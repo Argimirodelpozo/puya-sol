@@ -1,0 +1,62 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/FullMathEchidnaTest.sol.FullMathEchidnaTest.approval_program() -> uint64:
+main:
+    intcblock 64 0
+    pushbytes 0x0883f665 // method "checkH(uint512,uint512)void"
+    txna ApplicationArgs 0
+    match main_checkH_route@2
+    err
+
+main_checkH_route@2:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b checkH
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/FullMathEchidnaTest.sol.FullMathEchidnaTest.checkH[routing]() -> void:
+checkH:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    swap
+    intc_1 // 0
+    itob
+    dup
+    cover 2
+    b==
+    bnz checkH_if_body@3
+    dig 3
+    dup
+    dig 4
+    dup
+    cover 3
+    b*
+    swap
+    b/
+    b==
+    bz checkH_after_if_else@4
+
+checkH_if_body@3:
+    dup2
+    b==
+    assert
+
+checkH_after_if_else@4:
+    pushint 1
+    return

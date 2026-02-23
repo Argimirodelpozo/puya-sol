@@ -1,0 +1,78 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/SafeERC20NamerTest.sol.SafeERC20NamerTest.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    bytecblock 0x151f7c75
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xe03f9dd8 0x4c846f5b // method "tokenSymbol(address)string", method "tokenName(address)string"
+    txna ApplicationArgs 0
+    match tokenSymbol tokenName
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/SafeERC20NamerTest.sol.SafeERC20NamerTest.tokenSymbol[routing]() -> void:
+tokenSymbol:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/SafeERC20NamerTest.sol.SafeERC20NamerTest.tokenSymbol
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/SafeERC20NamerTest.sol.SafeERC20NamerTest.tokenName[routing]() -> void:
+tokenName:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/SafeERC20NamerTest.sol.SafeERC20NamerTest.tokenName
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/SafeERC20NamerTest.sol.SafeERC20NamerTest.tokenSymbol(token: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/SafeERC20NamerTest.sol.SafeERC20NamerTest.tokenSymbol:
+    proto 1 1
+    frame_dig -1
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/SafeERC20NamerTest.sol.SafeERC20NamerTest.tokenSymbol
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/SafeERC20NamerTest.sol.SafeERC20NamerTest.tokenName(token: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/SafeERC20NamerTest.sol.SafeERC20NamerTest.tokenName:
+    proto 1 1
+    frame_dig -1
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/SafeERC20NamerTest.sol.SafeERC20NamerTest.tokenName
+    retsub

@@ -1,0 +1,112 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/FullMathTest.sol.FullMathTest.approval_program() -> uint64:
+main:
+    intcblock 64 1
+    bytecblock 0x151f7c75
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x13e26b55 0xa2dd3ae5 // method "mulDiv(uint512,uint512,uint512)uint512", method "mulDivRoundingUp(uint512,uint512,uint512)uint512"
+    txna ApplicationArgs 0
+    match mulDiv mulDivRoundingUp
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/FullMathTest.sol.FullMathTest.mulDiv[routing]() -> void:
+mulDiv:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/FullMathTest.sol.FullMathTest.mulDiv
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/FullMathTest.sol.FullMathTest.mulDivRoundingUp[routing]() -> void:
+mulDivRoundingUp:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dig 2
+    dig 2
+    b*
+    dig 1
+    b%
+    pushint 0
+    itob
+    b>
+    cover 3
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/FullMathTest.sol.FullMathTest.mulDiv
+    swap
+    itob
+    b+
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/FullMathTest.sol.FullMathTest.mulDiv(x: bytes, y: bytes, z: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/FullMathTest.sol.FullMathTest.mulDiv:
+    proto 3 1
+    frame_dig -3
+    frame_dig -2
+    frame_dig -1
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/FullMathTest.sol.FullMathTest.mulDiv
+    retsub

@@ -1,0 +1,55 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/AddressStringUtilTest.sol.AddressStringUtilTest.approval_program() -> uint64:
+main:
+    pushbytes 0xed532089 // method "toAsciiString(address,uint512)string"
+    txna ApplicationArgs 0
+    match main_toAsciiString_route@2
+    err
+
+main_toAsciiString_route@2:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b toAsciiString
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/AddressStringUtilTest.sol.AddressStringUtilTest.toAsciiString[routing]() -> void:
+toAsciiString:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/AddressStringUtilTest.sol.AddressStringUtilTest.toAsciiString
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/AddressStringUtilTest.sol.AddressStringUtilTest.toAsciiString(addr: bytes, len: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/AddressStringUtilTest.sol.AddressStringUtilTest.toAsciiString:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol-v2/examples/example2/contracts/test/AddressStringUtilTest.sol.AddressStringUtilTest.toAsciiString
+    retsub
