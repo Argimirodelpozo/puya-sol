@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Solidity source and build directories
-set(SOLIDITY_DIR "${CMAKE_SOURCE_DIR}/../solidity")
+set(SOLIDITY_DIR "${CMAKE_SOURCE_DIR}/solidity")
 set(SOLIDITY_BUILD_DIR "${SOLIDITY_DIR}/build")
 
 # Include paths
