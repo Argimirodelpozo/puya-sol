@@ -1,0 +1,1565 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.approval_program() -> uint64:
+main:
+    intcblock 0 1 64 32
+    bytecblock 0x "unlocked" "totalSupply" "reserve0" "reserve1" base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) "token0" "token1" "kLast" "balanceOf" "factory" "blockTimestampLast" "allowance" "DOMAIN_SEPARATOR" "price0CumulativeLast" "price1CumulativeLast" 0x151f7c75 0xddf252ad 0x151f7c7580 0xffffffffffffffffffffffffffff
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "totalSupply"
+    bytec_0 // 0x
+    app_global_put
+    bytec 13 // "DOMAIN_SEPARATOR"
+    bytec_0 // 0x
+    app_global_put
+    bytec 10 // "factory"
+    bytec 5 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 6 // "token0"
+    bytec 5 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 7 // "token1"
+    bytec 5 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_3 // "reserve0"
+    bytec_0 // 0x
+    app_global_put
+    bytec 4 // "reserve1"
+    bytec_0 // 0x
+    app_global_put
+    bytec 11 // "blockTimestampLast"
+    intc_0 // 0
+    app_global_put
+    bytec 14 // "price0CumulativeLast"
+    bytec_0 // 0x
+    app_global_put
+    bytec 15 // "price1CumulativeLast"
+    bytec_0 // 0x
+    app_global_put
+    bytec 8 // "kLast"
+    bytec_0 // 0x
+    app_global_put
+    bytec_1 // "unlocked"
+    bytec_0 // 0x
+    app_global_put
+    pushbytes 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400fbfcc8ef98ffbf7b6c3fec7bf5185b566b9863e35a9d83acd49ad6824b5969738c89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc60000000000000000
+    global CurrentApplicationAddress
+    concat
+    keccak256
+    bytec 13 // "DOMAIN_SEPARATOR"
+    swap
+    app_global_put
+    bytec 10 // "factory"
+    txn Sender
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x78bc9897 0x807b0424 0xcf4002e4 0x5f7153d0 0xf2eb5fa4 0x1eb3a39b 0x98f39682 0x3c4937bd 0x42820278 0x177171e7 0xaf82b588 // method "getReserves()(uint512,uint512,uint64)", method "initialize(address,address)void", method "mint(address)uint512", method "burn(address)(uint512,uint512)", method "swap(uint512,uint512,address,byte[])void", method "skim(address)void", method "sync()void", method "approve(address,uint512)bool", method "transfer(address,uint512)bool", method "transferFrom(address,address,uint512)bool", method "permit(address,address,uint512,uint512,uint64,byte[32],byte[32])void"
+    txna ApplicationArgs 0
+    match getReserves initialize mint burn swap skim sync approve transfer transferFrom permit
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.Math.sqrt(y: bytes) -> bytes:
+Math.sqrt:
+    proto 1 1
+    intc_0 // 0
+    dup
+    bytec_0 // 0x
+    pushint 3
+    itob
+    frame_dig -1
+    b<
+    bz Math.sqrt_else_body@5
+    pushint 2
+    itob
+    dup
+    frame_bury 0
+    frame_dig -1
+    swap
+    b/
+    intc_1 // 1
+    itob
+    b+
+    frame_bury 1
+    frame_dig -1
+    frame_bury 2
+
+Math.sqrt_while_top@2:
+    frame_dig 1
+    frame_dig 2
+    b<
+    bz Math.sqrt_after_if_else@8
+    frame_dig -1
+    frame_dig 1
+    dup
+    cover 2
+    b/
+    dig 1
+    b+
+    frame_dig 0
+    b/
+    frame_bury 1
+    frame_bury 2
+    b Math.sqrt_while_top@2
+
+Math.sqrt_after_if_else@8:
+    frame_dig 2
+    frame_bury 0
+    retsub
+
+Math.sqrt_else_body@5:
+    intc_0 // 0
+    itob
+    frame_dig -1
+    b!=
+    bz Math.sqrt_after_if_else@8
+    intc_1 // 1
+    itob
+    frame_bury 2
+    b Math.sqrt_after_if_else@8
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.SafeMath.mul(x: bytes, y: bytes) -> bytes:
+SafeMath.mul:
+    proto 2 1
+    bytec_0 // 0x
+    intc_0 // 0
+    itob
+    frame_dig -1
+    b==
+    bnz SafeMath.mul_bool_true@2
+    frame_dig -2
+    frame_dig -1
+    b*
+    dup
+    frame_bury 0
+    frame_dig -1
+    b/
+    frame_dig -2
+    b==
+    bz SafeMath.mul_bool_false@3
+
+SafeMath.mul_bool_true@2:
+    intc_1 // 1
+
+SafeMath.mul_bool_merge@4:
+    assert // ds-math-mul-overflow
+    frame_dig 0
+    swap
+    retsub
+
+SafeMath.mul_bool_false@3:
+    intc_0 // 0
+    b SafeMath.mul_bool_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.getReserves[routing]() -> void:
+getReserves:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.getReserves
+    dig 2
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    uncover 3
+    dig 1
+    b|
+    dig 3
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    uncover 3
+    uncover 2
+    b|
+    concat
+    swap
+    itob
+    concat
+    bytec 16 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.initialize[routing]() -> void:
+initialize:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_0 // 0
+    bytec 10 // "factory"
+    app_global_get_ex
+    assert // check factory exists
+    ==
+    assert // UniswapV2: FORBIDDEN
+    bytec 6 // "token0"
+    uncover 2
+    app_global_put
+    bytec 7 // "token1"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.mint[routing]() -> void:
+mint:
+    intc_0 // 0
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_0 // 0
+    bytec_1 // "unlocked"
+    app_global_get_ex
+    assert // check unlocked exists
+    intc_1 // 1
+    itob
+    dup
+    cover 2
+    b==
+    assert // UniswapV2: LOCKED
+    intc_0 // 0
+    itob
+    dup
+    bytec_1 // "unlocked"
+    dig 1
+    app_global_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.getReserves
+    popn 2
+    dup
+    cover 2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.getReserves
+    pop
+    dup
+    cover 3
+    cover 4
+    pop
+    global CurrentApplicationAddress
+    intc_0 // 0
+    asset_holding_get AssetBalance
+    assert // account is opted in to asset
+    itob
+    dup
+    cover 4
+    global CurrentApplicationAddress
+    intc_0 // 0
+    asset_holding_get AssetBalance
+    assert // account is opted in to asset
+    itob
+    dup
+    cover 5
+    dig 1
+    dig 3
+    b-
+    dup
+    cover 6
+    uncover 2
+    b<=
+    assert // ds-math-sub-underflow
+    dup
+    dig 3
+    b-
+    dup
+    cover 5
+    b>=
+    assert // ds-math-sub-underflow
+    swap
+    callsub _mintFee
+    swap
+    intc_0 // 0
+    bytec_2 // "totalSupply"
+    app_global_get_ex
+    swap
+    dup
+    cover 2
+    cover 3
+    assert // check totalSupply exists
+    b==
+    bz mint_else_body@3
+    dig 3
+    dig 3
+    callsub SafeMath.mul
+    callsub Math.sqrt
+    pushint 1000
+    itob
+    dup2
+    b-
+    dup
+    uncover 3
+    b<=
+    assert // ds-math-sub-underflow
+    bytec 5 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    uncover 2
+    callsub _mint
+    bury 12
+
+mint_after_if_else@4:
+    dig 11
+    dup
+    dig 10
+    b>
+    assert // UniswapV2: INSUFFICIENT_LIQUIDITY_MINTED
+    dig 11
+    swap
+    callsub _mint
+    dig 5
+    dig 5
+    dig 9
+    dig 9
+    callsub _update
+    dig 1
+    bz mint_after_if_else@6
+    intc_0 // 0
+    bytec_3 // "reserve0"
+    app_global_get_ex
+    assert // check reserve0 exists
+    intc_0 // 0
+    bytec 4 // "reserve1"
+    app_global_get_ex
+    assert // check reserve1 exists
+    callsub SafeMath.mul
+    bytec 8 // "kLast"
+    swap
+    app_global_put
+
+mint_after_if_else@6:
+    pushbytes 0x4c209b5f
+    dig 4
+    concat
+    dig 3
+    concat
+    log
+    bytec_1 // "unlocked"
+    dig 10
+    app_global_put
+    dig 11
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec 16 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+mint_else_body@3:
+    dig 3
+    dig 1
+    dup
+    cover 2
+    callsub SafeMath.mul
+    dig 9
+    b/
+    dig 4
+    uncover 2
+    callsub SafeMath.mul
+    dig 8
+    b/
+    dup2
+    b<
+    swap
+    cover 2
+    select
+    bury 12
+    b mint_after_if_else@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.burn[routing]() -> void:
+burn:
+    txna ApplicationArgs 1
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_0 // 0
+    bytec_1 // "unlocked"
+    app_global_get_ex
+    assert // check unlocked exists
+    intc_1 // 1
+    itob
+    dup
+    cover 2
+    b==
+    assert // UniswapV2: LOCKED
+    intc_0 // 0
+    itob
+    dup
+    bytec_1 // "unlocked"
+    dig 1
+    app_global_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.getReserves
+    popn 2
+    dup
+    cover 2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.getReserves
+    pop
+    dup
+    cover 2
+    cover 4
+    pop
+    intc_0 // 0
+    bytec 6 // "token0"
+    app_global_get_ex
+    bury 1
+    assert // check token0 exists
+    intc_0 // 0
+    bytec 7 // "token1"
+    app_global_get_ex
+    bury 1
+    assert // check token1 exists
+    global CurrentApplicationAddress
+    intc_0 // 0
+    asset_holding_get AssetBalance
+    assert // account is opted in to asset
+    itob
+    global CurrentApplicationAddress
+    intc_0 // 0
+    asset_holding_get AssetBalance
+    assert // account is opted in to asset
+    itob
+    global CurrentApplicationAddress
+    sha256
+    bytec 9 // "balanceOf"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    cover 6
+    uncover 4
+    uncover 4
+    callsub _mintFee
+    cover 4
+    intc_0 // 0
+    bytec_2 // "totalSupply"
+    app_global_get_ex
+    assert // check totalSupply exists
+    dig 1
+    uncover 4
+    callsub SafeMath.mul
+    dig 1
+    b/
+    dup
+    cover 3
+    cover 5
+    swap
+    uncover 3
+    callsub SafeMath.mul
+    swap
+    b/
+    cover 2
+    b<
+    bz burn_bool_false@4
+    dup
+    dig 7
+    b>
+    bz burn_bool_false@4
+    intc_1 // 1
+
+burn_bool_merge@5:
+    assert // UniswapV2: INSUFFICIENT_LIQUIDITY_BURNED
+    global CurrentApplicationAddress
+    sha256
+    bytec 9 // "balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    dig 6
+    dup
+    cover 4
+    b-
+    dup
+    uncover 2
+    b<=
+    assert // ds-math-sub-underflow
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_0 // 0
+    bytec_2 // "totalSupply"
+    app_global_get_ex
+    assert // check totalSupply exists
+    dup
+    dig 2
+    b-
+    dup
+    uncover 2
+    b<=
+    assert // ds-math-sub-underflow
+    bytec_2 // "totalSupply"
+    swap
+    app_global_put
+    bytec 17 // 0xddf252ad
+    swap
+    concat
+    log
+    global CurrentApplicationAddress
+    intc_0 // 0
+    asset_holding_get AssetBalance
+    assert // account is opted in to asset
+    itob
+    global CurrentApplicationAddress
+    intc_0 // 0
+    asset_holding_get AssetBalance
+    assert // account is opted in to asset
+    itob
+    dig 7
+    dig 7
+    callsub _update
+    dig 2
+    bz burn_after_if_else@7
+    intc_0 // 0
+    bytec_3 // "reserve0"
+    app_global_get_ex
+    assert // check reserve0 exists
+    intc_0 // 0
+    bytec 4 // "reserve1"
+    app_global_get_ex
+    assert // check reserve1 exists
+    callsub SafeMath.mul
+    bytec 8 // "kLast"
+    swap
+    app_global_put
+
+burn_after_if_else@7:
+    pushbytes 0xdccd412f
+    dig 2
+    dup
+    cover 2
+    concat
+    dig 2
+    dup
+    cover 3
+    concat
+    log
+    bytec_1 // "unlocked"
+    dig 10
+    app_global_put
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    swap
+    dig 1
+    b|
+    dig 2
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    bytec 16 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+burn_bool_false@4:
+    intc_0 // 0
+    b burn_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.swap[routing]() -> void:
+swap:
+    intc_0 // 0
+    dupn 8
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    cover 2
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    swap
+    intc_0 // 0
+    bytec_1 // "unlocked"
+    app_global_get_ex
+    assert // check unlocked exists
+    intc_1 // 1
+    itob
+    dup
+    cover 3
+    b==
+    assert // UniswapV2: LOCKED
+    intc_0 // 0
+    itob
+    dup
+    cover 2
+    bytec_1 // "unlocked"
+    dig 1
+    app_global_put
+    b>
+    bnz swap_bool_true@3
+    dig 4
+    dig 1
+    b>
+    bz swap_bool_false@4
+
+swap_bool_true@3:
+    intc_1 // 1
+
+swap_bool_merge@5:
+    assert // UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.getReserves
+    popn 2
+    dup
+    bury 16
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.getReserves
+    pop
+    bury 16
+    pop
+    dig 6
+    b>
+    bz swap_bool_false@8
+    dig 4
+    dig 14
+    b<
+    bz swap_bool_false@8
+    intc_1 // 1
+
+swap_bool_merge@9:
+    assert // UniswapV2: INSUFFICIENT_LIQUIDITY
+    intc_0 // 0
+    bytec 6 // "token0"
+    app_global_get_ex
+    assert // check token0 exists
+    intc_0 // 0
+    bytec 7 // "token1"
+    app_global_get_ex
+    swap
+    bury 15
+    assert // check token1 exists
+    dig 4
+    !=
+    bz swap_bool_false@12
+    dig 3
+    dig 13
+    !=
+    bz swap_bool_false@12
+    intc_1 // 1
+
+swap_bool_merge@13:
+    assert // UniswapV2: INVALID_TO
+    dig 2
+    len
+    bz swap_after_if_else@20
+    itxn_begin
+    txn Sender
+    dig 4
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0xe42c4084 // method "uniswapV2Call(address,uint512,uint512,byte[])void"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    dig 5
+    itxn_field ApplicationArgs
+    dig 4
+    itxn_field ApplicationArgs
+    dig 2
+    itxn_field ApplicationArgs
+    itxn_submit
+
+swap_after_if_else@20:
+    global CurrentApplicationAddress
+    intc_0 // 0
+    asset_holding_get AssetBalance
+    assert // account is opted in to asset
+    itob
+    dup
+    bury 11
+    global CurrentApplicationAddress
+    intc_0 // 0
+    asset_holding_get AssetBalance
+    assert // account is opted in to asset
+    itob
+    bury 10
+    dig 15
+    dig 7
+    b-
+    dup
+    bury 10
+    b>
+    bz swap_ternary_false@22
+    dig 9
+    dig 8
+    b-
+    bury 12
+
+swap_ternary_merge@23:
+    dig 13
+    dig 5
+    b-
+    dup
+    bury 8
+    dig 9
+    b<
+    bz swap_ternary_false@25
+    dig 8
+    dig 7
+    b-
+    bury 11
+
+swap_ternary_merge@26:
+    dig 11
+    dig 1
+    b>
+    bnz swap_bool_true@28
+    dig 10
+    dig 1
+    b>
+    bz swap_bool_false@29
+
+swap_bool_true@28:
+    intc_1 // 1
+
+swap_bool_merge@30:
+    assert // UniswapV2: INSUFFICIENT_INPUT_AMOUNT
+    pushint 1000
+    itob
+    dig 10
+    dup
+    cover 2
+    dig 1
+    callsub SafeMath.mul
+    pushint 3
+    itob
+    dig 15
+    dup
+    cover 4
+    dig 1
+    callsub SafeMath.mul
+    dig 2
+    swap
+    b-
+    dup
+    uncover 3
+    b<=
+    assert // ds-math-sub-underflow
+    dig 13
+    dup
+    cover 4
+    uncover 3
+    callsub SafeMath.mul
+    dig 16
+    dup
+    cover 5
+    uncover 3
+    callsub SafeMath.mul
+    dig 1
+    swap
+    b-
+    dup
+    uncover 2
+    b<=
+    assert // ds-math-sub-underflow
+    callsub SafeMath.mul
+    dig 19
+    dup
+    cover 2
+    dig 20
+    dup
+    cover 4
+    callsub SafeMath.mul
+    pushint 1000000
+    itob
+    callsub SafeMath.mul
+    b>=
+    assert // UniswapV2: K
+    uncover 5
+    uncover 3
+    uncover 2
+    uncover 3
+    callsub _update
+    pushbytes 0xd78ad95f
+    uncover 2
+    concat
+    swap
+    concat
+    dig 6
+    concat
+    dig 5
+    concat
+    log
+    bytec_1 // "unlocked"
+    dig 2
+    app_global_put
+    intc_1 // 1
+    return
+
+swap_bool_false@29:
+    intc_0 // 0
+    b swap_bool_merge@30
+
+swap_ternary_false@25:
+    dup
+    bury 11
+    b swap_ternary_merge@26
+
+swap_ternary_false@22:
+    dup
+    bury 12
+    b swap_ternary_merge@23
+
+swap_bool_false@12:
+    intc_0 // 0
+    b swap_bool_merge@13
+
+swap_bool_false@8:
+    intc_0 // 0
+    b swap_bool_merge@9
+
+swap_bool_false@4:
+    intc_0 // 0
+    b swap_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.skim[routing]() -> void:
+skim:
+    txna ApplicationArgs 1
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_0 // 0
+    bytec_1 // "unlocked"
+    app_global_get_ex
+    assert // check unlocked exists
+    intc_1 // 1
+    itob
+    swap
+    dig 1
+    b==
+    assert // UniswapV2: LOCKED
+    intc_0 // 0
+    itob
+    bytec_1 // "unlocked"
+    swap
+    app_global_put
+    intc_0 // 0
+    bytec 6 // "token0"
+    app_global_get_ex
+    bury 1
+    assert // check token0 exists
+    intc_0 // 0
+    bytec 7 // "token1"
+    app_global_get_ex
+    bury 1
+    assert // check token1 exists
+    global CurrentApplicationAddress
+    intc_0 // 0
+    asset_holding_get AssetBalance
+    bury 1
+    assert // account is opted in to asset
+    intc_0 // 0
+    bytec_3 // "reserve0"
+    app_global_get_ex
+    bury 1
+    assert // check reserve0 exists
+    global CurrentApplicationAddress
+    intc_0 // 0
+    asset_holding_get AssetBalance
+    bury 1
+    assert // account is opted in to asset
+    intc_0 // 0
+    bytec 4 // "reserve1"
+    app_global_get_ex
+    bury 1
+    assert // check reserve1 exists
+    bytec_1 // "unlocked"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.sync[routing]() -> void:
+sync:
+    intc_0 // 0
+    bytec_1 // "unlocked"
+    app_global_get_ex
+    assert // check unlocked exists
+    intc_1 // 1
+    itob
+    swap
+    dig 1
+    b==
+    assert // UniswapV2: LOCKED
+    intc_0 // 0
+    itob
+    bytec_1 // "unlocked"
+    swap
+    app_global_put
+    global CurrentApplicationAddress
+    intc_0 // 0
+    asset_holding_get AssetBalance
+    assert // account is opted in to asset
+    itob
+    global CurrentApplicationAddress
+    intc_0 // 0
+    asset_holding_get AssetBalance
+    assert // account is opted in to asset
+    itob
+    intc_0 // 0
+    bytec_3 // "reserve0"
+    app_global_get_ex
+    assert // check reserve0 exists
+    intc_0 // 0
+    bytec 4 // "reserve1"
+    app_global_get_ex
+    assert // check reserve1 exists
+    callsub _update
+    bytec_1 // "unlocked"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.approve[routing]() -> void:
+approve:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    cover 2
+    callsub _approve
+    bytec 18 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.transfer[routing]() -> void:
+transfer:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    cover 2
+    callsub _transfer
+    bytec 18 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.transferFrom[routing]() -> void:
+transferFrom:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    cover 2
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    concat
+    sha256
+    bytec 12 // "allowance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b!=
+    bz transferFrom_after_if_else@3
+    txn Sender
+    dig 3
+    dup
+    uncover 2
+    concat
+    sha256
+    bytec 12 // "allowance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    dig 3
+    b-
+    dup
+    uncover 2
+    b<=
+    assert // ds-math-sub-underflow
+    txn Sender
+    uncover 2
+    swap
+    concat
+    sha256
+    bytec 12 // "allowance"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+transferFrom_after_if_else@3:
+    dig 2
+    dig 2
+    dig 2
+    callsub _transfer
+    bytec 18 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.permit[routing]() -> void:
+permit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 5
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    txna ApplicationArgs 6
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 7
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    global LatestTimestamp
+    itob
+    b>=
+    assert // UniswapV2: EXPIRED
+    intc_0 // 0
+    bytec 13 // "DOMAIN_SEPARATOR"
+    app_global_get_ex
+    bury 1
+    assert // check DOMAIN_SEPARATOR exists
+    dig 2
+    sha256
+    pushbytes "nonces"
+    swap
+    concat
+    dup
+    box_get
+    assert // box exists
+    pushbytes 0x01
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_0 // 0
+    assert // UniswapV2: INVALID_SIGNATURE
+    callsub _approve
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.getReserves() -> bytes, bytes, uint64:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.getReserves:
+    intc_0 // 0
+    bytec_3 // "reserve0"
+    app_global_get_ex
+    assert // check reserve0 exists
+    intc_0 // 0
+    bytec 4 // "reserve1"
+    app_global_get_ex
+    assert // check reserve1 exists
+    intc_0 // 0
+    bytec 11 // "blockTimestampLast"
+    app_global_get_ex
+    assert // check blockTimestampLast exists
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair._update(balance0: bytes, balance1: bytes, _reserve0: bytes, _reserve1: bytes) -> void:
+_update:
+    proto 4 0
+    intc_0 // 0
+    bytec_0 // ""
+    dup
+    frame_dig -4
+    bytec 19 // 0xffffffffffffffffffffffffffff
+    b<=
+    bz _update_bool_false@3
+    frame_dig -3
+    bytec 19 // 0xffffffffffffffffffffffffffff
+    b<=
+    bz _update_bool_false@3
+    intc_1 // 1
+
+_update_bool_merge@4:
+    assert // UniswapV2: OVERFLOW
+    pushint 8
+    bzero
+    global LatestTimestamp
+    itob
+    pushint 4294967296
+    itob
+    swap
+    dig 1
+    b%
+    dig 2
+    swap
+    concat
+    global LatestTimestamp
+    itob
+    uncover 2
+    b%
+    uncover 2
+    swap
+    concat
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    frame_bury 1
+    intc_0 // 0
+    bytec 11 // "blockTimestampLast"
+    app_global_get_ex
+    assert // check blockTimestampLast exists
+    -
+    dup
+    frame_bury 2
+    bz _update_after_if_else@8
+    intc_0 // 0
+    itob
+    dup
+    frame_bury 0
+    frame_dig -2
+    b!=
+    bz _update_after_if_else@8
+    frame_dig -1
+    frame_dig 0
+    b!=
+    bz _update_after_if_else@8
+    intc_0 // 0
+    bytec 14 // "price0CumulativeLast"
+    app_global_get_ex
+    assert // check price0CumulativeLast exists
+    frame_dig -1
+    pushbytes 0x72
+    b*
+    frame_dig -2
+    b/
+    frame_dig 2
+    itob
+    swap
+    dig 1
+    b*
+    uncover 2
+    b+
+    bytec 14 // "price0CumulativeLast"
+    swap
+    app_global_put
+    intc_0 // 0
+    bytec 15 // "price1CumulativeLast"
+    app_global_get_ex
+    assert // check price1CumulativeLast exists
+    frame_dig -2
+    pushbytes 0x72
+    b*
+    frame_dig -1
+    b/
+    uncover 2
+    b*
+    b+
+    bytec 15 // "price1CumulativeLast"
+    swap
+    app_global_put
+
+_update_after_if_else@8:
+    bytec_3 // "reserve0"
+    frame_dig -4
+    app_global_put
+    bytec 4 // "reserve1"
+    frame_dig -3
+    app_global_put
+    bytec 11 // "blockTimestampLast"
+    frame_dig 1
+    app_global_put
+    intc_0 // 0
+    bytec_3 // "reserve0"
+    app_global_get_ex
+    assert // check reserve0 exists
+    pushbytes 0x1c411e9a
+    swap
+    concat
+    intc_0 // 0
+    bytec 4 // "reserve1"
+    app_global_get_ex
+    assert // check reserve1 exists
+    concat
+    log
+    retsub
+
+_update_bool_false@3:
+    intc_0 // 0
+    b _update_bool_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair._mintFee(_reserve0: bytes, _reserve1: bytes) -> uint64:
+_mintFee:
+    proto 2 1
+    intc_0 // 0
+    dupn 4
+    itxn_begin
+    intc_0 // 0
+    bytec 10 // "factory"
+    app_global_get_ex
+    assert // check factory exists
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x93321cf3 // method "feeTo()address"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    bytec 5 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    dup
+    intc_0 // 0
+    bytec 8 // "kLast"
+    app_global_get_ex
+    swap
+    cover 2
+    assert // check kLast exists
+    bz _mintFee_else_body@9
+    intc_0 // 0
+    itob
+    dup
+    frame_bury 1
+    frame_dig 7
+    b!=
+    bz _mintFee_after_if_else@12
+    frame_dig -2
+    frame_dig -1
+    callsub SafeMath.mul
+    callsub Math.sqrt
+    dup
+    frame_bury 3
+    frame_dig 7
+    callsub Math.sqrt
+    dup
+    frame_bury 4
+    b>
+    bz _mintFee_after_if_else@12
+    intc_0 // 0
+    bytec_2 // "totalSupply"
+    app_global_get_ex
+    assert // check totalSupply exists
+    frame_dig 3
+    dup
+    frame_dig 4
+    dup
+    cover 4
+    b-
+    dup
+    dig 2
+    b<=
+    assert // ds-math-sub-underflow
+    uncover 2
+    swap
+    callsub SafeMath.mul
+    pushint 5
+    itob
+    uncover 2
+    swap
+    callsub SafeMath.mul
+    dup
+    uncover 3
+    b+
+    dup
+    uncover 2
+    b>=
+    assert // ds-math-add-overflow
+    b/
+    dup
+    frame_bury 0
+    frame_dig 1
+    b>
+    bz _mintFee_after_if_else@12
+    frame_dig 5
+    frame_dig 0
+    callsub _mint
+
+_mintFee_after_if_else@12:
+    frame_dig 6
+    frame_bury 0
+    retsub
+
+_mintFee_else_body@9:
+    intc_0 // 0
+    itob
+    dup
+    frame_bury 2
+    frame_dig 7
+    b!=
+    bz _mintFee_after_if_else@12
+    bytec 8 // "kLast"
+    frame_dig 2
+    app_global_put
+    b _mintFee_after_if_else@12
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair._mint(to: bytes, value: bytes) -> void:
+_mint:
+    proto 2 0
+    intc_0 // 0
+    bytec_2 // "totalSupply"
+    app_global_get_ex
+    assert // check totalSupply exists
+    dup
+    frame_dig -1
+    b+
+    dup
+    uncover 2
+    b>=
+    assert // ds-math-add-overflow
+    bytec_2 // "totalSupply"
+    swap
+    app_global_put
+    frame_dig -2
+    sha256
+    bytec 9 // "balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    frame_dig -1
+    b+
+    dup
+    uncover 2
+    b>=
+    assert // ds-math-add-overflow
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec 17 // 0xddf252ad
+    frame_dig -1
+    concat
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair._approve(owner: bytes, spender: bytes, value: bytes) -> void:
+_approve:
+    proto 3 0
+    frame_dig -3
+    frame_dig -2
+    concat
+    sha256
+    bytec 12 // "allowance"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    frame_dig -1
+    box_put
+    pushbytes 0x8c5be1e5
+    frame_dig -1
+    concat
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair._transfer(from: bytes, to: bytes, value: bytes) -> void:
+_transfer:
+    proto 3 0
+    frame_dig -3
+    sha256
+    bytec 9 // "balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    frame_dig -1
+    b-
+    dup
+    uncover 2
+    b<=
+    assert // ds-math-sub-underflow
+    dig 1
+    box_del
+    pop
+    box_put
+    frame_dig -2
+    sha256
+    bytec 9 // "balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    frame_dig -1
+    b+
+    dup
+    uncover 2
+    b>=
+    assert // ds-math-add-overflow
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec 17 // 0xddf252ad
+    frame_dig -1
+    concat
+    log
+    retsub

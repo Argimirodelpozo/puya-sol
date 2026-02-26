@@ -1,0 +1,295 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M30_AdvancedFeatureTest.sol.AdvancedFeatureTest.approval_program() -> uint64:
+main:
+    intcblock 64 32 1
+    bytecblock 0x151f7c75 "multiplier"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 7
+    itob
+    bytec_1 // "multiplier"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xcbbc8924 0xe8375810 0x22a210e4 0xdfec4c0e 0x7c4639e3 0xc944ff53 // method "testEncodePackedUintArray(uint512,uint512,uint512)byte[32]", method "testEncodePackedMixed(uint512,uint512,uint512)byte[32]", method "testExternalLib(uint512)uint512", method "testInternalLib(uint512)uint512", method "testStaticCall()bool", method "process(uint512)uint512"
+    txna ApplicationArgs 0
+    match testEncodePackedUintArray testEncodePackedMixed testExternalLib testInternalLib main_testStaticCall_route@9 process
+    err
+
+main_testStaticCall_route@9:
+    pushbytes 0x151f7c7580
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M30_AdvancedFeatureTest.sol.AdvancedFeatureTest.testEncodePackedUintArray[routing]() -> void:
+testEncodePackedUintArray:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    uncover 5
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 5
+    dig 1
+    b|
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    replace2 0 // on error: index access is out of bounds
+    uncover 4
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 4
+    dig 2
+    b|
+    replace2 64 // on error: index access is out of bounds
+    uncover 2
+    intc_0 // 64
+    <=
+    assert // overflow
+    cover 2
+    b|
+    replace2 128 // on error: index access is out of bounds
+    intc_1 // 32
+    bzero
+    dig 1
+    extract 0 64 // on error: index access is out of bounds
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 2
+    extract 64 64 // on error: index access is out of bounds
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    uncover 2
+    extract 128 64 // on error: index access is out of bounds
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    keccak256
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M30_AdvancedFeatureTest.sol.AdvancedFeatureTest.testEncodePackedMixed[routing]() -> void:
+testEncodePackedMixed:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    uncover 3
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 3
+    dig 1
+    b|
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    replace2 0 // on error: index access is out of bounds
+    uncover 2
+    intc_0 // 64
+    <=
+    assert // overflow
+    cover 2
+    b|
+    replace2 64 // on error: index access is out of bounds
+    intc_1 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 2
+    extract 0 64 // on error: index access is out of bounds
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    uncover 3
+    extract 64 64 // on error: index access is out of bounds
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    concat
+    keccak256
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M30_AdvancedFeatureTest.sol.AdvancedFeatureTest.testExternalLib[routing]() -> void:
+testExternalLib:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dup
+    b*
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M30_AdvancedFeatureTest.sol.AdvancedFeatureTest.testInternalLib[routing]() -> void:
+testInternalLib:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dup
+    b+
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M30_AdvancedFeatureTest.sol.AdvancedFeatureTest.process[routing]() -> void:
+process:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    pushint 0
+    bytec_1 // "multiplier"
+    app_global_get_ex
+    assert // check multiplier exists
+    b*
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

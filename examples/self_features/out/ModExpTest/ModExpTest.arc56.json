@@ -1,0 +1,110 @@
+{
+    "name": "ModExpTest",
+    "structs": {},
+    "methods": [
+        {
+            "name": "modexp",
+            "args": [
+                {
+                    "type": "uint512",
+                    "name": "base"
+                },
+                {
+                    "type": "uint512",
+                    "name": "exponent"
+                },
+                {
+                    "type": "uint512",
+                    "name": "modulus"
+                }
+            ],
+            "returns": {
+                "type": "uint512"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": true,
+            "desc": "Modular exponentiation: base^exponent % modulus\n Uses the EVM modexp precompile at address 0x05.",
+            "events": [],
+            "recommendations": {}
+        }
+    ],
+    "arcs": [
+        22,
+        28
+    ],
+    "networks": {},
+    "state": {
+        "schema": {
+            "global": {
+                "ints": 0,
+                "bytes": 0
+            },
+            "local": {
+                "ints": 0,
+                "bytes": 0
+            }
+        },
+        "keys": {
+            "global": {},
+            "local": {},
+            "box": {}
+        },
+        "maps": {
+            "global": {},
+            "local": {},
+            "box": {}
+        }
+    },
+    "bareActions": {
+        "create": [],
+        "call": []
+    },
+    "sourceInfo": {
+        "approval": {
+            "sourceInfo": [
+                {
+                    "pc": [
+                        48,
+                        56,
+                        67
+                    ],
+                    "errorMessage": "invalid number of bytes for arc4.uint512"
+                },
+                {
+                    "pc": [
+                        125
+                    ],
+                    "errorMessage": "overflow"
+                }
+            ],
+            "pcOffsetMethod": "none"
+        },
+        "clear": {
+            "sourceInfo": [],
+            "pcOffsetMethod": "none"
+        }
+    },
+    "source": {
+        "approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyAvaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvZXhhbXBsZXMvc2VsZl9mZWF0dXJlcy9jb250cmFjdHMvTTI4X01vZEV4cFRlc3Quc29sLk1vZEV4cFRlc3QuYXBwcm92YWxfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIGludGNibG9jayA2NCAxCiAgICBieXRlY2Jsb2NrIDB4MDEgMHgKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBibnogbWFpbl9hZnRlcl9pZl9lbHNlQDIKICAgIGludGNfMSAvLyAxCiAgICByZXR1cm4KCm1haW5fYWZ0ZXJfaWZfZWxzZUAyOgogICAgcHVzaGJ5dGVzIDB4YzljYzBhMGUgLy8gbWV0aG9kICJtb2RleHAodWludDUxMix1aW50NTEyLHVpbnQ1MTIpdWludDUxMiIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIG1haW5fbW9kZXhwX3JvdXRlQDQKICAgIGVycgoKbWFpbl9tb2RleHBfcm91dGVANDoKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICAmJgogICAgYXNzZXJ0CiAgICBiIG1vZGV4cAoKCi8vIC9ob21lL2FyZ2kvQWxnb3JhbmRGb3VuZGF0aW9uL1NpZGVQcm9qZWN0cy9wdXlhLXNvbC9wdXlhLXNvbC9leGFtcGxlcy9zZWxmX2ZlYXR1cmVzL2NvbnRyYWN0cy9NMjhfTW9kRXhwVGVzdC5zb2wuTW9kRXhwVGVzdC5tb2RleHBbcm91dGluZ10oKSAtPiB2b2lkOgptb2RleHA6CiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCiAgICBkdXAKICAgIGxlbgogICAgaW50Y18wIC8vIDY0CiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBhcmM0LnVpbnQ1MTIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDIKICAgIGR1cAogICAgbGVuCiAgICBpbnRjXzAgLy8gNjQKICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIGFyYzQudWludDUxMgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMwogICAgZHVwCiAgICBjb3ZlciAzCiAgICBkdXAKICAgIGxlbgogICAgaW50Y18wIC8vIDY0CiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBhcmM0LnVpbnQ1MTIKICAgIGJ5dGVjXzAgLy8gMHgwMQogICAgY292ZXIgMwogICAgdW5jb3ZlciAyCiAgICBzd2FwCiAgICBiJQogICAgc3dhcAoKbW9kZXhwX3doaWxlX3RvcEAyOgogICAgZHVwCiAgICBieXRlY18xIC8vIDB4CiAgICBiPgogICAgYnogbW9kZXhwX2FmdGVyX3doaWxlQDYKICAgIGR1cAogICAgYnl0ZWNfMCAvLyAweDAxCiAgICBiJgogICAgYnl0ZWNfMSAvLyAweAogICAgYiE9CiAgICBieiBtb2RleHBfYWZ0ZXJfaWZfZWxzZUA1CiAgICBkaWcgMgogICAgZGlnIDIKICAgIGIqCiAgICBkaWcgNAogICAgYiUKICAgIGJ1cnkgMwoKbW9kZXhwX2FmdGVyX2lmX2Vsc2VANToKICAgIGR1cAogICAgcHVzaGJ5dGVzIDB4MDIKICAgIGIvCiAgICBidXJ5IDEKICAgIGRpZyAxCiAgICBkdXAKICAgIGIqCiAgICBkaWcgNAogICAgYiUKICAgIGJ1cnkgMgogICAgYiBtb2RleHBfd2hpbGVfdG9wQDIKCm1vZGV4cF9hZnRlcl93aGlsZUA2OgogICAgZGlnIDIKICAgIGR1cAogICAgbGVuCiAgICBpbnRjXzAgLy8gNjQKICAgIDw9CiAgICBhc3NlcnQgLy8gb3ZlcmZsb3cKICAgIGludGNfMCAvLyA2NAogICAgYnplcm8KICAgIGJ8CiAgICBwdXNoYnl0ZXMgMHgxNTFmN2M3NQogICAgc3dhcAogICAgY29uY2F0CiAgICBsb2cKICAgIGludGNfMSAvLyAxCiAgICByZXR1cm4K",
+        "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyAvaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvZXhhbXBsZXMvc2VsZl9mZWF0dXJlcy9jb250cmFjdHMvTTI4X01vZEV4cFRlc3Quc29sLk1vZEV4cFRlc3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMQogICAgcmV0dXJuCg=="
+    },
+    "byteCode": {
+        "approval": "CiACQAEmAgEBADEYQAACI0OABMnMCg42GgCOAQABADEZFDEYEERCAAA2GgFJFSISRDYaAkkVIhJENhoDSU4DSRUiEkQoTgNPAkyqTEkppUEAJUkorCmpQQAKSwJLAqNLBKpFA0mAAQKiRQFLAUmjSwSqRQJC/9VLAkkVIg5EIq+rgAQVH3x1TFCwI0M=",
+        "clear": "CoEBQw=="
+    },
+    "compilerInfo": {
+        "compiler": "puya",
+        "compilerVersion": {
+            "major": 5,
+            "minor": 7,
+            "patch": 1
+        }
+    },
+    "events": [],
+    "templateVariables": {}
+}

@@ -1,0 +1,1207 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/FullChainVerifier.sol.FullChainVerifier.approval_program() -> uint64:
+main:
+    intcblock 32 0 64 1
+    bytecblock 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001 0x068101 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47 0x
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_3 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xbc8edb50 // method "verifyProof(uint512[2],uint512[4],uint512[2],uint512[14])bool"
+    txna ApplicationArgs 0
+    match main_verifyProof_route@4
+    err
+
+main_verifyProof_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b verifyProof
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/FullChainVerifier.sol.FullChainVerifier.verifyProof[routing]() -> void:
+verifyProof:
+    intc_1 // 0
+    dupn 13
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 128
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint512, 2>
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 256
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint512, 4>
+    txna ApplicationArgs 3
+    dup
+    len
+    pushint 128
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint512, 2>
+    txna ApplicationArgs 4
+    dup
+    len
+    pushint 896
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint512, 14>
+
+verifyProof_while_top@88:
+    pushint 30010
+    global OpcodeBudget
+    >
+    bz verifyProof_after_while@93
+    itxn_begin
+    pushint 6 // appl
+    itxn_field TypeEnum
+    pushint 5 // DeleteApplication
+    itxn_field OnCompletion
+    bytec_1 // 0x068101
+    itxn_field ApprovalProgram
+    bytec_1 // 0x068101
+    itxn_field ClearStateProgram
+    intc_1 // 0
+    itxn_field Fee
+    itxn_submit
+    b verifyProof_while_top@88
+
+verifyProof_after_while@93:
+    dup
+    extract 0 64 // on error: index access is out of bounds
+    dup
+    bury 19
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b<
+    bnz verifyProof_after_if_else@3
+    intc_1 // 0
+
+verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/FullChainVerifier.sol.FullChainVerifier.verifyProof@86:
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+verifyProof_after_if_else@3:
+    dup
+    extract 64 64 // on error: index access is out of bounds
+    dup
+    bury 18
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b<
+    bnz verifyProof_after_if_else@5
+    intc_1 // 0
+    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/FullChainVerifier.sol.FullChainVerifier.verifyProof@86
+
+verifyProof_after_if_else@5:
+    dup
+    extract 128 64 // on error: index access is out of bounds
+    dup
+    bury 13
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b<
+    bnz verifyProof_after_if_else@7
+    intc_1 // 0
+    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/FullChainVerifier.sol.FullChainVerifier.verifyProof@86
+
+verifyProof_after_if_else@7:
+    dup
+    extract 192 64 // on error: index access is out of bounds
+    dup
+    bury 12
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b<
+    bnz verifyProof_after_if_else@9
+    intc_1 // 0
+    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/FullChainVerifier.sol.FullChainVerifier.verifyProof@86
+
+verifyProof_after_if_else@9:
+    dup
+    pushint 256
+    intc_2 // 64
+    extract3 // on error: index access is out of bounds
+    dup
+    bury 11
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b<
+    bnz verifyProof_after_if_else@11
+    intc_1 // 0
+    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/FullChainVerifier.sol.FullChainVerifier.verifyProof@86
+
+verifyProof_after_if_else@11:
+    dup
+    pushint 320
+    intc_2 // 64
+    extract3 // on error: index access is out of bounds
+    dup
+    bury 10
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b<
+    bnz verifyProof_after_if_else@13
+    intc_1 // 0
+    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/FullChainVerifier.sol.FullChainVerifier.verifyProof@86
+
+verifyProof_after_if_else@13:
+    dup
+    pushint 384
+    intc_2 // 64
+    extract3 // on error: index access is out of bounds
+    dup
+    bury 9
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b<
+    bnz verifyProof_after_if_else@15
+    intc_1 // 0
+    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/FullChainVerifier.sol.FullChainVerifier.verifyProof@86
+
+verifyProof_after_if_else@15:
+    dup
+    pushint 448
+    intc_2 // 64
+    extract3 // on error: index access is out of bounds
+    dup
+    bury 8
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b<
+    bnz verifyProof_after_if_else@17
+    intc_1 // 0
+    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/FullChainVerifier.sol.FullChainVerifier.verifyProof@86
+
+verifyProof_after_if_else@17:
+    dup
+    pushint 512
+    intc_2 // 64
+    extract3 // on error: index access is out of bounds
+    dup
+    bury 7
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b<
+    bnz verifyProof_after_if_else@19
+    intc_1 // 0
+    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/FullChainVerifier.sol.FullChainVerifier.verifyProof@86
+
+verifyProof_after_if_else@19:
+    dup
+    pushint 576
+    intc_2 // 64
+    extract3 // on error: index access is out of bounds
+    dup
+    bury 6
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b<
+    bnz verifyProof_after_if_else@21
+    intc_1 // 0
+    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/FullChainVerifier.sol.FullChainVerifier.verifyProof@86
+
+verifyProof_after_if_else@21:
+    dup
+    pushint 640
+    intc_2 // 64
+    extract3 // on error: index access is out of bounds
+    dup
+    bury 17
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b<
+    bnz verifyProof_after_if_else@23
+    intc_1 // 0
+    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/FullChainVerifier.sol.FullChainVerifier.verifyProof@86
+
+verifyProof_after_if_else@23:
+    dup
+    pushint 704
+    intc_2 // 64
+    extract3 // on error: index access is out of bounds
+    dup
+    bury 16
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b<
+    bnz verifyProof_after_if_else@25
+    intc_1 // 0
+    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/FullChainVerifier.sol.FullChainVerifier.verifyProof@86
+
+verifyProof_after_if_else@25:
+    dup
+    pushint 768
+    intc_2 // 64
+    extract3 // on error: index access is out of bounds
+    dup
+    bury 15
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b<
+    bnz verifyProof_after_if_else@27
+    intc_1 // 0
+    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/FullChainVerifier.sol.FullChainVerifier.verifyProof@86
+
+verifyProof_after_if_else@27:
+    dup
+    pushint 832
+    intc_2 // 64
+    extract3 // on error: index access is out of bounds
+    dup
+    bury 14
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b<
+    bnz verifyProof_after_if_else@29
+    intc_1 // 0
+    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/FullChainVerifier.sol.FullChainVerifier.verifyProof@86
+
+verifyProof_after_if_else@29:
+    intc_0 // 32
+    bzero
+    dup
+    dig 19
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x2cb2d729ed72f1549a25ce38612093191cad885f2550224edb3eff14c2b31c29062db7a512348c752b84f815e42b1b1ba20c417ad80a3edfe9d4f2ab82012d40
+    swap
+    ec_scalar_mul BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    pushbytes 0x0501eb60d7066f1f2541d5092c0235a5d52a2db8bc0a89125e3de9746551bdc81d494b37fdd15ebb11267c3c20cb9f80ef70bb9aa2e766ad1bee0a6859b6184d
+    ec_add BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 2
+    dig 20
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x2cab01d7e37ae5c5d678d8b71de783191a26391264ac34b9954b8c7db1a0e0f42ea272924846ee62e38a14585d8f179a0526d657e6e22171fa97df23db14c9bb
+    swap
+    ec_scalar_mul BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    ec_add BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 2
+    dig 15
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x03248a330fc6d302ecd2ac2a30ff5be8591c044531ea6d2f196ca046169f9fca0f9d3895b14ec6260ff273154e6cd7c138c742c8c846820167e5819d5588f02f
+    swap
+    ec_scalar_mul BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    ec_add BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 2
+    dig 14
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x08c23bf569526499efc9dea465b25fbbc43f00185f96f714ed6cffb9d0e100cf2496f2d77bd2c6309d9492189678c62a7f7eec64f0af29dcf7dfb49c4b5ec945
+    swap
+    ec_scalar_mul BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    ec_add BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 2
+    dig 13
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x29ad1e9b5a72b672ae4e31a6122d2f94d665642bc82b4433694a27ca9077cac71483e4b07daba3cfb02d4318fa8b405801becddf9d64663e86201366aa88981a
+    swap
+    ec_scalar_mul BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    ec_add BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 2
+    dig 12
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x14e787fd0f266d110f05c2683a8eb3a90e21b093d43fea04709941ffa5a7cdce17fe0ab8d204e30687f918f5fdc5dcc513b65c33b6e7b1d8e72d0b9b33a5bae3
+    swap
+    ec_scalar_mul BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    ec_add BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 2
+    dig 11
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x1cff19e01d04c3fe49f60d05c7f17794b008f3fbe4583c56a96c5d601468590810a6a4ae4f6dd52c4f31b18987c515766b93f5180ff3a2f5a4c57f94a04a5360
+    swap
+    ec_scalar_mul BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    ec_add BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 2
+    dig 10
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x066bc615ea26d6fc9b045eb9894e189fb82b3037080fbeae087dfe9287fd166c0f8eeacc5cc82ffdfd9c794f1eecab73292bea1f88d1c10b0f3cad89f6d503ea
+    swap
+    ec_scalar_mul BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    ec_add BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 2
+    dig 9
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x069eb6104d12ea7b78ac0b499686e3cd142bcb5f581a292c934e30bd6c71154b250384f5dd7bf2eee952a606f7ab9bda52506d6a5a42b9a818f2db9fe58e15b6
+    swap
+    ec_scalar_mul BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    ec_add BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 2
+    dig 8
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x10a656ffab6c0cc0bf8b19b46abd301612dc5bc6fcd0baf154511e9b9f314a5329fb94f99ba991f617aa305565f775950279e2cdd12caaab7805339917665c92
+    swap
+    ec_scalar_mul BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    ec_add BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 2
+    dig 19
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x25af330be0d4c7df67b2f339a95bea65b5dbf7dc9d344958543ad05860b5769614ad9fe1be0cc964c8fe18e76906f5da0a1cf9e4df3ec8cdfae8db511aed3add
+    swap
+    ec_scalar_mul BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    ec_add BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 2
+    dig 18
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x13b9abfc5b40c26d24a814ecc2297823c60a5e5bb0d2468e9149879c529d7f8606ab179be9555dfc1b22e25156946dd6706980e200e0c7918ee8acc67ba30321
+    swap
+    ec_scalar_mul BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    ec_add BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 2
+    dig 17
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x188609f0d2bb8228b995678db64171f9875cb480494919f18d21af7afa4499541f6c9ba295a74c5fbd38970f340c27df08a2aa3f32d6ecf544404991c6875fb8
+    swap
+    ec_scalar_mul BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    ec_add BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 2
+    dig 16
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x0fe297ed38c64a0e43f1ef9e955817271e35a9fb99419d7ccc1d3b95a966472b2630dc316a16ee9fea0bebc1d2219189b4d6fccf072f7793f99578b1b60c58af
+    swap
+    ec_scalar_mul BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    ec_add BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 6
+    dup
+    extract 0 64 // on error: index access is out of bounds
+    swap
+    extract 64 64 // on error: index access is out of bounds
+    bytec_2 // 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
+    swap
+    b-
+    bytec_2 // 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
+    b%
+    dig 7
+    dup
+    extract 0 64 // on error: index access is out of bounds
+    dig 1
+    extract 64 64 // on error: index access is out of bounds
+    dig 2
+    extract 128 64 // on error: index access is out of bounds
+    uncover 3
+    extract 192 64 // on error: index access is out of bounds
+    dig 10
+    dup
+    extract 0 64 // on error: index access is out of bounds
+    swap
+    extract 64 64 // on error: index access is out of bounds
+    dig 10
+    uncover 8
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 10
+    uncover 8
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    pushbytes 0x0ea358985c752f6498e1fe1d8d8b226355cb93c8a12f85502e945dbe2b2f26d409c8e3a144d3f6329f909c1af202648154b32c73966bc5a82a1f2a8a26878272
+    concat
+    dig 9
+    uncover 9
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 9
+    uncover 9
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    concat
+    dig 7
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 7
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    concat
+    dig 5
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 5
+    uncover 5
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 4
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 4
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    concat
+    pushbytes 0x283fe9319792de3f6bfad50d884cd51ef0126b82869745156f26dccb759b4c2315ee251e1c39b2559349c49413995e1a70ff40aea9f350477a70566babe9994022aa103312a6ed7b31bce801a55323726654d294e22d1cd88c5f511bad47f7580c2c5e59e156ce3b17144a432bc100a961c8787eee37eee6082b537c998630c71800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c212c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa090689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b1188f73fbb3acab39fe8669e563596332ad020ae5cc25e8c1c4b423822f0a10e06795e3af412976ce90c28e3be3520e4c4689c86ba5af20eefeed135a551e88f0992a878b0433038a05ced250e3dd94bc50d22ab7630a45c04b78af7f86339bc2493d95d6e4afd14545a06203593885b52d9f399f3b2149b31809fd040923f80
+    concat
+    ec_pairing_check BN254g1
+    bytec_3 // 0x
+    pushbytes 0x01
+    uncover 2
+    select
+    pushbytes 0x01
+    b&
+    bytec_3 // 0x
+    b!=
+    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/FullChainVerifier.sol.FullChainVerifier.verifyProof@86

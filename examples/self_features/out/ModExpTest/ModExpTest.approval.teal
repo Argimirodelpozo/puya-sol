@@ -1,0 +1,103 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M28_ModExpTest.sol.ModExpTest.approval_program() -> uint64:
+main:
+    intcblock 64 1
+    bytecblock 0x01 0x
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xc9cc0a0e // method "modexp(uint512,uint512,uint512)uint512"
+    txna ApplicationArgs 0
+    match main_modexp_route@4
+    err
+
+main_modexp_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b modexp
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M28_ModExpTest.sol.ModExpTest.modexp[routing]() -> void:
+modexp:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    cover 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    bytec_0 // 0x01
+    cover 3
+    uncover 2
+    swap
+    b%
+    swap
+
+modexp_while_top@2:
+    dup
+    bytec_1 // 0x
+    b>
+    bz modexp_after_while@6
+    dup
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz modexp_after_if_else@5
+    dig 2
+    dig 2
+    b*
+    dig 4
+    b%
+    bury 3
+
+modexp_after_if_else@5:
+    dup
+    pushbytes 0x02
+    b/
+    bury 1
+    dig 1
+    dup
+    b*
+    dig 4
+    b%
+    bury 2
+    b modexp_while_top@2
+
+modexp_after_while@6:
+    dig 2
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

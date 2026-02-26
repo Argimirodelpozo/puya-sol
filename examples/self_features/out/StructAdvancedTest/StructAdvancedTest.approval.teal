@@ -1,0 +1,585 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M32_StructAdvanced.sol.StructAdvancedTest.approval_program() -> uint64:
+main:
+    intcblock 64 1
+    bytecblock 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x49660768 0xf48ad0b3 0x6adf7094 0x5cd1623a 0x3292f857 0x392bb454 // method "testNestedStruct(uint512,uint512,uint512,uint512)(uint512,uint512,uint512,uint512)", method "testStructWithArray(uint512,uint512,uint512,uint512)(uint512,uint512)", method "testFieldMutation(uint512,uint512,uint512)(uint512,uint512)", method "testNestedFieldMutation(uint512,uint512,uint512,uint512,uint512)(uint512,uint512)", method "testStructPassReturn(uint512,uint512,uint512,uint512)(uint512,uint512)", method "testMultiStructReturn(uint512,uint512,uint512,uint512)(uint512,uint512,uint512,uint512)"
+    txna ApplicationArgs 0
+    match testNestedStruct testStructWithArray testFieldMutation testNestedFieldMutation testStructPassReturn testMultiStructReturn
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M32_StructAdvanced.sol.StructAdvancedTest.testNestedStruct[routing]() -> void:
+testNestedStruct:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 4
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    uncover 2
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    uncover 3
+    dig 1
+    b|
+    uncover 2
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 2
+    dig 2
+    b|
+    concat
+    uncover 4
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 4
+    dig 2
+    b|
+    uncover 3
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 3
+    dig 3
+    b|
+    concat
+    swap
+    concat
+    dup
+    extract 0 128
+    dup
+    extract 0 64
+    swap
+    extract 64 64
+    uncover 2
+    extract 128 128
+    dup
+    extract 0 64
+    swap
+    extract 64 64
+    uncover 3
+    dig 4
+    b|
+    uncover 3
+    dig 4
+    b|
+    concat
+    uncover 2
+    dig 3
+    b|
+    concat
+    swap
+    uncover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M32_StructAdvanced.sol.StructAdvancedTest.testStructWithArray[routing]() -> void:
+testStructWithArray:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 4
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    uncover 5
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 5
+    dig 1
+    b|
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    replace2 0 // on error: index access is out of bounds
+    uncover 4
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 4
+    dig 2
+    b|
+    replace2 64 // on error: index access is out of bounds
+    uncover 2
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 2
+    dig 2
+    b|
+    replace2 128 // on error: index access is out of bounds
+    uncover 2
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 2
+    dig 2
+    b|
+    swap
+    concat
+    dup
+    extract 0 64
+    swap
+    extract 64 192
+    extract 64 64 // on error: index access is out of bounds
+    swap
+    dig 2
+    b|
+    swap
+    uncover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M32_StructAdvanced.sol.StructAdvancedTest.testFieldMutation[routing]() -> void:
+testFieldMutation:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    uncover 4
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    uncover 5
+    dig 1
+    b|
+    uncover 4
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 4
+    dig 2
+    b|
+    concat
+    uncover 2
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 2
+    dig 2
+    b|
+    swap
+    extract 64 64
+    concat
+    dup
+    extract 0 64
+    swap
+    extract 64 64
+    swap
+    dig 2
+    b|
+    swap
+    uncover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M32_StructAdvanced.sol.StructAdvancedTest.testNestedFieldMutation[routing]() -> void:
+testNestedFieldMutation:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 4
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 5
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    uncover 4
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    uncover 5
+    dig 1
+    b|
+    uncover 4
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 4
+    dig 2
+    b|
+    concat
+    uncover 6
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 6
+    dig 2
+    b|
+    uncover 5
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 5
+    dig 3
+    b|
+    concat
+    swap
+    concat
+    uncover 2
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 2
+    dig 2
+    b|
+    dig 1
+    extract 0 128
+    extract 64 64
+    concat
+    replace2 0
+    extract 0 128
+    dup
+    extract 0 64
+    swap
+    extract 64 64
+    swap
+    dig 2
+    b|
+    swap
+    uncover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M32_StructAdvanced.sol.StructAdvancedTest.testStructPassReturn[routing]() -> void:
+testStructPassReturn:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 4
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    uncover 6
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    uncover 7
+    dig 1
+    b|
+    uncover 6
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 6
+    dig 2
+    b|
+    concat
+    uncover 4
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 4
+    dig 2
+    b|
+    uncover 3
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 3
+    dig 3
+    b|
+    concat
+    dig 1
+    extract 0 64
+    dig 1
+    extract 0 64
+    b+
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    dig 3
+    b|
+    uncover 2
+    extract 64 64
+    uncover 2
+    extract 64 64
+    b+
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    dig 2
+    b|
+    concat
+    dup
+    extract 0 64
+    swap
+    extract 64 64
+    swap
+    dig 2
+    b|
+    swap
+    uncover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M32_StructAdvanced.sol.StructAdvancedTest.testMultiStructReturn[routing]() -> void:
+testMultiStructReturn:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 4
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    uncover 2
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    uncover 3
+    dig 1
+    b|
+    uncover 2
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 2
+    dig 2
+    b|
+    concat
+    uncover 4
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 4
+    dig 2
+    b|
+    uncover 3
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 3
+    dig 3
+    b|
+    concat
+    swap
+    concat
+    dup
+    extract 0 128
+    swap
+    extract 128 128
+    dig 1
+    extract 0 64
+    uncover 2
+    extract 64 64
+    dig 2
+    extract 0 64
+    uncover 3
+    extract 64 64
+    uncover 3
+    dig 4
+    b|
+    uncover 3
+    dig 4
+    b|
+    concat
+    uncover 2
+    dig 3
+    b|
+    concat
+    swap
+    uncover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

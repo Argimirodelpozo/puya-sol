@@ -1,0 +1,209 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Factory.sol.UniswapV2Factory.approval_program() -> uint64:
+main:
+    intcblock 0 1 32
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 "feeToSetter" "allPairs_length" 0x "feeTo" 0x151f7c75 "getPair"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 4 // "feeTo"
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_1 // "feeToSetter"
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_2 // "allPairs_length"
+    intc_0 // 0
+    app_global_put
+    bytec_1 // "feeToSetter"
+    txna ApplicationArgs 0
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x7fdc7468 0xf4bb4c53 0xd01b94b6 0x717981c7 // method "allPairsLength()uint512", method "createPair(address,address)address", method "setFeeTo(address)void", method "setFeeToSetter(address)void"
+    txna ApplicationArgs 0
+    match allPairsLength createPair setFeeTo setFeeToSetter
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Factory.sol.UniswapV2Factory.allPairsLength[routing]() -> void:
+allPairsLength:
+    intc_0 // 0
+    bytec_2 // "allPairs_length"
+    app_global_get_ex
+    assert // check allPairs_length exists
+    itob
+    pushint 64
+    bzero
+    b|
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Factory.sol.UniswapV2Factory.createPair[routing]() -> void:
+createPair:
+    intc_0 // 0
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    dup2
+    !=
+    assert // UniswapV2: IDENTICAL_ADDRESSES
+    b<
+    dup
+    bz createPair_ternary_false@3
+    dig 2
+    bury 4
+
+createPair_ternary_merge@4:
+    dup
+    bz createPair_ternary_false@6
+    dig 1
+
+createPair_ternary_merge@7:
+    dig 4
+    dup
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // UniswapV2: ZERO_ADDRESS
+    dup
+    dig 2
+    concat
+    sha256
+    bytec 6 // "getPair"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    assert // UniswapV2: PAIR_EXISTS
+    itxn_begin
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    intc_0 // 0
+    itxn_field ApplicationID
+    pushbytes 0x807b0424 // method "initialize(address,address)void"
+    itxn_field ApplicationArgs
+    dig 1
+    itxn_field ApplicationArgs
+    dig 2
+    itxn_field ApplicationArgs
+    itxn_submit
+    bytec_3 // 0x
+    box_put
+    concat
+    sha256
+    bytec 6 // "getPair"
+    swap
+    concat
+    bytec_3 // 0x
+    box_put
+    intc_0 // 0
+    bytec_2 // "allPairs_length"
+    app_global_get_ex
+    assert // check allPairs_length exists
+    dup
+    itob
+    pushbytes "allPairs"
+    swap
+    concat
+    bytec_3 // 0x
+    box_put
+    intc_1 // 1
+    +
+    bytec_2 // "allPairs_length"
+    dig 1
+    app_global_put
+    itob
+    pushbytes 0x0d3648bd
+    swap
+    concat
+    log
+    bytec 5 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+createPair_ternary_false@6:
+    dig 2
+    b createPair_ternary_merge@7
+
+createPair_ternary_false@3:
+    dig 1
+    bury 4
+    b createPair_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Factory.sol.UniswapV2Factory.setFeeTo[routing]() -> void:
+setFeeTo:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_0 // 0
+    bytec_1 // "feeToSetter"
+    app_global_get_ex
+    assert // check feeToSetter exists
+    ==
+    assert // UniswapV2: FORBIDDEN
+    bytec 4 // "feeTo"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Factory.sol.UniswapV2Factory.setFeeToSetter[routing]() -> void:
+setFeeToSetter:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_0 // 0
+    bytec_1 // "feeToSetter"
+    app_global_get_ex
+    assert // check feeToSetter exists
+    ==
+    assert // UniswapV2: FORBIDDEN
+    bytec_1 // "feeToSetter"
+    swap
+    app_global_put
+    intc_1 // 1
+    return

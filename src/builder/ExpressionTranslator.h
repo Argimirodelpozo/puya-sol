@@ -20,6 +20,9 @@ namespace puyasol::builder
 /// Maps "LibraryName.functionName" → subroutine ID string.
 using LibraryFunctionIdMap = std::unordered_map<std::string, std::string>;
 
+/// Maps AST node ID → subroutine ID for free functions (used by operator overloading).
+using FreeFunctionIdMap = std::unordered_map<int64_t, std::string>;
+
 /// Set of function names that have overloads (multiple definitions with same name).
 using OverloadedNamesSet = std::unordered_set<std::string>;
 
@@ -34,10 +37,12 @@ public:
 		std::string const& _sourceFile,
 		std::string const& _contractName,
 		LibraryFunctionIdMap const& _libraryFunctionIds,
-		OverloadedNamesSet const& _overloadedNames = {}
+		OverloadedNamesSet const& _overloadedNames = {},
+		FreeFunctionIdMap const& _freeFunctionById = {}
 	);
 
 	static LibraryFunctionIdMap const s_emptyLibraryFunctionIds;
+	static FreeFunctionIdMap const s_emptyFreeFunctionIds;
 
 	/// Translate a Solidity expression to AWST.
 	std::shared_ptr<awst::Expression> translate(solidity::frontend::Expression const& _expr);
@@ -72,6 +77,7 @@ private:
 	std::string m_contractName;
 	LibraryFunctionIdMap const& m_libraryFunctionIds;
 	OverloadedNamesSet const& m_overloadedNames;
+	FreeFunctionIdMap const& m_freeFunctionById;
 
 	/// Get the disambiguated method name for a function.
 	/// Returns "name(paramCount)" if the function name is overloaded, else just "name".

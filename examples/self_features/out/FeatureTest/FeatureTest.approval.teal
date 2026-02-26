@@ -1,0 +1,278 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.approval_program() -> uint64:
+main:
+    intcblock 64 1 0 2
+    bytecblock 0x151f7c75 0x00
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x851699b1 0xff1abeb6 0xd30149e0 0x141b40ce 0xb620f07f 0xb812b365 0x3783f9da 0x8657910f 0xa7b69211 0x8b2b9c3d // method "testWrap(uint512)uint512", method "testFrAdd(uint512,uint512)uint512", method "testFrSub(uint512,uint512)uint512", method "testFrMul(uint512,uint512)uint512", method "testFrEq(uint512,uint512)bool", method "testFrNeq(uint512,uint512)bool", method "testEnumValue()uint64", method "testEnumCompare()bool", method "testEnumIndex(uint64)uint64", method "testUnchecked(uint512,uint512)uint512"
+    txna ApplicationArgs 0
+    match testWrap testFrAdd testFrSub testFrMul testFrEq testFrNeq main_testEnumValue_route@11 main_testEnumCompare_route@12 testEnumIndex testUnchecked
+    err
+
+main_testEnumCompare_route@12:
+    pushbytes 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+main_testEnumValue_route@11:
+    pushbytes 0x151f7c750000000000000002
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testWrap[routing]() -> void:
+testWrap:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testFrAdd[routing]() -> void:
+testFrAdd:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    b+
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testFrSub[routing]() -> void:
+testFrSub:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    b-
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testFrMul[routing]() -> void:
+testFrMul:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    b*
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testFrEq[routing]() -> void:
+testFrEq:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    b==
+    bytec_1 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testFrNeq[routing]() -> void:
+testFrNeq:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    b!=
+    bytec_1 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testEnumIndex[routing]() -> void:
+testEnumIndex:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    dup
+    bnz testEnumIndex_after_if_else@3
+    intc_2 // 0
+
+testEnumIndex_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testEnumIndex@8:
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+testEnumIndex_after_if_else@3:
+    dup
+    intc_1 // 1
+    ==
+    bz testEnumIndex_after_if_else@5
+    intc_1 // 1
+    b testEnumIndex_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testEnumIndex@8
+
+testEnumIndex_after_if_else@5:
+    dup
+    intc_3 // 2
+    ==
+    bz testEnumIndex_after_if_else@7
+    intc_3 // 2
+    b testEnumIndex_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testEnumIndex@8
+
+testEnumIndex_after_if_else@7:
+    pushint 3
+    b testEnumIndex_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testEnumIndex@8
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M29_FeatureTest.sol.FeatureTest.testUnchecked[routing]() -> void:
+testUnchecked:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    b+
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

@@ -1,0 +1,303 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2ERC20.sol.UniswapV2ERC20.approval_program() -> uint64:
+main:
+    intcblock 32 1 64 0
+    bytecblock 0x "allowance" 0x151f7c7580 "DOMAIN_SEPARATOR" "balanceOf"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytes "totalSupply"
+    bytec_0 // 0x
+    app_global_put
+    pushbytes 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400fbfcc8ef98ffbf7b6c3fec7bf5185b566b9863e35a9d83acd49ad6824b5969738c89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc60000000000000000
+    global CurrentApplicationAddress
+    concat
+    keccak256
+    bytec_3 // "DOMAIN_SEPARATOR"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x3c4937bd 0x42820278 0x177171e7 0xaf82b588 // method "approve(address,uint512)bool", method "transfer(address,uint512)bool", method "transferFrom(address,address,uint512)bool", method "permit(address,address,uint512,uint512,uint64,byte[32],byte[32])void"
+    txna ApplicationArgs 0
+    match approve transfer transferFrom permit
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2ERC20.sol.UniswapV2ERC20.approve[routing]() -> void:
+approve:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    cover 2
+    callsub _approve
+    bytec_2 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2ERC20.sol.UniswapV2ERC20.transfer[routing]() -> void:
+transfer:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    cover 2
+    callsub _transfer
+    bytec_2 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2ERC20.sol.UniswapV2ERC20.transferFrom[routing]() -> void:
+transferFrom:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    cover 2
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    concat
+    sha256
+    bytec_1 // "allowance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b!=
+    bz transferFrom_after_if_else@3
+    txn Sender
+    dig 3
+    dup
+    uncover 2
+    concat
+    sha256
+    bytec_1 // "allowance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    dig 3
+    b-
+    dup
+    uncover 2
+    b<=
+    assert // ds-math-sub-underflow
+    txn Sender
+    uncover 2
+    swap
+    concat
+    sha256
+    bytec_1 // "allowance"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+transferFrom_after_if_else@3:
+    dig 2
+    dig 2
+    dig 2
+    callsub _transfer
+    bytec_2 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2ERC20.sol.UniswapV2ERC20.permit[routing]() -> void:
+permit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 5
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    txna ApplicationArgs 6
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 7
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    global LatestTimestamp
+    itob
+    b>=
+    assert // UniswapV2: EXPIRED
+    intc_3 // 0
+    bytec_3 // "DOMAIN_SEPARATOR"
+    app_global_get_ex
+    bury 1
+    assert // check DOMAIN_SEPARATOR exists
+    dig 2
+    sha256
+    pushbytes "nonces"
+    swap
+    concat
+    dup
+    box_get
+    assert // box exists
+    pushbytes 0x01
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_3 // 0
+    assert // UniswapV2: INVALID_SIGNATURE
+    callsub _approve
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2ERC20.sol.UniswapV2ERC20._approve(owner: bytes, spender: bytes, value: bytes) -> void:
+_approve:
+    proto 3 0
+    frame_dig -3
+    frame_dig -2
+    concat
+    sha256
+    bytec_1 // "allowance"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    frame_dig -1
+    box_put
+    pushbytes 0x8c5be1e5
+    frame_dig -1
+    concat
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2ERC20.sol.UniswapV2ERC20._transfer(from: bytes, to: bytes, value: bytes) -> void:
+_transfer:
+    proto 3 0
+    frame_dig -3
+    sha256
+    bytec 4 // "balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    frame_dig -1
+    b-
+    dup
+    uncover 2
+    b<=
+    assert // ds-math-sub-underflow
+    dig 1
+    box_del
+    pop
+    box_put
+    frame_dig -2
+    sha256
+    bytec 4 // "balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    frame_dig -1
+    b+
+    dup
+    uncover 2
+    b>=
+    assert // ds-math-add-overflow
+    dig 1
+    box_del
+    pop
+    box_put
+    pushbytes 0xddf252ad
+    frame_dig -1
+    concat
+    log
+    retsub

@@ -1,0 +1,2508 @@
+main /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/Verifier_vc_and_disclose.sol.Verifier_vc_and_disclose.approval_program:
+    block@0: // L831
+        let tmp%0#0: uint64 = (txn ApplicationID)
+        let tmp%1#0: bool = (== tmp%0#0 0u)
+        goto tmp%1#0 ? block@1 : block@2
+    block@1: // if_body_L831
+        return 1u
+    block@2: // after_if_else_L831
+        let tmp%2#0: bool = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/Verifier_vc_and_disclose.sol.Verifier_vc_and_disclose.__puya_arc4_router__()
+        return tmp%2#0
+
+subroutine _puya_lib.util.ensure_budget(required_budget: uint64, fee_source: uint64) -> void:
+    block@0: // L12
+        let tmp%0#0: uint64 = (+ required_budget#0 10u)
+        let required_budget_with_buffer#0: uint64 = tmp%0#0
+        goto block@1
+    block@1: // while_top_L20
+        let tmp%1#0: uint64 = (global OpcodeBudget)
+        let tmp%2#0: bool = (> required_budget_with_buffer#0 tmp%1#0)
+        goto tmp%2#0 ? block@2 : block@6
+    block@2: // while_body_L21
+        itxn_begin
+        ((itxn_field TypeEnum) appl)
+        ((itxn_field OnCompletion) DeleteApplication)
+        ((itxn_field ApprovalProgram) 0x068101)
+        ((itxn_field ClearStateProgram) 0x068101)
+        switch fee_source#0 {0u => block@3, 1u => block@4, * => block@5}
+    block@3: // switch_case_0_L28
+        ((itxn_field Fee) 0u)
+        goto block@5
+    block@4: // switch_case_1_L30
+        let tmp%3#0: uint64 = (global MinTxnFee)
+        ((itxn_field Fee) tmp%3#0)
+        goto block@5
+    block@5: // switch_case_next_L26
+        itxn_submit
+        goto block@1
+    block@6: // after_while_L20
+        return 
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/Verifier_vc_and_disclose.sol.Verifier_vc_and_disclose.__puya_arc4_router__() -> bool:
+    block@0: // L831
+        let tmp%0#0: bytes = (txna ApplicationArgs 0)
+        switch tmp%0#0 {method "verifyProof(uint512[2],uint512[4],uint512[2],uint512[21])bool" => block@1, * => block@2}
+    block@1: // verifyProof_route_L7534
+        let tmp%1#0: uint64 = (txn OnCompletion)
+        let tmp%2#0: bool = (== tmp%1#0 NoOp)
+        let tmp%3#0: uint64 = (txn ApplicationID)
+        let tmp%4#0: bool = (!= tmp%3#0 0u)
+        let tmp%5#0: bool = (&& tmp%2#0 tmp%4#0)
+        (assert tmp%5#0)
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/Verifier_vc_and_disclose.sol.Verifier_vc_and_disclose.verifyProof[routing]()
+        goto block@2
+    block@2: // switch_case_next_L831
+        exit 0u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/Verifier_vc_and_disclose.sol.Verifier_vc_and_disclose.verifyProof[routing]() -> void:
+    block@0: // L7534
+        let tmp%0#0: bytes = (txna ApplicationArgs 1)
+        let len%0#0: uint64 = (len tmp%0#0)
+        let eq%0#0: bool = (== len%0#0 128u)
+        (assert eq%0#0) // invalid number of bytes for arc4.static_array<arc4.uint512, 2>
+        let as_Encoded(uint512[2])%0#0: Encoded(uint512[2]) = tmp%0#0
+        let tmp%1#0: bytes = (txna ApplicationArgs 2)
+        let len%1#0: uint64 = (len tmp%1#0)
+        let eq%1#0: bool = (== len%1#0 256u)
+        (assert eq%1#0) // invalid number of bytes for arc4.static_array<arc4.uint512, 4>
+        let as_Encoded(uint512[4])%0#0: Encoded(uint512[4]) = tmp%1#0
+        let tmp%2#0: bytes = (txna ApplicationArgs 3)
+        let len%2#0: uint64 = (len tmp%2#0)
+        let eq%2#0: bool = (== len%2#0 128u)
+        (assert eq%2#0) // invalid number of bytes for arc4.static_array<arc4.uint512, 2>
+        let as_Encoded(uint512[2])%1#0: Encoded(uint512[2]) = tmp%2#0
+        let tmp%3#0: bytes = (txna ApplicationArgs 4)
+        let len%3#0: uint64 = (len tmp%3#0)
+        let eq%3#0: bool = (== len%3#0 1344u)
+        (assert eq%3#0) // invalid number of bytes for arc4.static_array<arc4.uint512, 21>
+        let as_Encoded(uint512[21])%0#0: Encoded(uint512[21]) = tmp%3#0
+        let tmp%4#0: bool = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/Verifier_vc_and_disclose.sol.Verifier_vc_and_disclose.verifyProof(as_Encoded(uint512[2])%0#0, as_Encoded(uint512[4])%0#0, as_Encoded(uint512[2])%1#0, as_Encoded(uint512[21])%0#0)
+        let tmp%5#0: Encoded(bool8) = bytes_encode<bool8>(tmp%4#0)
+        let tmp%6#0: bytes = (concat 0x151f7c75 tmp%5#0)
+        (log tmp%6#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/Verifier_vc_and_disclose.sol.Verifier_vc_and_disclose.verifyProof(_pA: Encoded(uint512[2]), _pB: Encoded(uint512[4]), _pC: Encoded(uint512[2]), _pubSignals: Encoded(uint512[21])) -> bool:
+    block@0: // L7534
+        _puya_lib.util.ensure_budget(90000u, 0u)
+        let __free_memory_ptr#0: biguint = 128b
+        let pMem#0: biguint = __free_memory_ptr#0
+        let tmp%0#0: biguint = (b+ pMem#0 896b)
+        let __free_memory_ptr#1: biguint = tmp%0#0
+        let array_item%0#0: Encoded(uint512) = extract_value(_pubSignals#0, 0u)
+        let tmp%1#0: biguint = decode_bytes<biguint>(array_item%0#0)
+        let v#0: biguint = tmp%1#0
+        let tmp%2#0: bool = (b< v#0 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto tmp%2#0 ? block@2 : block@1
+    block@1: // if_body_L7794
+        let mem_0x0#0: biguint = 0b
+        let tmp%3#0: bool = (b!= mem_0x0#0 0b)
+        return tmp%3#0
+    block@2: // after_if_else_L7794
+        let array_item%1#0: Encoded(uint512) = extract_value(_pubSignals#0, 1u)
+        let tmp%4#0: biguint = decode_bytes<biguint>(array_item%1#0)
+        let v#1: biguint = tmp%4#0
+        let tmp%5#0: bool = (b< v#1 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto tmp%5#0 ? block@4 : block@3
+    block@3: // if_body_L7794
+        let mem_0x0#1: biguint = 0b
+        let tmp%6#0: bool = (b!= mem_0x0#1 0b)
+        return tmp%6#0
+    block@4: // after_if_else_L7794
+        let array_item%2#0: Encoded(uint512) = extract_value(_pubSignals#0, 2u)
+        let tmp%7#0: biguint = decode_bytes<biguint>(array_item%2#0)
+        let v#2: biguint = tmp%7#0
+        let tmp%8#0: bool = (b< v#2 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto tmp%8#0 ? block@6 : block@5
+    block@5: // if_body_L7794
+        let mem_0x0#2: biguint = 0b
+        let tmp%9#0: bool = (b!= mem_0x0#2 0b)
+        return tmp%9#0
+    block@6: // after_if_else_L7794
+        let array_item%3#0: Encoded(uint512) = extract_value(_pubSignals#0, 3u)
+        let tmp%10#0: biguint = decode_bytes<biguint>(array_item%3#0)
+        let v#3: biguint = tmp%10#0
+        let tmp%11#0: bool = (b< v#3 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto tmp%11#0 ? block@8 : block@7
+    block@7: // if_body_L7794
+        let mem_0x0#3: biguint = 0b
+        let tmp%12#0: bool = (b!= mem_0x0#3 0b)
+        return tmp%12#0
+    block@8: // after_if_else_L7794
+        let array_item%4#0: Encoded(uint512) = extract_value(_pubSignals#0, 4u)
+        let tmp%13#0: biguint = decode_bytes<biguint>(array_item%4#0)
+        let v#4: biguint = tmp%13#0
+        let tmp%14#0: bool = (b< v#4 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto tmp%14#0 ? block@10 : block@9
+    block@9: // if_body_L7794
+        let mem_0x0#4: biguint = 0b
+        let tmp%15#0: bool = (b!= mem_0x0#4 0b)
+        return tmp%15#0
+    block@10: // after_if_else_L7794
+        let array_item%5#0: Encoded(uint512) = extract_value(_pubSignals#0, 5u)
+        let tmp%16#0: biguint = decode_bytes<biguint>(array_item%5#0)
+        let v#5: biguint = tmp%16#0
+        let tmp%17#0: bool = (b< v#5 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto tmp%17#0 ? block@12 : block@11
+    block@11: // if_body_L7794
+        let mem_0x0#5: biguint = 0b
+        let tmp%18#0: bool = (b!= mem_0x0#5 0b)
+        return tmp%18#0
+    block@12: // after_if_else_L7794
+        let array_item%6#0: Encoded(uint512) = extract_value(_pubSignals#0, 6u)
+        let tmp%19#0: biguint = decode_bytes<biguint>(array_item%6#0)
+        let v#6: biguint = tmp%19#0
+        let tmp%20#0: bool = (b< v#6 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto tmp%20#0 ? block@14 : block@13
+    block@13: // if_body_L7794
+        let mem_0x0#6: biguint = 0b
+        let tmp%21#0: bool = (b!= mem_0x0#6 0b)
+        return tmp%21#0
+    block@14: // after_if_else_L7794
+        let array_item%7#0: Encoded(uint512) = extract_value(_pubSignals#0, 7u)
+        let tmp%22#0: biguint = decode_bytes<biguint>(array_item%7#0)
+        let v#7: biguint = tmp%22#0
+        let tmp%23#0: bool = (b< v#7 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto tmp%23#0 ? block@16 : block@15
+    block@15: // if_body_L7794
+        let mem_0x0#7: biguint = 0b
+        let tmp%24#0: bool = (b!= mem_0x0#7 0b)
+        return tmp%24#0
+    block@16: // after_if_else_L7794
+        let array_item%8#0: Encoded(uint512) = extract_value(_pubSignals#0, 8u)
+        let tmp%25#0: biguint = decode_bytes<biguint>(array_item%8#0)
+        let v#8: biguint = tmp%25#0
+        let tmp%26#0: bool = (b< v#8 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto tmp%26#0 ? block@18 : block@17
+    block@17: // if_body_L7794
+        let mem_0x0#8: biguint = 0b
+        let tmp%27#0: bool = (b!= mem_0x0#8 0b)
+        return tmp%27#0
+    block@18: // after_if_else_L7794
+        let array_item%9#0: Encoded(uint512) = extract_value(_pubSignals#0, 9u)
+        let tmp%28#0: biguint = decode_bytes<biguint>(array_item%9#0)
+        let v#9: biguint = tmp%28#0
+        let tmp%29#0: bool = (b< v#9 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto tmp%29#0 ? block@20 : block@19
+    block@19: // if_body_L7794
+        let mem_0x0#9: biguint = 0b
+        let tmp%30#0: bool = (b!= mem_0x0#9 0b)
+        return tmp%30#0
+    block@20: // after_if_else_L7794
+        let array_item%10#0: Encoded(uint512) = extract_value(_pubSignals#0, 10u)
+        let tmp%31#0: biguint = decode_bytes<biguint>(array_item%10#0)
+        let v#10: biguint = tmp%31#0
+        let tmp%32#0: bool = (b< v#10 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto tmp%32#0 ? block@22 : block@21
+    block@21: // if_body_L7794
+        let mem_0x0#10: biguint = 0b
+        let tmp%33#0: bool = (b!= mem_0x0#10 0b)
+        return tmp%33#0
+    block@22: // after_if_else_L7794
+        let array_item%11#0: Encoded(uint512) = extract_value(_pubSignals#0, 11u)
+        let tmp%34#0: biguint = decode_bytes<biguint>(array_item%11#0)
+        let v#11: biguint = tmp%34#0
+        let tmp%35#0: bool = (b< v#11 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto tmp%35#0 ? block@24 : block@23
+    block@23: // if_body_L7794
+        let mem_0x0#11: biguint = 0b
+        let tmp%36#0: bool = (b!= mem_0x0#11 0b)
+        return tmp%36#0
+    block@24: // after_if_else_L7794
+        let array_item%12#0: Encoded(uint512) = extract_value(_pubSignals#0, 12u)
+        let tmp%37#0: biguint = decode_bytes<biguint>(array_item%12#0)
+        let v#12: biguint = tmp%37#0
+        let tmp%38#0: bool = (b< v#12 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto tmp%38#0 ? block@26 : block@25
+    block@25: // if_body_L7794
+        let mem_0x0#12: biguint = 0b
+        let tmp%39#0: bool = (b!= mem_0x0#12 0b)
+        return tmp%39#0
+    block@26: // after_if_else_L7794
+        let array_item%13#0: Encoded(uint512) = extract_value(_pubSignals#0, 13u)
+        let tmp%40#0: biguint = decode_bytes<biguint>(array_item%13#0)
+        let v#13: biguint = tmp%40#0
+        let tmp%41#0: bool = (b< v#13 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto tmp%41#0 ? block@28 : block@27
+    block@27: // if_body_L7794
+        let mem_0x0#13: biguint = 0b
+        let tmp%42#0: bool = (b!= mem_0x0#13 0b)
+        return tmp%42#0
+    block@28: // after_if_else_L7794
+        let array_item%14#0: Encoded(uint512) = extract_value(_pubSignals#0, 14u)
+        let tmp%43#0: biguint = decode_bytes<biguint>(array_item%14#0)
+        let v#14: biguint = tmp%43#0
+        let tmp%44#0: bool = (b< v#14 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto tmp%44#0 ? block@30 : block@29
+    block@29: // if_body_L7794
+        let mem_0x0#14: biguint = 0b
+        let tmp%45#0: bool = (b!= mem_0x0#14 0b)
+        return tmp%45#0
+    block@30: // after_if_else_L7794
+        let array_item%15#0: Encoded(uint512) = extract_value(_pubSignals#0, 15u)
+        let tmp%46#0: biguint = decode_bytes<biguint>(array_item%15#0)
+        let v#15: biguint = tmp%46#0
+        let tmp%47#0: bool = (b< v#15 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto tmp%47#0 ? block@32 : block@31
+    block@31: // if_body_L7794
+        let mem_0x0#15: biguint = 0b
+        let tmp%48#0: bool = (b!= mem_0x0#15 0b)
+        return tmp%48#0
+    block@32: // after_if_else_L7794
+        let array_item%16#0: Encoded(uint512) = extract_value(_pubSignals#0, 16u)
+        let tmp%49#0: biguint = decode_bytes<biguint>(array_item%16#0)
+        let v#16: biguint = tmp%49#0
+        let tmp%50#0: bool = (b< v#16 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto tmp%50#0 ? block@34 : block@33
+    block@33: // if_body_L7794
+        let mem_0x0#16: biguint = 0b
+        let tmp%51#0: bool = (b!= mem_0x0#16 0b)
+        return tmp%51#0
+    block@34: // after_if_else_L7794
+        let array_item%17#0: Encoded(uint512) = extract_value(_pubSignals#0, 17u)
+        let tmp%52#0: biguint = decode_bytes<biguint>(array_item%17#0)
+        let v#17: biguint = tmp%52#0
+        let tmp%53#0: bool = (b< v#17 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto tmp%53#0 ? block@36 : block@35
+    block@35: // if_body_L7794
+        let mem_0x0#17: biguint = 0b
+        let tmp%54#0: bool = (b!= mem_0x0#17 0b)
+        return tmp%54#0
+    block@36: // after_if_else_L7794
+        let array_item%18#0: Encoded(uint512) = extract_value(_pubSignals#0, 18u)
+        let tmp%55#0: biguint = decode_bytes<biguint>(array_item%18#0)
+        let v#18: biguint = tmp%55#0
+        let tmp%56#0: bool = (b< v#18 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto tmp%56#0 ? block@38 : block@37
+    block@37: // if_body_L7794
+        let mem_0x0#18: biguint = 0b
+        let tmp%57#0: bool = (b!= mem_0x0#18 0b)
+        return tmp%57#0
+    block@38: // after_if_else_L7794
+        let array_item%19#0: Encoded(uint512) = extract_value(_pubSignals#0, 19u)
+        let tmp%58#0: biguint = decode_bytes<biguint>(array_item%19#0)
+        let v#19: biguint = tmp%58#0
+        let tmp%59#0: bool = (b< v#19 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto tmp%59#0 ? block@40 : block@39
+    block@39: // if_body_L7794
+        let mem_0x0#19: biguint = 0b
+        let tmp%60#0: bool = (b!= mem_0x0#19 0b)
+        return tmp%60#0
+    block@40: // after_if_else_L7794
+        let array_item%20#0: Encoded(uint512) = extract_value(_pubSignals#0, 20u)
+        let tmp%61#0: biguint = decode_bytes<biguint>(array_item%20#0)
+        let v#20: biguint = tmp%61#0
+        let tmp%62#0: bool = (b< v#20 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto tmp%62#0 ? block@42 : block@41
+    block@41: // if_body_L7794
+        let mem_0x0#20: biguint = 0b
+        let tmp%63#0: bool = (b!= mem_0x0#20 0b)
+        return tmp%63#0
+    block@42: // after_if_else_L7794
+        let pA#0: Encoded(uint512[2]) = _pA#0
+        let pB#0: Encoded(uint512[4]) = _pB#0
+        let pC#0: Encoded(uint512[2]) = _pC#0
+        let pubSignals#0: Encoded(uint512[21]) = _pubSignals#0
+        let pMem#1: biguint = pMem#0
+        let isOk#0: biguint = 0b
+        let tmp%64#0: biguint = (b+ pMem#1 128b)
+        let _pPairing#0: biguint = tmp%64#0
+        let tmp%65#0: biguint = (b+ pMem#1 0b)
+        let _pVk#0: biguint = tmp%65#0
+        let mem_0x80#0: biguint = 5596963095588548215463373338908863751044901017738158737470568961739673965961b
+        let mem_0xa0#0: biguint = 197014595429711666232705760798810381313943401644903632013191386416875480347b
+        let pR#0: biguint = _pVk#0
+        let x#0: biguint = 5205997661858310131019668271478592188796010857087211482717528768703330586157b
+        let y#0: biguint = 13176893502345648015788198894995265386937497795228160152334741440356148760775b
+        let array_item%21#0: Encoded(uint512) = extract_value(_pubSignals#0, 0u)
+        let tmp%66#0: biguint = decode_bytes<biguint>(array_item%21#0)
+        let s#0: biguint = tmp%66#0
+        let success#0: biguint = 0b
+        let mIn#0: biguint = __free_memory_ptr#1
+        let mem_0x400#0: biguint = x#0
+        let mem_0x420#0: biguint = y#0
+        let mem_0x440#0: biguint = s#0
+        let tmp%67#0: bytes = (bzero 32u)
+        let tmp%68#0: bytes = (concat tmp%67#0 mem_0x400#0)
+        let tmp%69#0: bytes = (bzero 32u)
+        let tmp%70#0: bytes = (concat tmp%69#0 mem_0x400#0)
+        let tmp%71#0: uint64 = (len tmp%70#0)
+        let tmp%72#0: uint64 = (- tmp%71#0 32u)
+        let tmp%73#0: bytes = (extract3 tmp%68#0 tmp%72#0 32u)
+        let tmp%74#0: bytes = (bzero 32u)
+        let tmp%75#0: bytes = (concat tmp%74#0 mem_0x420#0)
+        let tmp%76#0: bytes = (bzero 32u)
+        let tmp%77#0: bytes = (concat tmp%76#0 mem_0x420#0)
+        let tmp%78#0: uint64 = (len tmp%77#0)
+        let tmp%79#0: uint64 = (- tmp%78#0 32u)
+        let tmp%80#0: bytes = (extract3 tmp%75#0 tmp%79#0 32u)
+        let tmp%81#0: bytes = (concat tmp%73#0 tmp%80#0)
+        let tmp%82#0: bytes = (bzero 32u)
+        let tmp%83#0: bytes = (concat tmp%82#0 mem_0x440#0)
+        let tmp%84#0: bytes = (bzero 32u)
+        let tmp%85#0: bytes = (concat tmp%84#0 mem_0x440#0)
+        let tmp%86#0: uint64 = (len tmp%85#0)
+        let tmp%87#0: uint64 = (- tmp%86#0 32u)
+        let tmp%88#0: bytes = (extract3 tmp%83#0 tmp%87#0 32u)
+        let tmp%89#0: bytes = ((ec_scalar_mul BN254g1) tmp%81#0 tmp%88#0)
+        let __bn256_result#0: bytes = tmp%89#0
+        let reinterpret_biguint%0#0: biguint = (extract3 __bn256_result#0 0u 32u)
+        let mem_0x400#1: biguint = reinterpret_biguint%0#0
+        let reinterpret_biguint%1#0: biguint = (extract3 __bn256_result#0 32u 32u)
+        let mem_0x420#1: biguint = reinterpret_biguint%1#0
+        let success#1: biguint = 1b
+        let tmp%90#0: bool = (b== success#1 0b)
+        goto tmp%90#0 ? block@43 : block@44
+    block@43: // if_body_L8316
+        let mem_0x0#21: biguint = 0b
+        let tmp%91#0: bool = (b!= mem_0x0#21 0b)
+        return tmp%91#0
+    block@44: // after_if_else_L8316
+        let mem_0x440#1: biguint = mem_0x80#0
+        let mem_0x460#0: biguint = mem_0xa0#0
+        let tmp%92#0: bytes = (bzero 32u)
+        let tmp%93#0: bytes = (concat tmp%92#0 mem_0x400#1)
+        let tmp%94#0: bytes = (bzero 32u)
+        let tmp%95#0: bytes = (concat tmp%94#0 mem_0x400#1)
+        let tmp%96#0: uint64 = (len tmp%95#0)
+        let tmp%97#0: uint64 = (- tmp%96#0 32u)
+        let tmp%98#0: bytes = (extract3 tmp%93#0 tmp%97#0 32u)
+        let tmp%99#0: bytes = (bzero 32u)
+        let tmp%100#0: bytes = (concat tmp%99#0 mem_0x420#1)
+        let tmp%101#0: bytes = (bzero 32u)
+        let tmp%102#0: bytes = (concat tmp%101#0 mem_0x420#1)
+        let tmp%103#0: uint64 = (len tmp%102#0)
+        let tmp%104#0: uint64 = (- tmp%103#0 32u)
+        let tmp%105#0: bytes = (extract3 tmp%100#0 tmp%104#0 32u)
+        let tmp%106#0: bytes = (concat tmp%98#0 tmp%105#0)
+        let tmp%107#0: bytes = (bzero 32u)
+        let tmp%108#0: bytes = (concat tmp%107#0 mem_0x440#1)
+        let tmp%109#0: bytes = (bzero 32u)
+        let tmp%110#0: bytes = (concat tmp%109#0 mem_0x440#1)
+        let tmp%111#0: uint64 = (len tmp%110#0)
+        let tmp%112#0: uint64 = (- tmp%111#0 32u)
+        let tmp%113#0: bytes = (extract3 tmp%108#0 tmp%112#0 32u)
+        let tmp%114#0: bytes = (bzero 32u)
+        let tmp%115#0: bytes = (concat tmp%114#0 mem_0x460#0)
+        let tmp%116#0: bytes = (bzero 32u)
+        let tmp%117#0: bytes = (concat tmp%116#0 mem_0x460#0)
+        let tmp%118#0: uint64 = (len tmp%117#0)
+        let tmp%119#0: uint64 = (- tmp%118#0 32u)
+        let tmp%120#0: bytes = (extract3 tmp%115#0 tmp%119#0 32u)
+        let tmp%121#0: bytes = (concat tmp%113#0 tmp%120#0)
+        let tmp%122#0: bytes = ((ec_add BN254g1) tmp%106#0 tmp%121#0)
+        let __bn256_result#1: bytes = tmp%122#0
+        let reinterpret_biguint%2#0: biguint = (extract3 __bn256_result#1 0u 32u)
+        let mem_0x80#1: biguint = reinterpret_biguint%2#0
+        let reinterpret_biguint%3#0: biguint = (extract3 __bn256_result#1 32u 32u)
+        let mem_0xa0#1: biguint = reinterpret_biguint%3#0
+        let success#2: biguint = 1b
+        let tmp%123#0: bool = (b== success#2 0b)
+        goto tmp%123#0 ? block@45 : block@46
+    block@45: // if_body_L8625
+        let mem_0x0#22: biguint = 0b
+        let tmp%124#0: bool = (b!= mem_0x0#22 0b)
+        return tmp%124#0
+    block@46: // after_if_else_L8625
+        let pR#1: biguint = _pVk#0
+        let x#1: biguint = 18686575958474802319284536716008271197119798202369722729545536852821555672502b
+        let y#1: biguint = 3215233739805959113477947017922133477171290691316010120728592048201282926316b
+        let array_item%22#0: Encoded(uint512) = extract_value(_pubSignals#0, 1u)
+        let tmp%125#0: biguint = decode_bytes<biguint>(array_item%22#0)
+        let s#1: biguint = tmp%125#0
+        let success#3: biguint = 0b
+        let mIn#1: biguint = __free_memory_ptr#1
+        let mem_0x400#2: biguint = x#1
+        let mem_0x420#2: biguint = y#1
+        let mem_0x440#2: biguint = s#1
+        let tmp%126#0: bytes = (bzero 32u)
+        let tmp%127#0: bytes = (concat tmp%126#0 mem_0x400#2)
+        let tmp%128#0: bytes = (bzero 32u)
+        let tmp%129#0: bytes = (concat tmp%128#0 mem_0x400#2)
+        let tmp%130#0: uint64 = (len tmp%129#0)
+        let tmp%131#0: uint64 = (- tmp%130#0 32u)
+        let tmp%132#0: bytes = (extract3 tmp%127#0 tmp%131#0 32u)
+        let tmp%133#0: bytes = (bzero 32u)
+        let tmp%134#0: bytes = (concat tmp%133#0 mem_0x420#2)
+        let tmp%135#0: bytes = (bzero 32u)
+        let tmp%136#0: bytes = (concat tmp%135#0 mem_0x420#2)
+        let tmp%137#0: uint64 = (len tmp%136#0)
+        let tmp%138#0: uint64 = (- tmp%137#0 32u)
+        let tmp%139#0: bytes = (extract3 tmp%134#0 tmp%138#0 32u)
+        let tmp%140#0: bytes = (concat tmp%132#0 tmp%139#0)
+        let tmp%141#0: bytes = (bzero 32u)
+        let tmp%142#0: bytes = (concat tmp%141#0 mem_0x440#2)
+        let tmp%143#0: bytes = (bzero 32u)
+        let tmp%144#0: bytes = (concat tmp%143#0 mem_0x440#2)
+        let tmp%145#0: uint64 = (len tmp%144#0)
+        let tmp%146#0: uint64 = (- tmp%145#0 32u)
+        let tmp%147#0: bytes = (extract3 tmp%142#0 tmp%146#0 32u)
+        let tmp%148#0: bytes = ((ec_scalar_mul BN254g1) tmp%140#0 tmp%147#0)
+        let __bn256_result#2: bytes = tmp%148#0
+        let reinterpret_biguint%4#0: biguint = (extract3 __bn256_result#2 0u 32u)
+        let mem_0x400#3: biguint = reinterpret_biguint%4#0
+        let reinterpret_biguint%5#0: biguint = (extract3 __bn256_result#2 32u 32u)
+        let mem_0x420#3: biguint = reinterpret_biguint%5#0
+        let success#4: biguint = 1b
+        let tmp%149#0: bool = (b== success#4 0b)
+        goto tmp%149#0 ? block@47 : block@48
+    block@47: // if_body_L8316
+        let mem_0x0#23: biguint = 0b
+        let tmp%150#0: bool = (b!= mem_0x0#23 0b)
+        return tmp%150#0
+    block@48: // after_if_else_L8316
+        let mem_0x440#3: biguint = mem_0x80#1
+        let mem_0x460#1: biguint = mem_0xa0#1
+        let tmp%151#0: bytes = (bzero 32u)
+        let tmp%152#0: bytes = (concat tmp%151#0 mem_0x400#3)
+        let tmp%153#0: bytes = (bzero 32u)
+        let tmp%154#0: bytes = (concat tmp%153#0 mem_0x400#3)
+        let tmp%155#0: uint64 = (len tmp%154#0)
+        let tmp%156#0: uint64 = (- tmp%155#0 32u)
+        let tmp%157#0: bytes = (extract3 tmp%152#0 tmp%156#0 32u)
+        let tmp%158#0: bytes = (bzero 32u)
+        let tmp%159#0: bytes = (concat tmp%158#0 mem_0x420#3)
+        let tmp%160#0: bytes = (bzero 32u)
+        let tmp%161#0: bytes = (concat tmp%160#0 mem_0x420#3)
+        let tmp%162#0: uint64 = (len tmp%161#0)
+        let tmp%163#0: uint64 = (- tmp%162#0 32u)
+        let tmp%164#0: bytes = (extract3 tmp%159#0 tmp%163#0 32u)
+        let tmp%165#0: bytes = (concat tmp%157#0 tmp%164#0)
+        let tmp%166#0: bytes = (bzero 32u)
+        let tmp%167#0: bytes = (concat tmp%166#0 mem_0x440#3)
+        let tmp%168#0: bytes = (bzero 32u)
+        let tmp%169#0: bytes = (concat tmp%168#0 mem_0x440#3)
+        let tmp%170#0: uint64 = (len tmp%169#0)
+        let tmp%171#0: uint64 = (- tmp%170#0 32u)
+        let tmp%172#0: bytes = (extract3 tmp%167#0 tmp%171#0 32u)
+        let tmp%173#0: bytes = (bzero 32u)
+        let tmp%174#0: bytes = (concat tmp%173#0 mem_0x460#1)
+        let tmp%175#0: bytes = (bzero 32u)
+        let tmp%176#0: bytes = (concat tmp%175#0 mem_0x460#1)
+        let tmp%177#0: uint64 = (len tmp%176#0)
+        let tmp%178#0: uint64 = (- tmp%177#0 32u)
+        let tmp%179#0: bytes = (extract3 tmp%174#0 tmp%178#0 32u)
+        let tmp%180#0: bytes = (concat tmp%172#0 tmp%179#0)
+        let tmp%181#0: bytes = ((ec_add BN254g1) tmp%165#0 tmp%180#0)
+        let __bn256_result#3: bytes = tmp%181#0
+        let reinterpret_biguint%6#0: biguint = (extract3 __bn256_result#3 0u 32u)
+        let mem_0x80#2: biguint = reinterpret_biguint%6#0
+        let reinterpret_biguint%7#0: biguint = (extract3 __bn256_result#3 32u 32u)
+        let mem_0xa0#2: biguint = reinterpret_biguint%7#0
+        let success#5: biguint = 1b
+        let tmp%182#0: bool = (b== success#5 0b)
+        goto tmp%182#0 ? block@49 : block@50
+    block@49: // if_body_L8625
+        let mem_0x0#24: biguint = 0b
+        let tmp%183#0: bool = (b!= mem_0x0#24 0b)
+        return tmp%183#0
+    block@50: // after_if_else_L8625
+        let pR#2: biguint = _pVk#0
+        let x#2: biguint = 1055127295460550191570931643553037666433550808218997758502836878984684391612b
+        let y#2: biguint = 6635530946691458473442812686202910426342274602603661196235658534469306652670b
+        let array_item%23#0: Encoded(uint512) = extract_value(_pubSignals#0, 2u)
+        let tmp%184#0: biguint = decode_bytes<biguint>(array_item%23#0)
+        let s#2: biguint = tmp%184#0
+        let success#6: biguint = 0b
+        let mIn#2: biguint = __free_memory_ptr#1
+        let mem_0x400#4: biguint = x#2
+        let mem_0x420#4: biguint = y#2
+        let mem_0x440#4: biguint = s#2
+        let tmp%185#0: bytes = (bzero 32u)
+        let tmp%186#0: bytes = (concat tmp%185#0 mem_0x400#4)
+        let tmp%187#0: bytes = (bzero 32u)
+        let tmp%188#0: bytes = (concat tmp%187#0 mem_0x400#4)
+        let tmp%189#0: uint64 = (len tmp%188#0)
+        let tmp%190#0: uint64 = (- tmp%189#0 32u)
+        let tmp%191#0: bytes = (extract3 tmp%186#0 tmp%190#0 32u)
+        let tmp%192#0: bytes = (bzero 32u)
+        let tmp%193#0: bytes = (concat tmp%192#0 mem_0x420#4)
+        let tmp%194#0: bytes = (bzero 32u)
+        let tmp%195#0: bytes = (concat tmp%194#0 mem_0x420#4)
+        let tmp%196#0: uint64 = (len tmp%195#0)
+        let tmp%197#0: uint64 = (- tmp%196#0 32u)
+        let tmp%198#0: bytes = (extract3 tmp%193#0 tmp%197#0 32u)
+        let tmp%199#0: bytes = (concat tmp%191#0 tmp%198#0)
+        let tmp%200#0: bytes = (bzero 32u)
+        let tmp%201#0: bytes = (concat tmp%200#0 mem_0x440#4)
+        let tmp%202#0: bytes = (bzero 32u)
+        let tmp%203#0: bytes = (concat tmp%202#0 mem_0x440#4)
+        let tmp%204#0: uint64 = (len tmp%203#0)
+        let tmp%205#0: uint64 = (- tmp%204#0 32u)
+        let tmp%206#0: bytes = (extract3 tmp%201#0 tmp%205#0 32u)
+        let tmp%207#0: bytes = ((ec_scalar_mul BN254g1) tmp%199#0 tmp%206#0)
+        let __bn256_result#4: bytes = tmp%207#0
+        let reinterpret_biguint%8#0: biguint = (extract3 __bn256_result#4 0u 32u)
+        let mem_0x400#5: biguint = reinterpret_biguint%8#0
+        let reinterpret_biguint%9#0: biguint = (extract3 __bn256_result#4 32u 32u)
+        let mem_0x420#5: biguint = reinterpret_biguint%9#0
+        let success#7: biguint = 1b
+        let tmp%208#0: bool = (b== success#7 0b)
+        goto tmp%208#0 ? block@51 : block@52
+    block@51: // if_body_L8316
+        let mem_0x0#25: biguint = 0b
+        let tmp%209#0: bool = (b!= mem_0x0#25 0b)
+        return tmp%209#0
+    block@52: // after_if_else_L8316
+        let mem_0x440#5: biguint = mem_0x80#2
+        let mem_0x460#2: biguint = mem_0xa0#2
+        let tmp%210#0: bytes = (bzero 32u)
+        let tmp%211#0: bytes = (concat tmp%210#0 mem_0x400#5)
+        let tmp%212#0: bytes = (bzero 32u)
+        let tmp%213#0: bytes = (concat tmp%212#0 mem_0x400#5)
+        let tmp%214#0: uint64 = (len tmp%213#0)
+        let tmp%215#0: uint64 = (- tmp%214#0 32u)
+        let tmp%216#0: bytes = (extract3 tmp%211#0 tmp%215#0 32u)
+        let tmp%217#0: bytes = (bzero 32u)
+        let tmp%218#0: bytes = (concat tmp%217#0 mem_0x420#5)
+        let tmp%219#0: bytes = (bzero 32u)
+        let tmp%220#0: bytes = (concat tmp%219#0 mem_0x420#5)
+        let tmp%221#0: uint64 = (len tmp%220#0)
+        let tmp%222#0: uint64 = (- tmp%221#0 32u)
+        let tmp%223#0: bytes = (extract3 tmp%218#0 tmp%222#0 32u)
+        let tmp%224#0: bytes = (concat tmp%216#0 tmp%223#0)
+        let tmp%225#0: bytes = (bzero 32u)
+        let tmp%226#0: bytes = (concat tmp%225#0 mem_0x440#5)
+        let tmp%227#0: bytes = (bzero 32u)
+        let tmp%228#0: bytes = (concat tmp%227#0 mem_0x440#5)
+        let tmp%229#0: uint64 = (len tmp%228#0)
+        let tmp%230#0: uint64 = (- tmp%229#0 32u)
+        let tmp%231#0: bytes = (extract3 tmp%226#0 tmp%230#0 32u)
+        let tmp%232#0: bytes = (bzero 32u)
+        let tmp%233#0: bytes = (concat tmp%232#0 mem_0x460#2)
+        let tmp%234#0: bytes = (bzero 32u)
+        let tmp%235#0: bytes = (concat tmp%234#0 mem_0x460#2)
+        let tmp%236#0: uint64 = (len tmp%235#0)
+        let tmp%237#0: uint64 = (- tmp%236#0 32u)
+        let tmp%238#0: bytes = (extract3 tmp%233#0 tmp%237#0 32u)
+        let tmp%239#0: bytes = (concat tmp%231#0 tmp%238#0)
+        let tmp%240#0: bytes = ((ec_add BN254g1) tmp%224#0 tmp%239#0)
+        let __bn256_result#5: bytes = tmp%240#0
+        let reinterpret_biguint%10#0: biguint = (extract3 __bn256_result#5 0u 32u)
+        let mem_0x80#3: biguint = reinterpret_biguint%10#0
+        let reinterpret_biguint%11#0: biguint = (extract3 __bn256_result#5 32u 32u)
+        let mem_0xa0#3: biguint = reinterpret_biguint%11#0
+        let success#8: biguint = 1b
+        let tmp%241#0: bool = (b== success#8 0b)
+        goto tmp%241#0 ? block@53 : block@54
+    block@53: // if_body_L8625
+        let mem_0x0#26: biguint = 0b
+        let tmp%242#0: bool = (b!= mem_0x0#26 0b)
+        return tmp%242#0
+    block@54: // after_if_else_L8625
+        let pR#3: biguint = _pVk#0
+        let x#3: biguint = 1176481886486243698849395799015692190365205425437354380942590868210339561547b
+        let y#3: biguint = 11032707277468575718219050081069609294195714593272361592511167680044356246676b
+        let array_item%24#0: Encoded(uint512) = extract_value(_pubSignals#0, 3u)
+        let tmp%243#0: biguint = decode_bytes<biguint>(array_item%24#0)
+        let s#3: biguint = tmp%243#0
+        let success#9: biguint = 0b
+        let mIn#3: biguint = __free_memory_ptr#1
+        let mem_0x400#6: biguint = x#3
+        let mem_0x420#6: biguint = y#3
+        let mem_0x440#6: biguint = s#3
+        let tmp%244#0: bytes = (bzero 32u)
+        let tmp%245#0: bytes = (concat tmp%244#0 mem_0x400#6)
+        let tmp%246#0: bytes = (bzero 32u)
+        let tmp%247#0: bytes = (concat tmp%246#0 mem_0x400#6)
+        let tmp%248#0: uint64 = (len tmp%247#0)
+        let tmp%249#0: uint64 = (- tmp%248#0 32u)
+        let tmp%250#0: bytes = (extract3 tmp%245#0 tmp%249#0 32u)
+        let tmp%251#0: bytes = (bzero 32u)
+        let tmp%252#0: bytes = (concat tmp%251#0 mem_0x420#6)
+        let tmp%253#0: bytes = (bzero 32u)
+        let tmp%254#0: bytes = (concat tmp%253#0 mem_0x420#6)
+        let tmp%255#0: uint64 = (len tmp%254#0)
+        let tmp%256#0: uint64 = (- tmp%255#0 32u)
+        let tmp%257#0: bytes = (extract3 tmp%252#0 tmp%256#0 32u)
+        let tmp%258#0: bytes = (concat tmp%250#0 tmp%257#0)
+        let tmp%259#0: bytes = (bzero 32u)
+        let tmp%260#0: bytes = (concat tmp%259#0 mem_0x440#6)
+        let tmp%261#0: bytes = (bzero 32u)
+        let tmp%262#0: bytes = (concat tmp%261#0 mem_0x440#6)
+        let tmp%263#0: uint64 = (len tmp%262#0)
+        let tmp%264#0: uint64 = (- tmp%263#0 32u)
+        let tmp%265#0: bytes = (extract3 tmp%260#0 tmp%264#0 32u)
+        let tmp%266#0: bytes = ((ec_scalar_mul BN254g1) tmp%258#0 tmp%265#0)
+        let __bn256_result#6: bytes = tmp%266#0
+        let reinterpret_biguint%12#0: biguint = (extract3 __bn256_result#6 0u 32u)
+        let mem_0x400#7: biguint = reinterpret_biguint%12#0
+        let reinterpret_biguint%13#0: biguint = (extract3 __bn256_result#6 32u 32u)
+        let mem_0x420#7: biguint = reinterpret_biguint%13#0
+        let success#10: biguint = 1b
+        let tmp%267#0: bool = (b== success#10 0b)
+        goto tmp%267#0 ? block@55 : block@56
+    block@55: // if_body_L8316
+        let mem_0x0#27: biguint = 0b
+        let tmp%268#0: bool = (b!= mem_0x0#27 0b)
+        return tmp%268#0
+    block@56: // after_if_else_L8316
+        let mem_0x440#7: biguint = mem_0x80#3
+        let mem_0x460#3: biguint = mem_0xa0#3
+        let tmp%269#0: bytes = (bzero 32u)
+        let tmp%270#0: bytes = (concat tmp%269#0 mem_0x400#7)
+        let tmp%271#0: bytes = (bzero 32u)
+        let tmp%272#0: bytes = (concat tmp%271#0 mem_0x400#7)
+        let tmp%273#0: uint64 = (len tmp%272#0)
+        let tmp%274#0: uint64 = (- tmp%273#0 32u)
+        let tmp%275#0: bytes = (extract3 tmp%270#0 tmp%274#0 32u)
+        let tmp%276#0: bytes = (bzero 32u)
+        let tmp%277#0: bytes = (concat tmp%276#0 mem_0x420#7)
+        let tmp%278#0: bytes = (bzero 32u)
+        let tmp%279#0: bytes = (concat tmp%278#0 mem_0x420#7)
+        let tmp%280#0: uint64 = (len tmp%279#0)
+        let tmp%281#0: uint64 = (- tmp%280#0 32u)
+        let tmp%282#0: bytes = (extract3 tmp%277#0 tmp%281#0 32u)
+        let tmp%283#0: bytes = (concat tmp%275#0 tmp%282#0)
+        let tmp%284#0: bytes = (bzero 32u)
+        let tmp%285#0: bytes = (concat tmp%284#0 mem_0x440#7)
+        let tmp%286#0: bytes = (bzero 32u)
+        let tmp%287#0: bytes = (concat tmp%286#0 mem_0x440#7)
+        let tmp%288#0: uint64 = (len tmp%287#0)
+        let tmp%289#0: uint64 = (- tmp%288#0 32u)
+        let tmp%290#0: bytes = (extract3 tmp%285#0 tmp%289#0 32u)
+        let tmp%291#0: bytes = (bzero 32u)
+        let tmp%292#0: bytes = (concat tmp%291#0 mem_0x460#3)
+        let tmp%293#0: bytes = (bzero 32u)
+        let tmp%294#0: bytes = (concat tmp%293#0 mem_0x460#3)
+        let tmp%295#0: uint64 = (len tmp%294#0)
+        let tmp%296#0: uint64 = (- tmp%295#0 32u)
+        let tmp%297#0: bytes = (extract3 tmp%292#0 tmp%296#0 32u)
+        let tmp%298#0: bytes = (concat tmp%290#0 tmp%297#0)
+        let tmp%299#0: bytes = ((ec_add BN254g1) tmp%283#0 tmp%298#0)
+        let __bn256_result#7: bytes = tmp%299#0
+        let reinterpret_biguint%14#0: biguint = (extract3 __bn256_result#7 0u 32u)
+        let mem_0x80#4: biguint = reinterpret_biguint%14#0
+        let reinterpret_biguint%15#0: biguint = (extract3 __bn256_result#7 32u 32u)
+        let mem_0xa0#4: biguint = reinterpret_biguint%15#0
+        let success#11: biguint = 1b
+        let tmp%300#0: bool = (b== success#11 0b)
+        goto tmp%300#0 ? block@57 : block@58
+    block@57: // if_body_L8625
+        let mem_0x0#28: biguint = 0b
+        let tmp%301#0: bool = (b!= mem_0x0#28 0b)
+        return tmp%301#0
+    block@58: // after_if_else_L8625
+        let pR#4: biguint = _pVk#0
+        let x#4: biguint = 21472746513384679694076117414900521235398567169230511281372877399956105858021b
+        let y#4: biguint = 563092790680798493082477969374982298318954854173051786179456245393201893102b
+        let array_item%25#0: Encoded(uint512) = extract_value(_pubSignals#0, 4u)
+        let tmp%302#0: biguint = decode_bytes<biguint>(array_item%25#0)
+        let s#4: biguint = tmp%302#0
+        let success#12: biguint = 0b
+        let mIn#4: biguint = __free_memory_ptr#1
+        let mem_0x400#8: biguint = x#4
+        let mem_0x420#8: biguint = y#4
+        let mem_0x440#8: biguint = s#4
+        let tmp%303#0: bytes = (bzero 32u)
+        let tmp%304#0: bytes = (concat tmp%303#0 mem_0x400#8)
+        let tmp%305#0: bytes = (bzero 32u)
+        let tmp%306#0: bytes = (concat tmp%305#0 mem_0x400#8)
+        let tmp%307#0: uint64 = (len tmp%306#0)
+        let tmp%308#0: uint64 = (- tmp%307#0 32u)
+        let tmp%309#0: bytes = (extract3 tmp%304#0 tmp%308#0 32u)
+        let tmp%310#0: bytes = (bzero 32u)
+        let tmp%311#0: bytes = (concat tmp%310#0 mem_0x420#8)
+        let tmp%312#0: bytes = (bzero 32u)
+        let tmp%313#0: bytes = (concat tmp%312#0 mem_0x420#8)
+        let tmp%314#0: uint64 = (len tmp%313#0)
+        let tmp%315#0: uint64 = (- tmp%314#0 32u)
+        let tmp%316#0: bytes = (extract3 tmp%311#0 tmp%315#0 32u)
+        let tmp%317#0: bytes = (concat tmp%309#0 tmp%316#0)
+        let tmp%318#0: bytes = (bzero 32u)
+        let tmp%319#0: bytes = (concat tmp%318#0 mem_0x440#8)
+        let tmp%320#0: bytes = (bzero 32u)
+        let tmp%321#0: bytes = (concat tmp%320#0 mem_0x440#8)
+        let tmp%322#0: uint64 = (len tmp%321#0)
+        let tmp%323#0: uint64 = (- tmp%322#0 32u)
+        let tmp%324#0: bytes = (extract3 tmp%319#0 tmp%323#0 32u)
+        let tmp%325#0: bytes = ((ec_scalar_mul BN254g1) tmp%317#0 tmp%324#0)
+        let __bn256_result#8: bytes = tmp%325#0
+        let reinterpret_biguint%16#0: biguint = (extract3 __bn256_result#8 0u 32u)
+        let mem_0x400#9: biguint = reinterpret_biguint%16#0
+        let reinterpret_biguint%17#0: biguint = (extract3 __bn256_result#8 32u 32u)
+        let mem_0x420#9: biguint = reinterpret_biguint%17#0
+        let success#13: biguint = 1b
+        let tmp%326#0: bool = (b== success#13 0b)
+        goto tmp%326#0 ? block@59 : block@60
+    block@59: // if_body_L8316
+        let mem_0x0#29: biguint = 0b
+        let tmp%327#0: bool = (b!= mem_0x0#29 0b)
+        return tmp%327#0
+    block@60: // after_if_else_L8316
+        let mem_0x440#9: biguint = mem_0x80#4
+        let mem_0x460#4: biguint = mem_0xa0#4
+        let tmp%328#0: bytes = (bzero 32u)
+        let tmp%329#0: bytes = (concat tmp%328#0 mem_0x400#9)
+        let tmp%330#0: bytes = (bzero 32u)
+        let tmp%331#0: bytes = (concat tmp%330#0 mem_0x400#9)
+        let tmp%332#0: uint64 = (len tmp%331#0)
+        let tmp%333#0: uint64 = (- tmp%332#0 32u)
+        let tmp%334#0: bytes = (extract3 tmp%329#0 tmp%333#0 32u)
+        let tmp%335#0: bytes = (bzero 32u)
+        let tmp%336#0: bytes = (concat tmp%335#0 mem_0x420#9)
+        let tmp%337#0: bytes = (bzero 32u)
+        let tmp%338#0: bytes = (concat tmp%337#0 mem_0x420#9)
+        let tmp%339#0: uint64 = (len tmp%338#0)
+        let tmp%340#0: uint64 = (- tmp%339#0 32u)
+        let tmp%341#0: bytes = (extract3 tmp%336#0 tmp%340#0 32u)
+        let tmp%342#0: bytes = (concat tmp%334#0 tmp%341#0)
+        let tmp%343#0: bytes = (bzero 32u)
+        let tmp%344#0: bytes = (concat tmp%343#0 mem_0x440#9)
+        let tmp%345#0: bytes = (bzero 32u)
+        let tmp%346#0: bytes = (concat tmp%345#0 mem_0x440#9)
+        let tmp%347#0: uint64 = (len tmp%346#0)
+        let tmp%348#0: uint64 = (- tmp%347#0 32u)
+        let tmp%349#0: bytes = (extract3 tmp%344#0 tmp%348#0 32u)
+        let tmp%350#0: bytes = (bzero 32u)
+        let tmp%351#0: bytes = (concat tmp%350#0 mem_0x460#4)
+        let tmp%352#0: bytes = (bzero 32u)
+        let tmp%353#0: bytes = (concat tmp%352#0 mem_0x460#4)
+        let tmp%354#0: uint64 = (len tmp%353#0)
+        let tmp%355#0: uint64 = (- tmp%354#0 32u)
+        let tmp%356#0: bytes = (extract3 tmp%351#0 tmp%355#0 32u)
+        let tmp%357#0: bytes = (concat tmp%349#0 tmp%356#0)
+        let tmp%358#0: bytes = ((ec_add BN254g1) tmp%342#0 tmp%357#0)
+        let __bn256_result#9: bytes = tmp%358#0
+        let reinterpret_biguint%18#0: biguint = (extract3 __bn256_result#9 0u 32u)
+        let mem_0x80#5: biguint = reinterpret_biguint%18#0
+        let reinterpret_biguint%19#0: biguint = (extract3 __bn256_result#9 32u 32u)
+        let mem_0xa0#5: biguint = reinterpret_biguint%19#0
+        let success#14: biguint = 1b
+        let tmp%359#0: bool = (b== success#14 0b)
+        goto tmp%359#0 ? block@61 : block@62
+    block@61: // if_body_L8625
+        let mem_0x0#30: biguint = 0b
+        let tmp%360#0: bool = (b!= mem_0x0#30 0b)
+        return tmp%360#0
+    block@62: // after_if_else_L8625
+        let pR#5: biguint = _pVk#0
+        let x#5: biguint = 13601138852852403856005944646975090972729648614966676409231172122638333974547b
+        let y#5: biguint = 3581105645906785730892656040994982459922202487976234152960491483044370048575b
+        let array_item%26#0: Encoded(uint512) = extract_value(_pubSignals#0, 5u)
+        let tmp%361#0: biguint = decode_bytes<biguint>(array_item%26#0)
+        let s#5: biguint = tmp%361#0
+        let success#15: biguint = 0b
+        let mIn#5: biguint = __free_memory_ptr#1
+        let mem_0x400#10: biguint = x#5
+        let mem_0x420#10: biguint = y#5
+        let mem_0x440#10: biguint = s#5
+        let tmp%362#0: bytes = (bzero 32u)
+        let tmp%363#0: bytes = (concat tmp%362#0 mem_0x400#10)
+        let tmp%364#0: bytes = (bzero 32u)
+        let tmp%365#0: bytes = (concat tmp%364#0 mem_0x400#10)
+        let tmp%366#0: uint64 = (len tmp%365#0)
+        let tmp%367#0: uint64 = (- tmp%366#0 32u)
+        let tmp%368#0: bytes = (extract3 tmp%363#0 tmp%367#0 32u)
+        let tmp%369#0: bytes = (bzero 32u)
+        let tmp%370#0: bytes = (concat tmp%369#0 mem_0x420#10)
+        let tmp%371#0: bytes = (bzero 32u)
+        let tmp%372#0: bytes = (concat tmp%371#0 mem_0x420#10)
+        let tmp%373#0: uint64 = (len tmp%372#0)
+        let tmp%374#0: uint64 = (- tmp%373#0 32u)
+        let tmp%375#0: bytes = (extract3 tmp%370#0 tmp%374#0 32u)
+        let tmp%376#0: bytes = (concat tmp%368#0 tmp%375#0)
+        let tmp%377#0: bytes = (bzero 32u)
+        let tmp%378#0: bytes = (concat tmp%377#0 mem_0x440#10)
+        let tmp%379#0: bytes = (bzero 32u)
+        let tmp%380#0: bytes = (concat tmp%379#0 mem_0x440#10)
+        let tmp%381#0: uint64 = (len tmp%380#0)
+        let tmp%382#0: uint64 = (- tmp%381#0 32u)
+        let tmp%383#0: bytes = (extract3 tmp%378#0 tmp%382#0 32u)
+        let tmp%384#0: bytes = ((ec_scalar_mul BN254g1) tmp%376#0 tmp%383#0)
+        let __bn256_result#10: bytes = tmp%384#0
+        let reinterpret_biguint%20#0: biguint = (extract3 __bn256_result#10 0u 32u)
+        let mem_0x400#11: biguint = reinterpret_biguint%20#0
+        let reinterpret_biguint%21#0: biguint = (extract3 __bn256_result#10 32u 32u)
+        let mem_0x420#11: biguint = reinterpret_biguint%21#0
+        let success#16: biguint = 1b
+        let tmp%385#0: bool = (b== success#16 0b)
+        goto tmp%385#0 ? block@63 : block@64
+    block@63: // if_body_L8316
+        let mem_0x0#31: biguint = 0b
+        let tmp%386#0: bool = (b!= mem_0x0#31 0b)
+        return tmp%386#0
+    block@64: // after_if_else_L8316
+        let mem_0x440#11: biguint = mem_0x80#5
+        let mem_0x460#5: biguint = mem_0xa0#5
+        let tmp%387#0: bytes = (bzero 32u)
+        let tmp%388#0: bytes = (concat tmp%387#0 mem_0x400#11)
+        let tmp%389#0: bytes = (bzero 32u)
+        let tmp%390#0: bytes = (concat tmp%389#0 mem_0x400#11)
+        let tmp%391#0: uint64 = (len tmp%390#0)
+        let tmp%392#0: uint64 = (- tmp%391#0 32u)
+        let tmp%393#0: bytes = (extract3 tmp%388#0 tmp%392#0 32u)
+        let tmp%394#0: bytes = (bzero 32u)
+        let tmp%395#0: bytes = (concat tmp%394#0 mem_0x420#11)
+        let tmp%396#0: bytes = (bzero 32u)
+        let tmp%397#0: bytes = (concat tmp%396#0 mem_0x420#11)
+        let tmp%398#0: uint64 = (len tmp%397#0)
+        let tmp%399#0: uint64 = (- tmp%398#0 32u)
+        let tmp%400#0: bytes = (extract3 tmp%395#0 tmp%399#0 32u)
+        let tmp%401#0: bytes = (concat tmp%393#0 tmp%400#0)
+        let tmp%402#0: bytes = (bzero 32u)
+        let tmp%403#0: bytes = (concat tmp%402#0 mem_0x440#11)
+        let tmp%404#0: bytes = (bzero 32u)
+        let tmp%405#0: bytes = (concat tmp%404#0 mem_0x440#11)
+        let tmp%406#0: uint64 = (len tmp%405#0)
+        let tmp%407#0: uint64 = (- tmp%406#0 32u)
+        let tmp%408#0: bytes = (extract3 tmp%403#0 tmp%407#0 32u)
+        let tmp%409#0: bytes = (bzero 32u)
+        let tmp%410#0: bytes = (concat tmp%409#0 mem_0x460#5)
+        let tmp%411#0: bytes = (bzero 32u)
+        let tmp%412#0: bytes = (concat tmp%411#0 mem_0x460#5)
+        let tmp%413#0: uint64 = (len tmp%412#0)
+        let tmp%414#0: uint64 = (- tmp%413#0 32u)
+        let tmp%415#0: bytes = (extract3 tmp%410#0 tmp%414#0 32u)
+        let tmp%416#0: bytes = (concat tmp%408#0 tmp%415#0)
+        let tmp%417#0: bytes = ((ec_add BN254g1) tmp%401#0 tmp%416#0)
+        let __bn256_result#11: bytes = tmp%417#0
+        let reinterpret_biguint%22#0: biguint = (extract3 __bn256_result#11 0u 32u)
+        let mem_0x80#6: biguint = reinterpret_biguint%22#0
+        let reinterpret_biguint%23#0: biguint = (extract3 __bn256_result#11 32u 32u)
+        let mem_0xa0#6: biguint = reinterpret_biguint%23#0
+        let success#17: biguint = 1b
+        let tmp%418#0: bool = (b== success#17 0b)
+        goto tmp%418#0 ? block@65 : block@66
+    block@65: // if_body_L8625
+        let mem_0x0#32: biguint = 0b
+        let tmp%419#0: bool = (b!= mem_0x0#32 0b)
+        return tmp%419#0
+    block@66: // after_if_else_L8625
+        let pR#6: biguint = _pVk#0
+        let x#6: biguint = 6157557994850342948856683835911743140429039440220926429072418330957123608019b
+        let y#6: biguint = 17388180375008418233457359417526833014165004918527650588909336131820427902612b
+        let array_item%27#0: Encoded(uint512) = extract_value(_pubSignals#0, 6u)
+        let tmp%420#0: biguint = decode_bytes<biguint>(array_item%27#0)
+        let s#6: biguint = tmp%420#0
+        let success#18: biguint = 0b
+        let mIn#6: biguint = __free_memory_ptr#1
+        let mem_0x400#12: biguint = x#6
+        let mem_0x420#12: biguint = y#6
+        let mem_0x440#12: biguint = s#6
+        let tmp%421#0: bytes = (bzero 32u)
+        let tmp%422#0: bytes = (concat tmp%421#0 mem_0x400#12)
+        let tmp%423#0: bytes = (bzero 32u)
+        let tmp%424#0: bytes = (concat tmp%423#0 mem_0x400#12)
+        let tmp%425#0: uint64 = (len tmp%424#0)
+        let tmp%426#0: uint64 = (- tmp%425#0 32u)
+        let tmp%427#0: bytes = (extract3 tmp%422#0 tmp%426#0 32u)
+        let tmp%428#0: bytes = (bzero 32u)
+        let tmp%429#0: bytes = (concat tmp%428#0 mem_0x420#12)
+        let tmp%430#0: bytes = (bzero 32u)
+        let tmp%431#0: bytes = (concat tmp%430#0 mem_0x420#12)
+        let tmp%432#0: uint64 = (len tmp%431#0)
+        let tmp%433#0: uint64 = (- tmp%432#0 32u)
+        let tmp%434#0: bytes = (extract3 tmp%429#0 tmp%433#0 32u)
+        let tmp%435#0: bytes = (concat tmp%427#0 tmp%434#0)
+        let tmp%436#0: bytes = (bzero 32u)
+        let tmp%437#0: bytes = (concat tmp%436#0 mem_0x440#12)
+        let tmp%438#0: bytes = (bzero 32u)
+        let tmp%439#0: bytes = (concat tmp%438#0 mem_0x440#12)
+        let tmp%440#0: uint64 = (len tmp%439#0)
+        let tmp%441#0: uint64 = (- tmp%440#0 32u)
+        let tmp%442#0: bytes = (extract3 tmp%437#0 tmp%441#0 32u)
+        let tmp%443#0: bytes = ((ec_scalar_mul BN254g1) tmp%435#0 tmp%442#0)
+        let __bn256_result#12: bytes = tmp%443#0
+        let reinterpret_biguint%24#0: biguint = (extract3 __bn256_result#12 0u 32u)
+        let mem_0x400#13: biguint = reinterpret_biguint%24#0
+        let reinterpret_biguint%25#0: biguint = (extract3 __bn256_result#12 32u 32u)
+        let mem_0x420#13: biguint = reinterpret_biguint%25#0
+        let success#19: biguint = 1b
+        let tmp%444#0: bool = (b== success#19 0b)
+        goto tmp%444#0 ? block@67 : block@68
+    block@67: // if_body_L8316
+        let mem_0x0#33: biguint = 0b
+        let tmp%445#0: bool = (b!= mem_0x0#33 0b)
+        return tmp%445#0
+    block@68: // after_if_else_L8316
+        let mem_0x440#13: biguint = mem_0x80#6
+        let mem_0x460#6: biguint = mem_0xa0#6
+        let tmp%446#0: bytes = (bzero 32u)
+        let tmp%447#0: bytes = (concat tmp%446#0 mem_0x400#13)
+        let tmp%448#0: bytes = (bzero 32u)
+        let tmp%449#0: bytes = (concat tmp%448#0 mem_0x400#13)
+        let tmp%450#0: uint64 = (len tmp%449#0)
+        let tmp%451#0: uint64 = (- tmp%450#0 32u)
+        let tmp%452#0: bytes = (extract3 tmp%447#0 tmp%451#0 32u)
+        let tmp%453#0: bytes = (bzero 32u)
+        let tmp%454#0: bytes = (concat tmp%453#0 mem_0x420#13)
+        let tmp%455#0: bytes = (bzero 32u)
+        let tmp%456#0: bytes = (concat tmp%455#0 mem_0x420#13)
+        let tmp%457#0: uint64 = (len tmp%456#0)
+        let tmp%458#0: uint64 = (- tmp%457#0 32u)
+        let tmp%459#0: bytes = (extract3 tmp%454#0 tmp%458#0 32u)
+        let tmp%460#0: bytes = (concat tmp%452#0 tmp%459#0)
+        let tmp%461#0: bytes = (bzero 32u)
+        let tmp%462#0: bytes = (concat tmp%461#0 mem_0x440#13)
+        let tmp%463#0: bytes = (bzero 32u)
+        let tmp%464#0: bytes = (concat tmp%463#0 mem_0x440#13)
+        let tmp%465#0: uint64 = (len tmp%464#0)
+        let tmp%466#0: uint64 = (- tmp%465#0 32u)
+        let tmp%467#0: bytes = (extract3 tmp%462#0 tmp%466#0 32u)
+        let tmp%468#0: bytes = (bzero 32u)
+        let tmp%469#0: bytes = (concat tmp%468#0 mem_0x460#6)
+        let tmp%470#0: bytes = (bzero 32u)
+        let tmp%471#0: bytes = (concat tmp%470#0 mem_0x460#6)
+        let tmp%472#0: uint64 = (len tmp%471#0)
+        let tmp%473#0: uint64 = (- tmp%472#0 32u)
+        let tmp%474#0: bytes = (extract3 tmp%469#0 tmp%473#0 32u)
+        let tmp%475#0: bytes = (concat tmp%467#0 tmp%474#0)
+        let tmp%476#0: bytes = ((ec_add BN254g1) tmp%460#0 tmp%475#0)
+        let __bn256_result#13: bytes = tmp%476#0
+        let reinterpret_biguint%26#0: biguint = (extract3 __bn256_result#13 0u 32u)
+        let mem_0x80#7: biguint = reinterpret_biguint%26#0
+        let reinterpret_biguint%27#0: biguint = (extract3 __bn256_result#13 32u 32u)
+        let mem_0xa0#7: biguint = reinterpret_biguint%27#0
+        let success#20: biguint = 1b
+        let tmp%477#0: bool = (b== success#20 0b)
+        goto tmp%477#0 ? block@69 : block@70
+    block@69: // if_body_L8625
+        let mem_0x0#34: biguint = 0b
+        let tmp%478#0: bool = (b!= mem_0x0#34 0b)
+        return tmp%478#0
+    block@70: // after_if_else_L8625
+        let pR#7: biguint = _pVk#0
+        let x#7: biguint = 19544790484484484983818685444502423855480935224872533613761747434233145297100b
+        let y#7: biguint = 3086922147265903956378031708647679668364443698616954000627119704330804346839b
+        let array_item%28#0: Encoded(uint512) = extract_value(_pubSignals#0, 7u)
+        let tmp%479#0: biguint = decode_bytes<biguint>(array_item%28#0)
+        let s#7: biguint = tmp%479#0
+        let success#21: biguint = 0b
+        let mIn#7: biguint = __free_memory_ptr#1
+        let mem_0x400#14: biguint = x#7
+        let mem_0x420#14: biguint = y#7
+        let mem_0x440#14: biguint = s#7
+        let tmp%480#0: bytes = (bzero 32u)
+        let tmp%481#0: bytes = (concat tmp%480#0 mem_0x400#14)
+        let tmp%482#0: bytes = (bzero 32u)
+        let tmp%483#0: bytes = (concat tmp%482#0 mem_0x400#14)
+        let tmp%484#0: uint64 = (len tmp%483#0)
+        let tmp%485#0: uint64 = (- tmp%484#0 32u)
+        let tmp%486#0: bytes = (extract3 tmp%481#0 tmp%485#0 32u)
+        let tmp%487#0: bytes = (bzero 32u)
+        let tmp%488#0: bytes = (concat tmp%487#0 mem_0x420#14)
+        let tmp%489#0: bytes = (bzero 32u)
+        let tmp%490#0: bytes = (concat tmp%489#0 mem_0x420#14)
+        let tmp%491#0: uint64 = (len tmp%490#0)
+        let tmp%492#0: uint64 = (- tmp%491#0 32u)
+        let tmp%493#0: bytes = (extract3 tmp%488#0 tmp%492#0 32u)
+        let tmp%494#0: bytes = (concat tmp%486#0 tmp%493#0)
+        let tmp%495#0: bytes = (bzero 32u)
+        let tmp%496#0: bytes = (concat tmp%495#0 mem_0x440#14)
+        let tmp%497#0: bytes = (bzero 32u)
+        let tmp%498#0: bytes = (concat tmp%497#0 mem_0x440#14)
+        let tmp%499#0: uint64 = (len tmp%498#0)
+        let tmp%500#0: uint64 = (- tmp%499#0 32u)
+        let tmp%501#0: bytes = (extract3 tmp%496#0 tmp%500#0 32u)
+        let tmp%502#0: bytes = ((ec_scalar_mul BN254g1) tmp%494#0 tmp%501#0)
+        let __bn256_result#14: bytes = tmp%502#0
+        let reinterpret_biguint%28#0: biguint = (extract3 __bn256_result#14 0u 32u)
+        let mem_0x400#15: biguint = reinterpret_biguint%28#0
+        let reinterpret_biguint%29#0: biguint = (extract3 __bn256_result#14 32u 32u)
+        let mem_0x420#15: biguint = reinterpret_biguint%29#0
+        let success#22: biguint = 1b
+        let tmp%503#0: bool = (b== success#22 0b)
+        goto tmp%503#0 ? block@71 : block@72
+    block@71: // if_body_L8316
+        let mem_0x0#35: biguint = 0b
+        let tmp%504#0: bool = (b!= mem_0x0#35 0b)
+        return tmp%504#0
+    block@72: // after_if_else_L8316
+        let mem_0x440#15: biguint = mem_0x80#7
+        let mem_0x460#7: biguint = mem_0xa0#7
+        let tmp%505#0: bytes = (bzero 32u)
+        let tmp%506#0: bytes = (concat tmp%505#0 mem_0x400#15)
+        let tmp%507#0: bytes = (bzero 32u)
+        let tmp%508#0: bytes = (concat tmp%507#0 mem_0x400#15)
+        let tmp%509#0: uint64 = (len tmp%508#0)
+        let tmp%510#0: uint64 = (- tmp%509#0 32u)
+        let tmp%511#0: bytes = (extract3 tmp%506#0 tmp%510#0 32u)
+        let tmp%512#0: bytes = (bzero 32u)
+        let tmp%513#0: bytes = (concat tmp%512#0 mem_0x420#15)
+        let tmp%514#0: bytes = (bzero 32u)
+        let tmp%515#0: bytes = (concat tmp%514#0 mem_0x420#15)
+        let tmp%516#0: uint64 = (len tmp%515#0)
+        let tmp%517#0: uint64 = (- tmp%516#0 32u)
+        let tmp%518#0: bytes = (extract3 tmp%513#0 tmp%517#0 32u)
+        let tmp%519#0: bytes = (concat tmp%511#0 tmp%518#0)
+        let tmp%520#0: bytes = (bzero 32u)
+        let tmp%521#0: bytes = (concat tmp%520#0 mem_0x440#15)
+        let tmp%522#0: bytes = (bzero 32u)
+        let tmp%523#0: bytes = (concat tmp%522#0 mem_0x440#15)
+        let tmp%524#0: uint64 = (len tmp%523#0)
+        let tmp%525#0: uint64 = (- tmp%524#0 32u)
+        let tmp%526#0: bytes = (extract3 tmp%521#0 tmp%525#0 32u)
+        let tmp%527#0: bytes = (bzero 32u)
+        let tmp%528#0: bytes = (concat tmp%527#0 mem_0x460#7)
+        let tmp%529#0: bytes = (bzero 32u)
+        let tmp%530#0: bytes = (concat tmp%529#0 mem_0x460#7)
+        let tmp%531#0: uint64 = (len tmp%530#0)
+        let tmp%532#0: uint64 = (- tmp%531#0 32u)
+        let tmp%533#0: bytes = (extract3 tmp%528#0 tmp%532#0 32u)
+        let tmp%534#0: bytes = (concat tmp%526#0 tmp%533#0)
+        let tmp%535#0: bytes = ((ec_add BN254g1) tmp%519#0 tmp%534#0)
+        let __bn256_result#15: bytes = tmp%535#0
+        let reinterpret_biguint%30#0: biguint = (extract3 __bn256_result#15 0u 32u)
+        let mem_0x80#8: biguint = reinterpret_biguint%30#0
+        let reinterpret_biguint%31#0: biguint = (extract3 __bn256_result#15 32u 32u)
+        let mem_0xa0#8: biguint = reinterpret_biguint%31#0
+        let success#23: biguint = 1b
+        let tmp%536#0: bool = (b== success#23 0b)
+        goto tmp%536#0 ? block@73 : block@74
+    block@73: // if_body_L8625
+        let mem_0x0#36: biguint = 0b
+        let tmp%537#0: bool = (b!= mem_0x0#36 0b)
+        return tmp%537#0
+    block@74: // after_if_else_L8625
+        let pR#8: biguint = _pVk#0
+        let x#8: biguint = 4095001260637928303635953754907841429905765318689568133295242708426356192097b
+        let y#8: biguint = 11201866687354690165969898890054530758881524395050433723353485108691384430582b
+        let array_item%29#0: Encoded(uint512) = extract_value(_pubSignals#0, 8u)
+        let tmp%538#0: biguint = decode_bytes<biguint>(array_item%29#0)
+        let s#8: biguint = tmp%538#0
+        let success#24: biguint = 0b
+        let mIn#8: biguint = __free_memory_ptr#1
+        let mem_0x400#16: biguint = x#8
+        let mem_0x420#16: biguint = y#8
+        let mem_0x440#16: biguint = s#8
+        let tmp%539#0: bytes = (bzero 32u)
+        let tmp%540#0: bytes = (concat tmp%539#0 mem_0x400#16)
+        let tmp%541#0: bytes = (bzero 32u)
+        let tmp%542#0: bytes = (concat tmp%541#0 mem_0x400#16)
+        let tmp%543#0: uint64 = (len tmp%542#0)
+        let tmp%544#0: uint64 = (- tmp%543#0 32u)
+        let tmp%545#0: bytes = (extract3 tmp%540#0 tmp%544#0 32u)
+        let tmp%546#0: bytes = (bzero 32u)
+        let tmp%547#0: bytes = (concat tmp%546#0 mem_0x420#16)
+        let tmp%548#0: bytes = (bzero 32u)
+        let tmp%549#0: bytes = (concat tmp%548#0 mem_0x420#16)
+        let tmp%550#0: uint64 = (len tmp%549#0)
+        let tmp%551#0: uint64 = (- tmp%550#0 32u)
+        let tmp%552#0: bytes = (extract3 tmp%547#0 tmp%551#0 32u)
+        let tmp%553#0: bytes = (concat tmp%545#0 tmp%552#0)
+        let tmp%554#0: bytes = (bzero 32u)
+        let tmp%555#0: bytes = (concat tmp%554#0 mem_0x440#16)
+        let tmp%556#0: bytes = (bzero 32u)
+        let tmp%557#0: bytes = (concat tmp%556#0 mem_0x440#16)
+        let tmp%558#0: uint64 = (len tmp%557#0)
+        let tmp%559#0: uint64 = (- tmp%558#0 32u)
+        let tmp%560#0: bytes = (extract3 tmp%555#0 tmp%559#0 32u)
+        let tmp%561#0: bytes = ((ec_scalar_mul BN254g1) tmp%553#0 tmp%560#0)
+        let __bn256_result#16: bytes = tmp%561#0
+        let reinterpret_biguint%32#0: biguint = (extract3 __bn256_result#16 0u 32u)
+        let mem_0x400#17: biguint = reinterpret_biguint%32#0
+        let reinterpret_biguint%33#0: biguint = (extract3 __bn256_result#16 32u 32u)
+        let mem_0x420#17: biguint = reinterpret_biguint%33#0
+        let success#25: biguint = 1b
+        let tmp%562#0: bool = (b== success#25 0b)
+        goto tmp%562#0 ? block@75 : block@76
+    block@75: // if_body_L8316
+        let mem_0x0#37: biguint = 0b
+        let tmp%563#0: bool = (b!= mem_0x0#37 0b)
+        return tmp%563#0
+    block@76: // after_if_else_L8316
+        let mem_0x440#17: biguint = mem_0x80#8
+        let mem_0x460#8: biguint = mem_0xa0#8
+        let tmp%564#0: bytes = (bzero 32u)
+        let tmp%565#0: bytes = (concat tmp%564#0 mem_0x400#17)
+        let tmp%566#0: bytes = (bzero 32u)
+        let tmp%567#0: bytes = (concat tmp%566#0 mem_0x400#17)
+        let tmp%568#0: uint64 = (len tmp%567#0)
+        let tmp%569#0: uint64 = (- tmp%568#0 32u)
+        let tmp%570#0: bytes = (extract3 tmp%565#0 tmp%569#0 32u)
+        let tmp%571#0: bytes = (bzero 32u)
+        let tmp%572#0: bytes = (concat tmp%571#0 mem_0x420#17)
+        let tmp%573#0: bytes = (bzero 32u)
+        let tmp%574#0: bytes = (concat tmp%573#0 mem_0x420#17)
+        let tmp%575#0: uint64 = (len tmp%574#0)
+        let tmp%576#0: uint64 = (- tmp%575#0 32u)
+        let tmp%577#0: bytes = (extract3 tmp%572#0 tmp%576#0 32u)
+        let tmp%578#0: bytes = (concat tmp%570#0 tmp%577#0)
+        let tmp%579#0: bytes = (bzero 32u)
+        let tmp%580#0: bytes = (concat tmp%579#0 mem_0x440#17)
+        let tmp%581#0: bytes = (bzero 32u)
+        let tmp%582#0: bytes = (concat tmp%581#0 mem_0x440#17)
+        let tmp%583#0: uint64 = (len tmp%582#0)
+        let tmp%584#0: uint64 = (- tmp%583#0 32u)
+        let tmp%585#0: bytes = (extract3 tmp%580#0 tmp%584#0 32u)
+        let tmp%586#0: bytes = (bzero 32u)
+        let tmp%587#0: bytes = (concat tmp%586#0 mem_0x460#8)
+        let tmp%588#0: bytes = (bzero 32u)
+        let tmp%589#0: bytes = (concat tmp%588#0 mem_0x460#8)
+        let tmp%590#0: uint64 = (len tmp%589#0)
+        let tmp%591#0: uint64 = (- tmp%590#0 32u)
+        let tmp%592#0: bytes = (extract3 tmp%587#0 tmp%591#0 32u)
+        let tmp%593#0: bytes = (concat tmp%585#0 tmp%592#0)
+        let tmp%594#0: bytes = ((ec_add BN254g1) tmp%578#0 tmp%593#0)
+        let __bn256_result#17: bytes = tmp%594#0
+        let reinterpret_biguint%34#0: biguint = (extract3 __bn256_result#17 0u 32u)
+        let mem_0x80#9: biguint = reinterpret_biguint%34#0
+        let reinterpret_biguint%35#0: biguint = (extract3 __bn256_result#17 32u 32u)
+        let mem_0xa0#9: biguint = reinterpret_biguint%35#0
+        let success#26: biguint = 1b
+        let tmp%595#0: bool = (b== success#26 0b)
+        goto tmp%595#0 ? block@77 : block@78
+    block@77: // if_body_L8625
+        let mem_0x0#38: biguint = 0b
+        let tmp%596#0: bool = (b!= mem_0x0#38 0b)
+        return tmp%596#0
+    block@78: // after_if_else_L8625
+        let pR#9: biguint = _pVk#0
+        let x#9: biguint = 19897122716138572934585433218242234674962957249341493237507498893019713486242b
+        let y#9: biguint = 21689091687047727664119058388835593061120184946270862215018621609047615882056b
+        let array_item%30#0: Encoded(uint512) = extract_value(_pubSignals#0, 9u)
+        let tmp%597#0: biguint = decode_bytes<biguint>(array_item%30#0)
+        let s#9: biguint = tmp%597#0
+        let success#27: biguint = 0b
+        let mIn#9: biguint = __free_memory_ptr#1
+        let mem_0x400#18: biguint = x#9
+        let mem_0x420#18: biguint = y#9
+        let mem_0x440#18: biguint = s#9
+        let tmp%598#0: bytes = (bzero 32u)
+        let tmp%599#0: bytes = (concat tmp%598#0 mem_0x400#18)
+        let tmp%600#0: bytes = (bzero 32u)
+        let tmp%601#0: bytes = (concat tmp%600#0 mem_0x400#18)
+        let tmp%602#0: uint64 = (len tmp%601#0)
+        let tmp%603#0: uint64 = (- tmp%602#0 32u)
+        let tmp%604#0: bytes = (extract3 tmp%599#0 tmp%603#0 32u)
+        let tmp%605#0: bytes = (bzero 32u)
+        let tmp%606#0: bytes = (concat tmp%605#0 mem_0x420#18)
+        let tmp%607#0: bytes = (bzero 32u)
+        let tmp%608#0: bytes = (concat tmp%607#0 mem_0x420#18)
+        let tmp%609#0: uint64 = (len tmp%608#0)
+        let tmp%610#0: uint64 = (- tmp%609#0 32u)
+        let tmp%611#0: bytes = (extract3 tmp%606#0 tmp%610#0 32u)
+        let tmp%612#0: bytes = (concat tmp%604#0 tmp%611#0)
+        let tmp%613#0: bytes = (bzero 32u)
+        let tmp%614#0: bytes = (concat tmp%613#0 mem_0x440#18)
+        let tmp%615#0: bytes = (bzero 32u)
+        let tmp%616#0: bytes = (concat tmp%615#0 mem_0x440#18)
+        let tmp%617#0: uint64 = (len tmp%616#0)
+        let tmp%618#0: uint64 = (- tmp%617#0 32u)
+        let tmp%619#0: bytes = (extract3 tmp%614#0 tmp%618#0 32u)
+        let tmp%620#0: bytes = ((ec_scalar_mul BN254g1) tmp%612#0 tmp%619#0)
+        let __bn256_result#18: bytes = tmp%620#0
+        let reinterpret_biguint%36#0: biguint = (extract3 __bn256_result#18 0u 32u)
+        let mem_0x400#19: biguint = reinterpret_biguint%36#0
+        let reinterpret_biguint%37#0: biguint = (extract3 __bn256_result#18 32u 32u)
+        let mem_0x420#19: biguint = reinterpret_biguint%37#0
+        let success#28: biguint = 1b
+        let tmp%621#0: bool = (b== success#28 0b)
+        goto tmp%621#0 ? block@79 : block@80
+    block@79: // if_body_L8316
+        let mem_0x0#39: biguint = 0b
+        let tmp%622#0: bool = (b!= mem_0x0#39 0b)
+        return tmp%622#0
+    block@80: // after_if_else_L8316
+        let mem_0x440#19: biguint = mem_0x80#9
+        let mem_0x460#9: biguint = mem_0xa0#9
+        let tmp%623#0: bytes = (bzero 32u)
+        let tmp%624#0: bytes = (concat tmp%623#0 mem_0x400#19)
+        let tmp%625#0: bytes = (bzero 32u)
+        let tmp%626#0: bytes = (concat tmp%625#0 mem_0x400#19)
+        let tmp%627#0: uint64 = (len tmp%626#0)
+        let tmp%628#0: uint64 = (- tmp%627#0 32u)
+        let tmp%629#0: bytes = (extract3 tmp%624#0 tmp%628#0 32u)
+        let tmp%630#0: bytes = (bzero 32u)
+        let tmp%631#0: bytes = (concat tmp%630#0 mem_0x420#19)
+        let tmp%632#0: bytes = (bzero 32u)
+        let tmp%633#0: bytes = (concat tmp%632#0 mem_0x420#19)
+        let tmp%634#0: uint64 = (len tmp%633#0)
+        let tmp%635#0: uint64 = (- tmp%634#0 32u)
+        let tmp%636#0: bytes = (extract3 tmp%631#0 tmp%635#0 32u)
+        let tmp%637#0: bytes = (concat tmp%629#0 tmp%636#0)
+        let tmp%638#0: bytes = (bzero 32u)
+        let tmp%639#0: bytes = (concat tmp%638#0 mem_0x440#19)
+        let tmp%640#0: bytes = (bzero 32u)
+        let tmp%641#0: bytes = (concat tmp%640#0 mem_0x440#19)
+        let tmp%642#0: uint64 = (len tmp%641#0)
+        let tmp%643#0: uint64 = (- tmp%642#0 32u)
+        let tmp%644#0: bytes = (extract3 tmp%639#0 tmp%643#0 32u)
+        let tmp%645#0: bytes = (bzero 32u)
+        let tmp%646#0: bytes = (concat tmp%645#0 mem_0x460#9)
+        let tmp%647#0: bytes = (bzero 32u)
+        let tmp%648#0: bytes = (concat tmp%647#0 mem_0x460#9)
+        let tmp%649#0: uint64 = (len tmp%648#0)
+        let tmp%650#0: uint64 = (- tmp%649#0 32u)
+        let tmp%651#0: bytes = (extract3 tmp%646#0 tmp%650#0 32u)
+        let tmp%652#0: bytes = (concat tmp%644#0 tmp%651#0)
+        let tmp%653#0: bytes = ((ec_add BN254g1) tmp%637#0 tmp%652#0)
+        let __bn256_result#19: bytes = tmp%653#0
+        let reinterpret_biguint%38#0: biguint = (extract3 __bn256_result#19 0u 32u)
+        let mem_0x80#10: biguint = reinterpret_biguint%38#0
+        let reinterpret_biguint%39#0: biguint = (extract3 __bn256_result#19 32u 32u)
+        let mem_0xa0#10: biguint = reinterpret_biguint%39#0
+        let success#29: biguint = 1b
+        let tmp%654#0: bool = (b== success#29 0b)
+        goto tmp%654#0 ? block@81 : block@82
+    block@81: // if_body_L8625
+        let mem_0x0#40: biguint = 0b
+        let tmp%655#0: bool = (b!= mem_0x0#40 0b)
+        return tmp%655#0
+    block@82: // after_if_else_L8625
+        let pR#10: biguint = _pVk#0
+        let x#10: biguint = 5478252900725318753860283254407973861234833745169084257513502840647894550060b
+        let y#10: biguint = 1791296742307044584126205288560498393897750881136190887025323159136398403555b
+        let array_item%31#0: Encoded(uint512) = extract_value(_pubSignals#0, 10u)
+        let tmp%656#0: biguint = decode_bytes<biguint>(array_item%31#0)
+        let s#10: biguint = tmp%656#0
+        let success#30: biguint = 0b
+        let mIn#10: biguint = __free_memory_ptr#1
+        let mem_0x400#20: biguint = x#10
+        let mem_0x420#20: biguint = y#10
+        let mem_0x440#20: biguint = s#10
+        let tmp%657#0: bytes = (bzero 32u)
+        let tmp%658#0: bytes = (concat tmp%657#0 mem_0x400#20)
+        let tmp%659#0: bytes = (bzero 32u)
+        let tmp%660#0: bytes = (concat tmp%659#0 mem_0x400#20)
+        let tmp%661#0: uint64 = (len tmp%660#0)
+        let tmp%662#0: uint64 = (- tmp%661#0 32u)
+        let tmp%663#0: bytes = (extract3 tmp%658#0 tmp%662#0 32u)
+        let tmp%664#0: bytes = (bzero 32u)
+        let tmp%665#0: bytes = (concat tmp%664#0 mem_0x420#20)
+        let tmp%666#0: bytes = (bzero 32u)
+        let tmp%667#0: bytes = (concat tmp%666#0 mem_0x420#20)
+        let tmp%668#0: uint64 = (len tmp%667#0)
+        let tmp%669#0: uint64 = (- tmp%668#0 32u)
+        let tmp%670#0: bytes = (extract3 tmp%665#0 tmp%669#0 32u)
+        let tmp%671#0: bytes = (concat tmp%663#0 tmp%670#0)
+        let tmp%672#0: bytes = (bzero 32u)
+        let tmp%673#0: bytes = (concat tmp%672#0 mem_0x440#20)
+        let tmp%674#0: bytes = (bzero 32u)
+        let tmp%675#0: bytes = (concat tmp%674#0 mem_0x440#20)
+        let tmp%676#0: uint64 = (len tmp%675#0)
+        let tmp%677#0: uint64 = (- tmp%676#0 32u)
+        let tmp%678#0: bytes = (extract3 tmp%673#0 tmp%677#0 32u)
+        let tmp%679#0: bytes = ((ec_scalar_mul BN254g1) tmp%671#0 tmp%678#0)
+        let __bn256_result#20: bytes = tmp%679#0
+        let reinterpret_biguint%40#0: biguint = (extract3 __bn256_result#20 0u 32u)
+        let mem_0x400#21: biguint = reinterpret_biguint%40#0
+        let reinterpret_biguint%41#0: biguint = (extract3 __bn256_result#20 32u 32u)
+        let mem_0x420#21: biguint = reinterpret_biguint%41#0
+        let success#31: biguint = 1b
+        let tmp%680#0: bool = (b== success#31 0b)
+        goto tmp%680#0 ? block@83 : block@84
+    block@83: // if_body_L8316
+        let mem_0x0#41: biguint = 0b
+        let tmp%681#0: bool = (b!= mem_0x0#41 0b)
+        return tmp%681#0
+    block@84: // after_if_else_L8316
+        let mem_0x440#21: biguint = mem_0x80#10
+        let mem_0x460#10: biguint = mem_0xa0#10
+        let tmp%682#0: bytes = (bzero 32u)
+        let tmp%683#0: bytes = (concat tmp%682#0 mem_0x400#21)
+        let tmp%684#0: bytes = (bzero 32u)
+        let tmp%685#0: bytes = (concat tmp%684#0 mem_0x400#21)
+        let tmp%686#0: uint64 = (len tmp%685#0)
+        let tmp%687#0: uint64 = (- tmp%686#0 32u)
+        let tmp%688#0: bytes = (extract3 tmp%683#0 tmp%687#0 32u)
+        let tmp%689#0: bytes = (bzero 32u)
+        let tmp%690#0: bytes = (concat tmp%689#0 mem_0x420#21)
+        let tmp%691#0: bytes = (bzero 32u)
+        let tmp%692#0: bytes = (concat tmp%691#0 mem_0x420#21)
+        let tmp%693#0: uint64 = (len tmp%692#0)
+        let tmp%694#0: uint64 = (- tmp%693#0 32u)
+        let tmp%695#0: bytes = (extract3 tmp%690#0 tmp%694#0 32u)
+        let tmp%696#0: bytes = (concat tmp%688#0 tmp%695#0)
+        let tmp%697#0: bytes = (bzero 32u)
+        let tmp%698#0: bytes = (concat tmp%697#0 mem_0x440#21)
+        let tmp%699#0: bytes = (bzero 32u)
+        let tmp%700#0: bytes = (concat tmp%699#0 mem_0x440#21)
+        let tmp%701#0: uint64 = (len tmp%700#0)
+        let tmp%702#0: uint64 = (- tmp%701#0 32u)
+        let tmp%703#0: bytes = (extract3 tmp%698#0 tmp%702#0 32u)
+        let tmp%704#0: bytes = (bzero 32u)
+        let tmp%705#0: bytes = (concat tmp%704#0 mem_0x460#10)
+        let tmp%706#0: bytes = (bzero 32u)
+        let tmp%707#0: bytes = (concat tmp%706#0 mem_0x460#10)
+        let tmp%708#0: uint64 = (len tmp%707#0)
+        let tmp%709#0: uint64 = (- tmp%708#0 32u)
+        let tmp%710#0: bytes = (extract3 tmp%705#0 tmp%709#0 32u)
+        let tmp%711#0: bytes = (concat tmp%703#0 tmp%710#0)
+        let tmp%712#0: bytes = ((ec_add BN254g1) tmp%696#0 tmp%711#0)
+        let __bn256_result#21: bytes = tmp%712#0
+        let reinterpret_biguint%42#0: biguint = (extract3 __bn256_result#21 0u 32u)
+        let mem_0x80#11: biguint = reinterpret_biguint%42#0
+        let reinterpret_biguint%43#0: biguint = (extract3 __bn256_result#21 32u 32u)
+        let mem_0xa0#11: biguint = reinterpret_biguint%43#0
+        let success#32: biguint = 1b
+        let tmp%713#0: bool = (b== success#32 0b)
+        goto tmp%713#0 ? block@85 : block@86
+    block@85: // if_body_L8625
+        let mem_0x0#42: biguint = 0b
+        let tmp%714#0: bool = (b!= mem_0x0#42 0b)
+        return tmp%714#0
+    block@86: // after_if_else_L8625
+        let pR#11: biguint = _pVk#0
+        let x#11: biguint = 14795507180423659678567208590170058380783028172120947205106407450365097532473b
+        let y#11: biguint = 10820601127512798821002861433402355623851630698577616863236044291614160298924b
+        let array_item%32#0: Encoded(uint512) = extract_value(_pubSignals#0, 11u)
+        let tmp%715#0: biguint = decode_bytes<biguint>(array_item%32#0)
+        let s#11: biguint = tmp%715#0
+        let success#33: biguint = 0b
+        let mIn#11: biguint = __free_memory_ptr#1
+        let mem_0x400#22: biguint = x#11
+        let mem_0x420#22: biguint = y#11
+        let mem_0x440#22: biguint = s#11
+        let tmp%716#0: bytes = (bzero 32u)
+        let tmp%717#0: bytes = (concat tmp%716#0 mem_0x400#22)
+        let tmp%718#0: bytes = (bzero 32u)
+        let tmp%719#0: bytes = (concat tmp%718#0 mem_0x400#22)
+        let tmp%720#0: uint64 = (len tmp%719#0)
+        let tmp%721#0: uint64 = (- tmp%720#0 32u)
+        let tmp%722#0: bytes = (extract3 tmp%717#0 tmp%721#0 32u)
+        let tmp%723#0: bytes = (bzero 32u)
+        let tmp%724#0: bytes = (concat tmp%723#0 mem_0x420#22)
+        let tmp%725#0: bytes = (bzero 32u)
+        let tmp%726#0: bytes = (concat tmp%725#0 mem_0x420#22)
+        let tmp%727#0: uint64 = (len tmp%726#0)
+        let tmp%728#0: uint64 = (- tmp%727#0 32u)
+        let tmp%729#0: bytes = (extract3 tmp%724#0 tmp%728#0 32u)
+        let tmp%730#0: bytes = (concat tmp%722#0 tmp%729#0)
+        let tmp%731#0: bytes = (bzero 32u)
+        let tmp%732#0: bytes = (concat tmp%731#0 mem_0x440#22)
+        let tmp%733#0: bytes = (bzero 32u)
+        let tmp%734#0: bytes = (concat tmp%733#0 mem_0x440#22)
+        let tmp%735#0: uint64 = (len tmp%734#0)
+        let tmp%736#0: uint64 = (- tmp%735#0 32u)
+        let tmp%737#0: bytes = (extract3 tmp%732#0 tmp%736#0 32u)
+        let tmp%738#0: bytes = ((ec_scalar_mul BN254g1) tmp%730#0 tmp%737#0)
+        let __bn256_result#22: bytes = tmp%738#0
+        let reinterpret_biguint%44#0: biguint = (extract3 __bn256_result#22 0u 32u)
+        let mem_0x400#23: biguint = reinterpret_biguint%44#0
+        let reinterpret_biguint%45#0: biguint = (extract3 __bn256_result#22 32u 32u)
+        let mem_0x420#23: biguint = reinterpret_biguint%45#0
+        let success#34: biguint = 1b
+        let tmp%739#0: bool = (b== success#34 0b)
+        goto tmp%739#0 ? block@87 : block@88
+    block@87: // if_body_L8316
+        let mem_0x0#43: biguint = 0b
+        let tmp%740#0: bool = (b!= mem_0x0#43 0b)
+        return tmp%740#0
+    block@88: // after_if_else_L8316
+        let mem_0x440#23: biguint = mem_0x80#11
+        let mem_0x460#11: biguint = mem_0xa0#11
+        let tmp%741#0: bytes = (bzero 32u)
+        let tmp%742#0: bytes = (concat tmp%741#0 mem_0x400#23)
+        let tmp%743#0: bytes = (bzero 32u)
+        let tmp%744#0: bytes = (concat tmp%743#0 mem_0x400#23)
+        let tmp%745#0: uint64 = (len tmp%744#0)
+        let tmp%746#0: uint64 = (- tmp%745#0 32u)
+        let tmp%747#0: bytes = (extract3 tmp%742#0 tmp%746#0 32u)
+        let tmp%748#0: bytes = (bzero 32u)
+        let tmp%749#0: bytes = (concat tmp%748#0 mem_0x420#23)
+        let tmp%750#0: bytes = (bzero 32u)
+        let tmp%751#0: bytes = (concat tmp%750#0 mem_0x420#23)
+        let tmp%752#0: uint64 = (len tmp%751#0)
+        let tmp%753#0: uint64 = (- tmp%752#0 32u)
+        let tmp%754#0: bytes = (extract3 tmp%749#0 tmp%753#0 32u)
+        let tmp%755#0: bytes = (concat tmp%747#0 tmp%754#0)
+        let tmp%756#0: bytes = (bzero 32u)
+        let tmp%757#0: bytes = (concat tmp%756#0 mem_0x440#23)
+        let tmp%758#0: bytes = (bzero 32u)
+        let tmp%759#0: bytes = (concat tmp%758#0 mem_0x440#23)
+        let tmp%760#0: uint64 = (len tmp%759#0)
+        let tmp%761#0: uint64 = (- tmp%760#0 32u)
+        let tmp%762#0: bytes = (extract3 tmp%757#0 tmp%761#0 32u)
+        let tmp%763#0: bytes = (bzero 32u)
+        let tmp%764#0: bytes = (concat tmp%763#0 mem_0x460#11)
+        let tmp%765#0: bytes = (bzero 32u)
+        let tmp%766#0: bytes = (concat tmp%765#0 mem_0x460#11)
+        let tmp%767#0: uint64 = (len tmp%766#0)
+        let tmp%768#0: uint64 = (- tmp%767#0 32u)
+        let tmp%769#0: bytes = (extract3 tmp%764#0 tmp%768#0 32u)
+        let tmp%770#0: bytes = (concat tmp%762#0 tmp%769#0)
+        let tmp%771#0: bytes = ((ec_add BN254g1) tmp%755#0 tmp%770#0)
+        let __bn256_result#23: bytes = tmp%771#0
+        let reinterpret_biguint%46#0: biguint = (extract3 __bn256_result#23 0u 32u)
+        let mem_0x80#12: biguint = reinterpret_biguint%46#0
+        let reinterpret_biguint%47#0: biguint = (extract3 __bn256_result#23 32u 32u)
+        let mem_0xa0#12: biguint = reinterpret_biguint%47#0
+        let success#35: biguint = 1b
+        let tmp%772#0: bool = (b== success#35 0b)
+        goto tmp%772#0 ? block@89 : block@90
+    block@89: // if_body_L8625
+        let mem_0x0#44: biguint = 0b
+        let tmp%773#0: bool = (b!= mem_0x0#44 0b)
+        return tmp%773#0
+    block@90: // after_if_else_L8625
+        let pR#12: biguint = _pVk#0
+        let x#12: biguint = 1371307947996742453808445358832377756162415203013759111969902645610915102884b
+        let y#12: biguint = 10979064264407256506966027217833361504889104814732489559103793054688600335381b
+        let array_item%33#0: Encoded(uint512) = extract_value(_pubSignals#0, 12u)
+        let tmp%774#0: biguint = decode_bytes<biguint>(array_item%33#0)
+        let s#12: biguint = tmp%774#0
+        let success#36: biguint = 0b
+        let mIn#12: biguint = __free_memory_ptr#1
+        let mem_0x400#24: biguint = x#12
+        let mem_0x420#24: biguint = y#12
+        let mem_0x440#24: biguint = s#12
+        let tmp%775#0: bytes = (bzero 32u)
+        let tmp%776#0: bytes = (concat tmp%775#0 mem_0x400#24)
+        let tmp%777#0: bytes = (bzero 32u)
+        let tmp%778#0: bytes = (concat tmp%777#0 mem_0x400#24)
+        let tmp%779#0: uint64 = (len tmp%778#0)
+        let tmp%780#0: uint64 = (- tmp%779#0 32u)
+        let tmp%781#0: bytes = (extract3 tmp%776#0 tmp%780#0 32u)
+        let tmp%782#0: bytes = (bzero 32u)
+        let tmp%783#0: bytes = (concat tmp%782#0 mem_0x420#24)
+        let tmp%784#0: bytes = (bzero 32u)
+        let tmp%785#0: bytes = (concat tmp%784#0 mem_0x420#24)
+        let tmp%786#0: uint64 = (len tmp%785#0)
+        let tmp%787#0: uint64 = (- tmp%786#0 32u)
+        let tmp%788#0: bytes = (extract3 tmp%783#0 tmp%787#0 32u)
+        let tmp%789#0: bytes = (concat tmp%781#0 tmp%788#0)
+        let tmp%790#0: bytes = (bzero 32u)
+        let tmp%791#0: bytes = (concat tmp%790#0 mem_0x440#24)
+        let tmp%792#0: bytes = (bzero 32u)
+        let tmp%793#0: bytes = (concat tmp%792#0 mem_0x440#24)
+        let tmp%794#0: uint64 = (len tmp%793#0)
+        let tmp%795#0: uint64 = (- tmp%794#0 32u)
+        let tmp%796#0: bytes = (extract3 tmp%791#0 tmp%795#0 32u)
+        let tmp%797#0: bytes = ((ec_scalar_mul BN254g1) tmp%789#0 tmp%796#0)
+        let __bn256_result#24: bytes = tmp%797#0
+        let reinterpret_biguint%48#0: biguint = (extract3 __bn256_result#24 0u 32u)
+        let mem_0x400#25: biguint = reinterpret_biguint%48#0
+        let reinterpret_biguint%49#0: biguint = (extract3 __bn256_result#24 32u 32u)
+        let mem_0x420#25: biguint = reinterpret_biguint%49#0
+        let success#37: biguint = 1b
+        let tmp%798#0: bool = (b== success#37 0b)
+        goto tmp%798#0 ? block@91 : block@92
+    block@91: // if_body_L8316
+        let mem_0x0#45: biguint = 0b
+        let tmp%799#0: bool = (b!= mem_0x0#45 0b)
+        return tmp%799#0
+    block@92: // after_if_else_L8316
+        let mem_0x440#25: biguint = mem_0x80#12
+        let mem_0x460#12: biguint = mem_0xa0#12
+        let tmp%800#0: bytes = (bzero 32u)
+        let tmp%801#0: bytes = (concat tmp%800#0 mem_0x400#25)
+        let tmp%802#0: bytes = (bzero 32u)
+        let tmp%803#0: bytes = (concat tmp%802#0 mem_0x400#25)
+        let tmp%804#0: uint64 = (len tmp%803#0)
+        let tmp%805#0: uint64 = (- tmp%804#0 32u)
+        let tmp%806#0: bytes = (extract3 tmp%801#0 tmp%805#0 32u)
+        let tmp%807#0: bytes = (bzero 32u)
+        let tmp%808#0: bytes = (concat tmp%807#0 mem_0x420#25)
+        let tmp%809#0: bytes = (bzero 32u)
+        let tmp%810#0: bytes = (concat tmp%809#0 mem_0x420#25)
+        let tmp%811#0: uint64 = (len tmp%810#0)
+        let tmp%812#0: uint64 = (- tmp%811#0 32u)
+        let tmp%813#0: bytes = (extract3 tmp%808#0 tmp%812#0 32u)
+        let tmp%814#0: bytes = (concat tmp%806#0 tmp%813#0)
+        let tmp%815#0: bytes = (bzero 32u)
+        let tmp%816#0: bytes = (concat tmp%815#0 mem_0x440#25)
+        let tmp%817#0: bytes = (bzero 32u)
+        let tmp%818#0: bytes = (concat tmp%817#0 mem_0x440#25)
+        let tmp%819#0: uint64 = (len tmp%818#0)
+        let tmp%820#0: uint64 = (- tmp%819#0 32u)
+        let tmp%821#0: bytes = (extract3 tmp%816#0 tmp%820#0 32u)
+        let tmp%822#0: bytes = (bzero 32u)
+        let tmp%823#0: bytes = (concat tmp%822#0 mem_0x460#12)
+        let tmp%824#0: bytes = (bzero 32u)
+        let tmp%825#0: bytes = (concat tmp%824#0 mem_0x460#12)
+        let tmp%826#0: uint64 = (len tmp%825#0)
+        let tmp%827#0: uint64 = (- tmp%826#0 32u)
+        let tmp%828#0: bytes = (extract3 tmp%823#0 tmp%827#0 32u)
+        let tmp%829#0: bytes = (concat tmp%821#0 tmp%828#0)
+        let tmp%830#0: bytes = ((ec_add BN254g1) tmp%814#0 tmp%829#0)
+        let __bn256_result#25: bytes = tmp%830#0
+        let reinterpret_biguint%50#0: biguint = (extract3 __bn256_result#25 0u 32u)
+        let mem_0x80#13: biguint = reinterpret_biguint%50#0
+        let reinterpret_biguint%51#0: biguint = (extract3 __bn256_result#25 32u 32u)
+        let mem_0xa0#13: biguint = reinterpret_biguint%51#0
+        let success#38: biguint = 1b
+        let tmp%831#0: bool = (b== success#38 0b)
+        goto tmp%831#0 ? block@93 : block@94
+    block@93: // if_body_L8625
+        let mem_0x0#46: biguint = 0b
+        let tmp%832#0: bool = (b!= mem_0x0#46 0b)
+        return tmp%832#0
+    block@94: // after_if_else_L8625
+        let pR#13: biguint = _pVk#0
+        let x#13: biguint = 109788638163029769699092214797728443378801928834723847442030420151550653348b
+        let y#13: biguint = 21855764518074664201856214595345297576098255265106979512083523259607952247044b
+        let array_item%34#0: Encoded(uint512) = extract_value(_pubSignals#0, 13u)
+        let tmp%833#0: biguint = decode_bytes<biguint>(array_item%34#0)
+        let s#13: biguint = tmp%833#0
+        let success#39: biguint = 0b
+        let mIn#13: biguint = __free_memory_ptr#1
+        let mem_0x400#26: biguint = x#13
+        let mem_0x420#26: biguint = y#13
+        let mem_0x440#26: biguint = s#13
+        let tmp%834#0: bytes = (bzero 32u)
+        let tmp%835#0: bytes = (concat tmp%834#0 mem_0x400#26)
+        let tmp%836#0: bytes = (bzero 32u)
+        let tmp%837#0: bytes = (concat tmp%836#0 mem_0x400#26)
+        let tmp%838#0: uint64 = (len tmp%837#0)
+        let tmp%839#0: uint64 = (- tmp%838#0 32u)
+        let tmp%840#0: bytes = (extract3 tmp%835#0 tmp%839#0 32u)
+        let tmp%841#0: bytes = (bzero 32u)
+        let tmp%842#0: bytes = (concat tmp%841#0 mem_0x420#26)
+        let tmp%843#0: bytes = (bzero 32u)
+        let tmp%844#0: bytes = (concat tmp%843#0 mem_0x420#26)
+        let tmp%845#0: uint64 = (len tmp%844#0)
+        let tmp%846#0: uint64 = (- tmp%845#0 32u)
+        let tmp%847#0: bytes = (extract3 tmp%842#0 tmp%846#0 32u)
+        let tmp%848#0: bytes = (concat tmp%840#0 tmp%847#0)
+        let tmp%849#0: bytes = (bzero 32u)
+        let tmp%850#0: bytes = (concat tmp%849#0 mem_0x440#26)
+        let tmp%851#0: bytes = (bzero 32u)
+        let tmp%852#0: bytes = (concat tmp%851#0 mem_0x440#26)
+        let tmp%853#0: uint64 = (len tmp%852#0)
+        let tmp%854#0: uint64 = (- tmp%853#0 32u)
+        let tmp%855#0: bytes = (extract3 tmp%850#0 tmp%854#0 32u)
+        let tmp%856#0: bytes = ((ec_scalar_mul BN254g1) tmp%848#0 tmp%855#0)
+        let __bn256_result#26: bytes = tmp%856#0
+        let reinterpret_biguint%52#0: biguint = (extract3 __bn256_result#26 0u 32u)
+        let mem_0x400#27: biguint = reinterpret_biguint%52#0
+        let reinterpret_biguint%53#0: biguint = (extract3 __bn256_result#26 32u 32u)
+        let mem_0x420#27: biguint = reinterpret_biguint%53#0
+        let success#40: biguint = 1b
+        let tmp%857#0: bool = (b== success#40 0b)
+        goto tmp%857#0 ? block@95 : block@96
+    block@95: // if_body_L8316
+        let mem_0x0#47: biguint = 0b
+        let tmp%858#0: bool = (b!= mem_0x0#47 0b)
+        return tmp%858#0
+    block@96: // after_if_else_L8316
+        let mem_0x440#27: biguint = mem_0x80#13
+        let mem_0x460#13: biguint = mem_0xa0#13
+        let tmp%859#0: bytes = (bzero 32u)
+        let tmp%860#0: bytes = (concat tmp%859#0 mem_0x400#27)
+        let tmp%861#0: bytes = (bzero 32u)
+        let tmp%862#0: bytes = (concat tmp%861#0 mem_0x400#27)
+        let tmp%863#0: uint64 = (len tmp%862#0)
+        let tmp%864#0: uint64 = (- tmp%863#0 32u)
+        let tmp%865#0: bytes = (extract3 tmp%860#0 tmp%864#0 32u)
+        let tmp%866#0: bytes = (bzero 32u)
+        let tmp%867#0: bytes = (concat tmp%866#0 mem_0x420#27)
+        let tmp%868#0: bytes = (bzero 32u)
+        let tmp%869#0: bytes = (concat tmp%868#0 mem_0x420#27)
+        let tmp%870#0: uint64 = (len tmp%869#0)
+        let tmp%871#0: uint64 = (- tmp%870#0 32u)
+        let tmp%872#0: bytes = (extract3 tmp%867#0 tmp%871#0 32u)
+        let tmp%873#0: bytes = (concat tmp%865#0 tmp%872#0)
+        let tmp%874#0: bytes = (bzero 32u)
+        let tmp%875#0: bytes = (concat tmp%874#0 mem_0x440#27)
+        let tmp%876#0: bytes = (bzero 32u)
+        let tmp%877#0: bytes = (concat tmp%876#0 mem_0x440#27)
+        let tmp%878#0: uint64 = (len tmp%877#0)
+        let tmp%879#0: uint64 = (- tmp%878#0 32u)
+        let tmp%880#0: bytes = (extract3 tmp%875#0 tmp%879#0 32u)
+        let tmp%881#0: bytes = (bzero 32u)
+        let tmp%882#0: bytes = (concat tmp%881#0 mem_0x460#13)
+        let tmp%883#0: bytes = (bzero 32u)
+        let tmp%884#0: bytes = (concat tmp%883#0 mem_0x460#13)
+        let tmp%885#0: uint64 = (len tmp%884#0)
+        let tmp%886#0: uint64 = (- tmp%885#0 32u)
+        let tmp%887#0: bytes = (extract3 tmp%882#0 tmp%886#0 32u)
+        let tmp%888#0: bytes = (concat tmp%880#0 tmp%887#0)
+        let tmp%889#0: bytes = ((ec_add BN254g1) tmp%873#0 tmp%888#0)
+        let __bn256_result#27: bytes = tmp%889#0
+        let reinterpret_biguint%54#0: biguint = (extract3 __bn256_result#27 0u 32u)
+        let mem_0x80#14: biguint = reinterpret_biguint%54#0
+        let reinterpret_biguint%55#0: biguint = (extract3 __bn256_result#27 32u 32u)
+        let mem_0xa0#14: biguint = reinterpret_biguint%55#0
+        let success#41: biguint = 1b
+        let tmp%890#0: bool = (b== success#41 0b)
+        goto tmp%890#0 ? block@97 : block@98
+    block@97: // if_body_L8625
+        let mem_0x0#48: biguint = 0b
+        let tmp%891#0: bool = (b!= mem_0x0#48 0b)
+        return tmp%891#0
+    block@98: // after_if_else_L8625
+        let pR#14: biguint = _pVk#0
+        let x#14: biguint = 3483239985558231052997982184949030327610541095960983024278219968128420996301b
+        let y#14: biguint = 14733921718987244788451642956589707498178006322890807039293135360881648657799b
+        let array_item%35#0: Encoded(uint512) = extract_value(_pubSignals#0, 14u)
+        let tmp%892#0: biguint = decode_bytes<biguint>(array_item%35#0)
+        let s#14: biguint = tmp%892#0
+        let success#42: biguint = 0b
+        let mIn#14: biguint = __free_memory_ptr#1
+        let mem_0x400#28: biguint = x#14
+        let mem_0x420#28: biguint = y#14
+        let mem_0x440#28: biguint = s#14
+        let tmp%893#0: bytes = (bzero 32u)
+        let tmp%894#0: bytes = (concat tmp%893#0 mem_0x400#28)
+        let tmp%895#0: bytes = (bzero 32u)
+        let tmp%896#0: bytes = (concat tmp%895#0 mem_0x400#28)
+        let tmp%897#0: uint64 = (len tmp%896#0)
+        let tmp%898#0: uint64 = (- tmp%897#0 32u)
+        let tmp%899#0: bytes = (extract3 tmp%894#0 tmp%898#0 32u)
+        let tmp%900#0: bytes = (bzero 32u)
+        let tmp%901#0: bytes = (concat tmp%900#0 mem_0x420#28)
+        let tmp%902#0: bytes = (bzero 32u)
+        let tmp%903#0: bytes = (concat tmp%902#0 mem_0x420#28)
+        let tmp%904#0: uint64 = (len tmp%903#0)
+        let tmp%905#0: uint64 = (- tmp%904#0 32u)
+        let tmp%906#0: bytes = (extract3 tmp%901#0 tmp%905#0 32u)
+        let tmp%907#0: bytes = (concat tmp%899#0 tmp%906#0)
+        let tmp%908#0: bytes = (bzero 32u)
+        let tmp%909#0: bytes = (concat tmp%908#0 mem_0x440#28)
+        let tmp%910#0: bytes = (bzero 32u)
+        let tmp%911#0: bytes = (concat tmp%910#0 mem_0x440#28)
+        let tmp%912#0: uint64 = (len tmp%911#0)
+        let tmp%913#0: uint64 = (- tmp%912#0 32u)
+        let tmp%914#0: bytes = (extract3 tmp%909#0 tmp%913#0 32u)
+        let tmp%915#0: bytes = ((ec_scalar_mul BN254g1) tmp%907#0 tmp%914#0)
+        let __bn256_result#28: bytes = tmp%915#0
+        let reinterpret_biguint%56#0: biguint = (extract3 __bn256_result#28 0u 32u)
+        let mem_0x400#29: biguint = reinterpret_biguint%56#0
+        let reinterpret_biguint%57#0: biguint = (extract3 __bn256_result#28 32u 32u)
+        let mem_0x420#29: biguint = reinterpret_biguint%57#0
+        let success#43: biguint = 1b
+        let tmp%916#0: bool = (b== success#43 0b)
+        goto tmp%916#0 ? block@99 : block@100
+    block@99: // if_body_L8316
+        let mem_0x0#49: biguint = 0b
+        let tmp%917#0: bool = (b!= mem_0x0#49 0b)
+        return tmp%917#0
+    block@100: // after_if_else_L8316
+        let mem_0x440#29: biguint = mem_0x80#14
+        let mem_0x460#14: biguint = mem_0xa0#14
+        let tmp%918#0: bytes = (bzero 32u)
+        let tmp%919#0: bytes = (concat tmp%918#0 mem_0x400#29)
+        let tmp%920#0: bytes = (bzero 32u)
+        let tmp%921#0: bytes = (concat tmp%920#0 mem_0x400#29)
+        let tmp%922#0: uint64 = (len tmp%921#0)
+        let tmp%923#0: uint64 = (- tmp%922#0 32u)
+        let tmp%924#0: bytes = (extract3 tmp%919#0 tmp%923#0 32u)
+        let tmp%925#0: bytes = (bzero 32u)
+        let tmp%926#0: bytes = (concat tmp%925#0 mem_0x420#29)
+        let tmp%927#0: bytes = (bzero 32u)
+        let tmp%928#0: bytes = (concat tmp%927#0 mem_0x420#29)
+        let tmp%929#0: uint64 = (len tmp%928#0)
+        let tmp%930#0: uint64 = (- tmp%929#0 32u)
+        let tmp%931#0: bytes = (extract3 tmp%926#0 tmp%930#0 32u)
+        let tmp%932#0: bytes = (concat tmp%924#0 tmp%931#0)
+        let tmp%933#0: bytes = (bzero 32u)
+        let tmp%934#0: bytes = (concat tmp%933#0 mem_0x440#29)
+        let tmp%935#0: bytes = (bzero 32u)
+        let tmp%936#0: bytes = (concat tmp%935#0 mem_0x440#29)
+        let tmp%937#0: uint64 = (len tmp%936#0)
+        let tmp%938#0: uint64 = (- tmp%937#0 32u)
+        let tmp%939#0: bytes = (extract3 tmp%934#0 tmp%938#0 32u)
+        let tmp%940#0: bytes = (bzero 32u)
+        let tmp%941#0: bytes = (concat tmp%940#0 mem_0x460#14)
+        let tmp%942#0: bytes = (bzero 32u)
+        let tmp%943#0: bytes = (concat tmp%942#0 mem_0x460#14)
+        let tmp%944#0: uint64 = (len tmp%943#0)
+        let tmp%945#0: uint64 = (- tmp%944#0 32u)
+        let tmp%946#0: bytes = (extract3 tmp%941#0 tmp%945#0 32u)
+        let tmp%947#0: bytes = (concat tmp%939#0 tmp%946#0)
+        let tmp%948#0: bytes = ((ec_add BN254g1) tmp%932#0 tmp%947#0)
+        let __bn256_result#29: bytes = tmp%948#0
+        let reinterpret_biguint%58#0: biguint = (extract3 __bn256_result#29 0u 32u)
+        let mem_0x80#15: biguint = reinterpret_biguint%58#0
+        let reinterpret_biguint%59#0: biguint = (extract3 __bn256_result#29 32u 32u)
+        let mem_0xa0#15: biguint = reinterpret_biguint%59#0
+        let success#44: biguint = 1b
+        let tmp%949#0: bool = (b== success#44 0b)
+        goto tmp%949#0 ? block@101 : block@102
+    block@101: // if_body_L8625
+        let mem_0x0#50: biguint = 0b
+        let tmp%950#0: bool = (b!= mem_0x0#50 0b)
+        return tmp%950#0
+    block@102: // after_if_else_L8625
+        let pR#15: biguint = _pVk#0
+        let x#15: biguint = 14798732842280992927477761391955163343018141761671851666429268509498613724692b
+        let y#15: biguint = 4455056645878601140444148446204168238779052860658115931655024263695173929532b
+        let array_item%36#0: Encoded(uint512) = extract_value(_pubSignals#0, 15u)
+        let tmp%951#0: biguint = decode_bytes<biguint>(array_item%36#0)
+        let s#15: biguint = tmp%951#0
+        let success#45: biguint = 0b
+        let mIn#15: biguint = __free_memory_ptr#1
+        let mem_0x400#30: biguint = x#15
+        let mem_0x420#30: biguint = y#15
+        let mem_0x440#30: biguint = s#15
+        let tmp%952#0: bytes = (bzero 32u)
+        let tmp%953#0: bytes = (concat tmp%952#0 mem_0x400#30)
+        let tmp%954#0: bytes = (bzero 32u)
+        let tmp%955#0: bytes = (concat tmp%954#0 mem_0x400#30)
+        let tmp%956#0: uint64 = (len tmp%955#0)
+        let tmp%957#0: uint64 = (- tmp%956#0 32u)
+        let tmp%958#0: bytes = (extract3 tmp%953#0 tmp%957#0 32u)
+        let tmp%959#0: bytes = (bzero 32u)
+        let tmp%960#0: bytes = (concat tmp%959#0 mem_0x420#30)
+        let tmp%961#0: bytes = (bzero 32u)
+        let tmp%962#0: bytes = (concat tmp%961#0 mem_0x420#30)
+        let tmp%963#0: uint64 = (len tmp%962#0)
+        let tmp%964#0: uint64 = (- tmp%963#0 32u)
+        let tmp%965#0: bytes = (extract3 tmp%960#0 tmp%964#0 32u)
+        let tmp%966#0: bytes = (concat tmp%958#0 tmp%965#0)
+        let tmp%967#0: bytes = (bzero 32u)
+        let tmp%968#0: bytes = (concat tmp%967#0 mem_0x440#30)
+        let tmp%969#0: bytes = (bzero 32u)
+        let tmp%970#0: bytes = (concat tmp%969#0 mem_0x440#30)
+        let tmp%971#0: uint64 = (len tmp%970#0)
+        let tmp%972#0: uint64 = (- tmp%971#0 32u)
+        let tmp%973#0: bytes = (extract3 tmp%968#0 tmp%972#0 32u)
+        let tmp%974#0: bytes = ((ec_scalar_mul BN254g1) tmp%966#0 tmp%973#0)
+        let __bn256_result#30: bytes = tmp%974#0
+        let reinterpret_biguint%60#0: biguint = (extract3 __bn256_result#30 0u 32u)
+        let mem_0x400#31: biguint = reinterpret_biguint%60#0
+        let reinterpret_biguint%61#0: biguint = (extract3 __bn256_result#30 32u 32u)
+        let mem_0x420#31: biguint = reinterpret_biguint%61#0
+        let success#46: biguint = 1b
+        let tmp%975#0: bool = (b== success#46 0b)
+        goto tmp%975#0 ? block@103 : block@104
+    block@103: // if_body_L8316
+        let mem_0x0#51: biguint = 0b
+        let tmp%976#0: bool = (b!= mem_0x0#51 0b)
+        return tmp%976#0
+    block@104: // after_if_else_L8316
+        let mem_0x440#31: biguint = mem_0x80#15
+        let mem_0x460#15: biguint = mem_0xa0#15
+        let tmp%977#0: bytes = (bzero 32u)
+        let tmp%978#0: bytes = (concat tmp%977#0 mem_0x400#31)
+        let tmp%979#0: bytes = (bzero 32u)
+        let tmp%980#0: bytes = (concat tmp%979#0 mem_0x400#31)
+        let tmp%981#0: uint64 = (len tmp%980#0)
+        let tmp%982#0: uint64 = (- tmp%981#0 32u)
+        let tmp%983#0: bytes = (extract3 tmp%978#0 tmp%982#0 32u)
+        let tmp%984#0: bytes = (bzero 32u)
+        let tmp%985#0: bytes = (concat tmp%984#0 mem_0x420#31)
+        let tmp%986#0: bytes = (bzero 32u)
+        let tmp%987#0: bytes = (concat tmp%986#0 mem_0x420#31)
+        let tmp%988#0: uint64 = (len tmp%987#0)
+        let tmp%989#0: uint64 = (- tmp%988#0 32u)
+        let tmp%990#0: bytes = (extract3 tmp%985#0 tmp%989#0 32u)
+        let tmp%991#0: bytes = (concat tmp%983#0 tmp%990#0)
+        let tmp%992#0: bytes = (bzero 32u)
+        let tmp%993#0: bytes = (concat tmp%992#0 mem_0x440#31)
+        let tmp%994#0: bytes = (bzero 32u)
+        let tmp%995#0: bytes = (concat tmp%994#0 mem_0x440#31)
+        let tmp%996#0: uint64 = (len tmp%995#0)
+        let tmp%997#0: uint64 = (- tmp%996#0 32u)
+        let tmp%998#0: bytes = (extract3 tmp%993#0 tmp%997#0 32u)
+        let tmp%999#0: bytes = (bzero 32u)
+        let tmp%1000#0: bytes = (concat tmp%999#0 mem_0x460#15)
+        let tmp%1001#0: bytes = (bzero 32u)
+        let tmp%1002#0: bytes = (concat tmp%1001#0 mem_0x460#15)
+        let tmp%1003#0: uint64 = (len tmp%1002#0)
+        let tmp%1004#0: uint64 = (- tmp%1003#0 32u)
+        let tmp%1005#0: bytes = (extract3 tmp%1000#0 tmp%1004#0 32u)
+        let tmp%1006#0: bytes = (concat tmp%998#0 tmp%1005#0)
+        let tmp%1007#0: bytes = ((ec_add BN254g1) tmp%991#0 tmp%1006#0)
+        let __bn256_result#31: bytes = tmp%1007#0
+        let reinterpret_biguint%62#0: biguint = (extract3 __bn256_result#31 0u 32u)
+        let mem_0x80#16: biguint = reinterpret_biguint%62#0
+        let reinterpret_biguint%63#0: biguint = (extract3 __bn256_result#31 32u 32u)
+        let mem_0xa0#16: biguint = reinterpret_biguint%63#0
+        let success#47: biguint = 1b
+        let tmp%1008#0: bool = (b== success#47 0b)
+        goto tmp%1008#0 ? block@105 : block@106
+    block@105: // if_body_L8625
+        let mem_0x0#52: biguint = 0b
+        let tmp%1009#0: bool = (b!= mem_0x0#52 0b)
+        return tmp%1009#0
+    block@106: // after_if_else_L8625
+        let pR#16: biguint = _pVk#0
+        let x#16: biguint = 7736826968011671338791057639700188385088653935654554560239035205278727242893b
+        let y#16: biguint = 500124354635552411023163921908192899897578217026396431383560884442758389341b
+        let array_item%37#0: Encoded(uint512) = extract_value(_pubSignals#0, 16u)
+        let tmp%1010#0: biguint = decode_bytes<biguint>(array_item%37#0)
+        let s#16: biguint = tmp%1010#0
+        let success#48: biguint = 0b
+        let mIn#16: biguint = __free_memory_ptr#1
+        let mem_0x400#32: biguint = x#16
+        let mem_0x420#32: biguint = y#16
+        let mem_0x440#32: biguint = s#16
+        let tmp%1011#0: bytes = (bzero 32u)
+        let tmp%1012#0: bytes = (concat tmp%1011#0 mem_0x400#32)
+        let tmp%1013#0: bytes = (bzero 32u)
+        let tmp%1014#0: bytes = (concat tmp%1013#0 mem_0x400#32)
+        let tmp%1015#0: uint64 = (len tmp%1014#0)
+        let tmp%1016#0: uint64 = (- tmp%1015#0 32u)
+        let tmp%1017#0: bytes = (extract3 tmp%1012#0 tmp%1016#0 32u)
+        let tmp%1018#0: bytes = (bzero 32u)
+        let tmp%1019#0: bytes = (concat tmp%1018#0 mem_0x420#32)
+        let tmp%1020#0: bytes = (bzero 32u)
+        let tmp%1021#0: bytes = (concat tmp%1020#0 mem_0x420#32)
+        let tmp%1022#0: uint64 = (len tmp%1021#0)
+        let tmp%1023#0: uint64 = (- tmp%1022#0 32u)
+        let tmp%1024#0: bytes = (extract3 tmp%1019#0 tmp%1023#0 32u)
+        let tmp%1025#0: bytes = (concat tmp%1017#0 tmp%1024#0)
+        let tmp%1026#0: bytes = (bzero 32u)
+        let tmp%1027#0: bytes = (concat tmp%1026#0 mem_0x440#32)
+        let tmp%1028#0: bytes = (bzero 32u)
+        let tmp%1029#0: bytes = (concat tmp%1028#0 mem_0x440#32)
+        let tmp%1030#0: uint64 = (len tmp%1029#0)
+        let tmp%1031#0: uint64 = (- tmp%1030#0 32u)
+        let tmp%1032#0: bytes = (extract3 tmp%1027#0 tmp%1031#0 32u)
+        let tmp%1033#0: bytes = ((ec_scalar_mul BN254g1) tmp%1025#0 tmp%1032#0)
+        let __bn256_result#32: bytes = tmp%1033#0
+        let reinterpret_biguint%64#0: biguint = (extract3 __bn256_result#32 0u 32u)
+        let mem_0x400#33: biguint = reinterpret_biguint%64#0
+        let reinterpret_biguint%65#0: biguint = (extract3 __bn256_result#32 32u 32u)
+        let mem_0x420#33: biguint = reinterpret_biguint%65#0
+        let success#49: biguint = 1b
+        let tmp%1034#0: bool = (b== success#49 0b)
+        goto tmp%1034#0 ? block@107 : block@108
+    block@107: // if_body_L8316
+        let mem_0x0#53: biguint = 0b
+        let tmp%1035#0: bool = (b!= mem_0x0#53 0b)
+        return tmp%1035#0
+    block@108: // after_if_else_L8316
+        let mem_0x440#33: biguint = mem_0x80#16
+        let mem_0x460#16: biguint = mem_0xa0#16
+        let tmp%1036#0: bytes = (bzero 32u)
+        let tmp%1037#0: bytes = (concat tmp%1036#0 mem_0x400#33)
+        let tmp%1038#0: bytes = (bzero 32u)
+        let tmp%1039#0: bytes = (concat tmp%1038#0 mem_0x400#33)
+        let tmp%1040#0: uint64 = (len tmp%1039#0)
+        let tmp%1041#0: uint64 = (- tmp%1040#0 32u)
+        let tmp%1042#0: bytes = (extract3 tmp%1037#0 tmp%1041#0 32u)
+        let tmp%1043#0: bytes = (bzero 32u)
+        let tmp%1044#0: bytes = (concat tmp%1043#0 mem_0x420#33)
+        let tmp%1045#0: bytes = (bzero 32u)
+        let tmp%1046#0: bytes = (concat tmp%1045#0 mem_0x420#33)
+        let tmp%1047#0: uint64 = (len tmp%1046#0)
+        let tmp%1048#0: uint64 = (- tmp%1047#0 32u)
+        let tmp%1049#0: bytes = (extract3 tmp%1044#0 tmp%1048#0 32u)
+        let tmp%1050#0: bytes = (concat tmp%1042#0 tmp%1049#0)
+        let tmp%1051#0: bytes = (bzero 32u)
+        let tmp%1052#0: bytes = (concat tmp%1051#0 mem_0x440#33)
+        let tmp%1053#0: bytes = (bzero 32u)
+        let tmp%1054#0: bytes = (concat tmp%1053#0 mem_0x440#33)
+        let tmp%1055#0: uint64 = (len tmp%1054#0)
+        let tmp%1056#0: uint64 = (- tmp%1055#0 32u)
+        let tmp%1057#0: bytes = (extract3 tmp%1052#0 tmp%1056#0 32u)
+        let tmp%1058#0: bytes = (bzero 32u)
+        let tmp%1059#0: bytes = (concat tmp%1058#0 mem_0x460#16)
+        let tmp%1060#0: bytes = (bzero 32u)
+        let tmp%1061#0: bytes = (concat tmp%1060#0 mem_0x460#16)
+        let tmp%1062#0: uint64 = (len tmp%1061#0)
+        let tmp%1063#0: uint64 = (- tmp%1062#0 32u)
+        let tmp%1064#0: bytes = (extract3 tmp%1059#0 tmp%1063#0 32u)
+        let tmp%1065#0: bytes = (concat tmp%1057#0 tmp%1064#0)
+        let tmp%1066#0: bytes = ((ec_add BN254g1) tmp%1050#0 tmp%1065#0)
+        let __bn256_result#33: bytes = tmp%1066#0
+        let reinterpret_biguint%66#0: biguint = (extract3 __bn256_result#33 0u 32u)
+        let mem_0x80#17: biguint = reinterpret_biguint%66#0
+        let reinterpret_biguint%67#0: biguint = (extract3 __bn256_result#33 32u 32u)
+        let mem_0xa0#17: biguint = reinterpret_biguint%67#0
+        let success#50: biguint = 1b
+        let tmp%1067#0: bool = (b== success#50 0b)
+        goto tmp%1067#0 ? block@109 : block@110
+    block@109: // if_body_L8625
+        let mem_0x0#54: biguint = 0b
+        let tmp%1068#0: bool = (b!= mem_0x0#54 0b)
+        return tmp%1068#0
+    block@110: // after_if_else_L8625
+        let pR#17: biguint = _pVk#0
+        let x#17: biguint = 14998100555567060664437417744560818779123122162052297806706232682724037825765b
+        let y#17: biguint = 21042787205915057944739845375687838358031355418400790550766487427122410219370b
+        let array_item%38#0: Encoded(uint512) = extract_value(_pubSignals#0, 17u)
+        let tmp%1069#0: biguint = decode_bytes<biguint>(array_item%38#0)
+        let s#17: biguint = tmp%1069#0
+        let success#51: biguint = 0b
+        let mIn#17: biguint = __free_memory_ptr#1
+        let mem_0x400#34: biguint = x#17
+        let mem_0x420#34: biguint = y#17
+        let mem_0x440#34: biguint = s#17
+        let tmp%1070#0: bytes = (bzero 32u)
+        let tmp%1071#0: bytes = (concat tmp%1070#0 mem_0x400#34)
+        let tmp%1072#0: bytes = (bzero 32u)
+        let tmp%1073#0: bytes = (concat tmp%1072#0 mem_0x400#34)
+        let tmp%1074#0: uint64 = (len tmp%1073#0)
+        let tmp%1075#0: uint64 = (- tmp%1074#0 32u)
+        let tmp%1076#0: bytes = (extract3 tmp%1071#0 tmp%1075#0 32u)
+        let tmp%1077#0: bytes = (bzero 32u)
+        let tmp%1078#0: bytes = (concat tmp%1077#0 mem_0x420#34)
+        let tmp%1079#0: bytes = (bzero 32u)
+        let tmp%1080#0: bytes = (concat tmp%1079#0 mem_0x420#34)
+        let tmp%1081#0: uint64 = (len tmp%1080#0)
+        let tmp%1082#0: uint64 = (- tmp%1081#0 32u)
+        let tmp%1083#0: bytes = (extract3 tmp%1078#0 tmp%1082#0 32u)
+        let tmp%1084#0: bytes = (concat tmp%1076#0 tmp%1083#0)
+        let tmp%1085#0: bytes = (bzero 32u)
+        let tmp%1086#0: bytes = (concat tmp%1085#0 mem_0x440#34)
+        let tmp%1087#0: bytes = (bzero 32u)
+        let tmp%1088#0: bytes = (concat tmp%1087#0 mem_0x440#34)
+        let tmp%1089#0: uint64 = (len tmp%1088#0)
+        let tmp%1090#0: uint64 = (- tmp%1089#0 32u)
+        let tmp%1091#0: bytes = (extract3 tmp%1086#0 tmp%1090#0 32u)
+        let tmp%1092#0: bytes = ((ec_scalar_mul BN254g1) tmp%1084#0 tmp%1091#0)
+        let __bn256_result#34: bytes = tmp%1092#0
+        let reinterpret_biguint%68#0: biguint = (extract3 __bn256_result#34 0u 32u)
+        let mem_0x400#35: biguint = reinterpret_biguint%68#0
+        let reinterpret_biguint%69#0: biguint = (extract3 __bn256_result#34 32u 32u)
+        let mem_0x420#35: biguint = reinterpret_biguint%69#0
+        let success#52: biguint = 1b
+        let tmp%1093#0: bool = (b== success#52 0b)
+        goto tmp%1093#0 ? block@111 : block@112
+    block@111: // if_body_L8316
+        let mem_0x0#55: biguint = 0b
+        let tmp%1094#0: bool = (b!= mem_0x0#55 0b)
+        return tmp%1094#0
+    block@112: // after_if_else_L8316
+        let mem_0x440#35: biguint = mem_0x80#17
+        let mem_0x460#17: biguint = mem_0xa0#17
+        let tmp%1095#0: bytes = (bzero 32u)
+        let tmp%1096#0: bytes = (concat tmp%1095#0 mem_0x400#35)
+        let tmp%1097#0: bytes = (bzero 32u)
+        let tmp%1098#0: bytes = (concat tmp%1097#0 mem_0x400#35)
+        let tmp%1099#0: uint64 = (len tmp%1098#0)
+        let tmp%1100#0: uint64 = (- tmp%1099#0 32u)
+        let tmp%1101#0: bytes = (extract3 tmp%1096#0 tmp%1100#0 32u)
+        let tmp%1102#0: bytes = (bzero 32u)
+        let tmp%1103#0: bytes = (concat tmp%1102#0 mem_0x420#35)
+        let tmp%1104#0: bytes = (bzero 32u)
+        let tmp%1105#0: bytes = (concat tmp%1104#0 mem_0x420#35)
+        let tmp%1106#0: uint64 = (len tmp%1105#0)
+        let tmp%1107#0: uint64 = (- tmp%1106#0 32u)
+        let tmp%1108#0: bytes = (extract3 tmp%1103#0 tmp%1107#0 32u)
+        let tmp%1109#0: bytes = (concat tmp%1101#0 tmp%1108#0)
+        let tmp%1110#0: bytes = (bzero 32u)
+        let tmp%1111#0: bytes = (concat tmp%1110#0 mem_0x440#35)
+        let tmp%1112#0: bytes = (bzero 32u)
+        let tmp%1113#0: bytes = (concat tmp%1112#0 mem_0x440#35)
+        let tmp%1114#0: uint64 = (len tmp%1113#0)
+        let tmp%1115#0: uint64 = (- tmp%1114#0 32u)
+        let tmp%1116#0: bytes = (extract3 tmp%1111#0 tmp%1115#0 32u)
+        let tmp%1117#0: bytes = (bzero 32u)
+        let tmp%1118#0: bytes = (concat tmp%1117#0 mem_0x460#17)
+        let tmp%1119#0: bytes = (bzero 32u)
+        let tmp%1120#0: bytes = (concat tmp%1119#0 mem_0x460#17)
+        let tmp%1121#0: uint64 = (len tmp%1120#0)
+        let tmp%1122#0: uint64 = (- tmp%1121#0 32u)
+        let tmp%1123#0: bytes = (extract3 tmp%1118#0 tmp%1122#0 32u)
+        let tmp%1124#0: bytes = (concat tmp%1116#0 tmp%1123#0)
+        let tmp%1125#0: bytes = ((ec_add BN254g1) tmp%1109#0 tmp%1124#0)
+        let __bn256_result#35: bytes = tmp%1125#0
+        let reinterpret_biguint%70#0: biguint = (extract3 __bn256_result#35 0u 32u)
+        let mem_0x80#18: biguint = reinterpret_biguint%70#0
+        let reinterpret_biguint%71#0: biguint = (extract3 __bn256_result#35 32u 32u)
+        let mem_0xa0#18: biguint = reinterpret_biguint%71#0
+        let success#53: biguint = 1b
+        let tmp%1126#0: bool = (b== success#53 0b)
+        goto tmp%1126#0 ? block@113 : block@114
+    block@113: // if_body_L8625
+        let mem_0x0#56: biguint = 0b
+        let tmp%1127#0: bool = (b!= mem_0x0#56 0b)
+        return tmp%1127#0
+    block@114: // after_if_else_L8625
+        let pR#18: biguint = _pVk#0
+        let x#18: biguint = 16820751365714164024735961591109709928906102027280708691045408574326309130538b
+        let y#18: biguint = 13969803504492496345541664178863570638687274552579034460891887717501487588820b
+        let array_item%39#0: Encoded(uint512) = extract_value(_pubSignals#0, 18u)
+        let tmp%1128#0: biguint = decode_bytes<biguint>(array_item%39#0)
+        let s#18: biguint = tmp%1128#0
+        let success#54: biguint = 0b
+        let mIn#18: biguint = __free_memory_ptr#1
+        let mem_0x400#36: biguint = x#18
+        let mem_0x420#36: biguint = y#18
+        let mem_0x440#36: biguint = s#18
+        let tmp%1129#0: bytes = (bzero 32u)
+        let tmp%1130#0: bytes = (concat tmp%1129#0 mem_0x400#36)
+        let tmp%1131#0: bytes = (bzero 32u)
+        let tmp%1132#0: bytes = (concat tmp%1131#0 mem_0x400#36)
+        let tmp%1133#0: uint64 = (len tmp%1132#0)
+        let tmp%1134#0: uint64 = (- tmp%1133#0 32u)
+        let tmp%1135#0: bytes = (extract3 tmp%1130#0 tmp%1134#0 32u)
+        let tmp%1136#0: bytes = (bzero 32u)
+        let tmp%1137#0: bytes = (concat tmp%1136#0 mem_0x420#36)
+        let tmp%1138#0: bytes = (bzero 32u)
+        let tmp%1139#0: bytes = (concat tmp%1138#0 mem_0x420#36)
+        let tmp%1140#0: uint64 = (len tmp%1139#0)
+        let tmp%1141#0: uint64 = (- tmp%1140#0 32u)
+        let tmp%1142#0: bytes = (extract3 tmp%1137#0 tmp%1141#0 32u)
+        let tmp%1143#0: bytes = (concat tmp%1135#0 tmp%1142#0)
+        let tmp%1144#0: bytes = (bzero 32u)
+        let tmp%1145#0: bytes = (concat tmp%1144#0 mem_0x440#36)
+        let tmp%1146#0: bytes = (bzero 32u)
+        let tmp%1147#0: bytes = (concat tmp%1146#0 mem_0x440#36)
+        let tmp%1148#0: uint64 = (len tmp%1147#0)
+        let tmp%1149#0: uint64 = (- tmp%1148#0 32u)
+        let tmp%1150#0: bytes = (extract3 tmp%1145#0 tmp%1149#0 32u)
+        let tmp%1151#0: bytes = ((ec_scalar_mul BN254g1) tmp%1143#0 tmp%1150#0)
+        let __bn256_result#36: bytes = tmp%1151#0
+        let reinterpret_biguint%72#0: biguint = (extract3 __bn256_result#36 0u 32u)
+        let mem_0x400#37: biguint = reinterpret_biguint%72#0
+        let reinterpret_biguint%73#0: biguint = (extract3 __bn256_result#36 32u 32u)
+        let mem_0x420#37: biguint = reinterpret_biguint%73#0
+        let success#55: biguint = 1b
+        let tmp%1152#0: bool = (b== success#55 0b)
+        goto tmp%1152#0 ? block@115 : block@116
+    block@115: // if_body_L8316
+        let mem_0x0#57: biguint = 0b
+        let tmp%1153#0: bool = (b!= mem_0x0#57 0b)
+        return tmp%1153#0
+    block@116: // after_if_else_L8316
+        let mem_0x440#37: biguint = mem_0x80#18
+        let mem_0x460#18: biguint = mem_0xa0#18
+        let tmp%1154#0: bytes = (bzero 32u)
+        let tmp%1155#0: bytes = (concat tmp%1154#0 mem_0x400#37)
+        let tmp%1156#0: bytes = (bzero 32u)
+        let tmp%1157#0: bytes = (concat tmp%1156#0 mem_0x400#37)
+        let tmp%1158#0: uint64 = (len tmp%1157#0)
+        let tmp%1159#0: uint64 = (- tmp%1158#0 32u)
+        let tmp%1160#0: bytes = (extract3 tmp%1155#0 tmp%1159#0 32u)
+        let tmp%1161#0: bytes = (bzero 32u)
+        let tmp%1162#0: bytes = (concat tmp%1161#0 mem_0x420#37)
+        let tmp%1163#0: bytes = (bzero 32u)
+        let tmp%1164#0: bytes = (concat tmp%1163#0 mem_0x420#37)
+        let tmp%1165#0: uint64 = (len tmp%1164#0)
+        let tmp%1166#0: uint64 = (- tmp%1165#0 32u)
+        let tmp%1167#0: bytes = (extract3 tmp%1162#0 tmp%1166#0 32u)
+        let tmp%1168#0: bytes = (concat tmp%1160#0 tmp%1167#0)
+        let tmp%1169#0: bytes = (bzero 32u)
+        let tmp%1170#0: bytes = (concat tmp%1169#0 mem_0x440#37)
+        let tmp%1171#0: bytes = (bzero 32u)
+        let tmp%1172#0: bytes = (concat tmp%1171#0 mem_0x440#37)
+        let tmp%1173#0: uint64 = (len tmp%1172#0)
+        let tmp%1174#0: uint64 = (- tmp%1173#0 32u)
+        let tmp%1175#0: bytes = (extract3 tmp%1170#0 tmp%1174#0 32u)
+        let tmp%1176#0: bytes = (bzero 32u)
+        let tmp%1177#0: bytes = (concat tmp%1176#0 mem_0x460#18)
+        let tmp%1178#0: bytes = (bzero 32u)
+        let tmp%1179#0: bytes = (concat tmp%1178#0 mem_0x460#18)
+        let tmp%1180#0: uint64 = (len tmp%1179#0)
+        let tmp%1181#0: uint64 = (- tmp%1180#0 32u)
+        let tmp%1182#0: bytes = (extract3 tmp%1177#0 tmp%1181#0 32u)
+        let tmp%1183#0: bytes = (concat tmp%1175#0 tmp%1182#0)
+        let tmp%1184#0: bytes = ((ec_add BN254g1) tmp%1168#0 tmp%1183#0)
+        let __bn256_result#37: bytes = tmp%1184#0
+        let reinterpret_biguint%74#0: biguint = (extract3 __bn256_result#37 0u 32u)
+        let mem_0x80#19: biguint = reinterpret_biguint%74#0
+        let reinterpret_biguint%75#0: biguint = (extract3 __bn256_result#37 32u 32u)
+        let mem_0xa0#19: biguint = reinterpret_biguint%75#0
+        let success#56: biguint = 1b
+        let tmp%1185#0: bool = (b== success#56 0b)
+        goto tmp%1185#0 ? block@117 : block@118
+    block@117: // if_body_L8625
+        let mem_0x0#58: biguint = 0b
+        let tmp%1186#0: bool = (b!= mem_0x0#58 0b)
+        return tmp%1186#0
+    block@118: // after_if_else_L8625
+        let pR#19: biguint = _pVk#0
+        let x#19: biguint = 6300931722409788047719158584043307098783826800509826930873450623429686354711b
+        let y#19: biguint = 3296077608321280418003957840869174287982028175759219453107764250219772326699b
+        let array_item%40#0: Encoded(uint512) = extract_value(_pubSignals#0, 19u)
+        let tmp%1187#0: biguint = decode_bytes<biguint>(array_item%40#0)
+        let s#19: biguint = tmp%1187#0
+        let success#57: biguint = 0b
+        let mIn#19: biguint = __free_memory_ptr#1
+        let mem_0x400#38: biguint = x#19
+        let mem_0x420#38: biguint = y#19
+        let mem_0x440#38: biguint = s#19
+        let tmp%1188#0: bytes = (bzero 32u)
+        let tmp%1189#0: bytes = (concat tmp%1188#0 mem_0x400#38)
+        let tmp%1190#0: bytes = (bzero 32u)
+        let tmp%1191#0: bytes = (concat tmp%1190#0 mem_0x400#38)
+        let tmp%1192#0: uint64 = (len tmp%1191#0)
+        let tmp%1193#0: uint64 = (- tmp%1192#0 32u)
+        let tmp%1194#0: bytes = (extract3 tmp%1189#0 tmp%1193#0 32u)
+        let tmp%1195#0: bytes = (bzero 32u)
+        let tmp%1196#0: bytes = (concat tmp%1195#0 mem_0x420#38)
+        let tmp%1197#0: bytes = (bzero 32u)
+        let tmp%1198#0: bytes = (concat tmp%1197#0 mem_0x420#38)
+        let tmp%1199#0: uint64 = (len tmp%1198#0)
+        let tmp%1200#0: uint64 = (- tmp%1199#0 32u)
+        let tmp%1201#0: bytes = (extract3 tmp%1196#0 tmp%1200#0 32u)
+        let tmp%1202#0: bytes = (concat tmp%1194#0 tmp%1201#0)
+        let tmp%1203#0: bytes = (bzero 32u)
+        let tmp%1204#0: bytes = (concat tmp%1203#0 mem_0x440#38)
+        let tmp%1205#0: bytes = (bzero 32u)
+        let tmp%1206#0: bytes = (concat tmp%1205#0 mem_0x440#38)
+        let tmp%1207#0: uint64 = (len tmp%1206#0)
+        let tmp%1208#0: uint64 = (- tmp%1207#0 32u)
+        let tmp%1209#0: bytes = (extract3 tmp%1204#0 tmp%1208#0 32u)
+        let tmp%1210#0: bytes = ((ec_scalar_mul BN254g1) tmp%1202#0 tmp%1209#0)
+        let __bn256_result#38: bytes = tmp%1210#0
+        let reinterpret_biguint%76#0: biguint = (extract3 __bn256_result#38 0u 32u)
+        let mem_0x400#39: biguint = reinterpret_biguint%76#0
+        let reinterpret_biguint%77#0: biguint = (extract3 __bn256_result#38 32u 32u)
+        let mem_0x420#39: biguint = reinterpret_biguint%77#0
+        let success#58: biguint = 1b
+        let tmp%1211#0: bool = (b== success#58 0b)
+        goto tmp%1211#0 ? block@119 : block@120
+    block@119: // if_body_L8316
+        let mem_0x0#59: biguint = 0b
+        let tmp%1212#0: bool = (b!= mem_0x0#59 0b)
+        return tmp%1212#0
+    block@120: // after_if_else_L8316
+        let mem_0x440#39: biguint = mem_0x80#19
+        let mem_0x460#19: biguint = mem_0xa0#19
+        let tmp%1213#0: bytes = (bzero 32u)
+        let tmp%1214#0: bytes = (concat tmp%1213#0 mem_0x400#39)
+        let tmp%1215#0: bytes = (bzero 32u)
+        let tmp%1216#0: bytes = (concat tmp%1215#0 mem_0x400#39)
+        let tmp%1217#0: uint64 = (len tmp%1216#0)
+        let tmp%1218#0: uint64 = (- tmp%1217#0 32u)
+        let tmp%1219#0: bytes = (extract3 tmp%1214#0 tmp%1218#0 32u)
+        let tmp%1220#0: bytes = (bzero 32u)
+        let tmp%1221#0: bytes = (concat tmp%1220#0 mem_0x420#39)
+        let tmp%1222#0: bytes = (bzero 32u)
+        let tmp%1223#0: bytes = (concat tmp%1222#0 mem_0x420#39)
+        let tmp%1224#0: uint64 = (len tmp%1223#0)
+        let tmp%1225#0: uint64 = (- tmp%1224#0 32u)
+        let tmp%1226#0: bytes = (extract3 tmp%1221#0 tmp%1225#0 32u)
+        let tmp%1227#0: bytes = (concat tmp%1219#0 tmp%1226#0)
+        let tmp%1228#0: bytes = (bzero 32u)
+        let tmp%1229#0: bytes = (concat tmp%1228#0 mem_0x440#39)
+        let tmp%1230#0: bytes = (bzero 32u)
+        let tmp%1231#0: bytes = (concat tmp%1230#0 mem_0x440#39)
+        let tmp%1232#0: uint64 = (len tmp%1231#0)
+        let tmp%1233#0: uint64 = (- tmp%1232#0 32u)
+        let tmp%1234#0: bytes = (extract3 tmp%1229#0 tmp%1233#0 32u)
+        let tmp%1235#0: bytes = (bzero 32u)
+        let tmp%1236#0: bytes = (concat tmp%1235#0 mem_0x460#19)
+        let tmp%1237#0: bytes = (bzero 32u)
+        let tmp%1238#0: bytes = (concat tmp%1237#0 mem_0x460#19)
+        let tmp%1239#0: uint64 = (len tmp%1238#0)
+        let tmp%1240#0: uint64 = (- tmp%1239#0 32u)
+        let tmp%1241#0: bytes = (extract3 tmp%1236#0 tmp%1240#0 32u)
+        let tmp%1242#0: bytes = (concat tmp%1234#0 tmp%1241#0)
+        let tmp%1243#0: bytes = ((ec_add BN254g1) tmp%1227#0 tmp%1242#0)
+        let __bn256_result#39: bytes = tmp%1243#0
+        let reinterpret_biguint%78#0: biguint = (extract3 __bn256_result#39 0u 32u)
+        let mem_0x80#20: biguint = reinterpret_biguint%78#0
+        let reinterpret_biguint%79#0: biguint = (extract3 __bn256_result#39 32u 32u)
+        let mem_0xa0#20: biguint = reinterpret_biguint%79#0
+        let success#59: biguint = 1b
+        let tmp%1244#0: bool = (b== success#59 0b)
+        goto tmp%1244#0 ? block@121 : block@122
+    block@121: // if_body_L8625
+        let mem_0x0#60: biguint = 0b
+        let tmp%1245#0: bool = (b!= mem_0x0#60 0b)
+        return tmp%1245#0
+    block@122: // after_if_else_L8625
+        let pR#20: biguint = _pVk#0
+        let x#20: biguint = 8575934641343546340479763260628203666392881516995856567983301829732041115320b
+        let y#20: biguint = 9883873130137129757933294169163215566229691629254682468566589714083960043129b
+        let array_item%41#0: Encoded(uint512) = extract_value(_pubSignals#0, 20u)
+        let tmp%1246#0: biguint = decode_bytes<biguint>(array_item%41#0)
+        let s#20: biguint = tmp%1246#0
+        let success#60: biguint = 0b
+        let mIn#20: biguint = __free_memory_ptr#1
+        let mem_0x400#40: biguint = x#20
+        let mem_0x420#40: biguint = y#20
+        let mem_0x440#40: biguint = s#20
+        let tmp%1247#0: bytes = (bzero 32u)
+        let tmp%1248#0: bytes = (concat tmp%1247#0 mem_0x400#40)
+        let tmp%1249#0: bytes = (bzero 32u)
+        let tmp%1250#0: bytes = (concat tmp%1249#0 mem_0x400#40)
+        let tmp%1251#0: uint64 = (len tmp%1250#0)
+        let tmp%1252#0: uint64 = (- tmp%1251#0 32u)
+        let tmp%1253#0: bytes = (extract3 tmp%1248#0 tmp%1252#0 32u)
+        let tmp%1254#0: bytes = (bzero 32u)
+        let tmp%1255#0: bytes = (concat tmp%1254#0 mem_0x420#40)
+        let tmp%1256#0: bytes = (bzero 32u)
+        let tmp%1257#0: bytes = (concat tmp%1256#0 mem_0x420#40)
+        let tmp%1258#0: uint64 = (len tmp%1257#0)
+        let tmp%1259#0: uint64 = (- tmp%1258#0 32u)
+        let tmp%1260#0: bytes = (extract3 tmp%1255#0 tmp%1259#0 32u)
+        let tmp%1261#0: bytes = (concat tmp%1253#0 tmp%1260#0)
+        let tmp%1262#0: bytes = (bzero 32u)
+        let tmp%1263#0: bytes = (concat tmp%1262#0 mem_0x440#40)
+        let tmp%1264#0: bytes = (bzero 32u)
+        let tmp%1265#0: bytes = (concat tmp%1264#0 mem_0x440#40)
+        let tmp%1266#0: uint64 = (len tmp%1265#0)
+        let tmp%1267#0: uint64 = (- tmp%1266#0 32u)
+        let tmp%1268#0: bytes = (extract3 tmp%1263#0 tmp%1267#0 32u)
+        let tmp%1269#0: bytes = ((ec_scalar_mul BN254g1) tmp%1261#0 tmp%1268#0)
+        let __bn256_result#40: bytes = tmp%1269#0
+        let reinterpret_biguint%80#0: biguint = (extract3 __bn256_result#40 0u 32u)
+        let mem_0x400#41: biguint = reinterpret_biguint%80#0
+        let reinterpret_biguint%81#0: biguint = (extract3 __bn256_result#40 32u 32u)
+        let mem_0x420#41: biguint = reinterpret_biguint%81#0
+        let success#61: biguint = 1b
+        let tmp%1270#0: bool = (b== success#61 0b)
+        goto tmp%1270#0 ? block@123 : block@124
+    block@123: // if_body_L8316
+        let mem_0x0#61: biguint = 0b
+        let tmp%1271#0: bool = (b!= mem_0x0#61 0b)
+        return tmp%1271#0
+    block@124: // after_if_else_L8316
+        let mem_0x440#41: biguint = mem_0x80#20
+        let mem_0x460#20: biguint = mem_0xa0#20
+        let tmp%1272#0: bytes = (bzero 32u)
+        let tmp%1273#0: bytes = (concat tmp%1272#0 mem_0x400#41)
+        let tmp%1274#0: bytes = (bzero 32u)
+        let tmp%1275#0: bytes = (concat tmp%1274#0 mem_0x400#41)
+        let tmp%1276#0: uint64 = (len tmp%1275#0)
+        let tmp%1277#0: uint64 = (- tmp%1276#0 32u)
+        let tmp%1278#0: bytes = (extract3 tmp%1273#0 tmp%1277#0 32u)
+        let tmp%1279#0: bytes = (bzero 32u)
+        let tmp%1280#0: bytes = (concat tmp%1279#0 mem_0x420#41)
+        let tmp%1281#0: bytes = (bzero 32u)
+        let tmp%1282#0: bytes = (concat tmp%1281#0 mem_0x420#41)
+        let tmp%1283#0: uint64 = (len tmp%1282#0)
+        let tmp%1284#0: uint64 = (- tmp%1283#0 32u)
+        let tmp%1285#0: bytes = (extract3 tmp%1280#0 tmp%1284#0 32u)
+        let tmp%1286#0: bytes = (concat tmp%1278#0 tmp%1285#0)
+        let tmp%1287#0: bytes = (bzero 32u)
+        let tmp%1288#0: bytes = (concat tmp%1287#0 mem_0x440#41)
+        let tmp%1289#0: bytes = (bzero 32u)
+        let tmp%1290#0: bytes = (concat tmp%1289#0 mem_0x440#41)
+        let tmp%1291#0: uint64 = (len tmp%1290#0)
+        let tmp%1292#0: uint64 = (- tmp%1291#0 32u)
+        let tmp%1293#0: bytes = (extract3 tmp%1288#0 tmp%1292#0 32u)
+        let tmp%1294#0: bytes = (bzero 32u)
+        let tmp%1295#0: bytes = (concat tmp%1294#0 mem_0x460#20)
+        let tmp%1296#0: bytes = (bzero 32u)
+        let tmp%1297#0: bytes = (concat tmp%1296#0 mem_0x460#20)
+        let tmp%1298#0: uint64 = (len tmp%1297#0)
+        let tmp%1299#0: uint64 = (- tmp%1298#0 32u)
+        let tmp%1300#0: bytes = (extract3 tmp%1295#0 tmp%1299#0 32u)
+        let tmp%1301#0: bytes = (concat tmp%1293#0 tmp%1300#0)
+        let tmp%1302#0: bytes = ((ec_add BN254g1) tmp%1286#0 tmp%1301#0)
+        let __bn256_result#41: bytes = tmp%1302#0
+        let reinterpret_biguint%82#0: biguint = (extract3 __bn256_result#41 0u 32u)
+        let mem_0x80#21: biguint = reinterpret_biguint%82#0
+        let reinterpret_biguint%83#0: biguint = (extract3 __bn256_result#41 32u 32u)
+        let mem_0xa0#21: biguint = reinterpret_biguint%83#0
+        let success#62: biguint = 1b
+        let tmp%1303#0: bool = (b== success#62 0b)
+        goto tmp%1303#0 ? block@125 : block@126
+    block@125: // if_body_L8625
+        let mem_0x0#62: biguint = 0b
+        let tmp%1304#0: bool = (b!= mem_0x0#62 0b)
+        return tmp%1304#0
+    block@126: // after_if_else_L8625
+        let array_item%42#0: Encoded(uint512) = extract_value(_pA#0, 0u)
+        let tmp%1305#0: biguint = decode_bytes<biguint>(array_item%42#0)
+        let mem_0x100#0: biguint = tmp%1305#0
+        let array_item%43#0: Encoded(uint512) = extract_value(_pA#0, 1u)
+        let tmp%1306#0: biguint = decode_bytes<biguint>(array_item%43#0)
+        let tmp%1307#0: biguint = (b- 21888242871839275222246405745257275088696311157297823662689037894645226208583b tmp%1306#0)
+        let tmp%1308#0: biguint = (b% tmp%1307#0 21888242871839275222246405745257275088696311157297823662689037894645226208583b)
+        let mem_0x120#0: biguint = tmp%1308#0
+        let array_item%44#0: Encoded(uint512) = extract_value(_pB#0, 0u)
+        let tmp%1309#0: biguint = decode_bytes<biguint>(array_item%44#0)
+        let mem_0x140#0: biguint = tmp%1309#0
+        let array_item%45#0: Encoded(uint512) = extract_value(_pB#0, 1u)
+        let tmp%1310#0: biguint = decode_bytes<biguint>(array_item%45#0)
+        let mem_0x160#0: biguint = tmp%1310#0
+        let array_item%46#0: Encoded(uint512) = extract_value(_pB#0, 2u)
+        let tmp%1311#0: biguint = decode_bytes<biguint>(array_item%46#0)
+        let mem_0x180#0: biguint = tmp%1311#0
+        let array_item%47#0: Encoded(uint512) = extract_value(_pB#0, 3u)
+        let tmp%1312#0: biguint = decode_bytes<biguint>(array_item%47#0)
+        let mem_0x1a0#0: biguint = tmp%1312#0
+        let mem_0x1c0#0: biguint = 16428432848801857252194528405604668803277877773566238944394625302971855135431b
+        let mem_0x1e0#0: biguint = 16846502678714586896801519656441059708016666274385668027902869494772365009666b
+        let mem_0x200#0: biguint = 3182164110458002340215786955198810119980427837186618912744689678939861918171b
+        let mem_0x220#0: biguint = 16348171800823588416173124589066524623406261996681292662100840445103873053252b
+        let mem_0x240#0: biguint = 4920802715848186258981584729175884379674325733638798907835771393452862684714b
+        let mem_0x260#0: biguint = 19687132236965066906216944365591810874384658708175106803089633851114028275753b
+        let mem_0x280#0: biguint = mem_0x80#21
+        let mem_0x2a0#0: biguint = mem_0xa0#21
+        let mem_0x2c0#0: biguint = 11559732032986387107991004021392285783925812861821192530917403151452391805634b
+        let mem_0x2e0#0: biguint = 10857046999023057135944570762232829481370756359578518086990519993285655852781b
+        let mem_0x300#0: biguint = 4082367875863433681332203403145435568316851327593401208105741076214120093531b
+        let mem_0x320#0: biguint = 8495653923123431417604973247489272438418190587263600148770280649306958101930b
+        let array_item%48#0: Encoded(uint512) = extract_value(_pC#0, 0u)
+        let tmp%1313#0: biguint = decode_bytes<biguint>(array_item%48#0)
+        let mem_0x340#0: biguint = tmp%1313#0
+        let array_item%49#0: Encoded(uint512) = extract_value(_pC#0, 1u)
+        let tmp%1314#0: biguint = decode_bytes<biguint>(array_item%49#0)
+        let mem_0x360#0: biguint = tmp%1314#0
+        let mem_0x380#0: biguint = 16003296527668925742863515818275579351356339601946180391890101479883479175048b
+        let mem_0x3a0#0: biguint = 19984896270701531499196389858214296071784225307233905736778009760168662407770b
+        let mem_0x3c0#0: biguint = 5138655595787089892482835352178966166781128102524280116487962013964720103607b
+        let mem_0x3e0#0: biguint = 1217532993718676692158820192374740421387705198527773729064132560667312540512b
+        let tmp%1315#0: bytes = (bzero 32u)
+        let tmp%1316#0: bytes = (concat tmp%1315#0 mem_0x100#0)
+        let tmp%1317#0: bytes = (bzero 32u)
+        let tmp%1318#0: bytes = (concat tmp%1317#0 mem_0x100#0)
+        let tmp%1319#0: uint64 = (len tmp%1318#0)
+        let tmp%1320#0: uint64 = (- tmp%1319#0 32u)
+        let tmp%1321#0: bytes = (extract3 tmp%1316#0 tmp%1320#0 32u)
+        let tmp%1322#0: bytes = (bzero 32u)
+        let tmp%1323#0: bytes = (concat tmp%1322#0 mem_0x120#0)
+        let tmp%1324#0: bytes = (bzero 32u)
+        let tmp%1325#0: bytes = (concat tmp%1324#0 mem_0x120#0)
+        let tmp%1326#0: uint64 = (len tmp%1325#0)
+        let tmp%1327#0: uint64 = (- tmp%1326#0 32u)
+        let tmp%1328#0: bytes = (extract3 tmp%1323#0 tmp%1327#0 32u)
+        let tmp%1329#0: bytes = (concat tmp%1321#0 tmp%1328#0)
+        let tmp%1330#0: bytes = (bzero 32u)
+        let tmp%1331#0: bytes = (concat tmp%1330#0 mem_0x1c0#0)
+        let tmp%1332#0: bytes = (bzero 32u)
+        let tmp%1333#0: bytes = (concat tmp%1332#0 mem_0x1c0#0)
+        let tmp%1334#0: uint64 = (len tmp%1333#0)
+        let tmp%1335#0: uint64 = (- tmp%1334#0 32u)
+        let tmp%1336#0: bytes = (extract3 tmp%1331#0 tmp%1335#0 32u)
+        let tmp%1337#0: bytes = (bzero 32u)
+        let tmp%1338#0: bytes = (concat tmp%1337#0 mem_0x1e0#0)
+        let tmp%1339#0: bytes = (bzero 32u)
+        let tmp%1340#0: bytes = (concat tmp%1339#0 mem_0x1e0#0)
+        let tmp%1341#0: uint64 = (len tmp%1340#0)
+        let tmp%1342#0: uint64 = (- tmp%1341#0 32u)
+        let tmp%1343#0: bytes = (extract3 tmp%1338#0 tmp%1342#0 32u)
+        let tmp%1344#0: bytes = (concat tmp%1336#0 tmp%1343#0)
+        let tmp%1345#0: bytes = (concat tmp%1329#0 tmp%1344#0)
+        let tmp%1346#0: bytes = (bzero 32u)
+        let tmp%1347#0: bytes = (concat tmp%1346#0 mem_0x280#0)
+        let tmp%1348#0: bytes = (bzero 32u)
+        let tmp%1349#0: bytes = (concat tmp%1348#0 mem_0x280#0)
+        let tmp%1350#0: uint64 = (len tmp%1349#0)
+        let tmp%1351#0: uint64 = (- tmp%1350#0 32u)
+        let tmp%1352#0: bytes = (extract3 tmp%1347#0 tmp%1351#0 32u)
+        let tmp%1353#0: bytes = (bzero 32u)
+        let tmp%1354#0: bytes = (concat tmp%1353#0 mem_0x2a0#0)
+        let tmp%1355#0: bytes = (bzero 32u)
+        let tmp%1356#0: bytes = (concat tmp%1355#0 mem_0x2a0#0)
+        let tmp%1357#0: uint64 = (len tmp%1356#0)
+        let tmp%1358#0: uint64 = (- tmp%1357#0 32u)
+        let tmp%1359#0: bytes = (extract3 tmp%1354#0 tmp%1358#0 32u)
+        let tmp%1360#0: bytes = (concat tmp%1352#0 tmp%1359#0)
+        let tmp%1361#0: bytes = (concat tmp%1345#0 tmp%1360#0)
+        let tmp%1362#0: bytes = (bzero 32u)
+        let tmp%1363#0: bytes = (concat tmp%1362#0 mem_0x340#0)
+        let tmp%1364#0: bytes = (bzero 32u)
+        let tmp%1365#0: bytes = (concat tmp%1364#0 mem_0x340#0)
+        let tmp%1366#0: uint64 = (len tmp%1365#0)
+        let tmp%1367#0: uint64 = (- tmp%1366#0 32u)
+        let tmp%1368#0: bytes = (extract3 tmp%1363#0 tmp%1367#0 32u)
+        let tmp%1369#0: bytes = (bzero 32u)
+        let tmp%1370#0: bytes = (concat tmp%1369#0 mem_0x360#0)
+        let tmp%1371#0: bytes = (bzero 32u)
+        let tmp%1372#0: bytes = (concat tmp%1371#0 mem_0x360#0)
+        let tmp%1373#0: uint64 = (len tmp%1372#0)
+        let tmp%1374#0: uint64 = (- tmp%1373#0 32u)
+        let tmp%1375#0: bytes = (extract3 tmp%1370#0 tmp%1374#0 32u)
+        let tmp%1376#0: bytes = (concat tmp%1368#0 tmp%1375#0)
+        let tmp%1377#0: bytes = (concat tmp%1361#0 tmp%1376#0)
+        let tmp%1378#0: bytes = (bzero 32u)
+        let tmp%1379#0: bytes = (concat tmp%1378#0 mem_0x160#0)
+        let tmp%1380#0: bytes = (bzero 32u)
+        let tmp%1381#0: bytes = (concat tmp%1380#0 mem_0x160#0)
+        let tmp%1382#0: uint64 = (len tmp%1381#0)
+        let tmp%1383#0: uint64 = (- tmp%1382#0 32u)
+        let tmp%1384#0: bytes = (extract3 tmp%1379#0 tmp%1383#0 32u)
+        let tmp%1385#0: bytes = (bzero 32u)
+        let tmp%1386#0: bytes = (concat tmp%1385#0 mem_0x140#0)
+        let tmp%1387#0: bytes = (bzero 32u)
+        let tmp%1388#0: bytes = (concat tmp%1387#0 mem_0x140#0)
+        let tmp%1389#0: uint64 = (len tmp%1388#0)
+        let tmp%1390#0: uint64 = (- tmp%1389#0 32u)
+        let tmp%1391#0: bytes = (extract3 tmp%1386#0 tmp%1390#0 32u)
+        let tmp%1392#0: bytes = (concat tmp%1384#0 tmp%1391#0)
+        let tmp%1393#0: bytes = (bzero 32u)
+        let tmp%1394#0: bytes = (concat tmp%1393#0 mem_0x1a0#0)
+        let tmp%1395#0: bytes = (bzero 32u)
+        let tmp%1396#0: bytes = (concat tmp%1395#0 mem_0x1a0#0)
+        let tmp%1397#0: uint64 = (len tmp%1396#0)
+        let tmp%1398#0: uint64 = (- tmp%1397#0 32u)
+        let tmp%1399#0: bytes = (extract3 tmp%1394#0 tmp%1398#0 32u)
+        let tmp%1400#0: bytes = (bzero 32u)
+        let tmp%1401#0: bytes = (concat tmp%1400#0 mem_0x180#0)
+        let tmp%1402#0: bytes = (bzero 32u)
+        let tmp%1403#0: bytes = (concat tmp%1402#0 mem_0x180#0)
+        let tmp%1404#0: uint64 = (len tmp%1403#0)
+        let tmp%1405#0: uint64 = (- tmp%1404#0 32u)
+        let tmp%1406#0: bytes = (extract3 tmp%1401#0 tmp%1405#0 32u)
+        let tmp%1407#0: bytes = (concat tmp%1399#0 tmp%1406#0)
+        let tmp%1408#0: bytes = (concat tmp%1392#0 tmp%1407#0)
+        let tmp%1409#0: bytes = (bzero 32u)
+        let tmp%1410#0: bytes = (concat tmp%1409#0 mem_0x220#0)
+        let tmp%1411#0: bytes = (bzero 32u)
+        let tmp%1412#0: bytes = (concat tmp%1411#0 mem_0x220#0)
+        let tmp%1413#0: uint64 = (len tmp%1412#0)
+        let tmp%1414#0: uint64 = (- tmp%1413#0 32u)
+        let tmp%1415#0: bytes = (extract3 tmp%1410#0 tmp%1414#0 32u)
+        let tmp%1416#0: bytes = (bzero 32u)
+        let tmp%1417#0: bytes = (concat tmp%1416#0 mem_0x200#0)
+        let tmp%1418#0: bytes = (bzero 32u)
+        let tmp%1419#0: bytes = (concat tmp%1418#0 mem_0x200#0)
+        let tmp%1420#0: uint64 = (len tmp%1419#0)
+        let tmp%1421#0: uint64 = (- tmp%1420#0 32u)
+        let tmp%1422#0: bytes = (extract3 tmp%1417#0 tmp%1421#0 32u)
+        let tmp%1423#0: bytes = (concat tmp%1415#0 tmp%1422#0)
+        let tmp%1424#0: bytes = (bzero 32u)
+        let tmp%1425#0: bytes = (concat tmp%1424#0 mem_0x260#0)
+        let tmp%1426#0: bytes = (bzero 32u)
+        let tmp%1427#0: bytes = (concat tmp%1426#0 mem_0x260#0)
+        let tmp%1428#0: uint64 = (len tmp%1427#0)
+        let tmp%1429#0: uint64 = (- tmp%1428#0 32u)
+        let tmp%1430#0: bytes = (extract3 tmp%1425#0 tmp%1429#0 32u)
+        let tmp%1431#0: bytes = (bzero 32u)
+        let tmp%1432#0: bytes = (concat tmp%1431#0 mem_0x240#0)
+        let tmp%1433#0: bytes = (bzero 32u)
+        let tmp%1434#0: bytes = (concat tmp%1433#0 mem_0x240#0)
+        let tmp%1435#0: uint64 = (len tmp%1434#0)
+        let tmp%1436#0: uint64 = (- tmp%1435#0 32u)
+        let tmp%1437#0: bytes = (extract3 tmp%1432#0 tmp%1436#0 32u)
+        let tmp%1438#0: bytes = (concat tmp%1430#0 tmp%1437#0)
+        let tmp%1439#0: bytes = (concat tmp%1423#0 tmp%1438#0)
+        let tmp%1440#0: bytes = (concat tmp%1408#0 tmp%1439#0)
+        let tmp%1441#0: bytes = (bzero 32u)
+        let tmp%1442#0: bytes = (concat tmp%1441#0 mem_0x2e0#0)
+        let tmp%1443#0: bytes = (bzero 32u)
+        let tmp%1444#0: bytes = (concat tmp%1443#0 mem_0x2e0#0)
+        let tmp%1445#0: uint64 = (len tmp%1444#0)
+        let tmp%1446#0: uint64 = (- tmp%1445#0 32u)
+        let tmp%1447#0: bytes = (extract3 tmp%1442#0 tmp%1446#0 32u)
+        let tmp%1448#0: bytes = (bzero 32u)
+        let tmp%1449#0: bytes = (concat tmp%1448#0 mem_0x2c0#0)
+        let tmp%1450#0: bytes = (bzero 32u)
+        let tmp%1451#0: bytes = (concat tmp%1450#0 mem_0x2c0#0)
+        let tmp%1452#0: uint64 = (len tmp%1451#0)
+        let tmp%1453#0: uint64 = (- tmp%1452#0 32u)
+        let tmp%1454#0: bytes = (extract3 tmp%1449#0 tmp%1453#0 32u)
+        let tmp%1455#0: bytes = (concat tmp%1447#0 tmp%1454#0)
+        let tmp%1456#0: bytes = (bzero 32u)
+        let tmp%1457#0: bytes = (concat tmp%1456#0 mem_0x320#0)
+        let tmp%1458#0: bytes = (bzero 32u)
+        let tmp%1459#0: bytes = (concat tmp%1458#0 mem_0x320#0)
+        let tmp%1460#0: uint64 = (len tmp%1459#0)
+        let tmp%1461#0: uint64 = (- tmp%1460#0 32u)
+        let tmp%1462#0: bytes = (extract3 tmp%1457#0 tmp%1461#0 32u)
+        let tmp%1463#0: bytes = (bzero 32u)
+        let tmp%1464#0: bytes = (concat tmp%1463#0 mem_0x300#0)
+        let tmp%1465#0: bytes = (bzero 32u)
+        let tmp%1466#0: bytes = (concat tmp%1465#0 mem_0x300#0)
+        let tmp%1467#0: uint64 = (len tmp%1466#0)
+        let tmp%1468#0: uint64 = (- tmp%1467#0 32u)
+        let tmp%1469#0: bytes = (extract3 tmp%1464#0 tmp%1468#0 32u)
+        let tmp%1470#0: bytes = (concat tmp%1462#0 tmp%1469#0)
+        let tmp%1471#0: bytes = (concat tmp%1455#0 tmp%1470#0)
+        let tmp%1472#0: bytes = (concat tmp%1440#0 tmp%1471#0)
+        let tmp%1473#0: bytes = (bzero 32u)
+        let tmp%1474#0: bytes = (concat tmp%1473#0 mem_0x3a0#0)
+        let tmp%1475#0: bytes = (bzero 32u)
+        let tmp%1476#0: bytes = (concat tmp%1475#0 mem_0x3a0#0)
+        let tmp%1477#0: uint64 = (len tmp%1476#0)
+        let tmp%1478#0: uint64 = (- tmp%1477#0 32u)
+        let tmp%1479#0: bytes = (extract3 tmp%1474#0 tmp%1478#0 32u)
+        let tmp%1480#0: bytes = (bzero 32u)
+        let tmp%1481#0: bytes = (concat tmp%1480#0 mem_0x380#0)
+        let tmp%1482#0: bytes = (bzero 32u)
+        let tmp%1483#0: bytes = (concat tmp%1482#0 mem_0x380#0)
+        let tmp%1484#0: uint64 = (len tmp%1483#0)
+        let tmp%1485#0: uint64 = (- tmp%1484#0 32u)
+        let tmp%1486#0: bytes = (extract3 tmp%1481#0 tmp%1485#0 32u)
+        let tmp%1487#0: bytes = (concat tmp%1479#0 tmp%1486#0)
+        let tmp%1488#0: bytes = (bzero 32u)
+        let tmp%1489#0: bytes = (concat tmp%1488#0 mem_0x3e0#0)
+        let tmp%1490#0: bytes = (bzero 32u)
+        let tmp%1491#0: bytes = (concat tmp%1490#0 mem_0x3e0#0)
+        let tmp%1492#0: uint64 = (len tmp%1491#0)
+        let tmp%1493#0: uint64 = (- tmp%1492#0 32u)
+        let tmp%1494#0: bytes = (extract3 tmp%1489#0 tmp%1493#0 32u)
+        let tmp%1495#0: bytes = (bzero 32u)
+        let tmp%1496#0: bytes = (concat tmp%1495#0 mem_0x3c0#0)
+        let tmp%1497#0: bytes = (bzero 32u)
+        let tmp%1498#0: bytes = (concat tmp%1497#0 mem_0x3c0#0)
+        let tmp%1499#0: uint64 = (len tmp%1498#0)
+        let tmp%1500#0: uint64 = (- tmp%1499#0 32u)
+        let tmp%1501#0: bytes = (extract3 tmp%1496#0 tmp%1500#0 32u)
+        let tmp%1502#0: bytes = (concat tmp%1494#0 tmp%1501#0)
+        let tmp%1503#0: bytes = (concat tmp%1487#0 tmp%1502#0)
+        let tmp%1504#0: bytes = (concat tmp%1472#0 tmp%1503#0)
+        let tmp%1505#0: bool = ((ec_pairing_check BN254g1) tmp%1377#0 tmp%1504#0)
+        let select%0#0: biguint = (select 0b 1b tmp%1505#0)
+        let mem_0x100#1: biguint = select%0#0
+        let success#63: biguint = 1b
+        let reinterpret_biguint%84#0: biguint = (b& success#63 mem_0x100#1)
+        let isOk#1: biguint = reinterpret_biguint%84#0
+        let isValid#0: biguint = isOk#1
+        let mem_0x0#63: biguint = isValid#0
+        let tmp%1506#0: bool = (b!= mem_0x0#63 0b)
+        return tmp%1506#0

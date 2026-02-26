@@ -1,0 +1,347 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/DeepMerkleVerifier.sol.DeepMerkleVerifier.approval_program() -> uint64:
+main:
+    intcblock 32 0 128 1
+    bytecblock 0x068101 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47 0x
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_3 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xc31ca4ed // method "verifyProof(uint512[2],uint512[4],uint512[2],uint512[2])bool"
+    txna ApplicationArgs 0
+    match main_verifyProof_route@4
+    err
+
+main_verifyProof_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b verifyProof
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/DeepMerkleVerifier.sol.DeepMerkleVerifier.verifyProof[routing]() -> void:
+verifyProof:
+    intc_1 // 0
+    dup
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 128
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint512, 2>
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 256
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint512, 4>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_2 // 128
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint512, 2>
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_2 // 128
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint512, 2>
+
+verifyProof_while_top@16:
+    pushint 30010
+    global OpcodeBudget
+    >
+    bz verifyProof_after_while@21
+    itxn_begin
+    pushint 6 // appl
+    itxn_field TypeEnum
+    pushint 5 // DeleteApplication
+    itxn_field OnCompletion
+    bytec_0 // 0x068101
+    itxn_field ApprovalProgram
+    bytec_0 // 0x068101
+    itxn_field ClearStateProgram
+    intc_1 // 0
+    itxn_field Fee
+    itxn_submit
+    b verifyProof_while_top@16
+
+verifyProof_after_while@21:
+    dup
+    extract 0 64 // on error: index access is out of bounds
+    dup
+    bury 7
+    bytec_1 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b<
+    bnz verifyProof_after_if_else@3
+    intc_1 // 0
+
+verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/DeepMerkleVerifier.sol.DeepMerkleVerifier.verifyProof@14:
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+verifyProof_after_if_else@3:
+    dup
+    extract 64 64 // on error: index access is out of bounds
+    dup
+    bury 6
+    bytec_1 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b<
+    bnz verifyProof_after_if_else@5
+    intc_1 // 0
+    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/DeepMerkleVerifier.sol.DeepMerkleVerifier.verifyProof@14
+
+verifyProof_after_if_else@5:
+    intc_0 // 32
+    bzero
+    dup
+    dig 7
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x2d48c1b9a3835773bade9712e67f4955b2077adb244c31c5186107b4c60824f023671e4bd222108a9cf760110ae99dd7f431cabcfff68420b84fd291db9243eb
+    swap
+    ec_scalar_mul BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    pushbytes 0x1bb92155aa0f77c77f9e5aa18bdaf329852f97175a22c414c13d2c86eeb8d0f604b8480f2971d505a3dc563f5e71aa5db4c999ec8cca9524d3bf9df91a14ce9e
+    ec_add BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 2
+    dig 8
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x2f1159a034fee0e7cbc97300f10eb6fb8013a031b4af801bd42e6756b04aa331299c593b7320a92f10bd87261db898204ae4c6bae68d67514e69f3ed8afed862
+    swap
+    ec_scalar_mul BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    ec_add BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    dig 6
+    dup
+    extract 0 64 // on error: index access is out of bounds
+    swap
+    extract 64 64 // on error: index access is out of bounds
+    bytec_2 // 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
+    swap
+    b-
+    bytec_2 // 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
+    b%
+    dig 7
+    dup
+    extract 0 64 // on error: index access is out of bounds
+    dig 1
+    extract 64 64 // on error: index access is out of bounds
+    dig 2
+    extract 128 64 // on error: index access is out of bounds
+    uncover 3
+    extract 192 64 // on error: index access is out of bounds
+    dig 10
+    dup
+    extract 0 64 // on error: index access is out of bounds
+    swap
+    extract 64 64 // on error: index access is out of bounds
+    dig 10
+    uncover 8
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 10
+    uncover 8
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    pushbytes 0x0ea358985c752f6498e1fe1d8d8b226355cb93c8a12f85502e945dbe2b2f26d409c8e3a144d3f6329f909c1af202648154b32c73966bc5a82a1f2a8a26878272
+    concat
+    dig 9
+    uncover 9
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 9
+    uncover 9
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    concat
+    dig 7
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 7
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    concat
+    dig 5
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 5
+    uncover 5
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 4
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 4
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    concat
+    pushbytes 0x283fe9319792de3f6bfad50d884cd51ef0126b82869745156f26dccb759b4c2315ee251e1c39b2559349c49413995e1a70ff40aea9f350477a70566babe9994022aa103312a6ed7b31bce801a55323726654d294e22d1cd88c5f511bad47f7580c2c5e59e156ce3b17144a432bc100a961c8787eee37eee6082b537c998630c71800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c212c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa090689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b2fd7fe853ab1ec0c1a5ad8c95d039b2b62703569a8329e4888b64a676a2365981a812887ef86ba9ae88e5ac03f5505fdf48ceb11ed4eb8a7348c6448fadb1b2a0c0aa5f4dec1b7b089c10627e2762706a5bc7f10bfc1b798bf9301955ddf21d91763a52caab841ac379d7e68bea0d6468633a74e689084ef906788c7b01038bd
+    concat
+    ec_pairing_check BN254g1
+    bytec_3 // 0x
+    pushbytes 0x01
+    uncover 2
+    select
+    pushbytes 0x01
+    b&
+    bytec_3 // 0x
+    b!=
+    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/DeepMerkleVerifier.sol.DeepMerkleVerifier.verifyProof@14
