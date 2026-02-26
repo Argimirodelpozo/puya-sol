@@ -39,6 +39,7 @@ set(SOURCES
 	src/builder/ContractTranslator.cpp
 	src/builder/StorageMapper.cpp
 	src/builder/IntrinsicMapper.cpp
+	src/builder/AssemblyTranslator.cpp
 	src/json/AWSTSerializer.cpp
 	src/json/Base85.cpp
 	src/json/OptionsWriter.cpp

@@ -528,6 +528,13 @@ struct AddressConstant: Expression
 	std::string value;
 };
 
+struct PuyaLibCall: Expression
+{
+	std::string nodeType() const override { return "PuyaLibCall"; }
+	std::string func; // enum name, e.g. "ensure_budget"
+	std::vector<CallArg> args;
+};
+
 // ─── Statements ─────────────────────────────────────────────────────────────
 
 struct Statement

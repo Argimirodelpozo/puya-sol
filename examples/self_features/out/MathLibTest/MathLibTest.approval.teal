@@ -1,0 +1,104 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M01_LibraryCall.sol.MathLibTest.approval_program() -> uint64:
+main:
+    intcblock 64 1
+    bytecblock 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbdd5554d 0xf5b1fbab // method "testSquare(uint512)uint512", method "testClamp(uint512,uint512,uint512)uint512"
+    txna ApplicationArgs 0
+    match testSquare testClamp
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M01_LibraryCall.sol.MathLibTest.testSquare[routing]() -> void:
+testSquare:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dup
+    b*
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M01_LibraryCall.sol.MathLibTest.testClamp[routing]() -> void:
+testClamp:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    cover 3
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    b<
+    bz testClamp_after_if_else@3
+    dig 1
+
+testClamp_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M01_LibraryCall.sol.MathLib.clamp@6:
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+testClamp_after_if_else@3:
+    dig 2
+    dig 1
+    b>
+    bz testClamp_after_if_else@5
+    dup
+    b testClamp_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M01_LibraryCall.sol.MathLib.clamp@6
+
+testClamp_after_if_else@5:
+    dig 2
+    b testClamp_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M01_LibraryCall.sol.MathLib.clamp@6

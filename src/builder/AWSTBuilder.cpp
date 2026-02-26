@@ -9,55 +9,109 @@
 namespace puyasol::builder
 {
 
+/// Returns true if a statement always terminates (return or assert(false)).
+static bool statementAlwaysTerminates(awst::Statement const& _stmt)
+{
+	if (dynamic_cast<awst::ReturnStatement const*>(&_stmt))
+		return true;
+	// assert(false) from revert/require
+	if (auto const* exprStmt = dynamic_cast<awst::ExpressionStatement const*>(&_stmt))
+	{
+		if (auto const* assertExpr = dynamic_cast<awst::AssertExpression const*>(exprStmt->expr.get()))
+		{
+			if (auto const* boolConst = dynamic_cast<awst::BoolConstant const*>(assertExpr->condition.get()))
+				if (!boolConst->value)
+					return true;
+		}
+	}
+	return false;
+}
+
+/// Returns true if the given block always terminates (return or revert on all paths).
+static bool blockAlwaysTerminates(awst::Block const& _block)
+{
+	if (_block.body.empty())
+		return false;
+	auto const& last = _block.body.back();
+	if (statementAlwaysTerminates(*last))
+		return true;
+	// Check if last statement is an IfElse where both branches terminate
+	if (auto const* ifElse = dynamic_cast<awst::IfElse const*>(last.get()))
+	{
+		if (!ifElse->elseBranch)
+			return false; // no else → might fall through
+		bool ifTerminates = blockAlwaysTerminates(*ifElse->ifBranch);
+		bool elseTerminates = blockAlwaysTerminates(*ifElse->elseBranch);
+		return ifTerminates && elseTerminates;
+	}
+	return false;
+}
+
 std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 	solidity::frontend::CompilerStack& _compiler,
-	std::string const& _sourceFile
+	std::string const& _sourceFile,
+	uint64_t _opupBudget
 )
 {
 	m_storageMapper = std::make_unique<StorageMapper>(m_typeMapper);
 	m_libraryFunctionIds.clear();
 	std::vector<std::shared_ptr<awst::RootNode>> roots;
 
-	// First pass: register all library function IDs (before translating any bodies)
+	// First pass: register all library and free function IDs (before translating any bodies)
 	for (auto const& sourceName: _compiler.sourceNames())
 	{
 		auto const& sourceUnit = _compiler.ast(sourceName);
 
 		for (auto const& node: sourceUnit.nodes())
 		{
+			// Register library functions
 			auto const* contract = dynamic_cast<solidity::frontend::ContractDefinition const*>(
 				node.get()
 			);
 
-			if (!contract || !contract->isLibrary())
-				continue;
-
-			std::string libraryName = contract->name();
-
-			// Detect overloaded function names
-			std::unordered_map<std::string, int> nameCount;
-			for (auto const* func: contract->definedFunctions())
+			if (contract && contract->isLibrary())
 			{
-				if (!func->isImplemented())
-					continue;
-				nameCount[libraryName + "." + func->name()]++;
+				std::string libraryName = contract->name();
+
+				// Detect overloaded function names
+				std::unordered_map<std::string, int> nameCount;
+				for (auto const* func: contract->definedFunctions())
+				{
+					if (!func->isImplemented())
+						continue;
+					nameCount[libraryName + "." + func->name()]++;
+				}
+
+				for (auto const* func: contract->definedFunctions())
+				{
+					if (!func->isImplemented())
+						continue;
+
+					std::string baseName = libraryName + "." + func->name();
+					std::string qualifiedName = baseName;
+					std::string subroutineId = _sourceFile + "." + baseName;
+					// Disambiguate overloaded functions by parameter count
+					if (nameCount[baseName] > 1)
+					{
+						qualifiedName += "(" + std::to_string(func->parameters().size()) + ")";
+						subroutineId += "(" + std::to_string(func->parameters().size()) + ")";
+					}
+					m_libraryFunctionIds[qualifiedName] = subroutineId;
+				}
+				continue;
 			}
 
-			for (auto const* func: contract->definedFunctions())
+			// Register free (file-level) functions
+			auto const* func = dynamic_cast<solidity::frontend::FunctionDefinition const*>(
+				node.get()
+			);
+			if (func && func->isImplemented() && func->isFree())
 			{
-				if (!func->isImplemented())
-					continue;
-
-				std::string baseName = libraryName + "." + func->name();
-				std::string qualifiedName = baseName;
-				std::string subroutineId = _sourceFile + "." + baseName;
-				// Disambiguate overloaded functions by parameter count
-				if (nameCount[baseName] > 1)
-				{
-					qualifiedName += "(" + std::to_string(func->parameters().size()) + ")";
-					subroutineId += "(" + std::to_string(func->parameters().size()) + ")";
-				}
+				std::string qualifiedName = func->name();
+				std::string subroutineId = _sourceFile + "." + qualifiedName;
 				m_libraryFunctionIds[qualifiedName] = subroutineId;
+				// Also store by AST ID for operator overload resolution
+				m_freeFunctionById[func->id()] = subroutineId;
 			}
 		}
 	}
@@ -123,10 +177,14 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					sub->documentation.description = *func->documentation()->text();
 
 				// Parameters
-				for (auto const& param: func->parameters())
+				for (size_t pi = 0; pi < func->parameters().size(); ++pi)
 				{
+					auto const& param = func->parameters()[pi];
 					awst::SubroutineArgument arg;
 					arg.name = param->name();
+					// Assign synthetic name for unnamed parameters
+					if (arg.name.empty())
+						arg.name = "_param" + std::to_string(pi);
 					arg.sourceLocation.file = _sourceFile;
 					arg.sourceLocation.line = param->location().start >= 0 ? param->location().start : 0;
 					arg.sourceLocation.endLine = param->location().end >= 0 ? param->location().end : 0;
@@ -167,7 +225,96 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				);
 				StatementTranslator stmtTranslator(exprTranslator, m_typeMapper, _sourceFile);
 
-				sub->body = stmtTranslator.translateBlock(func->body());
+				// Set function context for inline assembly translation
+			{
+				std::vector<std::pair<std::string, awst::WType const*>> paramContext;
+				for (size_t pi = 0; pi < func->parameters().size(); ++pi)
+				{
+					auto const& param = func->parameters()[pi];
+					std::string pname = param->name();
+					if (pname.empty())
+						pname = "_param" + std::to_string(pi);
+					paramContext.emplace_back(pname, m_typeMapper.map(param->type()));
+				}
+				stmtTranslator.setFunctionContext(paramContext, sub->returnType);
+			}
+
+			sub->body = stmtTranslator.translateBlock(func->body());
+
+				// Insert zero-initialization for named return variables
+				// Solidity implicitly initializes named returns to their zero values
+				{
+					std::vector<std::shared_ptr<awst::Statement>> inits;
+					for (auto const& rp: returnParams)
+					{
+						if (rp->name().empty())
+							continue;
+						auto* rpType = m_typeMapper.map(rp->type());
+
+						auto target = std::make_shared<awst::VarExpression>();
+						target->sourceLocation = loc;
+						target->wtype = rpType;
+						target->name = rp->name();
+
+						std::shared_ptr<awst::Expression> zeroVal;
+						if (rpType == awst::WType::boolType())
+						{
+							auto def = std::make_shared<awst::BoolConstant>();
+							def->sourceLocation = loc;
+							def->wtype = rpType;
+							def->value = false;
+							zeroVal = std::move(def);
+						}
+						else if (rpType == awst::WType::uint64Type()
+							|| rpType == awst::WType::biguintType())
+						{
+							auto def = std::make_shared<awst::IntegerConstant>();
+							def->sourceLocation = loc;
+							def->wtype = rpType;
+							def->value = "0";
+							zeroVal = std::move(def);
+						}
+						else if (rpType && rpType->kind() == awst::WTypeKind::Bytes)
+						{
+							auto def = std::make_shared<awst::BytesConstant>();
+							def->sourceLocation = loc;
+							def->wtype = rpType;
+							def->encoding = awst::BytesEncoding::Base16;
+							// For fixed-size bytes types (bytes1..bytes32), produce N zero bytes
+							auto const* bytesType = dynamic_cast<awst::BytesWType const*>(rpType);
+							if (bytesType && bytesType->length().has_value())
+							{
+								int len = bytesType->length().value();
+								def->value = std::vector<unsigned char>(len, 0);
+							}
+							else
+							{
+								def->value = {};
+							}
+							zeroVal = std::move(def);
+						}
+						else
+						{
+							// Skip complex types (structs, arrays, etc.) —
+							// they'll be explicitly assigned in all code paths
+							continue;
+						}
+
+						auto assign = std::make_shared<awst::AssignmentStatement>();
+						assign->sourceLocation = loc;
+						assign->target = std::move(target);
+						assign->value = std::move(zeroVal);
+						inits.push_back(std::move(assign));
+					}
+					if (!inits.empty())
+					{
+						sub->body->body.insert(
+							sub->body->body.begin(),
+							std::make_move_iterator(inits.begin()),
+							std::make_move_iterator(inits.end())
+						);
+					}
+				}
 
 				// Handle assembly-only functions with known semantics
 				if (sub->body->body.empty() && func->name() == "efficientKeccak256"
@@ -211,8 +358,203 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 
 				// Synthesize implicit return for named return parameters
 				if (!sub->body->body.empty()
-					&& !dynamic_cast<awst::ReturnStatement const*>(sub->body->body.back().get())
+					&& !blockAlwaysTerminates(*sub->body)
 					&& !returnParams.empty())
+				{
+					bool hasNamedReturns = false;
+					for (auto const& rp: returnParams)
+						if (!rp->name().empty())
+							hasNamedReturns = true;
+
+					if (!hasNamedReturns)
+					{
+						// No named returns — skip implicit return
+					}
+					else
+					{
+					auto implicitReturn = std::make_shared<awst::ReturnStatement>();
+					implicitReturn->sourceLocation = loc;
+
+					if (returnParams.size() == 1)
+					{
+						auto var = std::make_shared<awst::VarExpression>();
+						var->sourceLocation = loc;
+						var->name = returnParams[0]->name();
+						var->wtype = m_typeMapper.map(returnParams[0]->type());
+						implicitReturn->value = std::move(var);
+					}
+					else
+					{
+						auto tuple = std::make_shared<awst::TupleExpression>();
+						tuple->sourceLocation = loc;
+						std::vector<awst::WType const*> types;
+						for (auto const& rp: returnParams)
+						{
+							auto var = std::make_shared<awst::VarExpression>();
+							var->sourceLocation = loc;
+							var->name = rp->name();
+							var->wtype = m_typeMapper.map(rp->type());
+							types.push_back(var->wtype);
+							tuple->items.push_back(std::move(var));
+						}
+						tuple->wtype = sub->returnType;
+						implicitReturn->value = std::move(tuple);
+					}
+
+					sub->body->body.push_back(std::move(implicitReturn));
+					}
+				}
+
+				roots.push_back(std::move(sub));
+			}
+		}
+	}
+
+	// Translate free (file-level) functions as Subroutine root nodes
+	for (auto const& sourceName: _compiler.sourceNames())
+	{
+		auto const& sourceUnit = _compiler.ast(sourceName);
+
+		for (auto const& node: sourceUnit.nodes())
+		{
+			auto const* func = dynamic_cast<solidity::frontend::FunctionDefinition const*>(
+				node.get()
+			);
+			if (!func || !func->isImplemented() || !func->isFree())
+				continue;
+
+			std::string qualifiedName = func->name();
+			auto it = m_libraryFunctionIds.find(qualifiedName);
+			std::string subroutineId = (it != m_libraryFunctionIds.end())
+				? it->second
+				: _sourceFile + "." + qualifiedName;
+
+			Logger::instance().debug("Translating free function: " + qualifiedName);
+
+			auto sub = std::make_shared<awst::Subroutine>();
+			awst::SourceLocation loc;
+			loc.file = _sourceFile;
+			loc.line = func->location().start >= 0 ? func->location().start : 0;
+			loc.endLine = func->location().end >= 0 ? func->location().end : 0;
+
+			sub->sourceLocation = loc;
+			sub->id = subroutineId;
+			sub->name = qualifiedName;
+
+			if (func->documentation())
+				sub->documentation.description = *func->documentation()->text();
+
+			for (size_t pi = 0; pi < func->parameters().size(); ++pi)
+			{
+				auto const& param = func->parameters()[pi];
+				awst::SubroutineArgument arg;
+				arg.name = param->name();
+				if (arg.name.empty())
+					arg.name = "_param" + std::to_string(pi);
+				arg.sourceLocation.file = _sourceFile;
+				arg.sourceLocation.line = param->location().start >= 0 ? param->location().start : 0;
+				arg.sourceLocation.endLine = param->location().end >= 0 ? param->location().end : 0;
+				arg.wtype = m_typeMapper.map(param->type());
+				sub->args.push_back(std::move(arg));
+			}
+
+			auto const& returnParams = func->returnParameters();
+			if (returnParams.empty())
+				sub->returnType = awst::WType::voidType();
+			else if (returnParams.size() == 1)
+				sub->returnType = m_typeMapper.map(returnParams[0]->type());
+			else
+			{
+				std::vector<awst::WType const*> types;
+				for (auto const& rp: returnParams)
+					types.push_back(m_typeMapper.map(rp->type()));
+				sub->returnType = new awst::WTuple(std::move(types));
+			}
+
+			sub->pure = func->stateMutability() == solidity::frontend::StateMutability::Pure;
+
+			ExpressionTranslator exprTranslator(
+				m_typeMapper, *m_storageMapper, _sourceFile, "", m_libraryFunctionIds
+			);
+			StatementTranslator stmtTranslator(exprTranslator, m_typeMapper, _sourceFile);
+
+			{
+				std::vector<std::pair<std::string, awst::WType const*>> paramContext;
+				for (size_t pi = 0; pi < func->parameters().size(); ++pi)
+				{
+					auto const& param = func->parameters()[pi];
+					std::string pname = param->name();
+					if (pname.empty())
+						pname = "_param" + std::to_string(pi);
+					paramContext.emplace_back(pname, m_typeMapper.map(param->type()));
+				}
+				stmtTranslator.setFunctionContext(paramContext, sub->returnType);
+			}
+
+			sub->body = stmtTranslator.translateBlock(func->body());
+
+			// Insert zero-initialization for named return variables
+			{
+				std::vector<std::shared_ptr<awst::Statement>> inits;
+				for (auto const& rp: returnParams)
+				{
+					if (rp->name().empty())
+						continue;
+					auto* rpType = m_typeMapper.map(rp->type());
+
+					auto target = std::make_shared<awst::VarExpression>();
+					target->sourceLocation = loc;
+					target->wtype = rpType;
+					target->name = rp->name();
+
+					std::shared_ptr<awst::Expression> zeroVal;
+					if (rpType == awst::WType::boolType())
+					{
+						auto def = std::make_shared<awst::BoolConstant>();
+						def->sourceLocation = loc;
+						def->wtype = rpType;
+						def->value = false;
+						zeroVal = std::move(def);
+					}
+					else if (rpType == awst::WType::uint64Type()
+						|| rpType == awst::WType::biguintType())
+					{
+						auto def = std::make_shared<awst::IntegerConstant>();
+						def->sourceLocation = loc;
+						def->wtype = rpType;
+						def->value = "0";
+						zeroVal = std::move(def);
+					}
+					else
+						continue;
+
+					auto assign = std::make_shared<awst::AssignmentStatement>();
+					assign->sourceLocation = loc;
+					assign->target = std::move(target);
+					assign->value = std::move(zeroVal);
+					inits.push_back(std::move(assign));
+				}
+				if (!inits.empty())
+				{
+					sub->body->body.insert(
+						sub->body->body.begin(),
+						std::make_move_iterator(inits.begin()),
+						std::make_move_iterator(inits.end())
+					);
+				}
+			}
+
+			// Synthesize implicit return for named return parameters
+			if (!sub->body->body.empty()
+				&& !blockAlwaysTerminates(*sub->body)
+				&& !returnParams.empty())
+			{
+				bool hasNamedReturns = false;
+				for (auto const& rp: returnParams)
+					if (!rp->name().empty())
+						hasNamedReturns = true;
+
+				if (hasNamedReturns)
 				{
 					auto implicitReturn = std::make_shared<awst::ReturnStatement>();
 					implicitReturn->sourceLocation = loc;
@@ -245,13 +587,13 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 
 					sub->body->body.push_back(std::move(implicitReturn));
 				}
-
-				roots.push_back(std::move(sub));
 			}
+
+			roots.push_back(std::move(sub));
 		}
 	}
 
-	// Second pass: translate contracts
+	// Translate contracts
 	for (auto const& sourceName: _compiler.sourceNames())
 	{
 		auto const& sourceUnit = _compiler.ast(sourceName);
@@ -284,7 +626,8 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 			Logger::instance().info("Translating contract: " + contract->name());
 
 			ContractTranslator translator(
-				m_typeMapper, *m_storageMapper, _sourceFile, m_libraryFunctionIds
+				m_typeMapper, *m_storageMapper, _sourceFile, m_libraryFunctionIds,
+				_opupBudget, m_freeFunctionById
 			);
 			auto awstContract = translator.translate(*contract);
 			roots.push_back(std::move(awstContract));
@@ -375,6 +718,11 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 			for (auto const& [_, v]: e->values)
 				if (v) collectRefs(*v, refs);
 		}
+		if (auto const* e = dynamic_cast<awst::NewStruct const*>(&expr))
+		{
+			for (auto const& [_, v]: e->values)
+				if (v) collectRefs(*v, refs);
+		}
 		if (auto const* e = dynamic_cast<awst::NewArray const*>(&expr))
 		{
 			for (auto const& v: e->values)
@@ -391,6 +739,100 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 		if (auto const* e = dynamic_cast<awst::BoxValueExpression const*>(&expr))
 		{
 			if (e->key) collectRefs(*e->key, refs);
+		}
+		if (auto const* e = dynamic_cast<awst::BytesBinaryOperation const*>(&expr))
+		{
+			if (e->left) collectRefs(*e->left, refs);
+			if (e->right) collectRefs(*e->right, refs);
+		}
+		if (auto const* e = dynamic_cast<awst::TupleItemExpression const*>(&expr))
+		{
+			if (e->base) collectRefs(*e->base, refs);
+		}
+		if (auto const* e = dynamic_cast<awst::ARC4Encode const*>(&expr))
+		{
+			if (e->value) collectRefs(*e->value, refs);
+		}
+		if (auto const* e = dynamic_cast<awst::ARC4Decode const*>(&expr))
+		{
+			if (e->value) collectRefs(*e->value, refs);
+		}
+		if (auto const* e = dynamic_cast<awst::Copy const*>(&expr))
+		{
+			if (e->value) collectRefs(*e->value, refs);
+		}
+		if (auto const* e = dynamic_cast<awst::SingleEvaluation const*>(&expr))
+		{
+			if (e->source) collectRefs(*e->source, refs);
+		}
+		if (auto const* e = dynamic_cast<awst::CheckedMaybe const*>(&expr))
+		{
+			if (e->expr) collectRefs(*e->expr, refs);
+		}
+		if (auto const* e = dynamic_cast<awst::Emit const*>(&expr))
+		{
+			if (e->value) collectRefs(*e->value, refs);
+		}
+		if (auto const* e = dynamic_cast<awst::ArrayConcat const*>(&expr))
+		{
+			if (e->left) collectRefs(*e->left, refs);
+			if (e->right) collectRefs(*e->right, refs);
+		}
+		if (auto const* e = dynamic_cast<awst::ArrayExtend const*>(&expr))
+		{
+			if (e->base) collectRefs(*e->base, refs);
+			if (e->other) collectRefs(*e->other, refs);
+		}
+		if (auto const* e = dynamic_cast<awst::StateGet const*>(&expr))
+		{
+			if (e->field) collectRefs(*e->field, refs);
+			if (e->defaultValue) collectRefs(*e->defaultValue, refs);
+		}
+		if (auto const* e = dynamic_cast<awst::StateExists const*>(&expr))
+		{
+			if (e->field) collectRefs(*e->field, refs);
+		}
+		if (auto const* e = dynamic_cast<awst::StateDelete const*>(&expr))
+		{
+			if (e->field) collectRefs(*e->field, refs);
+		}
+		if (auto const* e = dynamic_cast<awst::StateGetEx const*>(&expr))
+		{
+			if (e->field) collectRefs(*e->field, refs);
+		}
+		if (auto const* e = dynamic_cast<awst::AppStateExpression const*>(&expr))
+		{
+			if (e->key) collectRefs(*e->key, refs);
+		}
+		if (auto const* e = dynamic_cast<awst::AppAccountStateExpression const*>(&expr))
+		{
+			if (e->key) collectRefs(*e->key, refs);
+			if (e->account) collectRefs(*e->account, refs);
+		}
+		if (auto const* e = dynamic_cast<awst::BoxPrefixedKeyExpression const*>(&expr))
+		{
+			if (e->prefix) collectRefs(*e->prefix, refs);
+			if (e->key) collectRefs(*e->key, refs);
+		}
+		if (auto const* e = dynamic_cast<awst::CreateInnerTransaction const*>(&expr))
+		{
+			for (auto const& [_, v]: e->fields)
+				if (v) collectRefs(*v, refs);
+		}
+		if (auto const* e = dynamic_cast<awst::SubmitInnerTransaction const*>(&expr))
+		{
+			for (auto const& itxn: e->itxns)
+				if (itxn) collectRefs(*itxn, refs);
+		}
+		if (auto const* e = dynamic_cast<awst::InnerTransactionField const*>(&expr))
+		{
+			if (e->itxn) collectRefs(*e->itxn, refs);
+			if (e->arrayIndex) collectRefs(*e->arrayIndex, refs);
+		}
+		if (auto const* e = dynamic_cast<awst::CommaExpression const*>(&expr))
+		{
+			for (auto const& ex: e->expressions)
+				if (ex) collectRefs(*ex, refs);
 		}
 	};
 
@@ -425,6 +867,32 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 		{
 			if (wl->condition) collectRefs(*wl->condition, refs);
 			if (wl->loopBody) collectStmtRefs(*wl->loopBody, refs);
+		}
+		if (auto const* sw = dynamic_cast<awst::Switch const*>(&stmt))
+		{
+			if (sw->value) collectRefs(*sw->value, refs);
+			for (auto const& [caseExpr, caseBlock]: sw->cases)
+			{
+				if (caseExpr) collectRefs(*caseExpr, refs);
+				if (caseBlock) collectStmtRefs(*caseBlock, refs);
+			}
+			if (sw->defaultCase) collectStmtRefs(*sw->defaultCase, refs);
+		}
+		if (auto const* fl = dynamic_cast<awst::ForInLoop const*>(&stmt))
+		{
+			if (fl->sequence) collectRefs(*fl->sequence, refs);
+			if (fl->items) collectRefs(*fl->items, refs);
+			if (fl->loopBody) collectStmtRefs(*fl->loopBody, refs);
+		}
+		if (auto const* ua = dynamic_cast<awst::UInt64AugmentedAssignment const*>(&stmt))
+		{
+			if (ua->target) collectRefs(*ua->target, refs);
+			if (ua->value) collectRefs(*ua->value, refs);
+		}
+		if (auto const* ba = dynamic_cast<awst::BigUIntAugmentedAssignment const*>(&stmt))
+		{
+			if (ba->target) collectRefs(*ba->target, refs);
+			if (ba->value) collectRefs(*ba->value, refs);
 		}
 	};
 

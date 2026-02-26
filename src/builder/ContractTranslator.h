@@ -22,7 +22,9 @@ public:
 		TypeMapper& _typeMapper,
 		StorageMapper& _storageMapper,
 		std::string const& _sourceFile,
-		LibraryFunctionIdMap const& _libraryFunctionIds
+		LibraryFunctionIdMap const& _libraryFunctionIds,
+		uint64_t _opupBudget = 0,
+		FreeFunctionIdMap const& _freeFunctionById = {}
 	);
 
 	/// Translate a full contract definition.
@@ -35,6 +37,8 @@ private:
 	StorageMapper& m_storageMapper;
 	std::string m_sourceFile;
 	LibraryFunctionIdMap const& m_libraryFunctionIds;
+	uint64_t m_opupBudget = 0;
+	FreeFunctionIdMap const& m_freeFunctionById;
 
 	std::unique_ptr<ExpressionTranslator> m_exprTranslator;
 	std::unique_ptr<StatementTranslator> m_stmtTranslator;

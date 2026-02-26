@@ -7,16 +7,43 @@
 namespace puyasol::builder
 {
 
+static bool blockAlwaysTerminates(awst::Block const& _block)
+{
+	if (_block.body.empty())
+		return false;
+	auto const& last = _block.body.back();
+	if (dynamic_cast<awst::ReturnStatement const*>(last.get()))
+		return true;
+	if (auto const* exprStmt = dynamic_cast<awst::ExpressionStatement const*>(last.get()))
+	{
+		if (auto const* assertExpr = dynamic_cast<awst::AssertExpression const*>(exprStmt->expr.get()))
+			if (auto const* boolConst = dynamic_cast<awst::BoolConstant const*>(assertExpr->condition.get()))
+				if (!boolConst->value)
+					return true;
+	}
+	if (auto const* ifElse = dynamic_cast<awst::IfElse const*>(last.get()))
+	{
+		if (!ifElse->elseBranch)
+			return false;
+		return blockAlwaysTerminates(*ifElse->ifBranch) && blockAlwaysTerminates(*ifElse->elseBranch);
+	}
+	return false;
+}
+
 ContractTranslator::ContractTranslator(
 	TypeMapper& _typeMapper,
 	StorageMapper& _storageMapper,
 	std::string const& _sourceFile,
-	LibraryFunctionIdMap const& _libraryFunctionIds
+	LibraryFunctionIdMap const& _libraryFunctionIds,
+	uint64_t _opupBudget,
+	FreeFunctionIdMap const& _freeFunctionById
 )
 	: m_typeMapper(_typeMapper),
 	  m_storageMapper(_storageMapper),
 	  m_sourceFile(_sourceFile),
-	  m_libraryFunctionIds(_libraryFunctionIds)
+	  m_libraryFunctionIds(_libraryFunctionIds),
+	  m_opupBudget(_opupBudget),
+	  m_freeFunctionById(_freeFunctionById)
 {
 }
 
@@ -40,7 +67,8 @@ std::shared_ptr<awst::Contract> ContractTranslator::translate(
 
 	// Create translators for this contract
 	m_exprTranslator = std::make_unique<ExpressionTranslator>(
-		m_typeMapper, m_storageMapper, m_sourceFile, contractName, m_libraryFunctionIds
+		m_typeMapper, m_storageMapper, m_sourceFile, contractName,
+		m_libraryFunctionIds, m_overloadedNames, m_freeFunctionById
 	);
 	m_stmtTranslator = std::make_unique<StatementTranslator>(
 		*m_exprTranslator, m_typeMapper, m_sourceFile
@@ -92,7 +120,7 @@ std::shared_ptr<awst::Contract> ContractTranslator::translate(
 	// Re-create expression translator with overload info
 	m_exprTranslator = std::make_unique<ExpressionTranslator>(
 		m_typeMapper, m_storageMapper, m_sourceFile, contractName,
-		m_libraryFunctionIds, m_overloadedNames
+		m_libraryFunctionIds, m_overloadedNames, m_freeFunctionById
 	);
 	m_stmtTranslator = std::make_unique<StatementTranslator>(
 		*m_exprTranslator, m_typeMapper, m_sourceFile
@@ -269,6 +297,61 @@ awst::ContractMethod ContractTranslator::buildApprovalProgram(
 			}
 		}
 
+		// Initialize length counters for dynamic array state variables stored in boxes
+		{
+			auto const& linearized = _contract.annotation().linearizedBaseContracts;
+			std::set<std::string> lengthInitialized;
+			for (auto it = linearized.rbegin(); it != linearized.rend(); ++it)
+			{
+				for (auto const* var: (*it)->stateVariables())
+				{
+					if (var->isConstant())
+						continue;
+					if (lengthInitialized.count(var->name()))
+						continue;
+
+					auto kind = StorageMapper::shouldUseBoxStorage(*var)
+						? awst::AppStorageKind::Box
+						: awst::AppStorageKind::AppGlobal;
+
+					// Only for box-stored arrays (dynamic arrays)
+					if (kind != awst::AppStorageKind::Box)
+						continue;
+
+					auto* wtype = m_typeMapper.map(var->type());
+					if (!wtype || wtype->kind() != awst::WTypeKind::ReferenceArray)
+						continue;
+
+					lengthInitialized.insert(var->name());
+
+					// Initialize varName_length = 0 in global state
+					std::string lenKeyStr = var->name() + "_length";
+					auto key = std::make_shared<awst::BytesConstant>();
+					key->sourceLocation = method.sourceLocation;
+					key->wtype = awst::WType::bytesType();
+					key->encoding = awst::BytesEncoding::Utf8;
+					key->value = std::vector<uint8_t>(lenKeyStr.begin(), lenKeyStr.end());
+
+					auto zero = std::make_shared<awst::IntegerConstant>();
+					zero->sourceLocation = method.sourceLocation;
+					zero->wtype = awst::WType::uint64Type();
+					zero->value = "0";
+
+					auto put = std::make_shared<awst::IntrinsicCall>();
+					put->sourceLocation = method.sourceLocation;
+					put->opCode = "app_global_put";
+					put->wtype = awst::WType::voidType();
+					put->stackArgs.push_back(key);
+					put->stackArgs.push_back(zero);
+
+					auto stmt = std::make_shared<awst::ExpressionStatement>();
+					stmt->sourceLocation = method.sourceLocation;
+					stmt->expr = put;
+					createBlock->body.push_back(stmt);
+				}
+			}
+		}
+
 		// Collect explicit base constructor calls from the constructor's modifiers
 		auto const* constructor = _contract.constructor();
 		std::map<solidity::frontend::ContractDefinition const*,
@@ -277,47 +360,65 @@ awst::ContractMethod ContractTranslator::buildApprovalProgram(
 
 		if (constructor)
 		{
-			// Zero-initialize the constructor's own parameters with type-correct defaults.
-			// This is needed because base constructor args may reference these parameters,
-			// and Puya defaults uninitialized vars to integer 0 regardless of type.
+			// Read constructor parameters from ApplicationArgs during create.
+			// Each param is ARC4-encoded in ApplicationArgs[i].
+			// For contracts with no constructor params, this loop is skipped.
+			int argIndex = 0;
 			for (auto const& param: constructor->parameters())
 			{
 				auto* paramType = m_typeMapper.map(param->type());
-				std::shared_ptr<awst::Expression> defaultVal;
+
+				// txna ApplicationArgs i → raw ARC4 bytes
+				auto readArg = std::make_shared<awst::IntrinsicCall>();
+				readArg->sourceLocation = method.sourceLocation;
+				readArg->opCode = "txna";
+				readArg->immediates = {std::string("ApplicationArgs"), argIndex};
+				readArg->wtype = awst::WType::bytesType();
+
+				std::shared_ptr<awst::Expression> paramVal;
 
 				if (paramType == awst::WType::accountType())
 				{
-					auto addr = std::make_shared<awst::AddressConstant>();
-					addr->sourceLocation = method.sourceLocation;
-					addr->wtype = awst::WType::accountType();
-					addr->value = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ";
-					defaultVal = addr;
+					// bytes → account via ReinterpretCast
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = method.sourceLocation;
+					cast->wtype = awst::WType::accountType();
+					cast->expr = std::move(readArg);
+					paramVal = std::move(cast);
 				}
 				else if (paramType == awst::WType::biguintType())
 				{
-					auto val = std::make_shared<awst::IntegerConstant>();
-					val->sourceLocation = method.sourceLocation;
-					val->wtype = awst::WType::biguintType();
-					val->value = "0";
-					defaultVal = val;
+					// bytes → biguint via ReinterpretCast (big-endian, no-op on AVM)
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = method.sourceLocation;
+					cast->wtype = awst::WType::biguintType();
+					cast->expr = std::move(readArg);
+					paramVal = std::move(cast);
 				}
 				else if (paramType == awst::WType::uint64Type()
 					|| paramType == awst::WType::boolType())
 				{
-					auto val = std::make_shared<awst::IntegerConstant>();
-					val->sourceLocation = method.sourceLocation;
-					val->wtype = awst::WType::uint64Type();
-					val->value = "0";
-					defaultVal = val;
+					// ARC4 uint64 is 8-byte big-endian → btoi to native uint64
+					auto btoi = std::make_shared<awst::IntrinsicCall>();
+					btoi->sourceLocation = method.sourceLocation;
+					btoi->opCode = "btoi";
+					btoi->wtype = awst::WType::uint64Type();
+					btoi->stackArgs.push_back(std::move(readArg));
+					paramVal = std::move(btoi);
+				}
+				else if (paramType == awst::WType::stringType())
+				{
+					// bytes → string via ReinterpretCast
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = method.sourceLocation;
+					cast->wtype = awst::WType::stringType();
+					cast->expr = std::move(readArg);
+					paramVal = std::move(cast);
 				}
 				else
 				{
-					auto val = std::make_shared<awst::BytesConstant>();
-					val->sourceLocation = method.sourceLocation;
-					val->wtype = paramType ? paramType : awst::WType::bytesType();
-					val->encoding = awst::BytesEncoding::Base16;
-					val->value = {};
-					defaultVal = val;
+					// bytes, etc. → use raw bytes directly
+					paramVal = std::move(readArg);
 				}
 
 				auto target = std::make_shared<awst::VarExpression>();
@@ -328,8 +429,10 @@ awst::ContractMethod ContractTranslator::buildApprovalProgram(
 				auto assignment = std::make_shared<awst::AssignmentStatement>();
 				assignment->sourceLocation = method.sourceLocation;
 				assignment->target = target;
-				assignment->value = defaultVal;
-				createBlock->body.push_back(assignment);
+				assignment->value = std::move(paramVal);
+				createBlock->body.push_back(std::move(assignment));
+
+				++argIndex;
 			}
 
 			for (auto const& mod: constructor->modifiers())
@@ -340,6 +443,20 @@ awst::ContractMethod ContractTranslator::buildApprovalProgram(
 				{
 					explicitBaseArgs[baseContract] = mod->arguments();
 				}
+			}
+		}
+
+		// Also collect arguments from inheritance specifiers (e.g. `is Base(arg1, arg2)`)
+		for (auto const& baseSpec: _contract.baseContracts())
+		{
+			auto const* refDecl = baseSpec->name().annotation().referencedDeclaration;
+			auto const* baseContract =
+				dynamic_cast<solidity::frontend::ContractDefinition const*>(refDecl);
+			if (baseContract && baseSpec->arguments()
+				&& !baseSpec->arguments()->empty()
+				&& explicitBaseArgs.find(baseContract) == explicitBaseArgs.end())
+			{
+				explicitBaseArgs[baseContract] = baseSpec->arguments();
 			}
 		}
 
@@ -524,18 +641,149 @@ awst::ContractMethod ContractTranslator::translateFunction(
 	// ARC4 method config for public/external functions
 	method.arc4MethodConfig = buildARC4Config(_func, method.sourceLocation);
 
+	// For ARC4 methods, convert array/tuple parameter types to ARC4 encoding
+	// and prepare decode operations for the function body
+	struct ParamDecode
+	{
+		std::string name;
+		awst::WType const* nativeType;
+		awst::WType const* arc4Type;
+		awst::SourceLocation loc;
+	};
+	std::vector<ParamDecode> paramDecodes;
+	if (method.arc4MethodConfig.has_value())
+	{
+		for (auto& arg: method.args)
+		{
+			// Remap aggregate types (arrays, tuples) to ARC4 encoding.
+			// Scalar types (biguint, uint64, bool) are handled by puya's
+			// ARC4 router automatically via built-in encode/decode.
+			bool isAggregate = arg.wtype
+				&& (arg.wtype->kind() == awst::WTypeKind::ReferenceArray
+					|| arg.wtype->kind() == awst::WTypeKind::WTuple);
+			if (!isAggregate)
+				continue;
+
+			awst::WType const* arc4Type = m_typeMapper.mapToARC4Type(arg.wtype);
+			if (arc4Type != arg.wtype)
+			{
+				paramDecodes.push_back({arg.name, arg.wtype, arc4Type, arg.sourceLocation});
+				arg.wtype = arc4Type;
+			}
+		}
+	}
+
 	// Function body
 	if (_func.isImplemented())
 	{
+		// Set function context for inline assembly translation
+		// Use the (possibly ARC4-remapped) types from the method args
+		{
+			std::vector<std::pair<std::string, awst::WType const*>> paramContext;
+			for (auto const& arg: method.args)
+				paramContext.emplace_back(arg.name, arg.wtype);
+			m_stmtTranslator->setFunctionContext(paramContext, method.returnType);
+		}
+
 		method.body = m_stmtTranslator->translateBlock(_func.body());
+
+		// Skip ARC4 decode for functions with inline assembly blocks.
+		// The assembly translator handles parameter data directly via
+		// calldataload mapping using ARC4-encoded types.
+		bool hasInlineAssembly = false;
+		for (auto const& stmt: _func.body().statements())
+		{
+			if (dynamic_cast<solidity::frontend::InlineAssembly const*>(stmt.get()))
+			{
+				hasInlineAssembly = true;
+				break;
+			}
+		}
+
+		// Insert ARC4 decode operations for aggregate parameters.
+		// The method args were remapped to ARC4 types, but the body uses
+		// native types. We rename the ARC4 arg and insert a decode statement.
+		if (!paramDecodes.empty() && !hasInlineAssembly)
+		{
+			std::vector<std::shared_ptr<awst::Statement>> decodeStmts;
+			for (auto& pd: paramDecodes)
+			{
+				// Rename the method arg to __arc4_<name>
+				std::string arc4Name = "__arc4_" + pd.name;
+				for (auto& arg: method.args)
+				{
+					if (arg.name == pd.name)
+					{
+						arg.name = arc4Name;
+						break;
+					}
+				}
+
+				// Create: <name> = arc4_decode(__arc4_<name>)
+				auto arc4Var = std::make_shared<awst::VarExpression>();
+				arc4Var->sourceLocation = pd.loc;
+				arc4Var->name = arc4Name;
+				arc4Var->wtype = pd.arc4Type;
+
+				auto decode = std::make_shared<awst::ARC4Decode>();
+				decode->sourceLocation = pd.loc;
+				decode->wtype = pd.nativeType;
+				decode->value = std::move(arc4Var);
+
+				auto target = std::make_shared<awst::VarExpression>();
+				target->sourceLocation = pd.loc;
+				target->name = pd.name;
+				target->wtype = pd.nativeType;
+
+				auto assign = std::make_shared<awst::AssignmentStatement>();
+				assign->sourceLocation = pd.loc;
+				assign->target = std::move(target);
+				assign->value = std::move(decode);
+				decodeStmts.push_back(std::move(assign));
+			}
+			method.body->body.insert(
+				method.body->body.begin(),
+				std::make_move_iterator(decodeStmts.begin()),
+				std::make_move_iterator(decodeStmts.end())
+			);
+		}
 
 		// Inline modifiers
 		inlineModifiers(_func, method.body);
 
+		// Inject ensure_budget for opup budget padding on public/external methods
+		if (m_opupBudget > 0 && method.arc4MethodConfig.has_value())
+		{
+			auto budgetVal = std::make_shared<awst::IntegerConstant>();
+			budgetVal->sourceLocation = method.sourceLocation;
+			budgetVal->wtype = awst::WType::uint64Type();
+			budgetVal->value = std::to_string(m_opupBudget);
+
+			auto feeSource = std::make_shared<awst::IntegerConstant>();
+			feeSource->sourceLocation = method.sourceLocation;
+			feeSource->wtype = awst::WType::uint64Type();
+			feeSource->value = "0";
+
+			auto call = std::make_shared<awst::PuyaLibCall>();
+			call->sourceLocation = method.sourceLocation;
+			call->wtype = awst::WType::voidType();
+			call->func = "ensure_budget";
+			call->args = {
+				awst::CallArg{std::string("required_budget"), budgetVal},
+				awst::CallArg{std::string("fee_source"), feeSource}
+			};
+
+			auto stmt = std::make_shared<awst::ExpressionStatement>();
+			stmt->sourceLocation = method.sourceLocation;
+			stmt->expr = std::move(call);
+
+			method.body->body.insert(method.body->body.begin(), std::move(stmt));
+		}
+
 		// Synthesize implicit return for named return parameters
 		auto const& returnParams = _func.returnParameters();
 		if (!method.body->body.empty()
-			&& !dynamic_cast<awst::ReturnStatement const*>(method.body->body.back().get())
+			&& !blockAlwaysTerminates(*method.body)
 			&& !returnParams.empty())
 		{
 			bool hasNames = false;
@@ -598,16 +846,6 @@ std::optional<awst::ARC4MethodConfig> ContractTranslator::buildARC4Config(
 
 	if (vis == Visibility::Private || vis == Visibility::Internal)
 		return std::nullopt;
-
-	// Skip ARC4 config for methods with non-ARC4-compatible parameter types
-	for (auto const& param: _func.parameters())
-	{
-		auto* ptype = m_typeMapper.map(param->type());
-		if (ptype && ptype->kind() == awst::WTypeKind::ReferenceArray)
-			return std::nullopt;
-		if (ptype && ptype->kind() == awst::WTypeKind::WTuple)
-			return std::nullopt;
-	}
 
 	// Public/external functions get ARC4 ABI method configs
 	awst::ARC4ABIMethodConfig config;

@@ -1,0 +1,107 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M05_CustomErrors.sol.CustomErrorsTest.approval_program() -> uint64:
+main:
+    intcblock 1 64
+    bytecblock "balances" "owner" 0x
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "owner"
+    txn Sender
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x25ea3536 0x304f76d2 0xcacbb80f // method "onlyOwnerAction()bool", method "withdraw(uint512)uint512", method "deposit(uint512)void"
+    txna ApplicationArgs 0
+    match onlyOwnerAction withdraw deposit
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M05_CustomErrors.sol.CustomErrorsTest.onlyOwnerAction[routing]() -> void:
+onlyOwnerAction:
+    txn Sender
+    pushint 0
+    bytec_1 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    !=
+    !
+    assert // Unauthorized
+    pushbytes 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M05_CustomErrors.sol.CustomErrorsTest.withdraw[routing]() -> void:
+withdraw:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    bytec_0 // "balances"
+    txn Sender
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    dig 2
+    b<
+    !
+    assert // InsufficientBalance
+    swap
+    b-
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M05_CustomErrors.sol.CustomErrorsTest.deposit[routing]() -> void:
+deposit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    bytec_0 // "balances"
+    txn Sender
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    b+
+    bytec_0 // "balances"
+    txn Sender
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_0 // 1
+    return

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <map>
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace puyasol::awst
@@ -144,7 +144,7 @@ public:
 		: WType(
 			  "arc4.dynamic_array<" + _elementType->name() + ">",
 			  WTypeKind::ARC4DynamicArray,
-			  false
+			  _elementType->immutable()
 		  ),
 		  m_elementType(_elementType)
 	{
@@ -165,7 +165,7 @@ public:
 			  "arc4.static_array<" + _elementType->name() + ", "
 				  + std::to_string(_arraySize) + ">",
 			  WTypeKind::ARC4StaticArray,
-			  true
+			  _elementType->immutable()
 		  ),
 		  m_elementType(_elementType),
 		  m_arraySize(_arraySize)
@@ -186,42 +186,53 @@ class ARC4Struct: public WType
 public:
 	ARC4Struct(
 		std::string _name,
-		std::map<std::string, WType const*> _fields,
+		std::vector<std::pair<std::string, WType const*>> _fields,
 		bool _frozen = false
 	)
-		: WType(std::move(_name), WTypeKind::ARC4Struct, false),
+		: WType(std::move(_name), WTypeKind::ARC4Struct,
+			_frozen && std::all_of(_fields.begin(), _fields.end(),
+				[](auto const& p) { return p.second->immutable(); })),
 		  m_fields(std::move(_fields)),
 		  m_frozen(_frozen)
 	{
 	}
 
 	std::string jsonType() const override { return "ARC4Struct"; }
-	std::map<std::string, WType const*> const& fields() const { return m_fields; }
+	std::vector<std::pair<std::string, WType const*>> const& fields() const { return m_fields; }
 	bool frozen() const { return m_frozen; }
 
 private:
-	std::map<std::string, WType const*> m_fields;
+	std::vector<std::pair<std::string, WType const*>> m_fields;
 	bool m_frozen;
 };
 
 class ReferenceArray: public WType
 {
 public:
-	explicit ReferenceArray(WType const* _elementType, bool _immutable = false)
+	explicit ReferenceArray(
+		WType const* _elementType,
+		bool _immutable = true,
+		std::optional<int> _arraySize = std::nullopt
+	)
 		: WType(
-			  "array<" + _elementType->name() + ">",
+			  _arraySize
+				  ? "array<" + _elementType->name() + ", " + std::to_string(*_arraySize) + ">"
+				  : "array<" + _elementType->name() + ">",
 			  WTypeKind::ReferenceArray,
 			  _immutable
 		  ),
-		  m_elementType(_elementType)
+		  m_elementType(_elementType),
+		  m_arraySize(_arraySize)
 	{
 	}
 
 	std::string jsonType() const override { return "ReferenceArray"; }
 	WType const* elementType() const { return m_elementType; }
+	std::optional<int> arraySize() const { return m_arraySize; }
 
 private:
 	WType const* m_elementType;
+	std::optional<int> m_arraySize;
 };
 
 class WTuple: public WType
@@ -255,7 +266,7 @@ public:
 				  ? "inner_transaction_fields_" + txnTypeSuffix(*_transactionType)
 				  : std::string("inner_transaction_fields"),
 			  WTypeKind::WInnerTransactionFields,
-			  false
+			  true
 		  ),
 		  m_transactionType(_transactionType)
 	{

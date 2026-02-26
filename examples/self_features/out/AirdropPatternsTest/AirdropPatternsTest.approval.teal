@@ -1,0 +1,436 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M14_AirdropPatternsTest.sol.AirdropPatternsTest.approval_program() -> uint64:
+main:
+    intcblock 1 0 32 64
+    bytecblock "owner" 0x151f7c75 "isRegistrationOpen" "isClaimOpen" "verificationConfigId" "registeredUsers" "merkleRoot" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "owner"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_2 // "isRegistrationOpen"
+    intc_1 // 0
+    app_global_put
+    bytec_3 // "isClaimOpen"
+    intc_1 // 0
+    app_global_put
+    bytec 6 // "merkleRoot"
+    pushbytes 0x
+    app_global_put
+    bytec 4 // "verificationConfigId"
+    pushbytes 0x
+    app_global_put
+    bytec_0 // "owner"
+    txn Sender
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xf54fa1ec 0x18db4b62 0x56a0737e 0x5ba3fbfb 0x2e1b938f 0x2645a058 0xa7d15a3f 0xb05df75e 0xf3f563ed 0x0c262987 0x65977150 0xfaa71dad 0x76c7340a 0x7c5da79a // method "setMerkleRoot(byte[32])void", method "openRegistration()void", method "closeRegistration()void", method "openClaim()void", method "closeClaim()void", method "setConfigId(byte[32])void", method "register(uint512,uint512)void", method "isAddressRegistered(address)bool", method "registerAddress(address)void", method "getOwner()address", method "getSender()address", method "computeClaimNode(uint512,address,uint512)byte[32]", method "getConfigId()byte[32]", method "testIssuingState(byte[])string"
+    txna ApplicationArgs 0
+    match setMerkleRoot openRegistration closeRegistration openClaim closeClaim setConfigId register isAddressRegistered registerAddress getOwner getSender computeClaimNode getConfigId testIssuingState
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M14_AirdropPatternsTest.sol.AirdropPatternsTest.setMerkleRoot[routing]() -> void:
+setMerkleRoot:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_1 // 0
+    bytec_0 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    !=
+    !
+    assert // NotOwner
+    bytec 6 // "merkleRoot"
+    dig 1
+    app_global_put
+    pushbytes 0x90004c04
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M14_AirdropPatternsTest.sol.AirdropPatternsTest.openRegistration[routing]() -> void:
+openRegistration:
+    txn Sender
+    intc_1 // 0
+    bytec_0 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    !=
+    !
+    assert // NotOwner
+    bytec_2 // "isRegistrationOpen"
+    intc_0 // 1
+    app_global_put
+    pushbytes 0x79ca010d
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M14_AirdropPatternsTest.sol.AirdropPatternsTest.closeRegistration[routing]() -> void:
+closeRegistration:
+    txn Sender
+    intc_1 // 0
+    bytec_0 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    !=
+    !
+    assert // NotOwner
+    bytec_2 // "isRegistrationOpen"
+    intc_1 // 0
+    app_global_put
+    pushbytes 0x288d754f
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M14_AirdropPatternsTest.sol.AirdropPatternsTest.openClaim[routing]() -> void:
+openClaim:
+    txn Sender
+    intc_1 // 0
+    bytec_0 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    !=
+    !
+    assert // NotOwner
+    bytec_3 // "isClaimOpen"
+    intc_0 // 1
+    app_global_put
+    pushbytes 0x0a1c1f14
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M14_AirdropPatternsTest.sol.AirdropPatternsTest.closeClaim[routing]() -> void:
+closeClaim:
+    txn Sender
+    intc_1 // 0
+    bytec_0 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    !=
+    !
+    assert // NotOwner
+    bytec_3 // "isClaimOpen"
+    intc_1 // 0
+    app_global_put
+    pushbytes 0xd9cdc0c7
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M14_AirdropPatternsTest.sol.AirdropPatternsTest.setConfigId[routing]() -> void:
+setConfigId:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_1 // 0
+    bytec_0 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    !=
+    !
+    assert // NotOwner
+    bytec 4 // "verificationConfigId"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M14_AirdropPatternsTest.sol.AirdropPatternsTest.register[routing]() -> void:
+register:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec_2 // "isRegistrationOpen"
+    app_global_get_ex
+    assert // check isRegistrationOpen exists
+    assert // RegistrationNotOpen
+    intc_1 // 0
+    itob
+    dig 2
+    b==
+    !
+    assert // InvalidUser
+    dig 1
+    sha256
+    bytec 5 // "registeredUsers"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // AlreadyRegistered
+    swap
+    sha256
+    pushbytes "nullifierToUser"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    intc_0 // 1
+    itob
+    box_put
+    pushbytes 0x7c91c4b3
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M14_AirdropPatternsTest.sol.AirdropPatternsTest.isAddressRegistered[routing]() -> void:
+isAddressRegistered:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 5 // "registeredUsers"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M14_AirdropPatternsTest.sol.AirdropPatternsTest.registerAddress[routing]() -> void:
+registerAddress:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 5 // "registeredUsers"
+    swap
+    concat
+    intc_0 // 1
+    itob
+    box_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M14_AirdropPatternsTest.sol.AirdropPatternsTest.getOwner[routing]() -> void:
+getOwner:
+    intc_1 // 0
+    bytec_0 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M14_AirdropPatternsTest.sol.AirdropPatternsTest.getSender[routing]() -> void:
+getSender:
+    bytec_1 // 0x151f7c75
+    txn Sender
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M14_AirdropPatternsTest.sol.AirdropPatternsTest.computeClaimNode[routing]() -> void:
+computeClaimNode:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 32
+    bzero
+    dup
+    uncover 4
+    b|
+    uncover 3
+    concat
+    swap
+    uncover 2
+    b|
+    concat
+    keccak256
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M14_AirdropPatternsTest.sol.AirdropPatternsTest.getConfigId[routing]() -> void:
+getConfigId:
+    intc_1 // 0
+    bytec 4 // "verificationConfigId"
+    app_global_get_ex
+    assert // check verificationConfigId exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M14_AirdropPatternsTest.sol.AirdropPatternsTest.testIssuingState[routing]() -> void:
+testIssuingState:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    dup
+    bytec 7 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002
+    swap
+    len
+    itob
+    bytec 8 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004
+    b<=
+    !
+    assert // InsufficientCharcodeLen
+    pushint 8
+    bzero
+    swap
+    pushint 3
+    bzero
+    swap
+
+testIssuingState_while_top@9:
+    dup
+    bytec 8 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004
+    b<=
+    bz testIssuingState_after_while@11
+    dupn 2
+    bytec 7 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002
+    b-
+    dig 4
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    swap
+    dig 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 6
+    swap
+    intc_0 // 1
+    extract3
+    dig 4
+    cover 2
+    replace3
+    bury 3
+    pushbytes 0x01
+    b+
+    bury 1
+    b testIssuingState_while_top@9
+
+testIssuingState_after_while@11:
+    dig 1
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

@@ -1,0 +1,90 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M06_HashTest.sol.HashTest.approval_program() -> uint64:
+main:
+    intcblock 1 0 2 64
+    bytecblock 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xd89f9830 0x238a4b53 0x7575a89d // method "hashSha256(byte[])byte[32]", method "hashCombined(uint512,uint512)byte[32]", method "hashKeccak(byte[])byte[32]"
+    txna ApplicationArgs 0
+    match hashSha256 hashCombined hashKeccak
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M06_HashTest.sol.HashTest.hashSha256[routing]() -> void:
+hashSha256:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    sha256
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M06_HashTest.sol.HashTest.hashCombined[routing]() -> void:
+hashCombined:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    concat
+    sha256
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M06_HashTest.sol.HashTest.hashKeccak[routing]() -> void:
+hashKeccak:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    keccak256
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

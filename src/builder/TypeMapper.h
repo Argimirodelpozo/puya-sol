@@ -23,6 +23,10 @@ public:
 	/// Get or create an ARC4Struct WType for a Solidity struct.
 	awst::WType const* mapStruct(solidity::frontend::StructType const* _structType);
 
+	/// Map a raw WType to its ARC4 equivalent for storage encoding.
+	/// Types already in ARC4 form pass through unchanged.
+	awst::WType const* mapToARC4Type(awst::WType const* _type);
+
 	/// Create and register a new owned type.
 	template <typename T, typename... Args>
 	awst::WType const* createType(Args&&... _args)

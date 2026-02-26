@@ -21,9 +21,11 @@ class AWSTBuilder
 public:
 	/// Build AWST from a Solidity source file.
 	/// Returns root nodes (contracts, subroutines) for JSON serialization.
+	/// _opupBudget: if > 0, inject ensure_budget(_opupBudget) into public methods.
 	std::vector<std::shared_ptr<awst::RootNode>> build(
 		solidity::frontend::CompilerStack& _compiler,
-		std::string const& _sourceFile
+		std::string const& _sourceFile,
+		uint64_t _opupBudget = 0
 	);
 
 private:
@@ -32,6 +34,9 @@ private:
 
 	/// Registry of library function IDs, populated during the library translation pass.
 	LibraryFunctionIdMap m_libraryFunctionIds;
+
+	/// Maps free function AST ID → subroutine ID, for operator overload resolution.
+	std::unordered_map<int64_t, std::string> m_freeFunctionById;
 };
 
 } // namespace puyasol::builder

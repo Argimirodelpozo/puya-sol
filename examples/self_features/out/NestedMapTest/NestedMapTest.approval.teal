@@ -1,0 +1,112 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M07_NestedMap.sol.NestedMapTest.approval_program() -> uint64:
+main:
+    intcblock 64 1 0
+    bytecblock "nullifiers"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x45b47e2a 0x3184b21d 0x45c6c69c // method "setNullifier(uint512,uint512)void", method "clearNullifier(uint512,uint512)void", method "isNullified(uint512,uint512)bool"
+    txna ApplicationArgs 0
+    match setNullifier clearNullifier isNullified
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M07_NestedMap.sol.NestedMapTest.setNullifier[routing]() -> void:
+setNullifier:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    concat
+    sha256
+    bytec_0 // "nullifiers"
+    swap
+    concat
+    intc_1 // 1
+    itob
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M07_NestedMap.sol.NestedMapTest.clearNullifier[routing]() -> void:
+clearNullifier:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    concat
+    sha256
+    bytec_0 // "nullifiers"
+    swap
+    concat
+    intc_2 // 0
+    itob
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M07_NestedMap.sol.NestedMapTest.isNullified[routing]() -> void:
+isNullified:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    concat
+    sha256
+    bytec_0 // "nullifiers"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

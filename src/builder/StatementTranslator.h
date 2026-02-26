@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace puyasol::builder
@@ -30,6 +31,13 @@ public:
 	/// Translate a block of statements.
 	std::shared_ptr<awst::Block> translateBlock(solidity::frontend::Block const& _block);
 
+	/// Set function context for inline assembly translation.
+	/// Must be called before translateBlock if the function body may contain assembly.
+	void setFunctionContext(
+		std::vector<std::pair<std::string, awst::WType const*>> const& _params,
+		awst::WType const* _returnType
+	);
+
 	// ASTConstVisitor overrides
 	bool visit(solidity::frontend::Block const& _node) override;
 	bool visit(solidity::frontend::ExpressionStatement const& _node) override;
@@ -42,11 +50,16 @@ public:
 	bool visit(solidity::frontend::VariableDeclarationStatement const& _node) override;
 	bool visit(solidity::frontend::EmitStatement const& _node) override;
 	bool visit(solidity::frontend::RevertStatement const& _node) override;
+	bool visit(solidity::frontend::InlineAssembly const& _node) override;
 
 private:
 	ExpressionTranslator& m_exprTranslator;
 	TypeMapper& m_typeMapper;
 	std::string m_sourceFile;
+
+	/// Function context for inline assembly translation.
+	std::vector<std::pair<std::string, awst::WType const*>> m_functionParams;
+	awst::WType const* m_returnType = nullptr;
 
 	/// Statement result stack.
 	std::vector<std::shared_ptr<awst::Statement>> m_stack;

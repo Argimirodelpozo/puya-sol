@@ -4,7 +4,7 @@
 namespace puyasol::json
 {
 
-using njson = nlohmann::json;
+using njson = nlohmann::ordered_json;
 
 namespace
 {
@@ -537,11 +537,25 @@ njson AWSTSerializer::serializeExpression(awst::Expression const& _expr)
 	}
 	else if (auto const* e = dynamic_cast<awst::MethodConstant const*>(&_expr))
 	{
-		j["value"] = e->value;
+		njson methodSig;
+		methodSig["_type"] = "MethodSignatureString";
+		methodSig["source_location"] = serializeSourceLocation(e->sourceLocation);
+		methodSig["value"] = e->value;
+		j["value"] = std::move(methodSig);
 	}
 	else if (auto const* e = dynamic_cast<awst::AddressConstant const*>(&_expr))
 	{
 		j["value"] = e->value;
+	}
+	else if (auto const* e = dynamic_cast<awst::PuyaLibCall const*>(&_expr))
+	{
+		// wtype is init=False in puya (derived from func), so exclude it
+		j.erase("wtype");
+		j["func"] = e->func;
+		njson args = njson::array();
+		for (auto const& arg: e->args)
+			args.push_back(serializeCallArg(arg));
+		j["args"] = args;
 	}
 
 	return j;
@@ -721,6 +735,10 @@ njson AWSTSerializer::serializeWType(awst::WType const* _type)
 	{
 		auto const* at = static_cast<awst::ReferenceArray const*>(_type);
 		j["element_type"] = serializeWType(at->elementType());
+		if (at->arraySize().has_value())
+			j["array_size"] = at->arraySize().value();
+		else
+			j["array_size"] = nullptr;
 		j["source_location"] = nullptr;
 		break;
 	}

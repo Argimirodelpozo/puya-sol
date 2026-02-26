@@ -71,10 +71,13 @@ std::shared_ptr<awst::Expression> StorageMapper::makeDefaultValue(
 	}
 	if (_type == awst::WType::biguintType())
 	{
-		auto val = std::make_shared<awst::IntegerConstant>();
+		// Use BytesConstant (not IntegerConstant) so the puya backend stores
+		// this in the bytes constant pool, preventing type confusion with uint64.
+		auto val = std::make_shared<awst::BytesConstant>();
 		val->sourceLocation = _loc;
 		val->wtype = awst::WType::biguintType();
-		val->value = "0";
+		val->encoding = awst::BytesEncoding::Base16;
+		val->value = {}; // empty bytes = biguint(0)
 		return val;
 	}
 	if (_type->kind() == awst::WTypeKind::ARC4UIntN)
@@ -96,6 +99,33 @@ std::shared_ptr<awst::Expression> StorageMapper::makeDefaultValue(
 		for (auto const* componentType: tupleType->types())
 			tuple->items.push_back(makeDefaultValue(componentType, _loc));
 		return tuple;
+	}
+
+	// ARC4Struct → NewStruct with field defaults (recursive)
+	if (_type->kind() == awst::WTypeKind::ARC4Struct)
+	{
+		auto const* structType = static_cast<awst::ARC4Struct const*>(_type);
+		auto expr = std::make_shared<awst::NewStruct>();
+		expr->sourceLocation = _loc;
+		expr->wtype = _type;
+		for (auto const& [name, fieldType]: structType->fields())
+			expr->values[name] = makeDefaultValue(fieldType, _loc);
+		return expr;
+	}
+
+	// ReferenceArray → NewArray with default elements
+	if (_type->kind() == awst::WTypeKind::ReferenceArray)
+	{
+		auto const* refArr = static_cast<awst::ReferenceArray const*>(_type);
+		auto arr = std::make_shared<awst::NewArray>();
+		arr->sourceLocation = _loc;
+		arr->wtype = _type;
+		if (refArr->arraySize().has_value())
+		{
+			for (int i = 0; i < refArr->arraySize().value(); ++i)
+				arr->values.push_back(makeDefaultValue(refArr->elementType(), _loc));
+		}
+		return arr;
 	}
 
 	// Everything else (bytes, string, account, ARC4 types, etc.) → BytesConstant

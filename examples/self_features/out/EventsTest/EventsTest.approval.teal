@@ -1,0 +1,65 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M08_Events.sol.EventsTest.approval_program() -> uint64:
+main:
+    intcblock 1 64
+    bytecblock "value"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "value"
+    pushbytes 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xd0da65fd 0x049bcfc1 // method "setValue(uint512)void", method "emitTransfer(address,uint512)void"
+    txna ApplicationArgs 0
+    match setValue emitTransfer
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M08_Events.sol.EventsTest.setValue[routing]() -> void:
+setValue:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    bytec_0 // "value"
+    dig 1
+    app_global_put
+    pushbytes 0x012c78e2
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M08_Events.sol.EventsTest.emitTransfer[routing]() -> void:
+emitTransfer:
+    txna ApplicationArgs 1
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    pushbytes 0xddf252ad
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

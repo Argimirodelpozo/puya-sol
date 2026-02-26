@@ -1,0 +1,106 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M02_BytesLib.sol.BytesLibTest.approval_program() -> uint64:
+main:
+    intcblock 1 64 0 2
+    bytecblock 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x720b3fa0 0xe0479f55 // method "testAsciiDigit(uint512)uint512", method "testConcat(byte[],byte[])byte[]"
+    txna ApplicationArgs 0
+    match testAsciiDigit testConcat
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M02_BytesLib.sol.BytesLibTest.testAsciiDigit[routing]() -> void:
+testAsciiDigit:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    pushint 48
+    itob
+    dup
+    cover 2
+    b>=
+    bz testAsciiDigit_bool_false@4
+    pushint 57
+    itob
+    dig 2
+    b>=
+    bz testAsciiDigit_bool_false@4
+    intc_0 // 1
+
+testAsciiDigit_bool_merge@5:
+    assert // not an ASCII digit
+    dup2
+    b-
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+testAsciiDigit_bool_false@4:
+    intc_2 // 0
+    b testAsciiDigit_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M02_BytesLib.sol.BytesLibTest.testConcat[routing]() -> void:
+testConcat:
+    txna ApplicationArgs 1
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txna ApplicationArgs 2
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    concat
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

@@ -1,5 +1,14 @@
 #include "builder/StatementTranslator.h"
+#include "builder/AssemblyTranslator.h"
+#include "builder/StorageMapper.h"
 #include "Logger.h"
+
+#include <libsolidity/ast/ASTAnnotations.h>
+#include <libsolutil/Numeric.h>
+#include <libyul/AST.h>
+#include <libyul/YulName.h>
+
+#include <sstream>
 
 namespace puyasol::builder
 {
@@ -387,12 +396,24 @@ bool StatementTranslator::visit(solidity::frontend::VariableDeclarationStatement
 				def->value = false;
 				value = def;
 			}
-			else if (type == awst::WType::uint64Type() || type == awst::WType::biguintType())
+			else if (type == awst::WType::uint64Type())
 			{
 				auto def = std::make_shared<awst::IntegerConstant>();
 				def->sourceLocation = loc;
 				def->wtype = type;
 				def->value = "0";
+				value = def;
+			}
+			else if (type == awst::WType::biguintType())
+			{
+				// Use BytesConstant for biguint defaults to prevent the puya
+				// backend from folding biguint(0) into a uint64 constant pool
+				// entry, which breaks concat/b| when biguint is used as bytes.
+				auto def = std::make_shared<awst::BytesConstant>();
+				def->sourceLocation = loc;
+				def->wtype = type;
+				def->encoding = awst::BytesEncoding::Base16;
+				def->value = {}; // empty bytes = biguint(0)
 				value = def;
 			}
 			else if (type && type->kind() == awst::WTypeKind::Bytes)
@@ -440,15 +461,21 @@ bool StatementTranslator::visit(solidity::frontend::VariableDeclarationStatement
 				auto def = std::make_shared<awst::NewArray>();
 				def->sourceLocation = loc;
 				def->wtype = type;
+				// Pre-populate static arrays with zero values so the buffer
+				// is correctly sized for subsequent element-wise writes
+				auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(type);
+				if (refArr && refArr->arraySize())
+				{
+					for (int i = 0; i < *refArr->arraySize(); ++i)
+					{
+						def->values.push_back(StorageMapper::makeDefaultValue(refArr->elementType(), loc));
+					}
+				}
 				value = def;
 			}
 			else
 			{
-				auto def = std::make_shared<awst::IntegerConstant>();
-				def->sourceLocation = loc;
-				def->wtype = type;
-				def->value = "0";
-				value = def;
+				value = StorageMapper::makeDefaultValue(type, loc);
 			}
 		}
 
@@ -507,39 +534,154 @@ bool StatementTranslator::visit(solidity::frontend::EmitStatement const& _node)
 {
 	auto loc = makeLoc(_node.location());
 
-	// Emit event → log intrinsic (simplified: just log a comment for now)
-	// Full ARC-28 emit requires ARC4Struct encoding which is complex
 	auto const& eventCall = _node.eventCall();
 
-	std::string eventNameForLog;
-	if (auto const* ident = dynamic_cast<solidity::frontend::Identifier const*>(&eventCall.expression()))
-		eventNameForLog = ident->name();
-	else
-		eventNameForLog = "Event";
-	Logger::instance().warning(
-		"event '" + eventNameForLog + "' emitted as log() (ARC-28 encoding not yet supported)", loc
-	);
-
+	// Extract event name
 	std::string eventName;
 	if (auto const* ident = dynamic_cast<solidity::frontend::Identifier const*>(&eventCall.expression()))
 		eventName = ident->name();
 	else
 		eventName = "Event";
 
-	// Create: log(bytes("event:" + eventName))
+	// Try to resolve the EventDefinition to build the full signature
+	solidity::frontend::EventDefinition const* eventDef = nullptr;
+	if (auto const* ident = dynamic_cast<solidity::frontend::Identifier const*>(&eventCall.expression()))
+	{
+		auto const* decl = ident->annotation().referencedDeclaration;
+		eventDef = dynamic_cast<solidity::frontend::EventDefinition const*>(decl);
+	}
+
+	// Build event signature: EventName(type1,type2,...)
+	std::string eventSignature = eventName + "(";
+	if (eventDef)
+	{
+		bool first = true;
+		for (auto const& param: eventDef->parameters())
+		{
+			if (!first) eventSignature += ",";
+			eventSignature += param->type()->toString(true);
+			first = false;
+		}
+	}
+	eventSignature += ")";
+
+	Logger::instance().debug(
+		"event '" + eventName + "' signature: " + eventSignature, loc
+	);
+
+	// Build: log(concat(keccak256(signature)[:4], abi_encode(non_indexed_args)))
+	// Step 1: compute keccak256(signature) to get the event selector
+	auto sigBytes = std::make_shared<awst::BytesConstant>();
+	sigBytes->sourceLocation = loc;
+	sigBytes->wtype = awst::WType::bytesType();
+	sigBytes->encoding = awst::BytesEncoding::Utf8;
+	sigBytes->value = std::vector<uint8_t>(eventSignature.begin(), eventSignature.end());
+
+	auto selectorHash = std::make_shared<awst::IntrinsicCall>();
+	selectorHash->sourceLocation = loc;
+	selectorHash->wtype = awst::WType::bytesType();
+	selectorHash->opCode = "keccak256";
+	selectorHash->stackArgs.push_back(sigBytes);
+
+	// Step 2: extract first 4 bytes as selector
+	auto selectorExtract = std::make_shared<awst::IntrinsicCall>();
+	selectorExtract->sourceLocation = loc;
+	selectorExtract->wtype = awst::WType::bytesType();
+	selectorExtract->opCode = "extract3";
+	selectorExtract->stackArgs.push_back(selectorHash);
+
+	auto zeroConst = std::make_shared<awst::IntegerConstant>();
+	zeroConst->sourceLocation = loc;
+	zeroConst->wtype = awst::WType::uint64Type();
+	zeroConst->value = "0";
+	selectorExtract->stackArgs.push_back(zeroConst);
+
+	auto fourConst = std::make_shared<awst::IntegerConstant>();
+	fourConst->sourceLocation = loc;
+	fourConst->wtype = awst::WType::uint64Type();
+	fourConst->value = "4";
+	selectorExtract->stackArgs.push_back(fourConst);
+
+	// Step 3: translate and ABI-encode the non-indexed event arguments
+	// Collect non-indexed argument expressions
+	std::vector<std::shared_ptr<awst::Expression>> nonIndexedArgs;
+	auto const& callArgs = eventCall.arguments();
+	if (eventDef)
+	{
+		auto const& params = eventDef->parameters();
+		for (size_t i = 0; i < callArgs.size() && i < params.size(); ++i)
+		{
+			if (!params[i]->isIndexed())
+				nonIndexedArgs.push_back(m_exprTranslator.translate(*callArgs[i]));
+		}
+	}
+	else
+	{
+		// No event definition found — include all arguments
+		for (auto const& arg: callArgs)
+			nonIndexedArgs.push_back(m_exprTranslator.translate(*arg));
+	}
+
+	// Step 4: build the log data as selector + encoded args
+	std::shared_ptr<awst::Expression> logData;
+	if (nonIndexedArgs.empty())
+	{
+		// No arguments, just log the selector
+		logData = selectorExtract;
+	}
+	else
+	{
+		// Concatenate selector with each argument (serialized as bytes)
+		logData = selectorExtract;
+		for (auto& arg: nonIndexedArgs)
+		{
+			// Convert argument to bytes if needed
+			std::shared_ptr<awst::Expression> argBytes = arg;
+			if (arg->wtype == awst::WType::uint64Type())
+			{
+				auto itob = std::make_shared<awst::IntrinsicCall>();
+				itob->sourceLocation = loc;
+				itob->wtype = awst::WType::bytesType();
+				itob->opCode = "itob";
+				itob->stackArgs.push_back(std::move(arg));
+				argBytes = std::move(itob);
+			}
+			else if (arg->wtype == awst::WType::biguintType())
+			{
+				// biguint → bytes: reinterpret cast then zero-pad to 32 bytes
+				auto cast = std::make_shared<awst::ReinterpretCast>();
+				cast->sourceLocation = loc;
+				cast->wtype = awst::WType::bytesType();
+				cast->expr = std::move(arg);
+				argBytes = std::move(cast);
+			}
+			else if (arg->wtype == awst::WType::boolType())
+			{
+				// bool → itob(1 or 0)
+				auto itob = std::make_shared<awst::IntrinsicCall>();
+				itob->sourceLocation = loc;
+				itob->wtype = awst::WType::bytesType();
+				itob->opCode = "itob";
+				itob->stackArgs.push_back(std::move(arg));
+				argBytes = std::move(itob);
+			}
+
+			auto concat = std::make_shared<awst::IntrinsicCall>();
+			concat->sourceLocation = loc;
+			concat->wtype = awst::WType::bytesType();
+			concat->opCode = "concat";
+			concat->stackArgs.push_back(std::move(logData));
+			concat->stackArgs.push_back(std::move(argBytes));
+			logData = std::move(concat);
+		}
+	}
+
+	// Step 5: log(logData)
 	auto logCall = std::make_shared<awst::IntrinsicCall>();
 	logCall->sourceLocation = loc;
 	logCall->wtype = awst::WType::voidType();
 	logCall->opCode = "log";
-
-	auto logMsg = std::make_shared<awst::BytesConstant>();
-	logMsg->sourceLocation = loc;
-	logMsg->wtype = awst::WType::bytesType();
-	logMsg->encoding = awst::BytesEncoding::Utf8;
-	std::string msg = "event:" + eventName;
-	logMsg->value = std::vector<uint8_t>(msg.begin(), msg.end());
-
-	logCall->stackArgs.push_back(logMsg);
+	logCall->stackArgs.push_back(std::move(logData));
 
 	auto stmt = std::make_shared<awst::ExpressionStatement>();
 	stmt->sourceLocation = loc;
@@ -553,8 +695,15 @@ bool StatementTranslator::visit(solidity::frontend::RevertStatement const& _node
 {
 	auto loc = makeLoc(_node.location());
 
-	// revert → assert(false, "error message")
-	Logger::instance().debug("revert mapped to assert(false)", loc);
+	// Extract custom error name from the errorCall expression
+	std::string errorName = "revert";
+	auto const& errorCall = _node.errorCall();
+	if (auto const* ident = dynamic_cast<solidity::frontend::Identifier const*>(&errorCall.expression()))
+		errorName = ident->name();
+	else if (auto const* ma = dynamic_cast<solidity::frontend::MemberAccess const*>(&errorCall.expression()))
+		errorName = ma->memberName();
+
+	Logger::instance().debug("revert mapped to assert(false, \"" + errorName + "\")", loc);
 	auto assertExpr = std::make_shared<awst::AssertExpression>();
 	assertExpr->sourceLocation = loc;
 	assertExpr->wtype = awst::WType::voidType();
@@ -565,12 +714,101 @@ bool StatementTranslator::visit(solidity::frontend::RevertStatement const& _node
 	falseLit->value = false;
 
 	assertExpr->condition = falseLit;
-	assertExpr->errorMessage = "revert";
+	assertExpr->errorMessage = errorName;
 
 	auto stmt = std::make_shared<awst::ExpressionStatement>();
 	stmt->sourceLocation = loc;
 	stmt->expr = assertExpr;
 	push(stmt);
+	return false;
+}
+
+void StatementTranslator::setFunctionContext(
+	std::vector<std::pair<std::string, awst::WType const*>> const& _params,
+	awst::WType const* _returnType
+)
+{
+	m_functionParams = _params;
+	m_returnType = _returnType;
+}
+
+bool StatementTranslator::visit(solidity::frontend::InlineAssembly const& _node)
+{
+	auto loc = makeLoc(_node.location());
+
+	Logger::instance().debug("translating inline assembly block", loc);
+
+	// Determine context name from source file
+	std::string contextName = m_sourceFile;
+	auto lastDot = contextName.rfind('.');
+	if (lastDot != std::string::npos)
+		contextName = contextName.substr(0, lastDot);
+	auto lastSlash = contextName.rfind('/');
+	if (lastSlash != std::string::npos)
+		contextName = contextName.substr(lastSlash + 1);
+
+	// Extract external constant values from the InlineAssembly annotation
+	std::map<std::string, std::string> constants;
+	auto const& annotation = _node.annotation();
+	for (auto const& [yulId, extInfo]: annotation.externalReferences)
+	{
+		if (!extInfo.declaration)
+			continue;
+
+		auto const* varDecl = dynamic_cast<solidity::frontend::VariableDeclaration const*>(
+			extInfo.declaration
+		);
+		if (!varDecl || !varDecl->isConstant())
+			continue;
+
+		// Get the constant value from the initializer expression
+		auto const& initExpr = varDecl->value();
+		if (!initExpr)
+			continue;
+
+		if (auto const* literal = dynamic_cast<solidity::frontend::Literal const*>(initExpr.get()))
+		{
+			std::string name = yulId->name.str();
+			std::string value = literal->value();
+
+			// Convert hex literal to decimal
+			if (value.size() > 2 && value.substr(0, 2) == "0x")
+			{
+				// Parse hex string to boost multiprecision and convert to decimal
+				// We can use the u256 type from solidity
+				try
+				{
+					solidity::u256 numVal(value);
+					std::ostringstream oss;
+					oss << numVal;
+					constants[name] = oss.str();
+				}
+				catch (...)
+				{
+					Logger::instance().warning(
+						"failed to parse constant " + name + " = " + value, loc
+					);
+				}
+			}
+			else
+			{
+				constants[name] = value;
+			}
+		}
+	}
+
+	AssemblyTranslator asmTranslator(m_typeMapper, m_sourceFile, contextName);
+
+	auto stmts = asmTranslator.translateBlock(
+		_node.operations().root(),
+		m_functionParams,
+		m_returnType,
+		constants
+	);
+
+	for (auto& stmt: stmts)
+		push(std::move(stmt));
+
 	return false;
 }
 

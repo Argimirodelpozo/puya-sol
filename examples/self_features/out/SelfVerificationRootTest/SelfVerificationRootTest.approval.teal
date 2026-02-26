@@ -1,0 +1,859 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M13_SelfVerificationRootTest.sol.SelfVerificationRootTest.approval_program() -> uint64:
+main:
+    intcblock 0 1 8 64
+    bytecblock 0x151f7c75 0x "_scope" "_identityVerificationHubV2" 0x01 base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) "lastAttestationId" "lastOlderThan" "0123456789abcdef" 0x9f51ac63 0x0200000000000000000000000000000000000000000000000000000000000000
+    intc_0 // 0
+    dupn 4
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "_scope"
+    bytec_1 // 0x
+    app_global_put
+    bytec_3 // "_identityVerificationHubV2"
+    bytec 5 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 6 // "lastAttestationId"
+    bytec_1 // 0x
+    app_global_put
+    bytec 7 // "lastOlderThan"
+    bytec_1 // 0x
+    app_global_put
+    bytec_3 // "_identityVerificationHubV2"
+    txna ApplicationArgs 0
+    app_global_put
+    global CurrentApplicationID
+    itob
+    dup
+    bury 6
+    pushint 42220
+    itob
+    b==
+    bz main_after_if_else@23
+    bytec_1 // 0x
+    bury 3
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M13_SelfVerificationRootTest.sol.SelfVerificationRootTest._getPoseidonAddress@26:
+    dig 2
+    bytec 5 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    bz main_after_if_else@29
+    intc_0 // 0
+    itob
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M13_SelfVerificationRootTest.sol.SelfVerificationRootTest._calculateScope@31:
+    bytec_2 // "_scope"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@29:
+    pushbytes 0x307800000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bury 2
+    intc_0 // 0
+    itob
+    bury 4
+
+main_while_top@33:
+    pushint 20
+    itob
+    dig 4
+    b>
+    bz main_after_while@35
+    intc_2 // 8
+    bzero
+    pushint 2
+    itob
+    dig 5
+    dup
+    cover 3
+    dig 1
+    b*
+    swap
+    dig 1
+    b+
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    pushint 12
+    itob
+    dig 4
+    b+
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    dig 5
+    swap
+    getbyte
+    dup
+    pushint 4
+    +
+    bytec 8 // "0123456789abcdef"
+    swap
+    intc_1 // 1
+    extract3
+    dig 7
+    uncover 3
+    uncover 2
+    replace3
+    pushint 3
+    itob
+    uncover 3
+    b+
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    uncover 2
+    pushint 15
+    &
+    bytec 8 // "0123456789abcdef"
+    swap
+    intc_1 // 1
+    extract3
+    replace3
+    bury 3
+    bytec 4 // 0x01
+    b+
+    bury 4
+    b main_while_top@33
+
+main_after_while@35:
+    itxn_begin
+    dig 2
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec 9 // method "hash(uint256[2])uint512"
+    itxn_field ApplicationArgs
+    bytec_1 // 0x
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn_begin
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 9 // method "hash(uint256[2])uint512"
+    itxn_field ApplicationArgs
+    bytec_1 // 0x
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M13_SelfVerificationRootTest.sol.SelfVerificationRootTest._calculateScope@31
+
+main_after_if_else@23:
+    pushint 11142220
+    itob
+    dig 5
+    b==
+    bz main_after_if_else@25
+    bytec_1 // 0x
+    bury 3
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M13_SelfVerificationRootTest.sol.SelfVerificationRootTest._getPoseidonAddress@26
+
+main_after_if_else@25:
+    bytec 5 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bury 3
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M13_SelfVerificationRootTest.sol.SelfVerificationRootTest._getPoseidonAddress@26
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x54d47f5f 0xa06fe081 0x634a577c 0xd49cebd5 0xf5b39a0b 0x96f6af2a 0xb6c7a0b6 0x14ce514d 0x86e039a9 0x73dcc52c 0xd6afbfc5 0x8dca1ebb // method "getConfigId(byte[32],byte[32],byte[])byte[32]", method "testScope()uint512", method "testBuildBaseInput(byte[])byte[]", method "testBytesConcat(byte[],byte[])byte[]", method "testConfigId(byte[32],byte[32])byte[32]", method "testPassportOlderThan(byte[])uint512", method "testExtractString(byte[],uint512,uint512)string", method "testStringToBigInt(string)uint512", method "testSubstring(string,uint512,uint512)string", method "scope()uint512", method "verifySelfProof(byte[],byte[])void", method "onVerificationSuccess(byte[],byte[])void"
+    txna ApplicationArgs 0
+    match getConfigId(3) testScope testBuildBaseInput testBytesConcat testConfigId testPassportOlderThan testExtractString testStringToBigInt testSubstring scope verifySelfProof onVerificationSuccess
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M13_SelfVerificationRootTest.sol.SelfVerificationRootTest.getConfigId(3)[routing]() -> void:
+getConfigId(3):
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    pushint 32
+    bzero
+    dup
+    uncover 3
+    b|
+    swap
+    uncover 2
+    b|
+    concat
+    keccak256
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M13_SelfVerificationRootTest.sol.SelfVerificationRootTest.testScope[routing]() -> void:
+testScope:
+    intc_0 // 0
+    bytec_2 // "_scope"
+    app_global_get_ex
+    assert // check _scope exists
+    dup
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M13_SelfVerificationRootTest.sol.SelfVerificationRootTest.testBuildBaseInput[routing]() -> void:
+testBuildBaseInput:
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    pushint 32
+    bzero
+    intc_0 // 0
+    bytec_2 // "_scope"
+    app_global_get_ex
+    assert // check _scope exists
+    b|
+    bytec 10 // 0x0200000000000000000000000000000000000000000000000000000000000000
+    swap
+    concat
+    swap
+    concat
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M13_SelfVerificationRootTest.sol.SelfVerificationRootTest.testBytesConcat[routing]() -> void:
+testBytesConcat:
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txna ApplicationArgs 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    concat
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M13_SelfVerificationRootTest.sol.SelfVerificationRootTest.testConfigId[routing]() -> void:
+testConfigId:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    pushint 32
+    bzero
+    dup
+    uncover 3
+    b|
+    swap
+    uncover 2
+    b|
+    concat
+    keccak256
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M13_SelfVerificationRootTest.sol.SelfVerificationRootTest.testPassportOlderThan[routing]() -> void:
+testPassportOlderThan:
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    intc_3 // 64
+    bzero
+    dig 1
+    pushint 88
+    getbyte
+    itob
+    pushint 48
+    itob
+    swap
+    dig 1
+    b-
+    pushint 10
+    itob
+    b*
+    uncover 3
+    pushint 89
+    getbyte
+    itob
+    uncover 2
+    b-
+    b+
+    dup
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M13_SelfVerificationRootTest.sol.SelfVerificationRootTest.testExtractString[routing]() -> void:
+testExtractString:
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    dup
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    cover 3
+    dup
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    uncover 2
+    len
+    itob
+    dig 1
+    b<=
+    !
+    assert // InsufficientCharcodeLen
+    intc_2 // 8
+    bzero
+    dup
+    cover 2
+    cover 3
+    dig 2
+    b-
+    intc_1 // 1
+    itob
+    b+
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    bzero
+    swap
+
+testExtractString_while_top@2:
+    dup
+    dig 4
+    b<=
+    bz testExtractString_after_while@4
+    dupn 2
+    dig 6
+    b-
+    dig 4
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    swap
+    dig 2
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    dig 8
+    swap
+    intc_1 // 1
+    extract3
+    dig 4
+    cover 2
+    replace3
+    bury 3
+    bytec 4 // 0x01
+    b+
+    bury 1
+    b testExtractString_while_top@2
+
+testExtractString_after_while@4:
+    dig 1
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M13_SelfVerificationRootTest.sol.SelfVerificationRootTest.testStringToBigInt[routing]() -> void:
+testStringToBigInt:
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    dup
+    len
+    dup
+    pushint 31
+    <=
+    assert // String too long for BigInt conversion
+    intc_0 // 0
+    itob
+    dup
+
+testStringToBigInt_while_top@2:
+    dig 2
+    itob
+    dig 1
+    b>
+    bz testStringToBigInt_after_while@4
+    intc_2 // 8
+    bzero
+    dig 1
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    dig 5
+    swap
+    getbyte
+    dup
+    pushint 127
+    <=
+    assert // Non-ASCII character detected
+    pushint 256
+    itob
+    dig 4
+    b*
+    swap
+    itob
+    b|
+    bury 3
+    bytec 4 // 0x01
+    b+
+    bury 1
+    b testStringToBigInt_while_top@2
+
+testStringToBigInt_after_while@4:
+    dig 1
+    dup
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M13_SelfVerificationRootTest.sol.SelfVerificationRootTest.testSubstring[routing]() -> void:
+testSubstring:
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txna ApplicationArgs 2
+    dupn 2
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    cover 2
+    dup
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 8
+    bzero
+    dup
+    cover 3
+    swap
+    dig 2
+    b-
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    bzero
+    swap
+
+testSubstring_while_top@2:
+    dup
+    dig 4
+    b<
+    bz testSubstring_after_while@4
+    dupn 2
+    dig 6
+    b-
+    dig 4
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    swap
+    dig 2
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    dig 8
+    swap
+    intc_1 // 1
+    extract3
+    dig 4
+    cover 2
+    replace3
+    bury 3
+    bytec 4 // 0x01
+    b+
+    bury 1
+    b testSubstring_while_top@2
+
+testSubstring_after_while@4:
+    dig 1
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M13_SelfVerificationRootTest.sol.SelfVerificationRootTest.scope[routing]() -> void:
+scope:
+    intc_0 // 0
+    bytec_2 // "_scope"
+    app_global_get_ex
+    assert // check _scope exists
+    dup
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M13_SelfVerificationRootTest.sol.SelfVerificationRootTest.verifySelfProof[routing]() -> void:
+verifySelfProof:
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txna ApplicationArgs 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    dig 1
+    len
+    pushint 32
+    <
+    !
+    assert // InvalidDataFormat
+    dup
+    len
+    intc_3 // 64
+    <
+    !
+    assert // InvalidDataFormat
+    dup
+    substring 0 32
+    dig 1
+    substring 32 64
+    pushint 32
+    bzero
+    dup
+    uncover 3
+    b|
+    dig 1
+    uncover 3
+    b|
+    concat
+    keccak256
+    intc_0 // 0
+    bytec_2 // "_scope"
+    app_global_get_ex
+    assert // check _scope exists
+    uncover 2
+    b|
+    bytec 10 // 0x0200000000000000000000000000000000000000000000000000000000000000
+    swap
+    concat
+    uncover 3
+    concat
+    itxn_begin
+    swap
+    uncover 2
+    concat
+    intc_0 // 0
+    bytec_3 // "_identityVerificationHubV2"
+    app_global_get_ex
+    assert // check _identityVerificationHubV2 exists
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0xec261b59 // method "verify(byte[],byte[])void"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/build/../examples/self_features/contracts/M13_SelfVerificationRootTest.sol.SelfVerificationRootTest.onVerificationSuccess[routing]() -> void:
+onVerificationSuccess:
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txn Sender
+    intc_0 // 0
+    bytec_3 // "_identityVerificationHubV2"
+    app_global_get_ex
+    assert // check _identityVerificationHubV2 exists
+    !=
+    !
+    assert // UnauthorizedCaller
+    dup
+    extract 2 32
+    bytec 6 // "lastAttestationId"
+    swap
+    app_global_put
+    pushint 432
+    intc_3 // 64
+    extract3
+    bytec 7 // "lastOlderThan"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
