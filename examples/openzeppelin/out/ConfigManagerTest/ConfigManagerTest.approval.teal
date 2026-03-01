@@ -1,0 +1,306 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ConfigManager.sol.ConfigManagerTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock "_configCount" "_updateCount" 0x151f7c75 "_admin" "_configValue" "_configExists"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_0 // "_configCount"
+    pushbytes 0x
+    app_global_put
+    bytec_1 // "_updateCount"
+    pushbytes 0x
+    app_global_put
+    bytec_3 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 0
+    itob
+    bytec_0 // "_configCount"
+    dig 1
+    app_global_put
+    bytec_1 // "_updateCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x33925eb2 0xac8b24de 0xe445a6be 0x1480b644 0x93c8cd60 0x172b88a7 0xda677d72 // method "initConfig(uint512)void", method "getAdmin()address", method "getConfigCount()uint512", method "getUpdateCount()uint512", method "getConfig(uint512)uint512", method "isConfigSet(uint512)bool", method "setConfig(uint512,uint512)void"
+    txna ApplicationArgs 0
+    match initConfig getAdmin getConfigCount getUpdateCount getConfig isConfigSet setConfig
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ConfigManager.sol.ConfigManagerTest.initConfig[routing]() -> void:
+initConfig:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_configValue"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    bytec 5 // "_configExists"
+    swap
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ConfigManager.sol.ConfigManagerTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_1 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ConfigManager.sol.ConfigManagerTest.getConfigCount[routing]() -> void:
+getConfigCount:
+    intc_1 // 0
+    bytec_0 // "_configCount"
+    app_global_get_ex
+    assert // check _configCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ConfigManager.sol.ConfigManagerTest.getUpdateCount[routing]() -> void:
+getUpdateCount:
+    intc_1 // 0
+    bytec_1 // "_updateCount"
+    app_global_get_ex
+    assert // check _updateCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ConfigManager.sol.ConfigManagerTest.getConfig[routing]() -> void:
+getConfig:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_configValue"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ConfigManager.sol.ConfigManagerTest.isConfigSet[routing]() -> void:
+isConfigSet:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_configExists"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ConfigManager.sol.ConfigManagerTest.setConfig[routing]() -> void:
+setConfig:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Not admin
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    dup
+    bytec 5 // "_configExists"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bnz setConfig_after_if_else@3
+    intc_2 // 1
+    itob
+    dig 1
+    swap
+    box_put
+    intc_1 // 0
+    bytec_0 // "_configCount"
+    app_global_get_ex
+    assert // check _configCount exists
+    intc_2 // 1
+    itob
+    b+
+    bytec_0 // "_configCount"
+    swap
+    app_global_put
+
+setConfig_after_if_else@3:
+    bytec 4 // "_configValue"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    dig 3
+    box_put
+    intc_1 // 0
+    bytec_1 // "_updateCount"
+    app_global_get_ex
+    assert // check _updateCount exists
+    intc_2 // 1
+    itob
+    b+
+    bytec_1 // "_updateCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return

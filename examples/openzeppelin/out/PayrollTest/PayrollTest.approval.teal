@@ -1,0 +1,642 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Payroll.sol.PayrollTest.approval_program() -> uint64:
+main:
+    intcblock 0 1 64 32
+    bytecblock 0x 0x151f7c75 "_totalPayroll" "_admin" "_salary" "_isEmployee" "_isTerminated" "_employeeCount" "_totalPaidOut" "_totalPaid" "_paymentCount" "_employeeIndex"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 7 // "_employeeCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec 8 // "_totalPaidOut"
+    bytec_0 // 0x
+    app_global_put
+    bytec_2 // "_totalPayroll"
+    bytec_0 // 0x
+    app_global_put
+    bytec_3 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x0622debb 0x0a4fb6b3 0x2472d542 0xc611be8e 0x50bac77f 0xcbae65b4 0x5b8ae07c 0x39d6f824 0xa8a47a98 0x0f2bc1ad 0xb4e03e9d 0x52aaf709 0xb30e2ea6 0xc9a4691d // method "initEmployee(address)void", method "admin()address", method "employeeCount()uint512", method "totalPaidOut()uint512", method "totalPayroll()uint512", method "getSalary(address)uint512", method "getTotalPaidTo(address)uint512", method "getPaymentCount(address)uint512", method "isEmployee(address)bool", method "isTerminated(address)bool", method "addEmployee(address,uint512)void", method "payEmployee(address)void", method "terminate(address)void", method "updateSalary(address,uint512)void"
+    txna ApplicationArgs 0
+    match initEmployee admin employeeCount totalPaidOut totalPayroll getSalary getTotalPaidTo getPaymentCount isEmployee isTerminated addEmployee payEmployee terminate updateSalary
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Payroll.sol.PayrollTest.initEmployee[routing]() -> void:
+initEmployee:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_0 // 0
+    itob
+    swap
+    sha256
+    bytec 4 // "_salary"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 9 // "_totalPaid"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 10 // "_paymentCount"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 5 // "_isEmployee"
+    dig 1
+    concat
+    intc_0 // 0
+    itob
+    swap
+    dig 1
+    box_put
+    bytec 6 // "_isTerminated"
+    dig 2
+    concat
+    swap
+    box_put
+    bytec 11 // "_employeeIndex"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Payroll.sol.PayrollTest.admin[routing]() -> void:
+admin:
+    intc_0 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Payroll.sol.PayrollTest.employeeCount[routing]() -> void:
+employeeCount:
+    intc_0 // 0
+    bytec 7 // "_employeeCount"
+    app_global_get_ex
+    assert // check _employeeCount exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Payroll.sol.PayrollTest.totalPaidOut[routing]() -> void:
+totalPaidOut:
+    intc_0 // 0
+    bytec 8 // "_totalPaidOut"
+    app_global_get_ex
+    assert // check _totalPaidOut exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Payroll.sol.PayrollTest.totalPayroll[routing]() -> void:
+totalPayroll:
+    intc_0 // 0
+    bytec_2 // "_totalPayroll"
+    app_global_get_ex
+    assert // check _totalPayroll exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Payroll.sol.PayrollTest.getSalary[routing]() -> void:
+getSalary:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 4 // "_salary"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Payroll.sol.PayrollTest.getTotalPaidTo[routing]() -> void:
+getTotalPaidTo:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 9 // "_totalPaid"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Payroll.sol.PayrollTest.getPaymentCount[routing]() -> void:
+getPaymentCount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 10 // "_paymentCount"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Payroll.sol.PayrollTest.isEmployee[routing]() -> void:
+isEmployee:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 5 // "_isEmployee"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Payroll.sol.PayrollTest.isTerminated[routing]() -> void:
+isTerminated:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 6 // "_isTerminated"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Payroll.sol.PayrollTest.addEmployee[routing]() -> void:
+addEmployee:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_0 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Only admin
+    swap
+    sha256
+    bytec 5 // "_isEmployee"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already employee
+    bytec 4 // "_salary"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    dig 3
+    box_put
+    intc_1 // 1
+    itob
+    box_put
+    bytec 6 // "_isTerminated"
+    dig 1
+    concat
+    intc_0 // 0
+    itob
+    box_put
+    intc_0 // 0
+    bytec 7 // "_employeeCount"
+    app_global_get_ex
+    assert // check _employeeCount exists
+    intc_1 // 1
+    itob
+    b+
+    bytec 7 // "_employeeCount"
+    dig 1
+    app_global_put
+    bytec 11 // "_employeeIndex"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_0 // 0
+    bytec_2 // "_totalPayroll"
+    app_global_get_ex
+    assert // check _totalPayroll exists
+    b+
+    bytec_2 // "_totalPayroll"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Payroll.sol.PayrollTest.payEmployee[routing]() -> void:
+payEmployee:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_0 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Only admin
+    sha256
+    bytec 5 // "_isEmployee"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    assert // Not employee
+    bytec 6 // "_isTerminated"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Terminated
+    bytec 4 // "_salary"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 9 // "_totalPaid"
+    dig 2
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_0 // 0
+    bytec 8 // "_totalPaidOut"
+    app_global_get_ex
+    assert // check _totalPaidOut exists
+    b+
+    bytec 8 // "_totalPaidOut"
+    swap
+    app_global_put
+    bytec 10 // "_paymentCount"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 1
+    itob
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Payroll.sol.PayrollTest.terminate[routing]() -> void:
+terminate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_0 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Only admin
+    sha256
+    bytec 5 // "_isEmployee"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    assert // Not employee
+    bytec 6 // "_isTerminated"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already terminated
+    intc_1 // 1
+    itob
+    box_put
+    intc_0 // 0
+    bytec_2 // "_totalPayroll"
+    app_global_get_ex
+    assert // check _totalPayroll exists
+    bytec 4 // "_salary"
+    uncover 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b-
+    bytec_2 // "_totalPayroll"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Payroll.sol.PayrollTest.updateSalary[routing]() -> void:
+updateSalary:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_0 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Only admin
+    swap
+    sha256
+    bytec 5 // "_isEmployee"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    assert // Not employee
+    bytec 6 // "_isTerminated"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Terminated
+    bytec 4 // "_salary"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    box_del
+    pop
+    swap
+    dig 2
+    box_put
+    intc_0 // 0
+    bytec_2 // "_totalPayroll"
+    app_global_get_ex
+    assert // check _totalPayroll exists
+    swap
+    b-
+    b+
+    bytec_2 // "_totalPayroll"
+    swap
+    app_global_put
+    intc_1 // 1
+    return

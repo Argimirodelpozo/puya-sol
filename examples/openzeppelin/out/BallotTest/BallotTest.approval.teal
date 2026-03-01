@@ -1,0 +1,372 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Ballot.sol.BallotTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1 32
+    bytecblock 0x151f7c75 "_proposalCount" "_chairman" 0x "_canVote" "_hasVoted" "_proposalVotes"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "_chairman"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_1 // "_proposalCount"
+    bytec_3 // 0x
+    app_global_put
+    bytec_2 // "_chairman"
+    txn Sender
+    app_global_put
+    pushint 3
+    itob
+    bytec_1 // "_proposalCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x8fecb3ca 0x0788e316 0x6276fcb6 0x5a7f4932 0x1ed15da3 0x2f5bf321 0x0626f6c0 0xb61c7b09 // method "chairman()address", method "proposalCount()uint512", method "canVote(address)bool", method "hasVoted(address)bool", method "proposalVotes(uint512)uint512", method "grantVotingRight(address)void", method "vote(address,uint512)void", method "winningProposal()(uint512,uint512)"
+    txna ApplicationArgs 0
+    match chairman proposalCount canVote hasVoted proposalVotes grantVotingRight vote winningProposal
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Ballot.sol.BallotTest.chairman[routing]() -> void:
+chairman:
+    intc_1 // 0
+    bytec_2 // "_chairman"
+    app_global_get_ex
+    assert // check _chairman exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Ballot.sol.BallotTest.proposalCount[routing]() -> void:
+proposalCount:
+    intc_1 // 0
+    bytec_1 // "_proposalCount"
+    app_global_get_ex
+    assert // check _proposalCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Ballot.sol.BallotTest.canVote[routing]() -> void:
+canVote:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 4 // "_canVote"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Ballot.sol.BallotTest.hasVoted[routing]() -> void:
+hasVoted:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 5 // "_hasVoted"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Ballot.sol.BallotTest.proposalVotes[routing]() -> void:
+proposalVotes:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_proposalVotes"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Ballot.sol.BallotTest.grantVotingRight[routing]() -> void:
+grantVotingRight:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_chairman"
+    app_global_get_ex
+    assert // check _chairman exists
+    ==
+    assert // Not chairman
+    sha256
+    bytec 5 // "_hasVoted"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already voted
+    bytec 4 // "_canVote"
+    swap
+    concat
+    intc_2 // 1
+    itob
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Ballot.sol.BallotTest.vote[routing]() -> void:
+vote:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    sha256
+    bytec 4 // "_canVote"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // No voting right
+    bytec 5 // "_hasVoted"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already voted
+    intc_1 // 0
+    bytec_1 // "_proposalCount"
+    app_global_get_ex
+    assert // check _proposalCount exists
+    dig 2
+    b>
+    assert // Invalid proposal
+    intc_2 // 1
+    itob
+    box_put
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_proposalVotes"
+    swap
+    concat
+    dup
+    box_get
+    bytec_3 // 0x
+    cover 2
+    select
+    intc_2 // 1
+    itob
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Ballot.sol.BallotTest.winningProposal[routing]() -> void:
+winningProposal:
+    intc_1 // 0
+    dup
+    itob
+    dupn 2
+
+winningProposal_while_top@2:
+    intc_1 // 0
+    bytec_1 // "_proposalCount"
+    app_global_get_ex
+    assert // check _proposalCount exists
+    dig 1
+    b>
+    bz winningProposal_after_while@6
+    intc_0 // 64
+    bzero
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_proposalVotes"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x
+    cover 2
+    select
+    dup
+    bury 5
+    dig 3
+    b>
+    bz winningProposal_after_if_else@5
+    dup
+    bury 2
+    dig 3
+    bury 3
+
+winningProposal_after_if_else@5:
+    dup
+    pushbytes 0x01
+    b+
+    bury 1
+    b winningProposal_while_top@2
+
+winningProposal_after_while@6:
+    dig 1
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    swap
+    dig 1
+    b|
+    dig 4
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

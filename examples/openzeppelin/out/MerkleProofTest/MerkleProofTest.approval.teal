@@ -1,0 +1,258 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/MerkleProof.sol.MerkleProofTest.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock 0x151f7c75 0x00
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xade67c31 0x42edf1f4 0x2aa1e5bb 0x38ca6290 0x7e40a4b4 // method "hashPair(byte[32],byte[32])byte[32]", method "verifyDepth1(byte[32],byte[32],byte[32])bool", method "verifyDepth2(byte[32],byte[32],byte[32],byte[32])bool", method "verifyDepth3(byte[32],byte[32],byte[32],byte[32],byte[32])bool", method "computeLeafHash(uint512)byte[32]"
+    txna ApplicationArgs 0
+    match hashPair verifyDepth1 verifyDepth2 verifyDepth3 computeLeafHash
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/MerkleProof.sol.MerkleProof._hashPair(a: bytes, b: bytes) -> bytes:
+MerkleProof._hashPair:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b<
+    bz MerkleProof._hashPair_else_body@2
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    keccak256
+    retsub
+
+MerkleProof._hashPair_else_body@2:
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    keccak256
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/MerkleProof.sol.MerkleProofTest.hashPair[routing]() -> void:
+hashPair:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub MerkleProof._hashPair
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/MerkleProof.sol.MerkleProofTest.verifyDepth1[routing]() -> void:
+verifyDepth1:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub MerkleProof._hashPair
+    ==
+    bytec_1 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/MerkleProof.sol.MerkleProofTest.verifyDepth2[routing]() -> void:
+verifyDepth2:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    cover 2
+    callsub MerkleProof._hashPair
+    swap
+    callsub MerkleProof._hashPair
+    ==
+    bytec_1 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/MerkleProof.sol.MerkleProofTest.verifyDepth3[routing]() -> void:
+verifyDepth3:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 5
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    uncover 3
+    uncover 3
+    callsub MerkleProof._hashPair
+    uncover 2
+    callsub MerkleProof._hashPair
+    swap
+    callsub MerkleProof._hashPair
+    ==
+    bytec_1 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/MerkleProof.sol.MerkleProofTest.computeLeafHash[routing]() -> void:
+computeLeafHash:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 32
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    keccak256
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

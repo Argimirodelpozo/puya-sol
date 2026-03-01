@@ -1,0 +1,218 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EnumerableSet.sol.EnumerableSetTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock "_length" 0x151f7c75 "_contains" 0x00
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "_length"
+    pushbytes 0x
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xae3a4e7a 0x08db3e2a 0x7480fb78 0xb25aff31 // method "add(uint512)bool", method "remove(uint512)bool", method "contains(uint512)bool", method "length()uint512"
+    txna ApplicationArgs 0
+    match add remove contains length
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EnumerableSet.sol.EnumerableSetTest.add[routing]() -> void:
+add:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_contains"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bz add_after_if_else@3
+    intc_1 // 0
+
+add_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EnumerableSet.sol.EnumerableSetTest.add@4:
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+add_after_if_else@3:
+    intc_2 // 1
+    itob
+    dig 1
+    swap
+    box_put
+    intc_1 // 0
+    bytec_0 // "_length"
+    app_global_get_ex
+    assert // check _length exists
+    intc_2 // 1
+    itob
+    b+
+    bytec_0 // "_length"
+    swap
+    app_global_put
+    intc_2 // 1
+    b add_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EnumerableSet.sol.EnumerableSetTest.add@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EnumerableSet.sol.EnumerableSetTest.remove[routing]() -> void:
+remove:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_contains"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bnz remove_after_if_else@3
+    intc_1 // 0
+
+remove_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EnumerableSet.sol.EnumerableSetTest.remove@4:
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+remove_after_if_else@3:
+    intc_1 // 0
+    itob
+    dig 1
+    swap
+    box_put
+    intc_1 // 0
+    bytec_0 // "_length"
+    app_global_get_ex
+    assert // check _length exists
+    intc_2 // 1
+    itob
+    b-
+    bytec_0 // "_length"
+    swap
+    app_global_put
+    intc_2 // 1
+    b remove_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EnumerableSet.sol.EnumerableSetTest.remove@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EnumerableSet.sol.EnumerableSetTest.contains[routing]() -> void:
+contains:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_contains"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EnumerableSet.sol.EnumerableSetTest.length[routing]() -> void:
+length:
+    intc_1 // 0
+    bytec_0 // "_length"
+    app_global_get_ex
+    assert // check _length exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

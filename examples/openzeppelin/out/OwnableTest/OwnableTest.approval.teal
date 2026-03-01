@@ -1,0 +1,103 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Ownable.sol.OwnableTest.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock "_owner" base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA)
+    txn ApplicationID
+    bnz main_after_if_else@4
+    bytec_0 // "_owner"
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    txn Sender
+    dup
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    !
+    assert // OwnableInvalidOwner
+    callsub _transferOwnership
+    intc_0 // 1
+    return
+
+main_after_if_else@4:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb1bbb0a8 0x3e2c61e5 0xe17bafb4 // method "owner()address", method "renounceOwnership()void", method "transferOwnership(address)void"
+    txna ApplicationArgs 0
+    match owner renounceOwnership transferOwnership
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Ownable.sol.OwnableTest.owner[routing]() -> void:
+owner:
+    intc_1 // 0
+    bytec_0 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Ownable.sol.OwnableTest.renounceOwnership[routing]() -> void:
+renounceOwnership:
+    callsub _checkOwner
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    callsub _transferOwnership
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Ownable.sol.OwnableTest.transferOwnership[routing]() -> void:
+transferOwnership:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub _checkOwner
+    dup
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    !
+    assert // OwnableInvalidOwner
+    callsub _transferOwnership
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Ownable.sol.OwnableTest._checkOwner() -> void:
+_checkOwner:
+    intc_1 // 0
+    bytec_0 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    txn Sender
+    !=
+    !
+    assert // OwnableUnauthorizedAccount
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Ownable.sol.OwnableTest._transferOwnership(newOwner: bytes) -> void:
+_transferOwnership:
+    proto 1 0
+    intc_1 // 0
+    bytec_0 // "_owner"
+    app_global_get_ex
+    bury 1
+    assert // check _owner exists
+    bytec_0 // "_owner"
+    frame_dig -1
+    app_global_put
+    pushbytes 0x8be0079c
+    log
+    retsub

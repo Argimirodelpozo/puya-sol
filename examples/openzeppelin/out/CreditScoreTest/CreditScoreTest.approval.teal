@@ -1,0 +1,562 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CreditScore.sol.CreditScoreTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock "_borrowerCount" 0x151f7c75 "_admin" "_borrowerActive" "_borrowerScore" "_paymentCount"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_0 // "_borrowerCount"
+    pushbytes 0x
+    app_global_put
+    bytec_2 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 0
+    itob
+    bytec_0 // "_borrowerCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xa5340041 0xac8b24de 0x8a73c99f 0xf6ed98d7 0x4bda6864 0xf788875b 0x76e0e19b 0x70883276 0xb7d6e840 0x69f28762 0xdc657072 // method "initBorrower(uint512)void", method "getAdmin()address", method "getBorrowerCount()uint512", method "getBorrowerScore(uint512)uint512", method "getPaymentCount(uint512)uint512", method "isBorrowerActive(uint512)bool", method "getAverageScore()uint512", method "registerBorrower(uint512)uint512", method "adjustScore(uint512,uint512)void", method "recordPayment(uint512)void", method "deactivateBorrower(uint512)void"
+    txna ApplicationArgs 0
+    match initBorrower getAdmin getBorrowerCount getBorrowerScore getPaymentCount isBorrowerActive getAverageScore registerBorrower adjustScore recordPayment deactivateBorrower
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CreditScore.sol.CreditScoreTest.initBorrower[routing]() -> void:
+initBorrower:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_borrowerScore"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 5 // "_paymentCount"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    bytec_3 // "_borrowerActive"
+    swap
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CreditScore.sol.CreditScoreTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CreditScore.sol.CreditScoreTest.getBorrowerCount[routing]() -> void:
+getBorrowerCount:
+    intc_1 // 0
+    bytec_0 // "_borrowerCount"
+    app_global_get_ex
+    assert // check _borrowerCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CreditScore.sol.CreditScoreTest.getBorrowerScore[routing]() -> void:
+getBorrowerScore:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_borrowerScore"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CreditScore.sol.CreditScoreTest.getPaymentCount[routing]() -> void:
+getPaymentCount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_paymentCount"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CreditScore.sol.CreditScoreTest.isBorrowerActive[routing]() -> void:
+isBorrowerActive:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_borrowerActive"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CreditScore.sol.CreditScoreTest.getAverageScore[routing]() -> void:
+getAverageScore:
+    intc_1 // 0
+    bytec_0 // "_borrowerCount"
+    app_global_get_ex
+    assert // check _borrowerCount exists
+    intc_1 // 0
+    itob
+    dup
+    uncover 2
+    dig 1
+    b>
+    assert // No borrowers
+
+getAverageScore_while_top@2:
+    intc_1 // 0
+    bytec_0 // "_borrowerCount"
+    app_global_get_ex
+    assert // check _borrowerCount exists
+    dig 1
+    b>
+    bz getAverageScore_after_while@4
+    intc_0 // 64
+    bzero
+    dig 1
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_borrowerScore"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dig 3
+    b+
+    bury 3
+    pushbytes 0x01
+    b+
+    bury 1
+    b getAverageScore_while_top@2
+
+getAverageScore_after_while@4:
+    intc_1 // 0
+    bytec_0 // "_borrowerCount"
+    app_global_get_ex
+    assert // check _borrowerCount exists
+    dig 2
+    swap
+    b/
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CreditScore.sol.CreditScoreTest.registerBorrower[routing]() -> void:
+registerBorrower:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Not admin
+    intc_1 // 0
+    bytec_0 // "_borrowerCount"
+    app_global_get_ex
+    assert // check _borrowerCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_borrowerScore"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    intc_1 // 0
+    itob
+    bytec 5 // "_paymentCount"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    bytec_3 // "_borrowerActive"
+    swap
+    concat
+    intc_2 // 1
+    itob
+    box_put
+    intc_2 // 1
+    itob
+    dig 2
+    b+
+    bytec_0 // "_borrowerCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CreditScore.sol.CreditScoreTest.adjustScore[routing]() -> void:
+adjustScore:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Not admin
+    intc_1 // 0
+    bytec_0 // "_borrowerCount"
+    app_global_get_ex
+    assert // check _borrowerCount exists
+    dig 2
+    b>
+    assert // Borrower does not exist
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_borrowerActive"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // Borrower is inactive
+    bytec 4 // "_borrowerScore"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CreditScore.sol.CreditScoreTest.recordPayment[routing]() -> void:
+recordPayment:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec_0 // "_borrowerCount"
+    app_global_get_ex
+    assert // check _borrowerCount exists
+    dig 1
+    b>
+    assert // Borrower does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_borrowerActive"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // Borrower is inactive
+    bytec 5 // "_paymentCount"
+    swap
+    concat
+    dup
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    intc_2 // 1
+    itob
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CreditScore.sol.CreditScoreTest.deactivateBorrower[routing]() -> void:
+deactivateBorrower:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Not admin
+    intc_1 // 0
+    bytec_0 // "_borrowerCount"
+    app_global_get_ex
+    assert // check _borrowerCount exists
+    dig 1
+    b>
+    assert // Borrower does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_borrowerActive"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // Borrower already inactive
+    intc_1 // 0
+    itob
+    box_put
+    intc_2 // 1
+    return

@@ -1,0 +1,90 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ReentrancyGuard.sol.ReentrancyGuardTest.approval_program() -> uint64:
+main:
+    intcblock 1 0 64
+    bytecblock "_status" "_counter" 0x
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "_status"
+    bytec_2 // 0x
+    app_global_put
+    bytec_1 // "_counter"
+    bytec_2 // 0x
+    app_global_put
+    intc_0 // 1
+    itob
+    bytec_0 // "_status"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x2fa47328 0x87dd5a4b // method "increment()void", method "getCounter()uint512"
+    txna ApplicationArgs 0
+    match increment getCounter
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ReentrancyGuard.sol.ReentrancyGuardTest.increment[routing]() -> void:
+increment:
+    intc_1 // 0
+    bytec_0 // "_status"
+    app_global_get_ex
+    assert // check _status exists
+    pushint 2
+    itob
+    swap
+    dig 1
+    b==
+    !
+    assert // ReentrancyGuardReentrantCall
+    bytec_0 // "_status"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec_1 // "_counter"
+    app_global_get_ex
+    assert // check _counter exists
+    intc_0 // 1
+    itob
+    swap
+    dig 1
+    b+
+    bytec_1 // "_counter"
+    swap
+    app_global_put
+    bytec_0 // "_status"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ReentrancyGuard.sol.ReentrancyGuardTest.getCounter[routing]() -> void:
+getCounter:
+    intc_1 // 0
+    bytec_1 // "_counter"
+    app_global_get_ex
+    assert // check _counter exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

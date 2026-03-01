@@ -1,0 +1,512 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/InsurancePool.sol.InsurancePoolTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock 0x151f7c75 0x "_policyCount" "_totalPremiums" "_policyActive" "_admin" "_policyPremium" "_policyClaims" "_policyCoverage"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 5 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_2 // "_policyCount"
+    bytec_1 // 0x
+    app_global_put
+    bytec_3 // "_totalPremiums"
+    bytec_1 // 0x
+    app_global_put
+    bytec 5 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 0
+    itob
+    bytec_2 // "_policyCount"
+    dig 1
+    app_global_put
+    bytec_3 // "_totalPremiums"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xcec8b240 0xac8b24de 0x9c3ff527 0x5e4da6f0 0xb525e788 0xc6dd9aae 0x6d441332 0x2f72cf1b 0x762171a6 0x165e6e18 0xc486779a // method "initPolicy(uint512)void", method "getAdmin()address", method "getPolicyCount()uint512", method "getTotalPremiums()uint512", method "getPremium(uint512)uint512", method "getCoverage(uint512)uint512", method "isPolicyActive(uint512)bool", method "getClaimCount(uint512)uint512", method "createPolicy(uint512,uint512)uint512", method "activatePolicy(uint512)void", method "fileClaim(uint512)void"
+    txna ApplicationArgs 0
+    match initPolicy getAdmin getPolicyCount getTotalPremiums getPremium getCoverage isPolicyActive getClaimCount createPolicy activatePolicy fileClaim
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/InsurancePool.sol.InsurancePoolTest.initPolicy[routing]() -> void:
+initPolicy:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_policyPremium"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 8 // "_policyCoverage"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 4 // "_policyActive"
+    dig 1
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    bytec 7 // "_policyClaims"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/InsurancePool.sol.InsurancePoolTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_1 // 0
+    bytec 5 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/InsurancePool.sol.InsurancePoolTest.getPolicyCount[routing]() -> void:
+getPolicyCount:
+    intc_1 // 0
+    bytec_2 // "_policyCount"
+    app_global_get_ex
+    assert // check _policyCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/InsurancePool.sol.InsurancePoolTest.getTotalPremiums[routing]() -> void:
+getTotalPremiums:
+    intc_1 // 0
+    bytec_3 // "_totalPremiums"
+    app_global_get_ex
+    assert // check _totalPremiums exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/InsurancePool.sol.InsurancePoolTest.getPremium[routing]() -> void:
+getPremium:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_policyPremium"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/InsurancePool.sol.InsurancePoolTest.getCoverage[routing]() -> void:
+getCoverage:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_policyCoverage"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/InsurancePool.sol.InsurancePoolTest.isPolicyActive[routing]() -> void:
+isPolicyActive:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_policyActive"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/InsurancePool.sol.InsurancePoolTest.getClaimCount[routing]() -> void:
+getClaimCount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_policyClaims"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/InsurancePool.sol.InsurancePoolTest.createPolicy[routing]() -> void:
+createPolicy:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec_2 // "_policyCount"
+    app_global_get_ex
+    assert // check _policyCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_policyPremium"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 5
+    box_put
+    bytec 8 // "_policyCoverage"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    bytec 4 // "_policyActive"
+    dig 1
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    intc_1 // 0
+    itob
+    bytec 7 // "_policyClaims"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    itob
+    dig 2
+    b+
+    bytec_2 // "_policyCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/InsurancePool.sol.InsurancePoolTest.activatePolicy[routing]() -> void:
+activatePolicy:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec 5 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Not admin
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_policyActive"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already active
+    intc_2 // 1
+    itob
+    box_put
+    intc_1 // 0
+    bytec_3 // "_totalPremiums"
+    app_global_get_ex
+    assert // check _totalPremiums exists
+    bytec 6 // "_policyPremium"
+    uncover 2
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    b+
+    bytec_3 // "_totalPremiums"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/InsurancePool.sol.InsurancePoolTest.fileClaim[routing]() -> void:
+fileClaim:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_policyActive"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // Policy not active
+    bytec 7 // "_policyClaims"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_2 // 1
+    itob
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 1
+    return

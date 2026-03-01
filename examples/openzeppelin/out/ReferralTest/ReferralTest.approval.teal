@@ -1,0 +1,477 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referral.sol.ReferralTest.approval_program() -> uint64:
+main:
+    intcblock 1 64 0 32
+    bytecblock 0x 0x151f7c75 "rewardRate" "admin" "totalReferrals" "totalRewards" "memberCount" "_rewards" 0x0000000000000000000000000000000000000000000000000000000000000000 "_referrer" "_referralCount" "_memberIndex"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "admin"
+    bytec 8 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_2 // "rewardRate"
+    bytec_0 // 0x
+    app_global_put
+    bytec 4 // "totalReferrals"
+    bytec_0 // 0x
+    app_global_put
+    bytec 5 // "totalRewards"
+    bytec_0 // 0x
+    app_global_put
+    bytec 6 // "memberCount"
+    bytec_0 // 0x
+    app_global_put
+    pushint 200
+    itob
+    bytec_3 // "admin"
+    txn Sender
+    app_global_put
+    bytec_2 // "rewardRate"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xfcebad15 0xb5c2cd78 0x0a36199e 0xe86239d9 0x385f9fad 0x9884983b 0xfbcf2cd4 0xcdb3c6e8 0x46d8caf2 0x92b76e41 0xf6742709 0x03c293f8 0xac8b24de // method "initMember(address)void", method "register(address,address)void", method "recordReferral(address,uint512)void", method "claimReward(address)uint512", method "getReferrer(address)address", method "getReferralCount(address)uint512", method "getRewards(address)uint512", method "getTotalReferrals()uint512", method "getTotalRewards()uint512", method "getMemberCount()uint512", method "getRewardRate()uint512", method "setRewardRate(uint512)void", method "getAdmin()address"
+    txna ApplicationArgs 0
+    match initMember register recordReferral claimReward getReferrer getReferralCount getRewards getTotalReferrals getTotalRewards getMemberCount getRewardRate setRewardRate getAdmin
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referral.sol.ReferralTest.initMember[routing]() -> void:
+initMember:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 9 // "_referrer"
+    dig 1
+    concat
+    bytec 8 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    box_put
+    intc_2 // 0
+    itob
+    bytec 10 // "_referralCount"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    bytec 7 // "_rewards"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    bytec 11 // "_memberIndex"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referral.sol.ReferralTest.register[routing]() -> void:
+register:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    swap
+    sha256
+    bytec 9 // "_referrer"
+    dig 1
+    concat
+    uncover 2
+    box_put
+    bytec 11 // "_memberIndex"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_2 // 0
+    itob
+    b==
+    bz register_after_if_else@3
+    intc_2 // 0
+    bytec 6 // "memberCount"
+    app_global_get_ex
+    assert // check memberCount exists
+    intc_0 // 1
+    itob
+    b+
+    bytec 6 // "memberCount"
+    dig 1
+    app_global_put
+    dig 1
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+register_after_if_else@3:
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referral.sol.ReferralTest.recordReferral[routing]() -> void:
+recordReferral:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    bytec_2 // "rewardRate"
+    app_global_get_ex
+    assert // check rewardRate exists
+    b*
+    pushint 10000
+    itob
+    b/
+    swap
+    sha256
+    bytec 7 // "_rewards"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 3
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec 10 // "_referralCount"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_0 // 1
+    itob
+    swap
+    dig 1
+    b+
+    dig 2
+    box_del
+    pop
+    uncover 2
+    swap
+    box_put
+    intc_2 // 0
+    bytec 4 // "totalReferrals"
+    app_global_get_ex
+    assert // check totalReferrals exists
+    b+
+    bytec 4 // "totalReferrals"
+    swap
+    app_global_put
+    intc_2 // 0
+    bytec 5 // "totalRewards"
+    app_global_get_ex
+    assert // check totalRewards exists
+    b+
+    bytec 5 // "totalRewards"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referral.sol.ReferralTest.claimReward[routing]() -> void:
+claimReward:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 7 // "_rewards"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_2 // 0
+    itob
+    dup2
+    b>
+    assert
+    dig 2
+    box_del
+    pop
+    uncover 2
+    swap
+    box_put
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referral.sol.ReferralTest.getReferrer[routing]() -> void:
+getReferrer:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 9 // "_referrer"
+    swap
+    concat
+    box_get
+    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referral.sol.ReferralTest.getReferralCount[routing]() -> void:
+getReferralCount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 10 // "_referralCount"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referral.sol.ReferralTest.getRewards[routing]() -> void:
+getRewards:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 7 // "_rewards"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referral.sol.ReferralTest.getTotalReferrals[routing]() -> void:
+getTotalReferrals:
+    intc_2 // 0
+    bytec 4 // "totalReferrals"
+    app_global_get_ex
+    assert // check totalReferrals exists
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referral.sol.ReferralTest.getTotalRewards[routing]() -> void:
+getTotalRewards:
+    intc_2 // 0
+    bytec 5 // "totalRewards"
+    app_global_get_ex
+    assert // check totalRewards exists
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referral.sol.ReferralTest.getMemberCount[routing]() -> void:
+getMemberCount:
+    intc_2 // 0
+    bytec 6 // "memberCount"
+    app_global_get_ex
+    assert // check memberCount exists
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referral.sol.ReferralTest.getRewardRate[routing]() -> void:
+getRewardRate:
+    intc_2 // 0
+    bytec_2 // "rewardRate"
+    app_global_get_ex
+    assert // check rewardRate exists
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referral.sol.ReferralTest.setRewardRate[routing]() -> void:
+setRewardRate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec_3 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    ==
+    assert
+    bytec_2 // "rewardRate"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referral.sol.ReferralTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_2 // 0
+    bytec_3 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

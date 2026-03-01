@@ -1,0 +1,598 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Allowance.sol.AllowanceTest.approval_program() -> uint64:
+main:
+    intcblock 0 1 64 32
+    bytecblock 0x "_isActive" 0x151f7c75 "_totalBudget" "_limit" "_spent" "_accountCount" "_totalSpent" "_admin" "_accountIndex"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 8 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 6 // "_accountCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec 7 // "_totalSpent"
+    bytec_0 // 0x
+    app_global_put
+    bytec_3 // "_totalBudget"
+    bytec_0 // 0x
+    app_global_put
+    bytec 8 // "_admin"
+    txn Sender
+    app_global_put
+    intc_0 // 0
+    itob
+    bytec 6 // "_accountCount"
+    dig 1
+    app_global_put
+    bytec 7 // "_totalSpent"
+    dig 1
+    app_global_put
+    bytec_3 // "_totalBudget"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xae0ecf56 0x0a4fb6b3 0x6210f3fa 0x695dba42 0x169b0b2f 0x970e4972 0x43a5d608 0x96f74d62 0xf81b9241 0x55a581a6 0x6ad40289 0xc67fdf5d 0x5bc57ccf 0xb36ee016 0xe0292d94 // method "initAccount(address)void", method "admin()address", method "accountCount()uint512", method "totalSpent()uint512", method "totalBudget()uint512", method "getLimit(address)uint512", method "getSpent(address)uint512", method "isActive(address)bool", method "getRemaining(address)uint512", method "setupAccount(address,uint512)void", method "spend(address,uint512)void", method "resetPeriod(address)void", method "updateLimit(address,uint512)void", method "deactivateAccount(address)void", method "activateAccount(address)void"
+    txna ApplicationArgs 0
+    match initAccount admin accountCount totalSpent totalBudget getLimit getSpent isActive getRemaining setupAccount spend resetPeriod updateLimit deactivateAccount activateAccount
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Allowance.sol.AllowanceTest.initAccount[routing]() -> void:
+initAccount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_0 // 0
+    itob
+    swap
+    sha256
+    bytec 4 // "_limit"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 5 // "_spent"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 9 // "_accountIndex"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    bytec_1 // "_isActive"
+    swap
+    concat
+    intc_0 // 0
+    itob
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Allowance.sol.AllowanceTest.admin[routing]() -> void:
+admin:
+    intc_0 // 0
+    bytec 8 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Allowance.sol.AllowanceTest.accountCount[routing]() -> void:
+accountCount:
+    intc_0 // 0
+    bytec 6 // "_accountCount"
+    app_global_get_ex
+    assert // check _accountCount exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Allowance.sol.AllowanceTest.totalSpent[routing]() -> void:
+totalSpent:
+    intc_0 // 0
+    bytec 7 // "_totalSpent"
+    app_global_get_ex
+    assert // check _totalSpent exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Allowance.sol.AllowanceTest.totalBudget[routing]() -> void:
+totalBudget:
+    intc_0 // 0
+    bytec_3 // "_totalBudget"
+    app_global_get_ex
+    assert // check _totalBudget exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Allowance.sol.AllowanceTest.getLimit[routing]() -> void:
+getLimit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 4 // "_limit"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Allowance.sol.AllowanceTest.getSpent[routing]() -> void:
+getSpent:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 5 // "_spent"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Allowance.sol.AllowanceTest.isActive[routing]() -> void:
+isActive:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_1 // "_isActive"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Allowance.sol.AllowanceTest.getRemaining[routing]() -> void:
+getRemaining:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 4 // "_limit"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 5 // "_spent"
+    uncover 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b-
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Allowance.sol.AllowanceTest.setupAccount[routing]() -> void:
+setupAccount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    sha256
+    bytec_1 // "_isActive"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Account already active
+    intc_0 // 0
+    bytec 6 // "_accountCount"
+    app_global_get_ex
+    assert // check _accountCount exists
+    intc_1 // 1
+    itob
+    b+
+    bytec 6 // "_accountCount"
+    dig 1
+    app_global_put
+    bytec 9 // "_accountIndex"
+    dig 3
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    bytec 4 // "_limit"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    dig 3
+    box_put
+    intc_0 // 0
+    itob
+    bytec 5 // "_spent"
+    uncover 3
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    itob
+    box_put
+    intc_0 // 0
+    bytec_3 // "_totalBudget"
+    app_global_get_ex
+    assert // check _totalBudget exists
+    b+
+    bytec_3 // "_totalBudget"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Allowance.sol.AllowanceTest.spend[routing]() -> void:
+spend:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    sha256
+    bytec_1 // "_isActive"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    assert // Account not active
+    bytec 5 // "_spent"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 3
+    b+
+    bytec 4 // "_limit"
+    uncover 3
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b>=
+    assert // Exceeds limit
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_0 // 0
+    bytec 7 // "_totalSpent"
+    app_global_get_ex
+    assert // check _totalSpent exists
+    b+
+    bytec 7 // "_totalSpent"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Allowance.sol.AllowanceTest.resetPeriod[routing]() -> void:
+resetPeriod:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_1 // "_isActive"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    assert // Account not active
+    intc_0 // 0
+    itob
+    bytec 5 // "_spent"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Allowance.sol.AllowanceTest.updateLimit[routing]() -> void:
+updateLimit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    sha256
+    bytec_1 // "_isActive"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    assert // Account not active
+    bytec 4 // "_limit"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    box_del
+    pop
+    swap
+    dig 2
+    box_put
+    intc_0 // 0
+    bytec_3 // "_totalBudget"
+    app_global_get_ex
+    assert // check _totalBudget exists
+    swap
+    b-
+    b+
+    bytec_3 // "_totalBudget"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Allowance.sol.AllowanceTest.deactivateAccount[routing]() -> void:
+deactivateAccount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_1 // "_isActive"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    assert // Account not active
+    intc_0 // 0
+    itob
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Allowance.sol.AllowanceTest.activateAccount[routing]() -> void:
+activateAccount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_1 // "_isActive"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Account already active
+    intc_1 // 1
+    itob
+    box_put
+    intc_1 // 1
+    return

@@ -1,0 +1,757 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Governance.sol.GovernanceTest.approval_program() -> uint64:
+main:
+    intcblock 64 1 0 32
+    bytecblock 0x 0x151f7c75 "_quorum" "_admin" "_proposalCount" "_votingPeriod" "_againstVotes" "_forVotes" "_abstainVotes" "_votingPower" "_proposalDeadline" "_proposalExecuted"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 4 // "_proposalCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec 5 // "_votingPeriod"
+    bytec_0 // 0x
+    app_global_put
+    bytec_2 // "_quorum"
+    bytec_0 // 0x
+    app_global_put
+    bytec_3 // "_admin"
+    txn Sender
+    app_global_put
+    pushint 100
+    itob
+    bytec 5 // "_votingPeriod"
+    swap
+    app_global_put
+    pushint 10
+    itob
+    bytec_2 // "_quorum"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x0a4fb6b3 0x0788e316 0x0c1f9f8a 0xda9f25d1 0x1e7a346f 0x8fdd8b27 0x257443f3 0x28fc4310 0xd1445947 0xebdaef8a 0x1bb9766f 0x1d124c1c 0x949c6995 0x20977a04 0xad81d355 // method "admin()address", method "proposalCount()uint512", method "votingPeriod()uint512", method "quorum()uint512", method "setVotingPower(address,uint512)void", method "getVotingPower(address)uint512", method "createProposal(uint512)uint512", method "castVote(uint512,uint512,address)void", method "forVotes(uint512)uint512", method "againstVotes(uint512)uint512", method "abstainVotes(uint512)uint512", method "proposalDeadline(uint512)uint512", method "isProposalPassed(uint512)bool", method "executeProposal(uint512,uint512)bool", method "isProposalExecuted(uint512)bool"
+    txna ApplicationArgs 0
+    match admin proposalCount votingPeriod quorum setVotingPower getVotingPower createProposal castVote forVotes againstVotes abstainVotes proposalDeadline isProposalPassed executeProposal isProposalExecuted
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Governance.sol.GovernanceTest.admin[routing]() -> void:
+admin:
+    intc_2 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Governance.sol.GovernanceTest.proposalCount[routing]() -> void:
+proposalCount:
+    intc_2 // 0
+    bytec 4 // "_proposalCount"
+    app_global_get_ex
+    assert // check _proposalCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Governance.sol.GovernanceTest.votingPeriod[routing]() -> void:
+votingPeriod:
+    intc_2 // 0
+    bytec 5 // "_votingPeriod"
+    app_global_get_ex
+    assert // check _votingPeriod exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Governance.sol.GovernanceTest.quorum[routing]() -> void:
+quorum:
+    intc_2 // 0
+    bytec_2 // "_quorum"
+    app_global_get_ex
+    assert // check _quorum exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Governance.sol.GovernanceTest.setVotingPower[routing]() -> void:
+setVotingPower:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Not admin
+    swap
+    sha256
+    bytec 9 // "_votingPower"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Governance.sol.GovernanceTest.getVotingPower[routing]() -> void:
+getVotingPower:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 9 // "_votingPower"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Governance.sol.GovernanceTest.createProposal[routing]() -> void:
+createProposal:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    bytec 4 // "_proposalCount"
+    app_global_get_ex
+    assert // check _proposalCount exists
+    intc_1 // 1
+    itob
+    b+
+    bytec 4 // "_proposalCount"
+    dig 1
+    app_global_put
+    intc_2 // 0
+    bytec 5 // "_votingPeriod"
+    app_global_get_ex
+    assert // check _votingPeriod exists
+    uncover 2
+    b+
+    intc_0 // 64
+    bzero
+    dup
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 10 // "_proposalDeadline"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Governance.sol.GovernanceTest.castVote[routing]() -> void:
+castVote:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dupn 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 9 // "_votingPower"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    cover 2
+    intc_2 // 0
+    itob
+    swap
+    dig 1
+    b>
+    assert // No voting power
+    b==
+    bz castVote_else_body@3
+    intc_0 // 64
+    bzero
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_againstVotes"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+
+castVote_after_if_else@7:
+    intc_1 // 1
+    return
+
+castVote_else_body@3:
+    intc_1 // 1
+    itob
+    dig 2
+    b==
+    bz castVote_else_body@5
+    intc_0 // 64
+    bzero
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_forVotes"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    b castVote_after_if_else@7
+
+castVote_else_body@5:
+    intc_0 // 64
+    bzero
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_abstainVotes"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    b castVote_after_if_else@7
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Governance.sol.GovernanceTest.forVotes[routing]() -> void:
+forVotes:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_forVotes"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Governance.sol.GovernanceTest.againstVotes[routing]() -> void:
+againstVotes:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_againstVotes"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Governance.sol.GovernanceTest.abstainVotes[routing]() -> void:
+abstainVotes:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_abstainVotes"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Governance.sol.GovernanceTest.proposalDeadline[routing]() -> void:
+proposalDeadline:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 10 // "_proposalDeadline"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Governance.sol.GovernanceTest.isProposalPassed[routing]() -> void:
+isProposalPassed:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_forVotes"
+    dig 1
+    concat
+    dup
+    cover 2
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 6 // "_againstVotes"
+    dig 2
+    concat
+    dup
+    cover 3
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b+
+    bytec 8 // "_abstainVotes"
+    uncover 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b+
+    intc_2 // 0
+    bytec_2 // "_quorum"
+    app_global_get_ex
+    assert // check _quorum exists
+    b<
+    bz isProposalPassed_after_if_else@3
+    intc_2 // 0
+
+isProposalPassed_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Governance.sol.GovernanceTest.isProposalPassed@4:
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+isProposalPassed_after_if_else@3:
+    dig 1
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b>
+    b isProposalPassed_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Governance.sol.GovernanceTest.isProposalPassed@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Governance.sol.GovernanceTest.executeProposal[routing]() -> void:
+executeProposal:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 11 // "_proposalExecuted"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already executed
+    bytec 10 // "_proposalDeadline"
+    dig 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    uncover 3
+    b<=
+    assert // Voting not ended
+    bytec 7 // "_forVotes"
+    dig 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 6 // "_againstVotes"
+    dig 3
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup2
+    b+
+    bytec 8 // "_abstainVotes"
+    uncover 5
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b+
+    intc_2 // 0
+    bytec_2 // "_quorum"
+    app_global_get_ex
+    assert // check _quorum exists
+    b>=
+    assert // Quorum not reached
+    b>
+    assert // Proposal not passed
+    intc_1 // 1
+    itob
+    box_put
+    pushbytes 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Governance.sol.GovernanceTest.isProposalExecuted[routing]() -> void:
+isProposalExecuted:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 11 // "_proposalExecuted"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

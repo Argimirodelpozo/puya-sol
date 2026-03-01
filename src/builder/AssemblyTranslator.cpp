@@ -311,6 +311,34 @@ awst::SourceLocation AssemblyTranslator::makeLoc(
 
 // ─── AWST helper ────────────────────────────────────────────────────────────
 
+std::shared_ptr<awst::Expression> AssemblyTranslator::ensureBiguint(
+	std::shared_ptr<awst::Expression> _expr,
+	awst::SourceLocation const& _loc
+)
+{
+	if (!_expr || _expr->wtype != awst::WType::boolType())
+		return _expr;
+
+	// bool → biguint: (expr ? 1 : 0)
+	auto one = std::make_shared<awst::IntegerConstant>();
+	one->sourceLocation = _loc;
+	one->wtype = awst::WType::biguintType();
+	one->value = "1";
+
+	auto zero = std::make_shared<awst::IntegerConstant>();
+	zero->sourceLocation = _loc;
+	zero->wtype = awst::WType::biguintType();
+	zero->value = "0";
+
+	auto cond = std::make_shared<awst::ConditionalExpression>();
+	cond->sourceLocation = _loc;
+	cond->wtype = awst::WType::biguintType();
+	cond->condition = std::move(_expr);
+	cond->trueExpr = std::move(one);
+	cond->falseExpr = std::move(zero);
+	return cond;
+}
+
 std::shared_ptr<awst::Expression> AssemblyTranslator::makeBigUIntBinOp(
 	std::shared_ptr<awst::Expression> _left,
 	awst::BigUIntBinaryOperator _op,
@@ -321,9 +349,9 @@ std::shared_ptr<awst::Expression> AssemblyTranslator::makeBigUIntBinOp(
 	auto node = std::make_shared<awst::BigUIntBinaryOperation>();
 	node->sourceLocation = _loc;
 	node->wtype = awst::WType::biguintType();
-	node->left = std::move(_left);
+	node->left = ensureBiguint(std::move(_left), _loc);
 	node->op = _op;
-	node->right = std::move(_right);
+	node->right = ensureBiguint(std::move(_right), _loc);
 	return node;
 }
 
@@ -465,6 +493,15 @@ std::shared_ptr<awst::Expression> AssemblyTranslator::translateFunctionCall(
 	auto loc = makeLoc(_call.debugData);
 	std::string funcName = _call.functionName.name.str();
 
+	// Before translating args, check for Yul-level patterns that need raw AST access.
+	// mload(add(add(bytes_param, 32), offset)) → extract3(param, offset, 32)
+	if (funcName == "mload" && _call.arguments.size() == 1)
+	{
+		auto result = tryHandleBytesMemoryRead(_call.arguments[0], loc);
+		if (result)
+			return result;
+	}
+
 	// Translate all arguments (stored in source order by the Yul parser)
 	std::vector<std::shared_ptr<awst::Expression>> args;
 	for (auto const& arg: _call.arguments)
@@ -499,6 +536,10 @@ std::shared_ptr<awst::Expression> AssemblyTranslator::translateFunctionCall(
 		return handleOr(args, loc);
 	if (funcName == "not")
 		return handleNot(args, loc);
+	if (funcName == "xor")
+		return handleXor(args, loc);
+	if (funcName == "sload")
+		return handleSload(args, loc);
 	if (funcName == "gas")
 		return handleGas(loc);
 	if (funcName == "chainid")
@@ -867,6 +908,64 @@ std::shared_ptr<awst::Expression> AssemblyTranslator::handleNot(
 	return result;
 }
 
+std::shared_ptr<awst::Expression> AssemblyTranslator::handleXor(
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	awst::SourceLocation const& _loc
+)
+{
+	if (_args.size() != 2)
+	{
+		Logger::instance().error("xor requires 2 arguments", _loc);
+		return nullptr;
+	}
+	// Bitwise XOR on biguint: use b^ opcode
+	// Coerce bool operands to biguint first (Yul: all values are uint256)
+	auto lhs = ensureBiguint(_args[0], _loc);
+	auto rhs = ensureBiguint(_args[1], _loc);
+
+	auto call = std::make_shared<awst::IntrinsicCall>();
+	call->sourceLocation = _loc;
+	call->wtype = awst::WType::bytesType();
+	call->opCode = "b^";
+	// Convert both operands to bytes first
+	auto lhsCast = std::make_shared<awst::ReinterpretCast>();
+	lhsCast->sourceLocation = _loc;
+	lhsCast->wtype = awst::WType::bytesType();
+	lhsCast->expr = std::move(lhs);
+	auto rhsCast = std::make_shared<awst::ReinterpretCast>();
+	rhsCast->sourceLocation = _loc;
+	rhsCast->wtype = awst::WType::bytesType();
+	rhsCast->expr = std::move(rhs);
+	call->stackArgs.push_back(std::move(lhsCast));
+	call->stackArgs.push_back(std::move(rhsCast));
+	// Reinterpret result back to biguint
+	auto result = std::make_shared<awst::ReinterpretCast>();
+	result->sourceLocation = _loc;
+	result->wtype = awst::WType::biguintType();
+	result->expr = std::move(call);
+	return result;
+}
+
+std::shared_ptr<awst::Expression> AssemblyTranslator::handleSload(
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	awst::SourceLocation const& _loc
+)
+{
+	if (_args.size() != 1)
+	{
+		Logger::instance().error("sload requires 1 argument", _loc);
+		return nullptr;
+	}
+	// sload has no AVM equivalent — EVM raw storage slot access.
+	// Return 0 with a warning.
+	Logger::instance().warning("sload() has no AVM equivalent (EVM raw storage), returning 0", _loc);
+	auto zero = std::make_shared<awst::IntegerConstant>();
+	zero->sourceLocation = _loc;
+	zero->wtype = awst::WType::biguintType();
+	zero->value = "0";
+	return zero;
+}
+
 std::shared_ptr<awst::Expression> AssemblyTranslator::handleGas(
 	awst::SourceLocation const& _loc
 )
@@ -1073,6 +1172,70 @@ std::shared_ptr<awst::Expression> AssemblyTranslator::handleKeccak256(
 
 	auto offset = resolveConstantOffset(_args[0]);
 	auto length = resolveConstantOffset(_args[1]);
+
+	if (!offset && length)
+	{
+		// Offset is a variable — check if it references a struct (WTuple) parameter.
+		// Pattern: keccak256(structVar, numFields*32) hashes struct fields concatenated.
+		auto const* varExpr = dynamic_cast<awst::VarExpression const*>(_args[0].get());
+		if (varExpr)
+		{
+			auto it = m_locals.find(varExpr->name);
+			if (it != m_locals.end() && it->second && it->second->kind() == awst::WTypeKind::WTuple)
+			{
+				auto const* tupleType = dynamic_cast<awst::WTuple const*>(it->second);
+				if (tupleType)
+				{
+					int numFields = static_cast<int>(tupleType->types().size());
+					int expectedLen = numFields * 32;
+					if (static_cast<int>(*length) == expectedLen)
+					{
+						// Concatenate all struct fields, each padded to 32 bytes
+						std::shared_ptr<awst::Expression> data;
+						for (int i = 0; i < numFields; ++i)
+						{
+							auto field = std::make_shared<awst::TupleItemExpression>();
+							field->sourceLocation = _loc;
+							field->wtype = tupleType->types()[static_cast<size_t>(i)];
+							field->base = _args[0];
+							field->index = i;
+
+							auto padded = padTo32Bytes(std::move(field), _loc);
+
+							if (!data)
+								data = std::move(padded);
+							else
+							{
+								auto concat = std::make_shared<awst::IntrinsicCall>();
+								concat->sourceLocation = _loc;
+								concat->wtype = awst::WType::bytesType();
+								concat->opCode = "concat";
+								concat->stackArgs.push_back(std::move(data));
+								concat->stackArgs.push_back(std::move(padded));
+								data = std::move(concat);
+							}
+						}
+
+						// keccak256 the concatenated bytes
+						auto keccak = std::make_shared<awst::IntrinsicCall>();
+						keccak->sourceLocation = _loc;
+						keccak->wtype = awst::WType::bytesType();
+						keccak->opCode = "keccak256";
+						keccak->stackArgs.push_back(std::move(data));
+
+						auto castResult = std::make_shared<awst::ReinterpretCast>();
+						castResult->sourceLocation = _loc;
+						castResult->wtype = awst::WType::biguintType();
+						castResult->expr = std::move(keccak);
+						return castResult;
+					}
+				}
+			}
+		}
+
+		Logger::instance().error("keccak256 with non-constant offset/length not supported", _loc);
+		return nullptr;
+	}
 
 	if (!offset || !length)
 	{
@@ -2239,6 +2402,127 @@ std::shared_ptr<awst::Expression> AssemblyTranslator::handleMload(
 	return var;
 }
 
+std::shared_ptr<awst::Expression> AssemblyTranslator::tryHandleBytesMemoryRead(
+	solidity::yul::Expression const& _addrExpr,
+	awst::SourceLocation const& _loc
+)
+{
+	// Match: mload(add(add(bytes_param, 32), offset))
+	// or:    mload(add(offset, add(bytes_param, 32)))
+	//
+	// This is the standard Solidity pattern for reading 32 bytes from a
+	// bytes memory parameter at a variable byte offset.
+	// In EVM: data_ptr + 32 (skip length header) + offset → mload → 32 bytes
+	// In AVM: extract3(data, offset, 32) — bytes have no length header
+
+	auto* outerAdd = std::get_if<solidity::yul::FunctionCall>(&_addrExpr);
+	if (!outerAdd || outerAdd->functionName.name.str() != "add"
+		|| outerAdd->arguments.size() != 2)
+		return nullptr;
+
+	// One arg of outer add should be add(bytes_param, 32), the other is the offset
+	solidity::yul::FunctionCall const* innerAdd = nullptr;
+	solidity::yul::Expression const* offsetExprYul = nullptr;
+
+	auto* call0 = std::get_if<solidity::yul::FunctionCall>(&outerAdd->arguments[0]);
+	auto* call1 = std::get_if<solidity::yul::FunctionCall>(&outerAdd->arguments[1]);
+
+	if (call0 && call0->functionName.name.str() == "add" && call0->arguments.size() == 2)
+	{
+		innerAdd = call0;
+		offsetExprYul = &outerAdd->arguments[1];
+	}
+	else if (call1 && call1->functionName.name.str() == "add" && call1->arguments.size() == 2)
+	{
+		innerAdd = call1;
+		offsetExprYul = &outerAdd->arguments[0];
+	}
+
+	if (!innerAdd)
+		return nullptr;
+
+	// Inner add should have: (bytes_param, 32) or (32, bytes_param)
+	solidity::yul::Expression const* paramExpr = nullptr;
+
+	auto val1 = resolveConstantYulValue(innerAdd->arguments[1]);
+	if (val1 && *val1 == 32)
+	{
+		paramExpr = &innerAdd->arguments[0];
+	}
+	else
+	{
+		auto val0 = resolveConstantYulValue(innerAdd->arguments[0]);
+		if (val0 && *val0 == 32)
+			paramExpr = &innerAdd->arguments[1];
+	}
+
+	if (!paramExpr)
+		return nullptr;
+
+	// param must be an Identifier referencing a bytes/string parameter
+	auto* paramId = std::get_if<solidity::yul::Identifier>(paramExpr);
+	if (!paramId)
+		return nullptr;
+
+	std::string paramName = paramId->name.str();
+	auto paramIt = m_locals.find(paramName);
+	if (paramIt == m_locals.end())
+		return nullptr;
+
+	auto* paramType = paramIt->second;
+	if (paramType != awst::WType::bytesType() && paramType != awst::WType::stringType())
+		return nullptr;
+
+	// Pattern matched! Generate: extract3(param, btoi(offset), 32) → cast to biguint
+
+	Logger::instance().debug(
+		"mload bytes memory read: extract3(" + paramName + ", offset, 32)", _loc
+	);
+
+	// Build param reference
+	auto paramVar = std::make_shared<awst::VarExpression>();
+	paramVar->sourceLocation = _loc;
+	paramVar->name = paramName;
+	paramVar->wtype = paramType;
+
+	// Translate the dynamic offset and convert biguint → uint64
+	auto offsetExpr = translateExpression(*offsetExprYul);
+
+	auto offsetBytes = std::make_shared<awst::ReinterpretCast>();
+	offsetBytes->sourceLocation = _loc;
+	offsetBytes->wtype = awst::WType::bytesType();
+	offsetBytes->expr = offsetExpr;
+
+	auto offsetU64 = std::make_shared<awst::IntrinsicCall>();
+	offsetU64->sourceLocation = _loc;
+	offsetU64->wtype = awst::WType::uint64Type();
+	offsetU64->opCode = "btoi";
+	offsetU64->stackArgs.push_back(std::move(offsetBytes));
+
+	// Length: 32 bytes
+	auto lenArg = std::make_shared<awst::IntegerConstant>();
+	lenArg->sourceLocation = _loc;
+	lenArg->wtype = awst::WType::uint64Type();
+	lenArg->value = "32";
+
+	// extract3(param, offset, 32)
+	auto extract = std::make_shared<awst::IntrinsicCall>();
+	extract->sourceLocation = _loc;
+	extract->wtype = awst::WType::bytesType();
+	extract->opCode = "extract3";
+	extract->stackArgs.push_back(std::move(paramVar));
+	extract->stackArgs.push_back(std::move(offsetU64));
+	extract->stackArgs.push_back(std::move(lenArg));
+
+	// Cast bytes → biguint (mload returns uint256)
+	auto result = std::make_shared<awst::ReinterpretCast>();
+	result->sourceLocation = _loc;
+	result->wtype = awst::WType::biguintType();
+	result->expr = std::move(extract);
+
+	return result;
+}
+
 void AssemblyTranslator::handleMstore(
 	std::vector<std::shared_ptr<awst::Expression>> const& _args,
 	awst::SourceLocation const& _loc,
@@ -2254,8 +2538,8 @@ void AssemblyTranslator::handleMstore(
 	auto offset = resolveConstantOffset(_args[0]);
 	if (!offset)
 	{
-		Logger::instance().error(
-			"mstore with non-constant offset not supported in assembly translation", _loc
+		Logger::instance().warning(
+			"mstore with non-constant offset not supported in assembly translation (skipping)", _loc
 		);
 		return;
 	}
@@ -2715,6 +2999,38 @@ void AssemblyTranslator::translateAssignment(
 		zero->wtype = target->wtype;
 		zero->value = "0";
 		value = std::move(zero);
+	}
+
+	// Coerce value type to match target type when they differ
+	if (target->wtype != value->wtype)
+	{
+		if (target->wtype == awst::WType::boolType()
+			&& value->wtype != awst::WType::boolType())
+		{
+			// biguint → bool: value != 0
+			auto zero = std::make_shared<awst::IntegerConstant>();
+			zero->sourceLocation = loc;
+			zero->wtype = awst::WType::biguintType();
+			zero->value = "0";
+
+			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+			cmp->sourceLocation = loc;
+			cmp->wtype = awst::WType::boolType();
+			cmp->lhs = std::move(value);
+			cmp->op = awst::NumericComparison::Ne;
+			cmp->rhs = std::move(zero);
+			value = std::move(cmp);
+		}
+		else if (target->wtype->kind() == awst::WTypeKind::Bytes
+			&& value->wtype == awst::WType::biguintType())
+		{
+			// biguint → bytes[N]: ReinterpretCast
+			auto cast = std::make_shared<awst::ReinterpretCast>();
+			cast->sourceLocation = loc;
+			cast->wtype = target->wtype;
+			cast->expr = std::move(value);
+			value = std::move(cast);
+		}
 	}
 
 	auto assign = std::make_shared<awst::AssignmentStatement>();

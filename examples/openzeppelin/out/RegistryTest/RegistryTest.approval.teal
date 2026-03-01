@@ -1,0 +1,552 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Registry.sol.RegistryTest.approval_program() -> uint64:
+main:
+    intcblock 64 1 0 32
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 0x "_registrationCount" 0x151f7c75 "_nameToOwner" "_owner" "_registrationFee" "_nameToExpiry" "_primaryName"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 5 // "_owner"
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_2 // "_registrationCount"
+    bytec_1 // 0x
+    app_global_put
+    bytec 6 // "_registrationFee"
+    bytec_1 // 0x
+    app_global_put
+    bytec 5 // "_owner"
+    txn Sender
+    app_global_put
+    pushint 100
+    itob
+    bytec 6 // "_registrationFee"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb1bbb0a8 0x6c320ff7 0x2f59a541 0xca7a37a0 0x190aa18d 0xd298dadb 0xbe650c1f 0x0d9b917c 0x02015a13 0xc45a5113 0x1dc7588f 0x4b2c6d4b // method "owner()address", method "registrationCount()uint512", method "registrationFee()uint512", method "setRegistrationFee(uint512)void", method "register(uint512,address,uint512)void", method "ownerOfName(uint512)address", method "expiryOf(uint512)uint512", method "primaryName(address)uint512", method "setPrimaryName(address,uint512)void", method "transferName(uint512,address,address)void", method "renewName(uint512,uint512)void", method "releaseName(uint512)void"
+    txna ApplicationArgs 0
+    match owner registrationCount registrationFee setRegistrationFee register ownerOfName expiryOf primaryName setPrimaryName transferName renewName releaseName
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Registry.sol.RegistryTest.owner[routing]() -> void:
+owner:
+    intc_2 // 0
+    bytec 5 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Registry.sol.RegistryTest.registrationCount[routing]() -> void:
+registrationCount:
+    intc_2 // 0
+    bytec_2 // "_registrationCount"
+    app_global_get_ex
+    assert // check _registrationCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Registry.sol.RegistryTest.registrationFee[routing]() -> void:
+registrationFee:
+    intc_2 // 0
+    bytec 6 // "_registrationFee"
+    app_global_get_ex
+    assert // check _registrationFee exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Registry.sol.RegistryTest.setRegistrationFee[routing]() -> void:
+setRegistrationFee:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec 5 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // Not owner
+    bytec 6 // "_registrationFee"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Registry.sol.RegistryTest.register[routing]() -> void:
+register:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_nameToOwner"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    assert // Name taken
+    intc_2 // 0
+    itob
+    dig 3
+    b<
+    assert // Duration must be > 0
+    uncover 3
+    box_put
+    bytec 7 // "_nameToExpiry"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 0
+    bytec_2 // "_registrationCount"
+    app_global_get_ex
+    assert // check _registrationCount exists
+    intc_1 // 1
+    itob
+    b+
+    bytec_2 // "_registrationCount"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Registry.sol.RegistryTest.ownerOfName[routing]() -> void:
+ownerOfName:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_nameToOwner"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Registry.sol.RegistryTest.expiryOf[routing]() -> void:
+expiryOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_nameToExpiry"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Registry.sol.RegistryTest.primaryName[routing]() -> void:
+primaryName:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 8 // "_primaryName"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Registry.sol.RegistryTest.setPrimaryName[routing]() -> void:
+setPrimaryName:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_nameToOwner"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dig 2
+    ==
+    assert // Not name owner
+    swap
+    sha256
+    bytec 8 // "_primaryName"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Registry.sol.RegistryTest.transferName[routing]() -> void:
+transferName:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_0 // 64
+    bzero
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_nameToOwner"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dig 3
+    ==
+    assert // Not name owner
+    swap
+    box_put
+    sha256
+    bytec 8 // "_primaryName"
+    swap
+    concat
+    dup
+    cover 2
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    b==
+    bz transferName_after_if_else@3
+    intc_2 // 0
+    itob
+    dig 1
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+transferName_after_if_else@3:
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Registry.sol.RegistryTest.renewName[routing]() -> void:
+renewName:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_nameToOwner"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // Name not registered
+    bytec 7 // "_nameToExpiry"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    uncover 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Registry.sol.RegistryTest.releaseName[routing]() -> void:
+releaseName:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    dup
+    cover 2
+    bytec 4 // "_nameToOwner"
+    swap
+    concat
+    dup
+    cover 2
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // Name not registered
+    sha256
+    bytec 8 // "_primaryName"
+    swap
+    concat
+    dup
+    cover 2
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    b==
+    bz releaseName_after_if_else@3
+    intc_2 // 0
+    itob
+    dig 1
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+releaseName_after_if_else@3:
+    dig 1
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    box_put
+    intc_2 // 0
+    itob
+    bytec 7 // "_nameToExpiry"
+    dig 4
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 0
+    bytec_2 // "_registrationCount"
+    app_global_get_ex
+    assert // check _registrationCount exists
+    intc_1 // 1
+    itob
+    b-
+    bytec_2 // "_registrationCount"
+    swap
+    app_global_put
+    intc_1 // 1
+    return

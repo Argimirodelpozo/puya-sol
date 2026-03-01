@@ -1,0 +1,718 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Lottery2.sol.Lottery2Test.approval_program() -> uint64:
+main:
+    intcblock 64 1 0
+    bytecblock 0x 0x151f7c75 "_roundTicketsSold" "_roundDrawn" "_roundPrize" "_roundCount" "_totalTicketsSold" "_totalPrizesPaid" "_roundTicketPrice" "_roundMaxTickets" "_roundWinnerIndex" "_admin"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 11 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 5 // "_roundCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec 6 // "_totalTicketsSold"
+    bytec_0 // 0x
+    app_global_put
+    bytec 7 // "_totalPrizesPaid"
+    bytec_0 // 0x
+    app_global_put
+    bytec 11 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xecfcd506 0x0a4fb6b3 0x0a9060c4 0xcca9c13a 0xc667a653 0x8e8fece2 0x95495797 0x62d1e227 0x312147ac 0x7210c92d 0xe01a4925 0x51ee8c96 0xc7df43dd 0xe6d01b57 // method "initRound(uint512)void", method "admin()address", method "roundCount()uint512", method "totalTicketsSold()uint512", method "totalPrizesPaid()uint512", method "getRoundTicketPrice(uint512)uint512", method "getRoundMaxTickets(uint512)uint512", method "getRoundTicketsSold(uint512)uint512", method "isRoundDrawn(uint512)bool", method "getRoundWinnerIndex(uint512)uint512", method "getRoundPrize(uint512)uint512", method "createRound(uint512,uint512)uint512", method "buyTicket(uint512)uint512", method "drawWinner(uint512,uint512)void"
+    txna ApplicationArgs 0
+    match initRound admin roundCount totalTicketsSold totalPrizesPaid getRoundTicketPrice getRoundMaxTickets getRoundTicketsSold isRoundDrawn getRoundWinnerIndex getRoundPrize createRound buyTicket drawWinner
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Lottery2.sol.Lottery2Test.initRound[routing]() -> void:
+initRound:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_roundTicketPrice"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 9 // "_roundMaxTickets"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec_2 // "_roundTicketsSold"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec_3 // "_roundDrawn"
+    dig 1
+    concat
+    intc_2 // 0
+    itob
+    box_put
+    bytec 10 // "_roundWinnerIndex"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 4 // "_roundPrize"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Lottery2.sol.Lottery2Test.admin[routing]() -> void:
+admin:
+    intc_2 // 0
+    bytec 11 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Lottery2.sol.Lottery2Test.roundCount[routing]() -> void:
+roundCount:
+    intc_2 // 0
+    bytec 5 // "_roundCount"
+    app_global_get_ex
+    assert // check _roundCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Lottery2.sol.Lottery2Test.totalTicketsSold[routing]() -> void:
+totalTicketsSold:
+    intc_2 // 0
+    bytec 6 // "_totalTicketsSold"
+    app_global_get_ex
+    assert // check _totalTicketsSold exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Lottery2.sol.Lottery2Test.totalPrizesPaid[routing]() -> void:
+totalPrizesPaid:
+    intc_2 // 0
+    bytec 7 // "_totalPrizesPaid"
+    app_global_get_ex
+    assert // check _totalPrizesPaid exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Lottery2.sol.Lottery2Test.getRoundTicketPrice[routing]() -> void:
+getRoundTicketPrice:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_roundTicketPrice"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Lottery2.sol.Lottery2Test.getRoundMaxTickets[routing]() -> void:
+getRoundMaxTickets:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 9 // "_roundMaxTickets"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Lottery2.sol.Lottery2Test.getRoundTicketsSold[routing]() -> void:
+getRoundTicketsSold:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_roundTicketsSold"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Lottery2.sol.Lottery2Test.isRoundDrawn[routing]() -> void:
+isRoundDrawn:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_roundDrawn"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Lottery2.sol.Lottery2Test.getRoundWinnerIndex[routing]() -> void:
+getRoundWinnerIndex:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 10 // "_roundWinnerIndex"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Lottery2.sol.Lottery2Test.getRoundPrize[routing]() -> void:
+getRoundPrize:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_roundPrize"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Lottery2.sol.Lottery2Test.createRound[routing]() -> void:
+createRound:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    bytec 5 // "_roundCount"
+    app_global_get_ex
+    assert // check _roundCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_roundTicketPrice"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 5
+    box_put
+    bytec 9 // "_roundMaxTickets"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    intc_2 // 0
+    itob
+    bytec_2 // "_roundTicketsSold"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    bytec_3 // "_roundDrawn"
+    dig 2
+    concat
+    intc_2 // 0
+    itob
+    box_put
+    bytec 10 // "_roundWinnerIndex"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    bytec 4 // "_roundPrize"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    itob
+    dig 2
+    b+
+    bytec 5 // "_roundCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Lottery2.sol.Lottery2Test.buyTicket[routing]() -> void:
+buyTicket:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_roundDrawn"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Round already drawn
+    bytec_2 // "_roundTicketsSold"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 9 // "_roundMaxTickets"
+    dig 3
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b>
+    assert // No tickets available
+    intc_1 // 1
+    itob
+    dup2
+    b+
+    dig 3
+    box_del
+    pop
+    uncover 3
+    swap
+    box_put
+    bytec 4 // "_roundPrize"
+    dig 3
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 8 // "_roundTicketPrice"
+    uncover 5
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 0
+    bytec 6 // "_totalTicketsSold"
+    app_global_get_ex
+    assert // check _totalTicketsSold exists
+    b+
+    bytec 6 // "_totalTicketsSold"
+    swap
+    app_global_put
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Lottery2.sol.Lottery2Test.drawWinner[routing]() -> void:
+drawWinner:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_roundDrawn"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Round already drawn
+    bytec_2 // "_roundTicketsSold"
+    dig 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_2 // 0
+    itob
+    dig 1
+    b<
+    assert // No tickets sold
+    dig 3
+    b>
+    assert // Invalid winner index
+    intc_1 // 1
+    itob
+    box_put
+    bytec 10 // "_roundWinnerIndex"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    intc_2 // 0
+    bytec 7 // "_totalPrizesPaid"
+    app_global_get_ex
+    assert // check _totalPrizesPaid exists
+    bytec 4 // "_roundPrize"
+    uncover 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b+
+    bytec 7 // "_totalPrizesPaid"
+    swap
+    app_global_put
+    intc_1 // 1
+    return

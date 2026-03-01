@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.approval_program() -> uint64:
 main:
     intcblock 0 1 64 32
-    bytecblock 0x "unlocked" "totalSupply" "reserve0" "reserve1" base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) "token0" "token1" "kLast" "balanceOf" "factory" "blockTimestampLast" "allowance" "DOMAIN_SEPARATOR" "price0CumulativeLast" "price1CumulativeLast" 0x151f7c75 0xddf252ad 0x151f7c7580 0xffffffffffffffffffffffffffff
+    bytecblock 0x "unlocked" "totalSupply" "reserve0" "reserve1" base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) "token0" "token1" "kLast" "balanceOf" "factory" "blockTimestampLast" "allowance" "DOMAIN_SEPARATOR" "price0CumulativeLast" "price1CumulativeLast" "__ctor_pending" 0x151f7c75 0xddf252ad 0x151f7c7580 0xffffffffffffffffffffffffffff 0x010000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_2 // "totalSupply"
@@ -43,15 +43,8 @@ main:
     bytec_1 // "unlocked"
     bytec_0 // 0x
     app_global_put
-    pushbytes 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400fbfcc8ef98ffbf7b6c3fec7bf5185b566b9863e35a9d83acd49ad6824b5969738c89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc60000000000000000
-    global CurrentApplicationAddress
-    concat
-    keccak256
-    bytec 13 // "DOMAIN_SEPARATOR"
-    swap
-    app_global_put
-    bytec 10 // "factory"
-    txn Sender
+    bytec 16 // "__ctor_pending"
+    intc_1 // 1
     app_global_put
     intc_1 // 1
     return
@@ -62,9 +55,9 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x78bc9897 0x807b0424 0xcf4002e4 0x5f7153d0 0xf2eb5fa4 0x1eb3a39b 0x98f39682 0x3c4937bd 0x42820278 0x177171e7 0xaf82b588 // method "getReserves()(uint512,uint512,uint64)", method "initialize(address,address)void", method "mint(address)uint512", method "burn(address)(uint512,uint512)", method "swap(uint512,uint512,address,byte[])void", method "skim(address)void", method "sync()void", method "approve(address,uint512)bool", method "transfer(address,uint512)bool", method "transferFrom(address,address,uint512)bool", method "permit(address,address,uint512,uint512,uint64,byte[32],byte[32])void"
+    pushbytess 0xbacc49e3 0x78bc9897 0x807b0424 0xcf4002e4 0x5f7153d0 0xf2eb5fa4 0x1eb3a39b 0x98f39682 0x3c4937bd 0x42820278 0x177171e7 0xaf82b588 // method "__postInit()void", method "getReserves()(uint512,uint512,uint64)", method "initialize(address,address)void", method "mint(address)uint512", method "burn(address)(uint512,uint512)", method "swap(uint512,uint512,address,byte[])void", method "skim(address)void", method "sync()void", method "approve(address,uint512)bool", method "transfer(address,uint512)bool", method "transferFrom(address,address,uint512)bool", method "permit(address,address,uint512,uint512,uint64,byte[32],byte[32])void"
     txna ApplicationArgs 0
-    match getReserves initialize mint burn swap skim sync approve transfer transferFrom permit
+    match __postInit getReserves initialize mint burn swap skim sync approve transfer transferFrom permit
     err
 
 
@@ -162,6 +155,28 @@ SafeMath.mul_bool_false@3:
     b SafeMath.mul_bool_merge@4
 
 
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.__postInit[routing]() -> void:
+__postInit:
+    bytec 16 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 16 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    pushbytes 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400fbfcc8ef98ffbf7b6c3fec7bf5185b566b9863e35a9d83acd49ad6824b5969738c89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc60000000000000000
+    global CurrentApplicationAddress
+    concat
+    keccak256
+    bytec 13 // "DOMAIN_SEPARATOR"
+    swap
+    app_global_put
+    bytec 10 // "factory"
+    txn Sender
+    app_global_put
+    intc_1 // 1
+    return
+
+
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.getReserves[routing]() -> void:
 getReserves:
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/uniswap-v2/contracts/UniswapV2Pair.sol.UniswapV2Pair.getReserves
@@ -187,7 +202,7 @@ getReserves:
     swap
     itob
     concat
-    bytec 16 // 0x151f7c75
+    bytec 17 // 0x151f7c75
     swap
     concat
     log
@@ -368,7 +383,7 @@ mint_after_if_else@6:
     intc_2 // 64
     bzero
     b|
-    bytec 16 // 0x151f7c75
+    bytec 17 // 0x151f7c75
     swap
     concat
     log
@@ -530,7 +545,7 @@ burn_bool_merge@5:
     bytec_2 // "totalSupply"
     swap
     app_global_put
-    bytec 17 // 0xddf252ad
+    bytec 18 // 0xddf252ad
     swap
     concat
     log
@@ -594,7 +609,7 @@ burn_after_if_else@7:
     cover 2
     b|
     concat
-    bytec 16 // 0x151f7c75
+    bytec 17 // 0x151f7c75
     swap
     concat
     log
@@ -1010,7 +1025,7 @@ approve:
     txn Sender
     cover 2
     callsub _approve
-    bytec 18 // 0x151f7c7580
+    bytec 19 // 0x151f7c7580
     log
     intc_1 // 1
     return
@@ -1033,7 +1048,7 @@ transfer:
     txn Sender
     cover 2
     callsub _transfer
-    bytec 18 // 0x151f7c7580
+    bytec 19 // 0x151f7c7580
     log
     intc_1 // 1
     return
@@ -1113,7 +1128,7 @@ transferFrom_after_if_else@3:
     dig 2
     dig 2
     callsub _transfer
-    bytec 18 // 0x151f7c7580
+    bytec 19 // 0x151f7c7580
     log
     intc_1 // 1
     return
@@ -1182,6 +1197,13 @@ permit:
     dig 1
     box_del
     pop
+    dup2
+    box_put
+    pushbytes 0x01
+    b+
+    dig 1
+    box_del
+    pop
     box_put
     intc_0 // 0
     assert // UniswapV2: INVALID_SIGNATURE
@@ -1214,11 +1236,11 @@ _update:
     bytec_0 // ""
     dup
     frame_dig -4
-    bytec 19 // 0xffffffffffffffffffffffffffff
+    bytec 20 // 0xffffffffffffffffffffffffffff
     b<=
     bz _update_bool_false@3
     frame_dig -3
-    bytec 19 // 0xffffffffffffffffffffffffffff
+    bytec 20 // 0xffffffffffffffffffffffffffff
     b<=
     bz _update_bool_false@3
     intc_1 // 1
@@ -1274,7 +1296,7 @@ _update_bool_merge@4:
     app_global_get_ex
     assert // check price0CumulativeLast exists
     frame_dig -1
-    pushbytes 0x72
+    bytec 21 // 0x010000000000000000000000000000
     b*
     frame_dig -2
     b/
@@ -1293,7 +1315,7 @@ _update_bool_merge@4:
     app_global_get_ex
     assert // check price1CumulativeLast exists
     frame_dig -2
-    pushbytes 0x72
+    bytec 21 // 0x010000000000000000000000000000
     b*
     frame_dig -1
     b/
@@ -1484,7 +1506,7 @@ _mint:
     box_del
     pop
     box_put
-    bytec 17 // 0xddf252ad
+    bytec 18 // 0xddf252ad
     frame_dig -1
     concat
     log
@@ -1558,7 +1580,7 @@ _transfer:
     box_del
     pop
     box_put
-    bytec 17 // 0xddf252ad
+    bytec 18 // 0xddf252ad
     frame_dig -1
     concat
     log

@@ -1,0 +1,460 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SkillRegistry.sol.SkillRegistryTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock "_skillCount" 0x151f7c75 "_admin" "_verifiedCount" "_skillVerified" "_skillLevel" "_skillHash"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_0 // "_skillCount"
+    pushbytes 0x
+    app_global_put
+    bytec_3 // "_verifiedCount"
+    pushbytes 0x
+    app_global_put
+    bytec_2 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 0
+    itob
+    bytec_0 // "_skillCount"
+    dig 1
+    app_global_put
+    bytec_3 // "_verifiedCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x6ff6e10e 0xac8b24de 0xea722f48 0xf553acf2 0x546621db 0x046bfd74 0x0cdc9321 0x406d4370 0x8e00c032 0x8d554e8b // method "initSkill(uint512)void", method "getAdmin()address", method "getSkillCount()uint512", method "getVerifiedCount()uint512", method "getSkillHash(uint512)uint512", method "isSkillVerified(uint512)bool", method "getSkillLevel(uint512)uint512", method "registerSkill(uint512)uint512", method "verifySkill(uint512)void", method "setSkillLevel(uint512,uint512)void"
+    txna ApplicationArgs 0
+    match initSkill getAdmin getSkillCount getVerifiedCount getSkillHash isSkillVerified getSkillLevel registerSkill verifySkill setSkillLevel
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SkillRegistry.sol.SkillRegistryTest.initSkill[routing]() -> void:
+initSkill:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_skillHash"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 4 // "_skillVerified"
+    dig 1
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    bytec 5 // "_skillLevel"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SkillRegistry.sol.SkillRegistryTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SkillRegistry.sol.SkillRegistryTest.getSkillCount[routing]() -> void:
+getSkillCount:
+    intc_1 // 0
+    bytec_0 // "_skillCount"
+    app_global_get_ex
+    assert // check _skillCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SkillRegistry.sol.SkillRegistryTest.getVerifiedCount[routing]() -> void:
+getVerifiedCount:
+    intc_1 // 0
+    bytec_3 // "_verifiedCount"
+    app_global_get_ex
+    assert // check _verifiedCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SkillRegistry.sol.SkillRegistryTest.getSkillHash[routing]() -> void:
+getSkillHash:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_skillHash"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SkillRegistry.sol.SkillRegistryTest.isSkillVerified[routing]() -> void:
+isSkillVerified:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_skillVerified"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SkillRegistry.sol.SkillRegistryTest.getSkillLevel[routing]() -> void:
+getSkillLevel:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_skillLevel"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SkillRegistry.sol.SkillRegistryTest.registerSkill[routing]() -> void:
+registerSkill:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Not admin
+    intc_1 // 0
+    bytec_0 // "_skillCount"
+    app_global_get_ex
+    assert // check _skillCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_skillHash"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    bytec 4 // "_skillVerified"
+    dig 1
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    intc_1 // 0
+    itob
+    bytec 5 // "_skillLevel"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    itob
+    dig 2
+    b+
+    bytec_0 // "_skillCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SkillRegistry.sol.SkillRegistryTest.verifySkill[routing]() -> void:
+verifySkill:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Not admin
+    intc_1 // 0
+    bytec_0 // "_skillCount"
+    app_global_get_ex
+    assert // check _skillCount exists
+    dig 1
+    b>
+    assert // Skill does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_skillVerified"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already verified
+    intc_2 // 1
+    itob
+    box_put
+    intc_1 // 0
+    bytec_3 // "_verifiedCount"
+    app_global_get_ex
+    assert // check _verifiedCount exists
+    intc_2 // 1
+    itob
+    b+
+    bytec_3 // "_verifiedCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SkillRegistry.sol.SkillRegistryTest.setSkillLevel[routing]() -> void:
+setSkillLevel:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Not admin
+    intc_1 // 0
+    bytec_0 // "_skillCount"
+    app_global_get_ex
+    assert // check _skillCount exists
+    dig 2
+    b>
+    assert // Skill does not exist
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_skillLevel"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    return

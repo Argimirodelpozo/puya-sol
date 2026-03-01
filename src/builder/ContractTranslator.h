@@ -9,6 +9,7 @@
 #include <libsolidity/ast/AST.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace puyasol::builder
@@ -61,7 +62,8 @@ private:
 	/// Translate a function definition to a contract method.
 	awst::ContractMethod translateFunction(
 		solidity::frontend::FunctionDefinition const& _func,
-		std::string const& _contractName
+		std::string const& _contractName,
+		std::string const& _nameOverride = ""
 	);
 
 	/// Build an ARC4 method config for a public/external function.
@@ -75,6 +77,10 @@ private:
 		solidity::frontend::FunctionDefinition const& _func,
 		std::shared_ptr<awst::Block>& _body
 	);
+
+	/// If buildApprovalProgram detects box writes in the constructor,
+	/// it populates this with an auto-generated __postInit method.
+	std::optional<awst::ContractMethod> m_postInitMethod;
 };
 
 } // namespace puyasol::builder

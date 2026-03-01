@@ -1,0 +1,480 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RateLimiter.sol.RateLimiterTest.approval_program() -> uint64:
+main:
+    intcblock 0 1 64 32
+    bytecblock 0x "_maxActions" "_windowSize" 0x151f7c75 "_owner" "_actionCount" "_windowStart"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 4 // "_owner"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_1 // "_maxActions"
+    bytec_0 // 0x
+    app_global_put
+    bytec_2 // "_windowSize"
+    bytec_0 // 0x
+    app_global_put
+    bytec 4 // "_owner"
+    txn Sender
+    app_global_put
+    pushint 5
+    itob
+    bytec_1 // "_maxActions"
+    swap
+    app_global_put
+    pushint 100
+    itob
+    bytec_2 // "_windowSize"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb1bbb0a8 0xc6141d83 0xc273349a 0xbdab62e7 0xc923f64e 0x59ab6fdc 0xae913335 0x7e1021e6 0xd9762297 0x0f921b59 0xfb00f425 // method "owner()address", method "maxActions()uint512", method "windowSize()uint512", method "setMaxActions(uint512)void", method "setWindowSize(uint512)void", method "actionCount(address)uint512", method "windowStart(address)uint512", method "canPerformAction(address,uint512)bool", method "performAction(address,uint512)bool", method "remainingActions(address,uint512)uint512", method "resetAccount(address)void"
+    txna ApplicationArgs 0
+    match owner maxActions windowSize setMaxActions setWindowSize actionCount windowStart canPerformAction performAction remainingActions resetAccount
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RateLimiter.sol.RateLimiterTest.owner[routing]() -> void:
+owner:
+    intc_0 // 0
+    bytec 4 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RateLimiter.sol.RateLimiterTest.maxActions[routing]() -> void:
+maxActions:
+    intc_0 // 0
+    bytec_1 // "_maxActions"
+    app_global_get_ex
+    assert // check _maxActions exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RateLimiter.sol.RateLimiterTest.windowSize[routing]() -> void:
+windowSize:
+    intc_0 // 0
+    bytec_2 // "_windowSize"
+    app_global_get_ex
+    assert // check _windowSize exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RateLimiter.sol.RateLimiterTest.setMaxActions[routing]() -> void:
+setMaxActions:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_0 // 0
+    bytec 4 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // Not owner
+    bytec_1 // "_maxActions"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RateLimiter.sol.RateLimiterTest.setWindowSize[routing]() -> void:
+setWindowSize:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_0 // 0
+    bytec 4 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // Not owner
+    bytec_2 // "_windowSize"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RateLimiter.sol.RateLimiterTest.actionCount[routing]() -> void:
+actionCount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 5 // "_actionCount"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RateLimiter.sol.RateLimiterTest.windowStart[routing]() -> void:
+windowStart:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 6 // "_windowStart"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RateLimiter.sol.RateLimiterTest.canPerformAction[routing]() -> void:
+canPerformAction:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    sha256
+    dup
+    cover 2
+    bytec 6 // "_windowStart"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_0 // 0
+    bytec_2 // "_windowSize"
+    app_global_get_ex
+    assert // check _windowSize exists
+    b+
+    b>=
+    bz canPerformAction_after_if_else@3
+    intc_1 // 1
+
+canPerformAction_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RateLimiter.sol.RateLimiterTest.canPerformAction@4:
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+canPerformAction_after_if_else@3:
+    bytec 5 // "_actionCount"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_0 // 0
+    bytec_1 // "_maxActions"
+    app_global_get_ex
+    assert // check _maxActions exists
+    b<
+    b canPerformAction_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RateLimiter.sol.RateLimiterTest.canPerformAction@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RateLimiter.sol.RateLimiterTest.performAction[routing]() -> void:
+performAction:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    sha256
+    dup
+    cover 2
+    bytec 6 // "_windowStart"
+    swap
+    concat
+    dup
+    cover 3
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_0 // 0
+    bytec_2 // "_windowSize"
+    app_global_get_ex
+    assert // check _windowSize exists
+    b+
+    b>=
+    bz performAction_after_if_else@3
+    dig 1
+    dup
+    box_del
+    pop
+    dig 3
+    box_put
+    intc_1 // 1
+    itob
+    bytec 5 // "_actionCount"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+performAction_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RateLimiter.sol.RateLimiterTest.performAction@4:
+    pushbytes 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+performAction_after_if_else@3:
+    bytec 5 // "_actionCount"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_0 // 0
+    bytec_1 // "_maxActions"
+    app_global_get_ex
+    assert // check _maxActions exists
+    dig 1
+    b>
+    assert // Rate limit exceeded
+    intc_1 // 1
+    itob
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    b performAction_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RateLimiter.sol.RateLimiterTest.performAction@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RateLimiter.sol.RateLimiterTest.remainingActions[routing]() -> void:
+remainingActions:
+    intc_0 // 0
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    sha256
+    dup
+    cover 2
+    bytec 6 // "_windowStart"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_0 // 0
+    bytec_2 // "_windowSize"
+    app_global_get_ex
+    assert // check _windowSize exists
+    b+
+    b>=
+    bz remainingActions_after_if_else@3
+    intc_0 // 0
+    bytec_1 // "_maxActions"
+    app_global_get_ex
+    assert // check _maxActions exists
+
+remainingActions_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RateLimiter.sol.RateLimiterTest.remainingActions@6:
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+remainingActions_after_if_else@3:
+    bytec 5 // "_actionCount"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    bury 3
+    intc_0 // 0
+    bytec_1 // "_maxActions"
+    app_global_get_ex
+    assert // check _maxActions exists
+    b>=
+    bz remainingActions_after_if_else@5
+    intc_0 // 0
+    itob
+    b remainingActions_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RateLimiter.sol.RateLimiterTest.remainingActions@6
+
+remainingActions_after_if_else@5:
+    intc_0 // 0
+    bytec_1 // "_maxActions"
+    app_global_get_ex
+    assert // check _maxActions exists
+    dig 2
+    b-
+    b remainingActions_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RateLimiter.sol.RateLimiterTest.remainingActions@6
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RateLimiter.sol.RateLimiterTest.resetAccount[routing]() -> void:
+resetAccount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_0 // 0
+    bytec 4 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // Not owner
+    intc_0 // 0
+    itob
+    swap
+    sha256
+    bytec 5 // "_actionCount"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 6 // "_windowStart"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return

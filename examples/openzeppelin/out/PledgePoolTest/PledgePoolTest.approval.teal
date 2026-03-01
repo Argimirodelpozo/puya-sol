@@ -1,0 +1,493 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PledgePool.sol.PledgePoolTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock "_pledgeCount" 0x 0x151f7c75 "_admin" "_totalPledged" "_pledgeAmount" "_pledgeFunded" "_pledgeGoal"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_0 // "_pledgeCount"
+    bytec_1 // 0x
+    app_global_put
+    bytec 4 // "_totalPledged"
+    bytec_1 // 0x
+    app_global_put
+    bytec_3 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 0
+    itob
+    bytec_0 // "_pledgeCount"
+    dig 1
+    app_global_put
+    bytec 4 // "_totalPledged"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x3f78ebc5 0xac8b24de 0xe22c7147 0x30c914e9 0x68037e48 0x773e81c0 0x5b2bc22c 0xbd41186a 0x2263d89a 0x06185e6a // method "initPledge(uint512)void", method "getAdmin()address", method "getPledgeCount()uint512", method "getTotalPledged()uint512", method "getPledgeAmount(uint512)uint512", method "getPledgeGoal(uint512)uint512", method "isPledgeFunded(uint512)bool", method "createPledge(uint512)uint512", method "contribute(uint512,uint512)void", method "markFunded(uint512)void"
+    txna ApplicationArgs 0
+    match initPledge getAdmin getPledgeCount getTotalPledged getPledgeAmount getPledgeGoal isPledgeFunded createPledge contribute markFunded
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PledgePool.sol.PledgePoolTest.initPledge[routing]() -> void:
+initPledge:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_pledgeAmount"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 7 // "_pledgeGoal"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    bytec 6 // "_pledgeFunded"
+    swap
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PledgePool.sol.PledgePoolTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_1 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PledgePool.sol.PledgePoolTest.getPledgeCount[routing]() -> void:
+getPledgeCount:
+    intc_1 // 0
+    bytec_0 // "_pledgeCount"
+    app_global_get_ex
+    assert // check _pledgeCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PledgePool.sol.PledgePoolTest.getTotalPledged[routing]() -> void:
+getTotalPledged:
+    intc_1 // 0
+    bytec 4 // "_totalPledged"
+    app_global_get_ex
+    assert // check _totalPledged exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PledgePool.sol.PledgePoolTest.getPledgeAmount[routing]() -> void:
+getPledgeAmount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_pledgeAmount"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PledgePool.sol.PledgePoolTest.getPledgeGoal[routing]() -> void:
+getPledgeGoal:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_pledgeGoal"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PledgePool.sol.PledgePoolTest.isPledgeFunded[routing]() -> void:
+isPledgeFunded:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_pledgeFunded"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PledgePool.sol.PledgePoolTest.createPledge[routing]() -> void:
+createPledge:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Only admin
+    intc_1 // 0
+    itob
+    dup2
+    b>
+    assert // Goal must be positive
+    intc_1 // 0
+    bytec_0 // "_pledgeCount"
+    app_global_get_ex
+    assert // check _pledgeCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_pledgeAmount"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    bytec 7 // "_pledgeGoal"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    bytec 6 // "_pledgeFunded"
+    swap
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    intc_2 // 1
+    itob
+    dig 2
+    b+
+    bytec_0 // "_pledgeCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PledgePool.sol.PledgePoolTest.contribute[routing]() -> void:
+contribute:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec_0 // "_pledgeCount"
+    app_global_get_ex
+    assert // check _pledgeCount exists
+    dig 2
+    b>
+    assert // Pledge does not exist
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_pledgeFunded"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Pledge already funded
+    intc_1 // 0
+    itob
+    dig 2
+    b<
+    assert // Amount must be positive
+    bytec 5 // "_pledgeAmount"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_1 // 0
+    bytec 4 // "_totalPledged"
+    app_global_get_ex
+    assert // check _totalPledged exists
+    b+
+    bytec 4 // "_totalPledged"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PledgePool.sol.PledgePoolTest.markFunded[routing]() -> void:
+markFunded:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Only admin
+    intc_1 // 0
+    bytec_0 // "_pledgeCount"
+    app_global_get_ex
+    assert // check _pledgeCount exists
+    dig 1
+    b>
+    assert // Pledge does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_pledgeFunded"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Pledge already funded
+    bytec 5 // "_pledgeAmount"
+    dig 2
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    bytec 7 // "_pledgeGoal"
+    uncover 3
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    b>=
+    assert // Goal not reached
+    intc_2 // 1
+    itob
+    box_put
+    intc_2 // 1
+    return

@@ -1,0 +1,778 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Fundraiser.sol.FundraiserTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock 0x151f7c75 0x "_totalRaised" "_campaignRaised" "_campaignFinalized" "_campaignCount" "_campaignRefunded" "_campaignGoal" "_campaignDeadline" 0x00 "_admin" 0x0000000000000000000000000000000000000000000000000000000000000000 "_campaignCreator"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 10 // "_admin"
+    bytec 11 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 5 // "_campaignCount"
+    bytec_1 // 0x
+    app_global_put
+    bytec_2 // "_totalRaised"
+    bytec_1 // 0x
+    app_global_put
+    bytec 10 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 0
+    itob
+    bytec 5 // "_campaignCount"
+    dig 1
+    app_global_put
+    bytec_2 // "_totalRaised"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb56ade54 0xac8b24de 0x797b48ff 0xf8542cce 0x5c05a756 0x803dee9d 0x2a692895 0x25bd2bda 0xe53ba6e3 0x1ac0b985 0x74492f33 0x655c8329 0x7449b5dc 0x2263d89a 0xeebcb3ec 0x48d362fc // method "initCampaign(uint512)void", method "getAdmin()address", method "getCampaignCount()uint512", method "getTotalRaised()uint512", method "getCampaignGoal(uint512)uint512", method "getCampaignRaised(uint512)uint512", method "getCampaignDeadline(uint512)uint512", method "isCampaignFinalized(uint512)bool", method "isCampaignRefunded(uint512)bool", method "getCampaignCreator(uint512)address", method "isGoalReached(uint512)bool", method "isExpired(uint512,uint512)bool", method "createCampaign(address,uint512,uint512)uint512", method "contribute(uint512,uint512)void", method "finalizeCampaign(uint512)void", method "refundCampaign(uint512)void"
+    txna ApplicationArgs 0
+    match initCampaign getAdmin getCampaignCount getTotalRaised getCampaignGoal getCampaignRaised getCampaignDeadline isCampaignFinalized isCampaignRefunded getCampaignCreator isGoalReached isExpired createCampaign contribute finalizeCampaign refundCampaign
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Fundraiser.sol.FundraiserTest.initCampaign[routing]() -> void:
+initCampaign:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_campaignGoal"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec_3 // "_campaignRaised"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 8 // "_campaignDeadline"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    bytec 4 // "_campaignFinalized"
+    dig 1
+    concat
+    intc_1 // 0
+    itob
+    swap
+    dig 1
+    box_put
+    bytec 6 // "_campaignRefunded"
+    dig 2
+    concat
+    swap
+    box_put
+    bytec 12 // "_campaignCreator"
+    swap
+    concat
+    bytec 11 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Fundraiser.sol.FundraiserTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_1 // 0
+    bytec 10 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Fundraiser.sol.FundraiserTest.getCampaignCount[routing]() -> void:
+getCampaignCount:
+    intc_1 // 0
+    bytec 5 // "_campaignCount"
+    app_global_get_ex
+    assert // check _campaignCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Fundraiser.sol.FundraiserTest.getTotalRaised[routing]() -> void:
+getTotalRaised:
+    intc_1 // 0
+    bytec_2 // "_totalRaised"
+    app_global_get_ex
+    assert // check _totalRaised exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Fundraiser.sol.FundraiserTest.getCampaignGoal[routing]() -> void:
+getCampaignGoal:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_campaignGoal"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Fundraiser.sol.FundraiserTest.getCampaignRaised[routing]() -> void:
+getCampaignRaised:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_campaignRaised"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Fundraiser.sol.FundraiserTest.getCampaignDeadline[routing]() -> void:
+getCampaignDeadline:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_campaignDeadline"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Fundraiser.sol.FundraiserTest.isCampaignFinalized[routing]() -> void:
+isCampaignFinalized:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_campaignFinalized"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bytec 9 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Fundraiser.sol.FundraiserTest.isCampaignRefunded[routing]() -> void:
+isCampaignRefunded:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_campaignRefunded"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bytec 9 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Fundraiser.sol.FundraiserTest.getCampaignCreator[routing]() -> void:
+getCampaignCreator:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 12 // "_campaignCreator"
+    swap
+    concat
+    box_get
+    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Fundraiser.sol.FundraiserTest.isGoalReached[routing]() -> void:
+isGoalReached:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_campaignRaised"
+    dig 1
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    bytec 7 // "_campaignGoal"
+    uncover 2
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    b>=
+    bytec 9 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Fundraiser.sol.FundraiserTest.isExpired[routing]() -> void:
+isExpired:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_campaignDeadline"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    b>
+    bytec 9 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Fundraiser.sol.FundraiserTest.createCampaign[routing]() -> void:
+createCampaign:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec 5 // "_campaignCount"
+    app_global_get_ex
+    assert // check _campaignCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_campaignGoal"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 5
+    box_put
+    intc_1 // 0
+    itob
+    bytec_3 // "_campaignRaised"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    bytec 8 // "_campaignDeadline"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    bytec 4 // "_campaignFinalized"
+    dig 1
+    concat
+    intc_1 // 0
+    itob
+    swap
+    dig 1
+    box_put
+    bytec 6 // "_campaignRefunded"
+    dig 2
+    concat
+    swap
+    box_put
+    bytec 12 // "_campaignCreator"
+    swap
+    concat
+    uncover 3
+    box_put
+    intc_2 // 1
+    itob
+    dig 2
+    b+
+    bytec 5 // "_campaignCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Fundraiser.sol.FundraiserTest.contribute[routing]() -> void:
+contribute:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_campaignFinalized"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Campaign already finalized
+    bytec 6 // "_campaignRefunded"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Campaign already refunded
+    bytec_3 // "_campaignRaised"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_1 // 0
+    bytec_2 // "_totalRaised"
+    app_global_get_ex
+    assert // check _totalRaised exists
+    b+
+    bytec_2 // "_totalRaised"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Fundraiser.sol.FundraiserTest.finalizeCampaign[routing]() -> void:
+finalizeCampaign:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_campaignFinalized"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Campaign already finalized
+    intc_2 // 1
+    itob
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Fundraiser.sol.FundraiserTest.refundCampaign[routing]() -> void:
+refundCampaign:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_campaignFinalized"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Campaign already finalized
+    bytec 6 // "_campaignRefunded"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Campaign already refunded
+    intc_2 // 1
+    itob
+    box_put
+    intc_1 // 0
+    bytec_2 // "_totalRaised"
+    app_global_get_ex
+    assert // check _totalRaised exists
+    bytec_3 // "_campaignRaised"
+    uncover 2
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    b-
+    bytec_2 // "_totalRaised"
+    swap
+    app_global_put
+    intc_2 // 1
+    return

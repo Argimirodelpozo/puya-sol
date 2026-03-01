@@ -1,0 +1,53 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 0 2
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    pushbytes 0x3a93e0ef // method "verify(byte[],uint8[32][])bool"
+    txna ApplicationArgs 0
+    match __puya_arc4_router___verify_route@1
+    err
+
+__puya_arc4_router___verify_route@1:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b verify
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier.verify[routing]() -> void:
+verify:
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 32
+    *
+    intc_1 // 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 32>>
+    pushbytes 0x151f7c7500
+    log
+    pushint 1
+    return

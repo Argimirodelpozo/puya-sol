@@ -1,0 +1,434 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AssetLedger.sol.AssetLedgerTest.approval_program() -> uint64:
+main:
+    intcblock 64 1 0
+    bytecblock 0x151f7c75 "_assetCount" 0x "_admin" "_totalTransfers" "_assetOwner" "_transferCount" "_assetValue"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_1 // "_assetCount"
+    bytec_2 // 0x
+    app_global_put
+    bytec 4 // "_totalTransfers"
+    bytec_2 // 0x
+    app_global_put
+    bytec_3 // "_admin"
+    txn Sender
+    app_global_put
+    intc_2 // 0
+    itob
+    bytec_1 // "_assetCount"
+    dig 1
+    app_global_put
+    bytec 4 // "_totalTransfers"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x3b406e28 0xac8b24de 0x24bd6d8b 0x32b23147 0xe48d6eac 0xef7d99f6 0x24c0b3c8 0xed1389ca 0x1ce85ff2 // method "initAsset(uint512)void", method "getAdmin()address", method "getAssetCount()uint512", method "getTotalTransfers()uint512", method "getAssetOwner(uint512)uint512", method "getAssetValue(uint512)uint512", method "getTransferCount(uint512)uint512", method "createAsset(uint512,uint512)uint512", method "transferAsset(uint512,uint512)void"
+    txna ApplicationArgs 0
+    match initAsset getAdmin getAssetCount getTotalTransfers getAssetOwner getAssetValue getTransferCount createAsset transferAsset
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AssetLedger.sol.AssetLedgerTest.initAsset[routing]() -> void:
+initAsset:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_assetOwner"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 7 // "_assetValue"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 6 // "_transferCount"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AssetLedger.sol.AssetLedgerTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_2 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AssetLedger.sol.AssetLedgerTest.getAssetCount[routing]() -> void:
+getAssetCount:
+    intc_2 // 0
+    bytec_1 // "_assetCount"
+    app_global_get_ex
+    assert // check _assetCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AssetLedger.sol.AssetLedgerTest.getTotalTransfers[routing]() -> void:
+getTotalTransfers:
+    intc_2 // 0
+    bytec 4 // "_totalTransfers"
+    app_global_get_ex
+    assert // check _totalTransfers exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AssetLedger.sol.AssetLedgerTest.getAssetOwner[routing]() -> void:
+getAssetOwner:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_assetOwner"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AssetLedger.sol.AssetLedgerTest.getAssetValue[routing]() -> void:
+getAssetValue:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_assetValue"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AssetLedger.sol.AssetLedgerTest.getTransferCount[routing]() -> void:
+getTransferCount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_transferCount"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AssetLedger.sol.AssetLedgerTest.createAsset[routing]() -> void:
+createAsset:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Not admin
+    intc_2 // 0
+    bytec_1 // "_assetCount"
+    app_global_get_ex
+    assert // check _assetCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_assetOwner"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 5
+    box_put
+    bytec 7 // "_assetValue"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    intc_2 // 0
+    itob
+    bytec 6 // "_transferCount"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    itob
+    dig 2
+    b+
+    bytec_1 // "_assetCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AssetLedger.sol.AssetLedgerTest.transferAsset[routing]() -> void:
+transferAsset:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Not admin
+    intc_2 // 0
+    bytec_1 // "_assetCount"
+    app_global_get_ex
+    assert // check _assetCount exists
+    dig 2
+    b>
+    assert // Asset does not exist
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_assetOwner"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    bytec 6 // "_transferCount"
+    swap
+    concat
+    dup
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    intc_1 // 1
+    itob
+    swap
+    dig 1
+    b+
+    dig 2
+    box_del
+    pop
+    uncover 2
+    swap
+    box_put
+    intc_2 // 0
+    bytec 4 // "_totalTransfers"
+    app_global_get_ex
+    assert // check _totalTransfers exists
+    b+
+    bytec 4 // "_totalTransfers"
+    swap
+    app_global_put
+    intc_1 // 1
+    return

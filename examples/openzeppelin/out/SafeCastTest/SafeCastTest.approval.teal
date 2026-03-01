@@ -1,0 +1,206 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SafeCast.sol.SafeCastTest.approval_program() -> uint64:
+main:
+    intcblock 8 64 1
+    bytecblock 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x6ad00823 0xd414d206 0x83f5b1f2 0x510badf9 0xcfd03a5b 0xbd0deda9 // method "testToUint128(uint512)uint512", method "testToUint96(uint512)uint512", method "testToUint64(uint512)uint64", method "testToUint32(uint512)uint64", method "testToUint16(uint512)uint64", method "testToUint8(uint512)uint64"
+    txna ApplicationArgs 0
+    match testToUint128 testToUint96 testToUint64 testToUint32 testToUint16 testToUint8
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SafeCast.sol.SafeCastTest.testToUint128[routing]() -> void:
+testToUint128:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dig 1
+    pushbytes 0xffffffffffffffffffffffffffffffff
+    b>
+    !
+    assert // SafeCastOverflowedUintDowncast
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SafeCast.sol.SafeCastTest.testToUint96[routing]() -> void:
+testToUint96:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dig 1
+    pushbytes 0xffffffffffffffffffffffff
+    b>
+    !
+    assert // SafeCastOverflowedUintDowncast
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SafeCast.sol.SafeCastTest.testToUint64[routing]() -> void:
+testToUint64:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    pushint 18446744073709551615
+    itob
+    dig 1
+    b<
+    !
+    assert // SafeCastOverflowedUintDowncast
+    intc_0 // 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SafeCast.sol.SafeCastTest.testToUint32[routing]() -> void:
+testToUint32:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    pushint 4294967295
+    itob
+    dig 1
+    b<
+    !
+    assert // SafeCastOverflowedUintDowncast
+    intc_0 // 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SafeCast.sol.SafeCastTest.testToUint16[routing]() -> void:
+testToUint16:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    pushint 65535
+    itob
+    dig 1
+    b<
+    !
+    assert // SafeCastOverflowedUintDowncast
+    intc_0 // 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SafeCast.sol.SafeCastTest.testToUint8[routing]() -> void:
+testToUint8:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    pushint 255
+    itob
+    dig 1
+    b<
+    !
+    assert // SafeCastOverflowedUintDowncast
+    intc_0 // 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

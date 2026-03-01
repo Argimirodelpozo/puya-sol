@@ -1,0 +1,488 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Token.sol.ERC721Token.approval_program() -> uint64:
+main:
+    intcblock 1 32 64 0
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 "_balances" 0x "_operatorApprovals" "_owners" "_tokenApprovals"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x19750616 0x005b52b8 0xc90c90b1 0x9736f563 0x59baa4a5 0x473a14fc 0x29e26b9c 0x5005c46f 0x97cd19e1 0xf95588ea 0xc013cd57 // method "name()string", method "symbol()string", method "balanceOf(address)uint512", method "ownerOf(uint512)address", method "approve(address,uint512)void", method "getApproved(uint512)address", method "setApprovalForAll(address,bool)void", method "isApprovedForAll(address,address)bool", method "transferFrom(address,address,uint512)void", method "mint(address,uint512)void", method "burn(uint512)void"
+    txna ApplicationArgs 0
+    match main_name_route@5 main_symbol_route@6 balanceOf ownerOf approve getApproved setApprovalForAll isApprovedForAll transferFrom mint burn
+    err
+
+main_symbol_route@6:
+    pushbytes 0x151f7c750004544e4654
+    log
+    intc_0 // 1
+    return
+
+main_name_route@5:
+    pushbytes 0x151f7c750007546573744e4654
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Token.sol.ERC721Token.balanceOf[routing]() -> void:
+balanceOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    dup
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    !
+    assert // ERC721InvalidOwner
+    sha256
+    bytec_2 // "_balances"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Token.sol.ERC721Token.ownerOf[routing]() -> void:
+ownerOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub _requireOwned
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Token.sol.ERC721Token.approve[routing]() -> void:
+approve:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    callsub _approve
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Token.sol.ERC721Token.getApproved[routing]() -> void:
+getApproved:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dup
+    callsub _requireOwned
+    pop
+    callsub _getApproved
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Token.sol.ERC721Token.setApprovalForAll[routing]() -> void:
+setApprovalForAll:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_3 // 0
+    getbit
+    txn Sender
+    dig 2
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    !
+    assert // ERC721InvalidOperator
+    uncover 2
+    concat
+    sha256
+    bytec 4 // "_operatorApprovals"
+    swap
+    concat
+    swap
+    itob
+    swap
+    dig 1
+    box_put
+    pushbytes 0x17307eab
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Token.sol.ERC721Token.isApprovedForAll[routing]() -> void:
+isApprovedForAll:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Token.sol.ERC721Token.isApprovedForAll
+    pushbytes 0x00
+    intc_3 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Token.sol.ERC721Token.transferFrom[routing]() -> void:
+transferFrom:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dig 1
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    !
+    assert // ERC721InvalidReceiver
+    txn Sender
+    callsub _update
+    !=
+    !
+    assert // ERC721IncorrectOwner
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Token.sol.ERC721Token.mint[routing]() -> void:
+mint:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dig 1
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    !
+    assert // ERC721InvalidReceiver
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    callsub _update
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    !
+    assert // ERC721InvalidSender
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Token.sol.ERC721Token.burn[routing]() -> void:
+burn:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    swap
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    callsub _update
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    !
+    assert // ERC721NonexistentToken
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Token.sol.ERC721Token.isApprovedForAll(owner: bytes, operator: bytes) -> uint64:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Token.sol.ERC721Token.isApprovedForAll:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    concat
+    sha256
+    bytec 4 // "_operatorApprovals"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_3 // 0
+    swap
+    uncover 2
+    select
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Token.sol.ERC721Token._ownerOf(tokenId: bytes) -> bytes:
+_ownerOf:
+    proto 1 1
+    frame_dig -1
+    sha256
+    bytec 5 // "_owners"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Token.sol.ERC721Token._getApproved(tokenId: bytes) -> bytes:
+_getApproved:
+    proto 1 1
+    frame_dig -1
+    sha256
+    bytec 6 // "_tokenApprovals"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Token.sol.ERC721Token._isAuthorized(owner: bytes, spender: bytes, tokenId: bytes) -> uint64:
+_isAuthorized:
+    proto 3 1
+    frame_dig -2
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    bz _isAuthorized_bool_false@5
+    frame_dig -3
+    frame_dig -2
+    ==
+    bnz _isAuthorized_bool_true@4
+    frame_dig -3
+    frame_dig -2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Token.sol.ERC721Token.isApprovedForAll
+    bnz _isAuthorized_bool_true@4
+    frame_dig -1
+    callsub _getApproved
+    frame_dig -2
+    ==
+    bz _isAuthorized_bool_false@5
+
+_isAuthorized_bool_true@4:
+    intc_0 // 1
+    retsub
+
+_isAuthorized_bool_false@5:
+    intc_3 // 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Token.sol.ERC721Token._requireOwned(tokenId: bytes) -> bytes:
+_requireOwned:
+    proto 1 1
+    frame_dig -1
+    callsub _ownerOf
+    dup
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    !
+    assert // ERC721NonexistentToken
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Token.sol.ERC721Token._update(to: bytes, tokenId: bytes, auth: bytes) -> bytes:
+_update:
+    proto 3 1
+    frame_dig -2
+    callsub _ownerOf
+    frame_dig -1
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    bz _update_after_if_else@2
+    frame_dig 0
+    frame_dig -1
+    frame_dig -2
+    callsub _isAuthorized
+    bnz _update_after_if_else@2
+    frame_dig 0
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    assert // ERC721InsufficientApproval
+    err // ERC721NonexistentToken
+
+_update_after_if_else@2:
+    frame_dig 0
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    bz _update_after_if_else@4
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    frame_dig -2
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    callsub _approve
+    frame_dig 0
+    sha256
+    bytec_2 // "_balances"
+    swap
+    concat
+    dup
+    box_get
+    bytec_3 // 0x
+    cover 2
+    select
+    intc_0 // 1
+    itob
+    b-
+    dig 1
+    box_del
+    pop
+    box_put
+
+_update_after_if_else@4:
+    frame_dig -3
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    bz _update_after_if_else@6
+    frame_dig -3
+    sha256
+    bytec_2 // "_balances"
+    swap
+    concat
+    dup
+    box_get
+    bytec_3 // 0x
+    cover 2
+    select
+    intc_0 // 1
+    itob
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+
+_update_after_if_else@6:
+    frame_dig -2
+    sha256
+    bytec 5 // "_owners"
+    swap
+    concat
+    frame_dig -3
+    box_put
+    pushbytes 0xddf252ad
+    frame_dig -2
+    concat
+    log
+    frame_dig 0
+    swap
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Token.sol.ERC721Token._approve(to: bytes, tokenId: bytes, auth: bytes) -> void:
+_approve:
+    proto 3 0
+    frame_dig -1
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    bz _approve_after_if_else@4
+    frame_dig -2
+    callsub _requireOwned
+    frame_dig -1
+    frame_dig -2
+    callsub _isAuthorized
+    assert // ERC721InvalidApprover
+
+_approve_after_if_else@4:
+    frame_dig -2
+    sha256
+    bytec 6 // "_tokenApprovals"
+    swap
+    concat
+    frame_dig -3
+    box_put
+    pushbytes 0x8c5be1e5
+    frame_dig -2
+    concat
+    log
+    retsub

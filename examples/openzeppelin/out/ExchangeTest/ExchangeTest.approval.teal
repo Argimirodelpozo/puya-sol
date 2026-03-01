@@ -1,0 +1,689 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Exchange.sol.ExchangeTest.approval_program() -> uint64:
+main:
+    intcblock 64 1 0
+    bytecblock 0x151f7c75 0x "_orderCount" "_orderStatus" "_totalVolume" "_totalFilled" "_totalCancelled" "_orderPrice" "_orderAmount" "_admin" 0x0000000000000000000000000000000000000000000000000000000000000000 "_orderOwner" "_orderIsBuy"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 9 // "_admin"
+    bytec 10 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_2 // "_orderCount"
+    bytec_1 // 0x
+    app_global_put
+    bytec 4 // "_totalVolume"
+    bytec_1 // 0x
+    app_global_put
+    bytec 5 // "_totalFilled"
+    bytec_1 // 0x
+    app_global_put
+    bytec 6 // "_totalCancelled"
+    bytec_1 // 0x
+    app_global_put
+    bytec 9 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xd6180070 0x0a4fb6b3 0x2ce3d1df 0x1f799ae7 0x382cf075 0x45375c14 0x335d782d 0x29ab59c9 0xa6b77a8a 0xa1c8c226 0x6e38614c 0xeb239c3e 0x0b8d6cfc 0x5aae3ba8 0xd49c1bd4 // method "initOrder(uint512)void", method "admin()address", method "orderCount()uint512", method "totalVolume()uint512", method "totalFilled()uint512", method "totalCancelled()uint512", method "getOrderOwner(uint512)address", method "getOrderPrice(uint512)uint512", method "getOrderAmount(uint512)uint512", method "getOrderIsBuy(uint512)bool", method "getOrderStatus(uint512)uint512", method "getOrderValue(uint512)uint512", method "placeOrder(address,uint512,uint512,bool)uint512", method "fillOrder(uint512)void", method "cancelOrder(uint512)void"
+    txna ApplicationArgs 0
+    match initOrder admin orderCount totalVolume totalFilled totalCancelled getOrderOwner getOrderPrice getOrderAmount getOrderIsBuy getOrderStatus getOrderValue placeOrder fillOrder cancelOrder
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Exchange.sol.ExchangeTest.initOrder[routing]() -> void:
+initOrder:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 11 // "_orderOwner"
+    dig 1
+    concat
+    bytec 10 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    box_put
+    intc_2 // 0
+    itob
+    bytec 7 // "_orderPrice"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    bytec 8 // "_orderAmount"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    bytec 12 // "_orderIsBuy"
+    dig 2
+    concat
+    intc_2 // 0
+    itob
+    box_put
+    bytec_3 // "_orderStatus"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Exchange.sol.ExchangeTest.admin[routing]() -> void:
+admin:
+    intc_2 // 0
+    bytec 9 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Exchange.sol.ExchangeTest.orderCount[routing]() -> void:
+orderCount:
+    intc_2 // 0
+    bytec_2 // "_orderCount"
+    app_global_get_ex
+    assert // check _orderCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Exchange.sol.ExchangeTest.totalVolume[routing]() -> void:
+totalVolume:
+    intc_2 // 0
+    bytec 4 // "_totalVolume"
+    app_global_get_ex
+    assert // check _totalVolume exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Exchange.sol.ExchangeTest.totalFilled[routing]() -> void:
+totalFilled:
+    intc_2 // 0
+    bytec 5 // "_totalFilled"
+    app_global_get_ex
+    assert // check _totalFilled exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Exchange.sol.ExchangeTest.totalCancelled[routing]() -> void:
+totalCancelled:
+    intc_2 // 0
+    bytec 6 // "_totalCancelled"
+    app_global_get_ex
+    assert // check _totalCancelled exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Exchange.sol.ExchangeTest.getOrderOwner[routing]() -> void:
+getOrderOwner:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 11 // "_orderOwner"
+    swap
+    concat
+    box_get
+    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Exchange.sol.ExchangeTest.getOrderPrice[routing]() -> void:
+getOrderPrice:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_orderPrice"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Exchange.sol.ExchangeTest.getOrderAmount[routing]() -> void:
+getOrderAmount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_orderAmount"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Exchange.sol.ExchangeTest.getOrderIsBuy[routing]() -> void:
+getOrderIsBuy:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 12 // "_orderIsBuy"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Exchange.sol.ExchangeTest.getOrderStatus[routing]() -> void:
+getOrderStatus:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_orderStatus"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Exchange.sol.ExchangeTest.getOrderValue[routing]() -> void:
+getOrderValue:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_orderPrice"
+    dig 1
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    bytec 8 // "_orderAmount"
+    uncover 2
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    b*
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Exchange.sol.ExchangeTest.placeOrder[routing]() -> void:
+placeOrder:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_2 // 0
+    getbit
+    intc_2 // 0
+    itob
+    dig 3
+    dig 1
+    b>
+    assert // Exchange: price must be > 0
+    dig 2
+    dig 1
+    b>
+    assert // Exchange: amount must be > 0
+    intc_2 // 0
+    bytec_2 // "_orderCount"
+    app_global_get_ex
+    assert // check _orderCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 11 // "_orderOwner"
+    dig 1
+    concat
+    uncover 8
+    box_put
+    bytec 7 // "_orderPrice"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 7
+    box_put
+    bytec 8 // "_orderAmount"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 6
+    box_put
+    bytec 12 // "_orderIsBuy"
+    dig 1
+    concat
+    uncover 5
+    itob
+    box_put
+    bytec_3 // "_orderStatus"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    uncover 3
+    box_put
+    intc_2 // 0
+    bytec 4 // "_totalVolume"
+    app_global_get_ex
+    assert // check _totalVolume exists
+    uncover 4
+    uncover 4
+    b*
+    b+
+    bytec 4 // "_totalVolume"
+    swap
+    app_global_put
+    intc_2 // 0
+    bytec_2 // "_orderCount"
+    app_global_get_ex
+    assert // check _orderCount exists
+    intc_1 // 1
+    itob
+    b+
+    bytec_2 // "_orderCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Exchange.sol.ExchangeTest.fillOrder[routing]() -> void:
+fillOrder:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    bytec_2 // "_orderCount"
+    app_global_get_ex
+    assert // check _orderCount exists
+    dig 1
+    b>
+    assert // Exchange: order does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_orderStatus"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_2 // 0
+    itob
+    b==
+    assert // Exchange: order is not open
+    intc_1 // 1
+    itob
+    dig 1
+    box_del
+    pop
+    swap
+    dig 1
+    box_put
+    intc_2 // 0
+    bytec 5 // "_totalFilled"
+    app_global_get_ex
+    assert // check _totalFilled exists
+    b+
+    bytec 5 // "_totalFilled"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Exchange.sol.ExchangeTest.cancelOrder[routing]() -> void:
+cancelOrder:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    bytec_2 // "_orderCount"
+    app_global_get_ex
+    assert // check _orderCount exists
+    dig 1
+    b>
+    assert // Exchange: order does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_orderStatus"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_2 // 0
+    itob
+    b==
+    assert // Exchange: order is not open
+    pushint 2
+    itob
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 0
+    bytec 6 // "_totalCancelled"
+    app_global_get_ex
+    assert // check _totalCancelled exists
+    intc_1 // 1
+    itob
+    b+
+    bytec 6 // "_totalCancelled"
+    swap
+    app_global_put
+    intc_1 // 1
+    return

@@ -73,14 +73,20 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 			{
 				std::string libraryName = contract->name();
 
-				// Detect overloaded function names
+				// Detect overloaded function names and name+paramcount collisions
 				std::unordered_map<std::string, int> nameCount;
+				std::unordered_map<std::string, int> nameParamCount;
 				for (auto const* func: contract->definedFunctions())
 				{
 					if (!func->isImplemented())
 						continue;
-					nameCount[libraryName + "." + func->name()]++;
+					std::string baseName = libraryName + "." + func->name();
+					nameCount[baseName]++;
+					nameParamCount[baseName + "(" + std::to_string(func->parameters().size()) + ")"]++;
 				}
+
+				// Track sequence numbers for same-name-same-paramcount overloads
+				std::unordered_map<std::string, int> nameParamSeq;
 
 				for (auto const* func: contract->definedFunctions())
 				{
@@ -93,10 +99,20 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					// Disambiguate overloaded functions by parameter count
 					if (nameCount[baseName] > 1)
 					{
-						qualifiedName += "(" + std::to_string(func->parameters().size()) + ")";
-						subroutineId += "(" + std::to_string(func->parameters().size()) + ")";
+						std::string paramKey = baseName + "(" + std::to_string(func->parameters().size()) + ")";
+						qualifiedName = paramKey;
+						subroutineId = _sourceFile + "." + paramKey;
+						// Further disambiguate if same name AND same param count
+						if (nameParamCount[paramKey] > 1)
+						{
+							int seq = nameParamSeq[paramKey]++;
+							qualifiedName += "_" + std::to_string(seq);
+							subroutineId += "_" + std::to_string(seq);
+						}
 					}
 					m_libraryFunctionIds[qualifiedName] = subroutineId;
+					// Also store by AST ID for precise overload resolution
+					m_freeFunctionById[func->id()] = subroutineId;
 				}
 				continue;
 			}
@@ -140,28 +156,37 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 
 				std::string qualifiedName = libraryName + "." + func->name();
 				std::string subroutineId;
-				auto it = m_libraryFunctionIds.find(qualifiedName);
-				if (it != m_libraryFunctionIds.end())
+				// Prefer AST ID lookup for precise overload resolution
+				auto byId = m_freeFunctionById.find(func->id());
+				if (byId != m_freeFunctionById.end())
 				{
-					subroutineId = it->second;
+					subroutineId = byId->second;
 				}
 				else
 				{
-					// Try disambiguated name for overloaded functions
-					std::string overloadName = qualifiedName + "(" + std::to_string(func->parameters().size()) + ")";
-					auto it2 = m_libraryFunctionIds.find(overloadName);
-					if (it2 != m_libraryFunctionIds.end())
+					auto it = m_libraryFunctionIds.find(qualifiedName);
+					if (it != m_libraryFunctionIds.end())
 					{
-						qualifiedName = overloadName;
-						subroutineId = it2->second;
+						subroutineId = it->second;
 					}
 					else
-						subroutineId = _sourceFile + "." + qualifiedName;
+					{
+						std::string overloadName = qualifiedName + "(" + std::to_string(func->parameters().size()) + ")";
+						auto it2 = m_libraryFunctionIds.find(overloadName);
+						if (it2 != m_libraryFunctionIds.end())
+						{
+							qualifiedName = overloadName;
+							subroutineId = it2->second;
+						}
+						else
+							subroutineId = _sourceFile + "." + qualifiedName;
+					}
 				}
 
 				Logger::instance().debug("Translating library function: " + qualifiedName);
 
 				auto sub = std::make_shared<awst::Subroutine>();
+				sub->inlineOpt = false; // Prevent puya from inlining large subroutines
 
 				awst::SourceLocation loc;
 				loc.file = _sourceFile;
@@ -432,6 +457,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 			Logger::instance().debug("Translating free function: " + qualifiedName);
 
 			auto sub = std::make_shared<awst::Subroutine>();
+			sub->inlineOpt = false; // Prevent puya from inlining large subroutines
 			awst::SourceLocation loc;
 			loc.file = _sourceFile;
 			loc.line = func->location().start >= 0 ? func->location().start : 0;

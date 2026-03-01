@@ -1,0 +1,42 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/OracleMock.sol.OracleMock.approval_program() -> uint64:
+main:
+    bytecblock "price"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "price"
+    pushbytes 0x
+    app_global_put
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xcb99bffb // method "setPrice(uint512)void"
+    txna ApplicationArgs 0
+    match main_setPrice_route@4
+    err
+
+main_setPrice_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b setPrice
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/OracleMock.sol.OracleMock.setPrice[routing]() -> void:
+setPrice:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    bytec_0 // "price"
+    swap
+    app_global_put
+    pushint 1
+    return

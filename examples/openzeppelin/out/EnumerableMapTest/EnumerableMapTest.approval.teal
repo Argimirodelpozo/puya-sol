@@ -1,0 +1,514 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EnumerableMap.sol.EnumerableMapTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock 0x "_length" 0x151f7c75 "_indexOf" "_values" "_keyAtIndex" 0x00
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "_length"
+    bytec_0 // 0x
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x01999ed7 0x08db3e2a 0x7480fb78 0xb25aff31 0xe982a0ef 0x7cea95ea 0x4bbd99f9 // method "set(uint512,uint512)bool", method "remove(uint512)bool", method "contains(uint512)bool", method "length()uint512", method "at(uint512)(uint512,uint512)", method "get(uint512)uint512", method "tryGet(uint512)(bool,uint512)"
+    txna ApplicationArgs 0
+    match set remove contains length at get tryGet
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EnumerableMap.sol.EnumerableMapTest.set[routing]() -> void:
+set:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    cover 3
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_values"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    bytec_3 // "_indexOf"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    itob
+    b==
+    bz set_after_if_else@3
+    intc_1 // 0
+    bytec_1 // "_length"
+    app_global_get_ex
+    assert // check _length exists
+    intc_2 // 1
+    itob
+    b+
+    bytec_1 // "_length"
+    dig 1
+    app_global_put
+    dig 1
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_keyAtIndex"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    dig 3
+    box_put
+    intc_2 // 1
+
+set_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EnumerableMap.sol.EnumerableMapTest.set@4:
+    bytec 6 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+set_after_if_else@3:
+    intc_1 // 0
+    b set_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EnumerableMap.sol.EnumerableMapTest.set@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EnumerableMap.sol.EnumerableMapTest.remove[routing]() -> void:
+remove:
+    intc_1 // 0
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_indexOf"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    intc_1 // 0
+    itob
+    b==
+    bz remove_after_if_else@3
+    intc_1 // 0
+
+remove_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EnumerableMap.sol.EnumerableMapTest.remove@6:
+    bytec 6 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+remove_after_if_else@3:
+    intc_1 // 0
+    bytec_1 // "_length"
+    app_global_get_ex
+    swap
+    dup
+    cover 2
+    bury 5
+    assert // check _length exists
+    dig 1
+    b!=
+    bz remove_after_if_else@5
+    dig 1
+    dup
+    dig 4
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_keyAtIndex"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    dig 3
+    dup
+    cover 4
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_keyAtIndex"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_indexOf"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+remove_after_if_else@5:
+    intc_1 // 0
+    bytec_1 // "_length"
+    app_global_get_ex
+    assert // check _length exists
+    intc_2 // 1
+    itob
+    b-
+    bytec_1 // "_length"
+    swap
+    app_global_put
+    intc_2 // 1
+    b remove_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EnumerableMap.sol.EnumerableMapTest.remove@6
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EnumerableMap.sol.EnumerableMapTest.contains[routing]() -> void:
+contains:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_indexOf"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    itob
+    b!=
+    bytec 6 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EnumerableMap.sol.EnumerableMapTest.length[routing]() -> void:
+length:
+    intc_1 // 0
+    bytec_1 // "_length"
+    app_global_get_ex
+    assert // check _length exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EnumerableMap.sol.EnumerableMapTest.at[routing]() -> void:
+at:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    b>
+    bz at_bool_false@4
+    intc_1 // 0
+    bytec_1 // "_length"
+    app_global_get_ex
+    assert // check _length exists
+    dig 1
+    b>=
+    bz at_bool_false@4
+    intc_2 // 1
+
+at_bool_merge@5:
+    assert // index out of bounds
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_keyAtIndex"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_values"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    swap
+    uncover 2
+    b|
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+at_bool_false@4:
+    intc_1 // 0
+    b at_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EnumerableMap.sol.EnumerableMapTest.get[routing]() -> void:
+get:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_indexOf"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    itob
+    b!=
+    assert // key not found
+    bytec 4 // "_values"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EnumerableMap.sol.EnumerableMapTest.tryGet[routing]() -> void:
+tryGet:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_indexOf"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    itob
+    b!=
+    bytec 4 // "_values"
+    uncover 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 6 // 0x00
+    intc_1 // 0
+    uncover 3
+    setbit
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    swap
+    uncover 2
+    b|
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

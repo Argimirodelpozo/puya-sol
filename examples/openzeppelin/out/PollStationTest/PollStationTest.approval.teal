@@ -1,0 +1,495 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PollStation.sol.PollStationTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock "_pollCount" 0x 0x151f7c75 "_admin" "_pollResponseCount" "_pollTotalValue" "_pollOpen"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_0 // "_pollCount"
+    bytec_1 // 0x
+    app_global_put
+    bytec_3 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 0
+    itob
+    bytec_0 // "_pollCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x59897e7a 0xac8b24de 0xfb242eb3 0x25a63e08 0xbe5fdc59 0x229d22ac 0x762000b6 0xa55cc66c 0xa61f0e05 0xee69c593 // method "initPoll(uint512)void", method "getAdmin()address", method "getPollCount()uint512", method "getPollResponseCount(uint512)uint512", method "getPollTotalValue(uint512)uint512", method "getPollAverage(uint512)uint512", method "isPollOpen(uint512)bool", method "createPoll()uint512", method "submitResponse(uint512,uint512)void", method "closePoll(uint512)void"
+    txna ApplicationArgs 0
+    match initPoll getAdmin getPollCount getPollResponseCount getPollTotalValue getPollAverage isPollOpen createPoll submitResponse closePoll
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PollStation.sol.PollStationTest.initPoll[routing]() -> void:
+initPoll:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_pollResponseCount"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 5 // "_pollTotalValue"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    bytec 6 // "_pollOpen"
+    swap
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PollStation.sol.PollStationTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_1 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PollStation.sol.PollStationTest.getPollCount[routing]() -> void:
+getPollCount:
+    intc_1 // 0
+    bytec_0 // "_pollCount"
+    app_global_get_ex
+    assert // check _pollCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PollStation.sol.PollStationTest.getPollResponseCount[routing]() -> void:
+getPollResponseCount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_pollResponseCount"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PollStation.sol.PollStationTest.getPollTotalValue[routing]() -> void:
+getPollTotalValue:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_pollTotalValue"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PollStation.sol.PollStationTest.getPollAverage[routing]() -> void:
+getPollAverage:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_pollResponseCount"
+    dig 1
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    itob
+    dig 1
+    b<
+    assert // No responses
+    bytec 5 // "_pollTotalValue"
+    uncover 2
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    swap
+    b/
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PollStation.sol.PollStationTest.isPollOpen[routing]() -> void:
+isPollOpen:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_pollOpen"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PollStation.sol.PollStationTest.createPoll[routing]() -> void:
+createPoll:
+    txn Sender
+    intc_1 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Not admin
+    intc_1 // 0
+    bytec_0 // "_pollCount"
+    app_global_get_ex
+    assert // check _pollCount exists
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    dup
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_pollResponseCount"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 3
+    box_put
+    bytec 5 // "_pollTotalValue"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 3
+    box_put
+    bytec 6 // "_pollOpen"
+    swap
+    concat
+    intc_2 // 1
+    itob
+    box_put
+    intc_2 // 1
+    itob
+    dig 2
+    b+
+    bytec_0 // "_pollCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PollStation.sol.PollStationTest.submitResponse[routing]() -> void:
+submitResponse:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec_0 // "_pollCount"
+    app_global_get_ex
+    assert // check _pollCount exists
+    dig 2
+    b>
+    assert // Poll does not exist
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_pollOpen"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // Poll is closed
+    bytec 4 // "_pollResponseCount"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_2 // 1
+    itob
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec 5 // "_pollTotalValue"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    uncover 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PollStation.sol.PollStationTest.closePoll[routing]() -> void:
+closePoll:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Not admin
+    intc_1 // 0
+    bytec_0 // "_pollCount"
+    app_global_get_ex
+    assert // check _pollCount exists
+    dig 1
+    b>
+    assert // Poll does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_pollOpen"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // Poll already closed
+    intc_1 // 0
+    itob
+    box_put
+    intc_2 // 1
+    return

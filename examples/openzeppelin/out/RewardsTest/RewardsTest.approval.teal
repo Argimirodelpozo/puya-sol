@@ -1,0 +1,598 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.approval_program() -> uint64:
+main:
+    intcblock 64 1 0 32
+    bytecblock 0x 0x151f7c75 "_totalPointsIssued" "_owner" "_pointsPerAction" "_redemptionRate" "_points" "_totalRedeemed" "_totalEarned" "_totalSpent"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "_owner"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 4 // "_pointsPerAction"
+    bytec_0 // 0x
+    app_global_put
+    bytec 5 // "_redemptionRate"
+    bytec_0 // 0x
+    app_global_put
+    bytec_2 // "_totalPointsIssued"
+    bytec_0 // 0x
+    app_global_put
+    bytec 7 // "_totalRedeemed"
+    bytec_0 // 0x
+    app_global_put
+    bytec_3 // "_owner"
+    txn Sender
+    app_global_put
+    pushint 10
+    itob
+    bytec 4 // "_pointsPerAction"
+    swap
+    app_global_put
+    pushint 100
+    itob
+    bytec 5 // "_redemptionRate"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb1bbb0a8 0x7f44bef4 0x7fe982ee 0x4b1be26b 0x95e0abf3 0xcb04f06f 0x57d168c2 0x61e0a927 0x68532e9c 0x5150c68f 0xe6137e15 0xe376cb0b 0xc5cb2b84 0xc0b8ec00 // method "owner()address", method "pointsPerAction()uint512", method "redemptionRate()uint512", method "totalPointsIssued()uint512", method "totalRedeemed()uint512", method "pointsOf(address)uint512", method "totalEarnedOf(address)uint512", method "totalSpentOf(address)uint512", method "setPointsPerAction(uint512)void", method "earnPoints(address,uint512)void", method "awardBonus(address,uint512)void", method "redeem(address,uint512)uint512", method "getLevel(address)uint512", method "redeemableUnits(address)uint512"
+    txna ApplicationArgs 0
+    match owner pointsPerAction redemptionRate totalPointsIssued totalRedeemed pointsOf totalEarnedOf totalSpentOf setPointsPerAction earnPoints awardBonus redeem getLevel redeemableUnits
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.owner[routing]() -> void:
+owner:
+    intc_2 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.pointsPerAction[routing]() -> void:
+pointsPerAction:
+    intc_2 // 0
+    bytec 4 // "_pointsPerAction"
+    app_global_get_ex
+    assert // check _pointsPerAction exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.redemptionRate[routing]() -> void:
+redemptionRate:
+    intc_2 // 0
+    bytec 5 // "_redemptionRate"
+    app_global_get_ex
+    assert // check _redemptionRate exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.totalPointsIssued[routing]() -> void:
+totalPointsIssued:
+    intc_2 // 0
+    bytec_2 // "_totalPointsIssued"
+    app_global_get_ex
+    assert // check _totalPointsIssued exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.totalRedeemed[routing]() -> void:
+totalRedeemed:
+    intc_2 // 0
+    bytec 7 // "_totalRedeemed"
+    app_global_get_ex
+    assert // check _totalRedeemed exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.pointsOf[routing]() -> void:
+pointsOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 6 // "_points"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.totalEarnedOf[routing]() -> void:
+totalEarnedOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 8 // "_totalEarned"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.totalSpentOf[routing]() -> void:
+totalSpentOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 9 // "_totalSpent"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.setPointsPerAction[routing]() -> void:
+setPointsPerAction:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // Not owner
+    bytec 4 // "_pointsPerAction"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.earnPoints[routing]() -> void:
+earnPoints:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    bytec 4 // "_pointsPerAction"
+    app_global_get_ex
+    assert // check _pointsPerAction exists
+    b*
+    swap
+    sha256
+    bytec 6 // "_points"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 3
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec 8 // "_totalEarned"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 0
+    bytec_2 // "_totalPointsIssued"
+    app_global_get_ex
+    assert // check _totalPointsIssued exists
+    b+
+    bytec_2 // "_totalPointsIssued"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.awardBonus[routing]() -> void:
+awardBonus:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // Not owner
+    swap
+    sha256
+    bytec 6 // "_points"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 3
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec 8 // "_totalEarned"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 0
+    bytec_2 // "_totalPointsIssued"
+    app_global_get_ex
+    assert // check _totalPointsIssued exists
+    b+
+    bytec_2 // "_totalPointsIssued"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.redeem[routing]() -> void:
+redeem:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    bytec 5 // "_redemptionRate"
+    app_global_get_ex
+    assert // check _redemptionRate exists
+    dig 1
+    b*
+    uncover 2
+    sha256
+    bytec 6 // "_points"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    dig 4
+    b>=
+    assert // Insufficient points
+    dig 3
+    b-
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec 9 // "_totalSpent"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 0
+    bytec 7 // "_totalRedeemed"
+    app_global_get_ex
+    assert // check _totalRedeemed exists
+    uncover 2
+    b+
+    bytec 7 // "_totalRedeemed"
+    swap
+    app_global_put
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.getLevel[routing]() -> void:
+getLevel:
+    intc_2 // 0
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 8 // "_totalEarned"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    pushint 10000
+    itob
+    b>=
+    bz getLevel_after_if_else@3
+    pushint 5
+    itob
+
+getLevel_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.getLevel@12:
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+getLevel_after_if_else@3:
+    pushint 5000
+    itob
+    dig 1
+    b<=
+    bz getLevel_after_if_else@5
+    pushint 4
+    itob
+    b getLevel_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.getLevel@12
+
+getLevel_after_if_else@5:
+    pushint 1000
+    itob
+    dig 1
+    b<=
+    bz getLevel_after_if_else@7
+    pushint 3
+    itob
+    b getLevel_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.getLevel@12
+
+getLevel_after_if_else@7:
+    pushint 100
+    itob
+    dig 1
+    b<=
+    bz getLevel_after_if_else@9
+    pushint 2
+    itob
+    b getLevel_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.getLevel@12
+
+getLevel_after_if_else@9:
+    intc_2 // 0
+    itob
+    dup
+    bury 3
+    dig 1
+    b<
+    bz getLevel_after_if_else@11
+    intc_1 // 1
+    itob
+    b getLevel_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.getLevel@12
+
+getLevel_after_if_else@11:
+    dig 1
+    b getLevel_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.getLevel@12
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Rewards.sol.RewardsTest.redeemableUnits[routing]() -> void:
+redeemableUnits:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 6 // "_points"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_2 // 0
+    bytec 5 // "_redemptionRate"
+    app_global_get_ex
+    assert // check _redemptionRate exists
+    b/
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

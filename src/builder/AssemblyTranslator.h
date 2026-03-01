@@ -147,7 +147,15 @@ private:
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
 		awst::SourceLocation const& _loc
 	);
+	std::shared_ptr<awst::Expression> handleXor(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc
+	);
 	std::shared_ptr<awst::Expression> handleGas(
+		awst::SourceLocation const& _loc
+	);
+	std::shared_ptr<awst::Expression> handleSload(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
 		awst::SourceLocation const& _loc
 	);
 
@@ -285,6 +293,14 @@ private:
 		solidity::yul::Expression const& _expr
 	);
 
+	/// Try to match mload(add(add(bytes_param, 32), offset)) pattern.
+	/// Detects reads from bytes memory parameters with variable offset
+	/// and translates to extract3(param, offset, 32) instead of returning 0.
+	std::shared_ptr<awst::Expression> tryHandleBytesMemoryRead(
+		solidity::yul::Expression const& _addrExpr,
+		awst::SourceLocation const& _loc
+	);
+
 	// ── Memory model ────────────────────────────────────────────────────
 
 	struct MemorySlot
@@ -367,6 +383,13 @@ private:
 
 	awst::SourceLocation makeLoc(
 		solidity::langutil::DebugData::ConstPtr const& _debugData
+	);
+
+	/// Coerce bool expressions to biguint (Yul semantics: all values are uint256).
+	/// Returns the expression unchanged if it's already biguint.
+	std::shared_ptr<awst::Expression> ensureBiguint(
+		std::shared_ptr<awst::Expression> _expr,
+		awst::SourceLocation const& _loc
 	);
 
 	/// Build an AWST BigUIntBinaryOperation node.

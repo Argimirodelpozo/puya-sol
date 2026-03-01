@@ -1,0 +1,481 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SimpleEscrow.sol.SimpleEscrowTest.approval_program() -> uint64:
+main:
+    intcblock 0 1 64 32
+    bytecblock 0x 0x151f7c75 "frozen" "_deposits" "admin" "totalDeposits" "totalWithdrawn" "depositorCount" "_withdrawn" "_depositorIndex"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 4 // "admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 5 // "totalDeposits"
+    bytec_0 // 0x
+    app_global_put
+    bytec 6 // "totalWithdrawn"
+    bytec_0 // 0x
+    app_global_put
+    bytec 7 // "depositorCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec_2 // "frozen"
+    intc_0 // 0
+    app_global_put
+    bytec 4 // "admin"
+    txn Sender
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x7461d58e 0xc84af1db 0xb6348d3d 0x36ec8ab2 0xe9b9ed32 0x09ec0fbd 0x3a2abce1 0xfd107167 0xe240fb54 0x9b4c6d98 0xac8b24de 0x4c9d440d 0x3134ecc6 // method "initDepositor(address)void", method "deposit(address,uint512)void", method "withdraw(address,uint512)uint512", method "available(address)uint512", method "getDeposits(address)uint512", method "getWithdrawn(address)uint512", method "isDepositor(address)bool", method "getTotalDeposits()uint512", method "getTotalWithdrawn()uint512", method "getDepositorCount()uint512", method "getAdmin()address", method "emergencyFreeze()void", method "isFrozen()bool"
+    txna ApplicationArgs 0
+    match initDepositor deposit withdraw available getDeposits getWithdrawn isDepositor getTotalDeposits getTotalWithdrawn getDepositorCount getAdmin emergencyFreeze isFrozen
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SimpleEscrow.sol.SimpleEscrowTest.initDepositor[routing]() -> void:
+initDepositor:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_0 // 0
+    itob
+    swap
+    sha256
+    bytec_3 // "_deposits"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 8 // "_withdrawn"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 9 // "_depositorIndex"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SimpleEscrow.sol.SimpleEscrowTest.deposit[routing]() -> void:
+deposit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 0
+    bytec_2 // "frozen"
+    app_global_get_ex
+    assert // check frozen exists
+    !
+    assert // Escrow is frozen
+    swap
+    sha256
+    bytec_3 // "_deposits"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 3
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_0 // 0
+    bytec 5 // "totalDeposits"
+    app_global_get_ex
+    assert // check totalDeposits exists
+    uncover 2
+    b+
+    bytec 5 // "totalDeposits"
+    swap
+    app_global_put
+    bytec 9 // "_depositorIndex"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_0 // 0
+    itob
+    b==
+    bz deposit_after_if_else@3
+    intc_0 // 0
+    bytec 7 // "depositorCount"
+    app_global_get_ex
+    assert // check depositorCount exists
+    intc_1 // 1
+    itob
+    b+
+    bytec 7 // "depositorCount"
+    dig 1
+    app_global_put
+    dig 1
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+deposit_after_if_else@3:
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SimpleEscrow.sol.SimpleEscrowTest.withdraw[routing]() -> void:
+withdraw:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 0
+    bytec_2 // "frozen"
+    app_global_get_ex
+    assert // check frozen exists
+    !
+    assert // Escrow is frozen
+    uncover 2
+    sha256
+    bytec_3 // "_deposits"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 8 // "_withdrawn"
+    uncover 2
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    uncover 2
+    dig 1
+    b-
+    dig 4
+    b>=
+    assert // Insufficient available
+    dig 3
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_0 // 0
+    bytec 6 // "totalWithdrawn"
+    app_global_get_ex
+    assert // check totalWithdrawn exists
+    dig 2
+    b+
+    bytec 6 // "totalWithdrawn"
+    swap
+    app_global_put
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SimpleEscrow.sol.SimpleEscrowTest.available[routing]() -> void:
+available:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_3 // "_deposits"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 8 // "_withdrawn"
+    uncover 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b-
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SimpleEscrow.sol.SimpleEscrowTest.getDeposits[routing]() -> void:
+getDeposits:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_3 // "_deposits"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SimpleEscrow.sol.SimpleEscrowTest.getWithdrawn[routing]() -> void:
+getWithdrawn:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 8 // "_withdrawn"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SimpleEscrow.sol.SimpleEscrowTest.isDepositor[routing]() -> void:
+isDepositor:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 9 // "_depositorIndex"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_0 // 0
+    itob
+    b!=
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SimpleEscrow.sol.SimpleEscrowTest.getTotalDeposits[routing]() -> void:
+getTotalDeposits:
+    intc_0 // 0
+    bytec 5 // "totalDeposits"
+    app_global_get_ex
+    assert // check totalDeposits exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SimpleEscrow.sol.SimpleEscrowTest.getTotalWithdrawn[routing]() -> void:
+getTotalWithdrawn:
+    intc_0 // 0
+    bytec 6 // "totalWithdrawn"
+    app_global_get_ex
+    assert // check totalWithdrawn exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SimpleEscrow.sol.SimpleEscrowTest.getDepositorCount[routing]() -> void:
+getDepositorCount:
+    intc_0 // 0
+    bytec 7 // "depositorCount"
+    app_global_get_ex
+    assert // check depositorCount exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SimpleEscrow.sol.SimpleEscrowTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_0 // 0
+    bytec 4 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SimpleEscrow.sol.SimpleEscrowTest.emergencyFreeze[routing]() -> void:
+emergencyFreeze:
+    txn Sender
+    intc_0 // 0
+    bytec 4 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    ==
+    assert // Only admin
+    bytec_2 // "frozen"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SimpleEscrow.sol.SimpleEscrowTest.isFrozen[routing]() -> void:
+isFrozen:
+    intc_0 // 0
+    bytec_2 // "frozen"
+    app_global_get_ex
+    assert // check frozen exists
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

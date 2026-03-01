@@ -1,0 +1,450 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CouponVault.sol.CouponVaultTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock 0x151f7c75 "_couponCount" "_admin" 0x "_redeemedCount" "_totalValue" "_couponRedeemed" "_couponValue" "_couponExpiry"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_1 // "_couponCount"
+    bytec_3 // 0x
+    app_global_put
+    bytec 4 // "_redeemedCount"
+    bytec_3 // 0x
+    app_global_put
+    bytec 5 // "_totalValue"
+    bytec_3 // 0x
+    app_global_put
+    bytec_2 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 0
+    itob
+    bytec_1 // "_couponCount"
+    dig 1
+    app_global_put
+    bytec 4 // "_redeemedCount"
+    dig 1
+    app_global_put
+    bytec 5 // "_totalValue"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x3263e299 0xac8b24de 0xd0ffb001 0x62981836 0xd02af290 0x185109b8 0x493eee23 0x64a2bc32 0xb0bb283f 0x42d4c068 // method "initCoupon(uint512)void", method "getAdmin()address", method "getCouponCount()uint512", method "getRedeemedCount()uint512", method "getTotalValue()uint512", method "getCouponValue(uint512)uint512", method "isCouponRedeemed(uint512)bool", method "getCouponExpiry(uint512)uint512", method "createCoupon(uint512,uint512)uint512", method "redeemCoupon(uint512)void"
+    txna ApplicationArgs 0
+    match initCoupon getAdmin getCouponCount getRedeemedCount getTotalValue getCouponValue isCouponRedeemed getCouponExpiry createCoupon redeemCoupon
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CouponVault.sol.CouponVaultTest.initCoupon[routing]() -> void:
+initCoupon:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_couponValue"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 6 // "_couponRedeemed"
+    dig 1
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    bytec 8 // "_couponExpiry"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CouponVault.sol.CouponVaultTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CouponVault.sol.CouponVaultTest.getCouponCount[routing]() -> void:
+getCouponCount:
+    intc_1 // 0
+    bytec_1 // "_couponCount"
+    app_global_get_ex
+    assert // check _couponCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CouponVault.sol.CouponVaultTest.getRedeemedCount[routing]() -> void:
+getRedeemedCount:
+    intc_1 // 0
+    bytec 4 // "_redeemedCount"
+    app_global_get_ex
+    assert // check _redeemedCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CouponVault.sol.CouponVaultTest.getTotalValue[routing]() -> void:
+getTotalValue:
+    intc_1 // 0
+    bytec 5 // "_totalValue"
+    app_global_get_ex
+    assert // check _totalValue exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CouponVault.sol.CouponVaultTest.getCouponValue[routing]() -> void:
+getCouponValue:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_couponValue"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CouponVault.sol.CouponVaultTest.isCouponRedeemed[routing]() -> void:
+isCouponRedeemed:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_couponRedeemed"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CouponVault.sol.CouponVaultTest.getCouponExpiry[routing]() -> void:
+getCouponExpiry:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_couponExpiry"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CouponVault.sol.CouponVaultTest.createCoupon[routing]() -> void:
+createCoupon:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Not admin
+    intc_1 // 0
+    bytec_1 // "_couponCount"
+    app_global_get_ex
+    assert // check _couponCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_couponValue"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 5
+    box_put
+    bytec 6 // "_couponRedeemed"
+    dig 1
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    bytec 8 // "_couponExpiry"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    uncover 3
+    box_put
+    intc_1 // 0
+    bytec 5 // "_totalValue"
+    app_global_get_ex
+    assert // check _totalValue exists
+    uncover 3
+    b+
+    bytec 5 // "_totalValue"
+    swap
+    app_global_put
+    intc_2 // 1
+    itob
+    dig 2
+    b+
+    bytec_1 // "_couponCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CouponVault.sol.CouponVaultTest.redeemCoupon[routing]() -> void:
+redeemCoupon:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Not admin
+    intc_1 // 0
+    bytec_1 // "_couponCount"
+    app_global_get_ex
+    assert // check _couponCount exists
+    dig 1
+    b>
+    assert // Coupon does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_couponRedeemed"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already redeemed
+    intc_2 // 1
+    itob
+    box_put
+    intc_1 // 0
+    bytec 4 // "_redeemedCount"
+    app_global_get_ex
+    assert // check _redeemedCount exists
+    intc_2 // 1
+    itob
+    b+
+    bytec 4 // "_redeemedCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return

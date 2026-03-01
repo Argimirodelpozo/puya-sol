@@ -1,0 +1,48 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk-rust/contracts/SimpleHonkVerifier.sol.SimpleHonkVerifierTest__Helper3.__puya_arc4_router__() -> uint64:
+main:
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk-rust/contracts/SimpleHonkVerifier.sol.SimpleHonkVerifierTest__Helper3.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    pushbytes 0xac3c6e93 // method "RelationsLib.accumulateAuxillaryRelation(uint512[40],(uint512,uint512,uint512,uint512,uint512,uint512[25],uint512[28],uint512[28],uint512,uint512,uint512,uint512,uint512),uint512[26],uint512)void"
+    txna ApplicationArgs 0
+    match __puya_arc4_router___RelationsLib.accumulateAuxillaryRelation_route@1
+    err
+
+__puya_arc4_router___RelationsLib.accumulateAuxillaryRelation_route@1:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b RelationsLib.accumulateAuxillaryRelation
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk-rust/contracts/SimpleHonkVerifier.sol.SimpleHonkVerifierTest__Helper3.RelationsLib.accumulateAuxillaryRelation[routing]() -> void:
+RelationsLib.accumulateAuxillaryRelation:
+    txna ApplicationArgs 1
+    len
+    pushint 2560
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint512, 40>
+    txna ApplicationArgs 2
+    len
+    pushint 5824
+    ==
+    assert // invalid number of bytes for Transcript
+    txna ApplicationArgs 3
+    len
+    pushint 1664
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint512, 26>
+    txna ApplicationArgs 4
+    len
+    pushint 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    pushint 1
+    return

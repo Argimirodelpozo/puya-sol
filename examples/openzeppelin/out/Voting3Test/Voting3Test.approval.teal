@@ -1,0 +1,885 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Voting3.sol.Voting3Test.approval_program() -> uint64:
+main:
+    intcblock 64 0 1 2
+    bytecblock 0x 0x151f7c75 "_electionCount" "_electionOptions" "_admin" "_electionVotesOpt0" "_electionVotesOpt1" "_electionVotesOpt2" "_electionVotesOpt3" "_electionClosed" "_totalVotesCast" "_electionTotalVotes"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 4 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_2 // "_electionCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec 10 // "_totalVotesCast"
+    bytec_0 // 0x
+    app_global_put
+    bytec 4 // "_admin"
+    txn Sender
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xd492c33e 0x0a4fb6b3 0x5eb230ac 0xf64ae141 0x35603e96 0x1ad54def 0x32a30ecd 0x13233bd9 0x71b644f2 0x2e08e3a1 0x5dedae5f 0xdbc06a70 // method "initElection(uint512)void", method "admin()address", method "electionCount()uint512", method "totalVotesCast()uint512", method "electionOptions(uint512)uint512", method "electionClosed(uint512)bool", method "electionTotalVotes(uint512)uint512", method "createElection(uint512)uint512", method "castVote(uint512,uint512)void", method "closeElection(uint512)void", method "getVotesForOption(uint512,uint512)uint512", method "getWinningOption(uint512)uint512"
+    txna ApplicationArgs 0
+    match initElection admin electionCount totalVotesCast electionOptions electionClosed electionTotalVotes createElection castVote closeElection getVotesForOption getWinningOption
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Voting3.sol.Voting3Test.initElection[routing]() -> void:
+initElection:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_electionOptions"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 5 // "_electionVotesOpt0"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 6 // "_electionVotesOpt1"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 7 // "_electionVotesOpt2"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 8 // "_electionVotesOpt3"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 9 // "_electionClosed"
+    dig 1
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    bytec 11 // "_electionTotalVotes"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Voting3.sol.Voting3Test.admin[routing]() -> void:
+admin:
+    intc_1 // 0
+    bytec 4 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Voting3.sol.Voting3Test.electionCount[routing]() -> void:
+electionCount:
+    intc_1 // 0
+    bytec_2 // "_electionCount"
+    app_global_get_ex
+    assert // check _electionCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Voting3.sol.Voting3Test.totalVotesCast[routing]() -> void:
+totalVotesCast:
+    intc_1 // 0
+    bytec 10 // "_totalVotesCast"
+    app_global_get_ex
+    assert // check _totalVotesCast exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Voting3.sol.Voting3Test.electionOptions[routing]() -> void:
+electionOptions:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_electionOptions"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Voting3.sol.Voting3Test.electionClosed[routing]() -> void:
+electionClosed:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 9 // "_electionClosed"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Voting3.sol.Voting3Test.electionTotalVotes[routing]() -> void:
+electionTotalVotes:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 11 // "_electionTotalVotes"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Voting3.sol.Voting3Test.createElection[routing]() -> void:
+createElection:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec 4 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // only admin
+    intc_3 // 2
+    itob
+    dig 1
+    b<=
+    assert // min 2 options
+    pushint 4
+    itob
+    dig 1
+    b>=
+    assert // max 4 options
+    intc_1 // 0
+    bytec_2 // "_electionCount"
+    app_global_get_ex
+    assert // check _electionCount exists
+    intc_2 // 1
+    itob
+    dig 1
+    b+
+    bytec_2 // "_electionCount"
+    swap
+    app_global_put
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_electionOptions"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    intc_1 // 0
+    itob
+    bytec 5 // "_electionVotesOpt0"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    bytec 6 // "_electionVotesOpt1"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    bytec 7 // "_electionVotesOpt2"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    bytec 8 // "_electionVotesOpt3"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    bytec 9 // "_electionClosed"
+    dig 2
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    bytec 11 // "_electionTotalVotes"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Voting3.sol.Voting3Test.castVote[routing]() -> void:
+castVote:
+    intc_1 // 0
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec_2 // "_electionCount"
+    app_global_get_ex
+    assert // check _electionCount exists
+    dig 2
+    b>
+    assert // election does not exist
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    dup
+    cover 2
+    bytec 9 // "_electionClosed"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // election closed
+    bytec_3 // "_electionOptions"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b>
+    assert // invalid option
+    intc_1 // 0
+    itob
+    b==
+    bz castVote_else_body@3
+    bytec 5 // "_electionVotesOpt0"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_2 // 1
+    itob
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+
+castVote_after_if_else@10:
+    bytec 11 // "_electionTotalVotes"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_2 // 1
+    itob
+    swap
+    dig 1
+    b+
+    dig 2
+    box_del
+    pop
+    uncover 2
+    swap
+    box_put
+    intc_1 // 0
+    bytec 10 // "_totalVotesCast"
+    app_global_get_ex
+    assert // check _totalVotesCast exists
+    b+
+    bytec 10 // "_totalVotesCast"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+castVote_else_body@3:
+    intc_2 // 1
+    itob
+    dup
+    bury 4
+    dig 2
+    b==
+    bz castVote_else_body@5
+    bytec 6 // "_electionVotesOpt1"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 4
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    b castVote_after_if_else@10
+
+castVote_else_body@5:
+    intc_3 // 2
+    itob
+    dig 2
+    b==
+    bz castVote_else_body@7
+    bytec 7 // "_electionVotesOpt2"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 4
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    b castVote_after_if_else@10
+
+castVote_else_body@7:
+    bytec 8 // "_electionVotesOpt3"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 4
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    b castVote_after_if_else@10
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Voting3.sol.Voting3Test.closeElection[routing]() -> void:
+closeElection:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec 4 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // only admin
+    intc_1 // 0
+    bytec_2 // "_electionCount"
+    app_global_get_ex
+    assert // check _electionCount exists
+    dig 1
+    b>
+    assert // election does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 9 // "_electionClosed"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // already closed
+    intc_2 // 1
+    itob
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Voting3.sol.Voting3Test.getVotesForOption[routing]() -> void:
+getVotesForOption:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec_2 // "_electionCount"
+    app_global_get_ex
+    assert // check _electionCount exists
+    dig 2
+    b>
+    assert // election does not exist
+    intc_0 // 64
+    bzero
+    dup
+    cover 3
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    dup
+    cover 2
+    bytec_3 // "_electionOptions"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b>
+    assert // invalid option
+    intc_1 // 0
+    itob
+    b==
+    bz getVotesForOption_else_body@3
+    bytec 5 // "_electionVotesOpt0"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+
+getVotesForOption_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Voting3.sol.Voting3Test.getVotesForOption@8:
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    dig 2
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+getVotesForOption_else_body@3:
+    intc_2 // 1
+    itob
+    dig 3
+    b==
+    bz getVotesForOption_else_body@5
+    bytec 6 // "_electionVotesOpt1"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b getVotesForOption_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Voting3.sol.Voting3Test.getVotesForOption@8
+
+getVotesForOption_else_body@5:
+    intc_3 // 2
+    itob
+    dig 3
+    b==
+    bz getVotesForOption_else_body@7
+    bytec 7 // "_electionVotesOpt2"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b getVotesForOption_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Voting3.sol.Voting3Test.getVotesForOption@8
+
+getVotesForOption_else_body@7:
+    bytec 8 // "_electionVotesOpt3"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b getVotesForOption_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Voting3.sol.Voting3Test.getVotesForOption@8
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Voting3.sol.Voting3Test.getWinningOption[routing]() -> void:
+getWinningOption:
+    intc_1 // 0
+    dup
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec_2 // "_electionCount"
+    app_global_get_ex
+    assert // check _electionCount exists
+    dig 1
+    b>
+    assert // election does not exist
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    dup
+    bytec_3 // "_electionOptions"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    swap
+    intc_1 // 0
+    itob
+    swap
+    bytec 5 // "_electionVotesOpt0"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    uncover 2
+    bytec 6 // "_electionVotesOpt1"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    uncover 2
+    b>
+    bz getWinningOption_after_if_else@3
+    intc_2 // 1
+    itob
+    bury 3
+    dup
+    bury 2
+
+getWinningOption_after_if_else@3:
+    intc_3 // 2
+    itob
+    dup
+    bury 9
+    dig 4
+    b<
+    bz getWinningOption_after_if_else@7
+    bytec 7 // "_electionVotesOpt2"
+    dig 5
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    bury 8
+    dig 2
+    b>
+    bz getWinningOption_after_if_else@7
+    dig 7
+    bury 3
+    dig 6
+    bury 2
+
+getWinningOption_after_if_else@7:
+    pushint 3
+    itob
+    dup
+    bury 9
+    dig 4
+    b<
+    bz getWinningOption_after_if_else@11
+    bytec 8 // "_electionVotesOpt3"
+    dig 5
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b>
+    bz getWinningOption_after_if_else@11
+    dig 7
+    bury 3
+
+getWinningOption_after_if_else@11:
+    dig 2
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    dig 6
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

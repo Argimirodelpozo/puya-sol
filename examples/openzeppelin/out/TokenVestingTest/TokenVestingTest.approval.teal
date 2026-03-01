@@ -1,0 +1,727 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1 32
+    bytecblock 0x 0x151f7c75 "_owner" "_totalAllocated" "_vestingTotal" "_vestingStart" "_vestingDuration" "_vestingReleased"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "_owner"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_3 // "_totalAllocated"
+    bytec_0 // 0x
+    app_global_put
+    bytec_2 // "_owner"
+    txn Sender
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb1bbb0a8 0x829be5a3 0x32ac3164 0x1dd29448 0xd556d316 0x0a3a02e6 0xb7cb742e 0x1a12b856 0x149a24a8 0xb706b33e 0x055b3d0f // method "owner()address", method "totalAllocated()uint512", method "createVesting(address,uint512,uint512,uint512)void", method "vestingTotal(address)uint512", method "vestingReleased(address)uint512", method "vestingStart(address)uint512", method "vestingDuration(address)uint512", method "vestedAmount(address,uint512)uint512", method "releasable(address,uint512)uint512", method "release(address,uint512)uint512", method "revokeVesting(address)void"
+    txna ApplicationArgs 0
+    match owner totalAllocated createVesting vestingTotal vestingReleased vestingStart vestingDuration vestedAmount releasable release revokeVesting
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.owner[routing]() -> void:
+owner:
+    intc_1 // 0
+    bytec_2 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.totalAllocated[routing]() -> void:
+totalAllocated:
+    intc_1 // 0
+    bytec_3 // "_totalAllocated"
+    app_global_get_ex
+    assert // check _totalAllocated exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.createVesting[routing]() -> void:
+createVesting:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // Not owner
+    intc_1 // 0
+    itob
+    dig 3
+    dig 1
+    b>
+    assert // Amount must be > 0
+    dup2
+    b>
+    assert // Duration must be > 0
+    uncover 4
+    sha256
+    bytec 4 // "_vestingTotal"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 3
+    b==
+    assert // Already has vesting
+    dup
+    box_del
+    pop
+    dig 5
+    box_put
+    bytec 7 // "_vestingReleased"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    bytec 5 // "_vestingStart"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 3
+    box_put
+    bytec 6 // "_vestingDuration"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 0
+    bytec_3 // "_totalAllocated"
+    app_global_get_ex
+    assert // check _totalAllocated exists
+    b+
+    bytec_3 // "_totalAllocated"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.vestingTotal[routing]() -> void:
+vestingTotal:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 4 // "_vestingTotal"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.vestingReleased[routing]() -> void:
+vestingReleased:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 7 // "_vestingReleased"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.vestingStart[routing]() -> void:
+vestingStart:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 5 // "_vestingStart"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.vestingDuration[routing]() -> void:
+vestingDuration:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 6 // "_vestingDuration"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.vestedAmount[routing]() -> void:
+vestedAmount:
+    intc_1 // 0
+    dup
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    sha256
+    dup
+    bytec 4 // "_vestingTotal"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    intc_1 // 0
+    itob
+    dup
+    cover 2
+    b==
+    bz vestedAmount_after_if_else@3
+    dup
+
+vestedAmount_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.vestedAmount@8:
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+vestedAmount_after_if_else@3:
+    bytec 5 // "_vestingStart"
+    dig 3
+    dup
+    cover 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    cover 2
+    bury 7
+    bytec 6 // "_vestingDuration"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bury 7
+    dig 4
+    b>
+    bz vestedAmount_after_if_else@5
+    dup
+    b vestedAmount_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.vestedAmount@8
+
+vestedAmount_after_if_else@5:
+    dig 4
+    dig 6
+    b+
+    dig 4
+    b<=
+    bz vestedAmount_after_if_else@7
+    dig 1
+    b vestedAmount_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.vestedAmount@8
+
+vestedAmount_after_if_else@7:
+    dig 3
+    dig 5
+    b-
+    dig 2
+    b*
+    dig 6
+    b/
+    b vestedAmount_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.vestedAmount@8
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.releasable[routing]() -> void:
+releasable:
+    intc_1 // 0
+    dupn 3
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    sha256
+    dup
+    bytec 4 // "_vestingTotal"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    intc_1 // 0
+    itob
+    dup
+    cover 2
+    b==
+    bz releasable_after_if_else@3
+    dup
+
+releasable_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.releasable@12:
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+releasable_after_if_else@3:
+    bytec 5 // "_vestingStart"
+    dig 3
+    dup
+    cover 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    cover 2
+    bury 8
+    bytec 6 // "_vestingDuration"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bury 10
+    bytec 7 // "_vestingReleased"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bury 8
+    dig 4
+    b>
+    bz releasable_else_body@5
+    dup
+    bury 5
+
+releasable_after_if_else@9:
+    dig 4
+    dig 7
+    b<=
+    bz releasable_after_if_else@11
+    dup
+    b releasable_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.releasable@12
+
+releasable_after_if_else@11:
+    dig 4
+    dig 7
+    b-
+    b releasable_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.releasable@12
+
+releasable_else_body@5:
+    dig 5
+    dig 8
+    b+
+    dig 4
+    b<=
+    bz releasable_else_body@7
+    dig 1
+    bury 5
+    b releasable_after_if_else@9
+
+releasable_else_body@7:
+    dig 3
+    dig 6
+    b-
+    dig 2
+    b*
+    dig 8
+    b/
+    bury 5
+    b releasable_after_if_else@9
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.release[routing]() -> void:
+release:
+    intc_1 // 0
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // Not owner
+    swap
+    sha256
+    bytec 4 // "_vestingTotal"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    cover 3
+    intc_1 // 0
+    itob
+    dup
+    cover 4
+    b>
+    assert // No vesting
+    bytec 5 // "_vestingStart"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    cover 2
+    cover 3
+    bytec 6 // "_vestingDuration"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    cover 3
+    bytec 7 // "_vestingReleased"
+    swap
+    concat
+    dup
+    cover 3
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    cover 2
+    b<
+    bz release_else_body@3
+    dig 4
+    bury 8
+
+release_after_if_else@7:
+    dig 7
+    dig 1
+    b>
+    bnz release_if_body@8
+    dig 4
+
+release_after_if_else@9:
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+release_if_body@8:
+    dig 7
+    dig 1
+    dup
+    cover 2
+    b-
+    dup
+    cover 2
+    b+
+    dig 3
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    b release_after_if_else@9
+
+release_else_body@3:
+    dig 3
+    dig 3
+    b+
+    dig 7
+    b<=
+    bz release_else_body@5
+    dig 5
+    bury 8
+    b release_after_if_else@7
+
+release_else_body@5:
+    dig 6
+    dig 4
+    b-
+    dig 6
+    b*
+    dig 3
+    b/
+    bury 8
+    b release_after_if_else@7
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVesting.sol.TokenVestingTest.revokeVesting[routing]() -> void:
+revokeVesting:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // Not owner
+    sha256
+    bytec 4 // "_vestingTotal"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 7 // "_vestingReleased"
+    dig 3
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    bytec_3 // "_totalAllocated"
+    app_global_get_ex
+    assert // check _totalAllocated exists
+    uncover 3
+    uncover 2
+    b-
+    b-
+    bytec_3 // "_totalAllocated"
+    swap
+    app_global_put
+    intc_1 // 0
+    itob
+    dig 2
+    box_del
+    pop
+    uncover 2
+    dig 1
+    box_put
+    dig 1
+    box_del
+    pop
+    swap
+    dig 1
+    box_put
+    bytec 5 // "_vestingStart"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    bytec 6 // "_vestingDuration"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    return

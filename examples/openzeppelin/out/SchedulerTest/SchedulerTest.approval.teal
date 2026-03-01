@@ -1,0 +1,515 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Scheduler.sol.SchedulerTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock "_eventCount" 0x151f7c75 "_eventCompleted" "_admin" "_completedCount" "_eventCancelled" "_eventTimestamp"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_0 // "_eventCount"
+    pushbytes 0x
+    app_global_put
+    bytec 4 // "_completedCount"
+    pushbytes 0x
+    app_global_put
+    bytec_3 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 0
+    itob
+    bytec_0 // "_eventCount"
+    dig 1
+    app_global_put
+    bytec 4 // "_completedCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xf8d28f56 0xac8b24de 0x1bfcbcd8 0xbcc8ea63 0x359c70cf 0x432f64fd 0x2d059518 0x18d5cdc3 0x98af8e3d 0x9664a451 // method "initEvent(uint512)void", method "getAdmin()address", method "getEventCount()uint512", method "getCompletedCount()uint512", method "getEventTimestamp(uint512)uint512", method "isEventScheduled(uint512)bool", method "isEventCompleted(uint512)bool", method "scheduleEvent(uint512)uint512", method "cancelEvent(uint512)void", method "completeEvent(uint512)void"
+    txna ApplicationArgs 0
+    match initEvent getAdmin getEventCount getCompletedCount getEventTimestamp isEventScheduled isEventCompleted scheduleEvent cancelEvent completeEvent
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Scheduler.sol.SchedulerTest.initEvent[routing]() -> void:
+initEvent:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_eventTimestamp"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    bytec 5 // "_eventCancelled"
+    dig 1
+    concat
+    intc_1 // 0
+    itob
+    swap
+    dig 1
+    box_put
+    bytec_2 // "_eventCompleted"
+    uncover 2
+    concat
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Scheduler.sol.SchedulerTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_1 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Scheduler.sol.SchedulerTest.getEventCount[routing]() -> void:
+getEventCount:
+    intc_1 // 0
+    bytec_0 // "_eventCount"
+    app_global_get_ex
+    assert // check _eventCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Scheduler.sol.SchedulerTest.getCompletedCount[routing]() -> void:
+getCompletedCount:
+    intc_1 // 0
+    bytec 4 // "_completedCount"
+    app_global_get_ex
+    assert // check _completedCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Scheduler.sol.SchedulerTest.getEventTimestamp[routing]() -> void:
+getEventTimestamp:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_eventTimestamp"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Scheduler.sol.SchedulerTest.isEventScheduled[routing]() -> void:
+isEventScheduled:
+    intc_1 // 0
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec_0 // "_eventCount"
+    app_global_get_ex
+    assert // check _eventCount exists
+    b>=
+    bz isEventScheduled_after_if_else@3
+    intc_1 // 0
+
+isEventScheduled_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Scheduler.sol.SchedulerTest.isEventScheduled@8:
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+isEventScheduled_after_if_else@3:
+    intc_0 // 64
+    bzero
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    dup
+    bury 3
+    bytec 5 // "_eventCancelled"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    intc_2 // 1
+    ==
+    bz isEventScheduled_after_if_else@5
+    intc_1 // 0
+    b isEventScheduled_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Scheduler.sol.SchedulerTest.isEventScheduled@8
+
+isEventScheduled_after_if_else@5:
+    bytec_2 // "_eventCompleted"
+    dig 2
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    intc_2 // 1
+    ==
+    bz isEventScheduled_after_if_else@7
+    intc_1 // 0
+    b isEventScheduled_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Scheduler.sol.SchedulerTest.isEventScheduled@8
+
+isEventScheduled_after_if_else@7:
+    intc_2 // 1
+    b isEventScheduled_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Scheduler.sol.SchedulerTest.isEventScheduled@8
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Scheduler.sol.SchedulerTest.isEventCompleted[routing]() -> void:
+isEventCompleted:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_eventCompleted"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Scheduler.sol.SchedulerTest.scheduleEvent[routing]() -> void:
+scheduleEvent:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec_0 // "_eventCount"
+    app_global_get_ex
+    assert // check _eventCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_eventTimestamp"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    bytec 5 // "_eventCancelled"
+    dig 1
+    concat
+    intc_1 // 0
+    itob
+    swap
+    dig 1
+    box_put
+    bytec_2 // "_eventCompleted"
+    uncover 2
+    concat
+    swap
+    box_put
+    intc_2 // 1
+    itob
+    dig 2
+    b+
+    bytec_0 // "_eventCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Scheduler.sol.SchedulerTest.cancelEvent[routing]() -> void:
+cancelEvent:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Not admin
+    intc_1 // 0
+    bytec_0 // "_eventCount"
+    app_global_get_ex
+    assert // check _eventCount exists
+    dig 1
+    b>
+    assert // Event does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_eventCancelled"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already cancelled
+    bytec_2 // "_eventCompleted"
+    uncover 2
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already completed
+    intc_2 // 1
+    itob
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Scheduler.sol.SchedulerTest.completeEvent[routing]() -> void:
+completeEvent:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Not admin
+    intc_1 // 0
+    bytec_0 // "_eventCount"
+    app_global_get_ex
+    assert // check _eventCount exists
+    dig 1
+    b>
+    assert // Event does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_eventCancelled"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Event is cancelled
+    bytec_2 // "_eventCompleted"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already completed
+    intc_2 // 1
+    itob
+    box_put
+    intc_1 // 0
+    bytec 4 // "_completedCount"
+    app_global_get_ex
+    assert // check _completedCount exists
+    intc_2 // 1
+    itob
+    b+
+    bytec 4 // "_completedCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return

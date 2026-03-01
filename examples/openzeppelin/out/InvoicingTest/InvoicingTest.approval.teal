@@ -1,0 +1,868 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Invoicing.sol.InvoicingTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock 0x 0x151f7c75 "_invoiceAmount" "_invoicePaid" "_invoiceCancelled" "_invoiceCount" "_totalBilled" "_totalPaid" "_totalCancelled" "_invoiceDueDate" "_admin" 0x0000000000000000000000000000000000000000000000000000000000000000 "_invoicePayer" 0x00
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 10 // "_admin"
+    bytec 11 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 5 // "_invoiceCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec 6 // "_totalBilled"
+    bytec_0 // 0x
+    app_global_put
+    bytec 7 // "_totalPaid"
+    bytec_0 // 0x
+    app_global_put
+    bytec 8 // "_totalCancelled"
+    bytec_0 // 0x
+    app_global_put
+    bytec 10 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 0
+    itob
+    bytec 5 // "_invoiceCount"
+    dig 1
+    app_global_put
+    bytec 6 // "_totalBilled"
+    dig 1
+    app_global_put
+    bytec 7 // "_totalPaid"
+    dig 1
+    app_global_put
+    bytec 8 // "_totalCancelled"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x50421e35 0xac8b24de 0x193e181b 0xb4c4633b 0xc46603da 0xf71e7b9e 0x24d550b8 0x2da42e03 0xfff6dfad 0x428f8033 0xb7be70ac 0x344351ca 0x45f142cc 0xd45ec197 0xecf259ee 0x5b664d75 0xeee35baf // method "initInvoice(uint512)void", method "getAdmin()address", method "getInvoiceCount()uint512", method "getTotalBilled()uint512", method "getTotalPaid()uint512", method "getTotalCancelled()uint512", method "getInvoicePayer(uint512)address", method "getInvoiceAmount(uint512)uint512", method "getInvoicePaid(uint512)uint512", method "getInvoiceDueDate(uint512)uint512", method "isInvoiceCancelled(uint512)bool", method "getInvoiceBalance(uint512)uint512", method "isInvoiceFullyPaid(uint512)bool", method "createInvoice(address,uint512,uint512)uint512", method "payInvoice(uint512,uint512)void", method "cancelInvoice(uint512)void", method "isOverdue(uint512,uint512)bool"
+    txna ApplicationArgs 0
+    match initInvoice getAdmin getInvoiceCount getTotalBilled getTotalPaid getTotalCancelled getInvoicePayer getInvoiceAmount getInvoicePaid getInvoiceDueDate isInvoiceCancelled getInvoiceBalance isInvoiceFullyPaid createInvoice payInvoice cancelInvoice isOverdue
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Invoicing.sol.InvoicingTest.initInvoice[routing]() -> void:
+initInvoice:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 12 // "_invoicePayer"
+    dig 1
+    concat
+    bytec 11 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    box_put
+    intc_1 // 0
+    itob
+    bytec_2 // "_invoiceAmount"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    bytec_3 // "_invoicePaid"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    bytec 9 // "_invoiceDueDate"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    bytec 4 // "_invoiceCancelled"
+    swap
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Invoicing.sol.InvoicingTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_1 // 0
+    bytec 10 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Invoicing.sol.InvoicingTest.getInvoiceCount[routing]() -> void:
+getInvoiceCount:
+    intc_1 // 0
+    bytec 5 // "_invoiceCount"
+    app_global_get_ex
+    assert // check _invoiceCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Invoicing.sol.InvoicingTest.getTotalBilled[routing]() -> void:
+getTotalBilled:
+    intc_1 // 0
+    bytec 6 // "_totalBilled"
+    app_global_get_ex
+    assert // check _totalBilled exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Invoicing.sol.InvoicingTest.getTotalPaid[routing]() -> void:
+getTotalPaid:
+    intc_1 // 0
+    bytec 7 // "_totalPaid"
+    app_global_get_ex
+    assert // check _totalPaid exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Invoicing.sol.InvoicingTest.getTotalCancelled[routing]() -> void:
+getTotalCancelled:
+    intc_1 // 0
+    bytec 8 // "_totalCancelled"
+    app_global_get_ex
+    assert // check _totalCancelled exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Invoicing.sol.InvoicingTest.getInvoicePayer[routing]() -> void:
+getInvoicePayer:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 12 // "_invoicePayer"
+    swap
+    concat
+    box_get
+    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Invoicing.sol.InvoicingTest.getInvoiceAmount[routing]() -> void:
+getInvoiceAmount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_invoiceAmount"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Invoicing.sol.InvoicingTest.getInvoicePaid[routing]() -> void:
+getInvoicePaid:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_invoicePaid"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Invoicing.sol.InvoicingTest.getInvoiceDueDate[routing]() -> void:
+getInvoiceDueDate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 9 // "_invoiceDueDate"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Invoicing.sol.InvoicingTest.isInvoiceCancelled[routing]() -> void:
+isInvoiceCancelled:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_invoiceCancelled"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bytec 13 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Invoicing.sol.InvoicingTest.getInvoiceBalance[routing]() -> void:
+getInvoiceBalance:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_invoiceAmount"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec_3 // "_invoicePaid"
+    uncover 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b-
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Invoicing.sol.InvoicingTest.isInvoiceFullyPaid[routing]() -> void:
+isInvoiceFullyPaid:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_invoicePaid"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec_2 // "_invoiceAmount"
+    uncover 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b>=
+    bytec 13 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Invoicing.sol.InvoicingTest.createInvoice[routing]() -> void:
+createInvoice:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec 5 // "_invoiceCount"
+    app_global_get_ex
+    assert // check _invoiceCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 12 // "_invoicePayer"
+    dig 1
+    concat
+    uncover 6
+    box_put
+    bytec_2 // "_invoiceAmount"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 5
+    box_put
+    intc_1 // 0
+    itob
+    bytec_3 // "_invoicePaid"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    bytec 9 // "_invoiceDueDate"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    bytec 4 // "_invoiceCancelled"
+    swap
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    intc_2 // 1
+    itob
+    dig 2
+    b+
+    bytec 5 // "_invoiceCount"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec 6 // "_totalBilled"
+    app_global_get_ex
+    assert // check _totalBilled exists
+    uncover 3
+    b+
+    bytec 6 // "_totalBilled"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Invoicing.sol.InvoicingTest.payInvoice[routing]() -> void:
+payInvoice:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_invoiceCancelled"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Invoice is cancelled
+    bytec_2 // "_invoiceAmount"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec_3 // "_invoicePaid"
+    uncover 2
+    concat
+    dup
+    cover 3
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b-
+    dup
+    cover 2
+    b>
+    bnz payInvoice_if_body@2
+    dig 2
+
+payInvoice_after_if_else@3:
+    dig 2
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_1 // 0
+    bytec 7 // "_totalPaid"
+    app_global_get_ex
+    assert // check _totalPaid exists
+    b+
+    bytec 7 // "_totalPaid"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+payInvoice_if_body@2:
+    dup
+    b payInvoice_after_if_else@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Invoicing.sol.InvoicingTest.cancelInvoice[routing]() -> void:
+cancelInvoice:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_invoiceCancelled"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already cancelled
+    bytec_3 // "_invoicePaid"
+    dig 2
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec_2 // "_invoiceAmount"
+    uncover 4
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    uncover 2
+    b>
+    assert // Already fully paid
+    intc_2 // 1
+    itob
+    uncover 3
+    swap
+    box_put
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    swap
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b-
+    intc_1 // 0
+    bytec 8 // "_totalCancelled"
+    app_global_get_ex
+    assert // check _totalCancelled exists
+    b+
+    bytec 8 // "_totalCancelled"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Invoicing.sol.InvoicingTest.isOverdue[routing]() -> void:
+isOverdue:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    dup
+    bytec 4 // "_invoiceCancelled"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bz isOverdue_after_if_else@3
+    intc_1 // 0
+
+isOverdue_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Invoicing.sol.InvoicingTest.isOverdue@6:
+    bytec 13 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+isOverdue_after_if_else@3:
+    bytec_3 // "_invoicePaid"
+    dig 1
+    dup
+    cover 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec_2 // "_invoiceAmount"
+    uncover 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b>=
+    bz isOverdue_after_if_else@5
+    intc_1 // 0
+    b isOverdue_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Invoicing.sol.InvoicingTest.isOverdue@6
+
+isOverdue_after_if_else@5:
+    bytec 9 // "_invoiceDueDate"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b<
+    b isOverdue_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Invoicing.sol.InvoicingTest.isOverdue@6

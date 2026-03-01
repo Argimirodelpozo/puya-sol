@@ -1,0 +1,663 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TaskManager.sol.TaskManagerTest.approval_program() -> uint64:
+main:
+    intcblock 64 1 0 2
+    bytecblock 0x151f7c75 0x "_taskCount" "_taskStatus" "_completedCount" "_totalEffort" "_taskExists" 0x0000000000000000000000000000000000000000000000000000000000000000 "_taskAssignee" "_admin" "_taskPriority" "_taskEffort"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 9 // "_admin"
+    bytec 7 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_2 // "_taskCount"
+    bytec_1 // 0x
+    app_global_put
+    bytec 4 // "_completedCount"
+    bytec_1 // 0x
+    app_global_put
+    bytec 5 // "_totalEffort"
+    bytec_1 // 0x
+    app_global_put
+    bytec 9 // "_admin"
+    txn Sender
+    app_global_put
+    intc_2 // 0
+    itob
+    bytec_2 // "_taskCount"
+    dig 1
+    app_global_put
+    bytec 4 // "_completedCount"
+    dig 1
+    app_global_put
+    bytec 5 // "_totalEffort"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x13937631 0xac8b24de 0xe6c6877f 0xbcc8ea63 0xd853c6d9 0x3407d87d 0x844fdfa2 0xe5707ee8 0x97d4ec59 0x40edd78c 0xadf28913 0x79ef0350 0x9659e11f 0x5263ce4e // method "initTask(uint512)void", method "getAdmin()address", method "getTaskCount()uint512", method "getCompletedCount()uint512", method "getTotalEffort()uint512", method "getTaskPriority(uint512)uint512", method "getTaskEffort(uint512)uint512", method "getTaskAssignee(uint512)address", method "getTaskStatus(uint512)uint512", method "taskExists(uint512)bool", method "createTask(uint512,uint512)uint512", method "assignTask(uint512,address)void", method "completeTask(uint512)void", method "isComplete(uint512)bool"
+    txna ApplicationArgs 0
+    match initTask getAdmin getTaskCount getCompletedCount getTotalEffort getTaskPriority getTaskEffort getTaskAssignee getTaskStatus taskExists createTask assignTask completeTask isComplete
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TaskManager.sol.TaskManagerTest.initTask[routing]() -> void:
+initTask:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 10 // "_taskPriority"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 11 // "_taskEffort"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 8 // "_taskAssignee"
+    dig 1
+    concat
+    bytec 7 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    box_put
+    bytec_3 // "_taskStatus"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    bytec 6 // "_taskExists"
+    swap
+    concat
+    intc_2 // 0
+    itob
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TaskManager.sol.TaskManagerTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_2 // 0
+    bytec 9 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TaskManager.sol.TaskManagerTest.getTaskCount[routing]() -> void:
+getTaskCount:
+    intc_2 // 0
+    bytec_2 // "_taskCount"
+    app_global_get_ex
+    assert // check _taskCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TaskManager.sol.TaskManagerTest.getCompletedCount[routing]() -> void:
+getCompletedCount:
+    intc_2 // 0
+    bytec 4 // "_completedCount"
+    app_global_get_ex
+    assert // check _completedCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TaskManager.sol.TaskManagerTest.getTotalEffort[routing]() -> void:
+getTotalEffort:
+    intc_2 // 0
+    bytec 5 // "_totalEffort"
+    app_global_get_ex
+    assert // check _totalEffort exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TaskManager.sol.TaskManagerTest.getTaskPriority[routing]() -> void:
+getTaskPriority:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 10 // "_taskPriority"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TaskManager.sol.TaskManagerTest.getTaskEffort[routing]() -> void:
+getTaskEffort:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 11 // "_taskEffort"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TaskManager.sol.TaskManagerTest.getTaskAssignee[routing]() -> void:
+getTaskAssignee:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_taskAssignee"
+    swap
+    concat
+    box_get
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TaskManager.sol.TaskManagerTest.getTaskStatus[routing]() -> void:
+getTaskStatus:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_taskStatus"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TaskManager.sol.TaskManagerTest.taskExists[routing]() -> void:
+taskExists:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_taskExists"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TaskManager.sol.TaskManagerTest.createTask[routing]() -> void:
+createTask:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_3 // 2
+    itob
+    dig 2
+    b>=
+    assert // Invalid priority
+    intc_2 // 0
+    bytec_2 // "_taskCount"
+    app_global_get_ex
+    assert // check _taskCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 10 // "_taskPriority"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 5
+    box_put
+    bytec 11 // "_taskEffort"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 4
+    box_put
+    bytec 8 // "_taskAssignee"
+    dig 1
+    concat
+    bytec 7 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    box_put
+    intc_2 // 0
+    itob
+    bytec_3 // "_taskStatus"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    bytec 6 // "_taskExists"
+    swap
+    concat
+    intc_1 // 1
+    itob
+    box_put
+    intc_2 // 0
+    bytec 5 // "_totalEffort"
+    app_global_get_ex
+    assert // check _totalEffort exists
+    uncover 3
+    b+
+    bytec 5 // "_totalEffort"
+    swap
+    app_global_put
+    intc_2 // 0
+    bytec_2 // "_taskCount"
+    app_global_get_ex
+    assert // check _taskCount exists
+    intc_1 // 1
+    itob
+    b+
+    bytec_2 // "_taskCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TaskManager.sol.TaskManagerTest.assignTask[routing]() -> void:
+assignTask:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_taskExists"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 1
+    ==
+    assert // Task does not exist
+    bytec_3 // "_taskStatus"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_2 // 0
+    itob
+    b==
+    assert // Task not open
+    bytec 8 // "_taskAssignee"
+    uncover 2
+    concat
+    uncover 2
+    box_put
+    intc_1 // 1
+    itob
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TaskManager.sol.TaskManagerTest.completeTask[routing]() -> void:
+completeTask:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_taskExists"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 1
+    ==
+    assert // Task does not exist
+    bytec_3 // "_taskStatus"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_1 // 1
+    itob
+    swap
+    dig 1
+    b==
+    assert // Task not assigned
+    intc_3 // 2
+    itob
+    dig 2
+    box_del
+    pop
+    uncover 2
+    swap
+    box_put
+    intc_2 // 0
+    bytec 4 // "_completedCount"
+    app_global_get_ex
+    assert // check _completedCount exists
+    b+
+    bytec 4 // "_completedCount"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TaskManager.sol.TaskManagerTest.isComplete[routing]() -> void:
+isComplete:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_taskStatus"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_3 // 2
+    itob
+    b==
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

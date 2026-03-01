@@ -1,0 +1,263 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SignedMath.sol.SignedMathTest.approval_program() -> uint64:
+main:
+    intcblock 64 1
+    bytecblock 0x8000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x1e566033 0x834fcaff 0xd23bc3c8 0xf28c61a5 // method "testMax(uint512,uint512)uint512", method "testMin(uint512,uint512)uint512", method "testAverage(uint512,uint512)uint512", method "testAbs(uint512)uint512"
+    txna ApplicationArgs 0
+    match testMax testMin testAverage testAbs
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SignedMath.sol.SignedMathTest.testMax[routing]() -> void:
+testMax:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    uncover 2
+    bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    swap
+    bz testMax_after_if_else@4
+    dup
+    bnz testMax_after_if_else@4
+    dig 2
+
+testMax_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SignedMath.sol.SignedMath.max@8:
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+testMax_after_if_else@4:
+    dig 1
+    bnz testMax_after_if_else@7
+    dup
+    bz testMax_after_if_else@7
+    dig 3
+    b testMax_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SignedMath.sol.SignedMath.max@8
+
+testMax_after_if_else@7:
+    dig 3
+    dup
+    dig 4
+    dup
+    cover 2
+    b>
+    swap
+    cover 2
+    select
+    b testMax_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SignedMath.sol.SignedMath.max@8
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SignedMath.sol.SignedMathTest.testMin[routing]() -> void:
+testMin:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    uncover 2
+    bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    swap
+    bz testMin_after_if_else@4
+    dup
+    bnz testMin_after_if_else@4
+    dig 3
+
+testMin_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SignedMath.sol.SignedMath.min@8:
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+testMin_after_if_else@4:
+    dig 1
+    bnz testMin_after_if_else@7
+    dup
+    bz testMin_after_if_else@7
+    dig 2
+    b testMin_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SignedMath.sol.SignedMath.min@8
+
+testMin_after_if_else@7:
+    dig 3
+    dup
+    dig 4
+    dup
+    cover 2
+    b<
+    swap
+    cover 2
+    select
+    b testMin_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SignedMath.sol.SignedMath.min@8
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SignedMath.sol.SignedMathTest.testAverage[routing]() -> void:
+testAverage:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 1
+    itob
+    dup
+    uncover 2
+    uncover 3
+    bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b^
+    swap
+    bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b^
+    dup2
+    b&
+    cover 2
+    b^
+    dup
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    uncover 2
+    b+
+    bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b^
+    dup
+    cover 3
+    bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    swap
+    dig 2
+    b&
+    uncover 2
+    b==
+    swap
+    bz testAverage_after_if_else@4
+    dup
+    bz testAverage_after_if_else@4
+    dig 1
+    dig 3
+    b+
+    bury 2
+
+testAverage_after_if_else@4:
+    dig 1
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SignedMath.sol.SignedMathTest.testAbs[routing]() -> void:
+testAbs:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz testAbs_after_if_else@3
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    swap
+    b-
+    intc_1 // 1
+    itob
+    b+
+
+testAbs_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SignedMath.sol.SignedMath.abs@4:
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+testAbs_after_if_else@3:
+    b testAbs_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SignedMath.sol.SignedMath.abs@4

@@ -1,0 +1,143 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/IrmMock.sol.IrmMock.approval_program() -> uint64:
+main:
+    intcblock 64 1 192 384
+    bytecblock 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x8320846c 0x808d23a4 // method "borrowRateView((uint8[32],uint8[32],uint8[32],uint8[32],uint512),(uint512,uint512,uint512,uint512,uint512,uint512))uint512", method "borrowRate((uint8[32],uint8[32],uint8[32],uint8[32],uint512),(uint512,uint512,uint512,uint512,uint512,uint512))uint512"
+    txna ApplicationArgs 0
+    match borrowRateView borrowRate
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/IrmMock.sol.MathLib.wDivDown(x: bytes, y: bytes) -> bytes:
+MathLib.wDivDown:
+    proto 2 1
+    pushint 1000000000000000000
+    itob
+    frame_dig -2
+    swap
+    frame_dig -1
+    callsub MathLib.mulDivDown
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/IrmMock.sol.MathLib.mulDivDown(x: bytes, y: bytes, d: bytes) -> bytes:
+MathLib.mulDivDown:
+    proto 3 1
+    frame_dig -3
+    frame_dig -2
+    b*
+    frame_dig -1
+    b/
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/IrmMock.sol.IrmMock.borrowRateView[routing]() -> void:
+borrowRateView:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 192
+    ==
+    assert // invalid number of bytes for MarketParams
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 384
+    ==
+    assert // invalid number of bytes for Market
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/IrmMock.sol.IrmMock.borrowRateView
+    popn 2
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/IrmMock.sol.IrmMock.borrowRate[routing]() -> void:
+borrowRate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 192
+    ==
+    assert // invalid number of bytes for MarketParams
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 384
+    ==
+    assert // invalid number of bytes for Market
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/IrmMock.sol.IrmMock.borrowRateView
+    popn 2
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/IrmMock.sol.IrmMock.borrowRateView(_param0: bytes, market: bytes) -> bytes, bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/IrmMock.sol.IrmMock.borrowRateView:
+    proto 2 3
+    frame_dig -1
+    extract 0 64
+    dup
+    pushint 0
+    itob
+    dup
+    cover 2
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/IrmMock.sol.IrmMock.borrowRateView_after_if_else@2
+    frame_dig 1
+    frame_dig -2
+    frame_dig -1
+    uncover 4
+    uncover 4
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/IrmMock.sol.IrmMock.borrowRateView_after_if_else@2:
+    frame_dig -1
+    extract 128 64
+    frame_dig 0
+    callsub MathLib.wDivDown
+    pushint 31536000
+    itob
+    b/
+    frame_dig -2
+    frame_dig -1
+    uncover 4
+    uncover 4
+    retsub

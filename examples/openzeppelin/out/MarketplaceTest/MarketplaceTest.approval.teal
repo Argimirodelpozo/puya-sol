@@ -1,0 +1,509 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Marketplace.sol.MarketplaceTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1 32
+    bytecblock 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000 "_feePercent" 0x "_owner" "_itemCount" "_totalFees" "_itemSeller" "_itemPrice" "_itemSold"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 4 // "_owner"
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 5 // "_itemCount"
+    bytec_3 // 0x
+    app_global_put
+    bytec_2 // "_feePercent"
+    bytec_3 // 0x
+    app_global_put
+    bytec 6 // "_totalFees"
+    bytec_3 // 0x
+    app_global_put
+    bytec 4 // "_owner"
+    txn Sender
+    app_global_put
+    pushint 250
+    itob
+    bytec_2 // "_feePercent"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb1bbb0a8 0x9d21dd9b 0x53b23467 0x32f9bb52 0xbe2f2ad3 0x965facc5 0xbeb34a0f 0x471c57f0 0x30514d2d 0x8c83419d 0x4c2b76be 0xb5405709 // method "owner()address", method "itemCount()uint512", method "feePercent()uint512", method "totalFees()uint512", method "setFeePercent(uint512)void", method "listItem(address,uint512)uint512", method "getItemSeller(uint512)address", method "getItemPrice(uint512)uint512", method "isItemSold(uint512)bool", method "calculateFee(uint512)uint512", method "buyItem(uint512)bool", method "cancelItem(uint512,address)void"
+    txna ApplicationArgs 0
+    match owner itemCount feePercent totalFees setFeePercent listItem getItemSeller getItemPrice isItemSold calculateFee buyItem cancelItem
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Marketplace.sol.MarketplaceTest.owner[routing]() -> void:
+owner:
+    intc_1 // 0
+    bytec 4 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Marketplace.sol.MarketplaceTest.itemCount[routing]() -> void:
+itemCount:
+    intc_1 // 0
+    bytec 5 // "_itemCount"
+    app_global_get_ex
+    assert // check _itemCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Marketplace.sol.MarketplaceTest.feePercent[routing]() -> void:
+feePercent:
+    intc_1 // 0
+    bytec_2 // "_feePercent"
+    app_global_get_ex
+    assert // check _feePercent exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Marketplace.sol.MarketplaceTest.totalFees[routing]() -> void:
+totalFees:
+    intc_1 // 0
+    bytec 6 // "_totalFees"
+    app_global_get_ex
+    assert // check _totalFees exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Marketplace.sol.MarketplaceTest.setFeePercent[routing]() -> void:
+setFeePercent:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec 4 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // Not owner
+    pushint 1000
+    itob
+    dig 1
+    b>=
+    assert // Fee too high
+    bytec_2 // "_feePercent"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Marketplace.sol.MarketplaceTest.listItem[routing]() -> void:
+listItem:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    dig 1
+    b<
+    assert // Price must be > 0
+    intc_1 // 0
+    bytec 5 // "_itemCount"
+    app_global_get_ex
+    assert // check _itemCount exists
+    intc_2 // 1
+    itob
+    b+
+    bytec 5 // "_itemCount"
+    dig 1
+    app_global_put
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_itemSeller"
+    dig 1
+    concat
+    uncover 5
+    box_put
+    bytec 8 // "_itemPrice"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    bytec 9 // "_itemSold"
+    swap
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Marketplace.sol.MarketplaceTest.getItemSeller[routing]() -> void:
+getItemSeller:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_itemSeller"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Marketplace.sol.MarketplaceTest.getItemPrice[routing]() -> void:
+getItemPrice:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_itemPrice"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Marketplace.sol.MarketplaceTest.isItemSold[routing]() -> void:
+isItemSold:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 9 // "_itemSold"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Marketplace.sol.MarketplaceTest.calculateFee[routing]() -> void:
+calculateFee:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec_2 // "_feePercent"
+    app_global_get_ex
+    assert // check _feePercent exists
+    b*
+    pushint 10000
+    itob
+    b/
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Marketplace.sol.MarketplaceTest.buyItem[routing]() -> void:
+buyItem:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_itemSeller"
+    dig 1
+    concat
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // Item not found
+    bytec 9 // "_itemSold"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already sold
+    bytec 8 // "_itemPrice"
+    uncover 2
+    concat
+    box_get
+    bytec_3 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    bytec_2 // "_feePercent"
+    app_global_get_ex
+    assert // check _feePercent exists
+    b*
+    pushint 10000
+    itob
+    b/
+    intc_1 // 0
+    bytec 6 // "_totalFees"
+    app_global_get_ex
+    assert // check _totalFees exists
+    b+
+    bytec 6 // "_totalFees"
+    swap
+    app_global_put
+    intc_2 // 1
+    itob
+    box_put
+    pushbytes 0x151f7c7580
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Marketplace.sol.MarketplaceTest.cancelItem[routing]() -> void:
+cancelItem:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_itemSeller"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    uncover 3
+    ==
+    assert // Not seller
+    bytec 9 // "_itemSold"
+    dig 2
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already sold
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    box_put
+    intc_1 // 0
+    itob
+    bytec 8 // "_itemPrice"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    return

@@ -1,0 +1,195 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC1155Holder.sol.ERC1155HolderTest.approval_program() -> uint64:
+main:
+    intcblock 0 2 1 32
+    bytecblock 0x151f7c75f23a6e61
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x724891b7 0x4e22a3ba 0x8448c5d2 0x5736e8ec // method "testOnERC1155Received(address,address,uint512,uint512,byte[])byte[4]", method "supportsInterface(byte[4])bool", method "onERC1155Received(address,address,uint512,uint512,byte[])byte[4]", method "onERC1155BatchReceived(address,address,uint512[],uint512[],byte[])byte[4]"
+    txna ApplicationArgs 0
+    match testOnERC1155Received supportsInterface(1) onERC1155Received onERC1155BatchReceived
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC1155Holder.sol.ERC1155HolderTest.testOnERC1155Received[routing]() -> void:
+testOnERC1155Received:
+    txna ApplicationArgs 1
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    pushint 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 4
+    len
+    pushint 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 5
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    bytec_0 // 0x151f7c75f23a6e61
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC1155Holder.sol.ERC1155HolderTest.supportsInterface(1)[routing]() -> void:
+supportsInterface(1):
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    pushint 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    pushbytes 0x4e2312e0
+    ==
+    bnz supportsInterface(1)_bool_true@3
+    dup
+    pushbytes 0x01ffc9a7
+    ==
+    bz supportsInterface(1)_bool_false@4
+
+supportsInterface(1)_bool_true@3:
+    intc_2 // 1
+
+supportsInterface(1)_bool_merge@5:
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+supportsInterface(1)_bool_false@4:
+    intc_0 // 0
+    b supportsInterface(1)_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC1155Holder.sol.ERC1155HolderTest.onERC1155Received[routing]() -> void:
+onERC1155Received:
+    txna ApplicationArgs 1
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    pushint 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 4
+    len
+    pushint 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 5
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    bytec_0 // 0x151f7c75f23a6e61
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC1155Holder.sol.ERC1155HolderTest.onERC1155BatchReceived[routing]() -> void:
+onERC1155BatchReceived:
+    txna ApplicationArgs 1
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 64
+    *
+    intc_1 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint512>
+    txna ApplicationArgs 4
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 64
+    *
+    intc_1 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint512>
+    txna ApplicationArgs 5
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    swap
+    intc_1 // 2
+    intc_0 // 0
+    extract3
+    pop
+    intc_1 // 2
+    intc_0 // 0
+    extract3
+    pop
+    pushbytes 0x151f7c75bc197c81
+    log
+    intc_2 // 1
+    return

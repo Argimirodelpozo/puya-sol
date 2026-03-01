@@ -8,6 +8,7 @@
 #include <libyul/AST.h>
 #include <libyul/YulName.h>
 
+#include <algorithm>
 #include <sstream>
 
 namespace puyasol::builder
@@ -137,6 +138,41 @@ bool StatementTranslator::visit(solidity::frontend::Return const& _node)
 			stmt->value = ExpressionTranslator::implicitNumericCast(
 				std::move(stmt->value), expectedType, loc
 			);
+
+			// Coerce IntegerConstant → BytesConstant for bytes[N] return types
+			if (expectedType && expectedType->kind() == awst::WTypeKind::Bytes
+				&& stmt->value->wtype != expectedType)
+			{
+				auto const* bytesType = dynamic_cast<awst::BytesWType const*>(expectedType);
+				auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(stmt->value.get());
+				if (bytesType && intConst && bytesType->length().value_or(0) > 0)
+				{
+					// Convert integer to fixed-size bytes
+					int numBytes = bytesType->length().value();
+					uint64_t val = std::stoull(intConst->value);
+					std::vector<unsigned char> bytes(numBytes, 0);
+					for (int i = numBytes - 1; i >= 0 && val > 0; --i)
+					{
+						bytes[i] = static_cast<unsigned char>(val & 0xFF);
+						val >>= 8;
+					}
+					auto bc = std::make_shared<awst::BytesConstant>();
+					bc->sourceLocation = loc;
+					bc->wtype = expectedType;
+					bc->encoding = awst::BytesEncoding::Base16;
+					bc->value = bytes;
+					stmt->value = std::move(bc);
+				}
+				else if (stmt->value->wtype && stmt->value->wtype->kind() == awst::WTypeKind::Bytes)
+				{
+					// bytes → bytes[N] reinterpret cast
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = loc;
+					cast->wtype = expectedType;
+					cast->expr = std::move(stmt->value);
+					stmt->value = std::move(cast);
+				}
+			}
 		}
 	}
 
@@ -458,20 +494,25 @@ bool StatementTranslator::visit(solidity::frontend::VariableDeclarationStatement
 			}
 			else if (type && type->kind() == awst::WTypeKind::ReferenceArray)
 			{
-				auto def = std::make_shared<awst::NewArray>();
-				def->sourceLocation = loc;
-				def->wtype = type;
-				// Pre-populate static arrays with zero values so the buffer
-				// is correctly sized for subsequent element-wise writes
 				auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(type);
 				if (refArr && refArr->arraySize())
 				{
+					auto def = std::make_shared<awst::NewArray>();
+					def->sourceLocation = loc;
+					def->wtype = type;
 					for (int i = 0; i < *refArr->arraySize(); ++i)
-					{
-						def->values.push_back(StorageMapper::makeDefaultValue(refArr->elementType(), loc));
-					}
+						def->values.push_back(
+							StorageMapper::makeDefaultValue(refArr->elementType(), loc));
+					value = def;
 				}
-				value = def;
+				else
+				{
+					// Dynamic array (no fixed size)
+					auto def = std::make_shared<awst::NewArray>();
+					def->sourceLocation = loc;
+					def->wtype = type;
+					value = def;
+				}
 			}
 			else
 			{
@@ -489,6 +530,11 @@ bool StatementTranslator::visit(solidity::frontend::VariableDeclarationStatement
 			push(std::move(pending));
 
 		push(assign);
+
+		// Flush any pending ArrayExtend statements from large array chunking
+		for (auto& pending: m_pendingExtends)
+			push(std::move(pending));
+		m_pendingExtends.clear();
 	}
 	else if (declarations.size() > 1 && initialValue)
 	{
@@ -665,6 +711,15 @@ bool StatementTranslator::visit(solidity::frontend::EmitStatement const& _node)
 				itob->stackArgs.push_back(std::move(arg));
 				argBytes = std::move(itob);
 			}
+			else if (dynamic_cast<awst::ReferenceArray const*>(arg->wtype))
+			{
+				// Dynamic/static array → ARC4Encode to bytes for event emission
+				auto encode = std::make_shared<awst::ARC4Encode>();
+				encode->sourceLocation = loc;
+				encode->wtype = awst::WType::bytesType();
+				encode->value = std::move(arg);
+				argBytes = std::move(encode);
+			}
 
 			auto concat = std::make_shared<awst::IntrinsicCall>();
 			concat->sourceLocation = loc;
@@ -795,13 +850,57 @@ bool StatementTranslator::visit(solidity::frontend::InlineAssembly const& _node)
 				constants[name] = value;
 			}
 		}
+		else
+		{
+			// Fallback: handle constant expressions (e.g. `5 * 32`) by checking
+			// the expression's type annotation for a RationalNumberType.
+			auto const* exprType = initExpr->annotation().type;
+			if (auto const* ratType = dynamic_cast<solidity::frontend::RationalNumberType const*>(exprType))
+			{
+				if (!ratType->isFractional())
+				{
+					auto const& val = ratType->value();
+					solidity::u256 intVal = solidity::u256(val.numerator() / val.denominator());
+					std::ostringstream oss;
+					oss << intVal;
+					std::string name = yulId->name.str();
+					constants[name] = oss.str();
+				}
+			}
+		}
+	}
+
+	// Build augmented params list: input params + non-constant external variables
+	// (e.g., named return variables like `bool z` in exactlyOneZero)
+	auto augmentedParams = m_functionParams;
+	for (auto const& [yulId, extInfo]: annotation.externalReferences)
+	{
+		if (!extInfo.declaration)
+			continue;
+		auto const* varDecl = dynamic_cast<solidity::frontend::VariableDeclaration const*>(
+			extInfo.declaration
+		);
+		if (!varDecl || varDecl->isConstant())
+			continue;
+
+		std::string name = yulId->name.str();
+		// Skip if already in params list
+		bool found = false;
+		for (auto const& [pName, pType]: augmentedParams)
+			if (pName == name)
+				found = true;
+		if (!found)
+		{
+			auto* type = m_typeMapper.map(varDecl->type());
+			augmentedParams.emplace_back(name, type);
+		}
 	}
 
 	AssemblyTranslator asmTranslator(m_typeMapper, m_sourceFile, contextName);
 
 	auto stmts = asmTranslator.translateBlock(
 		_node.operations().root(),
-		m_functionParams,
+		augmentedParams,
 		m_returnType,
 		constants
 	);

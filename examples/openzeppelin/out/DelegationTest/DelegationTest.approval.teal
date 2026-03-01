@@ -1,0 +1,668 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Delegation.sol.DelegationTest.approval_program() -> uint64:
+main:
+    intcblock 0 1 64 32
+    bytecblock 0x 0x0000000000000000000000000000000000000000000000000000000000000000 "_totalPower" "_delegatedPower" 0x151f7c75 "_power" "_delegateTo" "_isRegistered" "_admin" "_userCount" "_userIndex"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 8 // "_admin"
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 9 // "_userCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec_2 // "_totalPower"
+    bytec_0 // 0x
+    app_global_put
+    bytec 8 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xaf849a18 0xac8b24de 0xca20ce1b 0x691f4c9f 0x20600a21 0x6caef37a 0xcaac94bc 0x2e50164c 0xd0524360 0x21edd44b 0x612761ef 0xd7eeabd5 0xbfb5a1f1 // method "initUser(address)void", method "getAdmin()address", method "getUserCount()uint512", method "getTotalPower()uint512", method "getPower(address)uint512", method "getDelegateTo(address)address", method "getDelegatedPower(address)uint512", method "getEffectivePower(address)uint512", method "isRegistered(address)bool", method "register(address,uint512)void", method "delegate(address,address)void", method "undelegate(address)void", method "setPower(address,uint512)void"
+    txna ApplicationArgs 0
+    match initUser getAdmin getUserCount getTotalPower getPower getDelegateTo getDelegatedPower getEffectivePower isRegistered register delegate undelegate setPower
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Delegation.sol.DelegationTest.initUser[routing]() -> void:
+initUser:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_0 // 0
+    itob
+    swap
+    sha256
+    bytec 5 // "_power"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 6 // "_delegateTo"
+    dig 1
+    concat
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    box_put
+    bytec_3 // "_delegatedPower"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 10 // "_userIndex"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    bytec 7 // "_isRegistered"
+    swap
+    concat
+    intc_0 // 0
+    itob
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Delegation.sol.DelegationTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_0 // 0
+    bytec 8 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Delegation.sol.DelegationTest.getUserCount[routing]() -> void:
+getUserCount:
+    intc_0 // 0
+    bytec 9 // "_userCount"
+    app_global_get_ex
+    assert // check _userCount exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Delegation.sol.DelegationTest.getTotalPower[routing]() -> void:
+getTotalPower:
+    intc_0 // 0
+    bytec_2 // "_totalPower"
+    app_global_get_ex
+    assert // check _totalPower exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Delegation.sol.DelegationTest.getPower[routing]() -> void:
+getPower:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 5 // "_power"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Delegation.sol.DelegationTest.getDelegateTo[routing]() -> void:
+getDelegateTo:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 6 // "_delegateTo"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Delegation.sol.DelegationTest.getDelegatedPower[routing]() -> void:
+getDelegatedPower:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_3 // "_delegatedPower"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Delegation.sol.DelegationTest.getEffectivePower[routing]() -> void:
+getEffectivePower:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    dup
+    bytec 6 // "_delegateTo"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    bz getEffectivePower_after_if_else@3
+    bytec_3 // "_delegatedPower"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+
+getEffectivePower_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Delegation.sol.DelegationTest.getEffectivePower@4:
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+getEffectivePower_after_if_else@3:
+    bytec 5 // "_power"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec_3 // "_delegatedPower"
+    uncover 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b+
+    b getEffectivePower_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Delegation.sol.DelegationTest.getEffectivePower@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Delegation.sol.DelegationTest.isRegistered[routing]() -> void:
+isRegistered:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 7 // "_isRegistered"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Delegation.sol.DelegationTest.register[routing]() -> void:
+register:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    sha256
+    bytec 7 // "_isRegistered"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // already registered
+    intc_1 // 1
+    itob
+    box_put
+    bytec 5 // "_power"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    intc_0 // 0
+    bytec 9 // "_userCount"
+    app_global_get_ex
+    assert // check _userCount exists
+    intc_1 // 1
+    itob
+    b+
+    bytec 9 // "_userCount"
+    dig 1
+    app_global_put
+    bytec 10 // "_userIndex"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_0 // 0
+    bytec_2 // "_totalPower"
+    app_global_get_ex
+    assert // check _totalPower exists
+    b+
+    bytec_2 // "_totalPower"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Delegation.sol.DelegationTest.delegate[routing]() -> void:
+delegate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    dig 1
+    sha256
+    bytec 7 // "_isRegistered"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    assert // from not registered
+    dig 1
+    sha256
+    bytec 7 // "_isRegistered"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    assert // to not registered
+    bytec 6 // "_delegateTo"
+    dig 2
+    concat
+    dup
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    assert // already delegating
+    uncover 4
+    dig 4
+    !=
+    assert // cannot self-delegate
+    uncover 3
+    box_put
+    bytec_3 // "_delegatedPower"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 5 // "_power"
+    uncover 3
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Delegation.sol.DelegationTest.undelegate[routing]() -> void:
+undelegate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 6 // "_delegateTo"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // not delegating
+    sha256
+    bytec_3 // "_delegatedPower"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 5 // "_power"
+    uncover 4
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b-
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Delegation.sol.DelegationTest.setPower[routing]() -> void:
+setPower:
+    intc_0 // 0
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_0 // 0
+    bytec 8 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // not admin
+    swap
+    sha256
+    dup
+    cover 2
+    bytec 7 // "_isRegistered"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    assert // not registered
+    bytec 5 // "_power"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    cover 3
+    dig 1
+    box_del
+    pop
+    swap
+    dig 2
+    box_put
+    b>
+    dup
+    bz setPower_else_body@3
+    intc_0 // 0
+    bytec_2 // "_totalPower"
+    app_global_get_ex
+    assert // check _totalPower exists
+    dig 4
+    dig 3
+    b-
+    b+
+    bytec_2 // "_totalPower"
+    swap
+    app_global_put
+
+setPower_after_if_else@4:
+    bytec 6 // "_delegateTo"
+    dig 3
+    concat
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    bury 6
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    bz setPower_after_if_else@9
+    dup
+    bz setPower_else_body@7
+    dig 4
+    sha256
+    bytec_3 // "_delegatedPower"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 5
+    dig 4
+    b-
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+
+setPower_after_if_else@9:
+    intc_1 // 1
+    return
+
+setPower_else_body@7:
+    dig 4
+    sha256
+    bytec_3 // "_delegatedPower"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 3
+    dig 6
+    b-
+    b-
+    dig 1
+    box_del
+    pop
+    box_put
+    b setPower_after_if_else@9
+
+setPower_else_body@3:
+    intc_0 // 0
+    bytec_2 // "_totalPower"
+    app_global_get_ex
+    assert // check _totalPower exists
+    dig 2
+    dig 5
+    b-
+    b-
+    bytec_2 // "_totalPower"
+    swap
+    app_global_put
+    b setPower_after_if_else@4

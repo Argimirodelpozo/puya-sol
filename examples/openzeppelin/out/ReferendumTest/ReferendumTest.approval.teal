@@ -1,0 +1,578 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referendum.sol.ReferendumTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock "_proposalCount" 0x 0x151f7c75 "_proposalForVotes" "_proposalAgainstVotes" "_proposalOpen" "_admin"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 6 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_0 // "_proposalCount"
+    bytec_1 // 0x
+    app_global_put
+    bytec 6 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 0
+    itob
+    bytec_0 // "_proposalCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x6d186cb2 0xac8b24de 0x7d3ca46b 0xa0a110b6 0xf736d736 0x5671b485 0x09975527 0x949c6995 0x93afde0e 0x303494fd 0x1178382c 0xe21bd801 // method "initProposal(uint512)void", method "getAdmin()address", method "getProposalCount()uint512", method "getForVotes(uint512)uint512", method "getAgainstVotes(uint512)uint512", method "isProposalOpen(uint512)bool", method "getTotalParticipation(uint512)uint512", method "isProposalPassed(uint512)bool", method "createProposal()uint512", method "voteFor(uint512)void", method "voteAgainst(uint512)void", method "closeProposal(uint512)void"
+    txna ApplicationArgs 0
+    match initProposal getAdmin getProposalCount getForVotes getAgainstVotes isProposalOpen getTotalParticipation isProposalPassed createProposal voteFor voteAgainst closeProposal
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referendum.sol.ReferendumTest.initProposal[routing]() -> void:
+initProposal:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_proposalForVotes"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 4 // "_proposalAgainstVotes"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    bytec 5 // "_proposalOpen"
+    swap
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referendum.sol.ReferendumTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_1 // 0
+    bytec 6 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referendum.sol.ReferendumTest.getProposalCount[routing]() -> void:
+getProposalCount:
+    intc_1 // 0
+    bytec_0 // "_proposalCount"
+    app_global_get_ex
+    assert // check _proposalCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referendum.sol.ReferendumTest.getForVotes[routing]() -> void:
+getForVotes:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_proposalForVotes"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referendum.sol.ReferendumTest.getAgainstVotes[routing]() -> void:
+getAgainstVotes:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_proposalAgainstVotes"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referendum.sol.ReferendumTest.isProposalOpen[routing]() -> void:
+isProposalOpen:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_proposalOpen"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referendum.sol.ReferendumTest.getTotalParticipation[routing]() -> void:
+getTotalParticipation:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_proposalForVotes"
+    dig 1
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    bytec 4 // "_proposalAgainstVotes"
+    uncover 2
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    b+
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referendum.sol.ReferendumTest.isProposalPassed[routing]() -> void:
+isProposalPassed:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec_0 // "_proposalCount"
+    app_global_get_ex
+    assert // check _proposalCount exists
+    dig 1
+    b>
+    assert // Referendum: proposal does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_proposalForVotes"
+    dig 1
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    bytec 4 // "_proposalAgainstVotes"
+    uncover 2
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    b>
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referendum.sol.ReferendumTest.createProposal[routing]() -> void:
+createProposal:
+    txn Sender
+    intc_1 // 0
+    bytec 6 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Referendum: not admin
+    intc_1 // 0
+    bytec_0 // "_proposalCount"
+    app_global_get_ex
+    assert // check _proposalCount exists
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    dup
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_proposalForVotes"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 3
+    box_put
+    bytec 4 // "_proposalAgainstVotes"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 3
+    box_put
+    bytec 5 // "_proposalOpen"
+    swap
+    concat
+    intc_2 // 1
+    itob
+    box_put
+    intc_2 // 1
+    itob
+    dig 2
+    b+
+    bytec_0 // "_proposalCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referendum.sol.ReferendumTest.voteFor[routing]() -> void:
+voteFor:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec_0 // "_proposalCount"
+    app_global_get_ex
+    assert // check _proposalCount exists
+    dig 1
+    b>
+    assert // Referendum: proposal does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_proposalOpen"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // Referendum: proposal is closed
+    bytec_3 // "_proposalForVotes"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_2 // 1
+    itob
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referendum.sol.ReferendumTest.voteAgainst[routing]() -> void:
+voteAgainst:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec_0 // "_proposalCount"
+    app_global_get_ex
+    assert // check _proposalCount exists
+    dig 1
+    b>
+    assert // Referendum: proposal does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_proposalOpen"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // Referendum: proposal is closed
+    bytec 4 // "_proposalAgainstVotes"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_2 // 1
+    itob
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Referendum.sol.ReferendumTest.closeProposal[routing]() -> void:
+closeProposal:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec 6 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Referendum: not admin
+    intc_1 // 0
+    bytec_0 // "_proposalCount"
+    app_global_get_ex
+    assert // check _proposalCount exists
+    dig 1
+    b>
+    assert // Referendum: proposal does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_proposalOpen"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // Referendum: proposal already closed
+    intc_1 // 0
+    itob
+    box_put
+    intc_2 // 1
+    return

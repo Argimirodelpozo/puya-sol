@@ -1,0 +1,446 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RatingSystem.sol.RatingSystemTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock 0x 0x151f7c75 "_entityCount" "_globalReviews" "_reviewCount" "_admin" "_totalScore" "_entityHash"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 5 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_2 // "_entityCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec_3 // "_globalReviews"
+    bytec_0 // 0x
+    app_global_put
+    bytec 5 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 0
+    itob
+    bytec_2 // "_entityCount"
+    dig 1
+    app_global_put
+    bytec_3 // "_globalReviews"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xf598c8be 0xac8b24de 0x382faacb 0x02c8c38c 0x73414ad1 0x1b79c55f 0x8c862845 0xf598ca19 0x1c04f000 // method "initEntity(uint512)void", method "getAdmin()address", method "getEntityCount()uint512", method "getGlobalReviews()uint512", method "getEntityHash(uint512)uint512", method "getReviewCount(uint512)uint512", method "registerEntity(uint512)uint512", method "submitReview(uint512,uint512)void", method "getAverageScore(uint512)uint512"
+    txna ApplicationArgs 0
+    match initEntity getAdmin getEntityCount getGlobalReviews getEntityHash getReviewCount registerEntity submitReview getAverageScore
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RatingSystem.sol.RatingSystemTest.initEntity[routing]() -> void:
+initEntity:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_entityHash"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 6 // "_totalScore"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 4 // "_reviewCount"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RatingSystem.sol.RatingSystemTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_1 // 0
+    bytec 5 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RatingSystem.sol.RatingSystemTest.getEntityCount[routing]() -> void:
+getEntityCount:
+    intc_1 // 0
+    bytec_2 // "_entityCount"
+    app_global_get_ex
+    assert // check _entityCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RatingSystem.sol.RatingSystemTest.getGlobalReviews[routing]() -> void:
+getGlobalReviews:
+    intc_1 // 0
+    bytec_3 // "_globalReviews"
+    app_global_get_ex
+    assert // check _globalReviews exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RatingSystem.sol.RatingSystemTest.getEntityHash[routing]() -> void:
+getEntityHash:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_entityHash"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RatingSystem.sol.RatingSystemTest.getReviewCount[routing]() -> void:
+getReviewCount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_reviewCount"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RatingSystem.sol.RatingSystemTest.registerEntity[routing]() -> void:
+registerEntity:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec 5 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Only admin
+    intc_1 // 0
+    bytec_2 // "_entityCount"
+    app_global_get_ex
+    assert // check _entityCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_entityHash"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    intc_1 // 0
+    itob
+    bytec 6 // "_totalScore"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    bytec 4 // "_reviewCount"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    itob
+    dig 2
+    b+
+    bytec_2 // "_entityCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RatingSystem.sol.RatingSystemTest.submitReview[routing]() -> void:
+submitReview:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec_2 // "_entityCount"
+    app_global_get_ex
+    assert // check _entityCount exists
+    dig 2
+    b>
+    assert // Entity does not exist
+    intc_1 // 0
+    itob
+    dig 1
+    b<
+    assert // Score must be positive
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_totalScore"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    uncover 3
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec 4 // "_reviewCount"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_2 // 1
+    itob
+    swap
+    dig 1
+    b+
+    dig 2
+    box_del
+    pop
+    uncover 2
+    swap
+    box_put
+    intc_1 // 0
+    bytec_3 // "_globalReviews"
+    app_global_get_ex
+    assert // check _globalReviews exists
+    b+
+    bytec_3 // "_globalReviews"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/RatingSystem.sol.RatingSystemTest.getAverageScore[routing]() -> void:
+getAverageScore:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_reviewCount"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    itob
+    dig 1
+    b<
+    assert // No reviews yet
+    bytec 6 // "_totalScore"
+    uncover 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    swap
+    b/
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

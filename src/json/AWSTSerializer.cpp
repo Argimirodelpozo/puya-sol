@@ -292,6 +292,11 @@ njson AWSTSerializer::serializeExpression(awst::Expression const& _expr)
 		j["op"] = bytesBinOpToString(e->op);
 		j["right"] = serializeExpression(*e->right);
 	}
+	else if (auto const* e = dynamic_cast<awst::BytesUnaryOperation const*>(&_expr))
+	{
+		j["op"] = "~";
+		j["expr"] = serializeExpression(*e->expr);
+	}
 	else if (auto const* e = dynamic_cast<awst::NumericComparisonExpression const*>(&_expr))
 	{
 		j["lhs"] = serializeExpression(*e->lhs);

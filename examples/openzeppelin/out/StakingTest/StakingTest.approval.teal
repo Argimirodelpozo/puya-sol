@@ -1,0 +1,637 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Staking.sol.StakingTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1 32 1000000
+    bytecblock 0x 0x151f7c75 "_rewardRate" "_totalStaked" "_stakeTime" "_rewards" "_staked" "_owner"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 7 // "_owner"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_2 // "_rewardRate"
+    bytec_0 // 0x
+    app_global_put
+    bytec_3 // "_totalStaked"
+    bytec_0 // 0x
+    app_global_put
+    bytec 7 // "_owner"
+    txn Sender
+    app_global_put
+    pushint 100
+    itob
+    bytec_2 // "_rewardRate"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb1bbb0a8 0x4e26cab6 0x42f7bc9e 0xfd0e9940 0x37837d12 0x77a9609c 0x03c293f8 0x23dd76b1 0xe3b6de46 0x2c630f41 0x7cd26f87 // method "owner()address", method "rewardRate()uint512", method "totalStaked()uint512", method "stakedOf(address)uint512", method "stakeTimeOf(address)uint512", method "rewardsOf(address)uint512", method "setRewardRate(uint512)void", method "stake(address,uint512,uint512)void", method "unstake(address,uint512,uint512)uint512", method "claimRewards(address,uint512)uint512", method "pendingRewards(address,uint512)uint512"
+    txna ApplicationArgs 0
+    match owner rewardRate totalStaked stakedOf stakeTimeOf rewardsOf setRewardRate stake unstake claimRewards pendingRewards
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Staking.sol.StakingTest.owner[routing]() -> void:
+owner:
+    intc_1 // 0
+    bytec 7 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Staking.sol.StakingTest.rewardRate[routing]() -> void:
+rewardRate:
+    intc_1 // 0
+    bytec_2 // "_rewardRate"
+    app_global_get_ex
+    assert // check _rewardRate exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Staking.sol.StakingTest.totalStaked[routing]() -> void:
+totalStaked:
+    intc_1 // 0
+    bytec_3 // "_totalStaked"
+    app_global_get_ex
+    assert // check _totalStaked exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Staking.sol.StakingTest.stakedOf[routing]() -> void:
+stakedOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 6 // "_staked"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Staking.sol.StakingTest.stakeTimeOf[routing]() -> void:
+stakeTimeOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 4 // "_stakeTime"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Staking.sol.StakingTest.rewardsOf[routing]() -> void:
+rewardsOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 5 // "_rewards"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Staking.sol.StakingTest.setRewardRate[routing]() -> void:
+setRewardRate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec 7 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // Not owner
+    bytec_2 // "_rewardRate"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Staking.sol.StakingTest.stake[routing]() -> void:
+stake:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    cover 3
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    swap
+    dig 1
+    b>
+    assert // Cannot stake 0
+    swap
+    sha256
+    dup
+    cover 2
+    bytec 6 // "_staked"
+    swap
+    concat
+    dup
+    cover 2
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b<
+    bz stake_after_if_else@3
+    bytec 4 // "_stakeTime"
+    dig 2
+    dup
+    cover 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 4
+    swap
+    b-
+    dig 2
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    bytec_2 // "_rewardRate"
+    app_global_get_ex
+    assert // check _rewardRate exists
+    b*
+    b*
+    intc 4 // 1000000
+    itob
+    b/
+    bytec 5 // "_rewards"
+    uncover 2
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    uncover 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+
+stake_after_if_else@3:
+    dupn 2
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 5
+    dup
+    cover 3
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec 4 // "_stakeTime"
+    dig 3
+    concat
+    dup
+    box_del
+    pop
+    dig 4
+    box_put
+    intc_1 // 0
+    bytec_3 // "_totalStaked"
+    app_global_get_ex
+    assert // check _totalStaked exists
+    b+
+    bytec_3 // "_totalStaked"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Staking.sol.StakingTest.unstake[routing]() -> void:
+unstake:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    uncover 3
+    sha256
+    bytec 6 // "_staked"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    dig 6
+    b>=
+    assert // Insufficient stake
+    bytec 4 // "_stakeTime"
+    dig 3
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 5
+    swap
+    b-
+    intc_1 // 0
+    bytec_2 // "_rewardRate"
+    app_global_get_ex
+    assert // check _rewardRate exists
+    uncover 3
+    b*
+    b*
+    intc 4 // 1000000
+    itob
+    b/
+    bytec 5 // "_rewards"
+    uncover 4
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    uncover 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    dig 1
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 5
+    b-
+    dig 2
+    box_del
+    pop
+    uncover 2
+    swap
+    box_put
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 0
+    bytec_3 // "_totalStaked"
+    app_global_get_ex
+    assert // check _totalStaked exists
+    dig 2
+    b-
+    bytec_3 // "_totalStaked"
+    swap
+    app_global_put
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Staking.sol.StakingTest.claimRewards[routing]() -> void:
+claimRewards:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    sha256
+    dup
+    bytec 6 // "_staked"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    itob
+    dup
+    cover 2
+    b>
+    bz claimRewards_after_if_else@3
+    bytec 4 // "_stakeTime"
+    dig 3
+    dup
+    cover 2
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 6
+    dup
+    cover 3
+    swap
+    b-
+    dig 5
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    bytec_2 // "_rewardRate"
+    app_global_get_ex
+    assert // check _rewardRate exists
+    b*
+    b*
+    intc 4 // 1000000
+    itob
+    b/
+    bytec 5 // "_rewards"
+    uncover 4
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    uncover 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+claimRewards_after_if_else@3:
+    bytec 5 // "_rewards"
+    dig 3
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    box_del
+    pop
+    swap
+    dig 2
+    box_put
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Staking.sol.StakingTest.pendingRewards[routing]() -> void:
+pendingRewards:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    sha256
+    dup
+    bytec 5 // "_rewards"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    swap
+    bytec 6 // "_staked"
+    swap
+    concat
+    dup
+    cover 2
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    itob
+    b>
+    bz pendingRewards_after_if_else@3
+    bytec 4 // "_stakeTime"
+    dig 3
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 4
+    swap
+    b-
+    dig 2
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    bytec_2 // "_rewardRate"
+    app_global_get_ex
+    assert // check _rewardRate exists
+    b*
+    b*
+    intc 4 // 1000000
+    itob
+    b/
+    b+
+
+pendingRewards_after_if_else@3:
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

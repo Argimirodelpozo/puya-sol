@@ -8,6 +8,7 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
 
+#include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -96,9 +97,29 @@ public:
 	/// Consume any pending statements generated during expression translation.
 	std::vector<std::shared_ptr<awst::Statement>> takePendingStatements();
 
+	/// Register a parameter remap: when an Identifier references the AST declaration
+	/// with ID _declId, resolve it as a VarExpression with _uniqueName instead.
+	/// Used for modifier parameter binding.
+	void addParamRemap(int64_t _declId, std::string const& _uniqueName, awst::WType const* _type);
+	/// Remove a previously registered parameter remap.
+	void removeParamRemap(int64_t _declId);
+
+	/// Register a super call target: when `super.method()` is translated,
+	/// the base function with AST ID _funcId is targeted as subroutine _name.
+	void addSuperTarget(int64_t _funcId, std::string const& _name);
+
+
 private:
 
 	awst::SourceLocation makeLoc(solidity::langutil::SourceLocation const& _solLoc);
+
+	/// Modifier parameter remaps: AST declaration ID → (unique name, type).
+	struct ParamRemap { std::string name; awst::WType const* type; };
+	std::map<int64_t, ParamRemap> m_paramRemaps;
+
+	/// Super call target names: base function AST ID → subroutine name.
+	/// Populated by ContractTranslator for functions called via `super.method()`.
+	std::unordered_map<int64_t, std::string> m_superTargetNames;
 
 	/// Map Solidity binary operator token to AWST equivalent.
 	/// Determines whether to use UInt64, BigUInt, or Bytes operation.

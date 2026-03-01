@@ -1,0 +1,434 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC4626.sol.ERC4626Test.approval_program() -> uint64:
+main:
+    intcblock 64 0 1 32
+    bytecblock 0x151f7c75 0x "_totalShares" "_totalAssets" "_shares" "_name" "_symbol"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 5 // "_name"
+    bytec_1 // 0x
+    app_global_put
+    bytec 6 // "_symbol"
+    bytec_1 // 0x
+    app_global_put
+    bytec_2 // "_totalShares"
+    bytec_1 // 0x
+    app_global_put
+    bytec_3 // "_totalAssets"
+    bytec_1 // 0x
+    app_global_put
+    bytec 5 // "_name"
+    pushbytes "Vault Token"
+    app_global_put
+    bytec 6 // "_symbol"
+    pushbytes "vTKN"
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x19750616 0x005b52b8 0x49ac1a6b 0x195389d0 0xc90c90b1 0x964dfdfc 0x8f1e6886 0x3800f49c 0xcb1ed88f 0x1d4e8325 0x351980a0 // method "name()string", method "symbol()string", method "totalSupply()uint512", method "totalAssets()uint512", method "balanceOf(address)uint512", method "convertToShares(uint512)uint512", method "convertToAssets(uint512)uint512", method "maxDeposit(address)uint512", method "deposit(uint512,address)uint512", method "withdraw(uint512,address,address)uint512", method "redeem(uint512,address,address)uint512"
+    txna ApplicationArgs 0
+    match name symbol totalSupply totalAssets balanceOf convertToShares convertToAssets maxDeposit deposit withdraw redeem
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC4626.sol.ERC4626Test.name[routing]() -> void:
+name:
+    intc_1 // 0
+    bytec 5 // "_name"
+    app_global_get_ex
+    assert // check _name exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC4626.sol.ERC4626Test.symbol[routing]() -> void:
+symbol:
+    intc_1 // 0
+    bytec 6 // "_symbol"
+    app_global_get_ex
+    assert // check _symbol exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC4626.sol.ERC4626Test.totalSupply[routing]() -> void:
+totalSupply:
+    intc_1 // 0
+    bytec_2 // "_totalShares"
+    app_global_get_ex
+    assert // check _totalShares exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC4626.sol.ERC4626Test.totalAssets[routing]() -> void:
+totalAssets:
+    intc_1 // 0
+    bytec_3 // "_totalAssets"
+    app_global_get_ex
+    assert // check _totalAssets exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC4626.sol.ERC4626Test.balanceOf[routing]() -> void:
+balanceOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 4 // "_shares"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC4626.sol.ERC4626Test.convertToShares[routing]() -> void:
+convertToShares:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC4626.sol.ERC4626Test.convertToAssets[routing]() -> void:
+convertToAssets:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC4626.sol.ERC4626Test.maxDeposit[routing]() -> void:
+maxDeposit:
+    txna ApplicationArgs 1
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC4626.sol.ERC4626Test.deposit[routing]() -> void:
+deposit:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_1 // 0
+    itob
+    dig 3
+    b<
+    assert // ERC4626: zero deposit
+    sha256
+    bytec 4 // "_shares"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dig 3
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_1 // 0
+    bytec_2 // "_totalShares"
+    app_global_get_ex
+    assert // check _totalShares exists
+    dig 2
+    b+
+    bytec_2 // "_totalShares"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec_3 // "_totalAssets"
+    app_global_get_ex
+    assert // check _totalAssets exists
+    dig 2
+    b+
+    bytec_3 // "_totalAssets"
+    swap
+    app_global_put
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC4626.sol.ERC4626Test.withdraw[routing]() -> void:
+withdraw:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_1 // 0
+    itob
+    dig 3
+    b<
+    assert // ERC4626: zero withdraw
+    sha256
+    bytec 4 // "_shares"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    dig 4
+    b>=
+    assert // ERC4626: insufficient shares
+    dig 3
+    b-
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_1 // 0
+    bytec_2 // "_totalShares"
+    app_global_get_ex
+    assert // check _totalShares exists
+    dig 2
+    b-
+    bytec_2 // "_totalShares"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec_3 // "_totalAssets"
+    app_global_get_ex
+    assert // check _totalAssets exists
+    dig 2
+    b-
+    bytec_3 // "_totalAssets"
+    swap
+    app_global_put
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC4626.sol.ERC4626Test.redeem[routing]() -> void:
+redeem:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_1 // 0
+    itob
+    dig 3
+    b<
+    assert // ERC4626: zero redeem
+    sha256
+    bytec 4 // "_shares"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    dig 4
+    b>=
+    assert // ERC4626: insufficient shares
+    dig 3
+    b-
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_1 // 0
+    bytec_2 // "_totalShares"
+    app_global_get_ex
+    assert // check _totalShares exists
+    dig 2
+    b-
+    bytec_2 // "_totalShares"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec_3 // "_totalAssets"
+    app_global_get_ex
+    assert // check _totalAssets exists
+    dig 2
+    b-
+    bytec_3 // "_totalAssets"
+    swap
+    app_global_put
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

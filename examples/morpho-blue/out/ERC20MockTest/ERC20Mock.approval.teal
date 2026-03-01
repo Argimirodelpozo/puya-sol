@@ -1,0 +1,313 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/ERC20Mock.sol.ERC20Mock.approval_program() -> uint64:
+main:
+    intcblock 1 32 64 0
+    bytecblock 0x "balanceOf" "totalSupply" "allowance" 0x151f7c7580 0xddf252ad
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "totalSupply"
+    bytec_0 // 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x43d6dea4 0x3c4937bd 0x42820278 0x177171e7 // method "setBalance(address,uint512)void", method "approve(address,uint512)bool", method "transfer(address,uint512)bool", method "transferFrom(address,address,uint512)bool"
+    txna ApplicationArgs 0
+    match setBalance approve transfer transferFrom
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/ERC20Mock.sol.ERC20Mock.setBalance[routing]() -> void:
+setBalance:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    sha256
+    bytec_1 // "balanceOf"
+    swap
+    concat
+    dup
+    cover 2
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b>
+    bz setBalance_else_body@3
+    intc_3 // 0
+    bytec_2 // "totalSupply"
+    app_global_get_ex
+    assert // check totalSupply exists
+    dig 1
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 3
+    swap
+    b-
+    b+
+    bytec_2 // "totalSupply"
+    swap
+    app_global_put
+
+setBalance_after_if_else@4:
+    dupn 2
+    box_del
+    pop
+    dig 2
+    box_put
+    intc_0 // 1
+    return
+
+setBalance_else_body@3:
+    intc_3 // 0
+    bytec_2 // "totalSupply"
+    app_global_get_ex
+    assert // check totalSupply exists
+    dig 1
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 3
+    b-
+    b-
+    bytec_2 // "totalSupply"
+    swap
+    app_global_put
+    b setBalance_after_if_else@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/ERC20Mock.sol.ERC20Mock.approve[routing]() -> void:
+approve:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    uncover 2
+    concat
+    sha256
+    bytec_3 // "allowance"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    pushbytes 0x8c5be1e5
+    swap
+    concat
+    log
+    bytec 4 // 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/ERC20Mock.sol.ERC20Mock.transfer[routing]() -> void:
+transfer:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    sha256
+    bytec_1 // "balanceOf"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b>=
+    assert // insufficient balance
+    txn Sender
+    sha256
+    bytec_1 // "balanceOf"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b-
+    txn Sender
+    sha256
+    bytec_1 // "balanceOf"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    swap
+    sha256
+    bytec_1 // "balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec 5 // 0xddf252ad
+    swap
+    concat
+    log
+    bytec 4 // 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/ERC20Mock.sol.ERC20Mock.transferFrom[routing]() -> void:
+transferFrom:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dig 2
+    txn Sender
+    concat
+    sha256
+    bytec_3 // "allowance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b>=
+    assert // insufficient allowance
+    dig 2
+    txn Sender
+    concat
+    sha256
+    bytec_3 // "allowance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b-
+    dig 3
+    txn Sender
+    concat
+    sha256
+    bytec_3 // "allowance"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    uncover 2
+    sha256
+    bytec_1 // "balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    dig 3
+    b>=
+    assert // insufficient balance
+    dig 2
+    b-
+    dig 1
+    box_del
+    pop
+    box_put
+    swap
+    sha256
+    bytec_1 // "balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec 5 // 0xddf252ad
+    swap
+    concat
+    log
+    bytec 4 // 0x151f7c7580
+    log
+    intc_0 // 1
+    return

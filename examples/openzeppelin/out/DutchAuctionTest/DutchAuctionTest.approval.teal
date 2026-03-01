@@ -1,0 +1,400 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/DutchAuction.sol.DutchAuctionTest.approval_program() -> uint64:
+main:
+    intcblock 0 64 1
+    bytecblock 0x151f7c75 0x "_endPrice" "_duration" "_sold" "_startTime" "_buyer" "_finalPrice" "_totalAuctions" "_owner" base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) "_startPrice" "_item"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 9 // "_owner"
+    bytec 10 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 11 // "_startPrice"
+    bytec_1 // 0x
+    app_global_put
+    bytec_2 // "_endPrice"
+    bytec_1 // 0x
+    app_global_put
+    bytec 5 // "_startTime"
+    bytec_1 // 0x
+    app_global_put
+    bytec_3 // "_duration"
+    bytec_1 // 0x
+    app_global_put
+    bytec 12 // "_item"
+    bytec_1 // 0x
+    app_global_put
+    bytec 4 // "_sold"
+    intc_0 // 0
+    app_global_put
+    bytec 6 // "_buyer"
+    bytec 10 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 7 // "_finalPrice"
+    bytec_1 // 0x
+    app_global_put
+    bytec 8 // "_totalAuctions"
+    bytec_1 // 0x
+    app_global_put
+    bytec 9 // "_owner"
+    txn Sender
+    app_global_put
+    pushint 10000
+    itob
+    bytec 11 // "_startPrice"
+    swap
+    app_global_put
+    pushint 1000
+    itob
+    bytec_2 // "_endPrice"
+    swap
+    app_global_put
+    intc_0 // 0
+    itob
+    bytec 5 // "_startTime"
+    dig 1
+    app_global_put
+    pushint 100
+    itob
+    bytec_3 // "_duration"
+    swap
+    app_global_put
+    pushint 42
+    itob
+    bytec 12 // "_item"
+    swap
+    app_global_put
+    bytec 4 // "_sold"
+    intc_0 // 0
+    app_global_put
+    bytec 6 // "_buyer"
+    bytec 10 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 7 // "_finalPrice"
+    dig 1
+    app_global_put
+    bytec 8 // "_totalAuctions"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x7e7197a8 0xbfb72f5c 0x2cecf21a 0x99a4e1dd 0x307202d9 0xeaf4af88 0x9e96681d 0x0c262987 0x4324b7a3 // method "startAuction(uint512)void", method "getCurrentPrice(uint512)uint512", method "buy(uint512)uint512", method "getItem()uint512", method "isSold()bool", method "getBuyer()address", method "getFinalPrice()uint512", method "getOwner()address", method "getTotalAuctions()uint512"
+    txna ApplicationArgs 0
+    match startAuction getCurrentPrice buy getItem isSold getBuyer getFinalPrice getOwner getTotalAuctions
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/DutchAuction.sol.DutchAuctionTest.startAuction[routing]() -> void:
+startAuction:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_0 // 0
+    bytec 9 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // Not owner
+    bytec 5 // "_startTime"
+    swap
+    app_global_put
+    bytec 4 // "_sold"
+    intc_0 // 0
+    app_global_put
+    bytec 6 // "_buyer"
+    bytec 10 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    intc_0 // 0
+    itob
+    bytec 7 // "_finalPrice"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/DutchAuction.sol.DutchAuctionTest.getCurrentPrice[routing]() -> void:
+getCurrentPrice:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 0
+    bytec 5 // "_startTime"
+    app_global_get_ex
+    assert // check _startTime exists
+    intc_0 // 0
+    itob
+    dig 1
+    b<
+    assert // Auction not started
+    b-
+    dup
+    intc_0 // 0
+    bytec_3 // "_duration"
+    app_global_get_ex
+    assert // check _duration exists
+    b>=
+    bz getCurrentPrice_after_if_else@3
+    intc_0 // 0
+    bytec_2 // "_endPrice"
+    app_global_get_ex
+    assert // check _endPrice exists
+
+getCurrentPrice_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/DutchAuction.sol.DutchAuctionTest.getCurrentPrice@4:
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+getCurrentPrice_after_if_else@3:
+    intc_0 // 0
+    bytec 11 // "_startPrice"
+    app_global_get_ex
+    assert // check _startPrice exists
+    intc_0 // 0
+    bytec_2 // "_endPrice"
+    app_global_get_ex
+    assert // check _endPrice exists
+    dig 1
+    swap
+    b-
+    dig 2
+    b*
+    intc_0 // 0
+    bytec_3 // "_duration"
+    app_global_get_ex
+    assert // check _duration exists
+    b/
+    b-
+    b getCurrentPrice_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/DutchAuction.sol.DutchAuctionTest.getCurrentPrice@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/DutchAuction.sol.DutchAuctionTest.buy[routing]() -> void:
+buy:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 0
+    bytec 4 // "_sold"
+    app_global_get_ex
+    assert // check _sold exists
+    !
+    assert // Already sold
+    intc_0 // 0
+    bytec 5 // "_startTime"
+    app_global_get_ex
+    assert // check _startTime exists
+    intc_0 // 0
+    itob
+    dig 1
+    b<
+    assert // Auction not started
+    b-
+    dup
+    intc_0 // 0
+    bytec_3 // "_duration"
+    app_global_get_ex
+    assert // check _duration exists
+    b>=
+    bz buy_else_body@3
+    intc_0 // 0
+    bytec_2 // "_endPrice"
+    app_global_get_ex
+    assert // check _endPrice exists
+
+buy_after_if_else@4:
+    bytec 6 // "_buyer"
+    txn Sender
+    app_global_put
+    bytec 7 // "_finalPrice"
+    dig 1
+    app_global_put
+    bytec 4 // "_sold"
+    intc_2 // 1
+    app_global_put
+    intc_0 // 0
+    bytec 8 // "_totalAuctions"
+    app_global_get_ex
+    assert // check _totalAuctions exists
+    intc_2 // 1
+    itob
+    b+
+    bytec 8 // "_totalAuctions"
+    swap
+    app_global_put
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+buy_else_body@3:
+    intc_0 // 0
+    bytec 11 // "_startPrice"
+    app_global_get_ex
+    assert // check _startPrice exists
+    intc_0 // 0
+    bytec_2 // "_endPrice"
+    app_global_get_ex
+    assert // check _endPrice exists
+    dig 1
+    swap
+    b-
+    dig 2
+    b*
+    intc_0 // 0
+    bytec_3 // "_duration"
+    app_global_get_ex
+    assert // check _duration exists
+    b/
+    b-
+    b buy_after_if_else@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/DutchAuction.sol.DutchAuctionTest.getItem[routing]() -> void:
+getItem:
+    intc_0 // 0
+    bytec 12 // "_item"
+    app_global_get_ex
+    assert // check _item exists
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/DutchAuction.sol.DutchAuctionTest.isSold[routing]() -> void:
+isSold:
+    intc_0 // 0
+    bytec 4 // "_sold"
+    app_global_get_ex
+    assert // check _sold exists
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/DutchAuction.sol.DutchAuctionTest.getBuyer[routing]() -> void:
+getBuyer:
+    intc_0 // 0
+    bytec 6 // "_buyer"
+    app_global_get_ex
+    assert // check _buyer exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/DutchAuction.sol.DutchAuctionTest.getFinalPrice[routing]() -> void:
+getFinalPrice:
+    intc_0 // 0
+    bytec 7 // "_finalPrice"
+    app_global_get_ex
+    assert // check _finalPrice exists
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/DutchAuction.sol.DutchAuctionTest.getOwner[routing]() -> void:
+getOwner:
+    intc_0 // 0
+    bytec 9 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/DutchAuction.sol.DutchAuctionTest.getTotalAuctions[routing]() -> void:
+getTotalAuctions:
+    intc_0 // 0
+    bytec 8 // "_totalAuctions"
+    app_global_get_ex
+    assert // check _totalAuctions exists
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

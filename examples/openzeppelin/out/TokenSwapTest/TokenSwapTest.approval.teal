@@ -1,0 +1,490 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenSwap.sol.TokenSwapTest.approval_program() -> uint64:
+main:
+    intcblock 64 1 0 32 1000
+    bytecblock 0x 0x151f7c75 "_rate" "_totalSwapped" "_owner" "_balanceA" "_balanceB"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 4 // "_owner"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_2 // "_rate"
+    bytec_0 // 0x
+    app_global_put
+    bytec_3 // "_totalSwapped"
+    bytec_0 // 0x
+    app_global_put
+    bytec 4 // "_owner"
+    txn Sender
+    app_global_put
+    pushint 2000
+    itob
+    bytec_2 // "_rate"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb1bbb0a8 0xbe30caf2 0x406e354e 0x83268470 0xabfb1bfb 0xe0136239 0x519a68b1 0x65784a47 0x13404288 0x57fa5121 0x6e2b8a0f 0x635f01b5 // method "owner()address", method "rate()uint512", method "totalSwapped()uint512", method "setRate(uint512)void", method "balanceA(address)uint512", method "balanceB(address)uint512", method "depositA(address,uint512)void", method "depositB(address,uint512)void", method "swapAtoB(address,uint512)uint512", method "swapBtoA(address,uint512)uint512", method "getQuoteAtoB(uint512)uint512", method "getQuoteBtoA(uint512)uint512"
+    txna ApplicationArgs 0
+    match owner rate totalSwapped setRate balanceA balanceB depositA depositB swapAtoB swapBtoA getQuoteAtoB getQuoteBtoA
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenSwap.sol.TokenSwapTest.owner[routing]() -> void:
+owner:
+    intc_2 // 0
+    bytec 4 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenSwap.sol.TokenSwapTest.rate[routing]() -> void:
+rate:
+    intc_2 // 0
+    bytec_2 // "_rate"
+    app_global_get_ex
+    assert // check _rate exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenSwap.sol.TokenSwapTest.totalSwapped[routing]() -> void:
+totalSwapped:
+    intc_2 // 0
+    bytec_3 // "_totalSwapped"
+    app_global_get_ex
+    assert // check _totalSwapped exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenSwap.sol.TokenSwapTest.setRate[routing]() -> void:
+setRate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec 4 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // Not owner
+    intc_2 // 0
+    itob
+    dig 1
+    b<
+    assert // Rate must be > 0
+    bytec_2 // "_rate"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenSwap.sol.TokenSwapTest.balanceA[routing]() -> void:
+balanceA:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 5 // "_balanceA"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenSwap.sol.TokenSwapTest.balanceB[routing]() -> void:
+balanceB:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 6 // "_balanceB"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenSwap.sol.TokenSwapTest.depositA[routing]() -> void:
+depositA:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    sha256
+    bytec 5 // "_balanceA"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    uncover 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenSwap.sol.TokenSwapTest.depositB[routing]() -> void:
+depositB:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    sha256
+    bytec 6 // "_balanceB"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    uncover 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenSwap.sol.TokenSwapTest.swapAtoB[routing]() -> void:
+swapAtoB:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    sha256
+    bytec 5 // "_balanceA"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    dig 4
+    b>=
+    assert // Insufficient balance A
+    intc_2 // 0
+    bytec_2 // "_rate"
+    app_global_get_ex
+    assert // check _rate exists
+    dig 4
+    b*
+    intc 4 // 1000
+    itob
+    b/
+    swap
+    dig 4
+    b-
+    dig 2
+    box_del
+    pop
+    uncover 2
+    swap
+    box_put
+    bytec 6 // "_balanceB"
+    uncover 2
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 0
+    bytec_3 // "_totalSwapped"
+    app_global_get_ex
+    assert // check _totalSwapped exists
+    uncover 2
+    b+
+    bytec_3 // "_totalSwapped"
+    swap
+    app_global_put
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenSwap.sol.TokenSwapTest.swapBtoA[routing]() -> void:
+swapBtoA:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    sha256
+    bytec 6 // "_balanceB"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    dig 4
+    b>=
+    assert // Insufficient balance B
+    intc 4 // 1000
+    itob
+    dig 4
+    b*
+    intc_2 // 0
+    bytec_2 // "_rate"
+    app_global_get_ex
+    assert // check _rate exists
+    b/
+    swap
+    uncover 4
+    b-
+    dig 2
+    box_del
+    pop
+    uncover 2
+    swap
+    box_put
+    bytec 5 // "_balanceA"
+    uncover 2
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 0
+    bytec_3 // "_totalSwapped"
+    app_global_get_ex
+    assert // check _totalSwapped exists
+    dig 1
+    b+
+    bytec_3 // "_totalSwapped"
+    swap
+    app_global_put
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenSwap.sol.TokenSwapTest.getQuoteAtoB[routing]() -> void:
+getQuoteAtoB:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    bytec_2 // "_rate"
+    app_global_get_ex
+    assert // check _rate exists
+    b*
+    intc 4 // 1000
+    itob
+    b/
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenSwap.sol.TokenSwapTest.getQuoteBtoA[routing]() -> void:
+getQuoteBtoA:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc 4 // 1000
+    itob
+    b*
+    intc_2 // 0
+    bytec_2 // "_rate"
+    app_global_get_ex
+    assert // check _rate exists
+    b/
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

@@ -1,0 +1,1637 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk-rust/contracts/SimpleHonkVerifier.sol.SimpleHonkVerifierTest__Helper8.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 64 32 256 512 576 640 320 384 448 1600 1408 1472 1536 1664
+    bytecblock 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001 0x151f7c75 0x01
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    store 0
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk-rust/contracts/SimpleHonkVerifier.sol.RelationsLib.wire(p: uint64, _wire: uint64) -> bytes:
+RelationsLib.wire:
+    proto 2 1
+    pushint 8
+    bzero
+    frame_dig -1
+    itob
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    frame_dig -2
+    loads
+    swap
+    intc_0 // 64
+    *
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk-rust/contracts/SimpleHonkVerifier.sol.TranscriptLib.splitChallenge(challenge: bytes) -> bytes, bytes:
+TranscriptLib.splitChallenge:
+    proto 1 2
+    frame_dig -1
+    pushbytes 0xffffffffffffffffffffffffffffffff
+    b&
+    intc_1 // 32
+    bzero
+    frame_dig -1
+    pushbytes 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    cover 2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk-rust/contracts/SimpleHonkVerifier.sol.SimpleHonkVerifierTest__Helper8.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xe12d3f00 0xd1a2f56b 0x1a4f7e7a 0x6f03d8e5 // method "TranscriptLib.generateShplonkNuChallenge((uint512,uint512,uint512,(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),uint512[8][28],uint512[40],(uint512,uint512,uint512,uint512)[27],uint512[28],(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512)),uint512)(uint512,uint512)", method "RelationsLib.accumulatePoseidonInternalRelation(uint512[40],uint512[26],uint512)void", method "RelationsLib.scaleAndBatchSubrelations(uint512[26],uint512[25])uint512", method "FrLib.sqr(uint512)uint512"
+    txna ApplicationArgs 0
+    match TranscriptLib.generateShplonkNuChallenge RelationsLib.accumulatePoseidonInternalRelation RelationsLib.scaleAndBatchSubrelations FrLib.sqr
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk-rust/contracts/SimpleHonkVerifier.sol.SimpleHonkVerifierTest__Helper8.TranscriptLib.generateShplonkNuChallenge[routing]() -> void:
+TranscriptLib.generateShplonkNuChallenge:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 28352
+    ==
+    assert // invalid number of bytes for Proof
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    cover 3
+    callsub _puya_lib.mem.new_slot
+    dup
+    cover 3
+    cover 4
+    swap
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    replace2 0 // on error: index access is out of bounds
+    stores
+    pushint 0
+    itob
+
+TranscriptLib.generateShplonkNuChallenge_while_top@2:
+    pushint 28
+    itob
+    dig 1
+    b>
+    bz TranscriptLib.generateShplonkNuChallenge_after_while@4
+    dig 3
+    pushints 26048 1792
+    extract3
+    pushint 8
+    bzero
+    dup
+    dig 3
+    dup
+    cover 3
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_0 // 64
+    *
+    uncover 3
+    swap
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    pushint 1
+    itob
+    dig 3
+    b+
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    swap
+    dig 5
+    b|
+    dig 4
+    dup
+    cover 2
+    loads
+    uncover 3
+    intc_0 // 64
+    *
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    stores
+    bytec_2 // 0x01
+    b+
+    bury 1
+    b TranscriptLib.generateShplonkNuChallenge_while_top@2
+
+TranscriptLib.generateShplonkNuChallenge_after_while@4:
+    intc_1 // 32
+    bzero
+    dig 2
+    loads
+    dup
+    extract 0 64 // on error: index access is out of bounds
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 1
+    extract 64 64 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    extract 128 64 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    extract 192 64 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    intc_2 // 256
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    intc 6 // 320
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    intc 7 // 384
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    intc 8 // 448
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    intc_3 // 512
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    intc 4 // 576
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    intc 5 // 640
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    pushint 704
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    pushint 768
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    pushint 832
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    pushint 896
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    pushint 960
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1024
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1088
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1152
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1216
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1280
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1344
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    intc 10 // 1408
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    intc 11 // 1472
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    intc 12 // 1536
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    intc 9 // 1600
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    intc 13 // 1664
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1728
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    swap
+    pushint 1792
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    keccak256
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    callsub TranscriptLib.splitChallenge
+    popn 2
+    dup
+    callsub TranscriptLib.splitChallenge
+    pop
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    dig 4
+    dup
+    cover 2
+    b|
+    dig 2
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk-rust/contracts/SimpleHonkVerifier.sol.SimpleHonkVerifierTest__Helper8.RelationsLib.accumulatePoseidonInternalRelation[routing]() -> void:
+RelationsLib.accumulatePoseidonInternalRelation:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 2560
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint512, 40>
+    callsub _puya_lib.mem.new_slot
+    dup
+    uncover 2
+    stores
+    txna ApplicationArgs 2
+    dup
+    len
+    intc 13 // 1664
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint512, 26>
+    swap
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000010dc6e9c006ea38b04b1e03b4bd9490c0d03f98929ca1d7fb56821fd19d3b6e700000000000000000000000000000000000000000000000000000000000000000c28145b6a44df3e0149b3d0a30b3bb599df9756d4dd9b84a86b38cfb45a740b000000000000000000000000000000000000000000000000000000000000000000544b8338791518b2c7645a50392798b21f75bb60e3596170067d00141cac150000000000000000000000000000000000000000000000000000000000000000222c01175718386f2e2e82eb122789e352e105a3b8fa852613bc534433ee428b
+    cover 4
+    dig 2
+    pushint 27
+    callsub RelationsLib.wire
+    dig 3
+    pushint 2
+    callsub RelationsLib.wire
+    b+
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    dig 1
+    b|
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    concat
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    concat
+    dup
+    intc 5 // 640
+    intc_0 // 64
+    extract3
+    dig 1
+    intc 4 // 576
+    intc_0 // 64
+    extract3
+    dup
+    dig 1
+    b*
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dig 1
+    b*
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dig 1
+    b*
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dig 1
+    b*
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    dig 4
+    b|
+    dig 3
+    extract 64 64
+    dig 4
+    extract 128 64
+    dig 5
+    extract 192 64
+    dig 6
+    intc_2 // 256
+    intc_0 // 64
+    extract3
+    dig 7
+    intc 6 // 320
+    intc_0 // 64
+    extract3
+    dig 8
+    intc 7 // 384
+    intc_0 // 64
+    extract3
+    dig 9
+    intc 8 // 448
+    intc_0 // 64
+    extract3
+    uncover 10
+    intc_3 // 512
+    intc_0 // 64
+    extract3
+    uncover 8
+    uncover 8
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    swap
+    concat
+    dup
+    intc 5 // 640
+    intc_0 // 64
+    extract3
+    dig 1
+    intc 4 // 576
+    intc_0 // 64
+    extract3
+    dig 2
+    extract 0 64
+    dig 6
+    pushint 28
+    callsub RelationsLib.wire
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    dig 5
+    b|
+    dig 4
+    extract 128 64
+    dig 5
+    extract 192 64
+    dig 6
+    intc_2 // 256
+    intc_0 // 64
+    extract3
+    dig 7
+    intc 6 // 320
+    intc_0 // 64
+    extract3
+    dig 8
+    intc 7 // 384
+    intc_0 // 64
+    extract3
+    dig 9
+    intc 8 // 448
+    intc_0 // 64
+    extract3
+    uncover 10
+    intc_3 // 512
+    intc_0 // 64
+    extract3
+    uncover 8
+    uncover 8
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    swap
+    concat
+    dup
+    intc 5 // 640
+    intc_0 // 64
+    extract3
+    dig 1
+    intc 4 // 576
+    intc_0 // 64
+    extract3
+    dig 2
+    extract 0 64
+    dig 3
+    extract 64 64
+    dig 7
+    pushint 29
+    callsub RelationsLib.wire
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    dig 6
+    b|
+    dig 5
+    extract 192 64
+    dig 6
+    intc_2 // 256
+    intc_0 // 64
+    extract3
+    dig 7
+    intc 6 // 320
+    intc_0 // 64
+    extract3
+    dig 8
+    intc 7 // 384
+    intc_0 // 64
+    extract3
+    dig 9
+    intc 8 // 448
+    intc_0 // 64
+    extract3
+    uncover 10
+    intc_3 // 512
+    intc_0 // 64
+    extract3
+    uncover 8
+    uncover 8
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    swap
+    concat
+    dup
+    intc 5 // 640
+    intc_0 // 64
+    extract3
+    dig 1
+    intc 4 // 576
+    intc_0 // 64
+    extract3
+    dig 2
+    extract 0 64
+    dig 3
+    extract 64 64
+    dig 4
+    extract 128 64
+    dig 8
+    pushint 30
+    callsub RelationsLib.wire
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    dig 7
+    b|
+    dig 6
+    intc_2 // 256
+    intc_0 // 64
+    extract3
+    dig 7
+    intc 6 // 320
+    intc_0 // 64
+    extract3
+    dig 8
+    intc 7 // 384
+    intc_0 // 64
+    extract3
+    dig 9
+    intc 8 // 448
+    intc_0 // 64
+    extract3
+    uncover 10
+    intc_3 // 512
+    intc_0 // 64
+    extract3
+    uncover 8
+    uncover 8
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    swap
+    concat
+    dup
+    intc 5 // 640
+    intc_0 // 64
+    extract3
+    dig 1
+    intc 4 // 576
+    intc_0 // 64
+    extract3
+    dig 2
+    extract 0 64
+    dig 3
+    extract 64 64
+    dig 4
+    extract 128 64
+    dig 5
+    extract 192 64
+    dig 3
+    dig 3
+    b+
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dig 2
+    b+
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dig 1
+    b+
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    dig 8
+    b|
+    dig 7
+    intc 6 // 320
+    intc_0 // 64
+    extract3
+    dig 8
+    intc 7 // 384
+    intc_0 // 64
+    extract3
+    dig 9
+    intc 8 // 448
+    intc_0 // 64
+    extract3
+    uncover 10
+    intc_3 // 512
+    intc_0 // 64
+    extract3
+    uncover 8
+    uncover 8
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    swap
+    concat
+    dig 3
+    pushint 12
+    callsub RelationsLib.wire
+    uncover 3
+    b*
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    dig 2
+    b|
+    dig 1
+    intc 4 // 576
+    intc_0 // 64
+    extract3
+    dig 2
+    extract 0 64
+    dig 3
+    extract 64 64
+    dig 4
+    extract 128 64
+    dig 5
+    extract 192 64
+    dig 6
+    intc_2 // 256
+    intc_0 // 64
+    extract3
+    dig 7
+    intc 6 // 320
+    intc_0 // 64
+    extract3
+    dig 8
+    intc 7 // 384
+    intc_0 // 64
+    extract3
+    dig 9
+    intc 8 // 448
+    intc_0 // 64
+    extract3
+    uncover 10
+    intc_3 // 512
+    intc_0 // 64
+    extract3
+    uncover 8
+    uncover 8
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    swap
+    concat
+    dup
+    intc 5 // 640
+    intc_0 // 64
+    extract3
+    dig 1
+    intc 4 // 576
+    intc_0 // 64
+    extract3
+    dig 2
+    extract 0 64
+    dig 3
+    extract 64 64
+    dig 4
+    extract 128 64
+    dig 5
+    extract 192 64
+    dig 6
+    intc_2 // 256
+    intc_0 // 64
+    extract3
+    dig 4
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000010dc6e9c006ea38b04b1e03b4bd9490c0d03f98929ca1d7fb56821fd19d3b6e7
+    b*
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dig 1
+    b+
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    dig 9
+    b|
+    dig 8
+    intc 7 // 384
+    intc_0 // 64
+    extract3
+    dig 9
+    intc 8 // 448
+    intc_0 // 64
+    extract3
+    uncover 10
+    intc_3 // 512
+    intc_0 // 64
+    extract3
+    uncover 8
+    uncover 8
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    swap
+    concat
+    uncover 3
+    dup
+    intc 10 // 1408
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 2
+    intc 5 // 640
+    intc_0 // 64
+    extract3
+    dig 3
+    intc 6 // 320
+    intc_0 // 64
+    extract3
+    dig 6
+    pushint 35
+    callsub RelationsLib.wire
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    swap
+    b-
+    dig 1
+    b+
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dig 2
+    b*
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    uncover 3
+    b+
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    dig 5
+    b|
+    uncover 3
+    intc 10 // 1408
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    dig 3
+    intc 4 // 576
+    intc_0 // 64
+    extract3
+    dig 4
+    extract 0 64
+    dig 5
+    extract 64 64
+    dig 6
+    extract 128 64
+    dig 7
+    extract 192 64
+    dig 8
+    intc_2 // 256
+    intc_0 // 64
+    extract3
+    dig 12
+    extract 64 64 // on error: index access is out of bounds
+    dig 4
+    b*
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dig 1
+    b+
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    dig 11
+    b|
+    dig 10
+    intc 8 // 448
+    intc_0 // 64
+    extract3
+    uncover 11
+    intc_3 // 512
+    intc_0 // 64
+    extract3
+    uncover 7
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 6
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    uncover 2
+    concat
+    dig 1
+    intc 11 // 1472
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 1
+    intc 5 // 640
+    intc_0 // 64
+    extract3
+    dig 2
+    intc 7 // 384
+    intc_0 // 64
+    extract3
+    dig 6
+    pushint 36
+    callsub RelationsLib.wire
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    swap
+    b-
+    dig 1
+    b+
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dig 2
+    b*
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    uncover 3
+    b+
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    dig 5
+    b|
+    uncover 4
+    intc 11 // 1472
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    dig 3
+    intc 4 // 576
+    intc_0 // 64
+    extract3
+    dig 4
+    extract 0 64
+    dig 5
+    extract 64 64
+    dig 6
+    extract 128 64
+    dig 7
+    extract 192 64
+    dig 8
+    intc_2 // 256
+    intc_0 // 64
+    extract3
+    dig 9
+    intc 6 // 320
+    intc_0 // 64
+    extract3
+    dig 13
+    extract 128 64 // on error: index access is out of bounds
+    dig 4
+    b*
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dig 2
+    b+
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    dig 12
+    b|
+    uncover 11
+    intc_3 // 512
+    intc_0 // 64
+    extract3
+    uncover 7
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 5
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    uncover 2
+    concat
+    dig 1
+    intc 12 // 1536
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 1
+    intc 5 // 640
+    intc_0 // 64
+    extract3
+    dig 2
+    intc 8 // 448
+    intc_0 // 64
+    extract3
+    dig 6
+    pushint 37
+    callsub RelationsLib.wire
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    swap
+    b-
+    dig 1
+    b+
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dig 2
+    b*
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    uncover 3
+    b+
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    dig 5
+    b|
+    uncover 4
+    intc 12 // 1536
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    dig 3
+    intc 4 // 576
+    intc_0 // 64
+    extract3
+    dig 4
+    extract 0 64
+    dig 5
+    extract 64 64
+    dig 6
+    extract 128 64
+    dig 7
+    extract 192 64
+    dig 8
+    intc_2 // 256
+    intc_0 // 64
+    extract3
+    dig 9
+    intc 6 // 320
+    intc_0 // 64
+    extract3
+    uncover 10
+    intc 7 // 384
+    intc_0 // 64
+    extract3
+    uncover 13
+    extract 192 64 // on error: index access is out of bounds
+    dig 4
+    b*
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dig 3
+    b+
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    dig 12
+    b|
+    uncover 7
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    uncover 2
+    concat
+    dig 1
+    intc 9 // 1600
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 1
+    intc 5 // 640
+    intc_0 // 64
+    extract3
+    uncover 2
+    intc_3 // 512
+    intc_0 // 64
+    extract3
+    uncover 5
+    pushint 38
+    callsub RelationsLib.wire
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    swap
+    b-
+    b+
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    b*
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    b+
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    intc 9 // 1600
+    swap
+    replace3 // on error: index access is out of bounds
+    pop
+    pushint 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk-rust/contracts/SimpleHonkVerifier.sol.SimpleHonkVerifierTest__Helper8.RelationsLib.scaleAndBatchSubrelations[routing]() -> void:
+RelationsLib.scaleAndBatchSubrelations:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc 13 // 1664
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint512, 26>
+    dup
+    txna ApplicationArgs 2
+    dup
+    len
+    intc 9 // 1600
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint512, 25>
+    swap
+    extract 0 64 // on error: index access is out of bounds
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    pushint 1
+    itob
+    dup
+
+RelationsLib.scaleAndBatchSubrelations_while_top@2:
+    pushint 26
+    itob
+    dig 1
+    b>
+    bz RelationsLib.scaleAndBatchSubrelations_after_while@4
+    pushint 8
+    bzero
+    dup
+    dig 2
+    dup
+    cover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 7
+    swap
+    intc_0 // 64
+    *
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dig 1
+    dig 5
+    b-
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 6
+    swap
+    intc_0 // 64
+    *
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    b*
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dig 4
+    b+
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    bury 4
+    bytec_2 // 0x01
+    b+
+    bury 1
+    b RelationsLib.scaleAndBatchSubrelations_while_top@2
+
+RelationsLib.scaleAndBatchSubrelations_after_while@4:
+    dig 2
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk-rust/contracts/SimpleHonkVerifier.sol.SimpleHonkVerifierTest__Helper8.FrLib.sqr[routing]() -> void:
+FrLib.sqr:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dup
+    b*
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return
+
+
+// _puya_lib.mem.new_slot() -> uint64:
+_puya_lib.mem.new_slot:
+    load 0
+    bitlen
+    load 0
+    intc_2 // 256
+    dig 2
+    -
+    pushint 0
+    setbit // on error: no available slots
+    store 0
+    retsub

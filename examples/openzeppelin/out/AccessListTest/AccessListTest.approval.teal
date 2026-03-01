@@ -1,0 +1,455 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessList.sol.AccessListTest.approval_program() -> uint64:
+main:
+    intcblock 0 1 64 32
+    bytecblock "admin" 0x 0x151f7c75 "_hasRole" "_roleExpiry" "memberCount" "_roleLevel" "_memberIndex"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 5 // "memberCount"
+    bytec_1 // 0x
+    app_global_put
+    pushbytes "roleCount"
+    bytec_1 // 0x
+    app_global_put
+    bytec_0 // "admin"
+    txn Sender
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xfcebad15 0x3d5d9e5e 0x5afabc26 0x0b0bba11 0x1d128eb7 0xcfce08c6 0x9e537ab6 0x92b76e41 0xac8b24de 0xe016a098 0x2a6132d5 // method "initMember(address)void", method "grantRole(address,uint512,uint512)void", method "revokeRole(address)void", method "isActive(address,uint512)bool", method "hasRole(address)bool", method "getRoleLevel(address)uint512", method "getRoleExpiry(address)uint512", method "getMemberCount()uint512", method "getAdmin()address", method "setRoleLevel(address,uint512)void", method "extendExpiry(address,uint512)void"
+    txna ApplicationArgs 0
+    match initMember grantRole revokeRole isActive hasRole getRoleLevel getRoleExpiry getMemberCount getAdmin setRoleLevel extendExpiry
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessList.sol.AccessListTest.initMember[routing]() -> void:
+initMember:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_3 // "_hasRole"
+    dig 1
+    concat
+    intc_0 // 0
+    itob
+    box_put
+    intc_0 // 0
+    itob
+    bytec 4 // "_roleExpiry"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    bytec 6 // "_roleLevel"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    bytec 7 // "_memberIndex"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessList.sol.AccessListTest.grantRole[routing]() -> void:
+grantRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_0 // 0
+    bytec_0 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    ==
+    assert // Not admin
+    uncover 2
+    sha256
+    bytec_3 // "_hasRole"
+    dig 1
+    concat
+    intc_1 // 1
+    itob
+    box_put
+    bytec 6 // "_roleLevel"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 3
+    box_put
+    bytec 4 // "_roleExpiry"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    bytec 7 // "_memberIndex"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_0 // 0
+    itob
+    b==
+    bz grantRole_after_if_else@3
+    intc_0 // 0
+    bytec 5 // "memberCount"
+    app_global_get_ex
+    assert // check memberCount exists
+    intc_1 // 1
+    itob
+    b+
+    bytec 5 // "memberCount"
+    dig 1
+    app_global_put
+    dig 1
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+grantRole_after_if_else@3:
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessList.sol.AccessListTest.revokeRole[routing]() -> void:
+revokeRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_0 // 0
+    bytec_0 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    ==
+    assert // Not admin
+    sha256
+    bytec_3 // "_hasRole"
+    swap
+    concat
+    intc_0 // 0
+    itob
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessList.sol.AccessListTest.isActive[routing]() -> void:
+isActive:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    sha256
+    bytec_3 // "_hasRole"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    bytec 4 // "_roleExpiry"
+    uncover 2
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    swap
+    bz isActive_bool_false@5
+    intc_0 // 0
+    itob
+    dig 1
+    b==
+    bnz isActive_bool_true@4
+    dup2
+    b<
+    bz isActive_bool_false@5
+
+isActive_bool_true@4:
+    intc_1 // 1
+
+isActive_bool_merge@6:
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+isActive_bool_false@5:
+    intc_0 // 0
+    b isActive_bool_merge@6
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessList.sol.AccessListTest.hasRole[routing]() -> void:
+hasRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_3 // "_hasRole"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessList.sol.AccessListTest.getRoleLevel[routing]() -> void:
+getRoleLevel:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 6 // "_roleLevel"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessList.sol.AccessListTest.getRoleExpiry[routing]() -> void:
+getRoleExpiry:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 4 // "_roleExpiry"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessList.sol.AccessListTest.getMemberCount[routing]() -> void:
+getMemberCount:
+    intc_0 // 0
+    bytec 5 // "memberCount"
+    app_global_get_ex
+    assert // check memberCount exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessList.sol.AccessListTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_0 // 0
+    bytec_0 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessList.sol.AccessListTest.setRoleLevel[routing]() -> void:
+setRoleLevel:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_0 // 0
+    bytec_0 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    ==
+    assert // Not admin
+    swap
+    sha256
+    bytec 6 // "_roleLevel"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessList.sol.AccessListTest.extendExpiry[routing]() -> void:
+extendExpiry:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_0 // 0
+    bytec_0 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    ==
+    assert // Not admin
+    swap
+    sha256
+    bytec 4 // "_roleExpiry"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return

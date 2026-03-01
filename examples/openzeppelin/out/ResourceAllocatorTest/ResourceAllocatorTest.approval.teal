@@ -1,0 +1,368 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ResourceAllocator.sol.ResourceAllocatorTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock "_totalAllocated" "_allocationCount" 0x151f7c75 "_admin" "_allocationAmount" "_allocationActive"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_1 // "_allocationCount"
+    pushbytes 0x
+    app_global_put
+    bytec_0 // "_totalAllocated"
+    pushbytes 0x
+    app_global_put
+    bytec_3 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 0
+    itob
+    bytec_1 // "_allocationCount"
+    dig 1
+    app_global_put
+    bytec_0 // "_totalAllocated"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x0f9e91ee 0xac8b24de 0xed72dbf0 0x3db2196f 0xcf0ed7c8 0x19cffe84 0xa0c19917 0xa750e104 // method "initAllocation(uint512)void", method "getAdmin()address", method "getAllocationCount()uint512", method "getTotalAllocated()uint512", method "getAllocation(uint512)uint512", method "isActive(uint512)bool", method "allocate(uint512)uint512", method "release(uint512)void"
+    txna ApplicationArgs 0
+    match initAllocation getAdmin getAllocationCount getTotalAllocated getAllocation isActive allocate release
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ResourceAllocator.sol.ResourceAllocatorTest.initAllocation[routing]() -> void:
+initAllocation:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_allocationAmount"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    bytec 5 // "_allocationActive"
+    swap
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ResourceAllocator.sol.ResourceAllocatorTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_1 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ResourceAllocator.sol.ResourceAllocatorTest.getAllocationCount[routing]() -> void:
+getAllocationCount:
+    intc_1 // 0
+    bytec_1 // "_allocationCount"
+    app_global_get_ex
+    assert // check _allocationCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ResourceAllocator.sol.ResourceAllocatorTest.getTotalAllocated[routing]() -> void:
+getTotalAllocated:
+    intc_1 // 0
+    bytec_0 // "_totalAllocated"
+    app_global_get_ex
+    assert // check _totalAllocated exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ResourceAllocator.sol.ResourceAllocatorTest.getAllocation[routing]() -> void:
+getAllocation:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_allocationAmount"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ResourceAllocator.sol.ResourceAllocatorTest.isActive[routing]() -> void:
+isActive:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_allocationActive"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ResourceAllocator.sol.ResourceAllocatorTest.allocate[routing]() -> void:
+allocate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Only admin
+    intc_1 // 0
+    itob
+    dig 1
+    b<
+    assert // Amount must be positive
+    intc_1 // 0
+    bytec_1 // "_allocationCount"
+    app_global_get_ex
+    assert // check _allocationCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_allocationAmount"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 4
+    box_put
+    bytec 5 // "_allocationActive"
+    swap
+    concat
+    intc_2 // 1
+    itob
+    box_put
+    intc_2 // 1
+    itob
+    dig 2
+    b+
+    bytec_1 // "_allocationCount"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec_0 // "_totalAllocated"
+    app_global_get_ex
+    assert // check _totalAllocated exists
+    uncover 3
+    b+
+    bytec_0 // "_totalAllocated"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ResourceAllocator.sol.ResourceAllocatorTest.release[routing]() -> void:
+release:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Only admin
+    intc_1 // 0
+    bytec_1 // "_allocationCount"
+    app_global_get_ex
+    assert // check _allocationCount exists
+    dig 1
+    b>
+    assert // Allocation does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_allocationActive"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // Allocation already released
+    intc_1 // 0
+    itob
+    box_put
+    intc_1 // 0
+    bytec_0 // "_totalAllocated"
+    app_global_get_ex
+    assert // check _totalAllocated exists
+    bytec 4 // "_allocationAmount"
+    uncover 2
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    b-
+    bytec_0 // "_totalAllocated"
+    swap
+    app_global_put
+    intc_2 // 1
+    return

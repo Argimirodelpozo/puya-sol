@@ -1,0 +1,1002 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WeightedVoting.sol.WeightedVoting.approval_program() -> uint64:
+main:
+    intcblock 64 1 0 32
+    bytecblock 0x 0x151f7c75 "_totalWeight" "_proposalCount" "_admin" 0x0000000000000000000000000000000000000000000000000000000000000000 "_weights" "_states" "_quorum" "_delegates" "_endTimes" "_forVotes" "_againstVotes" "_hasVoted"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 4 // "_admin"
+    bytec 5 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_3 // "_proposalCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec_2 // "_totalWeight"
+    bytec_0 // 0x
+    app_global_put
+    bytec 4 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xee162ef4 0xb3b65f28 0x15c07cfc 0xd4d97430 0xb5b8df35 0xd35932db 0xc8d461ab 0x364c71e7 0xd5ab049e 0xf7f876b2 0x86bb14f9 0xfd228fe4 0xbd0c7a94 0x0788e316 0xa6f2f42e 0x0a4fb6b3 // method "assignWeight(address,uint512)void", method "delegate(address)void", method "createProposal(uint512,uint512)uint512", method "vote(uint512,bool)void", method "finalize(uint512)void", method "getWeight(address)uint512", method "getDelegate(address)address", method "getEffectiveWeight(address)uint512", method "getProposalState(uint512)uint512", method "getProposalVotes(uint512)(uint512,uint512)", method "getProposalEndTime(uint512)uint512", method "getQuorum(uint512)uint512", method "hasVoted(uint512,address)bool", method "proposalCount()uint512", method "totalWeight()uint512", method "admin()address"
+    txna ApplicationArgs 0
+    match assignWeight delegate createProposal vote finalize getWeight getDelegate getEffectiveWeight getProposalState getProposalVotes getProposalEndTime getQuorum hasVoted proposalCount totalWeight admin
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WeightedVoting.sol.WeightedVoting.assignWeight[routing]() -> void:
+assignWeight:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec 4 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    !=
+    !
+    assert // VotingNotAuthorized
+    swap
+    sha256
+    bytec 6 // "_weights"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    cover 2
+    cover 3
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    intc_2 // 0
+    itob
+    dup
+    cover 2
+    b==
+    bz assignWeight_else_body@6
+    dig 2
+    dig 1
+    b>
+    bz assignWeight_else_body@6
+    intc_2 // 0
+    bytec_2 // "_totalWeight"
+    app_global_get_ex
+    assert // check _totalWeight exists
+    dig 3
+    b+
+    bytec_2 // "_totalWeight"
+    swap
+    app_global_put
+
+assignWeight_after_if_else@11:
+    pushbytes 0x0e0adfb6
+    dig 3
+    concat
+    log
+    intc_1 // 1
+    return
+
+assignWeight_else_body@6:
+    dup2
+    b>
+    bz assignWeight_else_body@9
+    dig 2
+    dig 1
+    b==
+    bz assignWeight_else_body@9
+    intc_2 // 0
+    bytec_2 // "_totalWeight"
+    app_global_get_ex
+    assert // check _totalWeight exists
+    dig 2
+    b-
+    bytec_2 // "_totalWeight"
+    swap
+    app_global_put
+    b assignWeight_after_if_else@11
+
+assignWeight_else_body@9:
+    intc_2 // 0
+    bytec_2 // "_totalWeight"
+    app_global_get_ex
+    assert // check _totalWeight exists
+    dig 2
+    b-
+    dig 3
+    b+
+    bytec_2 // "_totalWeight"
+    swap
+    app_global_put
+    b assignWeight_after_if_else@11
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WeightedVoting.sol.WeightedVoting.delegate[routing]() -> void:
+delegate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    sha256
+    bytec 9 // "_delegates"
+    swap
+    concat
+    swap
+    box_put
+    pushbytes 0x3134e8a2
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WeightedVoting.sol.WeightedVoting.createProposal[routing]() -> void:
+createProposal:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    callsub _getEffectiveWeight
+    intc_2 // 0
+    itob
+    b==
+    !
+    assert // VotingInsufficientWeight
+    intc_2 // 0
+    bytec_3 // "_proposalCount"
+    app_global_get_ex
+    assert // check _proposalCount exists
+    intc_1 // 1
+    itob
+    dup2
+    b+
+    bytec_3 // "_proposalCount"
+    swap
+    app_global_put
+    txn Sender
+    intc_0 // 64
+    bzero
+    dup
+    dig 4
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    pushbytes "_proposers"
+    dig 1
+    concat
+    uncover 3
+    box_put
+    global LatestTimestamp
+    itob
+    dig 6
+    b+
+    bytec 10 // "_endTimes"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    bytec 7 // "_states"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 3
+    box_put
+    bytec 8 // "_quorum"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    uncover 3
+    box_put
+    global LatestTimestamp
+    itob
+    uncover 3
+    b+
+    pushbytes 0x3417b456
+    swap
+    concat
+    log
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WeightedVoting.sol.WeightedVoting.vote[routing]() -> void:
+vote:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_2 // 0
+    getbit
+    dup
+    uncover 2
+    intc_2 // 0
+    bytec_3 // "_proposalCount"
+    app_global_get_ex
+    assert // check _proposalCount exists
+    dig 1
+    b<=
+    !
+    assert // VotingInvalidProposal
+    intc_0 // 64
+    bzero
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    dup
+    cover 3
+    bytec 7 // "_states"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 1
+    itob
+    b!=
+    !
+    assert // VotingProposalNotActive
+    txn Sender
+    callsub _getEffectiveWeight
+    dup
+    cover 3
+    intc_2 // 0
+    itob
+    b==
+    !
+    assert // VotingInsufficientWeight
+    intc_3 // 32
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_3 // 32
+    -
+    intc_3 // 32
+    extract3
+    txn Sender
+    concat
+    keccak256
+    sha256
+    bytec 13 // "_hasVoted"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // VotingAlreadyVoted
+    intc_1 // 1
+    itob
+    box_put
+    bz vote_else_body@11
+    bytec 11 // "_forVotes"
+    dig 2
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+
+vote_after_if_else@12:
+    dig 2
+    itob
+    pushbytes 0x7c2de587
+    swap
+    concat
+    dig 1
+    concat
+    log
+    intc_1 // 1
+    return
+
+vote_else_body@11:
+    bytec 12 // "_againstVotes"
+    dig 2
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    b vote_after_if_else@12
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WeightedVoting.sol.WeightedVoting.finalize[routing]() -> void:
+finalize:
+    intc_2 // 0
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    bytec_3 // "_proposalCount"
+    app_global_get_ex
+    assert // check _proposalCount exists
+    dig 1
+    b<=
+    !
+    assert // VotingInvalidProposal
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    dup
+    bytec 7 // "_states"
+    dig 1
+    concat
+    dup
+    cover 2
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 1
+    itob
+    b!=
+    !
+    assert // VotingProposalNotActive
+    bytec 11 // "_forVotes"
+    dig 1
+    concat
+    dup
+    cover 2
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 12 // "_againstVotes"
+    dig 2
+    concat
+    dup
+    cover 3
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b+
+    swap
+    global LatestTimestamp
+    itob
+    bytec 10 // "_endTimes"
+    uncover 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b>
+    bz finalize_else_body@14
+    bytec 8 // "_quorum"
+    dig 5
+    concat
+    dup
+    bury 7
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b<=
+    bz finalize_else_body@9
+    dig 2
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b>
+    bz finalize_else_body@9
+    pushint 2
+    itob
+    dig 4
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+finalize_after_if_else@21:
+    dig 3
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    pushbytes 0x7701dba1
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+finalize_else_body@9:
+    dig 5
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b<=
+    bz finalize_else_body@11
+    pushint 3
+    itob
+    dig 4
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    b finalize_after_if_else@21
+
+finalize_else_body@11:
+    pushint 4
+    itob
+    dig 4
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    b finalize_after_if_else@21
+
+finalize_else_body@14:
+    bytec 8 // "_quorum"
+    dig 5
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b<=
+    assert // VotingProposalNotExpired
+    dig 2
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b>
+    bz finalize_else_body@17
+    pushint 2
+    itob
+    dig 4
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    b finalize_after_if_else@21
+
+finalize_else_body@17:
+    pushint 3
+    itob
+    dig 4
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    b finalize_after_if_else@21
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WeightedVoting.sol.WeightedVoting.getWeight[routing]() -> void:
+getWeight:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 6 // "_weights"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WeightedVoting.sol.WeightedVoting.getDelegate[routing]() -> void:
+getDelegate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 9 // "_delegates"
+    swap
+    concat
+    box_get
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WeightedVoting.sol.WeightedVoting.getEffectiveWeight[routing]() -> void:
+getEffectiveWeight:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub _getEffectiveWeight
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WeightedVoting.sol.WeightedVoting.getProposalState[routing]() -> void:
+getProposalState:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_states"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WeightedVoting.sol.WeightedVoting.getProposalVotes[routing]() -> void:
+getProposalVotes:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 11 // "_forVotes"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 12 // "_againstVotes"
+    uncover 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    swap
+    uncover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WeightedVoting.sol.WeightedVoting.getProposalEndTime[routing]() -> void:
+getProposalEndTime:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 10 // "_endTimes"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WeightedVoting.sol.WeightedVoting.getQuorum[routing]() -> void:
+getQuorum:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_quorum"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WeightedVoting.sol.WeightedVoting.hasVoted[routing]() -> void:
+hasVoted:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_3 // 32
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_3 // 32
+    -
+    intc_3 // 32
+    extract3
+    swap
+    concat
+    keccak256
+    sha256
+    bytec 13 // "_hasVoted"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WeightedVoting.sol.WeightedVoting.proposalCount[routing]() -> void:
+proposalCount:
+    intc_2 // 0
+    bytec_3 // "_proposalCount"
+    app_global_get_ex
+    assert // check _proposalCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WeightedVoting.sol.WeightedVoting.totalWeight[routing]() -> void:
+totalWeight:
+    intc_2 // 0
+    bytec_2 // "_totalWeight"
+    app_global_get_ex
+    assert // check _totalWeight exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WeightedVoting.sol.WeightedVoting.admin[routing]() -> void:
+admin:
+    intc_2 // 0
+    bytec 4 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WeightedVoting.sol.WeightedVoting._getEffectiveWeight(voter: bytes) -> bytes:
+_getEffectiveWeight:
+    proto 1 1
+    frame_dig -1
+    sha256
+    dup
+    bytec 9 // "_delegates"
+    swap
+    concat
+    box_get
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    bytec 5 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    bz _getEffectiveWeight_after_if_else@2
+    frame_dig 1
+    sha256
+    bytec 6 // "_weights"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    frame_bury 0
+    retsub
+
+_getEffectiveWeight_after_if_else@2:
+    bytec 6 // "_weights"
+    frame_dig 0
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    frame_bury 0
+    retsub

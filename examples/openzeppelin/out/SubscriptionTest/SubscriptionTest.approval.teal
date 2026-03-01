@@ -1,0 +1,394 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Subscription.sol.SubscriptionTest.approval_program() -> uint64:
+main:
+    intcblock 64 1 0
+    bytecblock "_activeCount" 0x151f7c75 "_subscriptionCount" 0x0000000000000000000000000000000000000000000000000000000000000000 "_subActive" "_subOwner" "_admin" "_subPlan"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 6 // "_admin"
+    bytec_3 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_2 // "_subscriptionCount"
+    pushbytes 0x
+    app_global_put
+    bytec_0 // "_activeCount"
+    pushbytes 0x
+    app_global_put
+    bytec 6 // "_admin"
+    txn Sender
+    app_global_put
+    intc_2 // 0
+    itob
+    bytec_2 // "_subscriptionCount"
+    dig 1
+    app_global_put
+    bytec_0 // "_activeCount"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x77ae2c3d 0xac8b24de 0x3ecbccb2 0x8bcc2c6e 0x0d55ffbc 0x5ccf6383 0x494224a7 0x7983c963 0x9f47b5e8 // method "initSubscription(uint512)void", method "getAdmin()address", method "getSubscriptionCount()uint512", method "getActiveCount()uint512", method "getSubscriptionPlan(uint512)uint512", method "isSubscriptionActive(uint512)bool", method "getSubscriptionOwner(uint512)address", method "subscribe(uint512)uint512", method "cancelSubscription(uint512)void"
+    txna ApplicationArgs 0
+    match initSubscription getAdmin getSubscriptionCount getActiveCount getSubscriptionPlan isSubscriptionActive getSubscriptionOwner subscribe cancelSubscription
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Subscription.sol.SubscriptionTest.initSubscription[routing]() -> void:
+initSubscription:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_subPlan"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    bytec 4 // "_subActive"
+    dig 1
+    concat
+    intc_2 // 0
+    itob
+    box_put
+    bytec 5 // "_subOwner"
+    swap
+    concat
+    bytec_3 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Subscription.sol.SubscriptionTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_2 // 0
+    bytec 6 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Subscription.sol.SubscriptionTest.getSubscriptionCount[routing]() -> void:
+getSubscriptionCount:
+    intc_2 // 0
+    bytec_2 // "_subscriptionCount"
+    app_global_get_ex
+    assert // check _subscriptionCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Subscription.sol.SubscriptionTest.getActiveCount[routing]() -> void:
+getActiveCount:
+    intc_2 // 0
+    bytec_0 // "_activeCount"
+    app_global_get_ex
+    assert // check _activeCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Subscription.sol.SubscriptionTest.getSubscriptionPlan[routing]() -> void:
+getSubscriptionPlan:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_subPlan"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Subscription.sol.SubscriptionTest.isSubscriptionActive[routing]() -> void:
+isSubscriptionActive:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_subActive"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Subscription.sol.SubscriptionTest.getSubscriptionOwner[routing]() -> void:
+getSubscriptionOwner:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_subOwner"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Subscription.sol.SubscriptionTest.subscribe[routing]() -> void:
+subscribe:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    bytec_2 // "_subscriptionCount"
+    app_global_get_ex
+    assert // check _subscriptionCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_subPlan"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    bytec 4 // "_subActive"
+    dig 1
+    concat
+    intc_1 // 1
+    itob
+    box_put
+    txn Sender
+    bytec 5 // "_subOwner"
+    uncover 2
+    concat
+    swap
+    box_put
+    intc_1 // 1
+    itob
+    dig 2
+    dig 1
+    b+
+    bytec_2 // "_subscriptionCount"
+    swap
+    app_global_put
+    intc_2 // 0
+    bytec_0 // "_activeCount"
+    app_global_get_ex
+    assert // check _activeCount exists
+    b+
+    bytec_0 // "_activeCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Subscription.sol.SubscriptionTest.cancelSubscription[routing]() -> void:
+cancelSubscription:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_subActive"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 1
+    ==
+    assert // Not active
+    bytec 5 // "_subOwner"
+    uncover 2
+    concat
+    box_get
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    txn Sender
+    ==
+    assert // Not owner
+    intc_2 // 0
+    itob
+    box_put
+    intc_2 // 0
+    bytec_0 // "_activeCount"
+    app_global_get_ex
+    assert // check _activeCount exists
+    intc_1 // 1
+    itob
+    b-
+    bytec_0 // "_activeCount"
+    swap
+    app_global_put
+    intc_1 // 1
+    return

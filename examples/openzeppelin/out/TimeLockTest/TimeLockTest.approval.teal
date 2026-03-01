@@ -1,0 +1,410 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TimeLock.sol.TimeLockTest.approval_program() -> uint64:
+main:
+    intcblock 1 32 0 64
+    bytecblock 0x "_timestamps" 0x151f7c75 "_admin" "_minDelay" 0x00
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 4 // "_minDelay"
+    bytec_0 // 0x
+    app_global_put
+    bytec_3 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    pushint 10
+    itob
+    bytec 4 // "_minDelay"
+    swap
+    app_global_put
+    bytec_3 // "_admin"
+    txn Sender
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xf460c204 0xf6dc6334 0x1045c95b 0x4fff70b7 0xc52652dc 0x24555a8e 0xc281f782 0x281f8ff4 0x74235d44 0xa8c7fb20 0x4def7e13 // method "getMinDelay()uint512", method "setMinDelay(uint512)void", method "isOperation(byte[32])bool", method "isOperationPending(byte[32])bool", method "isOperationReady(byte[32])bool", method "isOperationDone(byte[32])bool", method "getTimestamp(byte[32])uint512", method "schedule(byte[32],uint512)void", method "execute(byte[32])void", method "cancel(byte[32])void", method "hashOperation(uint512,byte[32])byte[32]"
+    txna ApplicationArgs 0
+    match getMinDelay setMinDelay isOperation isOperationPending isOperationReady isOperationDone getTimestamp schedule execute cancel hashOperation
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TimeLock.sol.TimeLockTest.getMinDelay[routing]() -> void:
+getMinDelay:
+    intc_2 // 0
+    bytec 4 // "_minDelay"
+    app_global_get_ex
+    assert // check _minDelay exists
+    dup
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TimeLock.sol.TimeLockTest.setMinDelay[routing]() -> void:
+setMinDelay:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // TimeLock: caller is not admin
+    bytec 4 // "_minDelay"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TimeLock.sol.TimeLockTest.isOperation[routing]() -> void:
+isOperation:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_1 // "_timestamps"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_2 // 0
+    itob
+    b>
+    bytec 5 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TimeLock.sol.TimeLockTest.isOperationPending[routing]() -> void:
+isOperationPending:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_1 // "_timestamps"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_0 // 1
+    itob
+    b>
+    bytec 5 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TimeLock.sol.TimeLockTest.isOperationReady[routing]() -> void:
+isOperationReady:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_1 // "_timestamps"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_0 // 1
+    itob
+    b>
+    bytec 5 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TimeLock.sol.TimeLockTest.isOperationDone[routing]() -> void:
+isOperationDone:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_1 // "_timestamps"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_0 // 1
+    itob
+    b==
+    bytec 5 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TimeLock.sol.TimeLockTest.getTimestamp[routing]() -> void:
+getTimestamp:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_1 // "_timestamps"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TimeLock.sol.TimeLockTest.schedule[routing]() -> void:
+schedule:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // TimeLock: caller is not admin
+    swap
+    sha256
+    bytec_1 // "_timestamps"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_2 // 0
+    itob
+    b==
+    assert // TimeLock: operation already scheduled
+    intc_2 // 0
+    bytec 4 // "_minDelay"
+    app_global_get_ex
+    assert // check _minDelay exists
+    dig 2
+    b<=
+    assert // TimeLock: insufficient delay
+    pushint 2
+    itob
+    uncover 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TimeLock.sol.TimeLockTest.execute[routing]() -> void:
+execute:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_2 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // TimeLock: caller is not admin
+    sha256
+    bytec_1 // "_timestamps"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_0 // 1
+    itob
+    swap
+    dig 1
+    b>
+    assert // TimeLock: operation not pending
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TimeLock.sol.TimeLockTest.cancel[routing]() -> void:
+cancel:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_2 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // TimeLock: caller is not admin
+    sha256
+    bytec_1 // "_timestamps"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_0 // 1
+    itob
+    b>
+    assert // TimeLock: operation not pending
+    intc_2 // 0
+    itob
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TimeLock.sol.TimeLockTest.hashOperation[routing]() -> void:
+hashOperation:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_1 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    keccak256
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

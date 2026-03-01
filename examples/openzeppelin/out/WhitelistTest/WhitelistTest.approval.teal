@@ -1,0 +1,278 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Whitelist.sol.WhitelistTest.approval_program() -> uint64:
+main:
+    intcblock 0 1 32 64
+    bytecblock "_count" "_admin" "_whitelisted" 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_0 // "_count"
+    pushbytes 0x
+    app_global_put
+    bytec_1 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x0a4fb6b3 0x062ab171 0x5c5d33aa 0xa8dae90b 0xd9978ec4 0x857c6196 // method "admin()address", method "isWhitelisted(address)bool", method "whitelistCount()uint512", method "addToWhitelist(address)void", method "removeFromWhitelist(address)void", method "batchAdd(address,address)void"
+    txna ApplicationArgs 0
+    match admin isWhitelisted whitelistCount addToWhitelist removeFromWhitelist batchAdd
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Whitelist.sol.WhitelistTest.admin[routing]() -> void:
+admin:
+    intc_0 // 0
+    bytec_1 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Whitelist.sol.WhitelistTest.isWhitelisted[routing]() -> void:
+isWhitelisted:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_2 // "_whitelisted"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Whitelist.sol.WhitelistTest.whitelistCount[routing]() -> void:
+whitelistCount:
+    intc_0 // 0
+    bytec_0 // "_count"
+    app_global_get_ex
+    assert // check _count exists
+    dup
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Whitelist.sol.WhitelistTest.addToWhitelist[routing]() -> void:
+addToWhitelist:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_0 // 0
+    bytec_1 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Whitelist: not admin
+    sha256
+    bytec_2 // "_whitelisted"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Whitelist: already whitelisted
+    intc_1 // 1
+    itob
+    box_put
+    intc_0 // 0
+    bytec_0 // "_count"
+    app_global_get_ex
+    assert // check _count exists
+    intc_1 // 1
+    itob
+    b+
+    bytec_0 // "_count"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Whitelist.sol.WhitelistTest.removeFromWhitelist[routing]() -> void:
+removeFromWhitelist:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_0 // 0
+    bytec_1 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Whitelist: not admin
+    sha256
+    bytec_2 // "_whitelisted"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    assert // Whitelist: not whitelisted
+    intc_0 // 0
+    itob
+    box_put
+    intc_0 // 0
+    bytec_0 // "_count"
+    app_global_get_ex
+    assert // check _count exists
+    intc_1 // 1
+    itob
+    b-
+    bytec_0 // "_count"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Whitelist.sol.WhitelistTest.batchAdd[routing]() -> void:
+batchAdd:
+    intc_0 // 0
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_0 // 0
+    bytec_1 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Whitelist: not admin
+    sha256
+    bytec_2 // "_whitelisted"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    bnz batchAdd_after_if_else@3
+    intc_1 // 1
+    itob
+    dig 1
+    swap
+    box_put
+    intc_0 // 0
+    bytec_0 // "_count"
+    app_global_get_ex
+    assert // check _count exists
+    intc_1 // 1
+    itob
+    b+
+    bytec_0 // "_count"
+    swap
+    app_global_put
+
+batchAdd_after_if_else@3:
+    dig 1
+    sha256
+    bytec_2 // "_whitelisted"
+    swap
+    concat
+    dup
+    bury 4
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    bnz batchAdd_after_if_else@5
+    intc_1 // 1
+    itob
+    dig 3
+    swap
+    box_put
+    intc_0 // 0
+    bytec_0 // "_count"
+    app_global_get_ex
+    assert // check _count exists
+    intc_1 // 1
+    itob
+    b+
+    bytec_0 // "_count"
+    swap
+    app_global_put
+
+batchAdd_after_if_else@5:
+    intc_1 // 1
+    return

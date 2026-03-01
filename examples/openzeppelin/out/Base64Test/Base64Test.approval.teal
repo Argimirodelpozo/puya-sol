@@ -1,0 +1,357 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Base64.sol.Base64Test.approval_program() -> uint64:
+main:
+    intcblock 8 1 0 2
+    bytecblock "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" "" "="
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x63b05276 // method "encode(byte[])string"
+    txna ApplicationArgs 0
+    match main_encode_route@4
+    err
+
+main_encode_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b encode
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Base64.sol.Base64Test.encode[routing]() -> void:
+encode:
+    intc_2 // 0
+    dupn 15
+    bytec_1 // ""
+    dupn 3
+    txna ApplicationArgs 1
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    dup
+    len
+    dup
+    bnz encode_after_if_else@3
+    bytec_1 // ""
+
+encode_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Base64.sol.Base64.encode@19:
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+encode_after_if_else@3:
+    dup
+    itob
+    dup
+    bury 21
+    pushint 4
+    itob
+    dup
+    cover 2
+    bury 18
+    intc_3 // 2
+    itob
+    dup
+    bury 18
+    b+
+    pushint 3
+    itob
+    dup
+    bury 16
+    b/
+    b*
+    intc_0 // 8
+    bzero
+    dup
+    bury 10
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    bzero
+    bury 11
+    intc_2 // 0
+    itob
+    dup
+    bury 20
+    dup
+    bury 18
+    bury 18
+
+encode_while_top@4:
+    dig 17
+    dig 20
+    b<
+    bz encode_after_while@18
+    dig 7
+    dig 18
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    dig 3
+    swap
+    getbyte
+    itob
+    bury 23
+    intc_1 // 1
+    itob
+    dup
+    bury 14
+    b+
+    dup
+    bury 11
+    dig 20
+    b<
+    dup
+    bury 5
+    bz encode_ternary_false@7
+    dig 7
+    dig 10
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    dig 2
+    swap
+    getbyte
+    itob
+    bury 21
+
+encode_ternary_merge@8:
+    dig 17
+    dig 15
+    b+
+    dup
+    bury 10
+    dig 20
+    b<
+    dup
+    bury 4
+    bz encode_ternary_false@10
+    dig 7
+    dig 9
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    dig 2
+    swap
+    getbyte
+    itob
+
+encode_ternary_merge@11:
+    dig 22
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000010000
+    b*
+    dig 22
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000100
+    b*
+    b|
+    b|
+    dup
+    bury 8
+    dig 8
+    dup
+    cover 2
+    dig 19
+    dup
+    cover 4
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    dig 1
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000040000
+    b/
+    pushint 63
+    itob
+    dup
+    bury 20
+    swap
+    dig 1
+    b&
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    bytec_0 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    swap
+    intc_1 // 1
+    extract3
+    dig 16
+    uncover 3
+    uncover 2
+    replace3
+    dig 4
+    dig 17
+    b+
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    uncover 3
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000001000
+    b/
+    uncover 3
+    b&
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    bytec_0 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    swap
+    intc_1 // 1
+    extract3
+    replace3
+    bury 13
+    swap
+    dig 16
+    b+
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    bury 6
+    dig 3
+    bz encode_ternary_false@13
+    dig 6
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000040
+    b/
+    dig 14
+    b&
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    bytec_0 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    swap
+    intc_1 // 1
+    extract3
+
+encode_ternary_merge@14:
+    dig 11
+    dig 7
+    uncover 2
+    replace3
+    bury 11
+    dig 16
+    dig 13
+    b+
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    bury 5
+    dig 2
+    bz encode_ternary_false@16
+    dig 6
+    dig 14
+    b&
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    bytec_0 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    swap
+    intc_1 // 1
+    extract3
+
+encode_ternary_merge@17:
+    dig 11
+    dig 6
+    uncover 2
+    replace3
+    bury 11
+    dig 17
+    dig 13
+    b+
+    bury 18
+    dig 16
+    dig 16
+    b+
+    bury 17
+    b encode_while_top@4
+
+encode_ternary_false@16:
+    bytec_2 // "="
+    b encode_ternary_merge@17
+
+encode_ternary_false@13:
+    bytec_2 // "="
+    b encode_ternary_merge@14
+
+encode_ternary_false@10:
+    dig 18
+    b encode_ternary_merge@11
+
+encode_ternary_false@7:
+    dig 18
+    bury 21
+    b encode_ternary_merge@8
+
+encode_after_while@18:
+    dig 10
+    b encode_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Base64.sol.Base64.encode@19

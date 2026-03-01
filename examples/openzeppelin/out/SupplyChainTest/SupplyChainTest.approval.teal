@@ -1,0 +1,738 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SupplyChain.sol.SupplyChainTest.approval_program() -> uint64:
+main:
+    intcblock 64 1 0 2
+    bytecblock 0x 0x151f7c75 "_shipmentStatus" "_admin" "_shipmentCount" "_deliveredCount" "_returnedCount" "_shipmentOrigin" "_shipmentDestination" "_shipmentTimestamp" 0x00
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 4 // "_shipmentCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec 5 // "_deliveredCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec 6 // "_returnedCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec_3 // "_admin"
+    txn Sender
+    app_global_put
+    intc_2 // 0
+    itob
+    bytec 4 // "_shipmentCount"
+    dig 1
+    app_global_put
+    bytec 5 // "_deliveredCount"
+    dig 1
+    app_global_put
+    bytec 6 // "_returnedCount"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x747b7ce6 0xac8b24de 0xcab6e040 0xc2fe88aa 0xc07424b2 0xc5a97d3e 0x48b1fec9 0x7dcc221b 0x7a9bf42f 0xd2bdf30e 0xd3886519 0xcbdcff8f 0xfe8527dc 0xb6c6fbf7 0x57c1ddbb 0x7daf3ff0 // method "initShipment(uint512)void", method "getAdmin()address", method "getShipmentCount()uint512", method "getDeliveredCount()uint512", method "getReturnedCount()uint512", method "getShipmentOrigin(uint512)uint512", method "getShipmentDestination(uint512)uint512", method "getShipmentStatus(uint512)uint512", method "getShipmentTimestamp(uint512)uint512", method "isDelivered(uint512)bool", method "isReturned(uint512)bool", method "isInTransit(uint512)bool", method "createShipment(uint512,uint512,uint512)uint512", method "startTransit(uint512)void", method "deliver(uint512)void", method "returnShipment(uint512)void"
+    txna ApplicationArgs 0
+    match initShipment getAdmin getShipmentCount getDeliveredCount getReturnedCount getShipmentOrigin getShipmentDestination getShipmentStatus getShipmentTimestamp isDelivered isReturned isInTransit createShipment startTransit deliver returnShipment
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SupplyChain.sol.SupplyChainTest.initShipment[routing]() -> void:
+initShipment:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_shipmentOrigin"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 8 // "_shipmentDestination"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec_2 // "_shipmentStatus"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 9 // "_shipmentTimestamp"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SupplyChain.sol.SupplyChainTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_2 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SupplyChain.sol.SupplyChainTest.getShipmentCount[routing]() -> void:
+getShipmentCount:
+    intc_2 // 0
+    bytec 4 // "_shipmentCount"
+    app_global_get_ex
+    assert // check _shipmentCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SupplyChain.sol.SupplyChainTest.getDeliveredCount[routing]() -> void:
+getDeliveredCount:
+    intc_2 // 0
+    bytec 5 // "_deliveredCount"
+    app_global_get_ex
+    assert // check _deliveredCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SupplyChain.sol.SupplyChainTest.getReturnedCount[routing]() -> void:
+getReturnedCount:
+    intc_2 // 0
+    bytec 6 // "_returnedCount"
+    app_global_get_ex
+    assert // check _returnedCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SupplyChain.sol.SupplyChainTest.getShipmentOrigin[routing]() -> void:
+getShipmentOrigin:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_shipmentOrigin"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SupplyChain.sol.SupplyChainTest.getShipmentDestination[routing]() -> void:
+getShipmentDestination:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_shipmentDestination"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SupplyChain.sol.SupplyChainTest.getShipmentStatus[routing]() -> void:
+getShipmentStatus:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_shipmentStatus"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SupplyChain.sol.SupplyChainTest.getShipmentTimestamp[routing]() -> void:
+getShipmentTimestamp:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 9 // "_shipmentTimestamp"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SupplyChain.sol.SupplyChainTest.isDelivered[routing]() -> void:
+isDelivered:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_shipmentStatus"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_3 // 2
+    itob
+    b==
+    bytec 10 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SupplyChain.sol.SupplyChainTest.isReturned[routing]() -> void:
+isReturned:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_shipmentStatus"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    pushint 3
+    itob
+    b==
+    bytec 10 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SupplyChain.sol.SupplyChainTest.isInTransit[routing]() -> void:
+isInTransit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_shipmentStatus"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 1
+    itob
+    b==
+    bytec 10 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SupplyChain.sol.SupplyChainTest.createShipment[routing]() -> void:
+createShipment:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Only admin
+    intc_2 // 0
+    bytec 4 // "_shipmentCount"
+    app_global_get_ex
+    assert // check _shipmentCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_shipmentOrigin"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 6
+    box_put
+    bytec 8 // "_shipmentDestination"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 5
+    box_put
+    intc_2 // 0
+    itob
+    bytec_2 // "_shipmentStatus"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    bytec 9 // "_shipmentTimestamp"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    uncover 3
+    box_put
+    intc_1 // 1
+    itob
+    dig 2
+    b+
+    bytec 4 // "_shipmentCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SupplyChain.sol.SupplyChainTest.startTransit[routing]() -> void:
+startTransit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Only admin
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_shipmentStatus"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_2 // 0
+    itob
+    b==
+    assert // Not in created status
+    intc_1 // 1
+    itob
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SupplyChain.sol.SupplyChainTest.deliver[routing]() -> void:
+deliver:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Only admin
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_shipmentStatus"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 1
+    itob
+    swap
+    dig 1
+    b==
+    assert // Not in transit
+    intc_3 // 2
+    itob
+    dig 2
+    box_del
+    pop
+    uncover 2
+    swap
+    box_put
+    intc_2 // 0
+    bytec 5 // "_deliveredCount"
+    app_global_get_ex
+    assert // check _deliveredCount exists
+    b+
+    bytec 5 // "_deliveredCount"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/SupplyChain.sol.SupplyChainTest.returnShipment[routing]() -> void:
+returnShipment:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec_3 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Only admin
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_shipmentStatus"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 1
+    itob
+    swap
+    dig 1
+    b==
+    assert // Not in transit
+    pushint 3
+    itob
+    dig 2
+    box_del
+    pop
+    uncover 2
+    swap
+    box_put
+    intc_2 // 0
+    bytec 6 // "_returnedCount"
+    app_global_get_ex
+    assert // check _returnedCount exists
+    b+
+    bytec 6 // "_returnedCount"
+    swap
+    app_global_put
+    intc_1 // 1
+    return

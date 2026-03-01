@@ -1,0 +1,469 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FeeCollector.sol.FeeCollectorTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1 32
+    bytecblock 0x151f7c75 0x "_defaultFeeRate" "_owner" "_totalCollected" "_totalWithdrawn" "_customFeeRate" "_feesPaid"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "_owner"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 4 // "_totalCollected"
+    bytec_1 // 0x
+    app_global_put
+    bytec 5 // "_totalWithdrawn"
+    bytec_1 // 0x
+    app_global_put
+    bytec_2 // "_defaultFeeRate"
+    bytec_1 // 0x
+    app_global_put
+    bytec_3 // "_owner"
+    txn Sender
+    app_global_put
+    pushint 300
+    itob
+    bytec_2 // "_defaultFeeRate"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb1bbb0a8 0xeff2e7e7 0x62905ca5 0x54ee91d0 0x13098aa4 0x70e01f05 0x5e64241c 0x3203ad6e 0x24901c4a 0x0a7b8f91 0xdab6f241 0xb04ebd81 // method "owner()address", method "totalCollected()uint512", method "totalWithdrawn()uint512", method "defaultFeeRate()uint512", method "setDefaultFeeRate(uint512)void", method "setCustomFeeRate(address,uint512)void", method "getFeeRate(address)uint512", method "calculateFee(address,uint512)uint512", method "collectFee(address,uint512)uint512", method "feesPaid(address)uint512", method "withdraw(uint512)void", method "availableBalance()uint512"
+    txna ApplicationArgs 0
+    match owner totalCollected totalWithdrawn defaultFeeRate setDefaultFeeRate setCustomFeeRate getFeeRate calculateFee collectFee feesPaid withdraw availableBalance
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FeeCollector.sol.FeeCollectorTest.owner[routing]() -> void:
+owner:
+    intc_1 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FeeCollector.sol.FeeCollectorTest.totalCollected[routing]() -> void:
+totalCollected:
+    intc_1 // 0
+    bytec 4 // "_totalCollected"
+    app_global_get_ex
+    assert // check _totalCollected exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FeeCollector.sol.FeeCollectorTest.totalWithdrawn[routing]() -> void:
+totalWithdrawn:
+    intc_1 // 0
+    bytec 5 // "_totalWithdrawn"
+    app_global_get_ex
+    assert // check _totalWithdrawn exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FeeCollector.sol.FeeCollectorTest.defaultFeeRate[routing]() -> void:
+defaultFeeRate:
+    intc_1 // 0
+    bytec_2 // "_defaultFeeRate"
+    app_global_get_ex
+    assert // check _defaultFeeRate exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FeeCollector.sol.FeeCollectorTest.setDefaultFeeRate[routing]() -> void:
+setDefaultFeeRate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // Not owner
+    pushint 5000
+    itob
+    dig 1
+    b>=
+    assert // Max 50%
+    bytec_2 // "_defaultFeeRate"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FeeCollector.sol.FeeCollectorTest.setCustomFeeRate[routing]() -> void:
+setCustomFeeRate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // Not owner
+    swap
+    sha256
+    bytec 6 // "_customFeeRate"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FeeCollector.sol.FeeCollectorTest.getFeeRate[routing]() -> void:
+getFeeRate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 6 // "_customFeeRate"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    intc_1 // 0
+    itob
+    b>
+    bz getFeeRate_after_if_else@3
+    dup
+
+getFeeRate_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FeeCollector.sol.FeeCollectorTest.getFeeRate@4:
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+getFeeRate_after_if_else@3:
+    intc_1 // 0
+    bytec_2 // "_defaultFeeRate"
+    app_global_get_ex
+    assert // check _defaultFeeRate exists
+    b getFeeRate_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FeeCollector.sol.FeeCollectorTest.getFeeRate@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FeeCollector.sol.FeeCollectorTest.calculateFee[routing]() -> void:
+calculateFee:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    sha256
+    bytec 6 // "_customFeeRate"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    intc_1 // 0
+    itob
+    b>
+    bz calculateFee_ternary_false@3
+    dup
+
+calculateFee_ternary_merge@4:
+    dig 2
+    b*
+    pushint 10000
+    itob
+    b/
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+calculateFee_ternary_false@3:
+    intc_1 // 0
+    bytec_2 // "_defaultFeeRate"
+    app_global_get_ex
+    assert // check _defaultFeeRate exists
+    b calculateFee_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FeeCollector.sol.FeeCollectorTest.collectFee[routing]() -> void:
+collectFee:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    sha256
+    dup
+    bytec 6 // "_customFeeRate"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    intc_1 // 0
+    itob
+    b>
+    bz collectFee_ternary_false@3
+    dup
+
+collectFee_ternary_merge@4:
+    dig 3
+    b*
+    pushint 10000
+    itob
+    b/
+    bytec 7 // "_feesPaid"
+    dig 3
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_1 // 0
+    bytec 4 // "_totalCollected"
+    app_global_get_ex
+    assert // check _totalCollected exists
+    dig 1
+    b+
+    bytec 4 // "_totalCollected"
+    swap
+    app_global_put
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+collectFee_ternary_false@3:
+    intc_1 // 0
+    bytec_2 // "_defaultFeeRate"
+    app_global_get_ex
+    assert // check _defaultFeeRate exists
+    b collectFee_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FeeCollector.sol.FeeCollectorTest.feesPaid[routing]() -> void:
+feesPaid:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 7 // "_feesPaid"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FeeCollector.sol.FeeCollectorTest.withdraw[routing]() -> void:
+withdraw:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // Not owner
+    intc_1 // 0
+    bytec 4 // "_totalCollected"
+    app_global_get_ex
+    assert // check _totalCollected exists
+    intc_1 // 0
+    bytec 5 // "_totalWithdrawn"
+    app_global_get_ex
+    assert // check _totalWithdrawn exists
+    swap
+    dig 1
+    b-
+    dig 2
+    b>=
+    assert // Insufficient balance
+    b+
+    bytec 5 // "_totalWithdrawn"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FeeCollector.sol.FeeCollectorTest.availableBalance[routing]() -> void:
+availableBalance:
+    intc_1 // 0
+    bytec 4 // "_totalCollected"
+    app_global_get_ex
+    assert // check _totalCollected exists
+    intc_1 // 0
+    bytec 5 // "_totalWithdrawn"
+    app_global_get_ex
+    assert // check _totalWithdrawn exists
+    b-
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

@@ -1,0 +1,95 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Counters.sol.CountersTest.approval_program() -> uint64:
+main:
+    intcblock 1 0 64
+    bytecblock "_counter"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "_counter"
+    pushbytes 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x719b1918 0x2fa47328 0x4b5bddfd 0x19c02cb3 // method "current()uint512", method "increment()void", method "decrement()void", method "reset()void"
+    txna ApplicationArgs 0
+    match current increment decrement reset
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Counters.sol.CountersTest.current[routing]() -> void:
+current:
+    intc_1 // 0
+    bytec_0 // "_counter"
+    app_global_get_ex
+    assert // check _counter exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Counters.sol.CountersTest.increment[routing]() -> void:
+increment:
+    intc_1 // 0
+    bytec_0 // "_counter"
+    app_global_get_ex
+    assert // check _counter exists
+    intc_0 // 1
+    itob
+    b+
+    bytec_0 // "_counter"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Counters.sol.CountersTest.decrement[routing]() -> void:
+decrement:
+    intc_1 // 0
+    bytec_0 // "_counter"
+    app_global_get_ex
+    assert // check _counter exists
+    intc_1 // 0
+    itob
+    dig 1
+    b<
+    assert // Counter: decrement overflow
+    intc_0 // 1
+    itob
+    b-
+    bytec_0 // "_counter"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Counters.sol.CountersTest.reset[routing]() -> void:
+reset:
+    intc_1 // 0
+    itob
+    bytec_0 // "_counter"
+    swap
+    app_global_put
+    intc_0 // 1
+    return

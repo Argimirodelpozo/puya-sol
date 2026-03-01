@@ -1,0 +1,738 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Compliance.sol.ComplianceTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1 32
+    bytecblock 0x 0x151f7c75 "_admin" "_ruleCount" "_ruleActive" "_checkCount" "_totalViolations" "_ruleViolationCount" "_entityViolations" "_ruleSeverity" "_entityChecks"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_3 // "_ruleCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec 5 // "_checkCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec 6 // "_totalViolations"
+    bytec_0 // 0x
+    app_global_put
+    bytec_2 // "_admin"
+    txn Sender
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x71c068e4 0xa6b37022 0xac8b24de 0xc1a602d7 0xebfe56c9 0xe7683200 0x621d4184 0x3e90ac73 0x4c79947e 0x8a596c1d 0x6bf11dd5 0x99e5460a 0x81ef0cef 0x4c1b10be 0xfbc362df 0xe9d38a97 // method "initRule(uint512)void", method "initEntity(address)void", method "getAdmin()address", method "getRuleCount()uint512", method "getCheckCount()uint512", method "getTotalViolations()uint512", method "getRuleSeverity(uint512)uint512", method "isRuleActive(uint512)bool", method "getRuleViolationCount(uint512)uint512", method "getEntityViolations(address)uint512", method "getEntityChecks(address)uint512", method "createRule(uint512)uint512", method "performCheck(address,uint512,bool)void", method "deactivateRule(uint512)void", method "activateRule(uint512)void", method "isEntityCompliant(address)bool"
+    txna ApplicationArgs 0
+    match initRule initEntity getAdmin getRuleCount getCheckCount getTotalViolations getRuleSeverity isRuleActive getRuleViolationCount getEntityViolations getEntityChecks createRule performCheck deactivateRule activateRule isEntityCompliant
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Compliance.sol.ComplianceTest.initRule[routing]() -> void:
+initRule:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 9 // "_ruleSeverity"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 4 // "_ruleActive"
+    dig 1
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    bytec 7 // "_ruleViolationCount"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Compliance.sol.ComplianceTest.initEntity[routing]() -> void:
+initEntity:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_1 // 0
+    itob
+    swap
+    sha256
+    bytec 8 // "_entityViolations"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 10 // "_entityChecks"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Compliance.sol.ComplianceTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Compliance.sol.ComplianceTest.getRuleCount[routing]() -> void:
+getRuleCount:
+    intc_1 // 0
+    bytec_3 // "_ruleCount"
+    app_global_get_ex
+    assert // check _ruleCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Compliance.sol.ComplianceTest.getCheckCount[routing]() -> void:
+getCheckCount:
+    intc_1 // 0
+    bytec 5 // "_checkCount"
+    app_global_get_ex
+    assert // check _checkCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Compliance.sol.ComplianceTest.getTotalViolations[routing]() -> void:
+getTotalViolations:
+    intc_1 // 0
+    bytec 6 // "_totalViolations"
+    app_global_get_ex
+    assert // check _totalViolations exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Compliance.sol.ComplianceTest.getRuleSeverity[routing]() -> void:
+getRuleSeverity:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 9 // "_ruleSeverity"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Compliance.sol.ComplianceTest.isRuleActive[routing]() -> void:
+isRuleActive:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_ruleActive"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Compliance.sol.ComplianceTest.getRuleViolationCount[routing]() -> void:
+getRuleViolationCount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_ruleViolationCount"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Compliance.sol.ComplianceTest.getEntityViolations[routing]() -> void:
+getEntityViolations:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 8 // "_entityViolations"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Compliance.sol.ComplianceTest.getEntityChecks[routing]() -> void:
+getEntityChecks:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 10 // "_entityChecks"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Compliance.sol.ComplianceTest.createRule[routing]() -> void:
+createRule:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Compliance: not admin
+    pushint 2
+    itob
+    dig 1
+    b>=
+    assert // Compliance: invalid severity
+    intc_1 // 0
+    bytec_3 // "_ruleCount"
+    app_global_get_ex
+    assert // check _ruleCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 9 // "_ruleSeverity"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    bytec 4 // "_ruleActive"
+    dig 1
+    concat
+    intc_2 // 1
+    itob
+    box_put
+    intc_1 // 0
+    itob
+    bytec 7 // "_ruleViolationCount"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    itob
+    dig 2
+    b+
+    bytec_3 // "_ruleCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Compliance.sol.ComplianceTest.performCheck[routing]() -> void:
+performCheck:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_2 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Compliance: not admin
+    intc_1 // 0
+    bytec_3 // "_ruleCount"
+    app_global_get_ex
+    assert // check _ruleCount exists
+    dig 2
+    b>
+    assert // Compliance: rule does not exist
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    dup
+    cover 3
+    bytec 4 // "_ruleActive"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // Compliance: rule not active
+    intc_1 // 0
+    bytec 5 // "_checkCount"
+    app_global_get_ex
+    assert // check _checkCount exists
+    intc_2 // 1
+    itob
+    dup
+    cover 4
+    swap
+    dig 1
+    b+
+    bytec 5 // "_checkCount"
+    swap
+    app_global_put
+    uncover 2
+    sha256
+    dup
+    cover 3
+    bytec 10 // "_entityChecks"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    uncover 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    bnz performCheck_after_if_else@3
+    intc_1 // 0
+    bytec 6 // "_totalViolations"
+    app_global_get_ex
+    assert // check _totalViolations exists
+    dig 2
+    dup
+    cover 2
+    b+
+    bytec 6 // "_totalViolations"
+    swap
+    app_global_put
+    bytec 8 // "_entityViolations"
+    dig 2
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec 7 // "_ruleViolationCount"
+    dig 4
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    uncover 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+
+performCheck_after_if_else@3:
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Compliance.sol.ComplianceTest.deactivateRule[routing]() -> void:
+deactivateRule:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Compliance: not admin
+    intc_1 // 0
+    bytec_3 // "_ruleCount"
+    app_global_get_ex
+    assert // check _ruleCount exists
+    dig 1
+    b>
+    assert // Compliance: rule does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_ruleActive"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // Compliance: rule already inactive
+    intc_1 // 0
+    itob
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Compliance.sol.ComplianceTest.activateRule[routing]() -> void:
+activateRule:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Compliance: not admin
+    intc_1 // 0
+    bytec_3 // "_ruleCount"
+    app_global_get_ex
+    assert // check _ruleCount exists
+    dig 1
+    b>
+    assert // Compliance: rule does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_ruleActive"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Compliance: rule already active
+    intc_2 // 1
+    itob
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Compliance.sol.ComplianceTest.isEntityCompliant[routing]() -> void:
+isEntityCompliant:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 8 // "_entityViolations"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    itob
+    b==
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

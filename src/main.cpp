@@ -3,6 +3,11 @@
 #include "json/AWSTSerializer.h"
 #include "json/OptionsWriter.h"
 #include "runner/PuyaRunner.h"
+#include "splitter/SizeEstimator.h"
+#include "splitter/CallGraphAnalyzer.h"
+#include "splitter/ContractSplitter.h"
+#include "splitter/FunctionSplitter.h"
+#include "splitter/ConstantExternalizer.h"
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/FileReader.h>
@@ -48,11 +53,41 @@ std::string transformSource(std::string const& _source)
 		result = std::regex_replace(result, re, "type($1).max");
 	}
 
-	// 4. Fix bare Yul builtins: "chainid" (not followed by "(") → "chainid()"
+	// 4. Fix bare Yul builtins in assembly: "chainid" (not followed by "(") → "chainid()"
 	//    In 0.5.x Yul, chainid was a variable; in 0.8.x it must be called as a function.
+	//    Must NOT match "block.chainid" (0.8.x property access), only bare "chainid" in assembly.
+	//    C++ std::regex doesn't support lookbehind, so we use a manual replacement loop.
 	{
-		static std::regex const re(R"(\bchainid\b(?!\s*\())");
-		result = std::regex_replace(result, re, "chainid()");
+		std::string const needle = "chainid";
+		size_t pos = 0;
+		while ((pos = result.find(needle, pos)) != std::string::npos)
+		{
+			size_t endPos = pos + needle.size();
+			// Skip if preceded by '.' (e.g. block.chainid)
+			if (pos > 0 && result[pos - 1] == '.')
+			{
+				pos = endPos;
+				continue;
+			}
+			// Skip if already followed by '('
+			size_t nextNonSpace = endPos;
+			while (nextNonSpace < result.size() && result[nextNonSpace] == ' ')
+				++nextNonSpace;
+			if (nextNonSpace < result.size() && result[nextNonSpace] == '(')
+			{
+				pos = endPos;
+				continue;
+			}
+			// Check word boundary: character before must not be alphanumeric/underscore
+			if (pos > 0 && (std::isalnum(result[pos - 1]) || result[pos - 1] == '_'))
+			{
+				pos = endPos;
+				continue;
+			}
+			// Replace bare "chainid" with "chainid()"
+			result.insert(endPos, "()");
+			pos = endPos + 2;
+		}
 	}
 
 	return result;
@@ -109,6 +144,9 @@ struct Options
 	bool dumpAwst = false;
 	bool noPuya = false;
 	uint64_t opupBudget = 0;
+	bool splitContracts = false;
+	bool allowMidFunctionSplit = false;
+	int optimizationLevel = 1;
 };
 
 void printUsage(char const* _progName)
@@ -125,6 +163,9 @@ void printUsage(char const* _progName)
 		<< "  --dump-awst            Dump AWST JSON to stdout\n"
 		<< "  --no-puya              Skip puya invocation (only generate JSON)\n"
 		<< "  --opup-budget <N>      Inject ensure_budget(N) into public methods (OpUp)\n"
+		<< "  --split-contracts      Auto-split oversized contracts into cooperating helpers\n"
+		<< "  --allow-mid-function-split  Allow splitting oversized functions at statement boundaries\n"
+		<< "  --optimization-level <N>   Puya optimization level: 0, 1, 2 (default: 1)\n"
 		<< "  --help                 Show this help message\n";
 }
 
@@ -152,6 +193,12 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.noPuya = true;
 		else if (arg == "--opup-budget" && i + 1 < _argc)
 			opts.opupBudget = std::stoull(_argv[++i]);
+		else if (arg == "--split-contracts")
+			opts.splitContracts = true;
+		else if (arg == "--allow-mid-function-split")
+			opts.allowMidFunctionSplit = true;
+		else if (arg == "--optimization-level" && i + 1 < _argc)
+			opts.optimizationLevel = std::stoi(_argv[++i]);
 		else if (arg == "--help")
 		{
 			printUsage(_argv[0]);
@@ -306,8 +353,10 @@ int main(int _argc, char* _argv[])
 	// Set sources using the normalized source unit name
 	compiler.setSources({{sourceUnitName, mainSourceContent}});
 
-	// Configure EVM version
-	compiler.setEVMVersion(solidity::langutil::EVMVersion{});
+	// Configure EVM version — use Cancun to support block.chainid, block.basefee, etc.
+	auto evmVer = solidity::langutil::EVMVersion::cancun();
+	compiler.setEVMVersion(evmVer);
+	logger.info("EVM version set to: " + evmVer.name() + " (hasChainID=" + (evmVer.hasChainID() ? "true" : "false") + ")");
 
 	// No remappings needed — node_modules is added as include path
 
@@ -388,6 +437,203 @@ int main(int _argc, char* _argv[])
 
 	logger.info("Generated " + std::to_string(roots.size()) + " AWST root node(s)");
 
+	// ─── Contract size estimation and splitting ────────────────────────────
+	// Always run size estimation (Parts 1-2: diagnostics).
+	// Only split if --split-contracts is set AND contract is oversized.
+
+	// Find the primary contract for analysis
+	std::shared_ptr<puyasol::awst::Contract> primaryContract;
+	std::string sourceBaseName = fs::path(sourceFile).stem().string();
+	for (auto const& root: roots)
+	{
+		if (auto contract = std::dynamic_pointer_cast<puyasol::awst::Contract>(root))
+		{
+			primaryContract = contract; // fallback = last
+			if (contract->name == sourceBaseName)
+				break;
+		}
+	}
+
+	// Collect subroutines for analysis
+	std::vector<std::shared_ptr<puyasol::awst::RootNode>> subroutines;
+	for (auto const& root: roots)
+	{
+		if (dynamic_cast<puyasol::awst::Subroutine const*>(root.get()))
+			subroutines.push_back(root);
+	}
+
+	bool didSplit = false;
+	std::vector<std::string> allContractIds;
+
+	if (primaryContract)
+	{
+		// ─── Constant externalization ─────────────────────────────────────────
+		// Move large constants (proof data, etc.) to box storage. This reduces
+		// bytecode size and enables contracts to fit within AVM 8KB limit.
+		// A __load_constants() ABI method is added to read from box → scratch.
+		{
+			puyasol::splitter::ConstantExternalizer constExt;
+			auto constResult = constExt.externalize(*primaryContract, subroutines);
+			if (constResult.didExternalize)
+			{
+				logger.info("Externalized " + std::to_string(constResult.constants.size()) +
+					" constant(s) to box '" + constResult.boxName + "' (" +
+					std::to_string(constResult.totalBoxSize) + " bytes)");
+			}
+		}
+
+		// ─── Phase 0: Mid-function splitting (BEFORE contract splitting) ─────
+		// Run FunctionSplitter globally so that chunks become independent
+		// subroutines that can be distributed across helper contracts.
+		puyasol::splitter::FunctionSplitter::SplitResult funcResult;
+
+		if (opts.allowMidFunctionSplit && opts.splitContracts)
+		{
+			logger.info("Phase 0: Global mid-function splitting...");
+			puyasol::splitter::FunctionSplitter funcSplitter;
+
+			// Target ~2000 instructions ≈ ~4000 bytes per chunk.
+			// Shared deps (FrLib, Transcript utils) add ~3-5KB when duplicated.
+			// Most helpers fit 8KB; 2-3 outliers may need further optimization.
+			constexpr size_t maxChunkInstructions = 2000;
+
+			funcResult = funcSplitter.splitOversizedFunctions(roots, maxChunkInstructions);
+			if (funcResult.didSplit)
+			{
+				logger.info("  Split " + std::to_string(funcResult.rewrittenFunctions.size()) +
+					" function(s) into chunks (" +
+					std::to_string(funcResult.newSubroutines.size()) + " new subroutines)");
+
+				if (!funcResult.mutableSharedFunctions.empty())
+					logger.info("  " + std::to_string(funcResult.mutableSharedFunctions.size()) +
+						" function(s) have mutable shared params (chunks grouped)");
+
+				// Re-collect subroutines after splitting (new chunks added to roots)
+				subroutines.clear();
+				for (auto const& root: roots)
+				{
+					if (dynamic_cast<puyasol::awst::Subroutine const*>(root.get()))
+						subroutines.push_back(root);
+				}
+			}
+		}
+
+		// ─── Phase 1: Size estimation ────────────────────────────────────────
+		puyasol::splitter::SizeEstimator estimator;
+		auto estimate = estimator.estimate(*primaryContract, subroutines);
+
+		logger.info("Size estimate for '" + primaryContract->name + "': " +
+			std::to_string(estimate.totalInstructions) + " instructions, ~" +
+			std::to_string(estimate.estimatedBytes) + " bytes");
+
+		// Log per-method breakdown at debug level
+		for (auto const& [name, size]: estimate.methodSizes)
+			logger.debug("  " + name + ": " + std::to_string(size) + " instructions");
+
+		if (estimate.estimatedBytes > puyasol::splitter::SizeEstimator::WarnThresholdBytes)
+			logger.warning("Contract '" + primaryContract->name + "' estimated at ~" +
+				std::to_string(estimate.estimatedBytes) + " bytes, exceeds AVM limit of ~" +
+				std::to_string(puyasol::splitter::SizeEstimator::AVMMaxBytes) + " bytes");
+
+		// ─── Phase 2: Call graph analysis ────────────────────────────────────
+		puyasol::splitter::CallGraphAnalyzer analyzer;
+		auto recommendation = analyzer.analyze(
+			*primaryContract, subroutines, estimate,
+			funcResult.rewrittenFunctions,
+			funcResult.mutableSharedFunctions
+		);
+
+		// ─── Phase 3-4: Contract splitting ───────────────────────────────────
+		if (opts.splitContracts && recommendation.shouldSplit)
+		{
+			logger.info("--split-contracts enabled, performing contract split...");
+
+			puyasol::splitter::ContractSplitter splitter;
+			auto splitResult = splitter.split(primaryContract, roots, recommendation);
+
+			if (splitResult.didSplit)
+			{
+				didSplit = true;
+
+				// No per-helper FunctionSplitter loop — splitting was done
+				// globally in Phase 0 so chunks are already distributed.
+
+				// Create output directory
+				fs::create_directories(opts.outputDir);
+
+				puyasol::json::AWSTSerializer serializer;
+				puyasol::runner::PuyaRunner runner;
+				if (!opts.noPuya)
+					runner.setPuyaPath(opts.puyaPath);
+
+				int worstExit = 0;
+
+				// Write separate awst.json + options.json for each contract,
+				// then run puya for each.
+				for (auto const& contractAWST: splitResult.contracts)
+				{
+					auto awstJson = serializer.serialize(contractAWST.roots);
+
+					std::string suffix = contractAWST.contractName;
+					std::string awstPath = (fs::path(opts.outputDir) /
+						("awst_" + suffix + ".json")).string();
+					std::string optionsPath = (fs::path(opts.outputDir) /
+						("options_" + suffix + ".json")).string();
+
+					// Write awst.json
+					{
+						std::ofstream out(awstPath);
+						out << awstJson.dump(2) << std::endl;
+						logger.info("Wrote: " + awstPath);
+					}
+
+					if (opts.dumpAwst)
+						std::cout << "// " << suffix << "\n"
+							<< awstJson.dump(2) << std::endl;
+
+					// Write options.json
+					puyasol::json::OptionsWriter::write(
+						optionsPath,
+						contractAWST.contractId,
+						opts.outputDir,
+						opts.optimizationLevel
+					);
+					logger.info("Wrote: " + optionsPath);
+
+					// Run puya
+					if (!opts.noPuya)
+					{
+						logger.info("Compiling " + suffix + " ...");
+						int exitCode = runner.run(awstPath, optionsPath, opts.logLevel);
+						if (exitCode != 0)
+							worstExit = exitCode;
+					}
+				}
+
+				// Summary
+				if (logger.warningCount() > 0)
+					logger.info("Completed with " +
+						std::to_string(logger.warningCount()) + " warning(s)");
+
+				if (opts.noPuya)
+					logger.info("Done! AWST JSON generated for " +
+						std::to_string(splitResult.contracts.size()) +
+						" contracts. Use --puya-path to compile to TEAL.");
+
+				return worstExit;
+			}
+		}
+		else if (recommendation.shouldSplit)
+		{
+			logger.info("Contract is oversized. Use --split-contracts to automatically split.");
+			if (!recommendation.partitions.empty())
+				logger.info("Recommended " + std::to_string(recommendation.partitions.size()) +
+					" partitions");
+		}
+	}
+
+	// ─── Normal (non-split) serialization and output ───────────────────────
+
 	// Serialize to JSON
 	puyasol::json::AWSTSerializer serializer;
 	auto awstJson = serializer.serialize(roots);
@@ -407,20 +653,14 @@ int main(int _argc, char* _argv[])
 	if (opts.dumpAwst)
 		std::cout << awstJson.dump(2) << std::endl;
 
-	// Get contract name for options — prefer the contract whose name matches
-	// the source file name (e.g., UniswapV2Pair.sol → UniswapV2Pair).
-	// Falls back to the last contract in the list.
+	// Get contract name for options
 	std::string contractName;
-	std::string sourceBaseName = fs::path(sourceFile).stem().string();
 	for (auto const& root: roots)
 	{
 		if (auto const* contract = dynamic_cast<puyasol::awst::Contract const*>(root.get()))
 		{
 			contractName = contract->id; // always update (fallback = last)
-			// Check if this contract's name matches the source file name
-			// contract->id is like "...sol.ContractName"
-			std::string justName = contract->name;
-			if (justName == sourceBaseName)
+			if (contract->name == sourceBaseName)
 			{
 				contractName = contract->id;
 				break;
@@ -430,7 +670,7 @@ int main(int _argc, char* _argv[])
 
 	// Write options.json
 	std::string optionsPath = (fs::path(opts.outputDir) / "options.json").string();
-	puyasol::json::OptionsWriter::write(optionsPath, contractName, opts.outputDir);
+	puyasol::json::OptionsWriter::write(optionsPath, contractName, opts.outputDir, opts.optimizationLevel);
 	logger.info("Wrote: " + optionsPath);
 
 	// Summary

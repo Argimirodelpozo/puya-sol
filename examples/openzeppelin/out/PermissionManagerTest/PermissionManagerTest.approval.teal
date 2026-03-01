@@ -1,0 +1,462 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PermissionManager.sol.PermissionManagerTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1 1000000
+    bytecblock "_roleCount" "_totalGrants" "_admin" 0x151f7c75 "_permissions" "_roleHash"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_0 // "_roleCount"
+    pushbytes 0x
+    app_global_put
+    bytec_1 // "_totalGrants"
+    pushbytes 0x
+    app_global_put
+    bytec_2 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 0
+    itob
+    bytec_0 // "_roleCount"
+    dig 1
+    app_global_put
+    bytec_1 // "_totalGrants"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x2daf287b 0x871a060a 0xac8b24de 0xfaa71c69 0x0b2590b0 0x27ff2957 0xb6a87121 0x3b84106e 0x9264252c 0x045b2061 // method "initRole(uint512)void", method "initPermission(uint512)void", method "getAdmin()address", method "getRoleCount()uint512", method "getTotalGrants()uint512", method "getRoleHash(uint512)uint512", method "hasPermission(uint512,uint512)bool", method "createRole(uint512)uint512", method "grantPermission(uint512,uint512)void", method "revokePermission(uint512,uint512)void"
+    txna ApplicationArgs 0
+    match initRole initPermission getAdmin getRoleCount getTotalGrants getRoleHash hasPermission createRole grantPermission revokePermission
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PermissionManager.sol.PermissionManagerTest.initRole[routing]() -> void:
+initRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_roleHash"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PermissionManager.sol.PermissionManagerTest.initPermission[routing]() -> void:
+initPermission:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_permissions"
+    swap
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PermissionManager.sol.PermissionManagerTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PermissionManager.sol.PermissionManagerTest.getRoleCount[routing]() -> void:
+getRoleCount:
+    intc_1 // 0
+    bytec_0 // "_roleCount"
+    app_global_get_ex
+    assert // check _roleCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PermissionManager.sol.PermissionManagerTest.getTotalGrants[routing]() -> void:
+getTotalGrants:
+    intc_1 // 0
+    bytec_1 // "_totalGrants"
+    app_global_get_ex
+    assert // check _totalGrants exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PermissionManager.sol.PermissionManagerTest.getRoleHash[routing]() -> void:
+getRoleHash:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_roleHash"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PermissionManager.sol.PermissionManagerTest.hasPermission[routing]() -> void:
+hasPermission:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_3 // 1000000
+    itob
+    uncover 2
+    b*
+    b+
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_permissions"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PermissionManager.sol.PermissionManagerTest.createRole[routing]() -> void:
+createRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Not admin
+    intc_1 // 0
+    bytec_0 // "_roleCount"
+    app_global_get_ex
+    assert // check _roleCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_roleHash"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    uncover 3
+    box_put
+    intc_2 // 1
+    itob
+    dig 2
+    b+
+    bytec_0 // "_roleCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PermissionManager.sol.PermissionManagerTest.grantPermission[routing]() -> void:
+grantPermission:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Not admin
+    intc_1 // 0
+    bytec_0 // "_roleCount"
+    app_global_get_ex
+    assert // check _roleCount exists
+    dig 2
+    b>
+    assert // Role does not exist
+    intc_3 // 1000000
+    itob
+    uncover 2
+    b*
+    b+
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_permissions"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Permission already granted
+    intc_2 // 1
+    itob
+    box_put
+    intc_1 // 0
+    bytec_1 // "_totalGrants"
+    app_global_get_ex
+    assert // check _totalGrants exists
+    intc_2 // 1
+    itob
+    b+
+    bytec_1 // "_totalGrants"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/PermissionManager.sol.PermissionManagerTest.revokePermission[routing]() -> void:
+revokePermission:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Not admin
+    intc_1 // 0
+    bytec_0 // "_roleCount"
+    app_global_get_ex
+    assert // check _roleCount exists
+    dig 2
+    b>
+    assert // Role does not exist
+    intc_3 // 1000000
+    itob
+    uncover 2
+    b*
+    b+
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_permissions"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // Permission not granted
+    intc_1 // 0
+    itob
+    box_put
+    intc_1 // 0
+    bytec_1 // "_totalGrants"
+    app_global_get_ex
+    assert // check _totalGrants exists
+    intc_2 // 1
+    itob
+    b-
+    bytec_1 // "_totalGrants"
+    swap
+    app_global_put
+    intc_2 // 1
+    return

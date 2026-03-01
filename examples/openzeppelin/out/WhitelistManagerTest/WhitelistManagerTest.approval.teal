@@ -1,0 +1,517 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WhitelistManager.sol.WhitelistManagerTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock "_whitelistCount" "_whitelisted" "_admin" "_batchOpCount" 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_0 // "_whitelistCount"
+    pushbytes 0x
+    app_global_put
+    bytec_3 // "_batchOpCount"
+    pushbytes 0x
+    app_global_put
+    bytec_2 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 0
+    itob
+    bytec_0 // "_whitelistCount"
+    dig 1
+    app_global_put
+    bytec_3 // "_batchOpCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x60bcc712 0xac8b24de 0x25834237 0xf846bddd 0xdc4ea0b6 0x3749bd96 0x5b5fd93b 0x9d39f3ce 0x5d13a695 // method "initWhitelistEntry(uint512)void", method "getAdmin()address", method "getWhitelistCount()uint512", method "getBatchOpCount()uint512", method "isWhitelisted(uint512)bool", method "addToWhitelist(uint512)void", method "removeFromWhitelist(uint512)void", method "batchAdd(uint512,uint512)void", method "batchRemove(uint512,uint512)void"
+    txna ApplicationArgs 0
+    match initWhitelistEntry getAdmin getWhitelistCount getBatchOpCount isWhitelisted addToWhitelist removeFromWhitelist batchAdd batchRemove
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WhitelistManager.sol.WhitelistManagerTest.initWhitelistEntry[routing]() -> void:
+initWhitelistEntry:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_1 // "_whitelisted"
+    swap
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WhitelistManager.sol.WhitelistManagerTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WhitelistManager.sol.WhitelistManagerTest.getWhitelistCount[routing]() -> void:
+getWhitelistCount:
+    intc_1 // 0
+    bytec_0 // "_whitelistCount"
+    app_global_get_ex
+    assert // check _whitelistCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WhitelistManager.sol.WhitelistManagerTest.getBatchOpCount[routing]() -> void:
+getBatchOpCount:
+    intc_1 // 0
+    bytec_3 // "_batchOpCount"
+    app_global_get_ex
+    assert // check _batchOpCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WhitelistManager.sol.WhitelistManagerTest.isWhitelisted[routing]() -> void:
+isWhitelisted:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_1 // "_whitelisted"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WhitelistManager.sol.WhitelistManagerTest.addToWhitelist[routing]() -> void:
+addToWhitelist:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // WhitelistManager: not admin
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_1 // "_whitelisted"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // WhitelistManager: already whitelisted
+    intc_2 // 1
+    itob
+    box_put
+    intc_1 // 0
+    bytec_0 // "_whitelistCount"
+    app_global_get_ex
+    assert // check _whitelistCount exists
+    intc_2 // 1
+    itob
+    b+
+    bytec_0 // "_whitelistCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WhitelistManager.sol.WhitelistManagerTest.removeFromWhitelist[routing]() -> void:
+removeFromWhitelist:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // WhitelistManager: not admin
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_1 // "_whitelisted"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // WhitelistManager: not whitelisted
+    intc_1 // 0
+    itob
+    box_put
+    intc_1 // 0
+    bytec_0 // "_whitelistCount"
+    app_global_get_ex
+    assert // check _whitelistCount exists
+    intc_2 // 1
+    itob
+    b-
+    bytec_0 // "_whitelistCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WhitelistManager.sol.WhitelistManagerTest.batchAdd[routing]() -> void:
+batchAdd:
+    intc_1 // 0
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // WhitelistManager: not admin
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_1 // "_whitelisted"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bnz batchAdd_after_if_else@3
+    intc_2 // 1
+    itob
+    dig 1
+    swap
+    box_put
+    intc_1 // 0
+    bytec_0 // "_whitelistCount"
+    app_global_get_ex
+    assert // check _whitelistCount exists
+    intc_2 // 1
+    itob
+    b+
+    bytec_0 // "_whitelistCount"
+    swap
+    app_global_put
+
+batchAdd_after_if_else@3:
+    dig 1
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_1 // "_whitelisted"
+    swap
+    concat
+    dup
+    bury 5
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bnz batchAdd_after_if_else@5
+    intc_2 // 1
+    itob
+    dig 4
+    swap
+    box_put
+    intc_1 // 0
+    bytec_0 // "_whitelistCount"
+    app_global_get_ex
+    assert // check _whitelistCount exists
+    intc_2 // 1
+    itob
+    b+
+    bytec_0 // "_whitelistCount"
+    swap
+    app_global_put
+
+batchAdd_after_if_else@5:
+    intc_1 // 0
+    bytec_3 // "_batchOpCount"
+    app_global_get_ex
+    assert // check _batchOpCount exists
+    intc_2 // 1
+    itob
+    b+
+    bytec_3 // "_batchOpCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/WhitelistManager.sol.WhitelistManagerTest.batchRemove[routing]() -> void:
+batchRemove:
+    intc_1 // 0
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // WhitelistManager: not admin
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_1 // "_whitelisted"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bz batchRemove_after_if_else@3
+    intc_1 // 0
+    itob
+    dig 1
+    swap
+    box_put
+    intc_1 // 0
+    bytec_0 // "_whitelistCount"
+    app_global_get_ex
+    assert // check _whitelistCount exists
+    intc_2 // 1
+    itob
+    b-
+    bytec_0 // "_whitelistCount"
+    swap
+    app_global_put
+
+batchRemove_after_if_else@3:
+    dig 1
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_1 // "_whitelisted"
+    swap
+    concat
+    dup
+    bury 5
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bz batchRemove_after_if_else@5
+    intc_1 // 0
+    itob
+    dig 4
+    swap
+    box_put
+    intc_1 // 0
+    bytec_0 // "_whitelistCount"
+    app_global_get_ex
+    assert // check _whitelistCount exists
+    intc_2 // 1
+    itob
+    b-
+    bytec_0 // "_whitelistCount"
+    swap
+    app_global_put
+
+batchRemove_after_if_else@5:
+    intc_1 // 0
+    bytec_3 // "_batchOpCount"
+    app_global_get_ex
+    assert // check _batchOpCount exists
+    intc_2 // 1
+    itob
+    b+
+    bytec_3 // "_batchOpCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return

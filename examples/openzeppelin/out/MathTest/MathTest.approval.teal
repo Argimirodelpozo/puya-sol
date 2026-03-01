@@ -1,0 +1,729 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Math.sol.MathTest.approval_program() -> uint64:
+main:
+    intcblock 64 1 0 16
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000002 0x151f7c75 0x0000000000000000000000000000000000000000000000010000000000000000 0x0000000000000000000000000000000000000000000000000000000100000000 0x0000000000000000000000000000000000000000000000000000000000010000 0x0000000000000000000000000000000000000000000000000000000000000100 0x0000000000000000000000000000000000000000000000000000000000000010 0x0000000000000000000000000000000000000000000000000000000000000004 0x0000000000000000000000000000000100000000000000000000000000000000 0x184f03e93ff9f4daa797ed6e38ed64bf6a1f010000000000000000 0x04ee2d6d415b85acef8100000000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x42433676 0x4288a6c5 0xca3aac02 0x274463da 0x536374b3 0xd23bc3c8 0x1e566033 0x834fcaff // method "testMulDiv(uint512,uint512,uint512)uint512", method "testSqrt(uint512)uint512", method "testLog2(uint512)uint512", method "testLog10(uint512)uint512", method "testCeilDiv(uint512,uint512)uint512", method "testAverage(uint512,uint512)uint512", method "testMax(uint512,uint512)uint512", method "testMin(uint512,uint512)uint512"
+    txna ApplicationArgs 0
+    match testMulDiv testSqrt testLog2 testLog10 testCeilDiv testAverage testMax testMin
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Math.sol.MathTest.testMulDiv[routing]() -> void:
+testMulDiv:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    itob
+    dig 1
+    b<
+    assert // Math: division by zero
+    cover 2
+    b*
+    swap
+    b/
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Math.sol.MathTest.testSqrt[routing]() -> void:
+testSqrt:
+    intc_2 // 0
+    dup
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    itob
+    dup
+    cover 2
+    b==
+    bz testSqrt_after_if_else@3
+    dup
+
+testSqrt_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Math.sol.Math.sqrt(1)@18:
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+testSqrt_after_if_else@3:
+    intc_1 // 1
+    itob
+    bury 4
+    dig 1
+    pushbytes 0x0100000000000000000000000000000000
+    b>=
+    bnz testSqrt_if_body@4
+    dig 1
+    bury 3
+
+testSqrt_after_if_else@5:
+    dig 2
+    pushbytes 0x010000000000000000
+    b>=
+    bz testSqrt_after_if_else@7
+    dig 2
+    bytec_2 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    bury 3
+    dig 3
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000100000000
+    b*
+    bury 4
+
+testSqrt_after_if_else@7:
+    pushint 4294967296
+    itob
+    dig 3
+    b<=
+    bz testSqrt_after_if_else@9
+    dig 2
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000100000000
+    b/
+    bury 3
+    dig 3
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000010000
+    b*
+    bury 4
+
+testSqrt_after_if_else@9:
+    pushint 65536
+    itob
+    dig 3
+    b<=
+    bz testSqrt_after_if_else@11
+    dig 2
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000010000
+    b/
+    bury 3
+    dig 3
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000100
+    b*
+    bury 4
+
+testSqrt_after_if_else@11:
+    pushint 256
+    itob
+    dig 3
+    b<=
+    bz testSqrt_after_if_else@13
+    dig 2
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000100
+    b/
+    bury 3
+    dig 3
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000010
+    b*
+    bury 4
+
+testSqrt_after_if_else@13:
+    intc_3 // 16
+    itob
+    dig 3
+    b<=
+    bz testSqrt_after_if_else@15
+    dig 2
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000010
+    b/
+    bury 3
+    dig 3
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000004
+    b*
+    bury 4
+
+testSqrt_after_if_else@15:
+    pushint 4
+    itob
+    dig 3
+    b<=
+    bz testSqrt_after_if_else@17
+    dig 3
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b*
+    bury 4
+
+testSqrt_after_if_else@17:
+    dig 1
+    dup
+    dig 5
+    dup
+    cover 2
+    b/
+    b+
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    dup2
+    b/
+    b+
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    dup2
+    b/
+    b+
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    dup2
+    b/
+    b+
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    dup2
+    b/
+    b+
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    dup2
+    b/
+    b+
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    dup2
+    b/
+    b+
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    swap
+    dig 1
+    b/
+    dup2
+    b<
+    swap
+    cover 2
+    select
+    b testSqrt_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Math.sol.Math.sqrt(1)@18
+
+testSqrt_if_body@4:
+    dig 1
+    bytec 8 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    bury 3
+    bytec_2 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    bury 4
+    b testSqrt_after_if_else@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Math.sol.MathTest.testLog2[routing]() -> void:
+testLog2:
+    intc_2 // 0
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    itob
+    dup
+    uncover 2
+    bytec 8 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    dup
+    uncover 2
+    b>
+    bnz testLog2_if_body@2
+    dig 1
+    bury 4
+
+testLog2_after_if_else@3:
+    dig 2
+    bytec_2 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    dup
+    bury 2
+    dig 2
+    b>
+    bz testLog2_after_if_else@5
+    intc_0 // 64
+    itob
+    dig 4
+    b+
+    bury 4
+    dup
+    bury 3
+
+testLog2_after_if_else@5:
+    dig 2
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000100000000
+    b/
+    dup
+    bury 2
+    dig 2
+    b>
+    bz testLog2_after_if_else@7
+    pushint 32
+    itob
+    dig 4
+    b+
+    bury 4
+    dup
+    bury 3
+
+testLog2_after_if_else@7:
+    dig 2
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000010000
+    b/
+    dup
+    bury 2
+    dig 2
+    b>
+    bz testLog2_after_if_else@9
+    intc_3 // 16
+    itob
+    dig 4
+    b+
+    bury 4
+    dup
+    bury 3
+
+testLog2_after_if_else@9:
+    dig 2
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000100
+    b/
+    dup
+    bury 2
+    dig 2
+    b>
+    bz testLog2_after_if_else@11
+    pushint 8
+    itob
+    dig 4
+    b+
+    bury 4
+    dup
+    bury 3
+
+testLog2_after_if_else@11:
+    dig 2
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000010
+    b/
+    dup
+    bury 2
+    dig 2
+    b>
+    bz testLog2_after_if_else@13
+    pushint 4
+    itob
+    dig 4
+    b+
+    bury 4
+    dup
+    bury 3
+
+testLog2_after_if_else@13:
+    dig 2
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000004
+    b/
+    dup
+    bury 2
+    dig 2
+    b>
+    bz testLog2_after_if_else@15
+    pushint 2
+    itob
+    dig 4
+    b+
+    bury 4
+    dup
+    bury 3
+
+testLog2_after_if_else@15:
+    dig 2
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    dig 2
+    b>
+    bnz testLog2_if_body@16
+    dig 3
+    bury 2
+
+testLog2_after_if_else@17:
+    dig 1
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+testLog2_if_body@16:
+    intc_1 // 1
+    itob
+    dig 4
+    b+
+    bury 2
+    b testLog2_after_if_else@17
+
+testLog2_if_body@2:
+    pushint 128
+    itob
+    bury 4
+    dup
+    bury 3
+    b testLog2_after_if_else@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Math.sol.MathTest.testLog10[routing]() -> void:
+testLog10:
+    intc_2 // 0
+    dupn 3
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    itob
+    swap
+    bytec 9 // 0x184f03e93ff9f4daa797ed6e38ed64bf6a1f010000000000000000
+    b>=
+    bz testLog10_after_if_else@3
+    dig 1
+    bytec 9 // 0x184f03e93ff9f4daa797ed6e38ed64bf6a1f010000000000000000
+    b/
+    bury 2
+    intc_0 // 64
+    itob
+    bury 1
+
+testLog10_after_if_else@3:
+    dig 1
+    bytec 10 // 0x04ee2d6d415b85acef8100000000
+    b>=
+    bz testLog10_after_if_else@5
+    dig 1
+    bytec 10 // 0x04ee2d6d415b85acef8100000000
+    b/
+    bury 2
+    pushint 32
+    itob
+    dig 1
+    b+
+    bury 1
+
+testLog10_after_if_else@5:
+    pushint 10000000000000000
+    itob
+    dup
+    bury 6
+    dig 2
+    b<=
+    bz testLog10_after_if_else@7
+    dig 1
+    dig 5
+    b/
+    bury 2
+    intc_3 // 16
+    itob
+    dig 1
+    b+
+    bury 1
+
+testLog10_after_if_else@7:
+    pushint 100000000
+    itob
+    dup
+    bury 5
+    dig 2
+    b<=
+    bz testLog10_after_if_else@9
+    dig 1
+    dig 4
+    b/
+    bury 2
+    pushint 8
+    itob
+    dig 1
+    b+
+    bury 1
+
+testLog10_after_if_else@9:
+    pushint 10000
+    itob
+    dup
+    bury 4
+    dig 2
+    b<=
+    bz testLog10_after_if_else@11
+    dig 1
+    dig 3
+    b/
+    bury 2
+    pushint 4
+    itob
+    dig 1
+    b+
+    bury 1
+
+testLog10_after_if_else@11:
+    pushint 100
+    itob
+    dup
+    bury 7
+    dig 2
+    b<=
+    bz testLog10_after_if_else@13
+    dig 1
+    dig 6
+    b/
+    bury 2
+    pushint 2
+    itob
+    dig 1
+    b+
+    bury 1
+
+testLog10_after_if_else@13:
+    pushint 10
+    itob
+    dig 2
+    b<=
+    bz testLog10_after_if_else@15
+    intc_1 // 1
+    itob
+    dig 1
+    b+
+    bury 1
+
+testLog10_after_if_else@15:
+    dupn 2
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Math.sol.MathTest.testCeilDiv[routing]() -> void:
+testCeilDiv:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    itob
+    dup
+    cover 3
+    swap
+    dig 1
+    b>
+    assert // Math: division by zero
+    b==
+    bz testCeilDiv_ternary_false@3
+    dup
+
+testCeilDiv_ternary_merge@4:
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+testCeilDiv_ternary_false@3:
+    intc_1 // 1
+    itob
+    dig 3
+    dig 1
+    b-
+    dig 3
+    b/
+    b+
+    b testCeilDiv_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Math.sol.MathTest.testAverage[routing]() -> void:
+testAverage:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dup2
+    b&
+    cover 2
+    b^
+    pushint 2
+    itob
+    b/
+    b+
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Math.sol.MathTest.testMax[routing]() -> void:
+testMax:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dup2
+    b>
+    swap
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Math.sol.MathTest.testMin[routing]() -> void:
+testMin:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dup2
+    b<
+    swap
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

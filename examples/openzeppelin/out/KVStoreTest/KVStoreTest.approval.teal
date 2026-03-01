@@ -1,0 +1,696 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/KVStore.sol.KVStoreTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock "_entryCount" "_version" "_totalWrites" 0x151f7c75 "_values" "_exists" "_totalDeletes" "_lastModified" "_admin"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 8 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_0 // "_entryCount"
+    pushbytes 0x
+    app_global_put
+    bytec_1 // "_version"
+    pushbytes 0x
+    app_global_put
+    bytec_2 // "_totalWrites"
+    pushbytes 0x
+    app_global_put
+    bytec 6 // "_totalDeletes"
+    pushbytes 0x
+    app_global_put
+    bytec 8 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 0
+    itob
+    bytec_0 // "_entryCount"
+    dig 1
+    app_global_put
+    bytec_1 // "_version"
+    dig 1
+    app_global_put
+    bytec_2 // "_totalWrites"
+    dig 1
+    app_global_put
+    bytec 6 // "_totalDeletes"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x7b6de84e 0xac8b24de 0xe99856ca 0xc7c0d4e1 0xc8c979a4 0xdc23d439 0xc59f89ab 0x11825941 0xfa747275 0x0b9fd0ec 0x3d8588b6 0xdee2b89e // method "initKey(uint512)void", method "getAdmin()address", method "getEntryCount()uint512", method "getVersion()uint512", method "getTotalWrites()uint512", method "getTotalDeletes()uint512", method "getValue(uint512)uint512", method "exists(uint512)bool", method "getLastModified(uint512)uint512", method "setValue(uint512,uint512)void", method "deleteKey(uint512)void", method "batchSet(uint512,uint512,uint512,uint512)void"
+    txna ApplicationArgs 0
+    match initKey getAdmin getEntryCount getVersion getTotalWrites getTotalDeletes getValue exists getLastModified setValue deleteKey batchSet
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/KVStore.sol.KVStoreTest.initKey[routing]() -> void:
+initKey:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_values"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 5 // "_exists"
+    dig 1
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    bytec 7 // "_lastModified"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/KVStore.sol.KVStoreTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_1 // 0
+    bytec 8 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/KVStore.sol.KVStoreTest.getEntryCount[routing]() -> void:
+getEntryCount:
+    intc_1 // 0
+    bytec_0 // "_entryCount"
+    app_global_get_ex
+    assert // check _entryCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/KVStore.sol.KVStoreTest.getVersion[routing]() -> void:
+getVersion:
+    intc_1 // 0
+    bytec_1 // "_version"
+    app_global_get_ex
+    assert // check _version exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/KVStore.sol.KVStoreTest.getTotalWrites[routing]() -> void:
+getTotalWrites:
+    intc_1 // 0
+    bytec_2 // "_totalWrites"
+    app_global_get_ex
+    assert // check _totalWrites exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/KVStore.sol.KVStoreTest.getTotalDeletes[routing]() -> void:
+getTotalDeletes:
+    intc_1 // 0
+    bytec 6 // "_totalDeletes"
+    app_global_get_ex
+    assert // check _totalDeletes exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/KVStore.sol.KVStoreTest.getValue[routing]() -> void:
+getValue:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_values"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/KVStore.sol.KVStoreTest.exists[routing]() -> void:
+exists:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_exists"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/KVStore.sol.KVStoreTest.getLastModified[routing]() -> void:
+getLastModified:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_lastModified"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/KVStore.sol.KVStoreTest.setValue[routing]() -> void:
+setValue:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    dup
+    bytec 5 // "_exists"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bnz setValue_after_if_else@3
+    intc_1 // 0
+    bytec_0 // "_entryCount"
+    app_global_get_ex
+    assert // check _entryCount exists
+    intc_2 // 1
+    itob
+    b+
+    bytec_0 // "_entryCount"
+    swap
+    app_global_put
+
+setValue_after_if_else@3:
+    bytec 4 // "_values"
+    dig 2
+    dup
+    cover 2
+    concat
+    dup
+    box_del
+    pop
+    dig 4
+    box_put
+    intc_2 // 1
+    itob
+    dig 2
+    swap
+    box_put
+    intc_1 // 0
+    bytec_1 // "_version"
+    app_global_get_ex
+    assert // check _version exists
+    bytec 7 // "_lastModified"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    intc_2 // 1
+    itob
+    swap
+    dig 1
+    b+
+    bytec_1 // "_version"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec_2 // "_totalWrites"
+    app_global_get_ex
+    assert // check _totalWrites exists
+    b+
+    bytec_2 // "_totalWrites"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/KVStore.sol.KVStoreTest.deleteKey[routing]() -> void:
+deleteKey:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_exists"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // key does not exist
+    intc_1 // 0
+    itob
+    bytec 4 // "_values"
+    uncover 3
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 0
+    itob
+    box_put
+    intc_1 // 0
+    bytec_0 // "_entryCount"
+    app_global_get_ex
+    assert // check _entryCount exists
+    intc_2 // 1
+    itob
+    swap
+    dig 1
+    b-
+    bytec_0 // "_entryCount"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec_1 // "_version"
+    app_global_get_ex
+    assert // check _version exists
+    dig 1
+    b+
+    bytec_1 // "_version"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec 6 // "_totalDeletes"
+    app_global_get_ex
+    assert // check _totalDeletes exists
+    b+
+    bytec 6 // "_totalDeletes"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/KVStore.sol.KVStoreTest.batchSet[routing]() -> void:
+batchSet:
+    intc_1 // 0
+    dupn 3
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    cover 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 4
+    dup
+    cover 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    dup
+    bytec 5 // "_exists"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bnz batchSet_after_if_else@3
+    intc_1 // 0
+    bytec_0 // "_entryCount"
+    app_global_get_ex
+    assert // check _entryCount exists
+    intc_2 // 1
+    itob
+    b+
+    bytec_0 // "_entryCount"
+    swap
+    app_global_put
+
+batchSet_after_if_else@3:
+    bytec 4 // "_values"
+    dig 2
+    dup
+    cover 2
+    concat
+    dup
+    box_del
+    pop
+    dig 7
+    box_put
+    intc_2 // 1
+    itob
+    dup
+    bury 11
+    dig 2
+    swap
+    box_put
+    intc_1 // 0
+    bytec_1 // "_version"
+    app_global_get_ex
+    assert // check _version exists
+    bytec 7 // "_lastModified"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    intc_2 // 1
+    itob
+    dup
+    bury 9
+    swap
+    dig 1
+    b+
+    bytec_1 // "_version"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec_2 // "_totalWrites"
+    app_global_get_ex
+    assert // check _totalWrites exists
+    b+
+    bytec_2 // "_totalWrites"
+    swap
+    app_global_put
+    dig 2
+    dig 5
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    dup
+    bury 9
+    bytec 5 // "_exists"
+    swap
+    concat
+    dup
+    bury 11
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bnz batchSet_after_if_else@5
+    intc_1 // 0
+    bytec_0 // "_entryCount"
+    app_global_get_ex
+    assert // check _entryCount exists
+    dig 7
+    b+
+    bytec_0 // "_entryCount"
+    swap
+    app_global_put
+
+batchSet_after_if_else@5:
+    bytec 4 // "_values"
+    dig 8
+    dup
+    cover 2
+    concat
+    dup
+    box_del
+    pop
+    dig 5
+    box_put
+    dig 10
+    dig 10
+    box_put
+    intc_1 // 0
+    bytec_1 // "_version"
+    app_global_get_ex
+    assert // check _version exists
+    bytec 7 // "_lastModified"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    dig 7
+    dup
+    cover 2
+    b+
+    bytec_1 // "_version"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec_2 // "_totalWrites"
+    app_global_get_ex
+    assert // check _totalWrites exists
+    b+
+    bytec_2 // "_totalWrites"
+    swap
+    app_global_put
+    intc_2 // 1
+    return

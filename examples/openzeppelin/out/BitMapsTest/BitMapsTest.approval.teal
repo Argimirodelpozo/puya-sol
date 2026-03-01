@@ -1,0 +1,338 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/BitMaps.sol.BitMapsTest.approval_program() -> uint64:
+main:
+    intcblock 64 1 8 255
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000100 "_data" 0x
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xdde551e4 0xd5fa9f39 0xc864f27c 0x7da21d41 // method "get(uint512)bool", method "set(uint512)void", method "unset(uint512)void", method "setTo(uint512,bool)void"
+    txna ApplicationArgs 0
+    match get set unset setTo
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/BitMaps.sol.BitMapsTest.get[routing]() -> void:
+get:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    pushint 32
+    bzero
+    dig 1
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000100
+    b/
+    intc_2 // 8
+    bzero
+    intc_3 // 255
+    itob
+    uncover 4
+    b&
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    intc_3 // 255
+    swap
+    -
+    uncover 2
+    swap
+    intc_1 // 1
+    setbit
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_1 // "_data"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    b&
+    pushint 0
+    itob
+    b!=
+    pushbytes 0x00
+    pushint 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/BitMaps.sol.BitMapsTest.set[routing]() -> void:
+set:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    pushint 32
+    bzero
+    dig 1
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000100
+    b/
+    intc_2 // 8
+    bzero
+    intc_3 // 255
+    itob
+    uncover 4
+    b&
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    intc_3 // 255
+    swap
+    -
+    uncover 2
+    swap
+    intc_1 // 1
+    setbit
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_1 // "_data"
+    swap
+    concat
+    dup
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    uncover 2
+    b|
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/BitMaps.sol.BitMapsTest.unset[routing]() -> void:
+unset:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    pushint 32
+    bzero
+    dig 1
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000100
+    b/
+    intc_2 // 8
+    bzero
+    intc_3 // 255
+    itob
+    uncover 4
+    b&
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    intc_3 // 255
+    swap
+    -
+    uncover 2
+    swap
+    intc_1 // 1
+    setbit
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_1 // "_data"
+    swap
+    concat
+    dup
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    uncover 2
+    b~
+    b&
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/BitMaps.sol.BitMapsTest.setTo[routing]() -> void:
+setTo:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    pushint 0
+    getbit
+    bz setTo_else_body@3
+    pushint 32
+    bzero
+    swap
+    dup
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000100
+    b/
+    intc_2 // 8
+    bzero
+    intc_3 // 255
+    itob
+    uncover 3
+    b&
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    intc_3 // 255
+    swap
+    -
+    uncover 2
+    swap
+    intc_1 // 1
+    setbit
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_1 // "_data"
+    swap
+    concat
+    dup
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    uncover 2
+    b|
+    dig 1
+    box_del
+    pop
+    box_put
+
+setTo_after_if_else@4:
+    intc_1 // 1
+    return
+
+setTo_else_body@3:
+    pushint 32
+    bzero
+    swap
+    dup
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000100
+    b/
+    intc_2 // 8
+    bzero
+    intc_3 // 255
+    itob
+    uncover 3
+    b&
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    intc_3 // 255
+    swap
+    -
+    uncover 2
+    swap
+    intc_1 // 1
+    setbit
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_1 // "_data"
+    swap
+    concat
+    dup
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    uncover 2
+    b~
+    b&
+    dig 1
+    box_del
+    pop
+    box_put
+    b setTo_after_if_else@4

@@ -1,0 +1,738 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FlashLoan.sol.FlashLoanTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1 32
+    bytecblock 0x151f7c75 "_totalPool" 0x "_activeLoanCount" "_feeRate" "_loanCount" "_totalFeesEarned" "_admin" "_deposited" "_loanAmount" "_loanRepaid" 0x0000000000000000000000000000000000000000000000000000000000000000 "_loanBorrower"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 7 // "_admin"
+    bytec 11 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 4 // "_feeRate"
+    bytec_2 // 0x
+    app_global_put
+    bytec_1 // "_totalPool"
+    bytec_2 // 0x
+    app_global_put
+    bytec 6 // "_totalFeesEarned"
+    bytec_2 // 0x
+    app_global_put
+    bytec 5 // "_loanCount"
+    bytec_2 // 0x
+    app_global_put
+    bytec_3 // "_activeLoanCount"
+    bytec_2 // 0x
+    app_global_put
+    pushint 30
+    itob
+    bytec 7 // "_admin"
+    txn Sender
+    app_global_put
+    bytec 4 // "_feeRate"
+    swap
+    app_global_put
+    intc_1 // 0
+    itob
+    bytec_1 // "_totalPool"
+    dig 1
+    app_global_put
+    bytec 6 // "_totalFeesEarned"
+    dig 1
+    app_global_put
+    bytec 5 // "_loanCount"
+    dig 1
+    app_global_put
+    bytec_3 // "_activeLoanCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x69a1d048 0xe32cc94d 0xac8b24de 0xc41d4e4f 0x7e7dc673 0x7c48eaf9 0x38705fd3 0xe5906a3e 0x3bb25c5e 0xa12f2a36 0x065f556a 0xb8895d9c 0x8c83419d 0xc84af1db 0xdb94880d 0x28e1ca2d 0xdc96d02b 0x246ed2a8 // method "initProvider(address)void", method "initLoan(uint512)void", method "getAdmin()address", method "getFeeRate()uint512", method "getTotalPool()uint512", method "getTotalFeesEarned()uint512", method "getLoanCount()uint512", method "getActiveLoanCount()uint512", method "getDeposited(address)uint512", method "getLoanAmount(uint512)uint512", method "getLoanBorrower(uint512)address", method "isLoanRepaid(uint512)bool", method "calculateFee(uint512)uint512", method "deposit(address,uint512)void", method "withdraw(address,uint512)void", method "initiateLoan(address,uint512)uint512", method "repayLoan(uint512,uint512)void", method "setFeeRate(uint512)void"
+    txna ApplicationArgs 0
+    match initProvider initLoan getAdmin getFeeRate getTotalPool getTotalFeesEarned getLoanCount getActiveLoanCount getDeposited getLoanAmount getLoanBorrower isLoanRepaid calculateFee deposit withdraw initiateLoan repayLoan setFeeRate
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FlashLoan.sol.FlashLoanTest.initProvider[routing]() -> void:
+initProvider:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_1 // 0
+    itob
+    swap
+    sha256
+    bytec 8 // "_deposited"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FlashLoan.sol.FlashLoanTest.initLoan[routing]() -> void:
+initLoan:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 9 // "_loanAmount"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    bytec 12 // "_loanBorrower"
+    dig 1
+    concat
+    bytec 11 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    box_put
+    bytec 10 // "_loanRepaid"
+    swap
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FlashLoan.sol.FlashLoanTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_1 // 0
+    bytec 7 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FlashLoan.sol.FlashLoanTest.getFeeRate[routing]() -> void:
+getFeeRate:
+    intc_1 // 0
+    bytec 4 // "_feeRate"
+    app_global_get_ex
+    assert // check _feeRate exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FlashLoan.sol.FlashLoanTest.getTotalPool[routing]() -> void:
+getTotalPool:
+    intc_1 // 0
+    bytec_1 // "_totalPool"
+    app_global_get_ex
+    assert // check _totalPool exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FlashLoan.sol.FlashLoanTest.getTotalFeesEarned[routing]() -> void:
+getTotalFeesEarned:
+    intc_1 // 0
+    bytec 6 // "_totalFeesEarned"
+    app_global_get_ex
+    assert // check _totalFeesEarned exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FlashLoan.sol.FlashLoanTest.getLoanCount[routing]() -> void:
+getLoanCount:
+    intc_1 // 0
+    bytec 5 // "_loanCount"
+    app_global_get_ex
+    assert // check _loanCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FlashLoan.sol.FlashLoanTest.getActiveLoanCount[routing]() -> void:
+getActiveLoanCount:
+    intc_1 // 0
+    bytec_3 // "_activeLoanCount"
+    app_global_get_ex
+    assert // check _activeLoanCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FlashLoan.sol.FlashLoanTest.getDeposited[routing]() -> void:
+getDeposited:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 8 // "_deposited"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FlashLoan.sol.FlashLoanTest.getLoanAmount[routing]() -> void:
+getLoanAmount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 9 // "_loanAmount"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FlashLoan.sol.FlashLoanTest.getLoanBorrower[routing]() -> void:
+getLoanBorrower:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 12 // "_loanBorrower"
+    swap
+    concat
+    box_get
+    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FlashLoan.sol.FlashLoanTest.isLoanRepaid[routing]() -> void:
+isLoanRepaid:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 10 // "_loanRepaid"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FlashLoan.sol.FlashLoanTest.calculateFee[routing]() -> void:
+calculateFee:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec 4 // "_feeRate"
+    app_global_get_ex
+    assert // check _feeRate exists
+    b*
+    pushint 10000
+    itob
+    b/
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FlashLoan.sol.FlashLoanTest.deposit[routing]() -> void:
+deposit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    sha256
+    bytec 8 // "_deposited"
+    swap
+    concat
+    dup
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_1 // 0
+    bytec_1 // "_totalPool"
+    app_global_get_ex
+    assert // check _totalPool exists
+    b+
+    bytec_1 // "_totalPool"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FlashLoan.sol.FlashLoanTest.withdraw[routing]() -> void:
+withdraw:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    sha256
+    bytec 8 // "_deposited"
+    swap
+    concat
+    dup
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    dig 3
+    b>=
+    assert // Insufficient deposit
+    dig 2
+    b-
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_1 // 0
+    bytec_1 // "_totalPool"
+    app_global_get_ex
+    assert // check _totalPool exists
+    swap
+    b-
+    bytec_1 // "_totalPool"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FlashLoan.sol.FlashLoanTest.initiateLoan[routing]() -> void:
+initiateLoan:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec_1 // "_totalPool"
+    app_global_get_ex
+    assert // check _totalPool exists
+    dup2
+    b<=
+    assert // Insufficient pool liquidity
+    intc_1 // 0
+    bytec 5 // "_loanCount"
+    app_global_get_ex
+    assert // check _loanCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 9 // "_loanAmount"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 5
+    box_put
+    bytec 12 // "_loanBorrower"
+    dig 1
+    concat
+    uncover 6
+    box_put
+    bytec 10 // "_loanRepaid"
+    swap
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    uncover 2
+    uncover 3
+    b-
+    bytec_1 // "_totalPool"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec 5 // "_loanCount"
+    app_global_get_ex
+    assert // check _loanCount exists
+    intc_2 // 1
+    itob
+    swap
+    dig 1
+    b+
+    bytec 5 // "_loanCount"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec_3 // "_activeLoanCount"
+    app_global_get_ex
+    assert // check _activeLoanCount exists
+    b+
+    bytec_3 // "_activeLoanCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FlashLoan.sol.FlashLoanTest.repayLoan[routing]() -> void:
+repayLoan:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 10 // "_loanRepaid"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Loan already repaid
+    bytec 9 // "_loanAmount"
+    uncover 2
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    bytec 4 // "_feeRate"
+    app_global_get_ex
+    assert // check _feeRate exists
+    dig 1
+    b*
+    pushint 10000
+    itob
+    b/
+    dup2
+    b+
+    uncover 4
+    b<=
+    assert // Insufficient repayment
+    intc_2 // 1
+    itob
+    uncover 3
+    swap
+    box_put
+    intc_1 // 0
+    bytec_1 // "_totalPool"
+    app_global_get_ex
+    assert // check _totalPool exists
+    uncover 2
+    b+
+    dig 1
+    b+
+    bytec_1 // "_totalPool"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec_3 // "_activeLoanCount"
+    app_global_get_ex
+    assert // check _activeLoanCount exists
+    intc_2 // 1
+    itob
+    b-
+    bytec_3 // "_activeLoanCount"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec 6 // "_totalFeesEarned"
+    app_global_get_ex
+    assert // check _totalFeesEarned exists
+    b+
+    bytec 6 // "_totalFeesEarned"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/FlashLoan.sol.FlashLoanTest.setFeeRate[routing]() -> void:
+setFeeRate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec 7 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Only admin
+    bytec 4 // "_feeRate"
+    swap
+    app_global_put
+    intc_2 // 1
+    return

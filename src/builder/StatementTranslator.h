@@ -64,6 +64,9 @@ private:
 	/// Statement result stack.
 	std::vector<std::shared_ptr<awst::Statement>> m_stack;
 
+	/// Pending ArrayExtend statements from large array chunking.
+	std::vector<std::shared_ptr<awst::Statement>> m_pendingExtends;
+
 	void push(std::shared_ptr<awst::Statement> _stmt);
 	std::shared_ptr<awst::Statement> pop();
 

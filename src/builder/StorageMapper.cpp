@@ -1,5 +1,7 @@
 #include "builder/StorageMapper.h"
 
+#include "Logger.h"
+
 #include <liblangutil/SourceLocation.h>
 
 #include <set>
@@ -152,6 +154,64 @@ std::shared_ptr<awst::Expression> StorageMapper::makeDefaultValue(
 	return val;
 }
 
+int StorageMapper::computeEncodedElementSize(awst::WType const* _type)
+{
+	if (!_type)
+		return 0;
+
+	switch (_type->kind())
+	{
+	case awst::WTypeKind::ARC4UIntN:
+		return static_cast<awst::ARC4UIntN const*>(_type)->n() / 8;
+	case awst::WTypeKind::ARC4UFixedNxM:
+		return static_cast<awst::ARC4UFixedNxM const*>(_type)->n() / 8;
+	case awst::WTypeKind::ARC4Struct:
+	{
+		auto const* structType = static_cast<awst::ARC4Struct const*>(_type);
+		int total = 0;
+		for (auto const& [name, fieldType]: structType->fields())
+		{
+			int fieldSize = computeEncodedElementSize(fieldType);
+			if (fieldSize == 0)
+				return 0; // variable-length field → can't predict size
+			total += fieldSize;
+		}
+		return total;
+	}
+	case awst::WTypeKind::ARC4StaticArray:
+	{
+		auto const* arr = static_cast<awst::ARC4StaticArray const*>(_type);
+		int elemSize = computeEncodedElementSize(arr->elementType());
+		if (elemSize == 0)
+			return 0;
+		return arr->arraySize() * elemSize;
+	}
+	case awst::WTypeKind::ARC4DynamicArray:
+		return 0; // variable length
+	case awst::WTypeKind::Bytes:
+	{
+		auto const* bytesType = static_cast<awst::BytesWType const*>(_type);
+		if (bytesType->length())
+			return *bytesType->length();
+		return 0; // dynamic bytes
+	}
+	case awst::WTypeKind::Basic:
+	{
+		if (_type == awst::WType::biguintType())
+			return 64; // encoded as ARC4UIntN(512) → 64 bytes
+		if (_type == awst::WType::uint64Type())
+			return 8; // itob encoding
+		if (_type == awst::WType::boolType())
+			return 8; // itob encoding
+		if (_type == awst::WType::accountType())
+			return 32;
+		return 0;
+	}
+	default:
+		return 0;
+	}
+}
+
 bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration const& _var)
 {
 	auto const* type = _var.type();
@@ -162,10 +222,10 @@ bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration 
 	if (type->category() == solidity::frontend::Type::Category::Mapping)
 		return true;
 
-	// Dynamic arrays also use box storage
+	// Dynamic arrays use box storage (but not string/bytes — those fit in global state)
 	if (auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(type))
 	{
-		if (arrType->isDynamicallySized())
+		if (arrType->isDynamicallySized() && !arrType->isString() && !arrType->isByteArrayOrString())
 			return true;
 	}
 
@@ -213,11 +273,15 @@ std::vector<awst::AppStorageDefinition> StorageMapper::mapStateVariables(
 			}
 				else if (auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(var->type()))
 				{
-					// Dynamic arrays → box map with element type as storage type
+					Logger::instance().error(
+						"Dynamic state arrays ('" + var->name() + "') are not supported on AVM. "
+						"Use a mapping(uint256 => <elementType>) with a separate uint256 counter instead",
+						def.sourceLocation
+					);
+					// Still emit storage definitions so downstream doesn't crash
 					def.storageWType = m_typeMapper.map(arrType->baseType());
 					def.isMap = true;
 
-					// Also create a global state entry for the array length
 					awst::AppStorageDefinition lenDef;
 					lenDef.sourceLocation = def.sourceLocation;
 					lenDef.memberName = var->name() + "_length";
@@ -235,6 +299,12 @@ std::vector<awst::AppStorageDefinition> StorageMapper::mapStateVariables(
 			{
 				def.storageKind = awst::AppStorageKind::AppGlobal;
 				def.storageWType = m_typeMapper.map(var->type());
+
+				if (def.storageWType == awst::WType::stringType())
+					Logger::instance().info(
+						"string state variable '" + var->name()
+						+ "' uses Algorand global state (limited to ~64 bytes)"
+					);
 			}
 
 			def.key = makeKeyExpr(var->name(), def.sourceLocation, def.storageKind);

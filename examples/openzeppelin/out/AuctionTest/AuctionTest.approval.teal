@@ -1,0 +1,282 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Auction.sol.AuctionTest.approval_program() -> uint64:
+main:
+    intcblock 0 1 64 32
+    bytecblock 0x151f7c75 "_highestBid" 0x "_ended" "_owner" "_highestBidder" "_pendingReturns" base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) "_endTime"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 4 // "_owner"
+    bytec 7 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 5 // "_highestBidder"
+    bytec 7 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_1 // "_highestBid"
+    bytec_2 // 0x
+    app_global_put
+    bytec_3 // "_ended"
+    intc_0 // 0
+    app_global_put
+    bytec 8 // "_endTime"
+    bytec_2 // 0x
+    app_global_put
+    bytec 4 // "_owner"
+    txn Sender
+    app_global_put
+    pushint 1000000
+    itob
+    bytec 8 // "_endTime"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb1bbb0a8 0x1c1b5878 0xbc386a0d 0xb6e45b83 0x3b2e4e43 0xa28d157a 0x79396f59 0xbb2abcf4 // method "owner()address", method "highestBidder()address", method "highestBid()uint512", method "ended()bool", method "bid(address,uint512)void", method "pendingReturn(address)uint512", method "withdraw(address)uint512", method "endAuction()void"
+    txna ApplicationArgs 0
+    match owner highestBidder highestBid ended bid pendingReturn withdraw endAuction
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Auction.sol.AuctionTest.owner[routing]() -> void:
+owner:
+    intc_0 // 0
+    bytec 4 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Auction.sol.AuctionTest.highestBidder[routing]() -> void:
+highestBidder:
+    intc_0 // 0
+    bytec 5 // "_highestBidder"
+    app_global_get_ex
+    assert // check _highestBidder exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Auction.sol.AuctionTest.highestBid[routing]() -> void:
+highestBid:
+    intc_0 // 0
+    bytec_1 // "_highestBid"
+    app_global_get_ex
+    assert // check _highestBid exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Auction.sol.AuctionTest.ended[routing]() -> void:
+ended:
+    intc_0 // 0
+    bytec_3 // "_ended"
+    app_global_get_ex
+    assert // check _ended exists
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Auction.sol.AuctionTest.bid[routing]() -> void:
+bid:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dupn 2
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 0
+    bytec_3 // "_ended"
+    app_global_get_ex
+    assert // check _ended exists
+    !
+    assert // Auction ended
+    intc_0 // 0
+    bytec_1 // "_highestBid"
+    app_global_get_ex
+    assert // check _highestBid exists
+    swap
+    dig 1
+    b>
+    assert // Bid not high enough
+    intc_0 // 0
+    itob
+    b!=
+    bz bid_after_if_else@3
+    intc_0 // 0
+    bytec 5 // "_highestBidder"
+    app_global_get_ex
+    assert // check _highestBidder exists
+    sha256
+    bytec 6 // "_pendingReturns"
+    swap
+    concat
+    dup
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    intc_0 // 0
+    bytec_1 // "_highestBid"
+    app_global_get_ex
+    assert // check _highestBid exists
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+
+bid_after_if_else@3:
+    bytec 5 // "_highestBidder"
+    dig 2
+    app_global_put
+    bytec_1 // "_highestBid"
+    dig 1
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Auction.sol.AuctionTest.pendingReturn[routing]() -> void:
+pendingReturn:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 6 // "_pendingReturns"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Auction.sol.AuctionTest.withdraw[routing]() -> void:
+withdraw:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 6 // "_pendingReturns"
+    swap
+    concat
+    dup
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    intc_0 // 0
+    itob
+    dup
+    cover 2
+    b>
+    bz withdraw_after_if_else@3
+    dig 2
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+
+withdraw_after_if_else@3:
+    dig 1
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Auction.sol.AuctionTest.endAuction[routing]() -> void:
+endAuction:
+    txn Sender
+    intc_0 // 0
+    bytec 4 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // Not owner
+    intc_0 // 0
+    bytec_3 // "_ended"
+    app_global_get_ex
+    assert // check _ended exists
+    !
+    assert // Already ended
+    bytec_3 // "_ended"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return

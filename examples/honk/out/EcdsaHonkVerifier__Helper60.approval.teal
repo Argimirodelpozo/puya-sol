@@ -1,0 +1,575 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper60.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 64 32 1 128
+    bytecblock 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001 0x151f7c75 0x01 0x
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper60.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xd0da046f 0x3db1b700 0x858cf334 0x183de2de 0x452a7ed5 0x6f03d8e5 0x1ff2e886 0x186b2067 0xd351d234 0x4a8933c7 0xcc558454 0x62e687bf // method "FrLib.div(uint512,uint512)uint512", method "ecAdd((uint512,uint512),(uint512,uint512))(uint512,uint512)", method "TranscriptLib.splitChallenge(uint512)(uint512,uint512)", method "ecMul((uint512,uint512),uint512)(uint512,uint512)", method "sub(uint512,uint512)uint512", method "FrLib.sqr(uint512)uint512", method "add(uint512,uint512)uint512", method "mul(uint512,uint512)uint512", method "FrLib.from(uint512)uint512", method "FrLib.fromBytes32(byte[32])uint512", method "FrLib.neg(uint512)uint512", method "RelationsLib.wire(uint512[44],uint64)uint512"
+    txna ApplicationArgs 0
+    match FrLib.div ecAdd TranscriptLib.splitChallenge ecMul sub FrLib.sqr add mul FrLib.from FrLib.fromBytes32 FrLib.neg RelationsLib.wire
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper60.FrLib.div[routing]() -> void:
+FrLib.div:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    pushbytes 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593efffffff
+    bytec_2 // 0x01
+    cover 2
+    swap
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    swap
+
+FrLib.div_while_top@2:
+    dup
+    bytec_3 // 0x
+    b>
+    bz FrLib.div_after_while@6
+    dup
+    bytec_2 // 0x01
+    b&
+    bytec_3 // 0x
+    b!=
+    bz FrLib.div_after_if_else@5
+    dig 2
+    dig 2
+    b*
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    bury 3
+
+FrLib.div_after_if_else@5:
+    dup
+    pushbytes 0x02
+    b/
+    bury 1
+    dig 1
+    dup
+    b*
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    bury 2
+    b FrLib.div_while_top@2
+
+FrLib.div_after_while@6:
+    dig 3
+    dig 3
+    b*
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper60.ecAdd[routing]() -> void:
+ecAdd:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 128
+    ==
+    assert // invalid number of bytes for G1Point
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 128
+    ==
+    assert // invalid number of bytes for G1Point
+    intc_1 // 32
+    bzero
+    dig 2
+    extract 0 64
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    uncover 3
+    extract 64 64
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 2
+    extract 0 64
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    uncover 2
+    extract 64 64
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dup
+    extract 0 64
+    swap
+    extract 64 64
+    ec_add BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    intc_0 // 64
+    bzero
+    uncover 2
+    dig 1
+    b|
+    cover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper60.TranscriptLib.splitChallenge[routing]() -> void:
+TranscriptLib.splitChallenge:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffff
+    b&
+    intc_1 // 32
+    bzero
+    uncover 2
+    pushbytes 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    cover 2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    uncover 2
+    dig 1
+    b|
+    dig 2
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper60.ecMul[routing]() -> void:
+ecMul:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 128
+    ==
+    assert // invalid number of bytes for G1Point
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 32
+    bzero
+    dig 2
+    extract 0 64
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    uncover 3
+    extract 64 64
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dup
+    extract 0 64
+    swap
+    extract 64 32
+    ec_scalar_mul BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    intc_0 // 64
+    bzero
+    uncover 2
+    dig 1
+    b|
+    cover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper60.sub[routing]() -> void:
+sub:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    swap
+    b-
+    b+
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper60.FrLib.sqr[routing]() -> void:
+FrLib.sqr:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dup
+    b*
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper60.add[routing]() -> void:
+add:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    b+
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper60.mul[routing]() -> void:
+mul:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    b*
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper60.FrLib.from[routing]() -> void:
+FrLib.from:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper60.FrLib.fromBytes32[routing]() -> void:
+FrLib.fromBytes32:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper60.FrLib.neg[routing]() -> void:
+FrLib.neg:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    swap
+    b-
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper60.RelationsLib.wire[routing]() -> void:
+RelationsLib.wire:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 2816
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint512, 44>
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    pushint 8
+    bzero
+    swap
+    itob
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_0 // 64
+    *
+    intc_0 // 64
+    extract3 // on error: index access is out of bounds
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

@@ -1,0 +1,492 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/StringsExpanded.sol.StringsExpandedTest.approval_program() -> uint64:
+main:
+    intcblock 8 1 0 64
+    bytecblock 0x151f7c75 0x 0x01 "0"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x61c78ce8 0xfb6ed69c 0xd3e777cd 0x060121ba 0x43d3fb2d 0x30d05c36 // method "toString(uint512)string", method "toStringSigned(uint512)string", method "toHexString(uint512)string", method "toHexStringFixed(uint512,uint512)string", method "toHexStringAddr(address)string", method "equal(string,string)bool"
+    txna ApplicationArgs 0
+    match toString toStringSigned toHexString toHexStringFixed toHexStringAddr equal
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/StringsExpanded.sol.Strings.toString(value: bytes) -> bytes:
+Strings.toString:
+    proto 1 1
+    intc_2 // 0
+    dupn 4
+    itob
+    dup
+    frame_dig -1
+    b==
+    bz Strings.toString_after_if_else@2
+    bytec_3 // "0"
+    frame_bury 0
+    retsub
+
+Strings.toString_after_if_else@2:
+    bytec_1 // 0x
+    frame_bury 1
+    frame_dig -1
+    frame_bury 2
+
+Strings.toString_while_top@3:
+    frame_dig 2
+    frame_dig 4
+    b!=
+    bz Strings.toString_after_while@5
+    frame_dig 1
+    bytec_2 // 0x01
+    b+
+    frame_bury 1
+    pushint 10
+    itob
+    frame_dig 2
+    swap
+    b/
+    frame_bury 2
+    b Strings.toString_while_top@3
+
+Strings.toString_after_while@5:
+    intc_0 // 8
+    bzero
+    dup
+    frame_bury 3
+    frame_dig 1
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    bzero
+    frame_bury 0
+
+Strings.toString_while_top@6:
+    frame_dig -1
+    frame_dig 4
+    b!=
+    bz Strings.toString_after_while@8
+    intc_1 // 1
+    itob
+    frame_dig 1
+    swap
+    b-
+    dup
+    frame_bury 1
+    frame_dig 3
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    pushint 48
+    itob
+    pushint 10
+    itob
+    frame_dig -1
+    dig 1
+    b%
+    uncover 2
+    b+
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    extract 7 1
+    frame_dig 0
+    uncover 3
+    uncover 2
+    replace3
+    frame_bury 0
+    frame_dig -1
+    swap
+    b/
+    frame_bury -1
+    b Strings.toString_while_top@6
+
+Strings.toString_after_while@8:
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/StringsExpanded.sol.Strings.toHexString(2)(value: bytes, length: bytes) -> bytes:
+Strings.toHexString:
+    proto 2 1
+    bytec_1 // ""
+    intc_0 // 8
+    bzero
+    dup
+    pushint 2
+    itob
+    dup
+    frame_dig -1
+    b*
+    dup
+    uncover 2
+    b+
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    bzero
+    bytec_3 // "0"
+    replace2 0
+    pushbytes "x"
+    replace2 1
+    swap
+    intc_1 // 1
+    itob
+    dup
+    cover 2
+    b+
+    frame_dig -2
+
+Strings.toHexString_while_top@1:
+    frame_dig 4
+    frame_dig 3
+    b>
+    bz Strings.toHexString_after_while@3
+    frame_dig 1
+    frame_dig 4
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    frame_bury 0
+    pushint 15
+    itob
+    frame_dig 5
+    b&
+    dup
+    pushint 10
+    itob
+    b<
+    bz Strings.toHexString_after_if_else@8
+    pushint 48
+    itob
+    b+
+    frame_dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    extract 7 1
+
+Strings.toHexString_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/StringsExpanded.sol.Strings._hexDigit@9:
+    frame_dig 2
+    frame_dig 0
+    uncover 2
+    replace3
+    frame_bury 2
+    frame_dig 5
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000010
+    b/
+    frame_bury 5
+    frame_dig 4
+    bytec_2 // 0x01
+    b-
+    frame_bury 4
+    b Strings.toHexString_while_top@1
+
+Strings.toHexString_after_if_else@8:
+    pushint 87
+    itob
+    b+
+    frame_dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    extract 7 1
+    b Strings.toHexString_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/StringsExpanded.sol.Strings._hexDigit@9
+
+Strings.toHexString_after_while@3:
+    intc_2 // 0
+    itob
+    frame_dig 5
+    b!=
+    !
+    assert // StringsInsufficientHexLength
+    frame_dig 2
+    frame_bury 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/StringsExpanded.sol.StringsExpandedTest.toString[routing]() -> void:
+toString:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub Strings.toString
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/StringsExpanded.sol.StringsExpandedTest.toStringSigned[routing]() -> void:
+toStringSigned:
+    intc_2 // 0
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    itob
+    b<
+    dup
+    bz toStringSigned_ternary_false@3
+    pushbytes "-"
+    bury 3
+
+toStringSigned_ternary_merge@4:
+    dup
+    bz toStringSigned_ternary_false@6
+    bytec_1 // 0x
+    dig 2
+    b-
+
+toStringSigned_ternary_merge@7:
+    callsub Strings.toString
+    dig 3
+    swap
+    concat
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+toStringSigned_ternary_false@6:
+    dig 1
+    b toStringSigned_ternary_merge@7
+
+toStringSigned_ternary_false@3:
+    bytec_1 // ""
+    bury 3
+    b toStringSigned_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/StringsExpanded.sol.StringsExpandedTest.toHexString[routing]() -> void:
+toHexString:
+    intc_2 // 0
+    dup
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    itob
+    dup
+    cover 2
+    b==
+    bz toHexString_after_if_else@3
+    pushbytes "0x00"
+
+toHexString_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/StringsExpanded.sol.Strings.toHexString(1)_0@7:
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+toHexString_after_if_else@3:
+    bytec_1 // 0x
+    bury 4
+    dig 1
+    bury 3
+
+toHexString_while_top@4:
+    dig 2
+    dig 1
+    b!=
+    bz toHexString_after_while@6
+    dig 3
+    bytec_2 // 0x01
+    b+
+    bury 4
+    dig 2
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000100
+    b/
+    bury 3
+    b toHexString_while_top@4
+
+toHexString_after_while@6:
+    dig 1
+    dig 4
+    callsub Strings.toHexString
+    b toHexString_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/StringsExpanded.sol.Strings.toHexString(1)_0@7
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/StringsExpanded.sol.StringsExpandedTest.toHexStringFixed[routing]() -> void:
+toHexStringFixed:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub Strings.toHexString
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/StringsExpanded.sol.StringsExpandedTest.toHexStringAddr[routing]() -> void:
+toHexStringAddr:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    pushint 20
+    itob
+    callsub Strings.toHexString
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/StringsExpanded.sol.StringsExpandedTest.equal[routing]() -> void:
+equal:
+    txna ApplicationArgs 1
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    dup
+    txna ApplicationArgs 2
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    dup
+    uncover 2
+    len
+    swap
+    len
+    ==
+    bz equal_bool_false@4
+    dig 1
+    keccak256
+    dig 1
+    keccak256
+    ==
+    bz equal_bool_false@4
+    intc_1 // 1
+
+equal_bool_merge@5:
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+equal_bool_false@4:
+    intc_2 // 0
+    b equal_bool_merge@5

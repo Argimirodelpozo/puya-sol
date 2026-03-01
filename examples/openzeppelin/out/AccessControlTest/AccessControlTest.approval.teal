@@ -1,0 +1,284 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessControl.sol.AccessControlTest.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    bytecblock "__ctor_pending" 0x151f7c75 "_hasRole" 0x0000000000000000000000000000000000000000000000000000000000000000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x4e22a3ba 0x58a91028 0x67289c7d 0x141c4f18 0x830d60b1 0x9e4982ed // method "__postInit()void", method "supportsInterface(byte[4])bool", method "hasRole(byte[32],address)bool", method "getRoleAdmin(byte[32])byte[32]", method "grantRole(byte[32],address)void", method "revokeRole(byte[32],address)void", method "renounceRole(byte[32],address)void"
+    txna ApplicationArgs 0
+    match __postInit supportsInterface(1) hasRole getRoleAdmin grantRole revokeRole renounceRole
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessControl.sol.AccessControlTest.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    txn Sender
+    callsub _grantRole
+    pop
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessControl.sol.AccessControlTest.supportsInterface(1)[routing]() -> void:
+supportsInterface(1):
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    pushbytes 0x
+    ==
+    dup
+    bnz supportsInterface(1)_bool_true@3
+    dup
+    bz supportsInterface(1)_bool_false@4
+
+supportsInterface(1)_bool_true@3:
+    intc_0 // 1
+
+supportsInterface(1)_bool_merge@5:
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+supportsInterface(1)_bool_false@4:
+    intc_2 // 0
+    b supportsInterface(1)_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessControl.sol.AccessControlTest.hasRole[routing]() -> void:
+hasRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessControl.sol.AccessControlTest.hasRole
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessControl.sol.AccessControlTest.getRoleAdmin[routing]() -> void:
+getRoleAdmin:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessControl.sol.AccessControlTest.getRoleAdmin
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessControl.sol.AccessControlTest.grantRole[routing]() -> void:
+grantRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    dig 1
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessControl.sol.AccessControlTest.getRoleAdmin
+    txn Sender
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessControl.sol.AccessControlTest.hasRole
+    assert // AccessControlUnauthorizedAccount
+    callsub _grantRole
+    pop
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessControl.sol.AccessControlTest.revokeRole[routing]() -> void:
+revokeRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    dig 1
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessControl.sol.AccessControlTest.getRoleAdmin
+    txn Sender
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessControl.sol.AccessControlTest.hasRole
+    assert // AccessControlUnauthorizedAccount
+    callsub _revokeRole
+    pop
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessControl.sol.AccessControlTest.renounceRole[routing]() -> void:
+renounceRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    dup
+    txn Sender
+    !=
+    !
+    assert // AccessControlBadConfirmation
+    callsub _revokeRole
+    pop
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessControl.sol.AccessControlTest.hasRole(role: bytes, account: bytes) -> uint64:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessControl.sol.AccessControlTest.hasRole:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    concat
+    sha256
+    bytec_2 // "_hasRole"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessControl.sol.AccessControlTest.getRoleAdmin(role: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessControl.sol.AccessControlTest.getRoleAdmin:
+    proto 1 1
+    frame_dig -1
+    sha256
+    pushbytes "_adminRoles"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessControl.sol.AccessControlTest._grantRole(role: bytes, account: bytes) -> uint64:
+_grantRole:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessControl.sol.AccessControlTest.hasRole
+    bnz _grantRole_else_body@2
+    frame_dig -2
+    frame_dig -1
+    concat
+    sha256
+    bytec_2 // "_hasRole"
+    swap
+    concat
+    intc_0 // 1
+    itob
+    box_put
+    pushbytes 0x2f878811
+    log
+    intc_0 // 1
+    retsub
+
+_grantRole_else_body@2:
+    intc_2 // 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessControl.sol.AccessControlTest._revokeRole(role: bytes, account: bytes) -> uint64:
+_revokeRole:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/AccessControl.sol.AccessControlTest.hasRole
+    bz _revokeRole_else_body@2
+    frame_dig -2
+    frame_dig -1
+    concat
+    sha256
+    bytec_2 // "_hasRole"
+    swap
+    concat
+    intc_2 // 0
+    itob
+    box_put
+    pushbytes 0xf6391f5c
+    log
+    intc_0 // 1
+    retsub
+
+_revokeRole_else_body@2:
+    intc_2 // 0
+    retsub

@@ -1,11 +1,73 @@
 #include "builder/ContractTranslator.h"
 #include "Logger.h"
 
+#include <libsolidity/ast/ASTVisitor.h>
+
 #include <map>
 #include <set>
 
 namespace puyasol::builder
 {
+
+/// Checks if a Solidity AST subtree references any state variable whose AST ID
+/// is in the given set (i.e. box-stored state variables).
+class BoxVarRefChecker: public solidity::frontend::ASTConstVisitor
+{
+public:
+	explicit BoxVarRefChecker(std::set<int64_t> const& _boxVarIds): m_boxVarIds(_boxVarIds) {}
+	bool found() const { return m_found; }
+
+	bool visit(solidity::frontend::Identifier const& _node) override
+	{
+		if (m_found)
+			return false;
+		if (auto const* decl = dynamic_cast<solidity::frontend::VariableDeclaration const*>(
+				_node.annotation().referencedDeclaration))
+		{
+			if (m_boxVarIds.count(decl->id()))
+				m_found = true;
+		}
+		return !m_found;
+	}
+
+private:
+	std::set<int64_t> const& m_boxVarIds;
+	bool m_found = false;
+};
+
+/// Collects AST IDs of base functions that are called via `super.method()`.
+/// These need to be emitted as separate subroutines with distinct names.
+class SuperCallCollector: public solidity::frontend::ASTConstVisitor
+{
+public:
+	/// Set of AST IDs of base function definitions referenced by super calls.
+	std::set<int64_t> superTargetIds;
+
+	bool visit(solidity::frontend::MemberAccess const& _node) override
+	{
+		auto const* baseType = _node.expression().annotation().type;
+		if (!baseType)
+			return true;
+		// Unwrap TypeType if needed (super has type TypeType(ContractType(isSuper=true)))
+		if (baseType->category() == solidity::frontend::Type::Category::TypeType)
+		{
+			auto const* typeType = dynamic_cast<solidity::frontend::TypeType const*>(baseType);
+			if (typeType)
+				baseType = typeType->actualType();
+		}
+		if (baseType->category() == solidity::frontend::Type::Category::Contract)
+		{
+			auto const* contractType = dynamic_cast<solidity::frontend::ContractType const*>(baseType);
+			if (contractType && contractType->isSuper())
+			{
+				auto const* refDecl = _node.annotation().referencedDeclaration;
+				if (refDecl)
+					superTargetIds.insert(refDecl->id());
+			}
+		}
+		return true;
+	}
+};
 
 static bool blockAlwaysTerminates(awst::Block const& _block)
 {
@@ -65,7 +127,26 @@ std::shared_ptr<awst::Contract> ContractTranslator::translate(
 	std::string contractName = _contract.name();
 	std::string contractId = m_sourceFile + "." + contractName;
 
-	// Create translators for this contract
+	// Detect overloaded function names across all linearized base contracts
+	// Must happen BEFORE creating translators so constructor body uses correct names
+	m_overloadedNames.clear();
+	std::unordered_map<std::string, int> nameCount;
+	for (auto const* base: _contract.annotation().linearizedBaseContracts)
+	{
+		for (auto const* func: base->definedFunctions())
+		{
+			if (func->isConstructor() || !func->isImplemented())
+				continue;
+			nameCount[func->name()]++;
+		}
+	}
+	for (auto const& [name, count]: nameCount)
+	{
+		if (count > 1)
+			m_overloadedNames.insert(name);
+	}
+
+	// Create translators for this contract (with overload info)
 	m_exprTranslator = std::make_unique<ExpressionTranslator>(
 		m_typeMapper, m_storageMapper, m_sourceFile, contractName,
 		m_libraryFunctionIds, m_overloadedNames, m_freeFunctionById
@@ -96,35 +177,68 @@ std::shared_ptr<awst::Contract> ContractTranslator::translate(
 	contract->appState = m_storageMapper.mapStateVariables(_contract, m_sourceFile);
 
 	// Approval and clear programs
+	m_postInitMethod.reset();
 	contract->approvalProgram = buildApprovalProgram(_contract, contractName);
 	contract->clearProgram = buildClearProgram(_contract, contractName);
 
-	// Detect overloaded function names across all linearized base contracts
-	m_overloadedNames.clear();
-	std::unordered_map<std::string, int> nameCount;
+	// If constructor auto-split was triggered, add the __postInit method
+	// and the __ctor_pending state variable
+	if (m_postInitMethod)
+	{
+		// Add __ctor_pending global state variable
+		awst::AppStorageDefinition ctorPendingState;
+		ctorPendingState.memberName = "__ctor_pending";
+		ctorPendingState.sourceLocation = contract->approvalProgram.sourceLocation;
+		ctorPendingState.storageKind = awst::AppStorageKind::AppGlobal;
+		ctorPendingState.storageWType = awst::WType::uint64Type();
+		auto key = std::make_shared<awst::BytesConstant>();
+		key->sourceLocation = ctorPendingState.sourceLocation;
+		key->wtype = awst::WType::bytesType();
+		key->encoding = awst::BytesEncoding::Utf8;
+		std::string keyStr = "__ctor_pending";
+		key->value = std::vector<uint8_t>(keyStr.begin(), keyStr.end());
+		ctorPendingState.key = key;
+		contract->appState.push_back(std::move(ctorPendingState));
+
+		contract->methods.push_back(std::move(*m_postInitMethod));
+		m_postInitMethod.reset();
+	}
+
+	// Scan all functions (own + inherited) for super.method() calls.
+	// Collect AST IDs of base functions that need separate subroutines.
+	SuperCallCollector superCollector;
 	for (auto const* base: _contract.annotation().linearizedBaseContracts)
 	{
 		for (auto const* func: base->definedFunctions())
 		{
 			if (func->isConstructor() || !func->isImplemented())
 				continue;
-			nameCount[func->name()]++;
+			func->body().accept(superCollector);
 		}
 	}
-	for (auto const& [name, count]: nameCount)
-	{
-		if (count > 1)
-			m_overloadedNames.insert(name);
-	}
 
-	// Re-create expression translator with overload info
-	m_exprTranslator = std::make_unique<ExpressionTranslator>(
-		m_typeMapper, m_storageMapper, m_sourceFile, contractName,
-		m_libraryFunctionIds, m_overloadedNames, m_freeFunctionById
-	);
-	m_stmtTranslator = std::make_unique<StatementTranslator>(
-		*m_exprTranslator, m_typeMapper, m_sourceFile
-	);
+	// Build a map: base function AST ID → FunctionDefinition*
+	// for functions that are called via super and need separate emission
+	std::unordered_map<int64_t, solidity::frontend::FunctionDefinition const*> superTargetFuncs;
+	for (int64_t id: superCollector.superTargetIds)
+	{
+		for (auto const* base: _contract.annotation().linearizedBaseContracts)
+		{
+			for (auto const* func: base->definedFunctions())
+			{
+				if (func->id() == id && func->isImplemented())
+				{
+					superTargetFuncs[id] = func;
+					// Register the super target name with the ExpressionTranslator
+					std::string name = func->name();
+					if (m_overloadedNames.count(name))
+						name += "(" + std::to_string(func->parameters().size()) + ")";
+					std::string superName = name + "__super_" + std::to_string(id);
+					m_exprTranslator->addSuperTarget(id, superName);
+				}
+			}
+		}
+	}
 
 	// Translate all defined functions in this contract
 	// Use "name(paramCount)" for overloaded functions to disambiguate
@@ -169,6 +283,19 @@ std::shared_ptr<awst::Contract> ContractTranslator::translate(
 		}
 	}
 
+	// Emit base functions that are called via super as separate subroutines
+	for (auto const& [astId, func]: superTargetFuncs)
+	{
+		std::string name = func->name();
+		if (m_overloadedNames.count(name))
+			name += "(" + std::to_string(func->parameters().size()) + ")";
+		std::string superName = name + "__super_" + std::to_string(astId);
+		auto method = translateFunction(*func, contractName, superName);
+		// Super base functions should never be ABI-routable
+		method.arc4MethodConfig.reset();
+		contract->methods.push_back(std::move(method));
+	}
+
 	return contract;
 }
 
@@ -185,6 +312,125 @@ awst::ContractMethod ContractTranslator::buildApprovalProgram(
 
 	auto body = std::make_shared<awst::Block>();
 	body->sourceLocation = method.sourceLocation;
+
+	// Detect if constructor needs auto-split (box writes in constructor)
+	// Only generate __postInit if the constructor body actually references
+	// box-stored state variables. Having box storage + constructor code is
+	// not sufficient — if the constructor only writes global state, it can
+	// all happen during the create transaction.
+	bool needsPostInit = false;
+	{
+		// Collect AST IDs of all box-stored state variables
+		std::set<int64_t> boxVarIds;
+		for (auto const* base: _contract.annotation().linearizedBaseContracts)
+		{
+			for (auto const* var: base->stateVariables())
+			{
+				if (var->isConstant())
+					continue;
+				if (StorageMapper::shouldUseBoxStorage(*var))
+					boxVarIds.insert(var->id());
+			}
+		}
+
+		if (!boxVarIds.empty())
+		{
+			// Walk constructor bodies to check if they reference any box-stored variable.
+			// Also check functions called from constructors (transitively).
+			BoxVarRefChecker checker(boxVarIds);
+
+			// First, scan ALL non-constructor functions to find which ones
+			// reference box-stored state variables
+			std::set<int64_t> boxWriteFuncIds;
+			for (auto const* base: _contract.annotation().linearizedBaseContracts)
+			{
+				for (auto const* func: base->definedFunctions())
+				{
+					if (func->isConstructor() || !func->isImplemented())
+						continue;
+					BoxVarRefChecker funcChecker(boxVarIds);
+					func->body().accept(funcChecker);
+					if (funcChecker.found())
+						boxWriteFuncIds.insert(func->id());
+				}
+			}
+
+			// Now walk constructor bodies checking for:
+			// 1. Direct references to box-stored state variables
+			// 2. Calls to functions that reference box-stored state variables
+			auto const* ctor = _contract.constructor();
+			if (ctor && !ctor->body().statements().empty())
+				ctor->body().accept(checker);
+
+			if (!checker.found())
+			{
+				for (auto const* base: _contract.annotation().linearizedBaseContracts)
+				{
+					if (base == &_contract)
+						continue;
+					auto const* baseCtor = base->constructor();
+					if (baseCtor && baseCtor->isImplemented()
+						&& !baseCtor->body().statements().empty())
+					{
+						baseCtor->body().accept(checker);
+						if (checker.found())
+							break;
+					}
+				}
+			}
+
+			// If direct references weren't found, check if constructors
+			// call any function that writes to boxes
+			if (!checker.found() && !boxWriteFuncIds.empty())
+			{
+				// Scan constructor bodies for FunctionCall nodes whose
+				// referenced declaration is in boxWriteFuncIds
+				struct CtorCallChecker: public solidity::frontend::ASTConstVisitor
+				{
+					std::set<int64_t> const& targetIds;
+					bool found = false;
+					explicit CtorCallChecker(std::set<int64_t> const& _ids): targetIds(_ids) {}
+					bool visit(solidity::frontend::FunctionCall const& _node) override
+					{
+						if (found) return false;
+						auto const* expr = &_node.expression();
+						// Unwrap MemberAccess for calls like _grantRole(...)
+						if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(expr))
+						{
+							auto const* decl = id->annotation().referencedDeclaration;
+							if (decl && targetIds.count(decl->id()))
+								found = true;
+						}
+						return !found;
+					}
+				};
+				CtorCallChecker callChecker(boxWriteFuncIds);
+				if (ctor && !ctor->body().statements().empty())
+					ctor->body().accept(callChecker);
+				if (!callChecker.found)
+				{
+					for (auto const* base: _contract.annotation().linearizedBaseContracts)
+					{
+						if (base == &_contract)
+							continue;
+						auto const* baseCtor = base->constructor();
+						if (baseCtor && baseCtor->isImplemented()
+							&& !baseCtor->body().statements().empty())
+						{
+							baseCtor->body().accept(callChecker);
+							if (callChecker.found)
+								break;
+						}
+					}
+				}
+				needsPostInit = callChecker.found;
+			}
+			else
+			{
+				needsPostInit = checker.found();
+			}
+		}
+	}
 
 	// Create-time check: if (Txn.ApplicationID == 0) { base_ctors; ctor_body; return true; }
 	{
@@ -460,6 +706,159 @@ awst::ContractMethod ContractTranslator::buildApprovalProgram(
 			}
 		}
 
+		if (needsPostInit)
+		{
+			// Constructor writes to box storage — defer constructor body to __postInit().
+			// Set __ctor_pending = 1 in create block.
+			auto pendingKey = std::make_shared<awst::BytesConstant>();
+			pendingKey->sourceLocation = method.sourceLocation;
+			pendingKey->wtype = awst::WType::bytesType();
+			pendingKey->encoding = awst::BytesEncoding::Utf8;
+			std::string pendingKeyStr = "__ctor_pending";
+			pendingKey->value = std::vector<uint8_t>(pendingKeyStr.begin(), pendingKeyStr.end());
+
+			auto one = std::make_shared<awst::IntegerConstant>();
+			one->sourceLocation = method.sourceLocation;
+			one->wtype = awst::WType::uint64Type();
+			one->value = "1";
+
+			auto setPending = std::make_shared<awst::IntrinsicCall>();
+			setPending->sourceLocation = method.sourceLocation;
+			setPending->opCode = "app_global_put";
+			setPending->wtype = awst::WType::voidType();
+			setPending->stackArgs.push_back(pendingKey);
+			setPending->stackArgs.push_back(one);
+
+			auto setPendingStmt = std::make_shared<awst::ExpressionStatement>();
+			setPendingStmt->sourceLocation = method.sourceLocation;
+			setPendingStmt->expr = setPending;
+			createBlock->body.push_back(std::move(setPendingStmt));
+
+			// Build __postInit method with deferred constructor body
+			awst::ContractMethod postInit;
+			postInit.sourceLocation = method.sourceLocation;
+			postInit.returnType = awst::WType::voidType();
+			postInit.cref = m_sourceFile + "." + _contractName;
+			postInit.memberName = "__postInit";
+
+			awst::ARC4ABIMethodConfig postInitConfig;
+			postInitConfig.name = "__postInit";
+			postInitConfig.sourceLocation = method.sourceLocation;
+			postInitConfig.allowedCompletionTypes = {0}; // NoOp
+			postInitConfig.create = 3; // Disallow
+			postInitConfig.readonly = false;
+			postInit.arc4MethodConfig = postInitConfig;
+
+			auto postInitBody = std::make_shared<awst::Block>();
+			postInitBody->sourceLocation = method.sourceLocation;
+
+			// Guard: assert(__ctor_pending == 1)
+			auto readPending = std::make_shared<awst::IntrinsicCall>();
+			readPending->sourceLocation = method.sourceLocation;
+			readPending->opCode = "app_global_get";
+			readPending->wtype = awst::WType::uint64Type();
+			auto readKey = std::make_shared<awst::BytesConstant>();
+			readKey->sourceLocation = method.sourceLocation;
+			readKey->wtype = awst::WType::bytesType();
+			readKey->encoding = awst::BytesEncoding::Utf8;
+			readKey->value = std::vector<uint8_t>(pendingKeyStr.begin(), pendingKeyStr.end());
+			readPending->stackArgs.push_back(readKey);
+
+			auto assertPending = std::make_shared<awst::AssertExpression>();
+			assertPending->sourceLocation = method.sourceLocation;
+			assertPending->wtype = awst::WType::voidType();
+			assertPending->condition = readPending;
+			assertPending->errorMessage = "__postInit already called";
+			auto assertStmt = std::make_shared<awst::ExpressionStatement>();
+			assertStmt->sourceLocation = method.sourceLocation;
+			assertStmt->expr = assertPending;
+			postInitBody->body.push_back(std::move(assertStmt));
+
+			// Clear flag: __ctor_pending = 0
+			auto clearKey = std::make_shared<awst::BytesConstant>();
+			clearKey->sourceLocation = method.sourceLocation;
+			clearKey->wtype = awst::WType::bytesType();
+			clearKey->encoding = awst::BytesEncoding::Utf8;
+			clearKey->value = std::vector<uint8_t>(pendingKeyStr.begin(), pendingKeyStr.end());
+
+			auto zeroVal = std::make_shared<awst::IntegerConstant>();
+			zeroVal->sourceLocation = method.sourceLocation;
+			zeroVal->wtype = awst::WType::uint64Type();
+			zeroVal->value = "0";
+
+			auto clearPending = std::make_shared<awst::IntrinsicCall>();
+			clearPending->sourceLocation = method.sourceLocation;
+			clearPending->opCode = "app_global_put";
+			clearPending->wtype = awst::WType::voidType();
+			clearPending->stackArgs.push_back(clearKey);
+			clearPending->stackArgs.push_back(zeroVal);
+
+			auto clearStmt = std::make_shared<awst::ExpressionStatement>();
+			clearStmt->sourceLocation = method.sourceLocation;
+			clearStmt->expr = clearPending;
+			postInitBody->body.push_back(std::move(clearStmt));
+
+			// Inline base constructor bodies into __postInit
+			auto const& linearized = _contract.annotation().linearizedBaseContracts;
+			for (auto it = linearized.rbegin(); it != linearized.rend(); ++it)
+			{
+				auto const* base = *it;
+				if (base == &_contract)
+					continue;
+
+				auto const* baseCtor = base->constructor();
+				if (!baseCtor || !baseCtor->isImplemented())
+					continue;
+				if (baseCtor->body().statements().empty())
+					continue;
+
+				// Base constructor parameter assignments
+				auto argIt = explicitBaseArgs.find(base);
+				if (argIt != explicitBaseArgs.end() && argIt->second && !argIt->second->empty())
+				{
+					auto const& args = *(argIt->second);
+					auto const& params = baseCtor->parameters();
+					for (size_t i = 0; i < args.size() && i < params.size(); ++i)
+					{
+						auto argExpr = m_exprTranslator->translate(*args[i]);
+						if (!argExpr)
+							continue;
+
+						auto target = std::make_shared<awst::VarExpression>();
+						target->sourceLocation = makeLoc(args[i]->location());
+						target->name = params[i]->name();
+						target->wtype = m_typeMapper.map(params[i]->type());
+
+						argExpr = ExpressionTranslator::implicitNumericCast(
+							std::move(argExpr), target->wtype, target->sourceLocation
+						);
+
+						auto assignment = std::make_shared<awst::AssignmentStatement>();
+						assignment->sourceLocation = target->sourceLocation;
+						assignment->target = target;
+						assignment->value = std::move(argExpr);
+						postInitBody->body.push_back(std::move(assignment));
+					}
+				}
+
+				auto baseBody = m_stmtTranslator->translateBlock(baseCtor->body());
+				for (auto& stmt: baseBody->body)
+					postInitBody->body.push_back(std::move(stmt));
+			}
+
+			// Main constructor body
+			if (constructor && constructor->body().statements().size() > 0)
+			{
+				auto ctorBody = m_stmtTranslator->translateBlock(constructor->body());
+				for (auto& stmt: ctorBody->body)
+					postInitBody->body.push_back(std::move(stmt));
+			}
+
+			postInit.body = postInitBody;
+			m_postInitMethod = std::move(postInit);
+		}
+		else
+		{
 		// Inline base constructor bodies in linearization order (most-base-first)
 		auto const& linearized = _contract.annotation().linearizedBaseContracts;
 		for (auto it = linearized.rbegin(); it != linearized.rend(); ++it)
@@ -517,6 +916,7 @@ awst::ContractMethod ContractTranslator::buildApprovalProgram(
 			for (auto& stmt: ctorBody->body)
 				createBlock->body.push_back(std::move(stmt));
 		}
+		} // end else (no postInit needed)
 
 		// Return true to complete the create transaction
 		auto trueLit = std::make_shared<awst::BoolConstant>();
@@ -585,29 +985,42 @@ awst::ContractMethod ContractTranslator::buildClearProgram(
 
 awst::ContractMethod ContractTranslator::translateFunction(
 	solidity::frontend::FunctionDefinition const& _func,
-	std::string const& _contractName
+	std::string const& _contractName,
+	std::string const& _nameOverride
 )
 {
 	awst::ContractMethod method;
 	method.sourceLocation = makeLoc(_func.location());
 	method.cref = m_sourceFile + "." + _contractName;
-	// Disambiguate overloaded function names by appending parameter count
-	method.memberName = _func.name();
-	if (m_overloadedNames.count(_func.name()))
-		method.memberName += "(" + std::to_string(_func.parameters().size()) + ")";
+	// Use name override if provided, otherwise disambiguate overloaded names
+	if (!_nameOverride.empty())
+	{
+		method.memberName = _nameOverride;
+	}
+	else
+	{
+		method.memberName = _func.name();
+		if (m_overloadedNames.count(_func.name()))
+			method.memberName += "(" + std::to_string(_func.parameters().size()) + ")";
+	}
 
 	// Documentation
 	if (_func.documentation())
 		method.documentation.description = *_func.documentation()->text();
 
 	// Parameters
+	int paramIndex = 0;
 	for (auto const& param: _func.parameters())
 	{
 		awst::SubroutineArgument arg;
-		arg.name = param->name();
+		if (param->name().empty())
+			arg.name = "_param" + std::to_string(paramIndex);
+		else
+			arg.name = param->name();
 		arg.sourceLocation = makeLoc(param->location());
 		arg.wtype = m_typeMapper.map(param->type());
 		method.args.push_back(std::move(arg));
+		paramIndex++;
 	}
 
 	// Return type
@@ -869,6 +1282,8 @@ void ContractTranslator::inlineModifiers(
 	std::shared_ptr<awst::Block>& _body
 )
 {
+	static int modCounter = 0;
+
 	// For each modifier invocation, wrap the function body
 	for (auto const& modInvocation: _func.modifiers())
 	{
@@ -886,6 +1301,49 @@ void ContractTranslator::inlineModifiers(
 		if (modDef->body().statements().empty())
 			continue;
 
+		// Bind modifier arguments to unique local variables.
+		// e.g. onlyRole(getRoleAdmin(role)) → __mod_role_N = getRoleAdmin(role)
+		auto const* args = modInvocation->arguments();
+		auto const& params = modDef->parameters();
+		std::vector<int64_t> remappedDeclIds;
+
+		if (args && !args->empty())
+		{
+			auto modLoc = makeLoc(modInvocation->location());
+			for (size_t i = 0; i < args->size() && i < params.size(); ++i)
+			{
+				auto const& param = params[i];
+				std::string uniqueName = "__mod_" + param->name() + "_" + std::to_string(modCounter++);
+				auto* paramType = m_typeMapper.map(param->type());
+
+				// Translate the argument expression (e.g. getRoleAdmin(role))
+				auto argExpr = m_exprTranslator->translate(*(*args)[i]);
+				if (!argExpr)
+					continue;
+
+				// Cast to parameter type if needed
+				argExpr = ExpressionTranslator::implicitNumericCast(
+					std::move(argExpr), paramType, modLoc
+				);
+
+				// Create assignment: __mod_role_N = <evaluated arg>
+				auto target = std::make_shared<awst::VarExpression>();
+				target->sourceLocation = modLoc;
+				target->name = uniqueName;
+				target->wtype = paramType;
+
+				auto assignment = std::make_shared<awst::AssignmentStatement>();
+				assignment->sourceLocation = modLoc;
+				assignment->target = target;
+				assignment->value = std::move(argExpr);
+				modBody->body.push_back(std::move(assignment));
+
+				// Register remap so modifier body references resolve to the unique name
+				m_exprTranslator->addParamRemap(param->id(), uniqueName, paramType);
+				remappedDeclIds.push_back(param->id());
+			}
+		}
+
 		for (auto const& stmt: modDef->body().statements())
 		{
 			if (dynamic_cast<solidity::frontend::PlaceholderStatement const*>(stmt.get()))
@@ -901,6 +1359,10 @@ void ContractTranslator::inlineModifiers(
 					modBody->body.push_back(std::move(translated));
 			}
 		}
+
+		// Unregister remaps so they don't affect subsequent code
+		for (auto declId: remappedDeclIds)
+			m_exprTranslator->removeParamRemap(declId);
 
 		_body = modBody;
 	}

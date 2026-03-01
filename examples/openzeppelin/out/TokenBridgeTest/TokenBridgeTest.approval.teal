@@ -1,0 +1,627 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenBridge.sol.TokenBridgeTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock 0x151f7c75 "admin" 0x "paused" "bridgeFee" "transferCount" "totalBridged" "totalFees" "_transferCompleted" "_transferRefunded" 0x00 0x0000000000000000000000000000000000000000000000000000000000000000 "_transferSender" "_transferAmount" "_transferDestChain"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "admin"
+    bytec 11 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 4 // "bridgeFee"
+    bytec_2 // 0x
+    app_global_put
+    bytec 5 // "transferCount"
+    bytec_2 // 0x
+    app_global_put
+    bytec 6 // "totalBridged"
+    bytec_2 // 0x
+    app_global_put
+    bytec 7 // "totalFees"
+    bytec_2 // 0x
+    app_global_put
+    bytec_3 // "paused"
+    intc_1 // 0
+    app_global_put
+    pushint 100
+    itob
+    bytec_1 // "admin"
+    txn Sender
+    app_global_put
+    bytec 4 // "bridgeFee"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x40f0320f 0x3dad6276 0xf40aa487 0x0178f94b 0x1b529de8 0x9b4c07da 0xcccd056b 0xd860df2f 0x8ae68904 0x4c35b9ed 0x537800fe 0xfa5ceff4 0x39316e96 0x4af42db9 0xac8b24de 0xc72a5afa // method "initiate(address,uint512,uint512)uint512", method "complete(uint512)void", method "refund(uint512)void", method "pause()void", method "unpause()void", method "isPaused()bool", method "getTransferSender(uint512)address", method "getTransferAmount(uint512)uint512", method "getTransferDestChain(uint512)uint512", method "isTransferCompleted(uint512)bool", method "isTransferRefunded(uint512)bool", method "getTotalBridged()uint512", method "getTotalFees()uint512", method "getTransferCount()uint512", method "getAdmin()address", method "setBridgeFee(uint512)void"
+    txna ApplicationArgs 0
+    match initiate complete refund pause unpause isPaused getTransferSender getTransferAmount getTransferDestChain isTransferCompleted isTransferRefunded getTotalBridged getTotalFees getTransferCount getAdmin setBridgeFee
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenBridge.sol.TokenBridgeTest.initiate[routing]() -> void:
+initiate:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec_3 // "paused"
+    app_global_get_ex
+    assert // check paused exists
+    !
+    assert // Bridge is paused
+    intc_1 // 0
+    bytec 5 // "transferCount"
+    app_global_get_ex
+    assert // check transferCount exists
+    intc_2 // 1
+    itob
+    b+
+    bytec 5 // "transferCount"
+    dig 1
+    app_global_put
+    intc_1 // 0
+    bytec 4 // "bridgeFee"
+    app_global_get_ex
+    assert // check bridgeFee exists
+    dig 3
+    b*
+    pushint 10000
+    itob
+    b/
+    uncover 3
+    dig 1
+    b-
+    intc_0 // 64
+    bzero
+    dup
+    dig 4
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 12 // "_transferSender"
+    dig 1
+    concat
+    uncover 7
+    box_put
+    bytec 13 // "_transferAmount"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 3
+    box_put
+    bytec 14 // "_transferDestChain"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    uncover 5
+    box_put
+    intc_1 // 0
+    bytec 6 // "totalBridged"
+    app_global_get_ex
+    assert // check totalBridged exists
+    uncover 2
+    b+
+    bytec 6 // "totalBridged"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec 7 // "totalFees"
+    app_global_get_ex
+    assert // check totalFees exists
+    uncover 2
+    b+
+    bytec 7 // "totalFees"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenBridge.sol.TokenBridgeTest.complete[routing]() -> void:
+complete:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_1 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    ==
+    assert // Only admin
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_transferCompleted"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already completed
+    bytec 9 // "_transferRefunded"
+    uncover 2
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already refunded
+    intc_2 // 1
+    itob
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenBridge.sol.TokenBridgeTest.refund[routing]() -> void:
+refund:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_1 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    ==
+    assert // Only admin
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_transferCompleted"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already completed
+    bytec 9 // "_transferRefunded"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already refunded
+    intc_2 // 1
+    itob
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenBridge.sol.TokenBridgeTest.pause[routing]() -> void:
+pause:
+    txn Sender
+    intc_1 // 0
+    bytec_1 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    ==
+    assert // Only admin
+    bytec_3 // "paused"
+    intc_2 // 1
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenBridge.sol.TokenBridgeTest.unpause[routing]() -> void:
+unpause:
+    txn Sender
+    intc_1 // 0
+    bytec_1 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    ==
+    assert // Only admin
+    bytec_3 // "paused"
+    intc_1 // 0
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenBridge.sol.TokenBridgeTest.isPaused[routing]() -> void:
+isPaused:
+    intc_1 // 0
+    bytec_3 // "paused"
+    app_global_get_ex
+    assert // check paused exists
+    bytec 10 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenBridge.sol.TokenBridgeTest.getTransferSender[routing]() -> void:
+getTransferSender:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 12 // "_transferSender"
+    swap
+    concat
+    box_get
+    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenBridge.sol.TokenBridgeTest.getTransferAmount[routing]() -> void:
+getTransferAmount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 13 // "_transferAmount"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenBridge.sol.TokenBridgeTest.getTransferDestChain[routing]() -> void:
+getTransferDestChain:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 14 // "_transferDestChain"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenBridge.sol.TokenBridgeTest.isTransferCompleted[routing]() -> void:
+isTransferCompleted:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_transferCompleted"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bytec 10 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenBridge.sol.TokenBridgeTest.isTransferRefunded[routing]() -> void:
+isTransferRefunded:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 9 // "_transferRefunded"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bytec 10 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenBridge.sol.TokenBridgeTest.getTotalBridged[routing]() -> void:
+getTotalBridged:
+    intc_1 // 0
+    bytec 6 // "totalBridged"
+    app_global_get_ex
+    assert // check totalBridged exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenBridge.sol.TokenBridgeTest.getTotalFees[routing]() -> void:
+getTotalFees:
+    intc_1 // 0
+    bytec 7 // "totalFees"
+    app_global_get_ex
+    assert // check totalFees exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenBridge.sol.TokenBridgeTest.getTransferCount[routing]() -> void:
+getTransferCount:
+    intc_1 // 0
+    bytec 5 // "transferCount"
+    app_global_get_ex
+    assert // check transferCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenBridge.sol.TokenBridgeTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_1 // 0
+    bytec_1 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenBridge.sol.TokenBridgeTest.setBridgeFee[routing]() -> void:
+setBridgeFee:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_1 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    ==
+    assert // Only admin
+    bytec 4 // "bridgeFee"
+    swap
+    app_global_put
+    intc_2 // 1
+    return

@@ -1,0 +1,257 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC2981.sol.ERC2981Test.approval_program() -> uint64:
+main:
+    intcblock 64 1 0 10000
+    bytecblock "_defaultRoyaltyInfo" base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) 0x "_tokenRoyaltyInfo" 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "_defaultRoyaltyInfo"
+    bytec_2 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x2e8e4885 0xde8d0ef1 0x204ebb5f 0xa3f5bc79 0x4e22a3ba 0xd52cbf89 // method "setDefaultRoyalty(address,uint512)void", method "deleteDefaultRoyalty()void", method "setTokenRoyalty(uint512,address,uint512)void", method "resetTokenRoyalty(uint512)void", method "supportsInterface(byte[4])bool", method "royaltyInfo(uint512,uint512)(address,uint512)"
+    txna ApplicationArgs 0
+    match setDefaultRoyalty deleteDefaultRoyalty setTokenRoyalty resetTokenRoyalty supportsInterface(1) royaltyInfo
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC2981.sol.ERC2981Test.setDefaultRoyalty[routing]() -> void:
+setDefaultRoyalty:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_3 // 10000
+    itob
+    dig 2
+    b<
+    !
+    assert // ERC2981InvalidDefaultRoyalty
+    dig 2
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    !
+    assert // ERC2981InvalidDefaultRoyaltyReceiver
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    concat
+    bytec_0 // "_defaultRoyaltyInfo"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC2981.sol.ERC2981Test.deleteDefaultRoyalty[routing]() -> void:
+deleteDefaultRoyalty:
+    intc_2 // 0
+    bytec_0 // "_defaultRoyaltyInfo"
+    app_global_get_ex
+    bury 1
+    assert // check _defaultRoyaltyInfo exists
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC2981.sol.ERC2981Test.setTokenRoyalty[routing]() -> void:
+setTokenRoyalty:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_3 // 10000
+    itob
+    dig 2
+    b<
+    !
+    assert // ERC2981InvalidTokenRoyalty
+    dig 2
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    !
+    assert // ERC2981InvalidTokenRoyaltyReceiver
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    swap
+    dig 1
+    b|
+    uncover 2
+    swap
+    concat
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_tokenRoyaltyInfo"
+    swap
+    concat
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC2981.sol.ERC2981Test.resetTokenRoyalty[routing]() -> void:
+resetTokenRoyalty:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC2981.sol.ERC2981Test.supportsInterface(1)[routing]() -> void:
+supportsInterface(1):
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    bytec_2 // 0x
+    ==
+    dup
+    bnz supportsInterface(1)_bool_true@3
+    dup
+    bz supportsInterface(1)_bool_false@4
+
+supportsInterface(1)_bool_true@3:
+    intc_1 // 1
+
+supportsInterface(1)_bool_merge@5:
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+supportsInterface(1)_bool_false@4:
+    intc_2 // 0
+    b supportsInterface(1)_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC2981.sol.ERC2981Test.royaltyInfo[routing]() -> void:
+royaltyInfo:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_tokenRoyaltyInfo"
+    swap
+    concat
+    box_get
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 32
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    bz royaltyInfo_after_if_else@3
+    intc_2 // 0
+    bytec_0 // "_defaultRoyaltyInfo"
+    app_global_get_ex
+    swap
+    bury 2
+    assert // check _defaultRoyaltyInfo exists
+
+royaltyInfo_after_if_else@3:
+    dupn 2
+    extract 32 64
+    dig 4
+    b*
+    intc_3 // 10000
+    itob
+    b/
+    swap
+    extract 0 32
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    swap
+    dig 3
+    b|
+    concat
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

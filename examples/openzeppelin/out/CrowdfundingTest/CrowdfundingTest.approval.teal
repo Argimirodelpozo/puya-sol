@@ -1,0 +1,495 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Crowdfunding.sol.CrowdfundingTest.approval_program() -> uint64:
+main:
+    intcblock 0 1 64 32
+    bytecblock "_totalPledged" 0x 0x151f7c75 "_backerCount" "_claimed" "_goal" "_creator" "_deadline" "_pledges"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 6 // "_creator"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 5 // "_goal"
+    bytec_1 // 0x
+    app_global_put
+    bytec 7 // "_deadline"
+    bytec_1 // 0x
+    app_global_put
+    bytec_0 // "_totalPledged"
+    bytec_1 // 0x
+    app_global_put
+    bytec 4 // "_claimed"
+    intc_0 // 0
+    app_global_put
+    bytec_3 // "_backerCount"
+    bytec_1 // 0x
+    app_global_put
+    bytec 6 // "_creator"
+    txn Sender
+    app_global_put
+    pushint 10000
+    itob
+    bytec 5 // "_goal"
+    swap
+    app_global_put
+    pushint 999999
+    itob
+    bytec 7 // "_deadline"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x19a642a7 0x663774f6 0x1580267d 0xac34a218 0x204c5cf2 0x25f813c8 0xbcf63a0f 0x4b9af476 0xfe3e19c0 0xd31a9389 0xf1577726 0x9037b9db // method "creator()address", method "goal()uint512", method "deadline()uint512", method "totalPledged()uint512", method "claimed()bool", method "backerCount()uint512", method "pledgeOf(address)uint512", method "isGoalReached()bool", method "pledge(address,uint512,uint512)void", method "unpledge(address,uint512)void", method "claim()void", method "refund(address)uint512"
+    txna ApplicationArgs 0
+    match creator goal deadline totalPledged claimed backerCount pledgeOf isGoalReached pledge unpledge claim refund
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Crowdfunding.sol.CrowdfundingTest.creator[routing]() -> void:
+creator:
+    intc_0 // 0
+    bytec 6 // "_creator"
+    app_global_get_ex
+    assert // check _creator exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Crowdfunding.sol.CrowdfundingTest.goal[routing]() -> void:
+goal:
+    intc_0 // 0
+    bytec 5 // "_goal"
+    app_global_get_ex
+    assert // check _goal exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Crowdfunding.sol.CrowdfundingTest.deadline[routing]() -> void:
+deadline:
+    intc_0 // 0
+    bytec 7 // "_deadline"
+    app_global_get_ex
+    assert // check _deadline exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Crowdfunding.sol.CrowdfundingTest.totalPledged[routing]() -> void:
+totalPledged:
+    intc_0 // 0
+    bytec_0 // "_totalPledged"
+    app_global_get_ex
+    assert // check _totalPledged exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Crowdfunding.sol.CrowdfundingTest.claimed[routing]() -> void:
+claimed:
+    intc_0 // 0
+    bytec 4 // "_claimed"
+    app_global_get_ex
+    assert // check _claimed exists
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Crowdfunding.sol.CrowdfundingTest.backerCount[routing]() -> void:
+backerCount:
+    intc_0 // 0
+    bytec_3 // "_backerCount"
+    app_global_get_ex
+    assert // check _backerCount exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Crowdfunding.sol.CrowdfundingTest.pledgeOf[routing]() -> void:
+pledgeOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 8 // "_pledges"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Crowdfunding.sol.CrowdfundingTest.isGoalReached[routing]() -> void:
+isGoalReached:
+    intc_0 // 0
+    bytec_0 // "_totalPledged"
+    app_global_get_ex
+    assert // check _totalPledged exists
+    intc_0 // 0
+    bytec 5 // "_goal"
+    app_global_get_ex
+    assert // check _goal exists
+    b>=
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Crowdfunding.sol.CrowdfundingTest.pledge[routing]() -> void:
+pledge:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 0
+    bytec 7 // "_deadline"
+    app_global_get_ex
+    assert // check _deadline exists
+    b<
+    assert // Campaign ended
+    intc_0 // 0
+    itob
+    swap
+    dig 1
+    b>
+    assert // Amount must be > 0
+    intc_0 // 0
+    bytec 4 // "_claimed"
+    app_global_get_ex
+    assert // check _claimed exists
+    !
+    assert // Already claimed
+    swap
+    sha256
+    bytec 8 // "_pledges"
+    swap
+    concat
+    dup
+    cover 2
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    b==
+    bz pledge_after_if_else@3
+    intc_0 // 0
+    bytec_3 // "_backerCount"
+    app_global_get_ex
+    assert // check _backerCount exists
+    intc_1 // 1
+    itob
+    b+
+    bytec_3 // "_backerCount"
+    swap
+    app_global_put
+
+pledge_after_if_else@3:
+    dupn 2
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dig 3
+    dup
+    cover 3
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_0 // 0
+    bytec_0 // "_totalPledged"
+    app_global_get_ex
+    assert // check _totalPledged exists
+    b+
+    bytec_0 // "_totalPledged"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Crowdfunding.sol.CrowdfundingTest.unpledge[routing]() -> void:
+unpledge:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    sha256
+    bytec 8 // "_pledges"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    dig 3
+    b>=
+    assert // Insufficient pledge
+    intc_0 // 0
+    bytec 4 // "_claimed"
+    app_global_get_ex
+    assert // check _claimed exists
+    !
+    assert // Already claimed
+    dig 2
+    b-
+    dig 1
+    box_del
+    pop
+    swap
+    dig 1
+    box_put
+    intc_0 // 0
+    bytec_0 // "_totalPledged"
+    app_global_get_ex
+    assert // check _totalPledged exists
+    uncover 2
+    b-
+    bytec_0 // "_totalPledged"
+    swap
+    app_global_put
+    intc_0 // 0
+    itob
+    b==
+    bz unpledge_after_if_else@3
+    intc_0 // 0
+    bytec_3 // "_backerCount"
+    app_global_get_ex
+    assert // check _backerCount exists
+    intc_1 // 1
+    itob
+    b-
+    bytec_3 // "_backerCount"
+    swap
+    app_global_put
+
+unpledge_after_if_else@3:
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Crowdfunding.sol.CrowdfundingTest.claim[routing]() -> void:
+claim:
+    txn Sender
+    intc_0 // 0
+    bytec 6 // "_creator"
+    app_global_get_ex
+    assert // check _creator exists
+    ==
+    assert // Not creator
+    intc_0 // 0
+    bytec_0 // "_totalPledged"
+    app_global_get_ex
+    assert // check _totalPledged exists
+    intc_0 // 0
+    bytec 5 // "_goal"
+    app_global_get_ex
+    assert // check _goal exists
+    b>=
+    assert // Goal not reached
+    intc_0 // 0
+    bytec 4 // "_claimed"
+    app_global_get_ex
+    assert // check _claimed exists
+    !
+    assert // Already claimed
+    bytec 4 // "_claimed"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Crowdfunding.sol.CrowdfundingTest.refund[routing]() -> void:
+refund:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_0 // 0
+    bytec 4 // "_claimed"
+    app_global_get_ex
+    assert // check _claimed exists
+    !
+    assert // Already claimed
+    sha256
+    bytec 8 // "_pledges"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    intc_0 // 0
+    itob
+    dup
+    cover 2
+    b>
+    bz refund_after_if_else@3
+    dig 2
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    intc_0 // 0
+    bytec_0 // "_totalPledged"
+    app_global_get_ex
+    assert // check _totalPledged exists
+    dig 2
+    b-
+    bytec_0 // "_totalPledged"
+    swap
+    app_global_put
+    intc_0 // 0
+    bytec_3 // "_backerCount"
+    app_global_get_ex
+    assert // check _backerCount exists
+    intc_1 // 1
+    itob
+    b-
+    bytec_3 // "_backerCount"
+    swap
+    app_global_put
+
+refund_after_if_else@3:
+    dig 1
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

@@ -1,0 +1,554 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Loyalty.sol.LoyaltyTest.approval_program() -> uint64:
+main:
+    intcblock 0 1 64 32
+    bytecblock 0x 0x151f7c75 "_pointsRate" "_memberCount" "_totalPointsIssued" "_totalPointsRedeemed" "_isEnrolled" "_admin" "_points" "_totalEarned" "_memberIndex"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 7 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_2 // "_pointsRate"
+    bytec_0 // 0x
+    app_global_put
+    bytec_3 // "_memberCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec 4 // "_totalPointsIssued"
+    bytec_0 // 0x
+    app_global_put
+    bytec 5 // "_totalPointsRedeemed"
+    bytec_0 // 0x
+    app_global_put
+    pushint 10
+    itob
+    bytec 7 // "_admin"
+    txn Sender
+    app_global_put
+    bytec_2 // "_pointsRate"
+    swap
+    app_global_put
+    intc_0 // 0
+    itob
+    bytec_3 // "_memberCount"
+    dig 1
+    app_global_put
+    bytec 4 // "_totalPointsIssued"
+    dig 1
+    app_global_put
+    bytec 5 // "_totalPointsRedeemed"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xfcebad15 0xac8b24de 0x4854a886 0x92b76e41 0xb87361f4 0x575ef88e 0x664345d1 0x6f5e2eeb 0x23f2c784 0x788c615b 0xa0907848 0x5150c68f 0xd1233a39 0xb6776f03 // method "initMember(address)void", method "getAdmin()address", method "getPointsRate()uint512", method "getMemberCount()uint512", method "getTotalPointsIssued()uint512", method "getTotalPointsRedeemed()uint512", method "getPoints(address)uint512", method "getTotalEarned(address)uint512", method "isEnrolled(address)bool", method "getTier(address)uint512", method "enroll(address)void", method "earnPoints(address,uint512)void", method "redeemPoints(address,uint512)void", method "setPointsRate(uint512)void"
+    txna ApplicationArgs 0
+    match initMember getAdmin getPointsRate getMemberCount getTotalPointsIssued getTotalPointsRedeemed getPoints getTotalEarned isEnrolled getTier enroll earnPoints redeemPoints setPointsRate
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Loyalty.sol.LoyaltyTest.initMember[routing]() -> void:
+initMember:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_0 // 0
+    itob
+    swap
+    sha256
+    bytec 8 // "_points"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 9 // "_totalEarned"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 10 // "_memberIndex"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    bytec 6 // "_isEnrolled"
+    swap
+    concat
+    intc_0 // 0
+    itob
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Loyalty.sol.LoyaltyTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_0 // 0
+    bytec 7 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Loyalty.sol.LoyaltyTest.getPointsRate[routing]() -> void:
+getPointsRate:
+    intc_0 // 0
+    bytec_2 // "_pointsRate"
+    app_global_get_ex
+    assert // check _pointsRate exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Loyalty.sol.LoyaltyTest.getMemberCount[routing]() -> void:
+getMemberCount:
+    intc_0 // 0
+    bytec_3 // "_memberCount"
+    app_global_get_ex
+    assert // check _memberCount exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Loyalty.sol.LoyaltyTest.getTotalPointsIssued[routing]() -> void:
+getTotalPointsIssued:
+    intc_0 // 0
+    bytec 4 // "_totalPointsIssued"
+    app_global_get_ex
+    assert // check _totalPointsIssued exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Loyalty.sol.LoyaltyTest.getTotalPointsRedeemed[routing]() -> void:
+getTotalPointsRedeemed:
+    intc_0 // 0
+    bytec 5 // "_totalPointsRedeemed"
+    app_global_get_ex
+    assert // check _totalPointsRedeemed exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Loyalty.sol.LoyaltyTest.getPoints[routing]() -> void:
+getPoints:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 8 // "_points"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Loyalty.sol.LoyaltyTest.getTotalEarned[routing]() -> void:
+getTotalEarned:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 9 // "_totalEarned"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Loyalty.sol.LoyaltyTest.isEnrolled[routing]() -> void:
+isEnrolled:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 6 // "_isEnrolled"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Loyalty.sol.LoyaltyTest.getTier[routing]() -> void:
+getTier:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 9 // "_totalEarned"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    pushint 5000
+    itob
+    b>=
+    bz getTier_else_body@3
+    pushint 2
+    itob
+
+getTier_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Loyalty.sol.LoyaltyTest.getTier@6:
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+getTier_else_body@3:
+    pushint 1000
+    itob
+    dig 1
+    b<=
+    bz getTier_else_body@5
+    intc_1 // 1
+    itob
+    b getTier_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Loyalty.sol.LoyaltyTest.getTier@6
+
+getTier_else_body@5:
+    intc_0 // 0
+    itob
+    b getTier_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Loyalty.sol.LoyaltyTest.getTier@6
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Loyalty.sol.LoyaltyTest.enroll[routing]() -> void:
+enroll:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 6 // "_isEnrolled"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already enrolled
+    intc_1 // 1
+    itob
+    box_put
+    intc_0 // 0
+    bytec_3 // "_memberCount"
+    app_global_get_ex
+    assert // check _memberCount exists
+    intc_1 // 1
+    itob
+    b+
+    bytec_3 // "_memberCount"
+    dig 1
+    app_global_put
+    bytec 10 // "_memberIndex"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Loyalty.sol.LoyaltyTest.earnPoints[routing]() -> void:
+earnPoints:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    sha256
+    bytec 6 // "_isEnrolled"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    assert // Not enrolled
+    intc_0 // 0
+    bytec_2 // "_pointsRate"
+    app_global_get_ex
+    assert // check _pointsRate exists
+    uncover 2
+    b*
+    bytec 8 // "_points"
+    dig 2
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec 9 // "_totalEarned"
+    uncover 2
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_0 // 0
+    bytec 4 // "_totalPointsIssued"
+    app_global_get_ex
+    assert // check _totalPointsIssued exists
+    b+
+    bytec 4 // "_totalPointsIssued"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Loyalty.sol.LoyaltyTest.redeemPoints[routing]() -> void:
+redeemPoints:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    sha256
+    bytec 6 // "_isEnrolled"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    assert // Not enrolled
+    bytec 8 // "_points"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    dig 3
+    b>=
+    assert // Insufficient points
+    dig 2
+    b-
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_0 // 0
+    bytec 5 // "_totalPointsRedeemed"
+    app_global_get_ex
+    assert // check _totalPointsRedeemed exists
+    b+
+    bytec 5 // "_totalPointsRedeemed"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Loyalty.sol.LoyaltyTest.setPointsRate[routing]() -> void:
+setPointsRate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_0 // 0
+    bytec 7 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Not admin
+    bytec_2 // "_pointsRate"
+    swap
+    app_global_put
+    intc_1 // 1
+    return

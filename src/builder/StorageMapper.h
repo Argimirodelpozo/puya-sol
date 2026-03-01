@@ -43,6 +43,10 @@ public:
 	/// Determine if a variable should use box storage.
 	static bool shouldUseBoxStorage(solidity::frontend::VariableDeclaration const& _var);
 
+	/// Compute the fixed encoded byte size of an AWST element type.
+	/// Returns 0 for variable-length types (skip splitting).
+	static int computeEncodedElementSize(awst::WType const* _type);
+
 	/// Create a type-correct default value expression (0/false/empty) for the given wtype.
 	static std::shared_ptr<awst::Expression> makeDefaultValue(
 		awst::WType const* _type,

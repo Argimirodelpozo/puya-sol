@@ -1,0 +1,793 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Inventory.sol.InventoryTest.approval_program() -> uint64:
+main:
+    intcblock 64 1 0
+    bytecblock 0x 0x151f7c75 "_totalItems" "_itemQuantity" "_itemActive" "_itemCount" "_lowStockThreshold" "_itemPrice" "_admin" "_itemSold"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 8 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 5 // "_itemCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec_2 // "_totalItems"
+    bytec_0 // 0x
+    app_global_put
+    bytec 6 // "_lowStockThreshold"
+    bytec_0 // 0x
+    app_global_put
+    pushint 5
+    itob
+    bytec 8 // "_admin"
+    txn Sender
+    app_global_put
+    intc_2 // 0
+    itob
+    bytec 5 // "_itemCount"
+    dig 1
+    app_global_put
+    bytec_2 // "_totalItems"
+    swap
+    app_global_put
+    bytec 6 // "_lowStockThreshold"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xc86e00eb 0xac8b24de 0x1a75f970 0x23de4c76 0x1d7b593c 0x432d3cbd 0x471c57f0 0xc6acee56 0x42e63155 0x16d62795 0x61d60e39 0x596df2d2 0x177b4d62 0x7b2b1704 0x019518e9 0x04b151a1 0x638f0ddd 0xba191421 // method "initItem(uint512)void", method "getAdmin()address", method "getItemCount()uint512", method "getTotalItems()uint512", method "getLowStockThreshold()uint512", method "getItemQuantity(uint512)uint512", method "getItemPrice(uint512)uint512", method "isItemActive(uint512)bool", method "getItemSold(uint512)uint512", method "getItemValue(uint512)uint512", method "isLowStock(uint512)bool", method "addItem(uint512,uint512)uint512", method "restock(uint512,uint512)void", method "sell(uint512,uint512)void", method "discontinue(uint512)void", method "reactivate(uint512)void", method "setPrice(uint512,uint512)void", method "setLowStockThreshold(uint512)void"
+    txna ApplicationArgs 0
+    match initItem getAdmin getItemCount getTotalItems getLowStockThreshold getItemQuantity getItemPrice isItemActive getItemSold getItemValue isLowStock addItem restock sell discontinue reactivate setPrice setLowStockThreshold
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Inventory.sol.InventoryTest.initItem[routing]() -> void:
+initItem:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_itemQuantity"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 7 // "_itemPrice"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 4 // "_itemActive"
+    dig 1
+    concat
+    intc_2 // 0
+    itob
+    box_put
+    bytec 9 // "_itemSold"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Inventory.sol.InventoryTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_2 // 0
+    bytec 8 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Inventory.sol.InventoryTest.getItemCount[routing]() -> void:
+getItemCount:
+    intc_2 // 0
+    bytec 5 // "_itemCount"
+    app_global_get_ex
+    assert // check _itemCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Inventory.sol.InventoryTest.getTotalItems[routing]() -> void:
+getTotalItems:
+    intc_2 // 0
+    bytec_2 // "_totalItems"
+    app_global_get_ex
+    assert // check _totalItems exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Inventory.sol.InventoryTest.getLowStockThreshold[routing]() -> void:
+getLowStockThreshold:
+    intc_2 // 0
+    bytec 6 // "_lowStockThreshold"
+    app_global_get_ex
+    assert // check _lowStockThreshold exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Inventory.sol.InventoryTest.getItemQuantity[routing]() -> void:
+getItemQuantity:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_itemQuantity"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Inventory.sol.InventoryTest.getItemPrice[routing]() -> void:
+getItemPrice:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_itemPrice"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Inventory.sol.InventoryTest.isItemActive[routing]() -> void:
+isItemActive:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_itemActive"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Inventory.sol.InventoryTest.getItemSold[routing]() -> void:
+getItemSold:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 9 // "_itemSold"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Inventory.sol.InventoryTest.getItemValue[routing]() -> void:
+getItemValue:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_itemQuantity"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 7 // "_itemPrice"
+    uncover 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b*
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Inventory.sol.InventoryTest.isLowStock[routing]() -> void:
+isLowStock:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_itemQuantity"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_2 // 0
+    bytec 6 // "_lowStockThreshold"
+    app_global_get_ex
+    assert // check _lowStockThreshold exists
+    b<
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Inventory.sol.InventoryTest.addItem[routing]() -> void:
+addItem:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    bytec 5 // "_itemCount"
+    app_global_get_ex
+    assert // check _itemCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_itemQuantity"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 5
+    box_put
+    bytec 7 // "_itemPrice"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    bytec 4 // "_itemActive"
+    dig 1
+    concat
+    intc_1 // 1
+    itob
+    box_put
+    intc_2 // 0
+    itob
+    bytec 9 // "_itemSold"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    itob
+    dig 2
+    b+
+    bytec 5 // "_itemCount"
+    swap
+    app_global_put
+    intc_2 // 0
+    bytec_2 // "_totalItems"
+    app_global_get_ex
+    assert // check _totalItems exists
+    uncover 3
+    b+
+    bytec_2 // "_totalItems"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Inventory.sol.InventoryTest.restock[routing]() -> void:
+restock:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_itemActive"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    assert // Item is not active
+    bytec_3 // "_itemQuantity"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 0
+    bytec_2 // "_totalItems"
+    app_global_get_ex
+    assert // check _totalItems exists
+    b+
+    bytec_2 // "_totalItems"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Inventory.sol.InventoryTest.sell[routing]() -> void:
+sell:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_itemActive"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    assert // Item is not active
+    bytec_3 // "_itemQuantity"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 3
+    dig 1
+    b<=
+    assert // Insufficient stock
+    dig 3
+    b-
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec 9 // "_itemSold"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 0
+    bytec_2 // "_totalItems"
+    app_global_get_ex
+    assert // check _totalItems exists
+    swap
+    b-
+    bytec_2 // "_totalItems"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Inventory.sol.InventoryTest.discontinue[routing]() -> void:
+discontinue:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_itemActive"
+    swap
+    concat
+    intc_2 // 0
+    itob
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Inventory.sol.InventoryTest.reactivate[routing]() -> void:
+reactivate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_itemActive"
+    swap
+    concat
+    intc_1 // 1
+    itob
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Inventory.sol.InventoryTest.setPrice[routing]() -> void:
+setPrice:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_itemPrice"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Inventory.sol.InventoryTest.setLowStockThreshold[routing]() -> void:
+setLowStockThreshold:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec 8 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Only admin
+    bytec 6 // "_lowStockThreshold"
+    swap
+    app_global_put
+    intc_1 // 1
+    return

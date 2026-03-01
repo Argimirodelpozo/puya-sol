@@ -1,0 +1,398 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/VotingTest.sol.VotingTest.approval_program() -> uint64:
+main:
+    intcblock 64 1 0
+    bytecblock "proposals" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 "proposalCount" "admin" "hasVoted"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "proposalCount"
+    pushbytes 0x
+    app_global_put
+    bytec 4 // "admin"
+    txn Sender
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x257443f3 0xd4d97430 0xa0a110b6 0xf736d736 0x29e0a5c9 0x5c31a255 // method "createProposal(uint512)uint512", method "vote(uint512,bool)void", method "getForVotes(uint512)uint512", method "getAgainstVotes(uint512)uint512", method "isExecuted(uint512)bool", method "execute(uint512)void"
+    txna ApplicationArgs 0
+    match createProposal vote getForVotes getAgainstVotes isExecuted execute
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/VotingTest.sol.VotingTest.createProposal[routing]() -> void:
+createProposal:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    bytec_3 // "proposalCount"
+    app_global_get_ex
+    assert // check proposalCount exists
+    intc_1 // 1
+    itob
+    dig 1
+    b+
+    bytec_3 // "proposalCount"
+    swap
+    app_global_put
+    intc_0 // 64
+    bzero
+    uncover 2
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 2
+    dig 1
+    b|
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    concat
+    pushbytes 0x00
+    concat
+    dig 1
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_0 // "proposals"
+    swap
+    concat
+    swap
+    box_put
+    pushbytes 0xc2c021f5
+    log
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/VotingTest.sol.VotingTest.vote[routing]() -> void:
+vote:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_2 // 0
+    getbit
+    dup
+    uncover 2
+    intc_0 // 64
+    bzero
+    dup
+    cover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    dup
+    cover 3
+    dup
+    txn Sender
+    concat
+    sha256
+    bytec 5 // "hasVoted"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // AlreadyVoted
+    txn Sender
+    concat
+    sha256
+    bytec 5 // "hasVoted"
+    swap
+    concat
+    intc_1 // 1
+    itob
+    box_put
+    bz vote_else_body@5
+    swap
+    sha256
+    bytec_0 // "proposals"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 64 64
+    dig 1
+    extract 128 64
+    dig 2
+    extract 192 1
+    uncover 3
+    extract 0 64
+    intc_1 // 1
+    itob
+    b+
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 5
+    b|
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    box_put
+
+vote_after_if_else@6:
+    dup
+    itob
+    pushbytes 0xa569f04a
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+vote_else_body@5:
+    swap
+    sha256
+    bytec_0 // "proposals"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 64 64
+    intc_1 // 1
+    itob
+    b+
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 3
+    b|
+    dig 1
+    extract 128 64
+    dig 2
+    extract 192 1
+    uncover 3
+    extract 0 64
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    box_put
+    b vote_after_if_else@6
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/VotingTest.sol.VotingTest.getForVotes[routing]() -> void:
+getForVotes:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_0 // "proposals"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 0 64
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/VotingTest.sol.VotingTest.getAgainstVotes[routing]() -> void:
+getAgainstVotes:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_0 // "proposals"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 64 64
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/VotingTest.sol.VotingTest.isExecuted[routing]() -> void:
+isExecuted:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_0 // "proposals"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 192 1
+    pushbytes 0x
+    b!=
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/VotingTest.sol.VotingTest.execute[routing]() -> void:
+execute:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec 4 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    !=
+    !
+    assert // NotAdmin
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_0 // "proposals"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 64
+    swap
+    extract 64 64
+    b<=
+    !
+    assert // ProposalNotSucceeded
+    pushbytes 0x712ae138
+    log
+    intc_1 // 1
+    return

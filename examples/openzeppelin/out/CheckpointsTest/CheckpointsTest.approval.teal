@@ -1,0 +1,249 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Checkpoints.sol.CheckpointsTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock "_latestValue" "_hasCheckpoint" 0x151f7c75 "_latestKey" "_values"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "_latestKey"
+    pushbytes 0x
+    app_global_put
+    bytec_0 // "_latestValue"
+    pushbytes 0x
+    app_global_put
+    bytec_1 // "_hasCheckpoint"
+    intc_1 // 0
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb02a6cdf 0x9e10612b 0x004dbee0 0x2c4db38a 0x9e22701c // method "push(uint512,uint512)(uint512,uint512)", method "latest()uint512", method "latestCheckpoint()(bool,uint512,uint512)", method "getAtKey(uint512)uint512", method "hasCheckpoint()bool"
+    txna ApplicationArgs 0
+    match push latest latestCheckpoint getAtKey hasCheckpoint
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Checkpoints.sol.CheckpointsTest.push[routing]() -> void:
+push:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec_0 // "_latestValue"
+    app_global_get_ex
+    assert // check _latestValue exists
+    intc_1 // 0
+    bytec_1 // "_hasCheckpoint"
+    app_global_get_ex
+    assert // check _hasCheckpoint exists
+    bz push_after_if_else@3
+    intc_1 // 0
+    bytec_3 // "_latestKey"
+    app_global_get_ex
+    assert // check _latestKey exists
+    dig 4
+    b<=
+    assert // Checkpoint: decreasing keys
+
+push_after_if_else@3:
+    intc_0 // 64
+    bzero
+    dup
+    dig 5
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_values"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    dig 5
+    dup
+    cover 2
+    box_put
+    bytec_3 // "_latestKey"
+    uncover 2
+    app_global_put
+    bytec_0 // "_latestValue"
+    dig 1
+    app_global_put
+    bytec_1 // "_hasCheckpoint"
+    intc_2 // 1
+    app_global_put
+    dig 2
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    dig 2
+    b|
+    dig 4
+    intc_0 // 64
+    <=
+    assert // overflow
+    swap
+    uncover 2
+    b|
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Checkpoints.sol.CheckpointsTest.latest[routing]() -> void:
+latest:
+    intc_1 // 0
+    bytec_0 // "_latestValue"
+    app_global_get_ex
+    assert // check _latestValue exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Checkpoints.sol.CheckpointsTest.latestCheckpoint[routing]() -> void:
+latestCheckpoint:
+    intc_1 // 0
+    bytec_1 // "_hasCheckpoint"
+    app_global_get_ex
+    assert // check _hasCheckpoint exists
+    intc_1 // 0
+    bytec_3 // "_latestKey"
+    app_global_get_ex
+    assert // check _latestKey exists
+    intc_1 // 0
+    bytec_0 // "_latestValue"
+    app_global_get_ex
+    assert // check _latestValue exists
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 4
+    setbit
+    dig 2
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    uncover 3
+    dig 1
+    b|
+    uncover 2
+    swap
+    concat
+    dig 2
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Checkpoints.sol.CheckpointsTest.getAtKey[routing]() -> void:
+getAtKey:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_values"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Checkpoints.sol.CheckpointsTest.hasCheckpoint[routing]() -> void:
+hasCheckpoint:
+    intc_1 // 0
+    bytec_1 // "_hasCheckpoint"
+    app_global_get_ex
+    assert // check _hasCheckpoint exists
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

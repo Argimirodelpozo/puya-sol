@@ -1,0 +1,412 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk-rust/contracts/SimpleHonkVerifier.sol.SimpleHonkVerifierTest__Helper11.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 32 64 1 128
+    bytecblock 0x151f7c75 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001 0x01 0x
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk-rust/contracts/SimpleHonkVerifier.sol.SimpleHonkVerifierTest__Helper11.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x498c5709 0xb23620ee 0x858cf334 0x9ee35c87 0xe7b11be0 0xd351d234 0x6a1d76ee // method "FrLib.invert(uint512)uint512", method "VerifyLib.ecAdd((uint512,uint512),(uint512,uint512))(uint512,uint512)", method "TranscriptLib.splitChallenge(uint512)(uint512,uint512)", method "VerifyLib.ecMul((uint512,uint512),uint512)(uint512,uint512)", method "TranscriptLib.readWord(byte[],uint512)byte[32]", method "FrLib.from(uint512)uint512", method "RelationsLib.wire(uint512[40],uint64)uint512"
+    txna ApplicationArgs 0
+    match FrLib.invert VerifyLib.ecAdd TranscriptLib.splitChallenge VerifyLib.ecMul TranscriptLib.readWord FrLib.from RelationsLib.wire
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk-rust/contracts/SimpleHonkVerifier.sol.SimpleHonkVerifierTest__Helper11.FrLib.invert[routing]() -> void:
+FrLib.invert:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    pushbytes 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593efffffff
+    bytec_2 // 0x01
+    cover 2
+    swap
+    bytec_1 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    swap
+
+FrLib.invert_while_top@2:
+    dup
+    bytec_3 // 0x
+    b>
+    bz FrLib.invert_after_while@6
+    dup
+    bytec_2 // 0x01
+    b&
+    bytec_3 // 0x
+    b!=
+    bz FrLib.invert_after_if_else@5
+    dig 2
+    dig 2
+    b*
+    bytec_1 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    bury 3
+
+FrLib.invert_after_if_else@5:
+    dup
+    pushbytes 0x02
+    b/
+    bury 1
+    dig 1
+    dup
+    b*
+    bytec_1 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    bury 2
+    b FrLib.invert_while_top@2
+
+FrLib.invert_after_while@6:
+    dig 2
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk-rust/contracts/SimpleHonkVerifier.sol.SimpleHonkVerifierTest__Helper11.VerifyLib.ecAdd[routing]() -> void:
+VerifyLib.ecAdd:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 128
+    ==
+    assert // invalid number of bytes for G1Point
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 128
+    ==
+    assert // invalid number of bytes for G1Point
+    intc_0 // 32
+    bzero
+    dig 2
+    extract 0 64
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    extract 64 64
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 2
+    extract 0 64
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    uncover 2
+    extract 64 64
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dup
+    extract 0 64
+    swap
+    extract 64 64
+    ec_add BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    intc_1 // 64
+    bzero
+    uncover 2
+    dig 1
+    b|
+    cover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk-rust/contracts/SimpleHonkVerifier.sol.SimpleHonkVerifierTest__Helper11.TranscriptLib.splitChallenge[routing]() -> void:
+TranscriptLib.splitChallenge:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffff
+    b&
+    intc_0 // 32
+    bzero
+    uncover 2
+    pushbytes 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dig 1
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    uncover 2
+    dig 1
+    b|
+    dig 2
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk-rust/contracts/SimpleHonkVerifier.sol.SimpleHonkVerifierTest__Helper11.VerifyLib.ecMul[routing]() -> void:
+VerifyLib.ecMul:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 128
+    ==
+    assert // invalid number of bytes for G1Point
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 32
+    bzero
+    dig 2
+    extract 0 64
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    extract 64 64
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dup
+    extract 0 64
+    swap
+    extract 64 32
+    ec_scalar_mul BN254g1
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    intc_1 // 64
+    bzero
+    uncover 2
+    dig 1
+    b|
+    cover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk-rust/contracts/SimpleHonkVerifier.sol.SimpleHonkVerifierTest__Helper11.TranscriptLib.readWord[routing]() -> void:
+TranscriptLib.readWord:
+    txna ApplicationArgs 1
+    dup
+    pushint 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    btoi
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk-rust/contracts/SimpleHonkVerifier.sol.SimpleHonkVerifierTest__Helper11.FrLib.from[routing]() -> void:
+FrLib.from:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    bytec_1 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk-rust/contracts/SimpleHonkVerifier.sol.SimpleHonkVerifierTest__Helper11.RelationsLib.wire[routing]() -> void:
+RelationsLib.wire:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 2560
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint512, 40>
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    pushint 8
+    bzero
+    swap
+    itob
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_1 // 64
+    *
+    intc_1 // 64
+    extract3 // on error: index access is out of bounds
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

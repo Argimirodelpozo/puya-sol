@@ -1,0 +1,959 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EscrowMultiParty.sol.EscrowMultiParty.approval_program() -> uint64:
+main:
+    intcblock 64 1 32 0
+    bytecblock 0x 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000 "_states" "_nextEscrowId" "_depositors" "_beneficiaries" "_arbiters" "_amounts" "_deadlines" "_votesRelease" "_votesRefund" "_hasVoted"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 4 // "_nextEscrowId"
+    bytec_0 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x573c86ff 0x8decb760 0x3525bd6a 0xd4d97430 0x40ad1260 0x19255638 0x38710b4e 0xda146be5 0xeee0c81b 0x704dbd93 0x9253eb35 0xf0702409 0xbd0c7a94 0x228f9a9b // method "createEscrow(address,address,uint512,uint512)uint512", method "fund(uint512)void", method "dispute(uint512)void", method "vote(uint512,bool)void", method "refundExpired(uint512)void", method "getDepositor(uint512)address", method "getBeneficiary(uint512)address", method "getArbiter(uint512)address", method "getAmount(uint512)uint512", method "getState(uint512)uint512", method "getDeadline(uint512)uint512", method "getVotes(uint512)(uint512,uint512)", method "hasVoted(uint512,address)bool", method "escrowCount()uint512"
+    txna ApplicationArgs 0
+    match createEscrow fund dispute vote refundExpired getDepositor getBeneficiary getArbiter getAmount getState getDeadline getVotes hasVoted escrowCount
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EscrowMultiParty.sol.EscrowMultiParty.createEscrow[routing]() -> void:
+createEscrow:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dig 3
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    !
+    assert // EscrowZeroAddress
+    dig 2
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    !
+    assert // EscrowZeroAddress
+    intc_3 // 0
+    itob
+    dig 2
+    dig 1
+    b==
+    !
+    assert // EscrowInsufficientAmount
+    intc_3 // 0
+    bytec 4 // "_nextEscrowId"
+    app_global_get_ex
+    assert // check _nextEscrowId exists
+    intc_1 // 1
+    itob
+    dig 1
+    b+
+    bytec 4 // "_nextEscrowId"
+    swap
+    app_global_put
+    txn Sender
+    intc_0 // 64
+    bzero
+    dup
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_depositors"
+    dig 1
+    concat
+    uncover 3
+    box_put
+    bytec 6 // "_beneficiaries"
+    dig 1
+    concat
+    uncover 8
+    box_put
+    bytec 7 // "_arbiters"
+    dig 1
+    concat
+    uncover 7
+    box_put
+    bytec 8 // "_amounts"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 6
+    box_put
+    bytec_3 // "_states"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    bytec 9 // "_deadlines"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    uncover 3
+    box_put
+    pushbytes 0xcc50a4e9
+    log
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EscrowMultiParty.sol.EscrowMultiParty.fund[routing]() -> void:
+fund:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dup
+    intc_3 // 0
+    callsub _requireState
+    dup
+    callsub _requireDepositor
+    intc_1 // 1
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_states"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    bytec 8 // "_amounts"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    pushbytes 0x911052e1
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EscrowMultiParty.sol.EscrowMultiParty.dispute[routing]() -> void:
+dispute:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dup
+    intc_1 // 1
+    callsub _requireState
+    dup
+    callsub _requireParticipant
+    pushint 2
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_states"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    pushbytes 0xc25e2b14
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EscrowMultiParty.sol.EscrowMultiParty.vote[routing]() -> void:
+vote:
+    intc_3 // 0
+    dup
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_3 // 0
+    getbit
+    dup
+    uncover 2
+    dup
+    pushint 2
+    callsub _requireState
+    dup
+    callsub _requireParticipant
+    intc_2 // 32
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    txn Sender
+    concat
+    keccak256
+    sha256
+    bytec 12 // "_hasVoted"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_3 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // EscrowAlreadyVoted
+    intc_1 // 1
+    itob
+    box_put
+    bz vote_else_body@5
+    intc_0 // 64
+    bzero
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 10 // "_votesRelease"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 1
+    itob
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+
+vote_after_if_else@6:
+    dup
+    itob
+    pushbytes 0xe71fcdac
+    swap
+    concat
+    log
+    intc_0 // 64
+    bzero
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    dup
+    bury 5
+    bytec 10 // "_votesRelease"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    pushint 2
+    itob
+    dup
+    bury 5
+    b>=
+    bz vote_else_body@8
+    pushint 3
+    itob
+    bytec_3 // "_states"
+    dig 5
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    pushbytes 0xb3417abc0000000000000001
+    log
+
+vote_after_if_else@11:
+    intc_1 // 1
+    return
+
+vote_else_body@8:
+    bytec 11 // "_votesRefund"
+    dig 4
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 3
+    b>=
+    bz vote_after_if_else@11
+    pushint 4
+    itob
+    bytec_3 // "_states"
+    dig 5
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    pushbytes 0xb3417abc0000000000000000
+    log
+    b vote_after_if_else@11
+
+vote_else_body@5:
+    intc_0 // 64
+    bzero
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 11 // "_votesRefund"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 1
+    itob
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    b vote_after_if_else@6
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EscrowMultiParty.sol.EscrowMultiParty.refundExpired[routing]() -> void:
+refundExpired:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    dup
+    bytec_3 // "_states"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    intc_1 // 1
+    itob
+    b!=
+    bz refundExpired_after_if_else@4
+    pushint 2
+    itob
+    dig 1
+    b!=
+    !
+    assert // EscrowInvalidState
+
+refundExpired_after_if_else@4:
+    dig 3
+    callsub _requireDepositor
+    global LatestTimestamp
+    itob
+    bytec 9 // "_deadlines"
+    dig 4
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b<=
+    !
+    assert // EscrowDeadlineNotPassed
+    pushint 4
+    itob
+    dig 2
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    pushbytes 0x2babb5cd
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EscrowMultiParty.sol.EscrowMultiParty.getDepositor[routing]() -> void:
+getDepositor:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_depositors"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EscrowMultiParty.sol.EscrowMultiParty.getBeneficiary[routing]() -> void:
+getBeneficiary:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_beneficiaries"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EscrowMultiParty.sol.EscrowMultiParty.getArbiter[routing]() -> void:
+getArbiter:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_arbiters"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EscrowMultiParty.sol.EscrowMultiParty.getAmount[routing]() -> void:
+getAmount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_amounts"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EscrowMultiParty.sol.EscrowMultiParty.getState[routing]() -> void:
+getState:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_states"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EscrowMultiParty.sol.EscrowMultiParty.getDeadline[routing]() -> void:
+getDeadline:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 9 // "_deadlines"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EscrowMultiParty.sol.EscrowMultiParty.getVotes[routing]() -> void:
+getVotes:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 10 // "_votesRelease"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 11 // "_votesRefund"
+    uncover 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    swap
+    uncover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EscrowMultiParty.sol.EscrowMultiParty.hasVoted[routing]() -> void:
+hasVoted:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_2 // 32
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    swap
+    concat
+    keccak256
+    sha256
+    bytec 12 // "_hasVoted"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_3 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_3 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EscrowMultiParty.sol.EscrowMultiParty.escrowCount[routing]() -> void:
+escrowCount:
+    intc_3 // 0
+    bytec 4 // "_nextEscrowId"
+    app_global_get_ex
+    assert // check _nextEscrowId exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EscrowMultiParty.sol.EscrowMultiParty._requireState(escrowId: bytes, expected: uint64) -> void:
+_requireState:
+    proto 2 0
+    intc_0 // 64
+    bzero
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_states"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    frame_dig -1
+    itob
+    b!=
+    !
+    assert // EscrowInvalidState
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EscrowMultiParty.sol.EscrowMultiParty._requireDepositor(escrowId: bytes) -> void:
+_requireDepositor:
+    proto 1 0
+    txn Sender
+    intc_0 // 64
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_depositors"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    !=
+    !
+    assert // EscrowNotParticipant
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EscrowMultiParty.sol.EscrowMultiParty._requireParticipant(escrowId: bytes) -> void:
+_requireParticipant:
+    proto 1 0
+    txn Sender
+    dup
+    intc_0 // 64
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    dup
+    cover 2
+    bytec 5 // "_depositors"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    !=
+    bz _requireParticipant_after_if_else@4
+    bytec 6 // "_beneficiaries"
+    frame_dig 1
+    concat
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    frame_dig 0
+    !=
+    bz _requireParticipant_after_if_else@4
+    bytec 7 // "_arbiters"
+    frame_dig 1
+    concat
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    frame_dig 0
+    !=
+    !
+    assert // EscrowNotParticipant
+
+_requireParticipant_after_if_else@4:
+    retsub

@@ -1,0 +1,565 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Treasury.sol.TreasuryTest.approval_program() -> uint64:
+main:
+    intcblock 64 1 0
+    bytecblock 0x151f7c75 0x 0x0000000000000000000000000000000000000000000000000000000000000000 "_totalFunds" "_requiredApprovals" "_admin" "_proposalCount" "_proposalApprovals" "_proposalExecuted" "_proposalCreator" "_proposalAmount" "_proposalRecipient"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 5 // "_admin"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 6 // "_proposalCount"
+    bytec_1 // 0x
+    app_global_put
+    bytec 4 // "_requiredApprovals"
+    bytec_1 // 0x
+    app_global_put
+    bytec_3 // "_totalFunds"
+    bytec_1 // 0x
+    app_global_put
+    bytec 5 // "_admin"
+    txn Sender
+    app_global_put
+    pushint 2
+    itob
+    bytec 4 // "_requiredApprovals"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x0a4fb6b3 0x0788e316 0x8411e886 0x12d9866e 0x31d7434b 0xcacbb80f 0xc13f8718 0xaa88fe8e 0x3b690272 0x193462bf 0x1a112149 0x0ae2381c 0xad81d355 // method "admin()address", method "proposalCount()uint512", method "requiredApprovals()uint512", method "totalFunds()uint512", method "setRequiredApprovals(uint512)void", method "deposit(uint512)void", method "createProposal(address,uint512)uint512", method "approve(uint512)void", method "executeProposal(uint512)bool", method "getProposalAmount(uint512)uint512", method "getProposalRecipient(uint512)address", method "getProposalApprovals(uint512)uint512", method "isProposalExecuted(uint512)bool"
+    txna ApplicationArgs 0
+    match admin proposalCount requiredApprovals totalFunds setRequiredApprovals deposit createProposal approve executeProposal getProposalAmount getProposalRecipient getProposalApprovals isProposalExecuted
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Treasury.sol.TreasuryTest.admin[routing]() -> void:
+admin:
+    intc_2 // 0
+    bytec 5 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Treasury.sol.TreasuryTest.proposalCount[routing]() -> void:
+proposalCount:
+    intc_2 // 0
+    bytec 6 // "_proposalCount"
+    app_global_get_ex
+    assert // check _proposalCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Treasury.sol.TreasuryTest.requiredApprovals[routing]() -> void:
+requiredApprovals:
+    intc_2 // 0
+    bytec 4 // "_requiredApprovals"
+    app_global_get_ex
+    assert // check _requiredApprovals exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Treasury.sol.TreasuryTest.totalFunds[routing]() -> void:
+totalFunds:
+    intc_2 // 0
+    bytec_3 // "_totalFunds"
+    app_global_get_ex
+    assert // check _totalFunds exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Treasury.sol.TreasuryTest.setRequiredApprovals[routing]() -> void:
+setRequiredApprovals:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec 5 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Not admin
+    intc_2 // 0
+    itob
+    dig 1
+    b<
+    assert // Must be > 0
+    bytec 4 // "_requiredApprovals"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Treasury.sol.TreasuryTest.deposit[routing]() -> void:
+deposit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    itob
+    dig 1
+    b<
+    assert // Amount must be > 0
+    intc_2 // 0
+    bytec_3 // "_totalFunds"
+    app_global_get_ex
+    assert // check _totalFunds exists
+    b+
+    bytec_3 // "_totalFunds"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Treasury.sol.TreasuryTest.createProposal[routing]() -> void:
+createProposal:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    itob
+    dup2
+    b>
+    assert // Amount must be > 0
+    intc_2 // 0
+    bytec 6 // "_proposalCount"
+    app_global_get_ex
+    assert // check _proposalCount exists
+    intc_1 // 1
+    itob
+    b+
+    bytec 6 // "_proposalCount"
+    dig 1
+    app_global_put
+    txn Sender
+    intc_0 // 64
+    bzero
+    dup
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 9 // "_proposalCreator"
+    dig 1
+    concat
+    uncover 3
+    box_put
+    bytec 10 // "_proposalAmount"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 5
+    box_put
+    bytec 11 // "_proposalRecipient"
+    dig 1
+    concat
+    uncover 5
+    box_put
+    bytec 7 // "_proposalApprovals"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    bytec 8 // "_proposalExecuted"
+    swap
+    concat
+    intc_2 // 0
+    itob
+    box_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Treasury.sol.TreasuryTest.approve[routing]() -> void:
+approve:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 9 // "_proposalCreator"
+    dig 1
+    concat
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // Proposal not found
+    bytec 8 // "_proposalExecuted"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already executed
+    bytec 7 // "_proposalApprovals"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_1 // 1
+    itob
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Treasury.sol.TreasuryTest.executeProposal[routing]() -> void:
+executeProposal:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 9 // "_proposalCreator"
+    dig 1
+    concat
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // Proposal not found
+    bytec 8 // "_proposalExecuted"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already executed
+    bytec 7 // "_proposalApprovals"
+    dig 2
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_2 // 0
+    bytec 4 // "_requiredApprovals"
+    app_global_get_ex
+    assert // check _requiredApprovals exists
+    b>=
+    assert // Not enough approvals
+    bytec 10 // "_proposalAmount"
+    uncover 2
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_2 // 0
+    bytec_3 // "_totalFunds"
+    app_global_get_ex
+    assert // check _totalFunds exists
+    dup
+    dig 2
+    b>=
+    assert // Insufficient funds
+    intc_1 // 1
+    itob
+    uncover 3
+    swap
+    box_put
+    swap
+    b-
+    bytec_3 // "_totalFunds"
+    swap
+    app_global_put
+    pushbytes 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Treasury.sol.TreasuryTest.getProposalAmount[routing]() -> void:
+getProposalAmount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 10 // "_proposalAmount"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Treasury.sol.TreasuryTest.getProposalRecipient[routing]() -> void:
+getProposalRecipient:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 11 // "_proposalRecipient"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Treasury.sol.TreasuryTest.getProposalApprovals[routing]() -> void:
+getProposalApprovals:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_proposalApprovals"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Treasury.sol.TreasuryTest.isProposalExecuted[routing]() -> void:
+isProposalExecuted:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_proposalExecuted"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

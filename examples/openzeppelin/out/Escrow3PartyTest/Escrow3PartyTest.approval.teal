@@ -1,0 +1,852 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow3Party.sol.Escrow3PartyTest.approval_program() -> uint64:
+main:
+    intcblock 64 1 0 32
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 0x 0x151f7c75 "_dealCount" "_dealStatus" "_dealBuyer" "_dealAmount" "_dealSeller" "_dealArbiter" "_admin" "_totalEscrowed" "_totalReleased" "_totalRefunded"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 9 // "_admin"
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_3 // "_dealCount"
+    bytec_1 // 0x
+    app_global_put
+    bytec 10 // "_totalEscrowed"
+    bytec_1 // 0x
+    app_global_put
+    bytec 11 // "_totalReleased"
+    bytec_1 // 0x
+    app_global_put
+    bytec 12 // "_totalRefunded"
+    bytec_1 // 0x
+    app_global_put
+    bytec 9 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x06f2ebf3 0x0a4fb6b3 0x8c001b11 0xfa18be10 0x3eb39b8e 0xa7032c84 0x55bd8ed8 0xc274bec7 0x3ae75b2a 0x63508064 0xdb7f73f5 0x8df2eaa4 0x917daa72 0xe56ad08f 0x2a423af5 0x6055bedc // method "initDeal(uint512)void", method "admin()address", method "dealCount()uint512", method "totalEscrowed()uint512", method "totalReleased()uint512", method "totalRefunded()uint512", method "getDealBuyer(uint512)address", method "getDealSeller(uint512)address", method "getDealArbiter(uint512)address", method "getDealAmount(uint512)uint512", method "getDealStatus(uint512)uint512", method "createDeal(address,address,address,uint512)uint512", method "fundDeal(uint512)void", method "releaseDeal(uint512)void", method "refundDeal(uint512)void", method "disputeDeal(uint512)void"
+    txna ApplicationArgs 0
+    match initDeal admin dealCount totalEscrowed totalReleased totalRefunded getDealBuyer getDealSeller getDealArbiter getDealAmount getDealStatus createDeal fundDeal releaseDeal refundDeal disputeDeal
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow3Party.sol.Escrow3PartyTest.initDeal[routing]() -> void:
+initDeal:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_dealBuyer"
+    dig 1
+    concat
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    box_put
+    bytec 7 // "_dealSeller"
+    dig 1
+    concat
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    box_put
+    bytec 8 // "_dealArbiter"
+    dig 1
+    concat
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    box_put
+    intc_2 // 0
+    itob
+    bytec 6 // "_dealAmount"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    bytec 4 // "_dealStatus"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow3Party.sol.Escrow3PartyTest.admin[routing]() -> void:
+admin:
+    intc_2 // 0
+    bytec 9 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow3Party.sol.Escrow3PartyTest.dealCount[routing]() -> void:
+dealCount:
+    intc_2 // 0
+    bytec_3 // "_dealCount"
+    app_global_get_ex
+    assert // check _dealCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow3Party.sol.Escrow3PartyTest.totalEscrowed[routing]() -> void:
+totalEscrowed:
+    intc_2 // 0
+    bytec 10 // "_totalEscrowed"
+    app_global_get_ex
+    assert // check _totalEscrowed exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow3Party.sol.Escrow3PartyTest.totalReleased[routing]() -> void:
+totalReleased:
+    intc_2 // 0
+    bytec 11 // "_totalReleased"
+    app_global_get_ex
+    assert // check _totalReleased exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow3Party.sol.Escrow3PartyTest.totalRefunded[routing]() -> void:
+totalRefunded:
+    intc_2 // 0
+    bytec 12 // "_totalRefunded"
+    app_global_get_ex
+    assert // check _totalRefunded exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow3Party.sol.Escrow3PartyTest.getDealBuyer[routing]() -> void:
+getDealBuyer:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_dealBuyer"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow3Party.sol.Escrow3PartyTest.getDealSeller[routing]() -> void:
+getDealSeller:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_dealSeller"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow3Party.sol.Escrow3PartyTest.getDealArbiter[routing]() -> void:
+getDealArbiter:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_dealArbiter"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow3Party.sol.Escrow3PartyTest.getDealAmount[routing]() -> void:
+getDealAmount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_dealAmount"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow3Party.sol.Escrow3PartyTest.getDealStatus[routing]() -> void:
+getDealStatus:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_dealStatus"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow3Party.sol.Escrow3PartyTest.createDeal[routing]() -> void:
+createDeal:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec 9 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Only admin
+    intc_2 // 0
+    itob
+    dup2
+    b>
+    assert // Amount must be positive
+    intc_2 // 0
+    bytec_3 // "_dealCount"
+    app_global_get_ex
+    assert // check _dealCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_dealBuyer"
+    dig 1
+    concat
+    uncover 8
+    box_put
+    bytec 7 // "_dealSeller"
+    dig 1
+    concat
+    uncover 7
+    box_put
+    bytec 8 // "_dealArbiter"
+    dig 1
+    concat
+    uncover 6
+    box_put
+    bytec 6 // "_dealAmount"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 5
+    box_put
+    bytec 4 // "_dealStatus"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    uncover 3
+    box_put
+    intc_1 // 1
+    itob
+    dig 2
+    b+
+    bytec_3 // "_dealCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow3Party.sol.Escrow3PartyTest.fundDeal[routing]() -> void:
+fundDeal:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    bytec_3 // "_dealCount"
+    app_global_get_ex
+    assert // check _dealCount exists
+    dig 1
+    b>
+    assert // Deal does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_dealStatus"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_2 // 0
+    itob
+    b==
+    assert // Deal not in created state
+    txn Sender
+    bytec 5 // "_dealBuyer"
+    dig 3
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    ==
+    assert // Only buyer can fund
+    intc_1 // 1
+    itob
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 0
+    bytec 10 // "_totalEscrowed"
+    app_global_get_ex
+    assert // check _totalEscrowed exists
+    bytec 6 // "_dealAmount"
+    uncover 2
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    b+
+    bytec 10 // "_totalEscrowed"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow3Party.sol.Escrow3PartyTest.releaseDeal[routing]() -> void:
+releaseDeal:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    bytec_3 // "_dealCount"
+    app_global_get_ex
+    assert // check _dealCount exists
+    dig 1
+    b>
+    assert // Deal does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    dup
+    bytec 4 // "_dealStatus"
+    dig 1
+    concat
+    dup
+    cover 2
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_1 // 1
+    itob
+    b==
+    assert // Deal not in funded state
+    txn Sender
+    bytec 5 // "_dealBuyer"
+    uncover 2
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    ==
+    bnz releaseDeal_bool_true@3
+    txn Sender
+    bytec 8 // "_dealArbiter"
+    dig 3
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    ==
+    bz releaseDeal_bool_false@4
+
+releaseDeal_bool_true@3:
+    intc_1 // 1
+
+releaseDeal_bool_merge@5:
+    assert // Only buyer or arbiter
+    pushint 2
+    itob
+    dig 1
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 0
+    bytec 11 // "_totalReleased"
+    app_global_get_ex
+    assert // check _totalReleased exists
+    bytec 6 // "_dealAmount"
+    dig 3
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    b+
+    bytec 11 // "_totalReleased"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+releaseDeal_bool_false@4:
+    intc_2 // 0
+    b releaseDeal_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow3Party.sol.Escrow3PartyTest.refundDeal[routing]() -> void:
+refundDeal:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    bytec_3 // "_dealCount"
+    app_global_get_ex
+    assert // check _dealCount exists
+    dig 1
+    b>
+    assert // Deal does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    dup
+    bytec 4 // "_dealStatus"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    intc_1 // 1
+    itob
+    b==
+    bnz refundDeal_bool_true@3
+    pushint 4
+    itob
+    dig 1
+    b==
+    bz refundDeal_bool_false@4
+
+refundDeal_bool_true@3:
+    intc_1 // 1
+
+refundDeal_bool_merge@5:
+    assert // Deal not in funded or disputed state
+    txn Sender
+    bytec 7 // "_dealSeller"
+    dig 4
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    ==
+    bnz refundDeal_bool_true@7
+    txn Sender
+    bytec 8 // "_dealArbiter"
+    dig 4
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    ==
+    bz refundDeal_bool_false@8
+
+refundDeal_bool_true@7:
+    intc_1 // 1
+
+refundDeal_bool_merge@9:
+    assert // Only seller or arbiter
+    pushint 3
+    itob
+    dig 2
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 0
+    bytec 12 // "_totalRefunded"
+    app_global_get_ex
+    assert // check _totalRefunded exists
+    bytec 6 // "_dealAmount"
+    dig 4
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    b+
+    bytec 12 // "_totalRefunded"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+refundDeal_bool_false@8:
+    intc_2 // 0
+    b refundDeal_bool_merge@9
+
+refundDeal_bool_false@4:
+    intc_2 // 0
+    b refundDeal_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow3Party.sol.Escrow3PartyTest.disputeDeal[routing]() -> void:
+disputeDeal:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    bytec_3 // "_dealCount"
+    app_global_get_ex
+    assert // check _dealCount exists
+    dig 1
+    b>
+    assert // Deal does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    dup
+    bytec 4 // "_dealStatus"
+    dig 1
+    concat
+    dup
+    cover 2
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_1 // 1
+    itob
+    b==
+    assert // Deal not in funded state
+    txn Sender
+    bytec 5 // "_dealBuyer"
+    uncover 2
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    ==
+    bnz disputeDeal_bool_true@3
+    txn Sender
+    bytec 7 // "_dealSeller"
+    dig 3
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    ==
+    bz disputeDeal_bool_false@4
+
+disputeDeal_bool_true@3:
+    intc_1 // 1
+
+disputeDeal_bool_merge@5:
+    assert // Only buyer or seller
+    pushint 4
+    itob
+    dig 1
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+disputeDeal_bool_false@4:
+    intc_2 // 0
+    b disputeDeal_bool_merge@5

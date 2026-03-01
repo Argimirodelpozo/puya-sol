@@ -1,0 +1,687 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Membership.sol.MembershipTest.approval_program() -> uint64:
+main:
+    intcblock 0 1 64 32
+    bytecblock 0x151f7c75 0x "_isMember" "_isSuspended" "_memberCount" "_totalFees" "_basicFee" "_premiumFee" "_vipFee" "_memberTier" "_memberFeesPaid" "_admin" "_memberIndex"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 11 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 4 // "_memberCount"
+    bytec_1 // 0x
+    app_global_put
+    bytec 5 // "_totalFees"
+    bytec_1 // 0x
+    app_global_put
+    bytec 6 // "_basicFee"
+    bytec_1 // 0x
+    app_global_put
+    bytec 7 // "_premiumFee"
+    bytec_1 // 0x
+    app_global_put
+    bytec 8 // "_vipFee"
+    bytec_1 // 0x
+    app_global_put
+    pushint 100
+    itob
+    pushint 500
+    itob
+    pushint 1000
+    itob
+    bytec 11 // "_admin"
+    txn Sender
+    app_global_put
+    bytec 6 // "_basicFee"
+    uncover 3
+    app_global_put
+    bytec 7 // "_premiumFee"
+    uncover 2
+    app_global_put
+    bytec 8 // "_vipFee"
+    swap
+    app_global_put
+    intc_0 // 0
+    itob
+    bytec 4 // "_memberCount"
+    dig 1
+    app_global_put
+    bytec 5 // "_totalFees"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xfcebad15 0x0a4fb6b3 0x9d7dc313 0x32f9bb52 0x6bb8d577 0x4536bdca 0xeb2a3a33 0xf2f59999 0xedf565c4 0xea0bba9e 0x0f7ece96 0x7ec9b6f7 0x3ecae5ab 0x471d944f 0x53221c8b 0xbf610d0c 0x1d8c8a4d // method "initMember(address)void", method "admin()address", method "memberCount()uint512", method "totalFees()uint512", method "basicFee()uint512", method "premiumFee()uint512", method "vipFee()uint512", method "addMember(address,uint512)void", method "payFee(address,uint512)void", method "getFeeForTier(uint512)uint512", method "suspend(address)void", method "reinstate(address)void", method "upgradeTier(address,uint512)void", method "getMemberTier(address)uint512", method "getMemberFeesPaid(address)uint512", method "isMember(address)bool", method "isSuspended(address)bool"
+    txna ApplicationArgs 0
+    match initMember admin memberCount totalFees basicFee premiumFee vipFee addMember payFee getFeeForTier suspend reinstate upgradeTier getMemberTier getMemberFeesPaid isMember isSuspended
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Membership.sol.MembershipTest.initMember[routing]() -> void:
+initMember:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_0 // 0
+    itob
+    swap
+    sha256
+    bytec 9 // "_memberTier"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 10 // "_memberFeesPaid"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec_2 // "_isMember"
+    dig 1
+    concat
+    intc_0 // 0
+    itob
+    swap
+    dig 1
+    box_put
+    bytec_3 // "_isSuspended"
+    dig 2
+    concat
+    swap
+    box_put
+    bytec 12 // "_memberIndex"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Membership.sol.MembershipTest.admin[routing]() -> void:
+admin:
+    intc_0 // 0
+    bytec 11 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Membership.sol.MembershipTest.memberCount[routing]() -> void:
+memberCount:
+    intc_0 // 0
+    bytec 4 // "_memberCount"
+    app_global_get_ex
+    assert // check _memberCount exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Membership.sol.MembershipTest.totalFees[routing]() -> void:
+totalFees:
+    intc_0 // 0
+    bytec 5 // "_totalFees"
+    app_global_get_ex
+    assert // check _totalFees exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Membership.sol.MembershipTest.basicFee[routing]() -> void:
+basicFee:
+    intc_0 // 0
+    bytec 6 // "_basicFee"
+    app_global_get_ex
+    assert // check _basicFee exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Membership.sol.MembershipTest.premiumFee[routing]() -> void:
+premiumFee:
+    intc_0 // 0
+    bytec 7 // "_premiumFee"
+    app_global_get_ex
+    assert // check _premiumFee exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Membership.sol.MembershipTest.vipFee[routing]() -> void:
+vipFee:
+    intc_0 // 0
+    bytec 8 // "_vipFee"
+    app_global_get_ex
+    assert // check _vipFee exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Membership.sol.MembershipTest.addMember[routing]() -> void:
+addMember:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    sha256
+    bytec_2 // "_isMember"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already a member
+    pushint 2
+    itob
+    dig 3
+    b>=
+    assert // Invalid tier
+    intc_1 // 1
+    itob
+    box_put
+    bytec 9 // "_memberTier"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    intc_0 // 0
+    itob
+    bytec 10 // "_memberFeesPaid"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    bytec_3 // "_isSuspended"
+    dig 1
+    concat
+    intc_0 // 0
+    itob
+    box_put
+    intc_0 // 0
+    bytec 4 // "_memberCount"
+    app_global_get_ex
+    assert // check _memberCount exists
+    intc_1 // 1
+    itob
+    b+
+    bytec 4 // "_memberCount"
+    dig 1
+    app_global_put
+    bytec 12 // "_memberIndex"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Membership.sol.MembershipTest.payFee[routing]() -> void:
+payFee:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    sha256
+    bytec_2 // "_isMember"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    assert // Not a member
+    bytec_3 // "_isSuspended"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Member is suspended
+    bytec 10 // "_memberFeesPaid"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_0 // 0
+    bytec 5 // "_totalFees"
+    app_global_get_ex
+    assert // check _totalFees exists
+    b+
+    bytec 5 // "_totalFees"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Membership.sol.MembershipTest.getFeeForTier[routing]() -> void:
+getFeeForTier:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    pushint 2
+    itob
+    dig 1
+    b>=
+    assert // Invalid tier
+    intc_0 // 0
+    itob
+    b==
+    bz getFeeForTier_else_body@3
+    intc_0 // 0
+    bytec 6 // "_basicFee"
+    app_global_get_ex
+    assert // check _basicFee exists
+
+getFeeForTier_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Membership.sol.MembershipTest.getFeeForTier@7:
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+getFeeForTier_else_body@3:
+    intc_1 // 1
+    itob
+    dig 1
+    b==
+    bz getFeeForTier_after_if_else@5
+    intc_0 // 0
+    bytec 7 // "_premiumFee"
+    app_global_get_ex
+    assert // check _premiumFee exists
+    b getFeeForTier_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Membership.sol.MembershipTest.getFeeForTier@7
+
+getFeeForTier_after_if_else@5:
+    intc_0 // 0
+    bytec 8 // "_vipFee"
+    app_global_get_ex
+    assert // check _vipFee exists
+    b getFeeForTier_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Membership.sol.MembershipTest.getFeeForTier@7
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Membership.sol.MembershipTest.suspend[routing]() -> void:
+suspend:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_2 // "_isMember"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    assert // Not a member
+    bytec_3 // "_isSuspended"
+    swap
+    concat
+    intc_1 // 1
+    itob
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Membership.sol.MembershipTest.reinstate[routing]() -> void:
+reinstate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_2 // "_isMember"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    assert // Not a member
+    bytec_3 // "_isSuspended"
+    swap
+    concat
+    intc_0 // 0
+    itob
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Membership.sol.MembershipTest.upgradeTier[routing]() -> void:
+upgradeTier:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    sha256
+    bytec_2 // "_isMember"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    assert // Not a member
+    bytec 9 // "_memberTier"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dig 2
+    b<
+    assert // New tier must be higher
+    pushint 2
+    itob
+    dig 2
+    b>=
+    assert // Invalid tier
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Membership.sol.MembershipTest.getMemberTier[routing]() -> void:
+getMemberTier:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 9 // "_memberTier"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Membership.sol.MembershipTest.getMemberFeesPaid[routing]() -> void:
+getMemberFeesPaid:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 10 // "_memberFeesPaid"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Membership.sol.MembershipTest.isMember[routing]() -> void:
+isMember:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_2 // "_isMember"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Membership.sol.MembershipTest.isSuspended[routing]() -> void:
+isSuspended:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_3 // "_isSuspended"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

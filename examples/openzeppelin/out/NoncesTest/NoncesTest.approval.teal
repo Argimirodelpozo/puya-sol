@@ -1,0 +1,148 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Nonces.sol.NoncesTest.approval_program() -> uint64:
+main:
+    intcblock 1 64 32
+    bytecblock "_nonces" 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x624852c2 0x3cd5a3fc 0xe08dc619 0xbcb88e20 // method "initNonce(address)void", method "useNonce(address)uint512", method "useCheckedNonce(address,uint512)void", method "nonces(address)uint512"
+    txna ApplicationArgs 0
+    match initNonce useNonce useCheckedNonce nonces(1)
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Nonces.sol.NoncesTest.initNonce[routing]() -> void:
+initNonce:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    pushint 0
+    itob
+    swap
+    sha256
+    bytec_0 // "_nonces"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Nonces.sol.NoncesTest.useNonce[routing]() -> void:
+useNonce:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub _useNonce
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Nonces.sol.NoncesTest.useCheckedNonce[routing]() -> void:
+useCheckedNonce:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    callsub _useNonce
+    b!=
+    !
+    assert // InvalidAccountNonce
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Nonces.sol.NoncesTest.nonces(1)[routing]() -> void:
+nonces(1):
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_0 // "_nonces"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Nonces.sol.NoncesTest._useNonce(owner: bytes) -> bytes:
+_useNonce:
+    proto 1 1
+    frame_dig -1
+    sha256
+    bytec_0 // "_nonces"
+    swap
+    concat
+    dup
+    box_get
+    assert // box exists
+    pushbytes 0x01
+    b+
+    dig 1
+    box_del
+    pop
+    swap
+    dig 1
+    box_put
+    retsub

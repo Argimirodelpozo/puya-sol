@@ -1,0 +1,95 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Pausable.sol.Pausable.approval_program() -> uint64:
+main:
+    intcblock 0 1
+    bytecblock "_paused"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "_paused"
+    intc_0 // 0
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x9ad48402 0x0178f94b 0x1b529de8 0xf1004aab // method "paused()bool", method "pause()void", method "unpause()void", method "doSomething()uint512"
+    txna ApplicationArgs 0
+    match paused pause unpause doSomething
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Pausable.sol.Pausable.paused[routing]() -> void:
+paused:
+    intc_0 // 0
+    bytec_0 // "_paused"
+    app_global_get_ex
+    assert // check _paused exists
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Pausable.sol.Pausable.pause[routing]() -> void:
+pause:
+    callsub _requireNotPaused
+    bytec_0 // "_paused"
+    intc_1 // 1
+    app_global_put
+    pushbytes 0x62e78cea
+    txn Sender
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Pausable.sol.Pausable.unpause[routing]() -> void:
+unpause:
+    intc_0 // 0
+    bytec_0 // "_paused"
+    app_global_get_ex
+    assert // check _paused exists
+    assert // ExpectedPause
+    bytec_0 // "_paused"
+    intc_0 // 0
+    app_global_put
+    pushbytes 0x5db9ee0a
+    txn Sender
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Pausable.sol.Pausable.doSomething[routing]() -> void:
+doSomething:
+    callsub _requireNotPaused
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002a
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Pausable.sol.Pausable._requireNotPaused() -> void:
+_requireNotPaused:
+    intc_0 // 0
+    bytec_0 // "_paused"
+    app_global_get_ex
+    assert // check _paused exists
+    !
+    assert // EnforcedPause
+    retsub

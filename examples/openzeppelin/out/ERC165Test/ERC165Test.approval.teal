@@ -1,0 +1,89 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC165.sol.ERC165Test.approval_program() -> uint64:
+main:
+    intcblock 1 4 0
+    bytecblock 0x00 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x4e22a3ba 0x1986d5fa 0xd2cc85e7 0x96e740ea 0x638ef18b // method "supportsInterface(byte[4])bool", method "getERC165InterfaceId()byte[4]", method "getERC20InterfaceId()byte[4]", method "getERC721InterfaceId()byte[4]", method "interfaceIdsEqual(byte[4],byte[4])bool"
+    txna ApplicationArgs 0
+    match supportsInterface main_getERC165InterfaceId_route@6 main_getERC20InterfaceId_route@7 main_getERC721InterfaceId_route@8 interfaceIdsEqual
+    err
+
+main_getERC721InterfaceId_route@8:
+    pushbytes 0x151f7c7513f2a32f
+    log
+    intc_0 // 1
+    return
+
+main_getERC20InterfaceId_route@7:
+    pushbytes 0x151f7c7536372b07
+    log
+    intc_0 // 1
+    return
+
+main_getERC165InterfaceId_route@6:
+    pushbytes 0x151f7c7501ffc9a7
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC165.sol.ERC165Test.supportsInterface[routing]() -> void:
+supportsInterface:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    pushbytes 0x01ffc9a7
+    ==
+    bytec_0 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC165.sol.ERC165Test.interfaceIdsEqual[routing]() -> void:
+interfaceIdsEqual:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    ==
+    bytec_0 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

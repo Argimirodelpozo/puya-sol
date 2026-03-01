@@ -1,0 +1,508 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EventTicketing.sol.EventTicketingTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock 0x151f7c75 "_ticketCount" 0x "_eventCount" "_admin" "_ticketUsed" "_eventCapacity" "_ticketEvent"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 4 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_1 // "_ticketCount"
+    bytec_2 // 0x
+    app_global_put
+    bytec_3 // "_eventCount"
+    bytec_2 // 0x
+    app_global_put
+    bytec 4 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 0
+    itob
+    bytec_1 // "_ticketCount"
+    dig 1
+    app_global_put
+    bytec_3 // "_eventCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x96889a2f 0xf8d28f56 0xac8b24de 0xa3d42aaa 0x1bfcbcd8 0x2a446e3f 0x2693d34c 0xd893a349 0x77c38b27 0xc7df43dd 0x064541d7 // method "initTicket(uint512)void", method "initEvent(uint512)void", method "getAdmin()address", method "getTicketCount()uint512", method "getEventCount()uint512", method "getTicketEvent(uint512)uint512", method "isTicketUsed(uint512)bool", method "getEventCapacity(uint512)uint512", method "createEvent(uint512)uint512", method "buyTicket(uint512)uint512", method "useTicket(uint512)void"
+    txna ApplicationArgs 0
+    match initTicket initEvent getAdmin getTicketCount getEventCount getTicketEvent isTicketUsed getEventCapacity createEvent buyTicket useTicket
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EventTicketing.sol.EventTicketingTest.initTicket[routing]() -> void:
+initTicket:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_ticketEvent"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    bytec 5 // "_ticketUsed"
+    swap
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EventTicketing.sol.EventTicketingTest.initEvent[routing]() -> void:
+initEvent:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_eventCapacity"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EventTicketing.sol.EventTicketingTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_1 // 0
+    bytec 4 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EventTicketing.sol.EventTicketingTest.getTicketCount[routing]() -> void:
+getTicketCount:
+    intc_1 // 0
+    bytec_1 // "_ticketCount"
+    app_global_get_ex
+    assert // check _ticketCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EventTicketing.sol.EventTicketingTest.getEventCount[routing]() -> void:
+getEventCount:
+    intc_1 // 0
+    bytec_3 // "_eventCount"
+    app_global_get_ex
+    assert // check _eventCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EventTicketing.sol.EventTicketingTest.getTicketEvent[routing]() -> void:
+getTicketEvent:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_ticketEvent"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EventTicketing.sol.EventTicketingTest.isTicketUsed[routing]() -> void:
+isTicketUsed:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_ticketUsed"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EventTicketing.sol.EventTicketingTest.getEventCapacity[routing]() -> void:
+getEventCapacity:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_eventCapacity"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EventTicketing.sol.EventTicketingTest.createEvent[routing]() -> void:
+createEvent:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec 4 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Only admin
+    intc_1 // 0
+    itob
+    dig 1
+    b<
+    assert // Capacity must be positive
+    intc_1 // 0
+    bytec_3 // "_eventCount"
+    app_global_get_ex
+    assert // check _eventCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_eventCapacity"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    uncover 3
+    box_put
+    intc_2 // 1
+    itob
+    dig 2
+    b+
+    bytec_3 // "_eventCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EventTicketing.sol.EventTicketingTest.buyTicket[routing]() -> void:
+buyTicket:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec_3 // "_eventCount"
+    app_global_get_ex
+    assert // check _eventCount exists
+    dig 1
+    b>
+    assert // Event does not exist
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_eventCapacity"
+    swap
+    concat
+    dup
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    itob
+    b>
+    assert // Event sold out
+    intc_1 // 0
+    bytec_1 // "_ticketCount"
+    app_global_get_ex
+    assert // check _ticketCount exists
+    dig 2
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_ticketEvent"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 5
+    box_put
+    bytec 5 // "_ticketUsed"
+    swap
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    dig 1
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    intc_2 // 1
+    itob
+    swap
+    dig 1
+    b-
+    dig 3
+    box_del
+    pop
+    uncover 3
+    swap
+    box_put
+    dig 1
+    b+
+    bytec_1 // "_ticketCount"
+    swap
+    app_global_put
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/EventTicketing.sol.EventTicketingTest.useTicket[routing]() -> void:
+useTicket:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec_1 // "_ticketCount"
+    app_global_get_ex
+    assert // check _ticketCount exists
+    dig 1
+    b>
+    assert // Ticket does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_ticketUsed"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Ticket already used
+    intc_2 // 1
+    itob
+    box_put
+    intc_2 // 1
+    return

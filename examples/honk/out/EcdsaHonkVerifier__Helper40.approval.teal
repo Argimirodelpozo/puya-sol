@@ -1,0 +1,574 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper40.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 32 8 0 256
+    bytecblock 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    store 0
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.TranscriptLib.splitChallenge(challenge: bytes) -> bytes, bytes:
+TranscriptLib.splitChallenge:
+    proto 1 2
+    frame_dig -1
+    pushbytes 0xffffffffffffffffffffffffffffffff
+    b&
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    pushbytes 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper40.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    pushbytes 0x58dbb1c5 // method "TranscriptLib.generateTranscript__chunk_0((uint512,uint512,uint512,(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),uint512[8][28],uint512[44],(uint512,uint512,uint512,uint512)[27],uint512[28],(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512)),byte[32][],uint512)uint512"
+    txna ApplicationArgs 0
+    match __puya_arc4_router___TranscriptLib.generateTranscript__chunk_0_route@1
+    err
+
+__puya_arc4_router___TranscriptLib.generateTranscript__chunk_0_route@1:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b TranscriptLib.generateTranscript__chunk_0
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper40.TranscriptLib.generateTranscript__chunk_0[routing]() -> void:
+TranscriptLib.generateTranscript__chunk_0:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    pushint 28608
+    ==
+    assert // invalid number of bytes for Proof
+    txna ApplicationArgs 2
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 32>>
+    pushint 2
+    intc_2 // 0
+    extract3
+    swap
+    txna ApplicationArgs 3
+    dup
+    cover 2
+    len
+    pushint 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub _puya_lib.mem.new_slot
+    dup
+    uncover 2
+    intc_0 // 32
+    bzero
+    dup
+    cover 3
+    dig 1
+    extract 0 64
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x
+    swap
+    replace2 0 // on error: index access is out of bounds
+    dig 2
+    extract 64 64
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 32 // on error: index access is out of bounds
+    uncover 2
+    extract 128 64
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 64 // on error: index access is out of bounds
+    stores
+    intc_2 // 0
+    itob
+
+TranscriptLib.generateTranscript__chunk_0_while_top@2:
+    dup
+    dig 4
+    b<
+    bz TranscriptLib.generateTranscript__chunk_0_after_while@4
+    intc_1 // 8
+    bzero
+    dup
+    dig 2
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dig 7
+    swap
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    pushint 3
+    itob
+    dig 2
+    b+
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dig 5
+    dup
+    cover 2
+    loads
+    swap
+    intc_0 // 32
+    *
+    uncover 3
+    replace3 // on error: index access is out of bounds
+    stores
+    pushbytes 0x01
+    b+
+    bury 1
+    b TranscriptLib.generateTranscript__chunk_0_while_top@2
+
+TranscriptLib.generateTranscript__chunk_0_after_while@4:
+    dig 5
+    dup
+    pushint 192
+    intc_3 // 256
+    extract3
+    dup
+    extract 0 64
+    dig 4
+    dup
+    cover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 8
+    bzero
+    pushint 3
+    itob
+    dig 9
+    dup
+    cover 4
+    b+
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dig 9
+    dup
+    cover 8
+    loads
+    swap
+    intc_0 // 32
+    *
+    uncover 3
+    replace3 // on error: index access is out of bounds
+    dig 3
+    extract 64 64
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    pushbytes 0x04
+    b+
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    dig 3
+    extract 128 64
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    pushbytes 0x05
+    b+
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    uncover 3
+    extract 192 64
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    pushbytes 0x06
+    b+
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    dig 4
+    pushint 448
+    intc_3 // 256
+    extract3
+    dup
+    extract 0 64
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    pushbytes 0x07
+    b+
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    uncover 3
+    swap
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    dig 1
+    extract 64 64
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    pushbytes 0x08
+    b+
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    dig 1
+    extract 128 64
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    pushbytes 0x09
+    b+
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    swap
+    extract 192 64
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    pushbytes 0x0a
+    b+
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    uncover 4
+    pushint 704
+    intc_3 // 256
+    extract3
+    dup
+    extract 0 64
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    pushbytes 0x0b
+    b+
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    uncover 3
+    swap
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    dig 1
+    extract 64 64
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    pushbytes 0x0c
+    b+
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    dig 1
+    extract 128 64
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    pushbytes 0x0d
+    b+
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    swap
+    extract 192 64
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    pushbytes 0x0e
+    b+
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    uncover 2
+    dig 1
+    stores
+    keccak256
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    dup
+    callsub TranscriptLib.splitChallenge
+    popn 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    keccak256
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    callsub TranscriptLib.splitChallenge
+    popn 2
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    pushint 1
+    return
+
+
+// _puya_lib.mem.new_slot() -> uint64:
+_puya_lib.mem.new_slot:
+    load 0
+    bitlen
+    load 0
+    intc_3 // 256
+    dig 2
+    -
+    intc_2 // 0
+    setbit // on error: no available slots
+    store 0
+    retsub

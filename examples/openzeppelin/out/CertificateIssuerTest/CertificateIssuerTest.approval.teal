@@ -1,0 +1,401 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CertificateIssuer.sol.CertificateIssuerTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock "_certCount" 0x151f7c75 "_admin" "_revokedCount" "_certIssued" "_certRevoked" "_certHash"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_0 // "_certCount"
+    pushbytes 0x
+    app_global_put
+    bytec_3 // "_revokedCount"
+    pushbytes 0x
+    app_global_put
+    bytec_2 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 0
+    itob
+    bytec_0 // "_certCount"
+    dig 1
+    app_global_put
+    bytec_3 // "_revokedCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x7d350d2f 0xac8b24de 0xb7d43e6b 0x39144fd4 0x155427ae 0x9e97cb8c 0xff4149bc 0x9f9dbd5c // method "initCert(uint512)void", method "getAdmin()address", method "getCertCount()uint512", method "getRevokedCount()uint512", method "getCertHash(uint512)uint512", method "issueCertificate(uint512)uint512", method "verifyCertificate(uint512)bool", method "revokeCertificate(uint512)void"
+    txna ApplicationArgs 0
+    match initCert getAdmin getCertCount getRevokedCount getCertHash issueCertificate verifyCertificate revokeCertificate
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CertificateIssuer.sol.CertificateIssuerTest.initCert[routing]() -> void:
+initCert:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_certHash"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    bytec 4 // "_certIssued"
+    dig 1
+    concat
+    intc_1 // 0
+    itob
+    swap
+    dig 1
+    box_put
+    bytec 5 // "_certRevoked"
+    uncover 2
+    concat
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CertificateIssuer.sol.CertificateIssuerTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CertificateIssuer.sol.CertificateIssuerTest.getCertCount[routing]() -> void:
+getCertCount:
+    intc_1 // 0
+    bytec_0 // "_certCount"
+    app_global_get_ex
+    assert // check _certCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CertificateIssuer.sol.CertificateIssuerTest.getRevokedCount[routing]() -> void:
+getRevokedCount:
+    intc_1 // 0
+    bytec_3 // "_revokedCount"
+    app_global_get_ex
+    assert // check _revokedCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CertificateIssuer.sol.CertificateIssuerTest.getCertHash[routing]() -> void:
+getCertHash:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_certHash"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CertificateIssuer.sol.CertificateIssuerTest.issueCertificate[routing]() -> void:
+issueCertificate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Only admin
+    intc_1 // 0
+    bytec_0 // "_certCount"
+    app_global_get_ex
+    assert // check _certCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_certHash"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    bytec 4 // "_certIssued"
+    dig 1
+    concat
+    intc_2 // 1
+    itob
+    box_put
+    bytec 5 // "_certRevoked"
+    swap
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    intc_2 // 1
+    itob
+    dig 2
+    b+
+    bytec_0 // "_certCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CertificateIssuer.sol.CertificateIssuerTest.verifyCertificate[routing]() -> void:
+verifyCertificate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    bytec_0 // "_certCount"
+    app_global_get_ex
+    assert // check _certCount exists
+    dig 1
+    b>
+    assert // Certificate does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    dup
+    bytec 4 // "_certIssued"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bz verifyCertificate_bool_false@4
+    bytec 5 // "_certRevoked"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bnz verifyCertificate_bool_false@4
+    intc_2 // 1
+
+verifyCertificate_bool_merge@5:
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+verifyCertificate_bool_false@4:
+    intc_1 // 0
+    b verifyCertificate_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/CertificateIssuer.sol.CertificateIssuerTest.revokeCertificate[routing]() -> void:
+revokeCertificate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Only admin
+    intc_1 // 0
+    bytec_0 // "_certCount"
+    app_global_get_ex
+    assert // check _certCount exists
+    dig 1
+    b>
+    assert // Certificate does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 4 // "_certIssued"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // Certificate not issued
+    bytec 5 // "_certRevoked"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Certificate already revoked
+    intc_2 // 1
+    itob
+    box_put
+    intc_1 // 0
+    bytec_3 // "_revokedCount"
+    app_global_get_ex
+    assert // check _revokedCount exists
+    intc_2 // 1
+    itob
+    b+
+    bytec_3 // "_revokedCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return

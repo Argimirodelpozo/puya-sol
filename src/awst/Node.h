@@ -246,6 +246,18 @@ struct BytesBinaryOperation: Expression
 	std::shared_ptr<Expression> right;
 };
 
+enum class BytesUnaryOperator
+{
+	BitInvert
+};
+
+struct BytesUnaryOperation: Expression
+{
+	std::string nodeType() const override { return "BytesUnaryOperation"; }
+	std::shared_ptr<Expression> expr;
+	BytesUnaryOperator op;
+};
+
 struct NumericComparisonExpression: Expression
 {
 	std::string nodeType() const override { return "NumericComparisonExpression"; }

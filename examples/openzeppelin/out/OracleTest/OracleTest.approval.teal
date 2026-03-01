@@ -1,0 +1,527 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Oracle.sol.OracleTest.approval_program() -> uint64:
+main:
+    intcblock 64 1 0
+    bytecblock 0x151f7c75 "admin" 0x "_feedActive" "feedCount" "updateCount" "_feedTimestamp" "_feedDecimals" "_feedPrice"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 4 // "feedCount"
+    bytec_2 // 0x
+    app_global_put
+    bytec 5 // "updateCount"
+    bytec_2 // 0x
+    app_global_put
+    bytec_1 // "admin"
+    txn Sender
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xa66b049c 0xd527a475 0xe60ad7f4 0x7ec2928c 0x386a88cd 0x42a42c9b 0xd00ce7ce 0xfb1ade24 0x15cf01ec 0x1480b644 0xac8b24de 0xf70043ff // method "createFeed(uint512)uint512", method "updatePrice(uint512,uint512,uint512)void", method "getPrice(uint512)uint512", method "getTimestamp(uint512)uint512", method "isFeedActive(uint512)bool", method "getDecimals(uint512)uint512", method "deactivateFeed(uint512)void", method "activateFeed(uint512)void", method "getFeedCount()uint512", method "getUpdateCount()uint512", method "getAdmin()address", method "isPriceStale(uint512,uint512,uint512)bool"
+    txna ApplicationArgs 0
+    match createFeed updatePrice getPrice getTimestamp isFeedActive getDecimals deactivateFeed activateFeed getFeedCount getUpdateCount getAdmin isPriceStale
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Oracle.sol.OracleTest.createFeed[routing]() -> void:
+createFeed:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec_1 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    ==
+    assert // not admin
+    intc_2 // 0
+    bytec 4 // "feedCount"
+    app_global_get_ex
+    assert // check feedCount exists
+    intc_1 // 1
+    itob
+    dig 1
+    b+
+    bytec 4 // "feedCount"
+    swap
+    app_global_put
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_feedActive"
+    dig 1
+    concat
+    intc_1 // 1
+    itob
+    box_put
+    bytec 7 // "_feedDecimals"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    uncover 3
+    box_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Oracle.sol.OracleTest.updatePrice[routing]() -> void:
+updatePrice:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec_1 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    ==
+    assert // not admin
+    intc_0 // 64
+    bzero
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_feedActive"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    assert // feed not active
+    bytec 8 // "_feedPrice"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 3
+    box_put
+    bytec 6 // "_feedTimestamp"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 0
+    bytec 5 // "updateCount"
+    app_global_get_ex
+    assert // check updateCount exists
+    intc_1 // 1
+    itob
+    b+
+    bytec 5 // "updateCount"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Oracle.sol.OracleTest.getPrice[routing]() -> void:
+getPrice:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_feedPrice"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Oracle.sol.OracleTest.getTimestamp[routing]() -> void:
+getTimestamp:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_feedTimestamp"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Oracle.sol.OracleTest.isFeedActive[routing]() -> void:
+isFeedActive:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_feedActive"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Oracle.sol.OracleTest.getDecimals[routing]() -> void:
+getDecimals:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_feedDecimals"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Oracle.sol.OracleTest.deactivateFeed[routing]() -> void:
+deactivateFeed:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec_1 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    ==
+    assert // not admin
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_feedActive"
+    swap
+    concat
+    intc_2 // 0
+    itob
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Oracle.sol.OracleTest.activateFeed[routing]() -> void:
+activateFeed:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec_1 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    ==
+    assert // not admin
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_feedActive"
+    swap
+    concat
+    intc_1 // 1
+    itob
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Oracle.sol.OracleTest.getFeedCount[routing]() -> void:
+getFeedCount:
+    intc_2 // 0
+    bytec 4 // "feedCount"
+    app_global_get_ex
+    assert // check feedCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Oracle.sol.OracleTest.getUpdateCount[routing]() -> void:
+getUpdateCount:
+    intc_2 // 0
+    bytec 5 // "updateCount"
+    app_global_get_ex
+    assert // check updateCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Oracle.sol.OracleTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_2 // 0
+    bytec_1 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Oracle.sol.OracleTest.isPriceStale[routing]() -> void:
+isPriceStale:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_feedTimestamp"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    uncover 2
+    swap
+    b-
+    b<
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

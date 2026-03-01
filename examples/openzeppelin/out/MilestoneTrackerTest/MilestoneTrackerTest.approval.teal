@@ -1,0 +1,486 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/MilestoneTracker.sol.MilestoneTrackerTest.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock "_milestoneCount" 0x151f7c75 "_admin" 0x "_completedCount" "_milestoneCompleted" "_milestoneProgress" "_milestoneTarget"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "_admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_0 // "_milestoneCount"
+    bytec_3 // 0x
+    app_global_put
+    bytec 4 // "_completedCount"
+    bytec_3 // 0x
+    app_global_put
+    bytec_2 // "_admin"
+    txn Sender
+    app_global_put
+    intc_1 // 0
+    itob
+    bytec_0 // "_milestoneCount"
+    dig 1
+    app_global_put
+    bytec 4 // "_completedCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb971f53d 0xac8b24de 0x34405dbd 0xbcc8ea63 0xa174bf83 0xcccf801b 0x70e39a1b 0xa63b769d 0x4eff1774 0xf0e7a450 // method "initMilestone(uint512)void", method "getAdmin()address", method "getMilestoneCount()uint512", method "getCompletedCount()uint512", method "getMilestoneTarget(uint512)uint512", method "getProgress(uint512)uint512", method "isCompleted(uint512)bool", method "createMilestone(uint512)uint512", method "updateProgress(uint512,uint512)void", method "completeMilestone(uint512)void"
+    txna ApplicationArgs 0
+    match initMilestone getAdmin getMilestoneCount getCompletedCount getMilestoneTarget getProgress isCompleted createMilestone updateProgress completeMilestone
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/MilestoneTracker.sol.MilestoneTrackerTest.initMilestone[routing]() -> void:
+initMilestone:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_milestoneTarget"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    bytec 6 // "_milestoneProgress"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 2
+    box_put
+    bytec 5 // "_milestoneCompleted"
+    swap
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/MilestoneTracker.sol.MilestoneTrackerTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/MilestoneTracker.sol.MilestoneTrackerTest.getMilestoneCount[routing]() -> void:
+getMilestoneCount:
+    intc_1 // 0
+    bytec_0 // "_milestoneCount"
+    app_global_get_ex
+    assert // check _milestoneCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/MilestoneTracker.sol.MilestoneTrackerTest.getCompletedCount[routing]() -> void:
+getCompletedCount:
+    intc_1 // 0
+    bytec 4 // "_completedCount"
+    app_global_get_ex
+    assert // check _completedCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/MilestoneTracker.sol.MilestoneTrackerTest.getMilestoneTarget[routing]() -> void:
+getMilestoneTarget:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_milestoneTarget"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/MilestoneTracker.sol.MilestoneTrackerTest.getProgress[routing]() -> void:
+getProgress:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 6 // "_milestoneProgress"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/MilestoneTracker.sol.MilestoneTrackerTest.isCompleted[routing]() -> void:
+isCompleted:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_milestoneCompleted"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/MilestoneTracker.sol.MilestoneTrackerTest.createMilestone[routing]() -> void:
+createMilestone:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Only admin
+    intc_1 // 0
+    itob
+    dup2
+    b>
+    assert // Target must be positive
+    intc_1 // 0
+    bytec_0 // "_milestoneCount"
+    app_global_get_ex
+    assert // check _milestoneCount exists
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_milestoneTarget"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 5
+    box_put
+    bytec 6 // "_milestoneProgress"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    bytec 5 // "_milestoneCompleted"
+    swap
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    intc_2 // 1
+    itob
+    dig 2
+    b+
+    bytec_0 // "_milestoneCount"
+    swap
+    app_global_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/MilestoneTracker.sol.MilestoneTrackerTest.updateProgress[routing]() -> void:
+updateProgress:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Only admin
+    intc_1 // 0
+    bytec_0 // "_milestoneCount"
+    app_global_get_ex
+    assert // check _milestoneCount exists
+    dig 2
+    b>
+    assert // Milestone does not exist
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_milestoneCompleted"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Milestone already completed
+    intc_1 // 0
+    itob
+    dig 2
+    b<
+    assert // Amount must be positive
+    bytec 6 // "_milestoneProgress"
+    swap
+    concat
+    dup
+    box_get
+    bytec_3 // 0x
+    cover 2
+    select
+    uncover 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/MilestoneTracker.sol.MilestoneTrackerTest.completeMilestone[routing]() -> void:
+completeMilestone:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec_2 // "_admin"
+    app_global_get_ex
+    assert // check _admin exists
+    ==
+    assert // Only admin
+    intc_1 // 0
+    bytec_0 // "_milestoneCount"
+    app_global_get_ex
+    assert // check _milestoneCount exists
+    dig 1
+    b>
+    assert // Milestone does not exist
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 5 // "_milestoneCompleted"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Milestone already completed
+    intc_2 // 1
+    itob
+    box_put
+    intc_1 // 0
+    bytec 4 // "_completedCount"
+    app_global_get_ex
+    assert // check _completedCount exists
+    intc_2 // 1
+    itob
+    b+
+    bytec 4 // "_completedCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return

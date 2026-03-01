@@ -1,0 +1,114 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper53.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 64 32
+    bytecblock 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.TranscriptLib.splitChallenge(challenge: bytes) -> bytes, bytes:
+TranscriptLib.splitChallenge:
+    proto 1 2
+    frame_dig -1
+    pushbytes 0xffffffffffffffffffffffffffffffff
+    b&
+    intc_1 // 32
+    bzero
+    frame_dig -1
+    pushbytes 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    cover 2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper53.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    pushbytes 0xea14c658 // method "TranscriptLib.generateGeminiRChallenge__chunk_2((uint512,uint512,uint512,(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),uint512[8][28],uint512[44],(uint512,uint512,uint512,uint512)[27],uint512[28],(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512)),uint512,uint512,uint512)(uint512,uint512)"
+    txna ApplicationArgs 0
+    match __puya_arc4_router___TranscriptLib.generateGeminiRChallenge__chunk_2_route@1
+    err
+
+__puya_arc4_router___TranscriptLib.generateGeminiRChallenge__chunk_2_route@1:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b TranscriptLib.generateGeminiRChallenge__chunk_2
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper53.TranscriptLib.generateGeminiRChallenge__chunk_2[routing]() -> void:
+TranscriptLib.generateGeminiRChallenge__chunk_2:
+    txna ApplicationArgs 1
+    len
+    pushint 28608
+    ==
+    assert // invalid number of bytes for Proof
+    txna ApplicationArgs 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 4
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dig 1
+    callsub TranscriptLib.splitChallenge
+    popn 2
+    dig 1
+    callsub TranscriptLib.splitChallenge
+    pop
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    swap
+    dig 1
+    b|
+    uncover 2
+    intc_0 // 64
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return

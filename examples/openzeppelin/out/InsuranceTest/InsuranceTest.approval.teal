@@ -1,0 +1,573 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Insurance.sol.InsuranceTest.approval_program() -> uint64:
+main:
+    intcblock 64 1 0
+    bytecblock 0x151f7c75 0x "_policyActive" "admin" "policyCount" "totalPremiums" "totalPayouts" "premiumRate" "_policyCoverage" "_policyPremium" "_policyClaimed" 0x0000000000000000000000000000000000000000000000000000000000000000 "_policyHolder"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "admin"
+    bytec 11 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 4 // "policyCount"
+    bytec_1 // 0x
+    app_global_put
+    bytec 7 // "premiumRate"
+    bytec_1 // 0x
+    app_global_put
+    bytec 5 // "totalPremiums"
+    bytec_1 // 0x
+    app_global_put
+    bytec 6 // "totalPayouts"
+    bytec_1 // 0x
+    app_global_put
+    pushint 50
+    itob
+    bytec_3 // "admin"
+    txn Sender
+    app_global_put
+    bytec 7 // "premiumRate"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x7b8f68fd 0x165e6e18 0x93dc542a 0x8a97e697 0x0c613368 0xb67b2b6c 0x4b5faea3 0x6d441332 0x014db06b 0x5e4da6f0 0xc4c9bb11 0x9c3ff527 0xac8b24de // method "createPolicy(address,uint512)uint512", method "activatePolicy(uint512)void", method "fileClaim(uint512)uint512", method "cancelPolicy(uint512)void", method "getPolicyHolder(uint512)address", method "getPolicyCoverage(uint512)uint512", method "getPolicyPremium(uint512)uint512", method "isPolicyActive(uint512)bool", method "isPolicyClaimed(uint512)bool", method "getTotalPremiums()uint512", method "getTotalPayouts()uint512", method "getPolicyCount()uint512", method "getAdmin()address"
+    txna ApplicationArgs 0
+    match createPolicy activatePolicy fileClaim cancelPolicy getPolicyHolder getPolicyCoverage getPolicyPremium isPolicyActive isPolicyClaimed getTotalPremiums getTotalPayouts getPolicyCount getAdmin
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Insurance.sol.InsuranceTest.createPolicy[routing]() -> void:
+createPolicy:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    bytec 4 // "policyCount"
+    app_global_get_ex
+    assert // check policyCount exists
+    intc_1 // 1
+    itob
+    b+
+    bytec 4 // "policyCount"
+    dig 1
+    app_global_put
+    intc_2 // 0
+    bytec 7 // "premiumRate"
+    app_global_get_ex
+    assert // check premiumRate exists
+    dig 2
+    b*
+    pushint 1000
+    itob
+    b/
+    intc_0 // 64
+    bzero
+    dup
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 12 // "_policyHolder"
+    dig 1
+    concat
+    uncover 6
+    box_put
+    bytec 8 // "_policyCoverage"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 5
+    box_put
+    bytec 9 // "_policyPremium"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 3
+    box_put
+    bytec_2 // "_policyActive"
+    dig 1
+    concat
+    intc_2 // 0
+    itob
+    swap
+    dig 1
+    box_put
+    bytec 10 // "_policyClaimed"
+    uncover 2
+    concat
+    swap
+    box_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Insurance.sol.InsuranceTest.activatePolicy[routing]() -> void:
+activatePolicy:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_policyActive"
+    dig 1
+    concat
+    intc_1 // 1
+    itob
+    box_put
+    intc_2 // 0
+    bytec 5 // "totalPremiums"
+    app_global_get_ex
+    assert // check totalPremiums exists
+    bytec 9 // "_policyPremium"
+    uncover 2
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    b+
+    bytec 5 // "totalPremiums"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Insurance.sol.InsuranceTest.fileClaim[routing]() -> void:
+fileClaim:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_policyActive"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    assert // Policy not active
+    bytec 10 // "_policyClaimed"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // Already claimed
+    intc_1 // 1
+    itob
+    box_put
+    bytec 8 // "_policyCoverage"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_2 // 0
+    bytec 6 // "totalPayouts"
+    app_global_get_ex
+    assert // check totalPayouts exists
+    dig 1
+    b+
+    bytec 6 // "totalPayouts"
+    swap
+    app_global_put
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Insurance.sol.InsuranceTest.cancelPolicy[routing]() -> void:
+cancelPolicy:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec_3 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    ==
+    assert // Not admin
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_policyActive"
+    swap
+    concat
+    intc_2 // 0
+    itob
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Insurance.sol.InsuranceTest.getPolicyHolder[routing]() -> void:
+getPolicyHolder:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 12 // "_policyHolder"
+    swap
+    concat
+    box_get
+    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Insurance.sol.InsuranceTest.getPolicyCoverage[routing]() -> void:
+getPolicyCoverage:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_policyCoverage"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Insurance.sol.InsuranceTest.getPolicyPremium[routing]() -> void:
+getPolicyPremium:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 9 // "_policyPremium"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Insurance.sol.InsuranceTest.isPolicyActive[routing]() -> void:
+isPolicyActive:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_policyActive"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Insurance.sol.InsuranceTest.isPolicyClaimed[routing]() -> void:
+isPolicyClaimed:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 10 // "_policyClaimed"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Insurance.sol.InsuranceTest.getTotalPremiums[routing]() -> void:
+getTotalPremiums:
+    intc_2 // 0
+    bytec 5 // "totalPremiums"
+    app_global_get_ex
+    assert // check totalPremiums exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Insurance.sol.InsuranceTest.getTotalPayouts[routing]() -> void:
+getTotalPayouts:
+    intc_2 // 0
+    bytec 6 // "totalPayouts"
+    app_global_get_ex
+    assert // check totalPayouts exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Insurance.sol.InsuranceTest.getPolicyCount[routing]() -> void:
+getPolicyCount:
+    intc_2 // 0
+    bytec 4 // "policyCount"
+    app_global_get_ex
+    assert // check policyCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Insurance.sol.InsuranceTest.getAdmin[routing]() -> void:
+getAdmin:
+    intc_2 // 0
+    bytec_3 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

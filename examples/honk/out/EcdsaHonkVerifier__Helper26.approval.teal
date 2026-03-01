@@ -1,0 +1,92 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper26.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 64 0 2
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper26.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    pushbytes 0x7ba60a68 // method "TranscriptLib.generateTranscript__chunk_11__chunk_4((uint512,uint512,uint512,(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512),uint512[8][28],uint512[44],(uint512,uint512,uint512,uint512)[27],uint512[28],(uint512,uint512,uint512,uint512),(uint512,uint512,uint512,uint512)),byte[32][],uint512,uint512,(uint512,uint512,uint512,uint512,uint512,uint512[25],uint512[28],uint512[28],uint512,uint512,uint512,uint512,uint512),uint512,uint512)(uint512,(uint512,uint512,uint512,uint512,uint512,uint512[25],uint512[28],uint512[28],uint512,uint512,uint512,uint512,uint512))"
+    txna ApplicationArgs 0
+    match __puya_arc4_router___TranscriptLib.generateTranscript__chunk_11__chunk_4_route@1
+    err
+
+__puya_arc4_router___TranscriptLib.generateTranscript__chunk_11__chunk_4_route@1:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b TranscriptLib.generateTranscript__chunk_11__chunk_4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/honk/contracts/reference/EcdsaHonkVerifier.sol.EcdsaHonkVerifier__Helper26.TranscriptLib.generateTranscript__chunk_11__chunk_4[routing]() -> void:
+TranscriptLib.generateTranscript__chunk_11__chunk_4:
+    txna ApplicationArgs 1
+    len
+    pushint 28608
+    ==
+    assert // invalid number of bytes for Proof
+    txna ApplicationArgs 2
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 32
+    *
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 32>>
+    intc_2 // 2
+    intc_1 // 0
+    extract3
+    pop
+    txna ApplicationArgs 3
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 4
+    dup
+    len
+    dup
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 5
+    dup
+    len
+    pushint 5824
+    ==
+    assert // invalid number of bytes for Transcript
+    txna ApplicationArgs 6
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 7
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    uncover 2
+    b|
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return

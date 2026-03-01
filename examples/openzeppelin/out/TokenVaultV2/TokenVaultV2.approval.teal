@@ -1,0 +1,700 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVaultV2.sol.TokenVaultV2.approval_program() -> uint64:
+main:
+    intcblock 64 1 0 32
+    bytecblock 0x 0x151f7c75 "_balances" "_withdrawalFeeBps" "_totalBalance" "_totalFees" "_owner" "_depositCount" "_depositorsCount" "_totalDeposited" "_totalWithdrawn"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 6 // "_owner"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 4 // "_totalBalance"
+    bytec_0 // 0x
+    app_global_put
+    bytec 5 // "_totalFees"
+    bytec_0 // 0x
+    app_global_put
+    bytec_3 // "_withdrawalFeeBps"
+    bytec_0 // 0x
+    app_global_put
+    bytec 8 // "_depositorsCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec 6 // "_owner"
+    txn Sender
+    app_global_put
+    pushint 200
+    itob
+    bytec_3 // "_withdrawalFeeBps"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xcacbb80f 0xdab6f241 0xf3d9437c 0xe4ce00a6 0xc90c90b1 0xf880b5a8 0x89d8b82e 0x64f679d2 0x658bc54e 0x0f8b5858 0x32f9bb52 0x2ab8a6e0 0x2e063379 0xb1bbb0a8 0x8c83419d // method "deposit(uint512)void", method "withdraw(uint512)void", method "collectFees()void", method "setFee(uint512)void", method "balanceOf(address)uint512", method "depositCount(address)uint512", method "totalDeposited(address)uint512", method "totalWithdrawn(address)uint512", method "accountInfo(address)(uint512,uint512,uint512,uint512)", method "totalBalance()uint512", method "totalFees()uint512", method "withdrawalFeeBps()uint512", method "depositorsCount()uint512", method "owner()address", method "calculateFee(uint512)uint512"
+    txna ApplicationArgs 0
+    match deposit withdraw collectFees setFee balanceOf depositCount totalDeposited totalWithdrawn accountInfo totalBalance totalFees withdrawalFeeBps depositorsCount owner calculateFee
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVaultV2.sol.TokenVaultV2.deposit[routing]() -> void:
+deposit:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    itob
+    dup
+    uncover 2
+    dig 1
+    b==
+    !
+    assert // VaultZeroAmount
+    txn Sender
+    sha256
+    bytec_2 // "_balances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b==
+    bz deposit_after_if_else@6
+    txn Sender
+    sha256
+    bytec 7 // "_depositCount"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b==
+    bz deposit_after_if_else@6
+    intc_2 // 0
+    bytec 8 // "_depositorsCount"
+    app_global_get_ex
+    assert // check _depositorsCount exists
+    intc_1 // 1
+    itob
+    b+
+    bytec 8 // "_depositorsCount"
+    swap
+    app_global_put
+
+deposit_after_if_else@6:
+    txn Sender
+    sha256
+    bytec_2 // "_balances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    dup
+    cover 2
+    b+
+    txn Sender
+    sha256
+    bytec_2 // "_balances"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    txn Sender
+    sha256
+    bytec 9 // "_totalDeposited"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b+
+    txn Sender
+    sha256
+    bytec 9 // "_totalDeposited"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    txn Sender
+    sha256
+    bytec 7 // "_depositCount"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    intc_1 // 1
+    itob
+    b+
+    txn Sender
+    sha256
+    bytec 7 // "_depositCount"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 0
+    bytec 4 // "_totalBalance"
+    app_global_get_ex
+    assert // check _totalBalance exists
+    dig 1
+    b+
+    bytec 4 // "_totalBalance"
+    swap
+    app_global_put
+    pushbytes 0x73a19dd2
+    swap
+    concat
+    txn Sender
+    sha256
+    bytec_2 // "_balances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVaultV2.sol.TokenVaultV2.withdraw[routing]() -> void:
+withdraw:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    itob
+    dig 1
+    b==
+    !
+    assert // VaultZeroAmount
+    txn Sender
+    sha256
+    bytec_2 // "_balances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    dig 2
+    b<
+    !
+    assert // VaultInsufficientBalance
+    intc_2 // 0
+    bytec_3 // "_withdrawalFeeBps"
+    app_global_get_ex
+    assert // check _withdrawalFeeBps exists
+    dig 2
+    b*
+    pushint 10000
+    itob
+    b/
+    dig 2
+    dig 1
+    b-
+    uncover 2
+    dig 3
+    b-
+    txn Sender
+    sha256
+    bytec_2 // "_balances"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    txn Sender
+    sha256
+    bytec 10 // "_totalWithdrawn"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b+
+    txn Sender
+    sha256
+    bytec 10 // "_totalWithdrawn"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 0
+    bytec 4 // "_totalBalance"
+    app_global_get_ex
+    assert // check _totalBalance exists
+    uncover 3
+    b-
+    bytec 4 // "_totalBalance"
+    swap
+    app_global_put
+    intc_2 // 0
+    bytec 5 // "_totalFees"
+    app_global_get_ex
+    assert // check _totalFees exists
+    dig 2
+    b+
+    bytec 5 // "_totalFees"
+    swap
+    app_global_put
+    pushbytes 0x92ccf450
+    swap
+    concat
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVaultV2.sol.TokenVaultV2.collectFees[routing]() -> void:
+collectFees:
+    txn Sender
+    intc_2 // 0
+    bytec 6 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    !=
+    !
+    assert // VaultNotOwner
+    intc_2 // 0
+    bytec 5 // "_totalFees"
+    app_global_get_ex
+    assert // check _totalFees exists
+    intc_2 // 0
+    itob
+    bytec 5 // "_totalFees"
+    swap
+    app_global_put
+    pushbytes 0x06c5efef
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVaultV2.sol.TokenVaultV2.setFee[routing]() -> void:
+setFee:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec 6 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    !=
+    !
+    assert // VaultNotOwner
+    pushint 1000
+    itob
+    dig 1
+    b<
+    !
+    assert // VaultFeeExceedsMax
+    intc_2 // 0
+    bytec_3 // "_withdrawalFeeBps"
+    app_global_get_ex
+    assert // check _withdrawalFeeBps exists
+    bytec_3 // "_withdrawalFeeBps"
+    dig 2
+    app_global_put
+    pushbytes 0x528d9479
+    swap
+    concat
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVaultV2.sol.TokenVaultV2.balanceOf[routing]() -> void:
+balanceOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_2 // "_balances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVaultV2.sol.TokenVaultV2.depositCount[routing]() -> void:
+depositCount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 7 // "_depositCount"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVaultV2.sol.TokenVaultV2.totalDeposited[routing]() -> void:
+totalDeposited:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 9 // "_totalDeposited"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVaultV2.sol.TokenVaultV2.totalWithdrawn[routing]() -> void:
+totalWithdrawn:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 10 // "_totalWithdrawn"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVaultV2.sol.TokenVaultV2.accountInfo[routing]() -> void:
+accountInfo:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_2 // "_balances"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 7 // "_depositCount"
+    dig 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 9 // "_totalDeposited"
+    dig 3
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 10 // "_totalWithdrawn"
+    uncover 4
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 3
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    uncover 4
+    dig 1
+    b|
+    dig 4
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 4
+    dig 2
+    b|
+    concat
+    dig 3
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    uncover 3
+    dig 2
+    b|
+    concat
+    dig 2
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVaultV2.sol.TokenVaultV2.totalBalance[routing]() -> void:
+totalBalance:
+    intc_2 // 0
+    bytec 4 // "_totalBalance"
+    app_global_get_ex
+    assert // check _totalBalance exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVaultV2.sol.TokenVaultV2.totalFees[routing]() -> void:
+totalFees:
+    intc_2 // 0
+    bytec 5 // "_totalFees"
+    app_global_get_ex
+    assert // check _totalFees exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVaultV2.sol.TokenVaultV2.withdrawalFeeBps[routing]() -> void:
+withdrawalFeeBps:
+    intc_2 // 0
+    bytec_3 // "_withdrawalFeeBps"
+    app_global_get_ex
+    assert // check _withdrawalFeeBps exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVaultV2.sol.TokenVaultV2.depositorsCount[routing]() -> void:
+depositorsCount:
+    intc_2 // 0
+    bytec 8 // "_depositorsCount"
+    app_global_get_ex
+    assert // check _depositorsCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVaultV2.sol.TokenVaultV2.owner[routing]() -> void:
+owner:
+    intc_2 // 0
+    bytec 6 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/TokenVaultV2.sol.TokenVaultV2.calculateFee[routing]() -> void:
+calculateFee:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    bytec_3 // "_withdrawalFeeBps"
+    app_global_get_ex
+    assert // check _withdrawalFeeBps exists
+    b*
+    pushint 10000
+    itob
+    b/
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

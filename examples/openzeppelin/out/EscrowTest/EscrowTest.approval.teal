@@ -1,0 +1,195 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow.sol.EscrowTest.approval_program() -> uint64:
+main:
+    intcblock 1 64 0 32
+    bytecblock "_totalDeposits" "_owner" 0x 0x151f7c75 "_deposits"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "_owner"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_0 // "_totalDeposits"
+    bytec_2 // 0x
+    app_global_put
+    bytec_1 // "_owner"
+    txn Sender
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb1bbb0a8 0x08f658bb 0x44d52b41 0xc84af1db 0xdb94880d // method "owner()address", method "depositsOf(address)uint512", method "totalDeposits()uint512", method "deposit(address,uint512)void", method "withdraw(address,uint512)void"
+    txna ApplicationArgs 0
+    match owner depositsOf totalDeposits deposit withdraw
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow.sol.EscrowTest.owner[routing]() -> void:
+owner:
+    intc_2 // 0
+    bytec_1 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow.sol.EscrowTest.depositsOf[routing]() -> void:
+depositsOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 4 // "_deposits"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow.sol.EscrowTest.totalDeposits[routing]() -> void:
+totalDeposits:
+    intc_2 // 0
+    bytec_0 // "_totalDeposits"
+    app_global_get_ex
+    assert // check _totalDeposits exists
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow.sol.EscrowTest.deposit[routing]() -> void:
+deposit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    swap
+    sha256
+    bytec 4 // "_deposits"
+    swap
+    concat
+    dup
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 0
+    bytec_0 // "_totalDeposits"
+    app_global_get_ex
+    assert // check _totalDeposits exists
+    b+
+    bytec_0 // "_totalDeposits"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/Escrow.sol.EscrowTest.withdraw[routing]() -> void:
+withdraw:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec_1 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // Escrow: caller is not the owner
+    swap
+    sha256
+    bytec 4 // "_deposits"
+    swap
+    concat
+    dup
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    dig 3
+    b>=
+    assert // Escrow: insufficient deposit
+    dig 2
+    b-
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 0
+    bytec_0 // "_totalDeposits"
+    app_global_get_ex
+    assert // check _totalDeposits exists
+    swap
+    b-
+    bytec_0 // "_totalDeposits"
+    swap
+    app_global_put
+    intc_0 // 1
+    return

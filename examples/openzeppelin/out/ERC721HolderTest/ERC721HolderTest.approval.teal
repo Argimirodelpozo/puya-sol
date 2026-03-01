@@ -1,0 +1,123 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Holder.sol.ERC721HolderTest.approval_program() -> uint64:
+main:
+    intcblock 1 0 32 64
+    bytecblock 0x151f7c75150b7a02
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x4e22a3ba 0x84aad289 0xf55e4a39 // method "supportsInterface(byte[4])bool", method "testOnERC721Received(address,address,uint512,byte[])byte[4]", method "onERC721Received(address,address,uint512,byte[])byte[4]"
+    txna ApplicationArgs 0
+    match supportsInterface(1) testOnERC721Received onERC721Received
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Holder.sol.ERC721HolderTest.supportsInterface(1)[routing]() -> void:
+supportsInterface(1):
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    pushbytes 0x
+    ==
+    dup
+    bnz supportsInterface(1)_bool_true@3
+    dup
+    bz supportsInterface(1)_bool_false@4
+
+supportsInterface(1)_bool_true@3:
+    intc_0 // 1
+
+supportsInterface(1)_bool_merge@5:
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+supportsInterface(1)_bool_false@4:
+    intc_1 // 0
+    b supportsInterface(1)_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Holder.sol.ERC721HolderTest.testOnERC721Received[routing]() -> void:
+testOnERC721Received:
+    txna ApplicationArgs 1
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 4
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    bytec_0 // 0x151f7c75150b7a02
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/ERC721Holder.sol.ERC721HolderTest.onERC721Received[routing]() -> void:
+onERC721Received:
+    txna ApplicationArgs 1
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 4
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    bytec_0 // 0x151f7c75150b7a02
+    log
+    intc_0 // 1
+    return

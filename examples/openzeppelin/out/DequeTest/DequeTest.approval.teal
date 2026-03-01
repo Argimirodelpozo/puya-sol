@@ -1,0 +1,260 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/DoubleEndedQueue.sol.DequeTest.approval_program() -> uint64:
+main:
+    intcblock 64 1 0
+    bytecblock "_size" 0x151f7c75 0x "_data"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "_size"
+    bytec_2 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x94132949 0xdd4201fe 0x0efdf917 0x511df416 0xb25aff31 0x99326a69 // method "push(uint512)void", method "pop()uint512", method "top()uint512", method "at(uint512)uint512", method "length()uint512", method "empty()bool"
+    txna ApplicationArgs 0
+    match push pop top at length empty
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/DoubleEndedQueue.sol.DequeTest.push[routing]() -> void:
+push:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    bytec_0 // "_size"
+    app_global_get_ex
+    assert // check _size exists
+    intc_1 // 1
+    itob
+    dig 1
+    b+
+    bytec_0 // "_size"
+    swap
+    app_global_put
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_data"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/DoubleEndedQueue.sol.DequeTest.pop[routing]() -> void:
+pop:
+    intc_2 // 0
+    bytec_0 // "_size"
+    app_global_get_ex
+    assert // check _size exists
+    intc_2 // 0
+    itob
+    dig 1
+    b==
+    !
+    assert // StackEmpty
+    intc_1 // 1
+    itob
+    b-
+    bytec_0 // "_size"
+    dig 1
+    app_global_put
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_data"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/DoubleEndedQueue.sol.DequeTest.top[routing]() -> void:
+top:
+    intc_2 // 0
+    bytec_0 // "_size"
+    app_global_get_ex
+    assert // check _size exists
+    intc_2 // 0
+    itob
+    dig 1
+    b==
+    !
+    assert // StackEmpty
+    intc_0 // 64
+    bzero
+    intc_1 // 1
+    itob
+    uncover 2
+    swap
+    b-
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_data"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/DoubleEndedQueue.sol.DequeTest.at[routing]() -> void:
+at:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
+    bytec_0 // "_size"
+    app_global_get_ex
+    assert // check _size exists
+    dig 1
+    b<=
+    !
+    assert // StackOutOfBounds
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_3 // "_data"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/DoubleEndedQueue.sol.DequeTest.length[routing]() -> void:
+length:
+    intc_2 // 0
+    bytec_0 // "_size"
+    app_global_get_ex
+    assert // check _size exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/openzeppelin/contracts/DoubleEndedQueue.sol.DequeTest.empty[routing]() -> void:
+empty:
+    intc_2 // 0
+    bytec_0 // "_size"
+    app_global_get_ex
+    assert // check _size exists
+    intc_2 // 0
+    itob
+    b==
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
