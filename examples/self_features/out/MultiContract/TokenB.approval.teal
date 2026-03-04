@@ -1,0 +1,121 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M43_MultiContract.sol.TokenB.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock "totalMinted" 0x "balances" 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "totalMinted"
+    bytec_1 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb595ec13 0x83bad7cc 0x4dae1968 // method "mint(address,uint256)void", method "balanceOf(address)uint256", method "totalMinted()uint256"
+    txna ApplicationArgs 0
+    match mint balanceOf totalMinted
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M43_MultiContract.sol.TokenB.mint[routing]() -> void:
+mint:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    swap
+    sha256
+    bytec_2 // "balances"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 0
+    bytec_0 // "totalMinted"
+    app_global_get_ex
+    assert // check totalMinted exists
+    b+
+    bytec_0 // "totalMinted"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M43_MultiContract.sol.TokenB.balanceOf[routing]() -> void:
+balanceOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_2 // "balances"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M43_MultiContract.sol.TokenB.totalMinted[routing]() -> void:
+totalMinted:
+    intc_2 // 0
+    bytec_0 // "totalMinted"
+    app_global_get_ex
+    assert // check totalMinted exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

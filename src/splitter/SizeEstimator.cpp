@@ -553,7 +553,7 @@ static size_t estimateABIEncodedSize(awst::WType const* _wtype)
 	{
 	case awst::WTypeKind::Basic:
 		if (_wtype->name() == "biguint")
-			return 64; // uint512 in ARC4
+			return 32; // uint256 in ARC4
 		if (_wtype->name() == "uint64" || _wtype->name() == "bool")
 			return 8;
 		return 64;

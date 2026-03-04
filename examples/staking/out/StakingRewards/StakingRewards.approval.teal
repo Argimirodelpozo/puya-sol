@@ -1,0 +1,565 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.approval_program() -> uint64:
+main:
+    intcblock 64 0 1 32
+    bytecblock 0x "totalStaked" "_userStakedBalance" 0x151f7c75 "owner" "rewardPerTokenStored" "_userRewards" "rewardRate" base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) "rewardsDuration" "stakingToken" "rewardToken" "lastUpdateBlock" "_userRewardPerTokenPaid"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 4 // "owner"
+    bytec 8 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 10 // "stakingToken"
+    bytec 8 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 11 // "rewardToken"
+    bytec 8 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 7 // "rewardRate"
+    bytec_0 // 0x
+    app_global_put
+    bytec 5 // "rewardPerTokenStored"
+    bytec_0 // 0x
+    app_global_put
+    bytec 12 // "lastUpdateBlock"
+    bytec_0 // 0x
+    app_global_put
+    bytec 9 // "rewardsDuration"
+    bytec_0 // 0x
+    app_global_put
+    bytec_1 // "totalStaked"
+    bytec_0 // 0x
+    app_global_put
+    txna ApplicationArgs 0
+    txna ApplicationArgs 1
+    bytec 4 // "owner"
+    txn Sender
+    app_global_put
+    bytec 10 // "stakingToken"
+    uncover 2
+    app_global_put
+    bytec 11 // "rewardToken"
+    swap
+    app_global_put
+    pushint 1000
+    itob
+    bytec 9 // "rewardsDuration"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x5a2df1ce 0x669cb6a8 0x114c9030 0x0c33cfdb 0xdab6f241 0x26d0f8e4 0xfa2f4a62 0x03c293f8 0xf183f9e3 0xd3e9c672 0xe965dfd2 // method "stakedBalanceOf(address)uint512", method "rewardPerToken()uint512", method "earned(address)uint512", method "stake(uint512)void", method "withdraw(uint512)void", method "claimReward()uint512", method "notifyRewardAmount(uint512)void", method "setRewardRate(uint512)void", method "setRewardPerTokenStored(uint512)void", method "getTotalStaked()uint512", method "getPendingRewards(address)uint512"
+    txna ApplicationArgs 0
+    match stakedBalanceOf rewardPerToken earned stake withdraw claimReward notifyRewardAmount setRewardRate setRewardPerTokenStored getTotalStaked getPendingRewards
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.stakedBalanceOf[routing]() -> void:
+stakedBalanceOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_2 // "_userStakedBalance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.rewardPerToken[routing]() -> void:
+rewardPerToken:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.rewardPerToken
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.earned[routing]() -> void:
+earned:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.earned
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.stake[routing]() -> void:
+stake:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    dig 1
+    b<
+    assert // cannot stake 0
+    txn Sender
+    callsub _updateReward
+    intc_1 // 0
+    bytec_1 // "totalStaked"
+    app_global_get_ex
+    assert // check totalStaked exists
+    dig 1
+    b+
+    bytec_1 // "totalStaked"
+    swap
+    app_global_put
+    txn Sender
+    sha256
+    bytec_2 // "_userStakedBalance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b+
+    txn Sender
+    sha256
+    bytec_2 // "_userStakedBalance"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    pushbytes 0x9e71bc8e
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.withdraw[routing]() -> void:
+withdraw:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 0
+    itob
+    dig 1
+    b<
+    assert // cannot withdraw 0
+    txn Sender
+    sha256
+    bytec_2 // "_userStakedBalance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b>=
+    assert // insufficient staked balance
+    txn Sender
+    callsub _updateReward
+    intc_1 // 0
+    bytec_1 // "totalStaked"
+    app_global_get_ex
+    assert // check totalStaked exists
+    dig 1
+    b-
+    bytec_1 // "totalStaked"
+    swap
+    app_global_put
+    txn Sender
+    sha256
+    bytec_2 // "_userStakedBalance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b-
+    txn Sender
+    sha256
+    bytec_2 // "_userStakedBalance"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    pushbytes 0x7084f547
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.claimReward[routing]() -> void:
+claimReward:
+    txn Sender
+    callsub _updateReward
+    txn Sender
+    sha256
+    bytec 6 // "_userRewards"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    intc_1 // 0
+    itob
+    dup
+    cover 2
+    b>
+    bz claimReward_after_if_else@3
+    txn Sender
+    sha256
+    bytec 6 // "_userRewards"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    pushbytes 0xe2403640
+    dig 2
+    concat
+    log
+
+claimReward_after_if_else@3:
+    dig 1
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.notifyRewardAmount[routing]() -> void:
+notifyRewardAmount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec 4 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    assert // only owner
+    intc_1 // 0
+    bytec 9 // "rewardsDuration"
+    app_global_get_ex
+    assert // check rewardsDuration exists
+    dig 1
+    swap
+    b/
+    bytec 7 // "rewardRate"
+    swap
+    app_global_put
+    pushint 100
+    itob
+    bytec 12 // "lastUpdateBlock"
+    swap
+    app_global_put
+    pushbytes 0xde88a922
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.setRewardRate[routing]() -> void:
+setRewardRate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec 4 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    assert // only owner
+    bytec 7 // "rewardRate"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.setRewardPerTokenStored[routing]() -> void:
+setRewardPerTokenStored:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec 4 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    assert // only owner
+    bytec 5 // "rewardPerTokenStored"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.getTotalStaked[routing]() -> void:
+getTotalStaked:
+    intc_1 // 0
+    bytec_1 // "totalStaked"
+    app_global_get_ex
+    assert // check totalStaked exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.getPendingRewards[routing]() -> void:
+getPendingRewards:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 6 // "_userRewards"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.rewardPerToken() -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.rewardPerToken:
+    intc_1 // 0
+    bytec_1 // "totalStaked"
+    app_global_get_ex
+    assert // check totalStaked exists
+    intc_1 // 0
+    itob
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.rewardPerToken_after_if_else@2
+    intc_1 // 0
+    bytec 5 // "rewardPerTokenStored"
+    app_global_get_ex
+    assert // check rewardPerTokenStored exists
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.rewardPerToken_after_if_else@2:
+    intc_1 // 0
+    bytec 5 // "rewardPerTokenStored"
+    app_global_get_ex
+    assert // check rewardPerTokenStored exists
+    intc_1 // 0
+    bytec 7 // "rewardRate"
+    app_global_get_ex
+    assert // check rewardRate exists
+    pushint 100
+    itob
+    b*
+    intc_1 // 0
+    bytec_1 // "totalStaked"
+    app_global_get_ex
+    assert // check totalStaked exists
+    b/
+    b+
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.earned(account: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.earned:
+    proto 1 1
+    frame_dig -1
+    sha256
+    bytec_2 // "_userStakedBalance"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    swap
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.rewardPerToken
+    dup
+    uncover 2
+    bytec 13 // "_userRewardPerTokenPaid"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    cover 2
+    cover 3
+    bytec 6 // "_userRewards"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    cover 2
+    b>
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.earned_after_if_else@2
+    frame_dig 1
+    frame_dig 2
+    b-
+    frame_dig 0
+    b*
+    pushint 1000000
+    itob
+    b/
+    b+
+    frame_bury 0
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.earned_after_if_else@2:
+    frame_bury 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards._updateReward(account: bytes) -> void:
+_updateReward:
+    proto 1 0
+    frame_dig -1
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.earned
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/staking/contracts/StakingRewards.sol.StakingRewards.rewardPerToken
+    bytec 5 // "rewardPerTokenStored"
+    dig 1
+    app_global_put
+    frame_dig -1
+    sha256
+    bytec 6 // "_userRewards"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 3
+    box_put
+    bytec 13 // "_userRewardPerTokenPaid"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    retsub

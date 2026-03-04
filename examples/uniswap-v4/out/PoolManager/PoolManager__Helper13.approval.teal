@@ -1,0 +1,467 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper13.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 32 0 2 1
+    bytecblock 0x 0x0000000000000000000000000000000100000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0xffffffffffffffffffffffffffffffff 0x8000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000080000000000000000000000000000000
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.CustomRevert.bubbleUpAndRevertWith(revertingContract: bytes, revertingFunctionSelector: bytes, additionalContext: bytes) -> void:
+CustomRevert.bubbleUpAndRevertWith:
+    proto 3 0
+    err // revert
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.Hooks.afterModifyLiquidity(self: bytes, key: bytes, params: bytes, delta: bytes, feesAccrued: bytes, hookData: bytes) -> bytes, bytes, bytes, bytes:
+Hooks.afterModifyLiquidity:
+    proto 6 4
+    bytec_0 // 0x
+    txn Sender
+    frame_dig -6
+    ==
+    bz Hooks.afterModifyLiquidity_after_if_else@2
+    intc_1 // 0
+    itob
+    frame_dig -3
+    swap
+    frame_dig -5
+    frame_dig -4
+    uncover 4
+    retsub
+
+Hooks.afterModifyLiquidity_after_if_else@2:
+    frame_dig -4
+    extract 16 32
+    intc_1 // 0
+    itob
+    b>
+    bz Hooks.afterModifyLiquidity_else_body@6
+    pushint 1024
+    itob
+    frame_dig -6
+    swap
+    callsub Hooks.hasPermission
+    bnz Hooks.afterModifyLiquidity_if_body@4
+    frame_dig -3
+
+Hooks.afterModifyLiquidity_after_if_else@9:
+    frame_dig 0
+    frame_dig -5
+    frame_dig -4
+    uncover 4
+    retsub
+
+Hooks.afterModifyLiquidity_if_body@4:
+    pushbytes 0x870f9dde // method "afterAddLiquidity(address,struct PoolKey,struct ModifyLiquidityParams,uint256,uint256,byte[])(byte[4],uint256)"
+    txn Sender
+    concat
+    frame_dig -5
+    concat
+    frame_dig -4
+    concat
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
+    concat
+    swap
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    frame_dig -1
+    concat
+    intc_2 // 2
+    itob
+    frame_dig -6
+    swap
+    callsub Hooks.hasPermission
+    frame_dig -6
+    cover 2
+    callsub Hooks.callHookWithReturnDelta
+    dup
+    frame_bury 0
+    frame_dig -3
+    swap
+    callsub sub
+    b Hooks.afterModifyLiquidity_after_if_else@9
+
+Hooks.afterModifyLiquidity_else_body@6:
+    pushint 256
+    itob
+    frame_dig -6
+    swap
+    callsub Hooks.hasPermission
+    bnz Hooks.afterModifyLiquidity_if_body@7
+    frame_dig -3
+    b Hooks.afterModifyLiquidity_after_if_else@9
+
+Hooks.afterModifyLiquidity_if_body@7:
+    pushbytes 0x182f408b // method "afterRemoveLiquidity(address,struct PoolKey,struct ModifyLiquidityParams,uint256,uint256,byte[])(byte[4],uint256)"
+    txn Sender
+    concat
+    frame_dig -5
+    concat
+    frame_dig -4
+    concat
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
+    concat
+    swap
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    frame_dig -1
+    concat
+    intc_3 // 1
+    itob
+    frame_dig -6
+    swap
+    callsub Hooks.hasPermission
+    frame_dig -6
+    cover 2
+    callsub Hooks.callHookWithReturnDelta
+    dup
+    frame_bury 0
+    frame_dig -3
+    swap
+    callsub sub
+    b Hooks.afterModifyLiquidity_after_if_else@9
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.Hooks.callHook(self: bytes, data: bytes) -> bytes:
+Hooks.callHook:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    bytec_0 // 0x
+    callsub CustomRevert.bubbleUpAndRevertWith
+    bytec_0 // 0x
+    callsub CustomRevert.revertWith
+    pushbytes 0x80
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.Hooks.callHookWithReturnDelta(self: bytes, data: bytes, parseReturn: uint64) -> bytes:
+Hooks.callHookWithReturnDelta:
+    proto 3 1
+    frame_dig -3
+    frame_dig -2
+    callsub Hooks.callHook
+    frame_dig -1
+    bnz Hooks.callHookWithReturnDelta_after_if_else@2
+    intc_1 // 0
+    itob
+    swap
+    retsub
+
+Hooks.callHookWithReturnDelta_after_if_else@2:
+    frame_dig 0
+    len
+    pushint 64
+    !=
+    bz Hooks.callHookWithReturnDelta_after_if_else@4
+    bytec_0 // 0x
+    callsub CustomRevert.revertWith
+
+Hooks.callHookWithReturnDelta_after_if_else@4:
+    frame_dig 0
+    callsub ParseBytes.parseReturnDelta
+    swap
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.Hooks.hasPermission(self: bytes, flag: bytes) -> uint64:
+Hooks.hasPermission:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b&
+    intc_1 // 0
+    itob
+    b!=
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.ParseBytes.parseReturnDelta(result: bytes) -> bytes:
+ParseBytes.parseReturnDelta:
+    proto 1 1
+    bytec_0 // 0x
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.sub(a: bytes, b: bytes) -> bytes:
+sub:
+    proto 2 1
+    intc_1 // 0
+    dupn 2
+    frame_dig -2
+    bytec 5 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz sub_ternary_false@2
+    frame_dig -2
+    bytec_1 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b|
+    frame_bury 0
+
+sub_ternary_merge@3:
+    frame_dig -2
+    bytec 6 // 0x0000000000000000000000000000000080000000000000000000000000000000
+    b/
+    pushbytes 0x02
+    b%
+    bytec_0 // 0x
+    b!=
+    bz sub_ternary_false@5
+    frame_dig -2
+    bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b|
+    frame_bury 1
+
+sub_ternary_merge@6:
+    frame_dig -1
+    bytec 5 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz sub_ternary_false@8
+    frame_dig -1
+    bytec_1 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b|
+    frame_bury 2
+
+sub_ternary_merge@9:
+    frame_dig -1
+    bytec 6 // 0x0000000000000000000000000000000080000000000000000000000000000000
+    b/
+    pushbytes 0x02
+    b%
+    bytec_0 // 0x
+    b!=
+    bz sub_ternary_false@11
+    frame_dig -1
+    bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b|
+
+sub_ternary_merge@12:
+    frame_dig 0
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig 2
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 1
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    uncover 2
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    swap
+    callsub SafeCast.toInt128
+    swap
+    callsub SafeCast.toInt128
+    callsub toBalanceDelta
+    frame_bury 0
+    retsub
+
+sub_ternary_false@11:
+    frame_dig -1
+    bytec 4 // 0xffffffffffffffffffffffffffffffff
+    b&
+    b sub_ternary_merge@12
+
+sub_ternary_false@8:
+    frame_dig -1
+    bytec_1 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    frame_bury 2
+    b sub_ternary_merge@9
+
+sub_ternary_false@5:
+    frame_dig -2
+    bytec 4 // 0xffffffffffffffffffffffffffffffff
+    b&
+    frame_bury 1
+    b sub_ternary_merge@6
+
+sub_ternary_false@2:
+    frame_dig -2
+    bytec_1 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    frame_bury 0
+    b sub_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.toBalanceDelta(_amount0: bytes, _amount1: bytes) -> bytes:
+toBalanceDelta:
+    proto 2 1
+    frame_dig -2
+    bytec_1 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 4 // 0xffffffffffffffffffffffffffffffff
+    frame_dig -1
+    b&
+    b|
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.CustomRevert.revertWith(1)(selector: bytes) -> void:
+CustomRevert.revertWith:
+    proto 1 0
+    err // revert
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.SafeCast.toInt128(1)_0(x: bytes) -> bytes:
+SafeCast.toInt128:
+    proto 1 1
+    frame_dig -1
+    bytec 4 // 0xffffffffffffffffffffffffffffffff
+    b&
+    dup
+    frame_dig -1
+    b!=
+    bz SafeCast.toInt128_after_if_else@2
+    bytec_0 // 0x
+    callsub CustomRevert.revertWith
+
+SafeCast.toInt128_after_if_else@2:
+    frame_dig 0
+    swap
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper13.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn NumAppArgs
+    bz __puya_arc4_router_____bare_create__@4
+    pushbytes 0x9553eb77 // method "Hooks.afterModifyLiquidity(address,(uint8[32],uint8[32],uint64,uint64,uint8[32]),(uint64,uint64,uint256,uint8[32]),uint256,uint256,byte[])(uint256,uint256)"
+    txna ApplicationArgs 0
+    match __puya_arc4_router___Hooks.afterModifyLiquidity_route@2
+    err
+
+__puya_arc4_router___Hooks.afterModifyLiquidity_route@2:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper13.Hooks.afterModifyLiquidity[routing]
+
+__puya_arc4_router_____bare_create__@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper13.Hooks.afterModifyLiquidity[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper13.Hooks.afterModifyLiquidity[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 112
+    ==
+    assert // invalid number of bytes for PoolKey
+    txna ApplicationArgs 3
+    dup
+    len
+    pushint 80
+    ==
+    assert // invalid number of bytes for ModifyLiquidityParams
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 5
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 6
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    callsub Hooks.afterModifyLiquidity
+    popn 2
+    swap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return

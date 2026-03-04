@@ -107,6 +107,7 @@ ContractTranslator::ContractTranslator(
 	  m_opupBudget(_opupBudget),
 	  m_freeFunctionById(_freeFunctionById)
 {
+	Logger::instance().debug("[TRACE] ContractTranslator m_freeFunctionById.size()=" + std::to_string(m_freeFunctionById.size()) + " addr=" + std::to_string((uintptr_t)&m_freeFunctionById));
 }
 
 awst::SourceLocation ContractTranslator::makeLoc(
@@ -280,6 +281,61 @@ std::shared_ptr<awst::Contract> ContractTranslator::translate(
 			translatedFunctions.insert(key);
 			auto method = translateFunction(*func, contractName);
 			contract->methods.push_back(std::move(method));
+		}
+	}
+
+	// Auto-generate getter methods for public state variables.
+	// In Solidity, `public uint256 threshold` generates `threshold() view returns (uint256)`.
+	// Skip if a function with the same name already exists.
+	for (auto const* base: _contract.annotation().linearizedBaseContracts)
+	{
+		for (auto const* var: base->stateVariables())
+		{
+			if (var->isConstant() || var->immutable())
+				continue;
+			if (var->visibility() != solidity::frontend::Visibility::Public)
+				continue;
+			// Skip mappings — they require key parameters (complex, skip for now)
+			if (var->type()->category() == solidity::frontend::Type::Category::Mapping)
+				continue;
+			if (translatedFunctions.count(var->name()))
+				continue; // explicit getter already exists
+
+			translatedFunctions.insert(var->name());
+
+			awst::ContractMethod getter;
+			getter.sourceLocation = makeLoc(var->location());
+			getter.cref = m_sourceFile + "." + contractName;
+			getter.memberName = var->name();
+			getter.returnType = m_typeMapper.map(var->type());
+			getter.pure = false;
+
+			awst::ARC4ABIMethodConfig config;
+			config.name = var->name();
+			config.sourceLocation = getter.sourceLocation;
+			config.allowedCompletionTypes = {0}; // NoOp
+			config.create = 3; // Disallow
+			config.readonly = true;
+			getter.arc4MethodConfig = config;
+
+			// Build body: return <stateRead(varName)>
+			auto body = std::make_shared<awst::Block>();
+			body->sourceLocation = getter.sourceLocation;
+
+			auto storageKind = StorageMapper::shouldUseBoxStorage(*var)
+				? awst::AppStorageKind::Box
+				: awst::AppStorageKind::AppGlobal;
+			auto readExpr = m_storageMapper.createStateRead(
+				var->name(), getter.returnType, storageKind, getter.sourceLocation
+			);
+
+			auto ret = std::make_shared<awst::ReturnStatement>();
+			ret->sourceLocation = getter.sourceLocation;
+			ret->value = std::move(readExpr);
+			body->body.push_back(std::move(ret));
+
+			getter.body = body;
+			contract->methods.push_back(std::move(getter));
 		}
 	}
 
@@ -741,6 +797,25 @@ awst::ContractMethod ContractTranslator::buildApprovalProgram(
 			postInit.cref = m_sourceFile + "." + _contractName;
 			postInit.memberName = "__postInit";
 
+			// Add constructor parameters as __postInit method arguments.
+			// This allows the caller to pass the same values when calling __postInit
+			// that were originally passed to the constructor.
+			if (constructor)
+			{
+				int paramIdx = 0;
+				for (auto const& param: constructor->parameters())
+				{
+					awst::SubroutineArgument arg;
+					arg.name = param->name().empty()
+						? "_param" + std::to_string(paramIdx)
+						: param->name();
+					arg.sourceLocation = method.sourceLocation;
+					arg.wtype = m_typeMapper.map(param->type());
+					postInit.args.push_back(std::move(arg));
+					++paramIdx;
+				}
+			}
+
 			awst::ARC4ABIMethodConfig postInitConfig;
 			postInitConfig.name = "__postInit";
 			postInitConfig.sourceLocation = method.sourceLocation;
@@ -748,6 +823,28 @@ awst::ContractMethod ContractTranslator::buildApprovalProgram(
 			postInitConfig.create = 3; // Disallow
 			postInitConfig.readonly = false;
 			postInit.arc4MethodConfig = postInitConfig;
+
+			// Remap aggregate types (arrays, tuples) to ARC4 encoding for __postInit args
+			for (auto& arg: postInit.args)
+			{
+				bool isAggregate = arg.wtype
+					&& (arg.wtype->kind() == awst::WTypeKind::ReferenceArray
+						|| arg.wtype->kind() == awst::WTypeKind::WTuple);
+				if (isAggregate)
+				{
+					awst::WType const* arc4Type = m_typeMapper.mapToARC4Type(arg.wtype);
+					if (arc4Type != arg.wtype)
+						arg.wtype = arc4Type;
+				}
+			}
+
+			// Set function context so constructor body can reference params by name
+			{
+				std::vector<std::pair<std::string, awst::WType const*>> paramContext;
+				for (auto const& arg: postInit.args)
+					paramContext.emplace_back(arg.name, arg.wtype);
+				m_stmtTranslator->setFunctionContext(paramContext, postInit.returnType);
+			}
 
 			auto postInitBody = std::make_shared<awst::Block>();
 			postInitBody->sourceLocation = method.sourceLocation;
@@ -1043,7 +1140,12 @@ awst::ContractMethod ContractTranslator::translateFunction(
 				hasNames = true;
 		}
 		if (hasNames)
-			method.returnType = new awst::WTuple(std::move(types), std::move(names));
+		{
+			// Use function name + "Return" as the struct name to avoid
+			// ARC56 collision when multiple methods return different named tuples.
+			std::string tupleName = _func.name() + "Return";
+			method.returnType = new awst::WTuple(std::move(types), std::move(names), std::move(tupleName));
+		}
 		else
 			method.returnType = new awst::WTuple(std::move(types));
 	}

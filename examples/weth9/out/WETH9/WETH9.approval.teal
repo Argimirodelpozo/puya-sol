@@ -1,0 +1,432 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/weth9/contracts/WETH9.sol.WETH9.approval_program() -> uint64:
+main:
+    intcblock 64 1 32 0
+    bytecblock 0x "balanceOf" "_totalSupply" "allowance" 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "_totalSupply"
+    bytec_0 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xcacbb80f 0xdab6f241 0x49ac1a6b 0x3c4937bd 0x42820278 0x177171e7 0x5f95805c 0xcf1a4480 // method "deposit(uint512)void", method "withdraw(uint512)void", method "totalSupply()uint512", method "approve(address,uint512)bool", method "transfer(address,uint512)bool", method "transferFrom(address,address,uint512)bool", method "getBalanceOf(address)uint512", method "getAllowance(address,address)uint512"
+    txna ApplicationArgs 0
+    match deposit withdraw totalSupply approve transfer transferFrom getBalanceOf getAllowance
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/weth9/contracts/WETH9.sol.WETH9.deposit[routing]() -> void:
+deposit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    sha256
+    bytec_1 // "balanceOf"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b+
+    txn Sender
+    sha256
+    bytec_1 // "balanceOf"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_3 // 0
+    bytec_2 // "_totalSupply"
+    app_global_get_ex
+    assert // check _totalSupply exists
+    dig 1
+    b+
+    bytec_2 // "_totalSupply"
+    swap
+    app_global_put
+    pushbytes 0xe1fffcc4
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/weth9/contracts/WETH9.sol.WETH9.withdraw[routing]() -> void:
+withdraw:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    sha256
+    bytec_1 // "balanceOf"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b>=
+    assert // WETH9: insufficient balance
+    txn Sender
+    sha256
+    bytec_1 // "balanceOf"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b-
+    txn Sender
+    sha256
+    bytec_1 // "balanceOf"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_3 // 0
+    bytec_2 // "_totalSupply"
+    app_global_get_ex
+    assert // check _totalSupply exists
+    dig 1
+    b-
+    bytec_2 // "_totalSupply"
+    swap
+    app_global_put
+    pushbytes 0x7fcf532c
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/weth9/contracts/WETH9.sol.WETH9.totalSupply[routing]() -> void:
+totalSupply:
+    intc_3 // 0
+    bytec_2 // "_totalSupply"
+    app_global_get_ex
+    assert // check _totalSupply exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/weth9/contracts/WETH9.sol.WETH9.approve[routing]() -> void:
+approve:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    uncover 2
+    concat
+    sha256
+    bytec_3 // "allowance"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    pushbytes 0x8c5be1e5
+    swap
+    concat
+    log
+    pushbytes 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/weth9/contracts/WETH9.sol.WETH9.transfer[routing]() -> void:
+transfer:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    cover 2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/weth9/contracts/WETH9.sol.WETH9.transferFrom
+    pushbytes 0x00
+    intc_3 // 0
+    uncover 2
+    setbit
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/weth9/contracts/WETH9.sol.WETH9.transferFrom[routing]() -> void:
+transferFrom:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/weth9/contracts/WETH9.sol.WETH9.transferFrom
+    pushbytes 0x00
+    intc_3 // 0
+    uncover 2
+    setbit
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/weth9/contracts/WETH9.sol.WETH9.getBalanceOf[routing]() -> void:
+getBalanceOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_1 // "balanceOf"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/weth9/contracts/WETH9.sol.WETH9.getAllowance[routing]() -> void:
+getAllowance:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    concat
+    sha256
+    bytec_3 // "allowance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/weth9/contracts/WETH9.sol.WETH9.transferFrom(src: bytes, dst: bytes, wad: bytes) -> uint64:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/weth9/contracts/WETH9.sol.WETH9.transferFrom:
+    proto 3 1
+    frame_dig -3
+    sha256
+    bytec_1 // "balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    frame_dig -1
+    b>=
+    assert // WETH9: insufficient balance
+    frame_dig -3
+    txn Sender
+    !=
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/weth9/contracts/WETH9.sol.WETH9.transferFrom_after_if_else@3
+    frame_dig -3
+    txn Sender
+    concat
+    sha256
+    bytec_3 // "allowance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b!=
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/weth9/contracts/WETH9.sol.WETH9.transferFrom_after_if_else@3
+    frame_dig -3
+    txn Sender
+    concat
+    sha256
+    bytec_3 // "allowance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    frame_dig -1
+    b>=
+    assert // WETH9: insufficient allowance
+    frame_dig -3
+    txn Sender
+    concat
+    sha256
+    bytec_3 // "allowance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    frame_dig -1
+    b-
+    frame_dig -3
+    txn Sender
+    concat
+    sha256
+    bytec_3 // "allowance"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/weth9/contracts/WETH9.sol.WETH9.transferFrom_after_if_else@3:
+    frame_dig 0
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    frame_dig -1
+    b-
+    dig 1
+    box_del
+    pop
+    box_put
+    frame_dig -2
+    sha256
+    bytec_1 // "balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    frame_dig -1
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    pushbytes 0xddf252ad
+    frame_dig -1
+    concat
+    log
+    intc_1 // 1
+    swap
+    retsub

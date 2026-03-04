@@ -1,0 +1,93 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper5.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 0 8 1
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper5.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn NumAppArgs
+    bz __puya_arc4_router_____bare_create__@4
+    pushbytes 0xd46b9cf6 // method "TickBitmap.nextInitializedTickWithinOneWord__chunk_1(byte[],uint64,uint64,bool,bool,uint64)(uint64,bool,uint64)"
+    txna ApplicationArgs 0
+    match __puya_arc4_router___TickBitmap.nextInitializedTickWithinOneWord__chunk_1_route@2
+    err
+
+__puya_arc4_router___TickBitmap.nextInitializedTickWithinOneWord__chunk_1_route@2:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b TickBitmap.nextInitializedTickWithinOneWord__chunk_1
+
+__puya_arc4_router_____bare_create__@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper5.TickBitmap.nextInitializedTickWithinOneWord__chunk_1[routing]() -> void:
+TickBitmap.nextInitializedTickWithinOneWord__chunk_1:
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 2
+    len
+    intc_1 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    txna ApplicationArgs 3
+    len
+    intc_1 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    txna ApplicationArgs 4
+    len
+    intc_2 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    txna ApplicationArgs 5
+    dup
+    len
+    intc_2 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_0 // 0
+    getbit
+    txna ApplicationArgs 6
+    dup
+    len
+    intc_1 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    intc_0 // 0
+    itob
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 4
+    setbit
+    concat
+    swap
+    itob
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

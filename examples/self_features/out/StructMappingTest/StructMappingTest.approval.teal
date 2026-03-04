@@ -1,0 +1,760 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    bytecblock "_positions" 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "_orders" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xa385066b 0x84a300fa 0x161b840d 0xd87e4a17 0x3b95c1d2 0xb56bef9c 0xd39a8f8c 0x05c023a0 0xdee20300 0xaa25959f 0x20f1c3f9 0xb9de959e // method "setSupply(uint256,uint256)void", method "getSupply(uint256)uint256", method "addSupply(uint256,uint256)void", method "subSupply(uint256,uint256)void", method "updatePosition(uint256,uint256,uint256,uint256)void", method "getPosition(uint256)(uint256,uint256,uint256)", method "updateViaPointer(uint256,uint256)void", method "addCollateralViaPointer(uint256,uint256)void", method "createAndModify(uint256,uint256,uint256)void", method "getOrder(uint256)(uint256,uint256,bool)", method "fillOrder(uint256,uint256)void", method "setBoth(uint256,uint256,uint256)void"
+    txna ApplicationArgs 0
+    match setSupply getSupply addSupply subSupply updatePosition getPosition updateViaPointer addCollateralViaPointer createAndModify getOrder fillOrder setBoth
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.setSupply[routing]() -> void:
+setSupply:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "_positions"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 32 32
+    swap
+    extract 64 32
+    uncover 4
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    uncover 4
+    b|
+    uncover 2
+    concat
+    swap
+    concat
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.getSupply[routing]() -> void:
+getSupply:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "_positions"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 0 32
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.addSupply[routing]() -> void:
+addSupply:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "_positions"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 32 32
+    dig 1
+    extract 64 32
+    uncover 2
+    extract 0 32
+    uncover 5
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    b|
+    uncover 2
+    concat
+    swap
+    concat
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.subSupply[routing]() -> void:
+subSupply:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "_positions"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 32 32
+    dig 1
+    extract 64 32
+    uncover 2
+    extract 0 32
+    uncover 5
+    b-
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    b|
+    uncover 2
+    concat
+    swap
+    concat
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.updatePosition[routing]() -> void:
+updatePosition:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 8
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "_positions"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 32 32
+    swap
+    extract 64 32
+    uncover 8
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 8
+    dig 4
+    b|
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 5
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 5
+    dig 3
+    b|
+    dig 1
+    extract 64 32
+    uncover 2
+    extract 0 32
+    uncover 2
+    concat
+    swap
+    concat
+    dup
+    extract 32 32
+    uncover 4
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    uncover 4
+    b|
+    uncover 2
+    extract 0 32
+    uncover 2
+    concat
+    swap
+    concat
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.getPosition[routing]() -> void:
+getPosition:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "_positions"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 32
+    dig 1
+    extract 32 32
+    uncover 2
+    extract 64 32
+    uncover 2
+    dig 3
+    b|
+    uncover 2
+    dig 3
+    b|
+    concat
+    swap
+    uncover 2
+    b|
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.updateViaPointer[routing]() -> void:
+updateViaPointer:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "_positions"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 64 32
+    swap
+    extract 0 32
+    uncover 3
+    concat
+    swap
+    concat
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.addCollateralViaPointer[routing]() -> void:
+addCollateralViaPointer:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "_positions"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 32 32
+    dig 1
+    extract 64 32
+    uncover 5
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    b|
+    uncover 2
+    extract 0 32
+    uncover 2
+    concat
+    swap
+    concat
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.createAndModify[routing]() -> void:
+createAndModify:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    uncover 2
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 3
+    dig 1
+    b|
+    uncover 2
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    dig 2
+    b|
+    concat
+    pushbytes 0x00
+    concat
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_2 // "_orders"
+    swap
+    concat
+    dig 1
+    extract 0 32
+    uncover 2
+    extract 32 32
+    concat
+    pushbytes 0x01
+    concat
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.getOrder[routing]() -> void:
+getOrder:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_2 // "_orders"
+    swap
+    concat
+    box_get
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 32
+    dig 1
+    extract 32 32
+    uncover 2
+    extract 64 1
+    pushbytes 0x
+    b!=
+    uncover 2
+    dig 3
+    b|
+    uncover 2
+    uncover 3
+    b|
+    concat
+    pushbytes 0x00
+    pushint 0
+    uncover 3
+    setbit
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.fillOrder[routing]() -> void:
+fillOrder:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_2 // "_orders"
+    swap
+    concat
+    dup
+    box_get
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 64 1
+    uncover 4
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    uncover 4
+    b|
+    uncover 2
+    extract 32 32
+    concat
+    swap
+    concat
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    concat
+    pushbytes 0x01
+    concat
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M34_StructMapping.sol.StructMappingTest.setBoth[routing]() -> void:
+setBoth:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 6
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "_positions"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 32 32
+    swap
+    extract 64 32
+    uncover 7
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 7
+    dig 5
+    b|
+    uncover 2
+    concat
+    swap
+    concat
+    box_put
+    bytec_2 // "_orders"
+    swap
+    concat
+    dup
+    box_get
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 64 1
+    uncover 4
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    uncover 4
+    b|
+    uncover 2
+    extract 32 32
+    concat
+    swap
+    concat
+    box_put
+    intc_1 // 1
+    return

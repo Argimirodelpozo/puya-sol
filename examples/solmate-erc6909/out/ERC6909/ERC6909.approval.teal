@@ -1,0 +1,618 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-erc6909/contracts/ERC6909.sol.ERC6909.approval_program() -> uint64:
+main:
+    intcblock 64 32 1 0
+    bytecblock 0x "_balanceOf" 0x1b3d7edb 0x151f7c7580 "_allowance" "_isOperator" 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xff0675be 0x18f6de27 0xb96dc1c5 0xbe41c4e5 0x562d0b6d 0x211e2ac0 0xdf6a6342 0x8065ef7c 0xe76507d1 // method "transfer(address,uint512,uint512)bool", method "transferFrom(address,address,uint512,uint512)bool", method "approve(address,uint512,uint512)bool", method "setOperator(address,bool)bool", method "isOperator(address,address)bool", method "balanceOf(address,uint512)uint512", method "allowance(address,address,uint512)uint512", method "mint(address,uint512,uint512)void", method "burn(address,uint512,uint512)void"
+    txna ApplicationArgs 0
+    match transfer transferFrom approve setOperator isOperator balanceOf allowance mint burn
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-erc6909/contracts/ERC6909.sol.ERC6909.transfer[routing]() -> void:
+transfer:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_0 // 64
+    bzero
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    swap
+    dig 1
+    concat
+    sha256
+    bytec_1 // "_balanceOf"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b-
+    txn Sender
+    dig 2
+    concat
+    sha256
+    bytec_1 // "_balanceOf"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    uncover 2
+    swap
+    concat
+    sha256
+    bytec_1 // "_balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec_2 // 0x1b3d7edb
+    txn Sender
+    concat
+    swap
+    concat
+    log
+    bytec_3 // 0x151f7c7580
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-erc6909/contracts/ERC6909.sol.ERC6909.transferFrom[routing]() -> void:
+transferFrom:
+    intc_3 // 0
+    dup
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    cover 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 4
+    dup
+    cover 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    !=
+    bz transferFrom_after_if_else@6
+    dig 3
+    txn Sender
+    concat
+    sha256
+    bytec 5 // "_isOperator"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_3 // 0
+    swap
+    uncover 2
+    select
+    bnz transferFrom_after_if_else@6
+    dig 3
+    txn Sender
+    concat
+    intc_0 // 64
+    bzero
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    dup
+    bury 7
+    concat
+    sha256
+    bytec 4 // "_allowance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    bury 7
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b!=
+    bz transferFrom_after_if_else@6
+    dig 5
+    dig 1
+    b-
+    dig 4
+    txn Sender
+    concat
+    dig 6
+    concat
+    sha256
+    bytec 4 // "_allowance"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+transferFrom_after_if_else@6:
+    intc_0 // 64
+    bzero
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    dig 4
+    dig 1
+    concat
+    sha256
+    bytec_1 // "_balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 3
+    dup
+    cover 4
+    b-
+    dig 1
+    box_del
+    pop
+    box_put
+    dig 4
+    swap
+    concat
+    sha256
+    bytec_1 // "_balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec_2 // 0x1b3d7edb
+    txn Sender
+    concat
+    swap
+    concat
+    log
+    bytec_3 // 0x151f7c7580
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-erc6909/contracts/ERC6909.sol.ERC6909.approve[routing]() -> void:
+approve:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    uncover 3
+    concat
+    intc_0 // 64
+    bzero
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    concat
+    sha256
+    bytec 4 // "_allowance"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    pushbytes 0xb3fd5071
+    swap
+    concat
+    log
+    bytec_3 // 0x151f7c7580
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-erc6909/contracts/ERC6909.sol.ERC6909.setOperator[routing]() -> void:
+setOperator:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_3 // 0
+    getbit
+    txn Sender
+    uncover 2
+    concat
+    sha256
+    bytec 5 // "_isOperator"
+    swap
+    concat
+    swap
+    itob
+    swap
+    dig 1
+    box_put
+    pushbytes 0xceb576d9
+    swap
+    concat
+    log
+    bytec_3 // 0x151f7c7580
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-erc6909/contracts/ERC6909.sol.ERC6909.isOperator[routing]() -> void:
+isOperator:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    concat
+    sha256
+    bytec 5 // "_isOperator"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_3 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_3 // 0
+    uncover 2
+    setbit
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-erc6909/contracts/ERC6909.sol.ERC6909.balanceOf[routing]() -> void:
+balanceOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    uncover 2
+    swap
+    concat
+    sha256
+    bytec_1 // "_balanceOf"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-erc6909/contracts/ERC6909.sol.ERC6909.allowance[routing]() -> void:
+allowance:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    cover 2
+    concat
+    intc_0 // 64
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    uncover 2
+    swap
+    concat
+    sha256
+    bytec 4 // "_allowance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-erc6909/contracts/ERC6909.sol.ERC6909.mint[routing]() -> void:
+mint:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    uncover 2
+    swap
+    concat
+    sha256
+    bytec_1 // "_balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec_2 // 0x1b3d7edb
+    txn Sender
+    concat
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-erc6909/contracts/ERC6909.sol.ERC6909.burn[routing]() -> void:
+burn:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    uncover 2
+    swap
+    concat
+    sha256
+    bytec_1 // "_balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b-
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec_2 // 0x1b3d7edb
+    txn Sender
+    concat
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

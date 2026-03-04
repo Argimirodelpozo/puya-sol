@@ -1,0 +1,786 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/governance/contracts/Governor.sol.Governor.approval_program() -> uint64:
+main:
+    intcblock 0 64 1 2
+    bytecblock 0x "proposalCount" 0x151f7c75 "token" 0x0000000000000000000000000000000000000000000000000000000000000000 "admin" "quorumVotes" "proposalThreshold" "_proposalProposer" "_receiptHasVoted" "_proposalAgainstVotes" "_proposalForVotes" "_proposalAbstainVotes" "_proposalExecuted" "_proposalCancelled" 0x8fdd8b27 "_receiptSupport" "_receiptVotes"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "token"
+    bytec 4 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 5 // "admin"
+    bytec 4 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_1 // "proposalCount"
+    bytec_0 // 0x
+    app_global_put
+    bytec 6 // "quorumVotes"
+    bytec_0 // 0x
+    app_global_put
+    bytec 7 // "proposalThreshold"
+    bytec_0 // 0x
+    app_global_put
+    txna ApplicationArgs 1
+    txna ApplicationArgs 2
+    bytec_3 // "token"
+    txna ApplicationArgs 0
+    app_global_put
+    bytec 5 // "admin"
+    txn Sender
+    app_global_put
+    bytec 6 // "quorumVotes"
+    uncover 2
+    app_global_put
+    bytec 7 // "proposalThreshold"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x717898c6 0xc732bfc9 0x5c31a255 0x51bf420b 0x2ecbb3aa 0x36f66d86 0x7d3ca46b // method "propose(string)uint512", method "castVote(uint512,uint64)uint512", method "execute(uint512)void", method "cancel(uint512)void", method "getProposal(uint512)(address,uint512,uint512,uint512,bool,bool)", method "getReceipt(uint512,address)(bool,uint512,uint512)", method "getProposalCount()uint512"
+    txna ApplicationArgs 0
+    match propose castVote execute cancel getProposal getReceipt getProposalCount
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/governance/contracts/Governor.sol.Governor.propose[routing]() -> void:
+propose:
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    itxn_begin
+    txn Sender
+    intc_0 // 0
+    bytec_3 // "token"
+    app_global_get_ex
+    assert // check token exists
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 15 // method "getVotingPower(address)uint512"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    intc_0 // 0
+    bytec 7 // "proposalThreshold"
+    app_global_get_ex
+    assert // check proposalThreshold exists
+    b>=
+    assert // below proposal threshold
+    intc_0 // 0
+    bytec_1 // "proposalCount"
+    app_global_get_ex
+    assert // check proposalCount exists
+    intc_2 // 1
+    itob
+    b+
+    bytec_1 // "proposalCount"
+    dig 1
+    app_global_put
+    txn Sender
+    intc_1 // 64
+    bzero
+    dup
+    dig 3
+    concat
+    dup
+    len
+    intc_1 // 64
+    -
+    intc_1 // 64
+    extract3
+    sha256
+    bytec 8 // "_proposalProposer"
+    swap
+    concat
+    uncover 2
+    box_put
+    pushbytes 0x7585f467
+    txn Sender
+    concat
+    uncover 3
+    concat
+    log
+    dig 1
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/governance/contracts/Governor.sol.Governor.castVote[routing]() -> void:
+castVote:
+    intc_0 // 0
+    dupn 3
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    swap
+    intc_0 // 0
+    itob
+    dup
+    cover 2
+    b>
+    bz castVote_bool_false@4
+    intc_0 // 0
+    bytec_1 // "proposalCount"
+    app_global_get_ex
+    assert // check proposalCount exists
+    dig 3
+    b>=
+    bz castVote_bool_false@4
+    intc_2 // 1
+
+castVote_bool_merge@5:
+    assert // invalid proposal
+    dig 1
+    dup
+    intc_3 // 2
+    <=
+    assert // invalid vote type
+    intc_1 // 64
+    bzero
+    dup
+    bury 8
+    dig 4
+    concat
+    dup
+    len
+    intc_1 // 64
+    -
+    intc_1 // 64
+    extract3
+    dup
+    bury 7
+    dup
+    txn Sender
+    concat
+    sha256
+    bytec 9 // "_receiptHasVoted"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // already voted
+    itxn_begin
+    txn Sender
+    intc_0 // 0
+    bytec_3 // "token"
+    app_global_get_ex
+    assert // check token exists
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 15 // method "getVotingPower(address)uint512"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    bury 7
+    dup
+    dig 4
+    b>
+    assert // no voting power
+    dig 1
+    txn Sender
+    concat
+    sha256
+    bytec 9 // "_receiptHasVoted"
+    swap
+    concat
+    intc_2 // 1
+    itob
+    box_put
+    dig 2
+    itob
+    dup
+    bury 11
+    dig 2
+    txn Sender
+    concat
+    sha256
+    bytec 16 // "_receiptSupport"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    txn Sender
+    uncover 2
+    swap
+    concat
+    sha256
+    bytec 17 // "_receiptVotes"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    bnz castVote_else_body@8
+    dig 4
+    sha256
+    bytec 10 // "_proposalAgainstVotes"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 5
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+
+castVote_after_if_else@12:
+    pushbytes 0x2c9deb38
+    dig 7
+    concat
+    dig 4
+    dup
+    cover 2
+    concat
+    log
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    dig 6
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+castVote_else_body@8:
+    dig 1
+    intc_2 // 1
+    ==
+    bz castVote_else_body@10
+    dig 4
+    sha256
+    bytec 11 // "_proposalForVotes"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 5
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    b castVote_after_if_else@12
+
+castVote_else_body@10:
+    dig 4
+    sha256
+    bytec 12 // "_proposalAbstainVotes"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 5
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    b castVote_after_if_else@12
+
+castVote_bool_false@4:
+    intc_0 // 0
+    b castVote_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/governance/contracts/Governor.sol.Governor.execute[routing]() -> void:
+execute:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 0
+    itob
+    b>
+    bz execute_bool_false@4
+    intc_0 // 0
+    bytec_1 // "proposalCount"
+    app_global_get_ex
+    assert // check proposalCount exists
+    dig 1
+    b>=
+    bz execute_bool_false@4
+    intc_2 // 1
+
+execute_bool_merge@5:
+    assert // invalid proposal
+    intc_1 // 64
+    bzero
+    dig 1
+    concat
+    dup
+    len
+    intc_1 // 64
+    -
+    intc_1 // 64
+    extract3
+    sha256
+    bytec 13 // "_proposalExecuted"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // already executed
+    bytec 14 // "_proposalCancelled"
+    dig 2
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // proposal cancelled
+    bytec 11 // "_proposalForVotes"
+    dig 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 10 // "_proposalAgainstVotes"
+    dig 3
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b<
+    assert // proposal not succeeded
+    bytec 12 // "_proposalAbstainVotes"
+    uncover 3
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b+
+    intc_0 // 0
+    bytec 6 // "quorumVotes"
+    app_global_get_ex
+    assert // check quorumVotes exists
+    b>=
+    assert // quorum not reached
+    intc_2 // 1
+    itob
+    box_put
+    pushbytes 0x712ae138
+    log
+    intc_2 // 1
+    return
+
+execute_bool_false@4:
+    intc_0 // 0
+    b execute_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/governance/contracts/Governor.sol.Governor.cancel[routing]() -> void:
+cancel:
+    intc_0 // 0
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 0
+    itob
+    b>
+    bz cancel_bool_false@4
+    intc_0 // 0
+    bytec_1 // "proposalCount"
+    app_global_get_ex
+    assert // check proposalCount exists
+    dig 1
+    b>=
+    bz cancel_bool_false@4
+    intc_2 // 1
+
+cancel_bool_merge@5:
+    assert // invalid proposal
+    intc_1 // 64
+    bzero
+    dig 1
+    concat
+    dup
+    len
+    intc_1 // 64
+    -
+    intc_1 // 64
+    extract3
+    sha256
+    bytec 13 // "_proposalExecuted"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // already executed
+    bytec 14 // "_proposalCancelled"
+    dig 1
+    concat
+    dup
+    bury 4
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // already cancelled
+    txn Sender
+    bytec 8 // "_proposalProposer"
+    uncover 2
+    concat
+    box_get
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    ==
+    bnz cancel_bool_true@7
+    txn Sender
+    intc_0 // 0
+    bytec 5 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    ==
+    bz cancel_bool_false@8
+
+cancel_bool_true@7:
+    intc_2 // 1
+
+cancel_bool_merge@9:
+    assert // not proposer or admin
+    intc_2 // 1
+    itob
+    dig 2
+    swap
+    box_put
+    pushbytes 0x416e669c
+    log
+    intc_2 // 1
+    return
+
+cancel_bool_false@8:
+    intc_0 // 0
+    b cancel_bool_merge@9
+
+cancel_bool_false@4:
+    intc_0 // 0
+    b cancel_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/governance/contracts/Governor.sol.Governor.getProposal[routing]() -> void:
+getProposal:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_1 // 64
+    -
+    intc_1 // 64
+    extract3
+    sha256
+    bytec 8 // "_proposalProposer"
+    dig 1
+    concat
+    box_get
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec 11 // "_proposalForVotes"
+    dig 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 10 // "_proposalAgainstVotes"
+    dig 3
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 12 // "_proposalAbstainVotes"
+    dig 4
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 13 // "_proposalExecuted"
+    dig 5
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    bytec 14 // "_proposalCancelled"
+    uncover 6
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    dig 4
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    uncover 4
+    dig 6
+    b|
+    uncover 5
+    swap
+    concat
+    dig 4
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    uncover 4
+    dig 5
+    b|
+    concat
+    dig 3
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    uncover 3
+    uncover 4
+    b|
+    concat
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 4
+    setbit
+    intc_2 // 1
+    uncover 3
+    setbit
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/governance/contracts/Governor.sol.Governor.getReceipt[routing]() -> void:
+getReceipt:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_1 // 64
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_1 // 64
+    -
+    intc_1 // 64
+    extract3
+    uncover 2
+    concat
+    sha256
+    bytec 9 // "_receiptHasVoted"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    bytec 16 // "_receiptSupport"
+    dig 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 17 // "_receiptVotes"
+    uncover 3
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 4
+    setbit
+    dig 2
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    uncover 2
+    dig 3
+    b|
+    concat
+    dig 1
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    swap
+    uncover 2
+    b|
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/governance/contracts/Governor.sol.Governor.getProposalCount[routing]() -> void:
+getProposalCount:
+    intc_0 // 0
+    bytec_1 // "proposalCount"
+    app_global_get_ex
+    assert // check proposalCount exists
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

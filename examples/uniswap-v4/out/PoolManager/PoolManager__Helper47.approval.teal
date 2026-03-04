@@ -1,0 +1,403 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 32 1 8
+    bytecblock 0x151f7c75 0x 0x01 0x56b0cc355dfe18bd5fb33f2b6493468a46f636aba53dfb2d15a03ef2d5493035 0x010000000000000000000000000000000000000000000000000000000000000000 0x9da1a8d0074a5ee25d331eb6b1cfd49ca3506015fdf99856dd6ea0c09507e9ab 0xffffffffffffffffffffffffffffffffffffffff 0x0d9ca8b06efb1c360cb744b39f1b4595a7c7afbc1d1e0971e0d3b5fbe56f8c7a
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.CurrencyDelta.getDelta(currency: bytes, target: bytes) -> bytes:
+CurrencyDelta.getDelta:
+    proto 2 1
+    pushbytes 0x5f5f745f313030
+    app_global_get
+    itob
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.CurrencyReserves.getSyncedReserves() -> bytes:
+CurrencyReserves.getSyncedReserves:
+    bytec 5 // 0x9da1a8d0074a5ee25d331eb6b1cfd49ca3506015fdf99856dd6ea0c09507e9ab
+    app_global_get
+    itob
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.CurrencyReserves.syncCurrencyAndReserves(currency: bytes, value: bytes) -> void:
+CurrencyReserves.syncCurrencyAndReserves:
+    proto 2 0
+    frame_dig -2
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
+    pushbytes 0xaa76174f3eb7966d17a39cdd173540c1830db36808aeabd4b6affe1e742cafe0
+    swap
+    app_global_put
+    bytec 5 // 0x9da1a8d0074a5ee25d331eb6b1cfd49ca3506015fdf99856dd6ea0c09507e9ab
+    frame_dig -1
+    app_global_put
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.Lock.isUnlocked() -> uint64:
+Lock.isUnlocked:
+    bytec 7 // 0x0d9ca8b06efb1c360cb744b39f1b4595a7c7afbc1d1e0971e0d3b5fbe56f8c7a
+    app_global_get
+    itob
+    bytec_1 // 0x
+    b!=
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.Lock.unlock() -> void:
+Lock.unlock:
+    bytec 7 // 0x0d9ca8b06efb1c360cb744b39f1b4595a7c7afbc1d1e0971e0d3b5fbe56f8c7a
+    bytec_2 // 0x01
+    app_global_put
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.NonzeroDeltaCount.increment() -> void:
+NonzeroDeltaCount.increment:
+    bytec_3 // 0x56b0cc355dfe18bd5fb33f2b6493468a46f636aba53dfb2d15a03ef2d5493035
+    app_global_get
+    itob
+    bytec_2 // 0x01
+    b+
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_3 // 0x56b0cc355dfe18bd5fb33f2b6493468a46f636aba53dfb2d15a03ef2d5493035
+    swap
+    app_global_put
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.NonzeroDeltaCount.read() -> bytes:
+NonzeroDeltaCount.read:
+    bytec_3 // 0x56b0cc355dfe18bd5fb33f2b6493468a46f636aba53dfb2d15a03ef2d5493035
+    app_global_get
+    itob
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.Position.calculatePositionKey(owner: bytes, tickLower: uint64, tickUpper: uint64, salt: bytes) -> bytes:
+Position.calculatePositionKey:
+    proto 4 1
+    pushbytes 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.Slot0Library.setSqrtPriceX96(_packed: bytes, _sqrtPriceX96: bytes) -> bytes:
+Slot0Library.setSqrtPriceX96:
+    proto 2 1
+    pushbytes 0xffffffffffffffffffffffff0000000000000000000000000000000000000000
+    frame_dig -2
+    b&
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffff
+    frame_dig -1
+    b&
+    b|
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.UnsafeMath.divRoundingUp(x: bytes, y: bytes) -> bytes:
+UnsafeMath.divRoundingUp:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b/
+    frame_dig -2
+    frame_dig -1
+    b%
+    bytec_1 // 0x
+    b>
+    bytec_1 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    b+
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.UnsafeMath.simpleMulDiv(a: bytes, b: bytes, denominator: bytes) -> bytes:
+UnsafeMath.simpleMulDiv:
+    proto 3 1
+    frame_dig -3
+    frame_dig -2
+    b*
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    b/
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn NumAppArgs
+    bz __puya_arc4_router_____bare_create__@17
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x84f4e64b 0xe77d458f 0x739ad015 0x75ecb26f 0x3253de72 0xee95deed 0xf2d2ed97 0x73856fb3 0x5a8cd14f 0x0d72eb73 0x98badbf5 // method "NonzeroDeltaCount.increment()void", method "CurrencyDelta.getDelta(address,address)uint256", method "UnsafeMath.divRoundingUp(uint256,uint256)uint256", method "Position.calculatePositionKey(address,uint64,uint64,byte[32])byte[32]", method "CurrencyReserves.syncCurrencyAndReserves(address,uint256)void", method "Lock.unlock()void", method "Lock.isUnlocked()bool", method "Slot0Library.setSqrtPriceX96(byte[32],uint256)byte[32]", method "NonzeroDeltaCount.read()uint256", method "CurrencyReserves.getSyncedReserves()uint256", method "UnsafeMath.simpleMulDiv(uint256,uint256,uint256)uint256"
+    txna ApplicationArgs 0
+    match /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.NonzeroDeltaCount.increment[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.CurrencyDelta.getDelta[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.UnsafeMath.divRoundingUp[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.Position.calculatePositionKey[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.CurrencyReserves.syncCurrencyAndReserves[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.Lock.unlock[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.Lock.isUnlocked[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.Slot0Library.setSqrtPriceX96[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.NonzeroDeltaCount.read[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.CurrencyReserves.getSyncedReserves[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.UnsafeMath.simpleMulDiv[routing]
+    err
+
+__puya_arc4_router_____bare_create__@17:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.NonzeroDeltaCount.increment[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.NonzeroDeltaCount.increment[routing]:
+    callsub NonzeroDeltaCount.increment
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.CurrencyDelta.getDelta[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.CurrencyDelta.getDelta[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub CurrencyDelta.getDelta
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.UnsafeMath.divRoundingUp[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.UnsafeMath.divRoundingUp[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub UnsafeMath.divRoundingUp
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.Position.calculatePositionKey[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.Position.calculatePositionKey[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub Position.calculatePositionKey
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.CurrencyReserves.syncCurrencyAndReserves[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.CurrencyReserves.syncCurrencyAndReserves[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub CurrencyReserves.syncCurrencyAndReserves
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.Lock.unlock[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.Lock.unlock[routing]:
+    callsub Lock.unlock
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.Lock.isUnlocked[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.Lock.isUnlocked[routing]:
+    callsub Lock.isUnlocked
+    pushbytes 0x00
+    pushint 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.Slot0Library.setSqrtPriceX96[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.Slot0Library.setSqrtPriceX96[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub Slot0Library.setSqrtPriceX96
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.NonzeroDeltaCount.read[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.NonzeroDeltaCount.read[routing]:
+    callsub NonzeroDeltaCount.read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.CurrencyReserves.getSyncedReserves[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.CurrencyReserves.getSyncedReserves[routing]:
+    callsub CurrencyReserves.getSyncedReserves
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.UnsafeMath.simpleMulDiv[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper47.UnsafeMath.simpleMulDiv[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub UnsafeMath.simpleMulDiv
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

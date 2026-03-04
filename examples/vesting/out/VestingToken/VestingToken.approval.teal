@@ -1,0 +1,371 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/vesting/contracts/VestingToken.sol.VestingToken.approval_program() -> uint64:
+main:
+    intcblock 32 64 1 0
+    bytecblock 0x "_balances" "_allowances" "totalSupply" "owner" 0x151f7c7580 "name" "symbol" 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 6 // "name"
+    bytec_0 // 0x
+    app_global_put
+    bytec 7 // "symbol"
+    bytec_0 // 0x
+    app_global_put
+    bytec_3 // "totalSupply"
+    bytec_0 // 0x
+    app_global_put
+    bytec 4 // "owner"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    txna ApplicationArgs 1
+    bytec 6 // "name"
+    txna ApplicationArgs 0
+    app_global_put
+    bytec 7 // "symbol"
+    swap
+    app_global_put
+    bytec 4 // "owner"
+    txn Sender
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xf95588ea 0xc90c90b1 0x42820278 0x3c4937bd 0x95b95bc6 0x177171e7 // method "mint(address,uint512)void", method "balanceOf(address)uint512", method "transfer(address,uint512)bool", method "approve(address,uint512)bool", method "allowance(address,address)uint512", method "transferFrom(address,address,uint512)bool"
+    txna ApplicationArgs 0
+    match mint balanceOf transfer approve allowance transferFrom
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/vesting/contracts/VestingToken.sol.VestingToken.mint[routing]() -> void:
+mint:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_3 // 0
+    bytec 4 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    assert // not owner
+    swap
+    sha256
+    bytec_1 // "_balances"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_3 // 0
+    bytec_3 // "totalSupply"
+    app_global_get_ex
+    assert // check totalSupply exists
+    b+
+    bytec_3 // "totalSupply"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/vesting/contracts/VestingToken.sol.VestingToken.balanceOf[routing]() -> void:
+balanceOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_1 // "_balances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec 8 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/vesting/contracts/VestingToken.sol.VestingToken.transfer[routing]() -> void:
+transfer:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    sha256
+    bytec_1 // "_balances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b>=
+    assert // insufficient balance
+    txn Sender
+    sha256
+    bytec_1 // "_balances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b-
+    txn Sender
+    sha256
+    bytec_1 // "_balances"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    swap
+    sha256
+    bytec_1 // "_balances"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    uncover 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec 5 // 0x151f7c7580
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/vesting/contracts/VestingToken.sol.VestingToken.approve[routing]() -> void:
+approve:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    uncover 2
+    concat
+    sha256
+    bytec_2 // "_allowances"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    bytec 5 // 0x151f7c7580
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/vesting/contracts/VestingToken.sol.VestingToken.allowance[routing]() -> void:
+allowance:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    concat
+    sha256
+    bytec_2 // "_allowances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec 8 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/vesting/contracts/VestingToken.sol.VestingToken.transferFrom[routing]() -> void:
+transferFrom:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dig 2
+    txn Sender
+    concat
+    sha256
+    bytec_2 // "_allowances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b>=
+    assert // not approved
+    dig 2
+    sha256
+    bytec_1 // "_balances"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b>=
+    assert // insufficient balance
+    dig 3
+    txn Sender
+    concat
+    sha256
+    bytec_2 // "_allowances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b-
+    txn Sender
+    uncover 5
+    swap
+    concat
+    sha256
+    bytec_2 // "_allowances"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b-
+    dig 1
+    box_del
+    pop
+    box_put
+    swap
+    sha256
+    bytec_1 // "_balances"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    uncover 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec 5 // 0x151f7c7580
+    log
+    intc_2 // 1
+    return

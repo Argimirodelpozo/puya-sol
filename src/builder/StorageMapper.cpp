@@ -198,7 +198,7 @@ int StorageMapper::computeEncodedElementSize(awst::WType const* _type)
 	case awst::WTypeKind::Basic:
 	{
 		if (_type == awst::WType::biguintType())
-			return 64; // encoded as ARC4UIntN(512) → 64 bytes
+			return 32; // encoded as ARC4UIntN(256) → 64 bytes
 		if (_type == awst::WType::uint64Type())
 			return 8; // itob encoding
 		if (_type == awst::WType::boolType())

@@ -108,6 +108,12 @@ public:
 	/// the base function with AST ID _funcId is targeted as subroutine _name.
 	void addSuperTarget(int64_t _funcId, std::string const& _name);
 
+	/// Register a storage pointer alias: when `Type storage p = _mapping[key]`,
+	/// later references to `p` resolve to the stored box read expression.
+	void addStorageAlias(int64_t _declId, std::shared_ptr<awst::Expression> _expr);
+	/// Remove a previously registered storage pointer alias.
+	void removeStorageAlias(int64_t _declId);
+
 
 private:
 
@@ -120,6 +126,11 @@ private:
 	/// Super call target names: base function AST ID → subroutine name.
 	/// Populated by ContractTranslator for functions called via `super.method()`.
 	std::unordered_map<int64_t, std::string> m_superTargetNames;
+
+	/// Storage pointer aliases: maps AST declaration ID to the box read expression.
+	/// For `Type storage p = _mapping[key]`, stores the StateGet(BoxValueExpression)
+	/// so that later references to `p` resolve to the box, not a local variable.
+	std::map<int64_t, std::shared_ptr<awst::Expression>> m_storageAliases;
 
 	/// Map Solidity binary operator token to AWST equivalent.
 	/// Determines whether to use UInt64, BigUInt, or Bytes operation.

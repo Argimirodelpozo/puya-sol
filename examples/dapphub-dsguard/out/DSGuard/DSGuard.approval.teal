@@ -1,0 +1,344 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/dapphub-dsguard/contracts/DSGuard.sol.DSGuard.approval_program() -> uint64:
+main:
+    intcblock 0 32 1
+    bytecblock "_acl" "_owner" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "_owner"
+    txn Sender
+    app_global_put
+    pushbytes 0x8be0079c
+    log
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb1bbb0a8 0xfe238cef 0x846f8237 0x1559cefe 0x739a1c23 // method "owner()address", method "canCall(byte[32],byte[32],byte[32])bool", method "getAcl(byte[32],byte[32],byte[32])bool", method "permit(byte[32],byte[32],byte[32])void", method "forbid(byte[32],byte[32],byte[32])void"
+    txna ApplicationArgs 0
+    match owner canCall getAcl permit forbid
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/dapphub-dsguard/contracts/DSGuard.sol.DSGuard.owner[routing]() -> void:
+owner:
+    intc_0 // 0
+    bytec_1 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/dapphub-dsguard/contracts/DSGuard.sol.DSGuard.canCall[routing]() -> void:
+canCall:
+    intc_0 // 0
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    cover 3
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    cover 2
+    concat
+    dup
+    uncover 2
+    concat
+    sha256
+    bytec_0 // "_acl"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    bnz canCall_bool_true@9
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    concat
+    sha256
+    bytec_0 // "_acl"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    bnz canCall_bool_true@9
+    dig 3
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    concat
+    dig 2
+    concat
+    sha256
+    bytec_0 // "_acl"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    bnz canCall_bool_true@9
+    dig 3
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    concat
+    sha256
+    bytec_0 // "_acl"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    bnz canCall_bool_true@9
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 3
+    concat
+    dup
+    bury 6
+    dig 2
+    concat
+    sha256
+    bytec_0 // "_acl"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    bnz canCall_bool_true@9
+    dig 4
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    concat
+    sha256
+    bytec_0 // "_acl"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    bnz canCall_bool_true@9
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 2
+    concat
+    sha256
+    bytec_0 // "_acl"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    bnz canCall_bool_true@9
+    pushbytes 0x5f61636cce65609cc564ce3d8cb72d46bc44cd5495afbad7bc61b5edfa0799baa5063191
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    bz canCall_bool_false@10
+
+canCall_bool_true@9:
+    intc_2 // 1
+
+canCall_bool_merge@11:
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+canCall_bool_false@10:
+    intc_0 // 0
+    b canCall_bool_merge@11
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/dapphub-dsguard/contracts/DSGuard.sol.DSGuard.getAcl[routing]() -> void:
+getAcl:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    cover 2
+    concat
+    swap
+    concat
+    sha256
+    bytec_0 // "_acl"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/dapphub-dsguard/contracts/DSGuard.sol.DSGuard.permit[routing]() -> void:
+permit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_0 // 0
+    bytec_1 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // ds-guard-auth-unauthorized
+    cover 2
+    concat
+    swap
+    concat
+    sha256
+    bytec_0 // "_acl"
+    swap
+    concat
+    intc_2 // 1
+    itob
+    box_put
+    pushbytes 0x6f503750
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/dapphub-dsguard/contracts/DSGuard.sol.DSGuard.forbid[routing]() -> void:
+forbid:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_0 // 0
+    bytec_1 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // ds-guard-auth-unauthorized
+    cover 2
+    concat
+    swap
+    concat
+    sha256
+    bytec_0 // "_acl"
+    swap
+    concat
+    intc_0 // 0
+    itob
+    box_put
+    pushbytes 0x95ba64c9
+    log
+    intc_2 // 1
+    return

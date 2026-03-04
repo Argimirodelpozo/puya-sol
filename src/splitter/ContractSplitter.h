@@ -92,6 +92,24 @@ private:
 		awst::WType const* _returnType
 	);
 
+	/// Scan a subroutine for raw SubroutineID targets (collecting IDs directly).
+	void scanSubroutineForRawIds(
+		awst::Subroutine const& _sub,
+		std::set<std::string>& _ids
+	);
+
+	/// Scan an expression for raw SubroutineID targets.
+	void scanExprForRawIds(
+		awst::Expression const& _expr,
+		std::set<std::string>& _ids
+	);
+
+	/// Scan a statement for raw SubroutineID targets.
+	void scanStmtForRawIds(
+		awst::Statement const& _stmt,
+		std::set<std::string>& _ids
+	);
+
 	/// Build a clear program that always approves.
 	awst::ContractMethod buildClearProgram(
 		awst::SourceLocation const& _loc,

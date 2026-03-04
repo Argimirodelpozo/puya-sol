@@ -1,0 +1,867 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 64 1 0 32 1000000 1000000000000000000
+    bytecblock 0x151f7c75 0x 0x01
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.MarketParamsLib.id(marketParams: bytes) -> bytes, bytes:
+MarketParamsLib.id:
+    proto 1 2
+    pushbytes 0xdfded4ed5ac76ba7379cfe7b3b0f53e768dca8d45a34854e649cfc3c18cbd9cd
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.MathLib.mulDivDown(x: bytes, y: bytes, d: bytes) -> bytes:
+MathLib.mulDivDown:
+    proto 3 1
+    frame_dig -3
+    frame_dig -2
+    b*
+    frame_dig -1
+    b/
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.MathLib.mulDivUp(x: bytes, y: bytes, d: bytes) -> bytes:
+MathLib.mulDivUp:
+    proto 3 1
+    frame_dig -3
+    frame_dig -2
+    b*
+    intc_1 // 1
+    itob
+    frame_dig -1
+    swap
+    b-
+    b+
+    frame_dig -1
+    b/
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.MathLib.wDivDown(x: bytes, y: bytes) -> bytes:
+MathLib.wDivDown:
+    proto 2 1
+    intc 5 // 1000000000000000000
+    itob
+    frame_dig -2
+    swap
+    frame_dig -1
+    callsub MathLib.mulDivDown
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.MathLib.wDivUp(x: bytes, y: bytes) -> bytes:
+MathLib.wDivUp:
+    proto 2 1
+    intc 5 // 1000000000000000000
+    itob
+    frame_dig -2
+    swap
+    frame_dig -1
+    callsub MathLib.mulDivUp
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.MathLib.wMulDown(x: bytes, y: bytes) -> bytes:
+MathLib.wMulDown:
+    proto 2 1
+    intc 5 // 1000000000000000000
+    itob
+    frame_dig -2
+    frame_dig -1
+    uncover 2
+    callsub MathLib.mulDivDown
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.MathLib.wTaylorCompounded(x: bytes, n: bytes) -> bytes:
+MathLib.wTaylorCompounded:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b*
+    dup
+    dig 1
+    pushbytes 0x1bc16d674ec80000
+    callsub MathLib.mulDivDown
+    dup
+    dig 2
+    pushbytes 0x29a2241af62c0000
+    callsub MathLib.mulDivDown
+    cover 2
+    b+
+    b+
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.SafeTransferLib.safeTransfer(token: bytes, to: bytes, value: bytes) -> void:
+SafeTransferLib.safeTransfer:
+    proto 3 0
+    intc_2 // 0
+    assert // no code
+    itxn_begin
+    intc_0 // 64
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    frame_dig -3
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x42820278 // method "transfer(address,uint512)bool"
+    itxn_field ApplicationArgs
+    frame_dig -2
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.SafeTransferLib.safeTransferFrom(token: bytes, from: bytes, to: bytes, value: bytes) -> void:
+SafeTransferLib.safeTransferFrom:
+    proto 4 0
+    intc_2 // 0
+    assert // no code
+    itxn_begin
+    intc_0 // 64
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    frame_dig -4
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x177171e7 // method "transferFrom(address,address,uint512)bool"
+    itxn_field ApplicationArgs
+    frame_dig -3
+    itxn_field ApplicationArgs
+    frame_dig -2
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.SharesMathLib.toAssetsDown(shares: bytes, totalAssets: bytes, totalShares: bytes) -> bytes:
+SharesMathLib.toAssetsDown:
+    proto 3 1
+    intc_1 // 1
+    itob
+    frame_dig -2
+    b+
+    intc 4 // 1000000
+    itob
+    frame_dig -1
+    b+
+    frame_dig -3
+    cover 2
+    callsub MathLib.mulDivDown
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.SharesMathLib.toAssetsUp(shares: bytes, totalAssets: bytes, totalShares: bytes) -> bytes:
+SharesMathLib.toAssetsUp:
+    proto 3 1
+    intc_1 // 1
+    itob
+    frame_dig -2
+    b+
+    intc 4 // 1000000
+    itob
+    frame_dig -1
+    b+
+    frame_dig -3
+    cover 2
+    callsub MathLib.mulDivUp
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.SharesMathLib.toSharesDown(assets: bytes, totalAssets: bytes, totalShares: bytes) -> bytes:
+SharesMathLib.toSharesDown:
+    proto 3 1
+    intc 4 // 1000000
+    itob
+    frame_dig -1
+    b+
+    intc_1 // 1
+    itob
+    frame_dig -2
+    b+
+    frame_dig -3
+    cover 2
+    callsub MathLib.mulDivDown
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.SharesMathLib.toSharesUp(assets: bytes, totalAssets: bytes, totalShares: bytes) -> bytes:
+SharesMathLib.toSharesUp:
+    proto 3 1
+    intc 4 // 1000000
+    itob
+    frame_dig -1
+    b+
+    intc_1 // 1
+    itob
+    frame_dig -2
+    b+
+    frame_dig -3
+    cover 2
+    callsub MathLib.mulDivUp
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.UtilsLib.exactlyOneZero(x: bytes, y: bytes) -> uint64:
+UtilsLib.exactlyOneZero:
+    proto 2 1
+    frame_dig -2
+    bytec_1 // 0x
+    b==
+    bytec_1 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    frame_dig -1
+    bytec_1 // 0x
+    b==
+    bytec_1 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    b^
+    bytec_1 // 0x
+    b!=
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.UtilsLib.min(x: bytes, y: bytes) -> bytes:
+UtilsLib.min:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b^
+    frame_dig -1
+    frame_dig -2
+    b<
+    bytec_1 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    b*
+    frame_dig -2
+    b^
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.UtilsLib.toUint128(x: bytes) -> bytes:
+UtilsLib.toUint128:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0xffffffffffffffffffffffffffffffff
+    b<=
+    assert // max uint128 exceeded
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.UtilsLib.zeroFloorSub(x: bytes, y: bytes) -> bytes:
+UtilsLib.zeroFloorSub:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b>
+    bytec_1 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    frame_dig -2
+    frame_dig -1
+    b-
+    b*
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn NumAppArgs
+    bz __puya_arc4_router_____bare_create__@23
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x9e626dff 0x27eda80e 0x3e973249 0x2e3573dc 0x20aa819d 0x6f285db9 0x23f105ae 0x9a43c6b7 0xcd64a412 0xe4be66d8 0xfe4e676e 0xd636fb51 0x57f9b377 0x6ed29fdc 0x1dd628cc 0xb5a98ecc 0xa5551f86 // method "MarketParamsLib.id((uint8[32],uint8[32],uint8[32],uint8[32],uint512))byte[32]", method "UtilsLib.exactlyOneZero(uint512,uint512)bool", method "UtilsLib.zeroFloorSub(uint512,uint512)uint512", method "MathLib.wTaylorCompounded(uint512,uint512)uint512", method "UtilsLib.min(uint512,uint512)uint512", method "SharesMathLib.toSharesUp(uint512,uint512,uint512)uint512", method "SharesMathLib.toAssetsUp(uint512,uint512,uint512)uint512", method "SafeTransferLib.safeTransferFrom(address,address,address,uint512)void", method "SafeTransferLib.safeTransfer(address,address,uint512)void", method "SharesMathLib.toAssetsDown(uint512,uint512,uint512)uint512", method "SharesMathLib.toSharesDown(uint512,uint512,uint512)uint512", method "MathLib.wDivUp(uint512,uint512)uint512", method "MathLib.mulDivUp(uint512,uint512,uint512)uint512", method "MathLib.wMulDown(uint512,uint512)uint512", method "MathLib.wDivDown(uint512,uint512)uint512", method "UtilsLib.toUint128(uint512)uint512", method "MathLib.mulDivDown(uint512,uint512,uint512)uint512"
+    txna ApplicationArgs 0
+    match /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.MarketParamsLib.id[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.UtilsLib.exactlyOneZero[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.UtilsLib.zeroFloorSub[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.MathLib.wTaylorCompounded[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.UtilsLib.min[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.SharesMathLib.toSharesUp[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.SharesMathLib.toAssetsUp[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.SafeTransferLib.safeTransferFrom[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.SafeTransferLib.safeTransfer[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.SharesMathLib.toAssetsDown[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.SharesMathLib.toSharesDown[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.MathLib.wDivUp[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.MathLib.mulDivUp[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.MathLib.wMulDown[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.MathLib.wDivDown[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.UtilsLib.toUint128[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.MathLib.mulDivDown[routing]
+    err
+
+__puya_arc4_router_____bare_create__@23:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.MarketParamsLib.id[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.MarketParamsLib.id[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 192
+    ==
+    assert // invalid number of bytes for MarketParams
+    callsub MarketParamsLib.id
+    pop
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.UtilsLib.exactlyOneZero[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.UtilsLib.exactlyOneZero[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub UtilsLib.exactlyOneZero
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.UtilsLib.zeroFloorSub[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.UtilsLib.zeroFloorSub[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub UtilsLib.zeroFloorSub
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.MathLib.wTaylorCompounded[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.MathLib.wTaylorCompounded[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub MathLib.wTaylorCompounded
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.UtilsLib.min[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.UtilsLib.min[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub UtilsLib.min
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.SharesMathLib.toSharesUp[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.SharesMathLib.toSharesUp[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub SharesMathLib.toSharesUp
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.SharesMathLib.toAssetsUp[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.SharesMathLib.toAssetsUp[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub SharesMathLib.toAssetsUp
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.SafeTransferLib.safeTransferFrom[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.SafeTransferLib.safeTransferFrom[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub SafeTransferLib.safeTransferFrom
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.SafeTransferLib.safeTransfer[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.SafeTransferLib.safeTransfer[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub SafeTransferLib.safeTransfer
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.SharesMathLib.toAssetsDown[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.SharesMathLib.toAssetsDown[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub SharesMathLib.toAssetsDown
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.SharesMathLib.toSharesDown[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.SharesMathLib.toSharesDown[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub SharesMathLib.toSharesDown
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.MathLib.wDivUp[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.MathLib.wDivUp[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub MathLib.wDivUp
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.MathLib.mulDivUp[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.MathLib.mulDivUp[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub MathLib.mulDivUp
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.MathLib.wMulDown[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.MathLib.wMulDown[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub MathLib.wMulDown
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.MathLib.wDivDown[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.MathLib.wDivDown[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub MathLib.wDivDown
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.UtilsLib.toUint128[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.UtilsLib.toUint128[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub UtilsLib.toUint128
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.MathLib.mulDivDown[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/Morpho.sol.Morpho__Helper1.MathLib.mulDivDown[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub MathLib.mulDivDown
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

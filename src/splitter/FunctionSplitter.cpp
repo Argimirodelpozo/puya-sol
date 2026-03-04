@@ -387,10 +387,15 @@ std::vector<std::shared_ptr<awst::Subroutine>> FunctionSplitter::splitFunction(
 		for (size_t i = chunkRanges[c].first; i < chunkRanges[c].second; ++i)
 			body->body.push_back(stmts[i]);
 
-		// For intermediate chunks: add return statement with live vars
+		// For intermediate chunks: rewrite inner returns and add final return with live vars
 		if (!isLast)
 		{
+			// Rewrite any inner ReturnStatements to match chunk return type.
+			// Do this BEFORE appending the final return statement.
 			auto const& liveOut = liveAtSplits[c];
+			if (!liveOut.empty())
+				rewriteInnerReturns(*body, chunk->returnType, liveOut, _func->sourceLocation);
+
 			if (!liveOut.empty())
 			{
 				auto ret = std::make_shared<awst::ReturnStatement>();
@@ -2103,6 +2108,168 @@ void FunctionSplitter::scanStmtForCallees(
 		if (ba.target) scanExprForCallees(*ba.target, _calleeIds);
 		if (ba.value) scanExprForCallees(*ba.value, _calleeIds);
 	}
+}
+
+std::shared_ptr<awst::Expression> FunctionSplitter::buildDefault(
+	awst::WType const* _type,
+	awst::SourceLocation const& _loc
+)
+{
+	if (_type == awst::WType::boolType())
+	{
+		auto val = std::make_shared<awst::BoolConstant>();
+		val->value = false;
+		val->wtype = awst::WType::boolType();
+		val->sourceLocation = _loc;
+		return val;
+	}
+	if (_type == awst::WType::uint64Type())
+	{
+		auto val = std::make_shared<awst::IntegerConstant>();
+		val->value = "0";
+		val->wtype = awst::WType::uint64Type();
+		val->sourceLocation = _loc;
+		return val;
+	}
+	if (_type == awst::WType::biguintType())
+	{
+		auto val = std::make_shared<awst::IntegerConstant>();
+		val->value = "0";
+		val->wtype = awst::WType::biguintType();
+		val->sourceLocation = _loc;
+		return val;
+	}
+	if (_type == awst::WType::bytesType() || _type->kind() == awst::WTypeKind::Bytes)
+	{
+		auto val = std::make_shared<awst::BytesConstant>();
+		val->wtype = _type;
+		val->sourceLocation = _loc;
+		val->encoding = awst::BytesEncoding::Base16;
+		if (auto const* bytesType = dynamic_cast<awst::BytesWType const*>(_type))
+			if (bytesType->length().has_value())
+				val->value.resize(*bytesType->length(), 0);
+		return val;
+	}
+	if (_type == awst::WType::accountType())
+	{
+		auto val = std::make_shared<awst::BytesConstant>();
+		val->wtype = awst::WType::accountType();
+		val->sourceLocation = _loc;
+		val->encoding = awst::BytesEncoding::Base16;
+		val->value.resize(32, 0);
+		return val;
+	}
+	if (_type->kind() == awst::WTypeKind::ARC4Struct ||
+		_type->kind() == awst::WTypeKind::ARC4Tuple ||
+		_type->kind() == awst::WTypeKind::WTuple)
+	{
+		auto const* tupleType = dynamic_cast<awst::WTuple const*>(_type);
+		if (tupleType)
+		{
+			auto tuple = std::make_shared<awst::TupleExpression>();
+			tuple->sourceLocation = _loc;
+			tuple->wtype = _type;
+			for (auto const* elemType: tupleType->types())
+				tuple->items.push_back(buildDefault(elemType, _loc));
+			return tuple;
+		}
+	}
+	// Fallback: zero biguint
+	auto val = std::make_shared<awst::IntegerConstant>();
+	val->value = "0";
+	val->wtype = awst::WType::biguintType();
+	val->sourceLocation = _loc;
+	return val;
+}
+
+void FunctionSplitter::rewriteInnerReturns(
+	awst::Block& _body,
+	awst::WType const* _chunkReturnType,
+	std::vector<VarInfo> const& _liveOut,
+	awst::SourceLocation const& _loc
+)
+{
+	if (!_chunkReturnType || _chunkReturnType == awst::WType::voidType())
+		return;
+	if (_liveOut.empty())
+		return;
+
+	// Build the replacement return: a tuple of all live-out variables.
+	// This is the same as the end-of-chunk return — any inner return in a
+	// non-last chunk should return the current values of all live variables,
+	// not the original function's return value.
+	auto buildLiveReturnValue = [&]() -> std::shared_ptr<awst::Expression> {
+		if (_liveOut.size() == 1)
+		{
+			auto var = std::make_shared<awst::VarExpression>();
+			var->sourceLocation = _loc;
+			var->wtype = _liveOut[0].wtype;
+			var->name = _liveOut[0].name;
+			return var;
+		}
+		auto tuple = std::make_shared<awst::TupleExpression>();
+		tuple->sourceLocation = _loc;
+		tuple->wtype = _chunkReturnType;
+		for (auto const& lv: _liveOut)
+		{
+			auto var = std::make_shared<awst::VarExpression>();
+			var->sourceLocation = _loc;
+			var->wtype = lv.wtype;
+			var->name = lv.name;
+			tuple->items.push_back(var);
+		}
+		return tuple;
+	};
+
+	// Recursive lambda to walk all statements and rewrite return statements
+	std::function<void(awst::Block&)> walkBlock = [&](awst::Block& block) {
+		for (auto& stmt: block.body)
+		{
+			if (!stmt) continue;
+			std::string type = stmt->nodeType();
+			if (type == "ReturnStatement")
+			{
+				auto& rs = static_cast<awst::ReturnStatement&>(*stmt);
+				// Replace the return value with the live variable tuple
+				rs.value = buildLiveReturnValue();
+			}
+			else if (type == "IfElse")
+			{
+				auto& ie = static_cast<awst::IfElse&>(*stmt);
+				if (ie.ifBranch)
+					walkBlock(static_cast<awst::Block&>(*ie.ifBranch));
+				if (ie.elseBranch)
+					walkBlock(static_cast<awst::Block&>(*ie.elseBranch));
+			}
+			else if (type == "WhileLoop")
+			{
+				auto& wl = static_cast<awst::WhileLoop&>(*stmt);
+				if (wl.loopBody)
+					walkBlock(static_cast<awst::Block&>(*wl.loopBody));
+			}
+			else if (type == "Block")
+			{
+				walkBlock(static_cast<awst::Block&>(*stmt));
+			}
+			else if (type == "Switch")
+			{
+				auto& sw = static_cast<awst::Switch&>(*stmt);
+				for (auto& [caseExpr, caseBlock]: sw.cases)
+					if (caseBlock)
+						walkBlock(static_cast<awst::Block&>(*caseBlock));
+				if (sw.defaultCase)
+					walkBlock(static_cast<awst::Block&>(*sw.defaultCase));
+			}
+			else if (type == "ForInLoop")
+			{
+				auto& fil = static_cast<awst::ForInLoop&>(*stmt);
+				if (fil.loopBody)
+					walkBlock(static_cast<awst::Block&>(*fil.loopBody));
+			}
+		}
+	};
+
+	walkBlock(_body);
 }
 
 } // namespace puyasol::splitter

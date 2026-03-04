@@ -113,6 +113,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					m_libraryFunctionIds[qualifiedName] = subroutineId;
 					// Also store by AST ID for precise overload resolution
 					m_freeFunctionById[func->id()] = subroutineId;
+					Logger::instance().debug("[REG] lib func id=" + std::to_string(func->id()) + " name=" + qualifiedName + " => " + subroutineId);
 				}
 				continue;
 			}
@@ -128,6 +129,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				m_libraryFunctionIds[qualifiedName] = subroutineId;
 				// Also store by AST ID for operator overload resolution
 				m_freeFunctionById[func->id()] = subroutineId;
+				Logger::instance().debug("[REG] free func id=" + std::to_string(func->id()) + " name=" + qualifiedName + " => " + subroutineId);
 			}
 		}
 	}
@@ -246,7 +248,8 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 
 				// Translate body using ExpressionTranslator and StatementTranslator
 				ExpressionTranslator exprTranslator(
-					m_typeMapper, *m_storageMapper, _sourceFile, libraryName, m_libraryFunctionIds
+					m_typeMapper, *m_storageMapper, _sourceFile, libraryName, m_libraryFunctionIds,
+					{}, m_freeFunctionById
 				);
 				StatementTranslator stmtTranslator(exprTranslator, m_typeMapper, _sourceFile);
 
@@ -500,7 +503,8 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 			sub->pure = func->stateMutability() == solidity::frontend::StateMutability::Pure;
 
 			ExpressionTranslator exprTranslator(
-				m_typeMapper, *m_storageMapper, _sourceFile, "", m_libraryFunctionIds
+				m_typeMapper, *m_storageMapper, _sourceFile, "", m_libraryFunctionIds,
+				{}, m_freeFunctionById
 			);
 			StatementTranslator stmtTranslator(exprTranslator, m_typeMapper, _sourceFile);
 
@@ -650,6 +654,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				continue;
 
 			Logger::instance().info("Translating contract: " + contract->name());
+			Logger::instance().debug("[TRACE] AWSTBuilder m_freeFunctionById.size()=" + std::to_string(m_freeFunctionById.size()) + " addr=" + std::to_string((uintptr_t)&m_freeFunctionById));
 
 			ContractTranslator translator(
 				m_typeMapper, *m_storageMapper, _sourceFile, m_libraryFunctionIds,

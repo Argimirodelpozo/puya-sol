@@ -520,6 +520,34 @@ bool StatementTranslator::visit(solidity::frontend::VariableDeclarationStatement
 			}
 		}
 
+		// Storage pointer alias: Type storage p = _mapping[key]
+		// Don't create a local variable — register as alias to the box expression.
+		// Later references to `p` will resolve to the box read, so field writes persist.
+		if (decl.referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
+			&& initialValue)
+		{
+			if (dynamic_cast<awst::StateGet const*>(value.get())
+				|| dynamic_cast<awst::BoxValueExpression const*>(value.get()))
+			{
+				// Ensure it's wrapped in StateGet for proper read semantics
+				auto aliasExpr = value;
+				if (auto const* boxVal = dynamic_cast<awst::BoxValueExpression const*>(value.get()))
+				{
+					auto stateGet = std::make_shared<awst::StateGet>();
+					stateGet->sourceLocation = loc;
+					stateGet->wtype = boxVal->wtype;
+					stateGet->field = value;
+					stateGet->defaultValue = StorageMapper::makeDefaultValue(boxVal->wtype, loc);
+					aliasExpr = stateGet;
+				}
+				m_exprTranslator.addStorageAlias(decl.id(), aliasExpr);
+				// Emit pending statements but skip the local variable assignment
+				for (auto& pending: m_exprTranslator.takePendingStatements())
+					push(std::move(pending));
+				return false;
+			}
+		}
+
 		auto assign = std::make_shared<awst::AssignmentStatement>();
 		assign->sourceLocation = loc;
 		assign->target = std::move(target);
@@ -544,6 +572,16 @@ bool StatementTranslator::visit(solidity::frontend::VariableDeclarationStatement
 		// Pick up any pending statements (e.g., inner transaction submits)
 		for (auto& pending: m_exprTranslator.takePendingStatements())
 			push(std::move(pending));
+
+		// Wrap in SingleEvaluation to ensure the RHS is evaluated only once.
+		// Without this, each TupleItemExpression would independently evaluate
+		// the base expression, causing side effects (like inner txn submits) to repeat.
+		auto singleRhs = std::make_shared<awst::SingleEvaluation>();
+		singleRhs->sourceLocation = loc;
+		singleRhs->wtype = rhsExpr->wtype;
+		singleRhs->source = std::move(rhsExpr);
+		singleRhs->id = static_cast<int>(_node.id());
+		rhsExpr = std::move(singleRhs);
 
 		// Assign each declared variable from the tuple
 		for (size_t i = 0; i < declarations.size(); ++i)

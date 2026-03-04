@@ -1,0 +1,612 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-roles/contracts/RolesAuthority.sol.RolesAuthority.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 4 255
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 "_owner" 0x151f7c75 "_userRoles" "_rolesWithCapability" 0x00 "_capabilityPublic" 0x8be0079c
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "_owner"
+    txn Sender
+    app_global_put
+    bytec 7 // 0x8be0079c
+    log
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb1bbb0a8 0xe17bafb4 0x3088a1ac 0xade5e01f 0x021bf095 0x3295adef 0xd9d2e135 0xd86cab76 0xb9786051 0x194904f8 0x475f6e4f // method "owner()address", method "transferOwnership(address)void", method "getUserRoles(address)byte[32]", method "isCapabilityPublic(address,byte[4])bool", method "getRolesWithCapability(address,byte[4])byte[32]", method "doesUserHaveRole(address,uint64)bool", method "doesRoleHaveCapability(uint64,address,byte[4])bool", method "canCall(address,address,byte[4])bool", method "setPublicCapability(address,byte[4],bool)void", method "setRoleCapability(uint64,address,byte[4],bool)void", method "setUserRole(address,uint64,bool)void"
+    txna ApplicationArgs 0
+    match owner transferOwnership getUserRoles isCapabilityPublic getRolesWithCapability doesUserHaveRole doesRoleHaveCapability canCall setPublicCapability setRoleCapability setUserRole
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-roles/contracts/RolesAuthority.sol.RolesAuthority.owner[routing]() -> void:
+owner:
+    intc_2 // 0
+    bytec_1 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-roles/contracts/RolesAuthority.sol.RolesAuthority.transferOwnership[routing]() -> void:
+transferOwnership:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_2 // 0
+    bytec_1 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // UNAUTHORIZED
+    bytec_1 // "_owner"
+    swap
+    app_global_put
+    bytec 7 // 0x8be0079c
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-roles/contracts/RolesAuthority.sol.RolesAuthority.getUserRoles[routing]() -> void:
+getUserRoles:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_3 // "_userRoles"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-roles/contracts/RolesAuthority.sol.RolesAuthority.isCapabilityPublic[routing]() -> void:
+isCapabilityPublic:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    concat
+    sha256
+    bytec 6 // "_capabilityPublic"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    bytec 5 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-roles/contracts/RolesAuthority.sol.RolesAuthority.getRolesWithCapability[routing]() -> void:
+getRolesWithCapability:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    concat
+    sha256
+    bytec 4 // "_rolesWithCapability"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-roles/contracts/RolesAuthority.sol.RolesAuthority.doesUserHaveRole[routing]() -> void:
+doesUserHaveRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    swap
+    sha256
+    bytec_3 // "_userRoles"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_0 // 32
+    bzero
+    intc 4 // 255
+    uncover 3
+    -
+    intc_1 // 1
+    setbit
+    b/
+    intc_1 // 1
+    itob
+    b&
+    intc_2 // 0
+    itob
+    b!=
+    bytec 5 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-roles/contracts/RolesAuthority.sol.RolesAuthority.doesRoleHaveCapability[routing]() -> void:
+doesRoleHaveCapability:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_3 // 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    concat
+    sha256
+    bytec 4 // "_rolesWithCapability"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_0 // 32
+    bzero
+    intc 4 // 255
+    uncover 3
+    -
+    intc_1 // 1
+    setbit
+    b/
+    intc_1 // 1
+    itob
+    b&
+    intc_2 // 0
+    itob
+    b!=
+    bytec 5 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-roles/contracts/RolesAuthority.sol.RolesAuthority.canCall[routing]() -> void:
+canCall:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_3 // 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    concat
+    sha256
+    dup
+    bytec 6 // "_capabilityPublic"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    bz canCall_after_if_else@3
+    intc_1 // 1
+
+canCall_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-roles/contracts/RolesAuthority.sol.RolesAuthority.canCall@4:
+    bytec 5 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+canCall_after_if_else@3:
+    dig 1
+    sha256
+    bytec_3 // "_userRoles"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec 4 // "_rolesWithCapability"
+    dig 2
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    b&
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    !=
+    b canCall_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-roles/contracts/RolesAuthority.sol.RolesAuthority.canCall@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-roles/contracts/RolesAuthority.sol.RolesAuthority.setPublicCapability[routing]() -> void:
+setPublicCapability:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_2 // 0
+    getbit
+    txn Sender
+    intc_2 // 0
+    bytec_1 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // UNAUTHORIZED
+    uncover 2
+    dig 2
+    concat
+    sha256
+    bytec 6 // "_capabilityPublic"
+    swap
+    concat
+    swap
+    itob
+    swap
+    dig 1
+    box_put
+    pushbytes 0x950a343f
+    uncover 2
+    concat
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-roles/contracts/RolesAuthority.sol.RolesAuthority.setRoleCapability[routing]() -> void:
+setRoleCapability:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    cover 2
+    len
+    intc_3 // 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_2 // 0
+    getbit
+    dup
+    cover 2
+    txn Sender
+    intc_2 // 0
+    bytec_1 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // UNAUTHORIZED
+    bz setRoleCapability_else_body@3
+    dig 2
+    concat
+    sha256
+    bytec 4 // "_rolesWithCapability"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_0 // 32
+    bzero
+    intc 4 // 255
+    dig 6
+    -
+    dig 1
+    swap
+    intc_1 // 1
+    setbit
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    b|
+    box_put
+
+setRoleCapability_after_if_else@4:
+    dig 2
+    itob
+    pushbytes 0xa52ea92e
+    swap
+    concat
+    dig 2
+    concat
+    dig 1
+    itob
+    concat
+    log
+    intc_1 // 1
+    return
+
+setRoleCapability_else_body@3:
+    dig 2
+    concat
+    sha256
+    bytec 4 // "_rolesWithCapability"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_0 // 32
+    bzero
+    intc 4 // 255
+    dig 6
+    -
+    dig 1
+    swap
+    intc_1 // 1
+    setbit
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    b~
+    b&
+    box_put
+    b setRoleCapability_after_if_else@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-roles/contracts/RolesAuthority.sol.RolesAuthority.setUserRole[routing]() -> void:
+setUserRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    swap
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_2 // 0
+    getbit
+    dup
+    cover 2
+    txn Sender
+    intc_2 // 0
+    bytec_1 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    ==
+    assert // UNAUTHORIZED
+    bz setUserRole_else_body@3
+    sha256
+    bytec_3 // "_userRoles"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_0 // 32
+    bzero
+    intc 4 // 255
+    dig 5
+    -
+    dig 1
+    swap
+    intc_1 // 1
+    setbit
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    b|
+    box_put
+
+setUserRole_after_if_else@4:
+    dig 1
+    itob
+    pushbytes 0x4c9bdd0c
+    swap
+    concat
+    dig 1
+    itob
+    concat
+    log
+    intc_1 // 1
+    return
+
+setUserRole_else_body@3:
+    sha256
+    bytec_3 // "_userRoles"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_0 // 32
+    bzero
+    intc 4 // 255
+    dig 5
+    -
+    dig 1
+    swap
+    intc_1 // 1
+    setbit
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    b~
+    b&
+    box_put
+    b setUserRole_after_if_else@4

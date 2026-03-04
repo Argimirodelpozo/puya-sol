@@ -145,6 +145,23 @@ private:
 		std::vector<std::shared_ptr<awst::RootNode>> const& _roots
 	);
 
+	/// Rewrite inner ReturnStatements in an intermediate (non-last) chunk body
+	/// to match the chunk's return type. Early returns from the original function
+	/// need their value padded with default values for live variables that are
+	/// not yet in scope at the return point.
+	void rewriteInnerReturns(
+		awst::Block& _body,
+		awst::WType const* _chunkReturnType,
+		std::vector<VarInfo> const& _liveOut,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Build a default (zero) expression for a given type.
+	static std::shared_ptr<awst::Expression> buildDefault(
+		awst::WType const* _type,
+		awst::SourceLocation const& _loc
+	);
+
 	// ── Callee collection for dep-aware cost estimation ──
 
 	/// Collect SubroutineCallExpression target IDs from a statement tree.

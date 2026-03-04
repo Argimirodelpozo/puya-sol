@@ -1,0 +1,1234 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper2.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 0 32 8 1 130 132 887272
+    bytecblock 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x 0x8000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000 0xffffff 0x02 0xffffffffffffffffffffffffffffffff 0x0000000000000000000000000000000000000000000000000000000000800000 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.LiquidityMath.addDelta(x: bytes, y: bytes) -> bytes:
+LiquidityMath.addDelta:
+    proto 2 1
+    frame_dig -2
+    bytec 8 // 0xffffffffffffffffffffffffffffffff
+    b&
+    frame_dig -1
+    pushbytes 0x0000000000000000000000000000000080000000000000000000000000000000
+    b/
+    bytec 7 // 0x02
+    b%
+    bytec_2 // 0x
+    b!=
+    bz LiquidityMath.addDelta_ternary_false@2
+    frame_dig -1
+    pushbytes 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b|
+
+LiquidityMath.addDelta_ternary_merge@3:
+    frame_dig 0
+    b+
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    pushbytes 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    bytec_2 // 0x
+    b!=
+    !
+    assert // revert
+    swap
+    retsub
+
+LiquidityMath.addDelta_ternary_false@2:
+    frame_dig -1
+    bytec 8 // 0xffffffffffffffffffffffffffffffff
+    b&
+    b LiquidityMath.addDelta_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.Pool.tickSpacingToMaxLiquidityPerTick(tickSpacing: uint64) -> bytes:
+Pool.tickSpacingToMaxLiquidityPerTick:
+    proto 1 1
+    intc_0 // 0
+    dupn 2
+    intc 6 // 887272
+    -
+    frame_dig -1
+    intc 6 // 887272
+    dig 2
+    bytec_2 // 0x
+    callsub Pool.tickSpacingToMaxLiquidityPerTick__chunk_1
+    popn 2
+    frame_dig -1
+    dig 1
+    uncover 3
+    bytec_2 // 0x
+    callsub Pool.tickSpacingToMaxLiquidityPerTick__chunk_1
+    pop
+    cover 2
+    pop
+    itob
+    dup
+    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    bytec_2 // 0x
+    bytec_0 // 0x01
+    uncover 2
+    select
+    frame_dig -1
+    itob
+    dup
+    cover 3
+    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    cover 3
+    bytec_2 // 0x
+    bytec_0 // 0x01
+    uncover 2
+    select
+    b!=
+    bz Pool.tickSpacingToMaxLiquidityPerTick_ternary_false@9
+    bz Pool.tickSpacingToMaxLiquidityPerTick_ternary_false@4
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig 3
+    b-
+    bytec_0 // 0x01
+    b+
+    frame_bury 0
+
+Pool.tickSpacingToMaxLiquidityPerTick_ternary_merge@5:
+    frame_dig 5
+    bz Pool.tickSpacingToMaxLiquidityPerTick_ternary_false@7
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig 4
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick_ternary_merge@8:
+    frame_dig 0
+    swap
+    b/
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    swap
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick_ternary_merge@16:
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig 2
+    b-
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x01
+    b+
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 8 // 0xffffffffffffffffffffffffffffffff
+    swap
+    b/
+    frame_bury 0
+    retsub
+
+Pool.tickSpacingToMaxLiquidityPerTick_ternary_false@7:
+    frame_dig 4
+    b Pool.tickSpacingToMaxLiquidityPerTick_ternary_merge@8
+
+Pool.tickSpacingToMaxLiquidityPerTick_ternary_false@4:
+    frame_dig 3
+    frame_bury 0
+    b Pool.tickSpacingToMaxLiquidityPerTick_ternary_merge@5
+
+Pool.tickSpacingToMaxLiquidityPerTick_ternary_false@9:
+    bz Pool.tickSpacingToMaxLiquidityPerTick_ternary_false@11
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig 3
+    b-
+    bytec_0 // 0x01
+    b+
+    frame_bury 1
+
+Pool.tickSpacingToMaxLiquidityPerTick_ternary_merge@12:
+    frame_dig 5
+    bz Pool.tickSpacingToMaxLiquidityPerTick_ternary_false@14
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig 4
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick_ternary_merge@15:
+    frame_dig 1
+    swap
+    b/
+    b Pool.tickSpacingToMaxLiquidityPerTick_ternary_merge@16
+
+Pool.tickSpacingToMaxLiquidityPerTick_ternary_false@14:
+    frame_dig 4
+    b Pool.tickSpacingToMaxLiquidityPerTick_ternary_merge@15
+
+Pool.tickSpacingToMaxLiquidityPerTick_ternary_false@11:
+    frame_dig 3
+    frame_bury 1
+    b Pool.tickSpacingToMaxLiquidityPerTick_ternary_merge@12
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.Pool.updateTick(self: bytes, tick: uint64, liquidityDelta: bytes, upper: uint64) -> uint64, bytes, bytes:
+Pool.updateTick:
+    proto 4 3
+    frame_dig -3
+    itob
+    sha256
+    pushbytes "ticks"
+    swap
+    concat
+    dup
+    box_get
+    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 0 32
+    dup
+    frame_dig -2
+    callsub LiquidityMath.addDelta
+    dup
+    cover 2
+    intc_0 // 0
+    itob
+    swap
+    dig 1
+    b==
+    cover 2
+    b==
+    swap
+    dig 1
+    !=
+    swap
+    bz Pool.updateTick_after_if_else@4
+    frame_dig -4
+    extract 0 32
+    callsub Slot0Library.tick
+    frame_dig -3
+    >=
+    bz Pool.updateTick_after_if_else@4
+    frame_dig -4
+    extract 32 32
+    intc_1 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    frame_dig 0
+    dup
+    cover 3
+    box_get
+    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 96 32
+    dig 1
+    extract 0 32
+    uncover 2
+    extract 32 32
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dup
+    extract 64 32
+    frame_dig -4
+    extract 64 32
+    uncover 3
+    b|
+    dig 2
+    extract 0 32
+    uncover 3
+    extract 32 32
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    box_put
+
+Pool.updateTick_after_if_else@4:
+    frame_dig 2
+    frame_dig 1
+    frame_dig -4
+    uncover 5
+    uncover 5
+    uncover 5
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.Slot0Library.tick(_packed: bytes) -> uint64:
+Slot0Library.tick:
+    proto 1 1
+    intc_0 // 0
+    intc_2 // 8
+    bzero
+    frame_dig -1
+    pushbytes 0x0000000000000000000000010000000000000000000000000000000000000000
+    b/
+    dup
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000800000
+    b/
+    bytec 7 // 0x02
+    b%
+    bytec_2 // 0x
+    b!=
+    dup
+    bz Slot0Library.tick_ternary_false@2
+    frame_dig 2
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
+    b|
+
+Slot0Library.tick_ternary_merge@3:
+    frame_dig 1
+    swap
+    concat
+    frame_bury 0
+    frame_dig 3
+    bz Slot0Library.tick_ternary_false@5
+    frame_dig 2
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
+    b|
+
+Slot0Library.tick_ternary_merge@6:
+    frame_dig 1
+    swap
+    concat
+    len
+    intc_2 // 8
+    -
+    frame_dig 0
+    swap
+    extract_uint64
+    frame_bury 0
+    retsub
+
+Slot0Library.tick_ternary_false@5:
+    frame_dig 2
+    bytec 6 // 0xffffff
+    b&
+    b Slot0Library.tick_ternary_merge@6
+
+Slot0Library.tick_ternary_false@2:
+    frame_dig 2
+    bytec 6 // 0xffffff
+    b&
+    b Slot0Library.tick_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.TickBitmap.flipTick(self: bytes, tick: uint64, tickSpacing: uint64) -> void:
+TickBitmap.flipTick:
+    proto 3 0
+    intc_0 // 0
+    dupn 5
+    bytec_2 // ""
+    dup
+    intc_2 // 8
+    bzero
+    frame_dig -2
+    itob
+    dup
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000800000
+    b/
+    bytec 7 // 0x02
+    b%
+    bytec_2 // 0x
+    b!=
+    dup
+    bz TickBitmap.flipTick_ternary_false@3
+    frame_dig 9
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
+    b|
+
+TickBitmap.flipTick_ternary_merge@4:
+    frame_dig 8
+    swap
+    concat
+    frame_bury 4
+    frame_dig 10
+    bz TickBitmap.flipTick_ternary_false@6
+    frame_dig 9
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
+    b|
+
+TickBitmap.flipTick_ternary_merge@7:
+    frame_dig 8
+    swap
+    concat
+    len
+    intc_2 // 8
+    -
+    frame_bury 6
+    frame_dig -1
+    itob
+    dup
+    frame_bury 0
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000800000
+    b/
+    bytec 7 // 0x02
+    b%
+    bytec_2 // 0x
+    b!=
+    dup
+    frame_bury 7
+    bz TickBitmap.flipTick_ternary_false@9
+    frame_dig 0
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
+    b|
+
+TickBitmap.flipTick_ternary_merge@10:
+    frame_dig 8
+    swap
+    concat
+    frame_bury 5
+    frame_dig 7
+    bz TickBitmap.flipTick_ternary_false@12
+    frame_dig 0
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
+    b|
+
+TickBitmap.flipTick_ternary_merge@13:
+    frame_dig 8
+    swap
+    concat
+    len
+    intc_2 // 8
+    -
+    frame_dig 5
+    swap
+    extract_uint64
+    frame_bury -1
+    frame_dig 4
+    frame_dig 6
+    intc_2 // 8
+    extract3
+    dup
+    frame_bury 1
+    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    bz TickBitmap.flipTick_ternary_false@21
+    bz TickBitmap.flipTick_ternary_false@16
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig 1
+    b-
+    bytec_0 // 0x01
+    b+
+    frame_bury 2
+
+TickBitmap.flipTick_ternary_merge@17:
+    frame_dig -1
+    itob
+    dup
+    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz TickBitmap.flipTick_ternary_false@19
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    swap
+    b-
+    bytec_0 // 0x01
+    b+
+
+TickBitmap.flipTick_ternary_merge@20:
+    frame_dig 2
+    swap
+    b%
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    swap
+    b-
+    bytec_0 // 0x01
+    b+
+
+TickBitmap.flipTick_ternary_merge@28:
+    bytec_2 // 0x
+    b!=
+    !
+    assert // revert
+    retsub
+
+TickBitmap.flipTick_ternary_false@19:
+    b TickBitmap.flipTick_ternary_merge@20
+
+TickBitmap.flipTick_ternary_false@16:
+    frame_dig 1
+    frame_bury 2
+    b TickBitmap.flipTick_ternary_merge@17
+
+TickBitmap.flipTick_ternary_false@21:
+    bz TickBitmap.flipTick_ternary_false@23
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig 1
+    b-
+    bytec_0 // 0x01
+    b+
+    frame_bury 3
+
+TickBitmap.flipTick_ternary_merge@24:
+    frame_dig -1
+    itob
+    dup
+    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz TickBitmap.flipTick_ternary_false@26
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    swap
+    b-
+    bytec_0 // 0x01
+    b+
+
+TickBitmap.flipTick_ternary_merge@27:
+    frame_dig 3
+    swap
+    b%
+    b TickBitmap.flipTick_ternary_merge@28
+
+TickBitmap.flipTick_ternary_false@26:
+    b TickBitmap.flipTick_ternary_merge@27
+
+TickBitmap.flipTick_ternary_false@23:
+    frame_dig 1
+    frame_bury 3
+    b TickBitmap.flipTick_ternary_merge@24
+
+TickBitmap.flipTick_ternary_false@12:
+    frame_dig 0
+    bytec 6 // 0xffffff
+    b&
+    b TickBitmap.flipTick_ternary_merge@13
+
+TickBitmap.flipTick_ternary_false@9:
+    frame_dig 0
+    bytec 6 // 0xffffff
+    b&
+    b TickBitmap.flipTick_ternary_merge@10
+
+TickBitmap.flipTick_ternary_false@6:
+    frame_dig 9
+    bytec 6 // 0xffffff
+    b&
+    b TickBitmap.flipTick_ternary_merge@7
+
+TickBitmap.flipTick_ternary_false@3:
+    frame_dig 9
+    bytec 6 // 0xffffff
+    b&
+    b TickBitmap.flipTick_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.CustomRevert.revertWith(2)_1(selector: bytes, value: uint64) -> void:
+CustomRevert.revertWith:
+    proto 2 0
+    err // revert
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.Pool.tickSpacingToMaxLiquidityPerTick__chunk_1(tickSpacing: uint64, MAX_TICK: uint64, MIN_TICK: uint64, result: bytes) -> uint64, bytes, bytes:
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1:
+    proto 4 3
+    intc_0 // 0
+    dupn 8
+    frame_dig -2
+    itob
+    dup
+    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    bytec_2 // 0x
+    bytec_0 // 0x01
+    uncover 2
+    select
+    frame_dig -4
+    itob
+    dup
+    cover 2
+    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    cover 2
+    bytec_2 // 0x
+    bytec_0 // 0x01
+    uncover 2
+    select
+    b!=
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@8
+    frame_dig 10
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@3
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig 9
+    b-
+    bytec_0 // 0x01
+    b+
+    frame_bury 0
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@4:
+    frame_dig 12
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@6
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig 11
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@7:
+    frame_dig 0
+    swap
+    b/
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    swap
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@15:
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_bury 8
+    frame_dig 10
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@23
+    frame_dig 10
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@18
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig 9
+    b-
+    bytec_0 // 0x01
+    b+
+    frame_bury 6
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@19:
+    frame_dig 12
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@21
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig 11
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@22:
+    frame_dig 6
+    swap
+    b%
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    swap
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@30:
+    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bytec_2 // 0x
+    bytec_0 // 0x01
+    uncover 2
+    select
+    bytec_2 // 0x
+    b==
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@47
+    frame_dig 10
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@39
+    frame_dig 10
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@34
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig 9
+    b-
+    bytec_0 // 0x01
+    b+
+    frame_bury 1
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@35:
+    frame_dig 12
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@37
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig 11
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@38:
+    frame_dig 1
+    swap
+    b%
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    swap
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@46:
+    bytec_2 // 0x
+    b<
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@63:
+    bytec_2 // 0x
+    bytec_0 // 0x01
+    uncover 2
+    select
+    frame_dig 8
+    swap
+    b-
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -3
+    swap
+    frame_dig -1
+    frame_bury 2
+    frame_bury 1
+    frame_bury 0
+    retsub
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@37:
+    frame_dig 11
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@38
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@34:
+    frame_dig 9
+    frame_bury 1
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@35
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@39:
+    frame_dig 10
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@41
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig 9
+    b-
+    bytec_0 // 0x01
+    b+
+    frame_bury 2
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@42:
+    frame_dig 12
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@44
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig 11
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@45:
+    frame_dig 2
+    swap
+    b%
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@46
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@44:
+    frame_dig 11
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@45
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@41:
+    frame_dig 9
+    frame_bury 2
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@42
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@47:
+    frame_dig 10
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@55
+    frame_dig 10
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@50
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig 9
+    b-
+    bytec_0 // 0x01
+    b+
+    frame_bury 3
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@51:
+    frame_dig 12
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@53
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig 11
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@54:
+    frame_dig 3
+    swap
+    b%
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    swap
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@62:
+    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@63
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@53:
+    frame_dig 11
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@54
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@50:
+    frame_dig 9
+    frame_bury 3
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@51
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@55:
+    frame_dig 10
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@57
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig 9
+    b-
+    bytec_0 // 0x01
+    b+
+    frame_bury 4
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@58:
+    frame_dig 12
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@60
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig 11
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@61:
+    frame_dig 4
+    swap
+    b%
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@62
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@60:
+    frame_dig 11
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@61
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@57:
+    frame_dig 9
+    frame_bury 4
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@58
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@21:
+    frame_dig 11
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@22
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@18:
+    frame_dig 9
+    frame_bury 6
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@19
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@23:
+    frame_dig 10
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@25
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig 9
+    b-
+    bytec_0 // 0x01
+    b+
+    frame_bury 7
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@26:
+    frame_dig 12
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@28
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig 11
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@29:
+    frame_dig 7
+    swap
+    b%
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@30
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@28:
+    frame_dig 11
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@29
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@25:
+    frame_dig 9
+    frame_bury 7
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@26
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@6:
+    frame_dig 11
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@7
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@3:
+    frame_dig 9
+    frame_bury 0
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@4
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@8:
+    frame_dig 10
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@10
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig 9
+    b-
+    bytec_0 // 0x01
+    b+
+    frame_bury 5
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@11:
+    frame_dig 12
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@13
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig 11
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@14:
+    frame_dig 5
+    swap
+    b/
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@15
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@13:
+    frame_dig 11
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@14
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@10:
+    frame_dig 9
+    frame_bury 5
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@11
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper2.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn NumAppArgs
+    bz __puya_arc4_router_____bare_create__@4
+    pushbytes 0x3f4a6701 // method "Pool.modifyLiquidity__chunk_1((uint8[32],uint256,uint256,uint256,byte[],byte[],byte[]),(uint8[32],uint64,uint64,uint256,uint64,uint8[32]),uint256,uint256,uint256,(uint8,uint256,uint8,uint256),uint64,uint64)(uint256,uint256,uint256,(uint8,uint256,uint8,uint256),uint64,uint64)"
+    txna ApplicationArgs 0
+    match __puya_arc4_router___Pool.modifyLiquidity__chunk_1_route@2
+    err
+
+__puya_arc4_router___Pool.modifyLiquidity__chunk_1_route@2:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b Pool.modifyLiquidity__chunk_1
+
+__puya_arc4_router_____bare_create__@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper2.Pool.modifyLiquidity__chunk_1[routing]() -> void:
+Pool.modifyLiquidity__chunk_1:
+    intc_0 // 0
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    dig 1
+    pushint 128
+    extract_uint16 // on error: invalid tuple encoding
+    dup
+    pushint 134
+    ==
+    assert // invalid tail pointer at index 4 of (uint8[32],uint256,uint256,uint256,(len+uint8[]),(len+uint8[]),(len+uint8[]))
+    dig 2
+    swap
+    dig 2
+    substring3
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 136
+    +
+    dig 2
+    intc 4 // 130
+    extract_uint16 // on error: invalid tuple encoding
+    dup
+    dig 2
+    ==
+    assert // invalid tail pointer at index 5 of (uint8[32],uint256,uint256,uint256,(len+uint8[]),(len+uint8[]),(len+uint8[]))
+    dig 3
+    swap
+    dig 3
+    substring3
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    +
+    dig 2
+    intc 5 // 132
+    extract_uint16 // on error: invalid tuple encoding
+    dup
+    dig 2
+    ==
+    assert // invalid tail pointer at index 6 of (uint8[32],uint256,uint256,uint256,(len+uint8[]),(len+uint8[]),(len+uint8[]))
+    uncover 3
+    swap
+    dig 3
+    substring3
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    +
+    ==
+    assert // invalid number of bytes for State
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 120
+    ==
+    assert // invalid number of bytes for ModifyLiquidityParams
+    txna ApplicationArgs 3
+    dup
+    len
+    dup
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    dup
+    len
+    dup
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 5
+    dupn 2
+    len
+    dup
+    cover 2
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 6
+    dup
+    cover 2
+    len
+    pushint 66
+    ==
+    assert // invalid number of bytes for ModifyLiquidityState
+    txna ApplicationArgs 7
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    swap
+    txna ApplicationArgs 8
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    swap
+    intc_0 // 0
+    itob
+    dup
+    cover 2
+    b!=
+    bz Pool.modifyLiquidity__chunk_1_after_if_else@12
+    dig 11
+    dig 3
+    dup
+    cover 2
+    dig 8
+    dup
+    cover 4
+    intc_0 // 0
+    callsub Pool.updateTick
+    cover 2
+    popn 2
+    dig 1
+    dig 3
+    intc_0 // 0
+    callsub Pool.updateTick
+    cover 2
+    pop
+    itob
+    dup
+    bitlen
+    intc_2 // 8
+    <=
+    assert // overflow
+    extract 7 1
+    dig 7
+    swap
+    replace2 0
+    swap
+    uncover 2
+    dig 3
+    intc_0 // 0
+    callsub Pool.updateTick
+    cover 2
+    bury 1
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    uncover 3
+    swap
+    replace2 1
+    uncover 2
+    dig 5
+    dup
+    cover 2
+    dig 5
+    intc_3 // 1
+    callsub Pool.updateTick
+    cover 2
+    popn 2
+    dig 1
+    dig 5
+    intc_3 // 1
+    callsub Pool.updateTick
+    cover 2
+    pop
+    itob
+    dup
+    bitlen
+    intc_2 // 8
+    <=
+    assert // overflow
+    extract 7 1
+    uncover 3
+    swap
+    replace2 33
+    swap
+    uncover 2
+    dig 4
+    intc_3 // 1
+    callsub Pool.updateTick
+    bury 17
+    bury 1
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    replace2 34
+    bury 5
+    dig 1
+    b>=
+    bz Pool.modifyLiquidity__chunk_1_after_if_else@7
+    dig 10
+    pushint 80
+    extract_uint64
+    callsub Pool.tickSpacingToMaxLiquidityPerTick
+    dup
+    bury 14
+    dig 4
+    extract 1 32
+    b<
+    bz Pool.modifyLiquidity__chunk_1_after_if_else@5
+    bytec_2 // 0x
+    dig 3
+    callsub CustomRevert.revertWith
+
+Pool.modifyLiquidity__chunk_1_after_if_else@5:
+    dig 3
+    extract 34 32
+    dig 13
+    b>
+    bz Pool.modifyLiquidity__chunk_1_after_if_else@7
+    bytec_2 // 0x
+    dig 2
+    callsub CustomRevert.revertWith
+
+Pool.modifyLiquidity__chunk_1_after_if_else@7:
+    dig 3
+    extract 0 1
+    bytec_2 // 0x
+    b!=
+    bz Pool.modifyLiquidity__chunk_1_after_if_else@9
+    dig 11
+    dup
+    intc 4 // 130
+    extract_uint16
+    dig 1
+    intc 5 // 132
+    extract_uint16
+    substring3
+    extract 2 0
+    dig 11
+    pushint 80
+    extract_uint64
+    dig 4
+    swap
+    callsub TickBitmap.flipTick
+
+Pool.modifyLiquidity__chunk_1_after_if_else@9:
+    dig 3
+    extract 33 1
+    bytec_2 // 0x
+    b!=
+    bz Pool.modifyLiquidity__chunk_1_after_if_else@12
+    dig 11
+    dup
+    intc 4 // 130
+    extract_uint16
+    dig 1
+    intc 5 // 132
+    extract_uint16
+    substring3
+    extract 2 0
+    dig 11
+    pushint 80
+    extract_uint64
+    dig 3
+    swap
+    callsub TickBitmap.flipTick
+
+Pool.modifyLiquidity__chunk_1_after_if_else@12:
+    dig 8
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    dig 10
+    dig 1
+    b|
+    dig 8
+    intc_1 // 32
+    <=
+    assert // overflow
+    dig 9
+    dig 2
+    b|
+    concat
+    dig 6
+    intc_1 // 32
+    <=
+    assert // overflow
+    dig 7
+    uncover 2
+    b|
+    concat
+    dig 4
+    concat
+    dig 3
+    itob
+    concat
+    dig 2
+    itob
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return

@@ -27,13 +27,23 @@ ContractSplitter::SplitResult ContractSplitter::split(
 	logger.info("Splitting contract '" + _original->name + "' into " +
 		std::to_string(_recommendation.partitions.size()) + " parts");
 
-	// Build subroutine name→node map
+	// Build subroutine name→node map (for unique names)
 	auto subMap = buildSubroutineMap(_roots);
+
+	// Build ID→subroutine map for overloaded functions
+	std::map<std::string, std::shared_ptr<awst::Subroutine>> subById;
+	for (auto const& root: _roots)
+		if (auto sub = std::dynamic_pointer_cast<awst::Subroutine>(root))
+			subById[sub->id] = sub;
 
 	// Also build ID→name map for dependency scanning
 	std::map<std::string, std::string> idToName;
 	for (auto const& [name, sub]: subMap)
 		idToName[sub->id] = name;
+	// Also add overloaded entries that were shadowed in subMap
+	for (auto const& [id, sub]: subById)
+		if (idToName.find(id) == idToName.end())
+			idToName[id] = sub->name;
 
 	int numHelpers = static_cast<int>(_recommendation.partitions.size()) - 1;
 
@@ -78,11 +88,66 @@ ContractSplitter::SplitResult ContractSplitter::split(
 		helperAWST.contractName = helper->name;
 
 		// Add subroutines this helper needs
+		std::set<std::string> addedIds;
 		for (auto const& funcName: assignedFuncs)
 		{
 			auto it = subMap.find(funcName);
 			if (it != subMap.end())
+			{
 				helperAWST.roots.push_back(it->second);
+				addedIds.insert(it->second->id);
+			}
+		}
+		// Also add ALL overloaded variants with matching names
+		for (auto const& funcName: assignedFuncs)
+		{
+			for (auto const& [id, sub]: subById)
+			{
+				if (sub->name == funcName && !addedIds.count(id))
+				{
+					helperAWST.roots.push_back(sub);
+					addedIds.insert(id);
+				}
+			}
+		}
+		// Finally, scan the added subroutines for SubroutineID references
+		// and include any referenced subroutines not yet added.
+		// Use a self-mapping idToName (id→id) so scanExprForSubroutineIds
+		// (which is comprehensive) collects raw IDs directly.
+		std::map<std::string, std::string> selfIdMap;
+		for (auto const& [id, sub]: subById)
+			selfIdMap[id] = id;
+
+		bool changed = true;
+		while (changed)
+		{
+			changed = false;
+			std::set<std::string> referencedIds;
+			for (auto const& root: helperAWST.roots)
+			{
+				if (auto sub = std::dynamic_pointer_cast<awst::Subroutine>(root))
+				{
+					if (sub->body)
+					{
+						for (auto const& stmt: sub->body->body)
+							if (stmt)
+								scanStmtForSubroutineIds(*stmt, referencedIds, selfIdMap);
+					}
+				}
+			}
+			for (auto const& refId: referencedIds)
+			{
+				if (!addedIds.count(refId))
+				{
+					auto it = subById.find(refId);
+					if (it != subById.end())
+					{
+						helperAWST.roots.push_back(it->second);
+						addedIds.insert(refId);
+						changed = true;
+					}
+				}
+			}
 		}
 
 		// Add the Contract node
@@ -185,6 +250,110 @@ std::set<std::string> ContractSplitter::collectDependencies(
 	}
 
 	return visited;
+}
+
+void ContractSplitter::scanSubroutineForRawIds(
+	awst::Subroutine const& _sub,
+	std::set<std::string>& _ids
+)
+{
+	if (!_sub.body)
+		return;
+
+	// Build an identity map (ID→ID) so scanExprForSubroutineIds collects raw IDs
+	std::map<std::string, std::string> identityMap;
+	// We'll populate as we find them — scanExprForSubroutineIds inserts
+	// the id→name lookup result. With an empty map, unresolved IDs are skipped.
+	// So instead, we pass a special map where every ID maps to itself.
+	// But we don't know all IDs upfront. Instead, modify the scan to also
+	// collect raw IDs via the _names set when _idToName is empty.
+
+	// Use a modified approach: scan statements, collecting names that ARE the raw IDs
+	// by using an idToName map where each id maps to itself.
+	// Actually the simplest approach: just walk the statements and look for SubroutineCallExpression
+	for (auto const& stmt: _sub.body->body)
+		if (stmt)
+			scanStmtForRawIds(*stmt, _ids);
+}
+
+void ContractSplitter::scanExprForRawIds(
+	awst::Expression const& _expr,
+	std::set<std::string>& _ids
+)
+{
+	std::string type = _expr.nodeType();
+	if (type == "SubroutineCallExpression")
+	{
+		auto const& call = static_cast<awst::SubroutineCallExpression const&>(_expr);
+		if (auto const* sid = std::get_if<awst::SubroutineID>(&call.target))
+			_ids.insert(sid->target);
+		for (auto const& arg: call.args)
+			if (arg.value)
+				scanExprForRawIds(*arg.value, _ids);
+		return;
+	}
+	// Reuse the same recursive pattern as scanExprForSubroutineIds
+	std::map<std::string, std::string> dummy;
+	std::set<std::string> dummyNames;
+	// Call the existing scanner which handles all expression types
+	scanExprForSubroutineIds(_expr, dummyNames, dummy);
+	// That won't capture IDs because dummy is empty. Let's do it directly.
+	// Just handle the few key expression types that can contain SubroutineCallExpression
+	if (type == "ConditionalExpression")
+	{
+		auto const& cond = static_cast<awst::ConditionalExpression const&>(_expr);
+		if (cond.condition) scanExprForRawIds(*cond.condition, _ids);
+		if (cond.trueExpr) scanExprForRawIds(*cond.trueExpr, _ids);
+		if (cond.falseExpr) scanExprForRawIds(*cond.falseExpr, _ids);
+	}
+}
+
+void ContractSplitter::scanStmtForRawIds(
+	awst::Statement const& _stmt,
+	std::set<std::string>& _ids
+)
+{
+	std::string type = _stmt.nodeType();
+	if (type == "ExpressionStatement")
+	{
+		auto const& es = static_cast<awst::ExpressionStatement const&>(_stmt);
+		if (es.expr) scanExprForRawIds(*es.expr, _ids);
+	}
+	else if (type == "AssignmentStatement")
+	{
+		auto const& as = static_cast<awst::AssignmentStatement const&>(_stmt);
+		if (as.value) scanExprForRawIds(*as.value, _ids);
+	}
+	else if (type == "ReturnStatement")
+	{
+		auto const& rs = static_cast<awst::ReturnStatement const&>(_stmt);
+		if (rs.value) scanExprForRawIds(*rs.value, _ids);
+	}
+	else if (type == "IfElse")
+	{
+		auto const& ie = static_cast<awst::IfElse const&>(_stmt);
+		if (ie.condition) scanExprForRawIds(*ie.condition, _ids);
+		if (ie.ifBranch)
+			for (auto const& s: ie.ifBranch->body)
+				if (s) scanStmtForRawIds(*s, _ids);
+		if (ie.elseBranch)
+			for (auto const& s: ie.elseBranch->body)
+				if (s) scanStmtForRawIds(*s, _ids);
+	}
+	else if (type == "Block")
+	{
+		auto const& block = static_cast<awst::Block const&>(_stmt);
+		for (auto const& s: block.body)
+			if (s) scanStmtForRawIds(*s, _ids);
+	}
+	else if (type == "WhileLoop")
+	{
+		auto const& wl = static_cast<awst::WhileLoop const&>(_stmt);
+		if (wl.condition) scanExprForRawIds(*wl.condition, _ids);
+		if (wl.loopBody)
+			for (auto const& s: wl.loopBody->body)
+				if (s) scanStmtForRawIds(*s, _ids);
+	}
 }
 
 void ContractSplitter::scanExprForSubroutineIds(
@@ -735,6 +904,30 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 		orch->methods.push_back(std::move(stub));
 	}
 
+	// Add a bare create method so the orchestrator can be deployed
+	{
+		awst::ContractMethod bareCreate;
+		bareCreate.sourceLocation = loc;
+		bareCreate.returnType = awst::WType::voidType();
+		bareCreate.cref = orch->id;
+		bareCreate.memberName = "__bare_create__";
+
+		auto body = std::make_shared<awst::Block>();
+		body->sourceLocation = loc;
+		auto ret = std::make_shared<awst::ReturnStatement>();
+		ret->sourceLocation = loc;
+		body->body.push_back(ret);
+		bareCreate.body = body;
+
+		awst::ARC4BareMethodConfig bareConfig;
+		bareConfig.sourceLocation = loc;
+		bareConfig.allowedCompletionTypes = {0}; // NoOp
+		bareConfig.create = 2; // Require (create-only)
+		bareCreate.arc4MethodConfig = bareConfig;
+
+		orch->methods.push_back(std::move(bareCreate));
+	}
+
 	// Approval program: ARC4 router (same as helpers)
 	{
 		auto body = std::make_shared<awst::Block>();
@@ -798,6 +991,12 @@ static std::shared_ptr<awst::Expression> buildDefaultExpression(
 		val->wtype = _type;
 		val->sourceLocation = _loc;
 		val->encoding = awst::BytesEncoding::Base16;
+		// For fixed-size bytes types (bytes[N]), fill with N zero bytes
+		if (auto const* bytesType = dynamic_cast<awst::BytesWType const*>(_type))
+		{
+			if (bytesType->length().has_value())
+				val->value.resize(*bytesType->length(), 0);
+		}
 		return val;
 	}
 	if (_type == awst::WType::stringType())

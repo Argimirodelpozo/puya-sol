@@ -1,0 +1,533 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper24.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 32 8 1
+    bytecblock 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x 0x8000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolIdLibrary.toId(poolKey: bytes) -> bytes, bytes:
+PoolIdLibrary.toId:
+    proto 1 2
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    extract 0 32
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_dig -1
+    extract 32 32
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    frame_dig -1
+    extract 64 8
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    frame_dig -1
+    extract 72 8
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    frame_dig -1
+    extract 80 32
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    keccak256
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper24.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn NumAppArgs
+    bz __puya_arc4_router_____bare_create__@8
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xdb2252c7 0xdb957eaf // method "Pool.tickSpacingToMaxLiquidityPerTick__chunk_1(uint64,uint64,uint64,uint256)(uint64,uint256,uint256)", method "PoolIdLibrary.toId((uint8[32],uint8[32],uint64,uint64,uint8[32]))byte[32]"
+    txna ApplicationArgs 0
+    match Pool.tickSpacingToMaxLiquidityPerTick__chunk_1 /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper24.PoolIdLibrary.toId[routing]
+    err
+
+__puya_arc4_router_____bare_create__@8:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper24.Pool.tickSpacingToMaxLiquidityPerTick__chunk_1[routing]() -> void:
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1:
+    pushint 0
+    dupn 8
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    swap
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_1 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 4
+    dup
+    cover 3
+    len
+    dup
+    cover 3
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    itob
+    dup
+    cover 2
+    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    cover 2
+    bytec_2 // 0x
+    bytec_0 // 0x01
+    uncover 2
+    select
+    swap
+    itob
+    dup
+    cover 2
+    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    cover 2
+    bytec_2 // 0x
+    bytec_0 // 0x01
+    uncover 2
+    select
+    b!=
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@9
+    dig 2
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@4
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 4
+    b-
+    bytec_0 // 0x01
+    b+
+    bury 16
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@5:
+    dup
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@7
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 2
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@8:
+    dig 16
+    swap
+    b/
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    swap
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@16:
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bury 8
+    dig 2
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@24
+    dig 2
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@19
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 4
+    b-
+    bytec_0 // 0x01
+    b+
+    bury 10
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@20:
+    dup
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@22
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 2
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@23:
+    dig 10
+    swap
+    b%
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    swap
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@31:
+    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bytec_2 // 0x
+    bytec_0 // 0x01
+    uncover 2
+    select
+    bytec_2 // 0x
+    b==
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@48
+    dig 2
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@40
+    dig 2
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@35
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 4
+    b-
+    bytec_0 // 0x01
+    b+
+    bury 15
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@36:
+    dup
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@38
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 2
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@39:
+    dig 15
+    swap
+    b%
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    swap
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@47:
+    bytec_2 // 0x
+    b<
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@64:
+    bytec_2 // 0x
+    bytec_0 // 0x01
+    uncover 2
+    select
+    dig 8
+    swap
+    b-
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 7
+    itob
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 2
+    dig 1
+    b|
+    uncover 2
+    swap
+    concat
+    dig 6
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 7
+    uncover 2
+    b|
+    concat
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@38:
+    dig 1
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@39
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@35:
+    dig 3
+    bury 15
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@36
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@40:
+    dig 2
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@42
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 4
+    b-
+    bytec_0 // 0x01
+    b+
+    bury 14
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@43:
+    dup
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@45
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 2
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@46:
+    dig 14
+    swap
+    b%
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@47
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@45:
+    dig 1
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@46
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@42:
+    dig 3
+    bury 14
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@43
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@48:
+    dig 2
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@56
+    dig 2
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@51
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 4
+    b-
+    bytec_0 // 0x01
+    b+
+    bury 13
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@52:
+    dup
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@54
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 2
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@55:
+    dig 13
+    swap
+    b%
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    swap
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@63:
+    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@64
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@54:
+    dig 1
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@55
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@51:
+    dig 3
+    bury 13
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@52
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@56:
+    dig 2
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@58
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 4
+    b-
+    bytec_0 // 0x01
+    b+
+    bury 12
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@59:
+    dup
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@61
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 2
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@62:
+    dig 12
+    swap
+    b%
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@63
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@61:
+    dig 1
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@62
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@58:
+    dig 3
+    bury 12
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@59
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@22:
+    dig 1
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@23
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@19:
+    dig 3
+    bury 10
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@20
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@24:
+    dig 2
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@26
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 4
+    b-
+    bytec_0 // 0x01
+    b+
+    bury 9
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@27:
+    dup
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@29
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 2
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@30:
+    dig 9
+    swap
+    b%
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@31
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@29:
+    dig 1
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@30
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@26:
+    dig 3
+    bury 9
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@27
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@7:
+    dig 1
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@8
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@4:
+    dig 3
+    bury 16
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@5
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@9:
+    dig 2
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@11
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 4
+    b-
+    bytec_0 // 0x01
+    b+
+    bury 11
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@12:
+    dup
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@14
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 2
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@15:
+    dig 11
+    swap
+    b/
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@16
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@14:
+    dig 1
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@15
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_false@11:
+    dig 3
+    bury 11
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_1_ternary_merge@12
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper24.PoolIdLibrary.toId[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper24.PoolIdLibrary.toId[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 112
+    ==
+    assert // invalid number of bytes for PoolKey
+    callsub PoolIdLibrary.toId
+    pop
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

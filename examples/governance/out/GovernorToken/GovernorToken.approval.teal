@@ -1,0 +1,582 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/governance/contracts/GovernorToken.sol.GovernorToken.approval_program() -> uint64:
+main:
+    intcblock 32 1 64 0
+    bytecblock 0x 0x0000000000000000000000000000000000000000000000000000000000000000 "_delegates" "_votingPower" "_balances" 0x151f7c75 "_allowances" "totalSupply" "owner" 0x151f7c7580 "name" "symbol" 0xddf252ad
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 10 // "name"
+    bytec_0 // 0x
+    app_global_put
+    bytec 11 // "symbol"
+    bytec_0 // 0x
+    app_global_put
+    bytec 7 // "totalSupply"
+    bytec_0 // 0x
+    app_global_put
+    bytec 8 // "owner"
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    txna ApplicationArgs 1
+    bytec 10 // "name"
+    txna ApplicationArgs 0
+    app_global_put
+    bytec 11 // "symbol"
+    swap
+    app_global_put
+    bytec 8 // "owner"
+    txn Sender
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xc90c90b1 0x42820278 0x3c4937bd 0x95b95bc6 0x177171e7 0xb3b65f28 0x8fdd8b27 0x4792f8ea 0xf95588ea // method "balanceOf(address)uint512", method "transfer(address,uint512)bool", method "approve(address,uint512)bool", method "allowance(address,address)uint512", method "transferFrom(address,address,uint512)bool", method "delegate(address)void", method "getVotingPower(address)uint512", method "delegates(address)address", method "mint(address,uint512)void"
+    txna ApplicationArgs 0
+    match balanceOf transfer approve allowance transferFrom delegate getVotingPower delegates mint
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/governance/contracts/GovernorToken.sol.GovernorToken.balanceOf[routing]() -> void:
+balanceOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 4 // "_balances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/governance/contracts/GovernorToken.sol.GovernorToken.transfer[routing]() -> void:
+transfer:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    cover 2
+    callsub _transfer
+    bytec 9 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/governance/contracts/GovernorToken.sol.GovernorToken.approve[routing]() -> void:
+approve:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    uncover 2
+    concat
+    sha256
+    bytec 6 // "_allowances"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    pushbytes 0x8c5be1e5
+    swap
+    concat
+    log
+    bytec 9 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/governance/contracts/GovernorToken.sol.GovernorToken.allowance[routing]() -> void:
+allowance:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    concat
+    sha256
+    bytec 6 // "_allowances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/governance/contracts/GovernorToken.sol.GovernorToken.transferFrom[routing]() -> void:
+transferFrom:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dig 2
+    txn Sender
+    concat
+    sha256
+    bytec 6 // "_allowances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    dig 2
+    b>=
+    assert // insufficient allowance
+    dig 1
+    b-
+    dig 3
+    txn Sender
+    concat
+    sha256
+    bytec 6 // "_allowances"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    callsub _transfer
+    bytec 9 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/governance/contracts/GovernorToken.sol.GovernorToken.delegate[routing]() -> void:
+delegate:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    sha256
+    bytec_2 // "_delegates"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    cover 2
+    txn Sender
+    sha256
+    bytec_2 // "_delegates"
+    swap
+    concat
+    uncover 2
+    box_put
+    txn Sender
+    sha256
+    bytec 4 // "_balances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    swap
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    bz delegate_after_if_else@4
+    intc_3 // 0
+    itob
+    dig 1
+    b<
+    bz delegate_after_if_else@4
+    dig 1
+    sha256
+    bytec_3 // "_votingPower"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b-
+    dig 1
+    box_del
+    pop
+    box_put
+
+delegate_after_if_else@4:
+    dig 2
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    bz delegate_after_if_else@7
+    intc_3 // 0
+    itob
+    dig 1
+    b<
+    bz delegate_after_if_else@7
+    dig 2
+    sha256
+    bytec_3 // "_votingPower"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+
+delegate_after_if_else@7:
+    pushbytes 0x3134e8a2
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/governance/contracts/GovernorToken.sol.GovernorToken.getVotingPower[routing]() -> void:
+getVotingPower:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_3 // "_votingPower"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/governance/contracts/GovernorToken.sol.GovernorToken.delegates[routing]() -> void:
+delegates:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_2 // "_delegates"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/governance/contracts/GovernorToken.sol.GovernorToken.mint[routing]() -> void:
+mint:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_2 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_3 // 0
+    bytec 8 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    assert // only owner
+    intc_3 // 0
+    bytec 7 // "totalSupply"
+    app_global_get_ex
+    assert // check totalSupply exists
+    dig 1
+    b+
+    bytec 7 // "totalSupply"
+    swap
+    app_global_put
+    swap
+    sha256
+    bytec 4 // "_balances"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    uncover 3
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec_2 // "_delegates"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    bz mint_after_if_else@3
+    dup
+    sha256
+    bytec_3 // "_votingPower"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 3
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+
+mint_after_if_else@3:
+    bytec 12 // 0xddf252ad
+    dig 2
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/governance/contracts/GovernorToken.sol.GovernorToken._transfer(from: bytes, to: bytes, amount: bytes) -> void:
+_transfer:
+    proto 3 0
+    frame_dig -3
+    sha256
+    bytec 4 // "_balances"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    frame_dig -1
+    b>=
+    assert // insufficient balance
+    frame_dig -1
+    b-
+    dig 1
+    box_del
+    pop
+    box_put
+    frame_dig -2
+    sha256
+    bytec 4 // "_balances"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    frame_dig -1
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec_2 // "_delegates"
+    uncover 2
+    concat
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    cover 2
+    bytec_2 // "_delegates"
+    uncover 2
+    concat
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    swap
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    bz _transfer_after_if_else@3
+    intc_3 // 0
+    itob
+    frame_dig -1
+    b<
+    bz _transfer_after_if_else@3
+    frame_dig 0
+    sha256
+    bytec_3 // "_votingPower"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    frame_dig -1
+    b-
+    dig 1
+    box_del
+    pop
+    box_put
+
+_transfer_after_if_else@3:
+    frame_dig 1
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    bz _transfer_after_if_else@6
+    intc_3 // 0
+    itob
+    frame_dig -1
+    b<
+    bz _transfer_after_if_else@6
+    frame_dig 1
+    sha256
+    bytec_3 // "_votingPower"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    frame_dig -1
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+
+_transfer_after_if_else@6:
+    bytec 12 // 0xddf252ad
+    frame_dig -1
+    concat
+    log
+    retsub

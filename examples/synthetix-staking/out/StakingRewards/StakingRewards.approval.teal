@@ -1,0 +1,891 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.approval_program() -> uint64:
+main:
+    intcblock 64 0 1 32 1000000000000000000
+    bytecblock 0x 0x151f7c75 "rewardPerTokenStored" "periodFinish" "rewardsDuration" "lastUpdateTime" "_totalSupply" "rewardRate" "rewards" "_balances" "userRewardPerTokenPaid" "owner" "rewardsDistribution" base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA)
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 11 // "owner"
+    bytec 13 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 12 // "rewardsDistribution"
+    bytec 13 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_3 // "periodFinish"
+    bytec_0 // 0x
+    app_global_put
+    bytec 7 // "rewardRate"
+    bytec_0 // 0x
+    app_global_put
+    bytec 4 // "rewardsDuration"
+    bytec_0 // 0x
+    app_global_put
+    bytec 5 // "lastUpdateTime"
+    bytec_0 // 0x
+    app_global_put
+    bytec_2 // "rewardPerTokenStored"
+    bytec_0 // 0x
+    app_global_put
+    bytec 6 // "_totalSupply"
+    bytec_0 // 0x
+    app_global_put
+    txna ApplicationArgs 0
+    bytec 11 // "owner"
+    txn Sender
+    app_global_put
+    bytec 12 // "rewardsDistribution"
+    txn Sender
+    app_global_put
+    bytec 4 // "rewardsDuration"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x49ac1a6b 0xc90c90b1 0xb178f963 0x8b0d71df 0x9e967aaa 0x3f9d1125 0x3f7e7ed9 0x236ca6e8 0x6efbe8e0 0x18f06952 0x2f784f91 0xf6742709 0x77fe1397 0x5773d631 0xc90ea219 0x17017f86 0x2b95d5f7 0xfbcf2cd4 // method "totalSupply()uint512", method "balanceOf(address)uint512", method "lastTimeRewardApplicable(uint512)uint512", method "rewardPerToken(uint512)uint512", method "earned(address,uint512)uint512", method "getRewardForDuration()uint512", method "stake(uint512,uint512)void", method "withdraw(uint512,uint512)void", method "getReward(uint512)uint512", method "notifyRewardAmount(uint512,uint512)void", method "setRewardsDuration(uint512,uint512)void", method "getRewardRate()uint512", method "getPeriodFinish()uint512", method "getLastUpdateTime()uint512", method "getRewardPerTokenStored()uint512", method "getRewardsDuration()uint512", method "getUserRewardPerTokenPaid(address)uint512", method "getRewards(address)uint512"
+    txna ApplicationArgs 0
+    match totalSupply balanceOf lastTimeRewardApplicable rewardPerToken earned getRewardForDuration stake withdraw getReward notifyRewardAmount setRewardsDuration getRewardRate getPeriodFinish getLastUpdateTime getRewardPerTokenStored getRewardsDuration getUserRewardPerTokenPaid getRewards
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.totalSupply[routing]() -> void:
+totalSupply:
+    intc_1 // 0
+    bytec 6 // "_totalSupply"
+    app_global_get_ex
+    assert // check _totalSupply exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.balanceOf[routing]() -> void:
+balanceOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 9 // "_balances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.lastTimeRewardApplicable[routing]() -> void:
+lastTimeRewardApplicable:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.lastTimeRewardApplicable
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.rewardPerToken[routing]() -> void:
+rewardPerToken:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.rewardPerToken
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.earned[routing]() -> void:
+earned:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.earned
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.getRewardForDuration[routing]() -> void:
+getRewardForDuration:
+    intc_1 // 0
+    bytec 7 // "rewardRate"
+    app_global_get_ex
+    assert // check rewardRate exists
+    intc_1 // 0
+    bytec 4 // "rewardsDuration"
+    app_global_get_ex
+    assert // check rewardsDuration exists
+    b*
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.stake[routing]() -> void:
+stake:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.rewardPerToken
+    bytec_2 // "rewardPerTokenStored"
+    swap
+    app_global_put
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.lastTimeRewardApplicable
+    bytec 5 // "lastUpdateTime"
+    swap
+    app_global_put
+    txn Sender
+    swap
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.earned
+    txn Sender
+    sha256
+    bytec 8 // "rewards"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 0
+    bytec_2 // "rewardPerTokenStored"
+    app_global_get_ex
+    assert // check rewardPerTokenStored exists
+    txn Sender
+    sha256
+    bytec 10 // "userRewardPerTokenPaid"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 0
+    itob
+    dig 1
+    b<
+    assert // Cannot stake 0
+    intc_1 // 0
+    bytec 6 // "_totalSupply"
+    app_global_get_ex
+    assert // check _totalSupply exists
+    dig 1
+    b+
+    bytec 6 // "_totalSupply"
+    swap
+    app_global_put
+    txn Sender
+    sha256
+    bytec 9 // "_balances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b+
+    txn Sender
+    sha256
+    bytec 9 // "_balances"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.withdraw[routing]() -> void:
+withdraw:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.rewardPerToken
+    bytec_2 // "rewardPerTokenStored"
+    swap
+    app_global_put
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.lastTimeRewardApplicable
+    bytec 5 // "lastUpdateTime"
+    swap
+    app_global_put
+    txn Sender
+    swap
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.earned
+    txn Sender
+    sha256
+    bytec 8 // "rewards"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 0
+    bytec_2 // "rewardPerTokenStored"
+    app_global_get_ex
+    assert // check rewardPerTokenStored exists
+    txn Sender
+    sha256
+    bytec 10 // "userRewardPerTokenPaid"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 0
+    itob
+    dig 1
+    b<
+    assert // Cannot withdraw 0
+    intc_1 // 0
+    bytec 6 // "_totalSupply"
+    app_global_get_ex
+    assert // check _totalSupply exists
+    dig 1
+    b-
+    bytec 6 // "_totalSupply"
+    swap
+    app_global_put
+    txn Sender
+    sha256
+    bytec 9 // "_balances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    swap
+    b-
+    txn Sender
+    sha256
+    bytec 9 // "_balances"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.getReward[routing]() -> void:
+getReward:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.rewardPerToken
+    bytec_2 // "rewardPerTokenStored"
+    swap
+    app_global_put
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.lastTimeRewardApplicable
+    bytec 5 // "lastUpdateTime"
+    swap
+    app_global_put
+    txn Sender
+    swap
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.earned
+    txn Sender
+    sha256
+    bytec 8 // "rewards"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 0
+    bytec_2 // "rewardPerTokenStored"
+    app_global_get_ex
+    assert // check rewardPerTokenStored exists
+    txn Sender
+    sha256
+    bytec 10 // "userRewardPerTokenPaid"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    txn Sender
+    sha256
+    bytec 8 // "rewards"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    intc_1 // 0
+    itob
+    dup
+    cover 2
+    b>
+    bz getReward_after_if_else@3
+    txn Sender
+    sha256
+    bytec 8 // "rewards"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+
+getReward_after_if_else@3:
+    dig 1
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.notifyRewardAmount[routing]() -> void:
+notifyRewardAmount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec 12 // "rewardsDistribution"
+    app_global_get_ex
+    assert // check rewardsDistribution exists
+    ==
+    assert // Caller is not RewardsDistribution
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.rewardPerToken
+    bytec_2 // "rewardPerTokenStored"
+    swap
+    app_global_put
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.lastTimeRewardApplicable
+    bytec 5 // "lastUpdateTime"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec_3 // "periodFinish"
+    app_global_get_ex
+    assert // check periodFinish exists
+    b>=
+    bz notifyRewardAmount_else_body@3
+    intc_1 // 0
+    bytec 4 // "rewardsDuration"
+    app_global_get_ex
+    assert // check rewardsDuration exists
+    b/
+    bytec 7 // "rewardRate"
+    swap
+    app_global_put
+
+notifyRewardAmount_after_if_else@4:
+    bytec 5 // "lastUpdateTime"
+    dig 1
+    dup
+    cover 2
+    app_global_put
+    intc_1 // 0
+    bytec 4 // "rewardsDuration"
+    app_global_get_ex
+    assert // check rewardsDuration exists
+    b+
+    bytec_3 // "periodFinish"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+notifyRewardAmount_else_body@3:
+    intc_1 // 0
+    bytec_3 // "periodFinish"
+    app_global_get_ex
+    assert // check periodFinish exists
+    dig 2
+    b-
+    intc_1 // 0
+    bytec 7 // "rewardRate"
+    app_global_get_ex
+    assert // check rewardRate exists
+    b*
+    b+
+    intc_1 // 0
+    bytec 4 // "rewardsDuration"
+    app_global_get_ex
+    assert // check rewardsDuration exists
+    b/
+    bytec 7 // "rewardRate"
+    swap
+    app_global_put
+    b notifyRewardAmount_after_if_else@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.setRewardsDuration[routing]() -> void:
+setRewardsDuration:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec 11 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    assert // Only owner
+    intc_1 // 0
+    bytec_3 // "periodFinish"
+    app_global_get_ex
+    assert // check periodFinish exists
+    b>
+    assert // Previous rewards period must be complete
+    bytec 4 // "rewardsDuration"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.getRewardRate[routing]() -> void:
+getRewardRate:
+    intc_1 // 0
+    bytec 7 // "rewardRate"
+    app_global_get_ex
+    assert // check rewardRate exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.getPeriodFinish[routing]() -> void:
+getPeriodFinish:
+    intc_1 // 0
+    bytec_3 // "periodFinish"
+    app_global_get_ex
+    assert // check periodFinish exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.getLastUpdateTime[routing]() -> void:
+getLastUpdateTime:
+    intc_1 // 0
+    bytec 5 // "lastUpdateTime"
+    app_global_get_ex
+    assert // check lastUpdateTime exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.getRewardPerTokenStored[routing]() -> void:
+getRewardPerTokenStored:
+    intc_1 // 0
+    bytec_2 // "rewardPerTokenStored"
+    app_global_get_ex
+    assert // check rewardPerTokenStored exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.getRewardsDuration[routing]() -> void:
+getRewardsDuration:
+    intc_1 // 0
+    bytec 4 // "rewardsDuration"
+    app_global_get_ex
+    assert // check rewardsDuration exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.getUserRewardPerTokenPaid[routing]() -> void:
+getUserRewardPerTokenPaid:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 10 // "userRewardPerTokenPaid"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.getRewards[routing]() -> void:
+getRewards:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 8 // "rewards"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.lastTimeRewardApplicable(currentTime: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.lastTimeRewardApplicable:
+    proto 1 1
+    intc_1 // 0
+    bytec_3 // "periodFinish"
+    app_global_get_ex
+    assert // check periodFinish exists
+    frame_dig -1
+    b>
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.lastTimeRewardApplicable_after_if_else@2
+    frame_dig -1
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.lastTimeRewardApplicable_after_if_else@2:
+    intc_1 // 0
+    bytec_3 // "periodFinish"
+    app_global_get_ex
+    assert // check periodFinish exists
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.rewardPerToken(currentTime: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.rewardPerToken:
+    proto 1 1
+    intc_1 // 0
+    bytec 6 // "_totalSupply"
+    app_global_get_ex
+    assert // check _totalSupply exists
+    intc_1 // 0
+    itob
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.rewardPerToken_after_if_else@2
+    intc_1 // 0
+    bytec_2 // "rewardPerTokenStored"
+    app_global_get_ex
+    assert // check rewardPerTokenStored exists
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.rewardPerToken_after_if_else@2:
+    frame_dig -1
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.lastTimeRewardApplicable
+    intc_1 // 0
+    bytec 5 // "lastUpdateTime"
+    app_global_get_ex
+    assert // check lastUpdateTime exists
+    b-
+    intc_1 // 0
+    bytec_2 // "rewardPerTokenStored"
+    app_global_get_ex
+    assert // check rewardPerTokenStored exists
+    intc_1 // 0
+    bytec 7 // "rewardRate"
+    app_global_get_ex
+    assert // check rewardRate exists
+    uncover 2
+    b*
+    intc 4 // 1000000000000000000
+    itob
+    b*
+    intc_1 // 0
+    bytec 6 // "_totalSupply"
+    app_global_get_ex
+    assert // check _totalSupply exists
+    b/
+    b+
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.earned(account: bytes, currentTime: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.earned:
+    proto 2 1
+    frame_dig -1
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/synthetix-staking/contracts/StakingRewards.sol.StakingRewards.rewardPerToken
+    frame_dig -2
+    sha256
+    bytec 10 // "userRewardPerTokenPaid"
+    dig 1
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec 9 // "_balances"
+    dig 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    uncover 3
+    uncover 2
+    b-
+    b*
+    intc 4 // 1000000000000000000
+    itob
+    b/
+    bytec 8 // "rewards"
+    uncover 2
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b+
+    retsub

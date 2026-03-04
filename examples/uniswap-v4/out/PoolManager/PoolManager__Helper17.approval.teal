@@ -1,0 +1,358 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper17.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 32 8 1 255 256
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000080000000000000000000000000000000 0x0000000000000000000000000000000100000000000000000000000000000000
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper17.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn NumAppArgs
+    bz __puya_arc4_router_____bare_create__@4
+    pushbytes 0x9e676176 // method "Pool.initialize__chunk_1__chunk_2((uint8[32],uint256,uint256,uint256,byte[],byte[],byte[]),uint256,uint64,uint64,uint256,uint256,uint256,uint256)(uint256,uint256,uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match __puya_arc4_router___Pool.initialize__chunk_1__chunk_2_route@2
+    err
+
+__puya_arc4_router___Pool.initialize__chunk_1__chunk_2_route@2:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b Pool.initialize__chunk_1__chunk_2
+
+__puya_arc4_router_____bare_create__@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper17.Pool.initialize__chunk_1__chunk_2[routing]() -> void:
+Pool.initialize__chunk_1__chunk_2:
+    txna ApplicationArgs 1
+    dup
+    len
+    dig 1
+    pushint 128
+    extract_uint16 // on error: invalid tuple encoding
+    dup
+    pushint 134
+    ==
+    assert // invalid tail pointer at index 4 of (uint8[32],uint256,uint256,uint256,(len+uint8[]),(len+uint8[]),(len+uint8[]))
+    dig 2
+    swap
+    dig 2
+    substring3
+    pushint 0
+    extract_uint16 // on error: invalid array length header
+    pushint 136
+    +
+    dig 2
+    pushint 130
+    extract_uint16 // on error: invalid tuple encoding
+    dup
+    dig 2
+    ==
+    assert // invalid tail pointer at index 5 of (uint8[32],uint256,uint256,uint256,(len+uint8[]),(len+uint8[]),(len+uint8[]))
+    dig 3
+    swap
+    dig 3
+    substring3
+    pushint 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    +
+    dig 2
+    pushint 132
+    extract_uint16 // on error: invalid tuple encoding
+    dup
+    dig 2
+    ==
+    assert // invalid tail pointer at index 6 of (uint8[32],uint256,uint256,uint256,(len+uint8[]),(len+uint8[]),(len+uint8[]))
+    uncover 3
+    swap
+    dig 3
+    substring3
+    pushint 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    +
+    ==
+    assert // invalid number of bytes for State
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    len
+    intc_1 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    txna ApplicationArgs 4
+    len
+    intc_1 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    txna ApplicationArgs 5
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 6
+    dupn 2
+    len
+    dup
+    cover 2
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 7
+    dup
+    cover 2
+    len
+    dup
+    cover 2
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 8
+    dup
+    cover 2
+    len
+    dup
+    cover 2
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    pushint 128
+    itob
+    b>=
+    bz Pool.initialize__chunk_1__chunk_2_else_body@3
+    intc_0 // 32
+    bzero
+    intc_1 // 8
+    bzero
+    pushint 127
+    itob
+    dig 8
+    swap
+    b-
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_3 // 255
+    swap
+    -
+    intc_2 // 1
+    setbit
+    dig 4
+    swap
+    b/
+
+Pool.initialize__chunk_1__chunk_2_after_if_else@4:
+    dup
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    intc_0 // 32
+    bzero
+    intc_1 // 8
+    bzero
+    uncover 2
+    bytec_1 // 0x0000000000000000000000000000000080000000000000000000000000000000
+    b/
+    dup
+    bytec_2 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc 4 // 256
+    %
+    intc_3 // 255
+    swap
+    -
+    dig 3
+    swap
+    intc_2 // 1
+    setbit
+    b/
+    dup
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000080000000000000000000000000000000
+    b/
+    dup
+    bytec_2 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc 4 // 256
+    %
+    intc_3 // 255
+    swap
+    -
+    dig 3
+    swap
+    intc_2 // 1
+    setbit
+    b/
+    dup
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000080000000000000000000000000000000
+    b/
+    dup
+    bytec_2 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc 4 // 256
+    %
+    intc_3 // 255
+    swap
+    -
+    dig 3
+    swap
+    intc_2 // 1
+    setbit
+    b/
+    dup
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000080000000000000000000000000000000
+    b/
+    dup
+    bytec_2 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc 4 // 256
+    %
+    intc_3 // 255
+    swap
+    -
+    dig 2
+    swap
+    intc_2 // 1
+    setbit
+    b/
+    dup
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000080000000000000000000000000000000
+    b/
+    bytec_2 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    dig 8
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 9
+    dig 2
+    b|
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    concat
+    dig 6
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 7
+    dig 2
+    b|
+    concat
+    dig 4
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 5
+    dig 2
+    b|
+    concat
+    dig 2
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 3
+    uncover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+Pool.initialize__chunk_1__chunk_2_else_body@3:
+    intc_0 // 32
+    bzero
+    intc_1 // 8
+    bzero
+    pushint 127
+    itob
+    dig 8
+    b-
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_3 // 255
+    swap
+    -
+    intc_2 // 1
+    setbit
+    dig 4
+    b*
+    b Pool.initialize__chunk_1__chunk_2_after_if_else@4

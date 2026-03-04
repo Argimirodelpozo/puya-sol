@@ -1,0 +1,637 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/timelock/contracts/TimelockController.sol.TimelockController.approval_program() -> uint64:
+main:
+    intcblock 64 1 0 32
+    bytecblock 0x151f7c75 0x "_operationState" "admin" "minDelay" "operationCount" "_isProposer" 0x00 "_isExecutor" 0x0000000000000000000000000000000000000000000000000000000000000000 "_operationReadyAt" "_operationTarget"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "admin"
+    bytec 9 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 4 // "minDelay"
+    bytec_1 // 0x
+    app_global_put
+    bytec 5 // "operationCount"
+    bytec_1 // 0x
+    app_global_put
+    txna ApplicationArgs 0
+    bytec_3 // "admin"
+    txn Sender
+    app_global_put
+    bytec 4 // "minDelay"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x28548877 0x06b75b70 0xd1d76dad 0xb11b18d6 0xcd3c759f 0x5c31a255 0x51bf420b 0x4438e99d 0x817fa17a 0x5ffb7ea3 0x8c0772bb 0xef9f514a 0x39273e39 0xfd479524 // method "grantProposerRole(address)void", method "grantExecutorRole(address)void", method "isProposer(address)bool", method "isExecutor(address)bool", method "schedule(address,uint512,uint512)uint512", method "execute(uint512)void", method "cancel(uint512)void", method "getOperationState(uint512)uint512", method "getOperationTarget(uint512)address", method "getOperationReadyAt(uint512)uint512", method "isOperationPending(uint512)bool", method "isOperationDone(uint512)bool", method "getOperationCount()uint512", method "updateMinDelay(uint512)void"
+    txna ApplicationArgs 0
+    match grantProposerRole grantExecutorRole isProposer isExecutor schedule execute cancel getOperationState getOperationTarget getOperationReadyAt isOperationPending isOperationDone getOperationCount updateMinDelay
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/timelock/contracts/TimelockController.sol.TimelockController.grantProposerRole[routing]() -> void:
+grantProposerRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_2 // 0
+    bytec_3 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    ==
+    assert // only admin
+    sha256
+    bytec 6 // "_isProposer"
+    swap
+    concat
+    intc_1 // 1
+    itob
+    box_put
+    pushbytes 0xb710f7d370726f706f736572
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/timelock/contracts/TimelockController.sol.TimelockController.grantExecutorRole[routing]() -> void:
+grantExecutorRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_2 // 0
+    bytec_3 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    ==
+    assert // only admin
+    sha256
+    bytec 8 // "_isExecutor"
+    swap
+    concat
+    intc_1 // 1
+    itob
+    box_put
+    pushbytes 0xb710f7d36578656375746f72
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/timelock/contracts/TimelockController.sol.TimelockController.isProposer[routing]() -> void:
+isProposer:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 6 // "_isProposer"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    bytec 7 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/timelock/contracts/TimelockController.sol.TimelockController.isExecutor[routing]() -> void:
+isExecutor:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 8 // "_isExecutor"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    bytec 7 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/timelock/contracts/TimelockController.sol.TimelockController.schedule[routing]() -> void:
+schedule:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    sha256
+    bytec 6 // "_isProposer"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    assert // not a proposer
+    intc_2 // 0
+    bytec 4 // "minDelay"
+    app_global_get_ex
+    assert // check minDelay exists
+    dig 1
+    b<=
+    assert // delay below minimum
+    intc_2 // 0
+    bytec 5 // "operationCount"
+    app_global_get_ex
+    assert // check operationCount exists
+    intc_1 // 1
+    itob
+    swap
+    dig 1
+    b+
+    bytec 5 // "operationCount"
+    dig 1
+    app_global_put
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_operationState"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    pushint 100
+    itob
+    dig 4
+    b+
+    bytec 10 // "_operationReadyAt"
+    dig 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    bytec 11 // "_operationTarget"
+    dig 1
+    concat
+    dig 6
+    box_put
+    pushbytes "_operationValue"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    pushbytes 0xcf20bea1
+    uncover 4
+    concat
+    uncover 3
+    concat
+    log
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/timelock/contracts/TimelockController.sol.TimelockController.execute[routing]() -> void:
+execute:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    sha256
+    bytec 8 // "_isExecutor"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    assert // not an executor
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_operationState"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_1 // 1
+    itob
+    b==
+    assert // not pending
+    pushint 2
+    itob
+    dig 1
+    box_del
+    pop
+    box_put
+    pushbytes 0x0e71fde5
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/timelock/contracts/TimelockController.sol.TimelockController.cancel[routing]() -> void:
+cancel:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    sha256
+    bytec 6 // "_isProposer"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    assert // not a proposer
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_operationState"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_1 // 1
+    itob
+    b==
+    assert // not pending
+    intc_2 // 0
+    itob
+    dig 1
+    box_del
+    pop
+    box_put
+    pushbytes 0x6b7f7505
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/timelock/contracts/TimelockController.sol.TimelockController.getOperationState[routing]() -> void:
+getOperationState:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_operationState"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/timelock/contracts/TimelockController.sol.TimelockController.getOperationTarget[routing]() -> void:
+getOperationTarget:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 11 // "_operationTarget"
+    swap
+    concat
+    box_get
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/timelock/contracts/TimelockController.sol.TimelockController.getOperationReadyAt[routing]() -> void:
+getOperationReadyAt:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 10 // "_operationReadyAt"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/timelock/contracts/TimelockController.sol.TimelockController.isOperationPending[routing]() -> void:
+isOperationPending:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_operationState"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_1 // 1
+    itob
+    b==
+    bytec 7 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/timelock/contracts/TimelockController.sol.TimelockController.isOperationDone[routing]() -> void:
+isOperationDone:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_operationState"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    pushint 2
+    itob
+    b==
+    bytec 7 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/timelock/contracts/TimelockController.sol.TimelockController.getOperationCount[routing]() -> void:
+getOperationCount:
+    intc_2 // 0
+    bytec 5 // "operationCount"
+    app_global_get_ex
+    assert // check operationCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/timelock/contracts/TimelockController.sol.TimelockController.updateMinDelay[routing]() -> void:
+updateMinDelay:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_2 // 0
+    bytec_3 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    ==
+    assert // only admin
+    intc_2 // 0
+    bytec 4 // "minDelay"
+    app_global_get_ex
+    assert // check minDelay exists
+    bytec 4 // "minDelay"
+    dig 2
+    app_global_put
+    pushbytes 0x45854098
+    swap
+    concat
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

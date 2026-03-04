@@ -1,0 +1,543 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-erc721/contracts/ERC721.sol.ERC721.approval_program() -> uint64:
+main:
+    intcblock 64 1 32 0
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 "_ownerOf" "_getApproved" "_balanceOf" "_isApprovedForAll" 0x151f7c75 0xddf252ad
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x59baa4a5 0x29e26b9c 0x97cd19e1 0x9736f563 0xc90c90b1 0x473a14fc 0x5005c46f 0xf95588ea 0xc013cd57 // method "approve(address,uint512)void", method "setApprovalForAll(address,bool)void", method "transferFrom(address,address,uint512)void", method "ownerOf(uint512)address", method "balanceOf(address)uint512", method "getApproved(uint512)address", method "isApprovedForAll(address,address)bool", method "mint(address,uint512)void", method "burn(uint512)void"
+    txna ApplicationArgs 0
+    match approve setApprovalForAll transferFrom ownerOf balanceOf getApproved isApprovedForAll mint burn
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-erc721/contracts/ERC721.sol.ERC721.approve[routing]() -> void:
+approve:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    dup
+    bytec_1 // "_ownerOf"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    txn Sender
+    ==
+    bnz approve_bool_true@3
+    dup
+    txn Sender
+    concat
+    sha256
+    bytec 4 // "_isApprovedForAll"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_3 // 0
+    swap
+    uncover 2
+    select
+    bz approve_bool_false@4
+
+approve_bool_true@3:
+    intc_1 // 1
+
+approve_bool_merge@5:
+    assert // NOT_AUTHORIZED
+    bytec_2 // "_getApproved"
+    dig 2
+    concat
+    dig 3
+    box_put
+    pushbytes 0x8c5be1e5
+    log
+    intc_1 // 1
+    return
+
+approve_bool_false@4:
+    intc_3 // 0
+    b approve_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-erc721/contracts/ERC721.sol.ERC721.setApprovalForAll[routing]() -> void:
+setApprovalForAll:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_3 // 0
+    getbit
+    txn Sender
+    uncover 2
+    concat
+    sha256
+    bytec 4 // "_isApprovedForAll"
+    swap
+    concat
+    swap
+    itob
+    swap
+    dig 1
+    box_put
+    pushbytes 0x17307eab
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-erc721/contracts/ERC721.sol.ERC721.transferFrom[routing]() -> void:
+transferFrom:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    dup
+    cover 3
+    bytec_1 // "_ownerOf"
+    swap
+    concat
+    dup
+    cover 3
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dig 2
+    ==
+    assert // WRONG_FROM
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // INVALID_RECIPIENT
+    txn Sender
+    ==
+    bnz transferFrom_bool_true@4
+    dig 3
+    txn Sender
+    concat
+    sha256
+    bytec 4 // "_isApprovedForAll"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_3 // 0
+    swap
+    uncover 2
+    select
+    bnz transferFrom_bool_true@4
+    txn Sender
+    bytec_2 // "_getApproved"
+    dig 3
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    ==
+    bz transferFrom_bool_false@5
+
+transferFrom_bool_true@4:
+    intc_1 // 1
+
+transferFrom_bool_merge@6:
+    assert // NOT_AUTHORIZED
+    dig 3
+    sha256
+    bytec_3 // "_balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    intc_1 // 1
+    itob
+    swap
+    dig 1
+    b-
+    dig 2
+    box_del
+    pop
+    uncover 2
+    swap
+    box_put
+    dig 3
+    dup
+    cover 2
+    sha256
+    bytec_3 // "_balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    uncover 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    dig 1
+    swap
+    box_put
+    bytec_2 // "_getApproved"
+    dig 2
+    concat
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    box_put
+    bytec 6 // 0xddf252ad
+    log
+    intc_1 // 1
+    return
+
+transferFrom_bool_false@5:
+    intc_3 // 0
+    b transferFrom_bool_merge@6
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-erc721/contracts/ERC721.sol.ERC721.ownerOf[routing]() -> void:
+ownerOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_1 // "_ownerOf"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // NOT_MINTED
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-erc721/contracts/ERC721.sol.ERC721.balanceOf[routing]() -> void:
+balanceOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    dup
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // ZERO_ADDRESS
+    sha256
+    bytec_3 // "_balanceOf"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-erc721/contracts/ERC721.sol.ERC721.getApproved[routing]() -> void:
+getApproved:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_2 // "_getApproved"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-erc721/contracts/ERC721.sol.ERC721.isApprovedForAll[routing]() -> void:
+isApprovedForAll:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    concat
+    sha256
+    bytec 4 // "_isApprovedForAll"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_3 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_3 // 0
+    uncover 2
+    setbit
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-erc721/contracts/ERC721.sol.ERC721.mint[routing]() -> void:
+mint:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    dig 1
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // INVALID_RECIPIENT
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_1 // "_ownerOf"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    assert // ALREADY_MINTED
+    dig 1
+    sha256
+    bytec_3 // "_balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    intc_1 // 1
+    itob
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    swap
+    box_put
+    bytec 6 // 0xddf252ad
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solmate-erc721/contracts/ERC721.sol.ERC721.burn[routing]() -> void:
+burn:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec_1 // "_ownerOf"
+    dig 1
+    concat
+    dup
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // NOT_MINTED
+    sha256
+    bytec_3 // "_balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    intc_1 // 1
+    itob
+    b-
+    dig 1
+    box_del
+    pop
+    box_put
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    box_put
+    bytec_2 // "_getApproved"
+    swap
+    concat
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    box_put
+    bytec 6 // 0xddf252ad
+    log
+    intc_1 // 1
+    return

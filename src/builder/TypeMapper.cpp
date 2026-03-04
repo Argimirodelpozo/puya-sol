@@ -216,7 +216,7 @@ awst::WType const* TypeMapper::mapToARC4Type(awst::WType const* _type)
 	if (_type == awst::WType::uint64Type())
 		return createType<awst::ARC4UIntN>(64);
 	if (_type == awst::WType::biguintType())
-		return createType<awst::ARC4UIntN>(512);
+		return createType<awst::ARC4UIntN>(256);
 	if (_type == awst::WType::boolType())
 		return createType<awst::ARC4UIntN>(8);
 	if (_type == awst::WType::accountType())
@@ -266,8 +266,10 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 	auto const& structDef = _structType->structDefinition();
 	std::string name = structDef.name();
 
-	// Check cache
-	auto it = m_cache.find("struct:" + name);
+	// Use AST ID for cache key to disambiguate same-named structs
+	// from different scopes (e.g. Pool.SwapParams vs IPoolManager.SwapParams)
+	std::string cacheKey = "struct:" + std::to_string(structDef.id());
+	auto it = m_cache.find(cacheKey);
 	if (it != m_cache.end())
 		return it->second;
 
@@ -276,11 +278,15 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 
 	for (auto const& member: structDef.members())
 	{
-		// Skip mapping fields — they are storage-only and cannot be
-		// embedded in an ARC4Struct.  Each mapping is handled as a
-		// separate box map by StorageMapper / ExpressionTranslator.
 		if (member->type()->category() == solidity::frontend::Type::Category::Mapping)
+		{
+			// Mapping fields cannot be ARC4-encoded, but must still appear
+			// in the struct type so that FieldExpression accesses are valid.
+			// Use bytes as placeholder — the actual mapping data is stored
+			// in separate box storage keyed by the mapping name.
+			fields.emplace_back(member->name(), awst::WType::bytesType());
 			continue;
+		}
 		auto const* rawType = map(member->type());
 		auto const* arc4Type = mapToARC4Type(rawType);
 		fields.emplace_back(member->name(), arc4Type);
@@ -292,7 +298,7 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 		/*_frozen=*/false
 	);
 
-	m_cache["struct:" + name] = result;
+	m_cache[cacheKey] = result;
 	return result;
 }
 

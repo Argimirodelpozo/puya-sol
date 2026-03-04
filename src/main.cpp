@@ -138,6 +138,7 @@ struct Options
 {
 	std::string sourceFile;
 	std::vector<std::string> importPaths;
+	std::vector<std::string> remappings;
 	std::string outputDir = "out";
 	std::string puyaPath;
 	std::string logLevel = "info";
@@ -157,6 +158,7 @@ void printUsage(char const* _progName)
 		<< "Options:\n"
 		<< "  --source <file>        Solidity source file to compile (required)\n"
 		<< "  --import-path <path>   Import path for resolving imports (repeatable)\n"
+		<< "  --remapping <map>      Import remapping: prefix=target (repeatable)\n"
 		<< "  --output-dir <dir>     Output directory (default: out)\n"
 		<< "  --puya-path <path>     Path to puya executable (required unless --no-puya)\n"
 		<< "  --log-level <level>    Log level: debug, info, warning, error (default: info)\n"
@@ -181,6 +183,8 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.sourceFile = _argv[++i];
 		else if (arg == "--import-path" && i + 1 < _argc)
 			opts.importPaths.push_back(_argv[++i]);
+		else if (arg == "--remapping" && i + 1 < _argc)
+			opts.remappings.push_back(_argv[++i]);
 		else if (arg == "--output-dir" && i + 1 < _argc)
 			opts.outputDir = _argv[++i];
 		else if (arg == "--puya-path" && i + 1 < _argc)
@@ -358,7 +362,30 @@ int main(int _argc, char* _argv[])
 	compiler.setEVMVersion(evmVer);
 	logger.info("EVM version set to: " + evmVer.name() + " (hasChainID=" + (evmVer.hasChainID() ? "true" : "false") + ")");
 
-	// No remappings needed — node_modules is added as include path
+	// Apply import remappings (Foundry-style: prefix=target)
+	if (!opts.remappings.empty())
+	{
+		std::vector<solidity::frontend::ImportRemapper::Remapping> parsedRemappings;
+		for (auto const& remapStr: opts.remappings)
+		{
+			auto parsed = solidity::frontend::ImportRemapper::parseRemapping(remapStr);
+			if (parsed.has_value())
+			{
+				parsedRemappings.push_back(parsed.value());
+				logger.debug("Remapping: '" + parsed->prefix + "' => '" + parsed->target + "'");
+				// Allow the remapping target directory so FileReader can read from it
+				fs::path targetPath(parsed->target);
+				if (targetPath.is_absolute() && fs::exists(targetPath))
+				{
+					fileReader.allowDirectory(targetPath);
+					fileReader.addIncludePath(targetPath);
+				}
+			}
+			else
+				logger.warning("Invalid remapping format: " + remapStr);
+		}
+		compiler.setRemappings(parsedRemappings);
+	}
 
 	logger.info("Parsing and type-checking...");
 
@@ -653,24 +680,25 @@ int main(int _argc, char* _argv[])
 	if (opts.dumpAwst)
 		std::cout << awstJson.dump(2) << std::endl;
 
-	// Get contract name for options
-	std::string contractName;
+	// Get all contract names for options
+	std::vector<std::string> contractNames;
 	for (auto const& root: roots)
 	{
 		if (auto const* contract = dynamic_cast<puyasol::awst::Contract const*>(root.get()))
-		{
-			contractName = contract->id; // always update (fallback = last)
-			if (contract->name == sourceBaseName)
-			{
-				contractName = contract->id;
-				break;
-			}
-		}
+			contractNames.push_back(contract->id);
 	}
 
 	// Write options.json
 	std::string optionsPath = (fs::path(opts.outputDir) / "options.json").string();
-	puyasol::json::OptionsWriter::write(optionsPath, contractName, opts.outputDir, opts.optimizationLevel);
+	if (contractNames.size() <= 1)
+	{
+		std::string contractName = contractNames.empty() ? "" : contractNames[0];
+		puyasol::json::OptionsWriter::write(optionsPath, contractName, opts.outputDir, opts.optimizationLevel);
+	}
+	else
+	{
+		puyasol::json::OptionsWriter::writeMultiple(optionsPath, contractNames, opts.outputDir, opts.optimizationLevel);
+	}
 	logger.info("Wrote: " + optionsPath);
 
 	// Summary

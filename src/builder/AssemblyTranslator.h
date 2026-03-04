@@ -159,6 +159,105 @@ private:
 		awst::SourceLocation const& _loc
 	);
 
+	/// Yul div(a, b): unsigned integer floor division (biguint).
+	std::shared_ptr<awst::Expression> handleDiv(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Yul shl(shift, value): logical left shift → value * 2^shift.
+	std::shared_ptr<awst::Expression> handleShl(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Yul shr(shift, value): logical right shift → value / 2^shift.
+	std::shared_ptr<awst::Expression> handleShr(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Yul byte(n, x): extract byte n from 32-byte big-endian value x.
+	std::shared_ptr<awst::Expression> handleByte(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Yul signextend(b, x): sign-extend from byte b to 256 bits.
+	std::shared_ptr<awst::Expression> handleSignextend(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Yul tload(slot): load from transient storage → global state read.
+	std::shared_ptr<awst::Expression> handleTload(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Yul tstore(slot, value): store to transient storage → global state write.
+	void handleTstore(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+
+	/// Yul sdiv(a, b): signed division (two's complement).
+	std::shared_ptr<awst::Expression> handleSdiv(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Yul smod(a, b): signed modulo (two's complement).
+	std::shared_ptr<awst::Expression> handleSmod(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Yul slt(a, b): signed less-than (two's complement).
+	std::shared_ptr<awst::Expression> handleSlt(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Yul sgt(a, b): signed greater-than (two's complement).
+	std::shared_ptr<awst::Expression> handleSgt(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Yul sar(shift, value): arithmetic right shift (preserves sign).
+	std::shared_ptr<awst::Expression> handleSar(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Yul sstore(slot, value): raw EVM storage write — stub as no-op.
+	void handleSstore(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+
+	/// Build a 2^shift power expression using setbit(bzero(32), 255-shift, 1).
+	std::shared_ptr<awst::Expression> buildPowerOf2(
+		std::shared_ptr<awst::Expression> _shift,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Check if a biguint value is "negative" (bit 255 set) in two's complement.
+	/// Returns a bool-typed expression.
+	std::shared_ptr<awst::Expression> isNegative256(
+		std::shared_ptr<awst::Expression> _val,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Negate a 256-bit two's complement value: ~x + 1 (mod 2^256).
+	std::shared_ptr<awst::Expression> negate256(
+		std::shared_ptr<awst::Expression> _val,
+		awst::SourceLocation const& _loc
+	);
+
 	/// Handle calldataload: reads 32 bytes from calldata at a given offset.
 	/// Maps to reading elements from calldata array parameters.
 	std::shared_ptr<awst::Expression> handleCalldataload(
@@ -313,6 +412,11 @@ private:
 	/// Maps memory offsets (0x00, 0x20, 0x80, 0xa0, ...) to variables.
 	std::map<uint64_t, MemorySlot> m_memoryMap;
 
+	/// Maps variable-base memory stores: varName → {relativeOffset → MemorySlot}.
+	/// Used when mstore offset is not a compile-time constant but is decomposable
+	/// as VarExpression + constant (e.g. add(memPtr, 0x20)).
+	std::map<std::string, std::map<uint64_t, MemorySlot>> m_varMemoryMap;
+
 	/// Initialize memory map from function parameters.
 	/// Array parameter elements are mapped at 0x80 + i*0x20.
 	void initializeMemoryMap(
@@ -322,6 +426,12 @@ private:
 	/// Try to resolve a constant memory offset from an expression.
 	/// Returns nullopt if the expression is not a compile-time constant.
 	std::optional<uint64_t> resolveConstantOffset(
+		std::shared_ptr<awst::Expression> const& _expr
+	);
+
+	/// Try to decompose an expression into (VarExpression name, constant offset).
+	/// Handles VarExpr, Add(VarExpr, Const), and Mod-wrapped variants.
+	std::optional<std::pair<std::string, uint64_t>> decomposeVarOffset(
 		std::shared_ptr<awst::Expression> const& _expr
 	);
 
@@ -345,6 +455,9 @@ private:
 
 	/// Compute the flat element count for an AWST type (handles nested arrays).
 	static int computeFlatElementCount(awst::WType const* _type);
+
+	/// Compute the encoded byte size of an ARC4 type.
+	static int computeARC4ByteSize(awst::WType const* _type);
 
 	/// Access a flat element from a (possibly nested) array parameter.
 	std::shared_ptr<awst::Expression> accessFlatElement(
@@ -392,11 +505,34 @@ private:
 		awst::SourceLocation const& _loc
 	);
 
+	/// Coerce biguint/uint64 expressions to bool (Yul semantics: non-zero = true).
+	std::shared_ptr<awst::Expression> ensureBool(
+		std::shared_ptr<awst::Expression> _expr,
+		awst::SourceLocation const& _loc
+	);
+
 	/// Build an AWST BigUIntBinaryOperation node.
 	std::shared_ptr<awst::Expression> makeBigUIntBinOp(
 		std::shared_ptr<awst::Expression> _left,
 		awst::BigUIntBinaryOperator _op,
 		std::shared_ptr<awst::Expression> _right,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Create a constant 2^256 as a biguint expression.
+	std::shared_ptr<awst::Expression> makeTwoPow256(awst::SourceLocation const& _loc);
+
+	/// Wrap an expression modulo 2^256 (EVM wrapping semantics).
+	std::shared_ptr<awst::Expression> wrapMod256(
+		std::shared_ptr<awst::Expression> _expr,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Safe btoi: extract last 8 bytes before btoi to handle biguint > 8 bytes.
+	/// AVM b&/b|/b^ pad shorter operands, producing results > 8 bytes even for
+	/// small values. This pattern ensures btoi never overflows.
+	std::shared_ptr<awst::Expression> safeBtoi(
+		std::shared_ptr<awst::Expression> _biguintExpr,
 		awst::SourceLocation const& _loc
 	);
 

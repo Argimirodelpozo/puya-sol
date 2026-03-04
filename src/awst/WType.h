@@ -240,9 +240,10 @@ class WTuple: public WType
 public:
 	WTuple(
 		std::vector<WType const*> _types,
-		std::optional<std::vector<std::string>> _names = std::nullopt
+		std::optional<std::vector<std::string>> _names = std::nullopt,
+		std::string _name = "tuple"
 	)
-		: WType("tuple", WTypeKind::WTuple, true),
+		: WType(std::move(_name), WTypeKind::WTuple, true),
 		  m_types(std::move(_types)),
 		  m_names(std::move(_names))
 	{

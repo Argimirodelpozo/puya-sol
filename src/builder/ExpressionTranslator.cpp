@@ -75,7 +75,7 @@ std::shared_ptr<awst::Expression> ExpressionTranslator::implicitNumericCast(
 	}
 
 	// biguint → uint64: safely extract lower 64 bits
-	// btoi only works on ≤8 bytes, but biguint from ABI-decoded uint512 is 64 bytes.
+	// btoi only works on ≤8 bytes, but biguint from ABI-decoded uint256 is 32 bytes.
 	// Approach: prepend 8 zero bytes, then extract last 8 bytes, then btoi.
 	// This is always safe: concat(bzero(8), bytes) has len ≥ 9, so (len-8) ≥ 1.
 	if (_expr->wtype == awst::WType::biguintType() && _targetType == awst::WType::uint64Type())
@@ -173,6 +173,7 @@ ExpressionTranslator::ExpressionTranslator(
 	  m_overloadedNames(_overloadedNames.empty() ? s_emptyOverloads : _overloadedNames),
 	  m_freeFunctionById(_freeFunctionById.empty() ? s_emptyFreeFunctionIds : _freeFunctionById)
 {
+	Logger::instance().debug("[TRACE] ExpressionTranslator m_freeFunctionById.size()=" + std::to_string(m_freeFunctionById.size()) + " paramSize=" + std::to_string(_freeFunctionById.size()) + " addr=" + std::to_string((uintptr_t)&m_freeFunctionById));
 }
 
 std::string ExpressionTranslator::resolveMethodName(
@@ -240,6 +241,16 @@ void ExpressionTranslator::removeParamRemap(int64_t _declId)
 void ExpressionTranslator::addSuperTarget(int64_t _funcId, std::string const& _name)
 {
 	m_superTargetNames[_funcId] = _name;
+}
+
+void ExpressionTranslator::addStorageAlias(int64_t _declId, std::shared_ptr<awst::Expression> _expr)
+{
+	m_storageAliases[_declId] = std::move(_expr);
+}
+
+void ExpressionTranslator::removeStorageAlias(int64_t _declId)
+{
+	m_storageAliases.erase(_declId);
 }
 
 awst::SourceLocation ExpressionTranslator::makeLoc(
@@ -366,6 +377,14 @@ bool ExpressionTranslator::visit(solidity::frontend::Identifier const& _node)
 			var->name = remapIt->second.name;
 			var->wtype = remapIt->second.type;
 			push(std::move(var));
+			return false;
+		}
+
+		// Check for storage pointer alias (e.g. Type storage p = _mapping[key])
+		auto aliasIt = m_storageAliases.find(decl->id());
+		if (aliasIt != m_storageAliases.end())
+		{
+			push(aliasIt->second);
 			return false;
 		}
 	}
@@ -500,11 +519,24 @@ std::shared_ptr<awst::Expression> ExpressionTranslator::buildBinaryOp(
 {
 	using Token = solidity::frontend::Token;
 
-	// Helper to coerce bytes[N] operands to uint64 when used in numeric context
+	// Helper to coerce bytes[N] operands to a numeric type when used in numeric context.
+	// For bytes[N] where N > 8, promotes to biguint (btoi only handles ≤8 bytes).
+	// For smaller bytes, uses btoi → uint64.
 	auto coerceBytesToUint = [&](std::shared_ptr<awst::Expression>& operand) {
 		if (operand->wtype && operand->wtype->kind() == awst::WTypeKind::Bytes)
 		{
-			// bytes[N] → bytes → btoi → uint64
+			auto const* bytesWType = dynamic_cast<awst::BytesWType const*>(operand->wtype);
+			if (bytesWType && bytesWType->length().has_value() && *bytesWType->length() > 8)
+			{
+				// bytes[N>8] → biguint via ReinterpretCast (btoi can't handle >8 bytes)
+				auto cast = std::make_shared<awst::ReinterpretCast>();
+				cast->sourceLocation = _loc;
+				cast->wtype = awst::WType::biguintType();
+				cast->expr = std::move(operand);
+				operand = std::move(cast);
+				return;
+			}
+			// bytes[N≤8] or unsized bytes → bytes → btoi → uint64
 			auto expr = std::move(operand);
 			if (expr->wtype != awst::WType::bytesType())
 			{
@@ -671,6 +703,33 @@ std::shared_ptr<awst::Expression> ExpressionTranslator::buildBinaryOp(
 		break;
 	}
 
+	// Bytes bitwise operations (b|, b&, b^) — for bytes[N] types like bytes32/bytes4
+	{
+		bool leftIsBytesKind = _left->wtype && _left->wtype->kind() == awst::WTypeKind::Bytes;
+		bool rightIsBytesKind = _right->wtype && _right->wtype->kind() == awst::WTypeKind::Bytes;
+		bool isBitwiseOp = (_op == Token::BitOr || _op == Token::AssignBitOr
+			|| _op == Token::BitXor || _op == Token::AssignBitXor
+			|| _op == Token::BitAnd || _op == Token::AssignBitAnd);
+
+		if ((leftIsBytesKind || rightIsBytesKind) && isBitwiseOp)
+		{
+			auto e = std::make_shared<awst::BytesBinaryOperation>();
+			e->sourceLocation = _loc;
+			e->wtype = awst::WType::bytesType();
+			e->left = std::move(_left);
+			e->right = std::move(_right);
+
+			switch (_op)
+			{
+			case Token::BitOr: case Token::AssignBitOr: e->op = awst::BytesBinaryOperator::BitOr; break;
+			case Token::BitXor: case Token::AssignBitXor: e->op = awst::BytesBinaryOperator::BitXor; break;
+			case Token::BitAnd: case Token::AssignBitAnd: e->op = awst::BytesBinaryOperator::BitAnd; break;
+			default: e->op = awst::BytesBinaryOperator::BitOr; break;
+			}
+			return e;
+		}
+	}
+
 	// Arithmetic/bitwise operations — choose uint64 vs biguint
 	if (isBigUInt(_resultType) || isBigUInt(_left->wtype) || isBigUInt(_right->wtype))
 	{
@@ -779,7 +838,7 @@ std::shared_ptr<awst::Expression> ExpressionTranslator::buildBinaryOp(
 		case Token::Mod: case Token::AssignMod: e->op = awst::UInt64BinaryOperator::Mod; break;
 		case Token::Exp: e->op = awst::UInt64BinaryOperator::Pow; break;
 		case Token::SHL: case Token::AssignShl: e->op = awst::UInt64BinaryOperator::LShift; break;
-		case Token::SHR: case Token::AssignShr: e->op = awst::UInt64BinaryOperator::RShift; break;
+		case Token::SHR: case Token::AssignShr: case Token::SAR: case Token::AssignSar: e->op = awst::UInt64BinaryOperator::RShift; break;
 		case Token::BitOr: case Token::AssignBitOr: e->op = awst::UInt64BinaryOperator::BitOr; break;
 		case Token::BitXor: case Token::AssignBitXor: e->op = awst::UInt64BinaryOperator::BitXor; break;
 		case Token::BitAnd: case Token::AssignBitAnd: e->op = awst::UInt64BinaryOperator::BitAnd; break;
@@ -926,45 +985,115 @@ bool ExpressionTranslator::visit(solidity::frontend::UnaryOperation const& _node
 	case Token::Inc:
 	case Token::Dec:
 	{
-		// i++ / i-- / ++i / --i → assignment expression: i = i + 1 (or i - 1)
-		// The result is the new value (pre-increment semantics for simplicity)
-		auto one = std::make_shared<awst::IntegerConstant>();
-		one->sourceLocation = loc;
-		one->wtype = operand->wtype;
-		one->value = "1";
+		// i++ / i-- / ++i / --i → assignment expression: i = i +/- 1
+		// Prefix (++i): result is the new value
+		// Postfix (i++): result is the old value (before increment)
+		bool isPrefix = _node.isPrefixOperation();
+		auto isInc = (_node.getOperator() == Token::Inc);
 
-		std::shared_ptr<awst::Expression> newValue;
-		auto op = (_node.getOperator() == Token::Inc);
-		if (isBigUInt(operand->wtype))
+		// For box-stored mappings, the operand is a bare BoxValueExpression
+		// (willBeWrittenTo=true skips StateGet wrapping). Wrap it in StateGet
+		// with a default value so the read works for uninitialized boxes.
+		if (dynamic_cast<awst::BoxValueExpression const*>(operand.get()))
 		{
-			auto binOp = std::make_shared<awst::BigUIntBinaryOperation>();
-			binOp->sourceLocation = loc;
-			binOp->wtype = awst::WType::biguintType();
-			binOp->left = operand; // shared, will also be used as target
-			binOp->op = op ? awst::BigUIntBinaryOperator::Add : awst::BigUIntBinaryOperator::Sub;
-			binOp->right = std::move(one);
-			newValue = std::move(binOp);
+			auto defaultVal = StorageMapper::makeDefaultValue(operand->wtype, loc);
+			auto stateGet = std::make_shared<awst::StateGet>();
+			stateGet->sourceLocation = loc;
+			stateGet->wtype = operand->wtype;
+			stateGet->field = operand;
+			stateGet->defaultValue = defaultVal;
+			operand = std::move(stateGet);
+		}
+
+		if (isPrefix)
+		{
+			// ++i / --i: compute new value, assign, return new value
+			auto one = std::make_shared<awst::IntegerConstant>();
+			one->sourceLocation = loc;
+			one->wtype = operand->wtype;
+			one->value = "1";
+
+			std::shared_ptr<awst::Expression> newValue;
+			if (isBigUInt(operand->wtype))
+			{
+				auto binOp = std::make_shared<awst::BigUIntBinaryOperation>();
+				binOp->sourceLocation = loc;
+				binOp->wtype = awst::WType::biguintType();
+				binOp->left = operand;
+				binOp->op = isInc ? awst::BigUIntBinaryOperator::Add : awst::BigUIntBinaryOperator::Sub;
+				binOp->right = std::move(one);
+				newValue = std::move(binOp);
+			}
+			else
+			{
+				auto binOp = std::make_shared<awst::UInt64BinaryOperation>();
+				binOp->sourceLocation = loc;
+				binOp->wtype = awst::WType::uint64Type();
+				binOp->left = operand;
+				binOp->op = isInc ? awst::UInt64BinaryOperator::Add : awst::UInt64BinaryOperator::Sub;
+				binOp->right = std::move(one);
+				newValue = std::move(binOp);
+			}
+
+			auto assignExpr = std::make_shared<awst::AssignmentExpression>();
+			assignExpr->sourceLocation = loc;
+			assignExpr->wtype = operand->wtype;
+			auto target = translate(_node.subExpression());
+			assignExpr->target = std::move(target);
+			assignExpr->value = std::move(newValue);
+			push(assignExpr);
 		}
 		else
 		{
-			auto binOp = std::make_shared<awst::UInt64BinaryOperation>();
-			binOp->sourceLocation = loc;
-			binOp->wtype = awst::WType::uint64Type();
-			binOp->left = operand;
-			binOp->op = op ? awst::UInt64BinaryOperator::Add : awst::UInt64BinaryOperator::Sub;
-			binOp->right = std::move(one);
-			newValue = std::move(binOp);
-		}
+			// i++ / i--: capture old value via SingleEvaluation, increment as side effect
+			// SingleEvaluation ensures the operand is read exactly once and cached.
+			// Both the return value and the increment expression share the same
+			// SingleEvaluation, so whichever evaluates first captures the old value.
+			auto singleEval = std::make_shared<awst::SingleEvaluation>();
+			singleEval->sourceLocation = loc;
+			singleEval->wtype = operand->wtype;
+			singleEval->source = operand;
+			singleEval->id = static_cast<int>(_node.id());
 
-		// Create assignment expression: i = i +/- 1
-		auto assignExpr = std::make_shared<awst::AssignmentExpression>();
-		assignExpr->sourceLocation = loc;
-		assignExpr->wtype = operand->wtype;
-		// Re-translate the sub-expression to get a fresh target
-		auto target = translate(_node.subExpression());
-		assignExpr->target = std::move(target);
-		assignExpr->value = std::move(newValue);
-		push(assignExpr);
+			auto one = std::make_shared<awst::IntegerConstant>();
+			one->sourceLocation = loc;
+			one->wtype = operand->wtype;
+			one->value = "1";
+
+			// Build new value: singleEval +/- 1
+			std::shared_ptr<awst::Expression> newValue;
+			if (isBigUInt(operand->wtype))
+			{
+				auto binOp = std::make_shared<awst::BigUIntBinaryOperation>();
+				binOp->sourceLocation = loc;
+				binOp->wtype = awst::WType::biguintType();
+				binOp->left = singleEval;
+				binOp->op = isInc ? awst::BigUIntBinaryOperator::Add : awst::BigUIntBinaryOperator::Sub;
+				binOp->right = std::move(one);
+				newValue = std::move(binOp);
+			}
+			else
+			{
+				auto binOp = std::make_shared<awst::UInt64BinaryOperation>();
+				binOp->sourceLocation = loc;
+				binOp->wtype = awst::WType::uint64Type();
+				binOp->left = singleEval;
+				binOp->op = isInc ? awst::UInt64BinaryOperator::Add : awst::UInt64BinaryOperator::Sub;
+				binOp->right = std::move(one);
+				newValue = std::move(binOp);
+			}
+
+			// Emit increment as a pending statement
+			auto incrStmt = std::make_shared<awst::AssignmentStatement>();
+			incrStmt->sourceLocation = loc;
+			auto target = translate(_node.subExpression());
+			incrStmt->target = std::move(target);
+			incrStmt->value = std::move(newValue);
+			m_pendingStatements.push_back(std::move(incrStmt));
+
+			// Return the SingleEvaluation (old value) as the expression result
+			push(singleEval);
+		}
 		break;
 	}
 	case Token::BitNot:
@@ -1001,11 +1130,45 @@ bool ExpressionTranslator::visit(solidity::frontend::UnaryOperation const& _node
 	}
 	case Token::Delete:
 	{
-		Logger::instance().error(
-			"'delete' is not supported on AVM. "
-			"Assign the default value instead, e.g. myMapping[key] = 0",
-			loc
-		);
+		// delete x → StateDelete for mapping values (box delete),
+		//            or assign zero/default for state vars and locals
+		auto target = translate(_node.subExpression());
+
+		// If target is a BoxValueExpression, emit StateDelete using the box as the field
+		if (dynamic_cast<awst::BoxValueExpression const*>(target.get()))
+		{
+			auto stateDelete = std::make_shared<awst::StateDelete>();
+			stateDelete->sourceLocation = loc;
+			stateDelete->wtype = awst::WType::boolType();
+			stateDelete->field = target; // The BoxValueExpression IS the field
+			m_pendingStatements.push_back(std::make_shared<awst::ExpressionStatement>());
+			m_pendingStatements.back()->sourceLocation = loc;
+			static_cast<awst::ExpressionStatement*>(m_pendingStatements.back().get())->expr = std::move(stateDelete);
+		}
+		else
+		{
+			// For other targets: assign the zero/default value
+			auto defaultVal = std::make_shared<awst::IntegerConstant>();
+			defaultVal->sourceLocation = loc;
+			if (isBigUInt(target->wtype))
+			{
+				defaultVal->wtype = awst::WType::biguintType();
+				defaultVal->value = "0";
+			}
+			else
+			{
+				defaultVal->wtype = awst::WType::uint64Type();
+				defaultVal->value = "0";
+			}
+
+			auto assignStmt = std::make_shared<awst::AssignmentStatement>();
+			assignStmt->sourceLocation = loc;
+			assignStmt->target = target;
+			assignStmt->value = std::move(defaultVal);
+			m_pendingStatements.push_back(std::move(assignStmt));
+		}
+
+		// Delete expression evaluates to void; push a dummy
 		push(std::move(operand));
 		break;
 	}
@@ -1123,6 +1286,42 @@ bool ExpressionTranslator::visit(solidity::frontend::FunctionCall const& _node)
 			auto converted = translate(*_node.arguments()[0]);
 			// Apply type conversion — try implicit numeric promotion first
 			converted = implicitNumericCast(std::move(converted), targetType, loc);
+
+			// Narrowing biguint cast: uint256 → uint160/uint128/etc.
+			// Both map to biguint, but we must insert truncation (AND mask)
+			// so SafeCast-style overflow checks work correctly on AVM.
+			if (targetType == awst::WType::biguintType()
+				&& converted->wtype == awst::WType::biguintType())
+			{
+				auto const* solTargetType = _node.annotation().type;
+				auto const* solSourceType = _node.arguments()[0]->annotation().type;
+				if (auto const* targetIntType = dynamic_cast<solidity::frontend::IntegerType const*>(solTargetType))
+				{
+					unsigned targetBits = targetIntType->numBits();
+					unsigned sourceBits = 256; // default
+					if (auto const* srcIntType = dynamic_cast<solidity::frontend::IntegerType const*>(solSourceType))
+						sourceBits = srcIntType->numBits();
+					if (targetBits < sourceBits && targetBits < 256)
+					{
+						// Insert: converted = converted & ((1 << targetBits) - 1)
+						auto mask = std::make_shared<awst::IntegerConstant>();
+						mask->sourceLocation = loc;
+						mask->wtype = awst::WType::biguintType();
+						// Compute mask: (2^targetBits) - 1
+						solidity::u256 maskVal = (solidity::u256(1) << targetBits) - 1;
+						mask->value = maskVal.str();
+
+						auto bitAnd = std::make_shared<awst::BigUIntBinaryOperation>();
+						bitAnd->sourceLocation = loc;
+						bitAnd->wtype = awst::WType::biguintType();
+						bitAnd->left = std::move(converted);
+						bitAnd->op = awst::BigUIntBinaryOperator::BitAnd;
+						bitAnd->right = std::move(mask);
+						converted = std::move(bitAnd);
+					}
+				}
+			}
+
 			if (targetType != converted->wtype)
 			{
 				bool sourceIsBytes = converted->wtype
@@ -1208,6 +1407,60 @@ bool ExpressionTranslator::visit(solidity::frontend::FunctionCall const& _node)
 						extract->stackArgs.push_back(std::move(result));
 						extract->stackArgs.push_back(std::move(offsetConst));
 						extract->stackArgs.push_back(std::move(widthConst));
+						result = std::move(extract);
+					}
+					else if (byteWidth > 8)
+					{
+						// itob produces 8 bytes; pad to byteWidth with leading zeros
+						// concat(bzero(byteWidth), itob_result) → extract last byteWidth bytes
+						auto widthConst = std::make_shared<awst::IntegerConstant>();
+						widthConst->sourceLocation = loc;
+						widthConst->wtype = awst::WType::uint64Type();
+						widthConst->value = std::to_string(byteWidth);
+
+						auto pad = std::make_shared<awst::IntrinsicCall>();
+						pad->sourceLocation = loc;
+						pad->wtype = awst::WType::bytesType();
+						pad->opCode = "bzero";
+						pad->stackArgs.push_back(std::move(widthConst));
+
+						auto cat = std::make_shared<awst::IntrinsicCall>();
+						cat->sourceLocation = loc;
+						cat->wtype = awst::WType::bytesType();
+						cat->opCode = "concat";
+						cat->stackArgs.push_back(std::move(pad));
+						cat->stackArgs.push_back(std::move(result));
+
+						auto lenExpr = std::make_shared<awst::IntrinsicCall>();
+						lenExpr->sourceLocation = loc;
+						lenExpr->wtype = awst::WType::uint64Type();
+						lenExpr->opCode = "len";
+						lenExpr->stackArgs.push_back(cat);
+
+						auto widthConst2 = std::make_shared<awst::IntegerConstant>();
+						widthConst2->sourceLocation = loc;
+						widthConst2->wtype = awst::WType::uint64Type();
+						widthConst2->value = std::to_string(byteWidth);
+
+						auto offsetExpr = std::make_shared<awst::UInt64BinaryOperation>();
+						offsetExpr->sourceLocation = loc;
+						offsetExpr->wtype = awst::WType::uint64Type();
+						offsetExpr->left = std::move(lenExpr);
+						offsetExpr->right = std::move(widthConst2);
+						offsetExpr->op = awst::UInt64BinaryOperator::Sub;
+
+						auto widthConst3 = std::make_shared<awst::IntegerConstant>();
+						widthConst3->sourceLocation = loc;
+						widthConst3->wtype = awst::WType::uint64Type();
+						widthConst3->value = std::to_string(byteWidth);
+
+						auto extract = std::make_shared<awst::IntrinsicCall>();
+						extract->sourceLocation = loc;
+						extract->wtype = awst::WType::bytesType();
+						extract->opCode = "extract3";
+						extract->stackArgs.push_back(std::move(cat));
+						extract->stackArgs.push_back(std::move(offsetExpr));
+						extract->stackArgs.push_back(std::move(widthConst3));
 						result = std::move(extract);
 					}
 
@@ -1432,6 +1685,7 @@ bool ExpressionTranslator::visit(solidity::frontend::FunctionCall const& _node)
 		if (memberName == "call")
 		{
 			auto receiver = translate(baseExpr);
+			bool handledAsInnerCall = false;
 
 			if (callValueAmount)
 			{
@@ -1455,42 +1709,346 @@ bool ExpressionTranslator::visit(solidity::frontend::FunctionCall const& _node)
 			}
 			else
 			{
-				// .call(data) without value — generic cross-contract call
-				// (e.g., token.call(abi.encodeWithSelector(SELECTOR, to, value)))
-				// Translate arguments so side effects happen, but stub the call.
-				// On Algorand, this would need to be an inner app call.
-				Logger::instance().warning(
-					"address.call(data) stubbed — returns (true, empty). "
-					"Cross-contract calls need inner app call translation.",
-					loc
-				);
-				for (auto const& arg: _node.arguments())
-					translate(*arg);
+				// .call(data) without value — detect abi.encodeCall for inner app call
+				if (!_node.arguments().empty())
+				{
+					auto const& dataArg = *_node.arguments()[0];
+					if (auto const* encodeCallExpr = dynamic_cast<solidity::frontend::FunctionCall const*>(&dataArg))
+					{
+						auto const* encodeMA = dynamic_cast<MemberAccess const*>(&encodeCallExpr->expression());
+						if (encodeMA && encodeMA->memberName() == "encodeCall"
+									&& encodeCallExpr->arguments().size() >= 2)
+						{
+									// Extract target function from first arg (e.g., IERC20.transfer)
+									auto const& targetFnExpr = *encodeCallExpr->arguments()[0];
+									solidity::frontend::FunctionDefinition const* targetFuncDef = nullptr;
+									
+									// The first arg's type annotation is a FunctionType
+									if (auto const* fnType = dynamic_cast<solidity::frontend::FunctionType const*>(
+												targetFnExpr.annotation().type))
+									{
+												if (fnType->hasDeclaration())
+												{
+															targetFuncDef = dynamic_cast<solidity::frontend::FunctionDefinition const*>(
+																		&fnType->declaration()
+															);
+												}
+									}
+									
+									if (targetFuncDef)
+									{
+												handledAsInnerCall = true;
+												
+												// Build ARC4 method selector (reuse solTypeToARC4Name logic)
+												auto solTypeToARC4 = [this](solidity::frontend::Type const* _type) -> std::string {
+															auto* wtype = m_typeMapper.map(_type);
+															if (wtype == awst::WType::biguintType()) return "uint256";
+															if (wtype == awst::WType::uint64Type()) return "uint64";
+															if (wtype == awst::WType::boolType()) return "bool";
+															if (wtype == awst::WType::accountType()) return "address";
+															if (wtype == awst::WType::bytesType()) return "byte[]";
+															if (wtype == awst::WType::stringType()) return "string";
+															if (wtype->kind() == awst::WTypeKind::Bytes)
+															{
+																		auto const* bw = static_cast<awst::BytesWType const*>(wtype);
+																		if (bw->length().has_value())
+																					return "byte[" + std::to_string(bw->length().value()) + "]";
+																		return "byte[]";
+															}
+															if (auto const* structType = dynamic_cast<solidity::frontend::StructType const*>(_type))
+																		return "struct " + structType->structDefinition().name();
+															return _type->toString(true);
+												};
+												
+												std::string methodSelector = targetFuncDef->name() + "(";
+												bool first = true;
+												for (auto const& param: targetFuncDef->parameters())
+												{
+															if (!first) methodSelector += ",";
+															methodSelector += solTypeToARC4(param->type());
+															first = false;
+												}
+												methodSelector += ")";
+												if (targetFuncDef->returnParameters().size() > 1)
+												{
+															methodSelector += "(";
+															bool firstRet = true;
+															for (auto const& retParam: targetFuncDef->returnParameters())
+															{
+																		if (!firstRet) methodSelector += ",";
+																		methodSelector += solTypeToARC4(retParam->type());
+																		firstRet = false;
+															}
+															methodSelector += ")";
+												}
+												else if (targetFuncDef->returnParameters().size() == 1)
+															methodSelector += solTypeToARC4(targetFuncDef->returnParameters()[0]->type());
+												else
+															methodSelector += "void";
+
+												auto methodConst = std::make_shared<awst::MethodConstant>();
+												methodConst->sourceLocation = loc;
+												methodConst->wtype = awst::WType::bytesType();
+												methodConst->value = methodSelector;
+												
+												// Build ApplicationArgs tuple
+												auto argsTuple = std::make_shared<awst::TupleExpression>();
+												argsTuple->sourceLocation = loc;
+												argsTuple->items.push_back(std::move(methodConst));
+												
+												// Extract call arguments from second arg (tuple)
+												auto const& argsExpr = *encodeCallExpr->arguments()[1];
+												std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression const>> callArgs;
+												if (auto const* tupleExpr = dynamic_cast<solidity::frontend::TupleExpression const*>(&argsExpr))
+												{
+															for (auto const& comp: tupleExpr->components())
+																		if (comp) callArgs.push_back(comp);
+												}
+												else
+															callArgs.push_back(encodeCallExpr->arguments()[1]);
+												
+												// Encode each argument with proper ARC4 encoding
+												for (auto const& arg: callArgs)
+												{
+															auto argExpr = translate(*arg);
+															if (argExpr->wtype == awst::WType::bytesType()
+																		|| argExpr->wtype->kind() == awst::WTypeKind::Bytes)
+															{
+																		argsTuple->items.push_back(std::move(argExpr));
+															}
+															else if (argExpr->wtype == awst::WType::uint64Type())
+															{
+																		auto itob = std::make_shared<awst::IntrinsicCall>();
+																		itob->sourceLocation = loc;
+																		itob->wtype = awst::WType::bytesType();
+																		itob->opCode = "itob";
+																		itob->stackArgs.push_back(std::move(argExpr));
+																		argsTuple->items.push_back(std::move(itob));
+															}
+															else if (argExpr->wtype == awst::WType::biguintType())
+															{
+																		// biguint → ARC4 uint256 = 32 bytes, left-padded
+																		auto cast = std::make_shared<awst::ReinterpretCast>();
+																		cast->sourceLocation = loc;
+																		cast->wtype = awst::WType::bytesType();
+																		cast->expr = std::move(argExpr);
+
+																		auto zeros = std::make_shared<awst::IntrinsicCall>();
+																		zeros->sourceLocation = loc;
+																		zeros->wtype = awst::WType::bytesType();
+																		zeros->opCode = "bzero";
+																		zeros->stackArgs.push_back(makeUint64("32", loc));
+
+																		auto padded = std::make_shared<awst::IntrinsicCall>();
+																		padded->sourceLocation = loc;
+																		padded->wtype = awst::WType::bytesType();
+																		padded->opCode = "concat";
+																		padded->stackArgs.push_back(std::move(zeros));
+																		padded->stackArgs.push_back(std::move(cast));
+
+																		auto lenCall = std::make_shared<awst::IntrinsicCall>();
+																		lenCall->sourceLocation = loc;
+																		lenCall->wtype = awst::WType::uint64Type();
+																		lenCall->opCode = "len";
+																		lenCall->stackArgs.push_back(padded);
+
+																		auto offset = std::make_shared<awst::IntrinsicCall>();
+																		offset->sourceLocation = loc;
+																		offset->wtype = awst::WType::uint64Type();
+																		offset->opCode = "-";
+																		offset->stackArgs.push_back(std::move(lenCall));
+																		offset->stackArgs.push_back(makeUint64("32", loc));
+
+																		auto extracted = std::make_shared<awst::IntrinsicCall>();
+																		extracted->sourceLocation = loc;
+																		extracted->wtype = awst::WType::bytesType();
+																		extracted->opCode = "extract3";
+																		extracted->stackArgs.push_back(std::move(padded));
+																		extracted->stackArgs.push_back(std::move(offset));
+																		extracted->stackArgs.push_back(makeUint64("32", loc));
+																		
+																		argsTuple->items.push_back(std::move(extracted));
+															}
+															else if (argExpr->wtype == awst::WType::boolType())
+															{
+																		// bool → ARC4 bool = 1 byte
+																		auto zeroByte = std::make_shared<awst::BytesConstant>();
+																		zeroByte->sourceLocation = loc;
+																		zeroByte->wtype = awst::WType::bytesType();
+																		zeroByte->encoding = awst::BytesEncoding::Base16;
+																		zeroByte->value = {0x00};
+																		
+																		auto setbit = std::make_shared<awst::IntrinsicCall>();
+																		setbit->sourceLocation = loc;
+																		setbit->wtype = awst::WType::bytesType();
+																		setbit->opCode = "setbit";
+																		setbit->stackArgs.push_back(std::move(zeroByte));
+																		setbit->stackArgs.push_back(makeUint64("0", loc));
+																		setbit->stackArgs.push_back(std::move(argExpr));
+																		
+																		argsTuple->items.push_back(std::move(setbit));
+															}
+															else if (argExpr->wtype == awst::WType::accountType())
+															{
+																		// account/address → 32 bytes
+																		auto cast = std::make_shared<awst::ReinterpretCast>();
+																		cast->sourceLocation = loc;
+																		cast->wtype = awst::WType::bytesType();
+																		cast->expr = std::move(argExpr);
+																		argsTuple->items.push_back(std::move(cast));
+															}
+															else
+															{
+																		// Fallback: reinterpret as bytes
+																		auto cast = std::make_shared<awst::ReinterpretCast>();
+																		cast->sourceLocation = loc;
+																		cast->wtype = awst::WType::bytesType();
+																		cast->expr = std::move(argExpr);
+																		argsTuple->items.push_back(std::move(cast));
+															}
+												}
+												
+												// Build WTuple type for args
+												std::vector<awst::WType const*> argTypes;
+												for (auto const& item: argsTuple->items)
+															argTypes.push_back(item->wtype);
+												argsTuple->wtype = m_typeMapper.createType<awst::WTuple>(
+															std::move(argTypes), std::nullopt
+												);
+												
+												// Convert receiver address → app ID
+												std::shared_ptr<awst::Expression> appId;
+												if (receiver->wtype == awst::WType::applicationType())
+												{
+															appId = std::move(receiver);
+												}
+												else
+												{
+															std::shared_ptr<awst::Expression> bytesExpr = std::move(receiver);
+															if (bytesExpr->wtype == awst::WType::accountType())
+															{
+																		auto toBytes = std::make_shared<awst::ReinterpretCast>();
+																		toBytes->sourceLocation = loc;
+																		toBytes->wtype = awst::WType::bytesType();
+																		toBytes->expr = std::move(bytesExpr);
+																		bytesExpr = std::move(toBytes);
+															}
+															auto extract = std::make_shared<awst::IntrinsicCall>();
+															extract->sourceLocation = loc;
+															extract->wtype = awst::WType::bytesType();
+															extract->opCode = "extract";
+															extract->immediates = {24, 8};
+															extract->stackArgs.push_back(std::move(bytesExpr));
+															
+															auto btoi = std::make_shared<awst::IntrinsicCall>();
+															btoi->sourceLocation = loc;
+															btoi->wtype = awst::WType::uint64Type();
+															btoi->opCode = "btoi";
+															btoi->stackArgs.push_back(std::move(extract));
+															
+															auto cast = std::make_shared<awst::ReinterpretCast>();
+															cast->sourceLocation = loc;
+															cast->wtype = awst::WType::applicationType();
+															cast->expr = std::move(btoi);
+															appId = std::move(cast);
+												}
+												
+												std::map<std::string, std::shared_ptr<awst::Expression>> fields;
+												fields["ApplicationID"] = std::move(appId);
+												fields["OnCompletion"] = makeUint64("0", loc);
+												fields["ApplicationArgs"] = std::move(argsTuple);
+												
+												auto create = buildCreateInnerTransaction(TxnTypeAppl, std::move(fields), loc);
+									
+									// Submit inner transaction as a pending statement
+									auto* submitWtype = m_typeMapper.createType<awst::WInnerTransaction>(TxnTypeAppl);
+									auto submit = std::make_shared<awst::SubmitInnerTransaction>();
+									submit->sourceLocation = loc;
+									submit->wtype = submitWtype;
+									submit->itxns.push_back(std::move(create));
+
+									auto submitStmt = std::make_shared<awst::ExpressionStatement>();
+									submitStmt->sourceLocation = loc;
+									submitStmt->expr = std::move(submit);
+									m_pendingStatements.push_back(std::move(submitStmt));
+
+									// Read LastLog from most recently submitted inner txn
+									auto readLog = std::make_shared<awst::IntrinsicCall>();
+									readLog->sourceLocation = loc;
+									readLog->wtype = awst::WType::bytesType();
+									readLog->opCode = "itxn";
+									readLog->immediates = {std::string("LastLog")};
+
+									// Strip the 4-byte ARC4 return prefix (0x151f7c75)
+									auto stripPrefix = std::make_shared<awst::IntrinsicCall>();
+									stripPrefix->sourceLocation = loc;
+									stripPrefix->opCode = "extract";
+									stripPrefix->immediates = {4, 0};
+									stripPrefix->wtype = awst::WType::bytesType();
+									stripPrefix->stackArgs.push_back(std::move(readLog));
+
+									// Return (true, return_data)
+									auto trueLit2 = std::make_shared<awst::BoolConstant>();
+									trueLit2->sourceLocation = loc;
+									trueLit2->wtype = awst::WType::boolType();
+									trueLit2->value = true;
+
+									auto tuple2 = std::make_shared<awst::TupleExpression>();
+									tuple2->sourceLocation = loc;
+									auto* tupleWtype2 = m_typeMapper.createType<awst::WTuple>(
+										std::vector<awst::WType const*>{awst::WType::boolType(), awst::WType::bytesType()}
+									);
+									tuple2->wtype = tupleWtype2;
+									tuple2->items.push_back(std::move(trueLit2));
+									tuple2->items.push_back(std::move(stripPrefix));
+
+									push(tuple2);
+												return false;
+									}
+						}
+					}
+				}
+				
+				if (!handledAsInnerCall)
+				{
+					// Generic .call(data) stub — data is not abi.encodeCall
+					Logger::instance().warning(
+								"address.call(data) stubbed — returns (true, empty). "
+								"Cross-contract calls need inner app call translation.",
+								loc
+					);
+					for (auto const& arg: _node.arguments())
+								translate(*arg);
+				}
 			}
-
-			// Return (true, empty_bytes) — EVM .call returns (bool, bytes)
-			auto trueLit = std::make_shared<awst::BoolConstant>();
-			trueLit->sourceLocation = loc;
-			trueLit->wtype = awst::WType::boolType();
-			trueLit->value = true;
-
-			auto emptyBytes = std::make_shared<awst::BytesConstant>();
-			emptyBytes->sourceLocation = loc;
-			emptyBytes->wtype = awst::WType::bytesType();
-			emptyBytes->encoding = awst::BytesEncoding::Base16;
-			emptyBytes->value = {};
-
-			auto tuple = std::make_shared<awst::TupleExpression>();
-			tuple->sourceLocation = loc;
-			auto* tupleWtype = m_typeMapper.createType<awst::WTuple>(
-				std::vector<awst::WType const*>{awst::WType::boolType(), awst::WType::bytesType()}
-			);
-			tuple->wtype = tupleWtype;
-			tuple->items.push_back(std::move(trueLit));
-			tuple->items.push_back(std::move(emptyBytes));
-
-			push(tuple);
+			
+			if (!handledAsInnerCall)
+			{
+				// Return (true, empty_bytes) — EVM .call returns (bool, bytes)
+				auto trueLit = std::make_shared<awst::BoolConstant>();
+				trueLit->sourceLocation = loc;
+				trueLit->wtype = awst::WType::boolType();
+				trueLit->value = true;
+				
+				auto emptyBytes = std::make_shared<awst::BytesConstant>();
+				emptyBytes->sourceLocation = loc;
+				emptyBytes->wtype = awst::WType::bytesType();
+				emptyBytes->encoding = awst::BytesEncoding::Base16;
+				emptyBytes->value = {};
+				
+				auto tuple = std::make_shared<awst::TupleExpression>();
+				tuple->sourceLocation = loc;
+				auto* tupleWtype = m_typeMapper.createType<awst::WTuple>(
+							std::vector<awst::WType const*>{awst::WType::boolType(), awst::WType::bytesType()}
+				);
+				tuple->wtype = tupleWtype;
+				tuple->items.push_back(std::move(trueLit));
+				tuple->items.push_back(std::move(emptyBytes));
+				
+				push(tuple);
+			}
 			return false;
+
 		}
 
 		// Handle .staticcall(...) — route to precompile if address is known
@@ -2578,11 +3136,294 @@ bool ExpressionTranslator::visit(solidity::frontend::FunctionCall const& _node)
 				return false;
 			}
 
-			// abi.encodeCall(fn, (args)) → empty bytes placeholder
-			// EVM calldata encoding has no Algorand equivalent
+			// Helper: encode a single expression as ARC4 bytes for calldata encoding
+			auto encodeArgAsARC4Bytes = [&](std::shared_ptr<awst::Expression> argExpr) -> std::shared_ptr<awst::Expression> {
+				if (argExpr->wtype == awst::WType::bytesType()
+					|| argExpr->wtype->kind() == awst::WTypeKind::Bytes)
+				{
+					return argExpr;
+				}
+				else if (argExpr->wtype == awst::WType::uint64Type())
+				{
+					auto itob = std::make_shared<awst::IntrinsicCall>();
+					itob->sourceLocation = loc;
+					itob->wtype = awst::WType::bytesType();
+					itob->opCode = "itob";
+					itob->stackArgs.push_back(std::move(argExpr));
+					return itob;
+				}
+				else if (argExpr->wtype == awst::WType::biguintType())
+				{
+					// biguint → 32 bytes, left-padded
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = loc;
+					cast->wtype = awst::WType::bytesType();
+					cast->expr = std::move(argExpr);
+
+					auto zeros = std::make_shared<awst::IntrinsicCall>();
+					zeros->sourceLocation = loc;
+					zeros->wtype = awst::WType::bytesType();
+					zeros->opCode = "bzero";
+					zeros->stackArgs.push_back(makeUint64("32", loc));
+
+					auto padded = std::make_shared<awst::IntrinsicCall>();
+					padded->sourceLocation = loc;
+					padded->wtype = awst::WType::bytesType();
+					padded->opCode = "concat";
+					padded->stackArgs.push_back(std::move(zeros));
+					padded->stackArgs.push_back(std::move(cast));
+
+					auto lenCall = std::make_shared<awst::IntrinsicCall>();
+					lenCall->sourceLocation = loc;
+					lenCall->wtype = awst::WType::uint64Type();
+					lenCall->opCode = "len";
+					lenCall->stackArgs.push_back(padded);
+
+					auto offset = std::make_shared<awst::IntrinsicCall>();
+					offset->sourceLocation = loc;
+					offset->wtype = awst::WType::uint64Type();
+					offset->opCode = "-";
+					offset->stackArgs.push_back(std::move(lenCall));
+					offset->stackArgs.push_back(makeUint64("32", loc));
+
+					auto extracted = std::make_shared<awst::IntrinsicCall>();
+					extracted->sourceLocation = loc;
+					extracted->wtype = awst::WType::bytesType();
+					extracted->opCode = "extract3";
+					extracted->stackArgs.push_back(std::move(padded));
+					extracted->stackArgs.push_back(std::move(offset));
+					extracted->stackArgs.push_back(makeUint64("32", loc));
+					return extracted;
+				}
+				else if (argExpr->wtype == awst::WType::boolType())
+				{
+					auto zeroByte = std::make_shared<awst::BytesConstant>();
+					zeroByte->sourceLocation = loc;
+					zeroByte->wtype = awst::WType::bytesType();
+					zeroByte->encoding = awst::BytesEncoding::Base16;
+					zeroByte->value = {0x00};
+
+					auto setbit = std::make_shared<awst::IntrinsicCall>();
+					setbit->sourceLocation = loc;
+					setbit->wtype = awst::WType::bytesType();
+					setbit->opCode = "setbit";
+					setbit->stackArgs.push_back(std::move(zeroByte));
+					setbit->stackArgs.push_back(makeUint64("0", loc));
+					setbit->stackArgs.push_back(std::move(argExpr));
+					return setbit;
+				}
+				else if (argExpr->wtype == awst::WType::accountType())
+				{
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = loc;
+					cast->wtype = awst::WType::bytesType();
+					cast->expr = std::move(argExpr);
+					return cast;
+				}
+				else
+				{
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = loc;
+					cast->wtype = awst::WType::bytesType();
+					cast->expr = std::move(argExpr);
+					return cast;
+				}
+			};
+
+			// Helper: build ARC4 method selector string from a FunctionDefinition
+			auto buildARC4MethodSelector = [this](solidity::frontend::FunctionDefinition const* funcDef) -> std::string {
+				auto solTypeToARC4 = [this](solidity::frontend::Type const* _type) -> std::string {
+					auto* wtype = m_typeMapper.map(_type);
+					if (wtype == awst::WType::biguintType()) return "uint256";
+					if (wtype == awst::WType::uint64Type()) return "uint64";
+					if (wtype == awst::WType::boolType()) return "bool";
+					if (wtype == awst::WType::accountType()) return "address";
+					if (wtype == awst::WType::bytesType()) return "byte[]";
+					if (wtype == awst::WType::stringType()) return "string";
+					if (wtype->kind() == awst::WTypeKind::Bytes)
+					{
+						auto const* bw = static_cast<awst::BytesWType const*>(wtype);
+						if (bw->length().has_value())
+							return "byte[" + std::to_string(bw->length().value()) + "]";
+						return "byte[]";
+					}
+					if (auto const* structType = dynamic_cast<solidity::frontend::StructType const*>(_type))
+						return "struct " + structType->structDefinition().name();
+					return _type->toString(true);
+				};
+
+				std::string selector = funcDef->name() + "(";
+				bool first = true;
+				for (auto const& param: funcDef->parameters())
+				{
+					if (!first) selector += ",";
+					selector += solTypeToARC4(param->type());
+					first = false;
+				}
+				selector += ")";
+				if (funcDef->returnParameters().size() > 1)
+				{
+					selector += "(";
+					bool firstRet = true;
+					for (auto const& retParam: funcDef->returnParameters())
+					{
+						if (!firstRet) selector += ",";
+						selector += solTypeToARC4(retParam->type());
+						firstRet = false;
+					}
+					selector += ")";
+				}
+				else if (funcDef->returnParameters().size() == 1)
+					selector += solTypeToARC4(funcDef->returnParameters()[0]->type());
+				else
+					selector += "void";
+				return selector;
+			};
+
+			// Helper: concatenate a list of byte expressions using concat intrinsics
+			auto concatByteExprs = [&](std::vector<std::shared_ptr<awst::Expression>> parts) -> std::shared_ptr<awst::Expression> {
+				if (parts.empty())
+				{
+					auto e = std::make_shared<awst::BytesConstant>();
+					e->sourceLocation = loc;
+					e->wtype = awst::WType::bytesType();
+					e->encoding = awst::BytesEncoding::Base16;
+					e->value = {};
+					return e;
+				}
+				auto result = std::move(parts[0]);
+				for (size_t i = 1; i < parts.size(); ++i)
+				{
+					auto concat = std::make_shared<awst::IntrinsicCall>();
+					concat->sourceLocation = loc;
+					concat->wtype = awst::WType::bytesType();
+					concat->opCode = "concat";
+					concat->stackArgs.push_back(std::move(result));
+					concat->stackArgs.push_back(std::move(parts[i]));
+					result = std::move(concat);
+				}
+				return result;
+			};
+
+			// abi.encodeCall(fn, (args)) → method_selector || ARC4_encoded_args
 			if (memberName == "encodeCall")
 			{
-				Logger::instance().warning("abi.encodeCall() not supported on Algorand, returning empty bytes", loc);
+				if (_node.arguments().size() >= 2)
+				{
+					auto const& targetFnExpr = *_node.arguments()[0];
+					solidity::frontend::FunctionDefinition const* targetFuncDef = nullptr;
+					if (auto const* fnType = dynamic_cast<solidity::frontend::FunctionType const*>(
+								targetFnExpr.annotation().type))
+					{
+						if (fnType->hasDeclaration())
+							targetFuncDef = dynamic_cast<solidity::frontend::FunctionDefinition const*>(
+								&fnType->declaration());
+					}
+
+					if (targetFuncDef)
+					{
+						std::string methodSig = buildARC4MethodSelector(targetFuncDef);
+						auto methodConst = std::make_shared<awst::MethodConstant>();
+						methodConst->sourceLocation = loc;
+						methodConst->wtype = awst::WType::bytesType();
+						methodConst->value = methodSig;
+
+						// Extract arguments from second arg (tuple)
+						std::vector<std::shared_ptr<awst::Expression>> parts;
+						parts.push_back(std::move(methodConst));
+
+						auto const& argsExpr = *_node.arguments()[1];
+						std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression const>> callArgs;
+						if (auto const* tupleExpr = dynamic_cast<solidity::frontend::TupleExpression const*>(&argsExpr))
+						{
+							for (auto const& comp: tupleExpr->components())
+								if (comp) callArgs.push_back(comp);
+						}
+						else
+							callArgs.push_back(_node.arguments()[1]);
+
+						for (auto const& arg: callArgs)
+							parts.push_back(encodeArgAsARC4Bytes(translate(*arg)));
+
+						push(concatByteExprs(std::move(parts)));
+						return false;
+					}
+				}
+				// Fallback: empty bytes
+				auto e = std::make_shared<awst::BytesConstant>();
+				e->sourceLocation = loc;
+				e->wtype = awst::WType::bytesType();
+				e->encoding = awst::BytesEncoding::Base16;
+				e->value = {};
+				push(e);
+				return false;
+			}
+
+			// abi.encodeWithSelector(bytes4, args...) → selector || ARC4_encoded_args
+			if (memberName == "encodeWithSelector")
+			{
+				auto const& args = _node.arguments();
+				if (!args.empty())
+				{
+					std::vector<std::shared_ptr<awst::Expression>> parts;
+					// First arg is the bytes4 selector
+					parts.push_back(translate(*args[0]));
+					// Remaining args are encoded as ARC4
+					for (size_t i = 1; i < args.size(); ++i)
+						parts.push_back(encodeArgAsARC4Bytes(translate(*args[i])));
+					push(concatByteExprs(std::move(parts)));
+					return false;
+				}
+				auto e = std::make_shared<awst::BytesConstant>();
+				e->sourceLocation = loc;
+				e->wtype = awst::WType::bytesType();
+				e->encoding = awst::BytesEncoding::Base16;
+				e->value = {};
+				push(e);
+				return false;
+			}
+
+			// abi.encodeWithSignature(string, args...) → sha256(sig)[0:4] || ARC4_encoded_args
+			if (memberName == "encodeWithSignature")
+			{
+				auto const& args = _node.arguments();
+				if (!args.empty())
+				{
+					std::vector<std::shared_ptr<awst::Expression>> parts;
+					// First arg is the string signature — use MethodConstant to compute 4-byte selector
+					// Extract the string literal value
+					auto sigExpr = translate(*args[0]);
+					if (auto const* strConst = dynamic_cast<awst::BytesConstant const*>(sigExpr.get()))
+					{
+						auto methodConst = std::make_shared<awst::MethodConstant>();
+						methodConst->sourceLocation = loc;
+						methodConst->wtype = awst::WType::bytesType();
+						methodConst->value = std::string(strConst->value.begin(), strConst->value.end());
+						parts.push_back(std::move(methodConst));
+					}
+					else
+					{
+						// Dynamic signature: hash at runtime — sha256(sig), extract first 4 bytes
+						auto hash = std::make_shared<awst::IntrinsicCall>();
+						hash->sourceLocation = loc;
+						hash->wtype = awst::WType::bytesType();
+						hash->opCode = "sha256";
+						hash->stackArgs.push_back(std::move(sigExpr));
+
+						auto extract4 = std::make_shared<awst::IntrinsicCall>();
+						extract4->sourceLocation = loc;
+						extract4->wtype = awst::WType::bytesType();
+						extract4->opCode = "extract";
+						extract4->immediates = {0, 4};
+						extract4->stackArgs.push_back(std::move(hash));
+						parts.push_back(std::move(extract4));
+					}
+
+					for (size_t i = 1; i < args.size(); ++i)
+						parts.push_back(encodeArgAsARC4Bytes(translate(*args[i])));
+					push(concatByteExprs(std::move(parts)));
+					return false;
+				}
 				auto e = std::make_shared<awst::BytesConstant>();
 				e->sourceLocation = loc;
 				e->wtype = awst::WType::bytesType();
@@ -2947,14 +3788,17 @@ bool ExpressionTranslator::visit(solidity::frontend::FunctionCall const& _node)
 			if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(refDecl))
 			{
 				resolvedFuncDef = funcDef;
+				std::string dbgScope = "(no scope)";
 				if (auto const* scope = funcDef->scope())
 				{
 					if (auto const* contractDef = dynamic_cast<ContractDefinition const*>(scope))
 					{
+						dbgScope = contractDef->name() + (contractDef->isLibrary() ? " [lib]" : "");
 						if (contractDef->isLibrary())
 						{
 							// Prefer AST ID lookup for precise overload resolution
 							auto byId = m_freeFunctionById.find(funcDef->id());
+							Logger::instance().debug("[RES] lib using-for: " + contractDef->name() + "." + funcDef->name() + " id=" + std::to_string(funcDef->id()) + " mapSize=" + std::to_string(m_freeFunctionById.size()) + " found=" + (byId != m_freeFunctionById.end() ? "YES" : "NO"));
 							if (byId != m_freeFunctionById.end())
 							{
 								call->target = awst::SubroutineID{byId->second};
@@ -2970,6 +3814,7 @@ bool ExpressionTranslator::visit(solidity::frontend::FunctionCall const& _node)
 									key += "(" + std::to_string(funcDef->parameters().size()) + ")";
 									it = m_libraryFunctionIds.find(key);
 								}
+								Logger::instance().debug("[RES] lib name fallback key='" + key + "' found=" + (it != m_libraryFunctionIds.end() ? "YES" : "NO"));
 								if (it != m_libraryFunctionIds.end())
 								{
 									call->target = awst::SubroutineID{it->second};
@@ -2984,12 +3829,17 @@ bool ExpressionTranslator::visit(solidity::frontend::FunctionCall const& _node)
 				if (!resolvedAsLibrary && funcDef->isFree())
 				{
 					auto it = m_freeFunctionById.find(funcDef->id());
+					Logger::instance().debug("[RES] free using-for: " + funcDef->name() + " id=" + std::to_string(funcDef->id()) + " found=" + (it != m_freeFunctionById.end() ? "YES" : "NO"));
 					if (it != m_freeFunctionById.end())
 					{
 						call->target = awst::SubroutineID{it->second};
 						resolvedAsLibrary = true;
 						isUsingDirectiveCall = true;
 					}
+				}
+				if (!resolvedAsLibrary)
+				{
+					Logger::instance().debug("[RES] FAILED for " + funcDef->name() + " id=" + std::to_string(funcDef->id()) + " scope=" + dbgScope + " isFree=" + (funcDef->isFree() ? "Y" : "N"));
 				}
 			}
 		}
@@ -3048,7 +3898,7 @@ bool ExpressionTranslator::visit(solidity::frontend::FunctionCall const& _node)
 				auto solTypeToARC4Name = [this](solidity::frontend::Type const* _type) -> std::string {
 					auto* wtype = m_typeMapper.map(_type);
 					if (wtype == awst::WType::biguintType())
-						return "uint512";
+						return "uint256";
 					if (wtype == awst::WType::uint64Type())
 						return "uint64";
 					if (wtype == awst::WType::boolType())
@@ -3066,6 +3916,9 @@ bool ExpressionTranslator::visit(solidity::frontend::FunctionCall const& _node)
 							return "byte[" + std::to_string(bw->length().value()) + "]";
 						return "byte[]";
 					}
+					// Struct types: use short name to match callee's compiled method selector
+					if (auto const* structType = dynamic_cast<solidity::frontend::StructType const*>(_type))
+						return "struct " + structType->structDefinition().name();
 					// Fallback: use Solidity name
 					return _type->toString(true);
 				};
@@ -3082,7 +3935,20 @@ bool ExpressionTranslator::visit(solidity::frontend::FunctionCall const& _node)
 						first = false;
 					}
 					methodSelector += ")";
-					if (!funcDef->returnParameters().empty())
+					if (funcDef->returnParameters().size() > 1)
+					{
+						// Multiple return values → tuple: (type1,type2,...)
+						methodSelector += "(";
+						bool firstRet = true;
+						for (auto const& retParam: funcDef->returnParameters())
+						{
+							if (!firstRet) methodSelector += ",";
+							methodSelector += solTypeToARC4Name(retParam->type());
+							firstRet = false;
+						}
+						methodSelector += ")";
+					}
+					else if (funcDef->returnParameters().size() == 1)
 						methodSelector += solTypeToARC4Name(funcDef->returnParameters()[0]->type());
 					else
 						methodSelector += "void";
@@ -3121,12 +3987,68 @@ bool ExpressionTranslator::visit(solidity::frontend::FunctionCall const& _node)
 					}
 					else if (argExpr->wtype == awst::WType::biguintType())
 					{
-						// biguint → reinterpret as bytes
+						// biguint → ARC4 uint256 = 32 bytes, left-padded with zeros
+						// concat(bzero(32), reinterpret_as_bytes(value)) → extract last 32 bytes
 						auto cast = std::make_shared<awst::ReinterpretCast>();
 						cast->sourceLocation = loc;
 						cast->wtype = awst::WType::bytesType();
 						cast->expr = std::move(argExpr);
-						argsTuple->items.push_back(std::move(cast));
+
+						auto zeros = std::make_shared<awst::IntrinsicCall>();
+						zeros->sourceLocation = loc;
+						zeros->wtype = awst::WType::bytesType();
+						zeros->opCode = "bzero";
+						zeros->stackArgs.push_back(makeUint64("32", loc));
+
+						auto padded = std::make_shared<awst::IntrinsicCall>();
+						padded->sourceLocation = loc;
+						padded->wtype = awst::WType::bytesType();
+						padded->opCode = "concat";
+						padded->stackArgs.push_back(std::move(zeros));
+						padded->stackArgs.push_back(std::move(cast));
+
+						auto lenCall = std::make_shared<awst::IntrinsicCall>();
+						lenCall->sourceLocation = loc;
+						lenCall->wtype = awst::WType::uint64Type();
+						lenCall->opCode = "len";
+						lenCall->stackArgs.push_back(padded);
+
+						auto offset = std::make_shared<awst::IntrinsicCall>();
+						offset->sourceLocation = loc;
+						offset->wtype = awst::WType::uint64Type();
+						offset->opCode = "-";
+						offset->stackArgs.push_back(std::move(lenCall));
+						offset->stackArgs.push_back(makeUint64("32", loc));
+
+						auto extracted = std::make_shared<awst::IntrinsicCall>();
+						extracted->sourceLocation = loc;
+						extracted->wtype = awst::WType::bytesType();
+						extracted->opCode = "extract3";
+						extracted->stackArgs.push_back(std::move(padded));
+						extracted->stackArgs.push_back(std::move(offset));
+						extracted->stackArgs.push_back(makeUint64("32", loc));
+						
+						argsTuple->items.push_back(std::move(extracted));
+					}
+					else if (argExpr->wtype == awst::WType::boolType())
+					{
+						// bool → ARC4 bool = 1 byte: 0x80 for true, 0x00 for false
+						// setbit(byte 0x00, 0, boolValue)
+						auto zeroByte = std::make_shared<awst::BytesConstant>();
+						zeroByte->sourceLocation = loc;
+						zeroByte->wtype = awst::WType::bytesType();
+						zeroByte->encoding = awst::BytesEncoding::Base16;
+						zeroByte->value = {0x00};
+						
+						auto setbit = std::make_shared<awst::IntrinsicCall>();
+						setbit->sourceLocation = loc;
+						setbit->wtype = awst::WType::bytesType();
+						setbit->opCode = "setbit";
+						setbit->stackArgs.push_back(std::move(zeroByte));
+						setbit->stackArgs.push_back(makeUint64("0", loc));
+						setbit->stackArgs.push_back(std::move(argExpr));
+						
+						argsTuple->items.push_back(std::move(setbit));
 					}
 					else if (argExpr->wtype->kind() == awst::WTypeKind::ReferenceArray
 						|| argExpr->wtype->kind() == awst::WTypeKind::ARC4StaticArray
@@ -3240,16 +4162,55 @@ bool ExpressionTranslator::visit(solidity::frontend::FunctionCall const& _node)
 			}
 			if (!isSuperCall)
 			{
-				// Resolve overloaded method names
-				std::string methodName = memberAccess->memberName();
+				// Last resort: try library/free function resolution by AST ID
 				auto const* refDecl = memberAccess->annotation().referencedDeclaration;
+				bool resolvedHere = false;
 				if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(refDecl))
 				{
 					resolvedFuncDef = funcDef;
-					methodName = resolveMethodName(*funcDef);
+					// Try AST ID lookup in free functions
+					auto byId = m_freeFunctionById.find(funcDef->id());
+					if (byId != m_freeFunctionById.end())
+					{
+						call->target = awst::SubroutineID{byId->second};
+						resolvedHere = true;
+						isUsingDirectiveCall = true;
+					}
+					else
+					{
+						// Try library function map with scope
+						if (auto const* scope = funcDef->scope())
+						{
+							if (auto const* contractDef = dynamic_cast<ContractDefinition const*>(scope))
+							{
+								if (contractDef->isLibrary())
+								{
+									std::string key = contractDef->name() + "." + funcDef->name();
+									auto it = m_libraryFunctionIds.find(key);
+									if (it == m_libraryFunctionIds.end())
+									{
+										key += "(" + std::to_string(funcDef->parameters().size()) + ")";
+										it = m_libraryFunctionIds.find(key);
+									}
+									if (it != m_libraryFunctionIds.end())
+									{
+										call->target = awst::SubroutineID{it->second};
+										resolvedHere = true;
+										isUsingDirectiveCall = true;
+									}
+								}
+							}
+						}
+					}
 				}
-				Logger::instance().debug("library resolution failed for member '" + methodName + "', falling back to InstanceMethodTarget");
-				call->target = awst::InstanceMethodTarget{methodName};
+				if (!resolvedHere)
+				{
+					std::string methodName = memberAccess->memberName();
+					if (resolvedFuncDef)
+						methodName = resolveMethodName(*resolvedFuncDef);
+					Logger::instance().debug("library resolution failed for member '" + methodName + "', falling back to InstanceMethodTarget");
+					call->target = awst::InstanceMethodTarget{methodName};
+				}
 			}
 		}
 	}
@@ -3680,11 +4641,11 @@ bool ExpressionTranslator::visit(solidity::frontend::IndexAccess const& _node)
 				}
 				else if (translated->wtype == awst::WType::biguintType())
 				{
-					// biguint → normalize to exactly 64 bytes before hashing.
+					// biguint → normalize to exactly 32 bytes before hashing.
 					// AVM biguint ops (b+, b-) produce minimal-length bytes via
 					// big.Int.Bytes(), while itob produces 8 bytes. Without
 					// normalization, the same number gets different sha256 hashes.
-					// Pattern: concat(bzero(64), bytes) → extract last 64 bytes.
+					// Pattern: concat(bzero(32), bytes) → extract last 32 bytes.
 					auto reinterpret = std::make_shared<awst::ReinterpretCast>();
 					reinterpret->sourceLocation = loc;
 					reinterpret->wtype = awst::WType::bytesType();
@@ -3693,7 +4654,7 @@ bool ExpressionTranslator::visit(solidity::frontend::IndexAccess const& _node)
 					auto padWidth = std::make_shared<awst::IntegerConstant>();
 					padWidth->sourceLocation = loc;
 					padWidth->wtype = awst::WType::uint64Type();
-					padWidth->value = "64";
+					padWidth->value = "32";
 
 					auto pad = std::make_shared<awst::IntrinsicCall>();
 					pad->sourceLocation = loc;
@@ -3717,7 +4678,7 @@ bool ExpressionTranslator::visit(solidity::frontend::IndexAccess const& _node)
 					auto width2 = std::make_shared<awst::IntegerConstant>();
 					width2->sourceLocation = loc;
 					width2->wtype = awst::WType::uint64Type();
-					width2->value = "64";
+					width2->value = "32";
 
 					auto offset = std::make_shared<awst::IntrinsicCall>();
 					offset->sourceLocation = loc;
@@ -3729,7 +4690,7 @@ bool ExpressionTranslator::visit(solidity::frontend::IndexAccess const& _node)
 					auto width3 = std::make_shared<awst::IntegerConstant>();
 					width3->sourceLocation = loc;
 					width3->wtype = awst::WType::uint64Type();
-					width3->value = "64";
+					width3->value = "32";
 
 					auto extract = std::make_shared<awst::IntrinsicCall>();
 					extract->sourceLocation = loc;
@@ -3778,7 +4739,7 @@ bool ExpressionTranslator::visit(solidity::frontend::IndexAccess const& _node)
 
 			// Hash the key with sha256 to fit within 64-byte box name limit.
 			// prefix(varName) + raw key could exceed 64 bytes
-			// (e.g. "registeredUsers" (15) + uint512 (64) = 79 bytes).
+			// (e.g. "registeredUsers" (15) + uint256 (32) = 47 bytes).
 			// sha256 produces 32 bytes, so prefix + 32 always fits.
 			{
 				auto hashCall = std::make_shared<awst::IntrinsicCall>();
@@ -4072,11 +5033,25 @@ bool ExpressionTranslator::visit(solidity::frontend::Assignment const& _node)
 			auto base = fieldExpr->base;
 			std::string fieldName = fieldExpr->name;
 
+			// Ensure base is readable for field extraction.
+			// If base is a bare BoxValueExpression (e.g. direct _mapping[key].field = value
+			// with willBeWrittenTo=true), wrap in StateGet for reading.
+			auto readBase = base;
+			if (dynamic_cast<awst::BoxValueExpression const*>(base.get()))
+			{
+				auto stateGet = std::make_shared<awst::StateGet>();
+				stateGet->sourceLocation = loc;
+				stateGet->wtype = base->wtype;
+				stateGet->field = base;
+				stateGet->defaultValue = StorageMapper::makeDefaultValue(base->wtype, loc);
+				readBase = stateGet;
+			}
+
 			if (op != Token::Assign)
 			{
 				auto currentField = std::make_shared<awst::FieldExpression>();
 				currentField->sourceLocation = loc;
-				currentField->base = base;
+				currentField->base = readBase;
 				currentField->name = fieldName;
 				currentField->wtype = fieldExpr->wtype;
 				// Decode the current field value for the binary op (it's ARC4)
@@ -4116,7 +5091,7 @@ bool ExpressionTranslator::visit(solidity::frontend::Assignment const& _node)
 				{
 					auto field = std::make_shared<awst::FieldExpression>();
 					field->sourceLocation = loc;
-					field->base = base;
+					field->base = readBase;
 					field->name = fname;
 					field->wtype = ftype;
 					newStruct->values[fname] = std::move(field);
@@ -4464,13 +5439,18 @@ std::shared_ptr<awst::Expression> ExpressionTranslator::buildSubmitAndReturn(
 	// For application calls with return values: extract from LastLog
 	if (txnType.has_value() && txnType.value() == 6) // Application call
 	{
-		// Read LastLog from submitted inner transaction
-		auto readLog = std::make_shared<awst::InnerTransactionField>();
+		// Submit as a pending statement to prevent duplication
+		auto submitStmt = std::make_shared<awst::ExpressionStatement>();
+		submitStmt->sourceLocation = _loc;
+		submitStmt->expr = std::move(submit);
+		m_pendingStatements.push_back(std::move(submitStmt));
+
+		// Read LastLog from most recently submitted inner txn using itxn intrinsic
+		auto readLog = std::make_shared<awst::IntrinsicCall>();
 		readLog->sourceLocation = _loc;
 		readLog->wtype = awst::WType::bytesType();
-		readLog->itxn = std::move(submit);
-		readLog->field = "LastLog";
-		readLog->arrayIndex = nullptr;
+		readLog->opCode = "itxn";
+		readLog->immediates = {std::string("LastLog")};
 
 		// Strip the 4-byte ARC4 return prefix (0x151f7c75)
 		auto stripPrefix = std::make_shared<awst::IntrinsicCall>();
@@ -4518,6 +5498,112 @@ std::shared_ptr<awst::Expression> ExpressionTranslator::buildSubmitAndReturn(
 			cast->expr = std::move(stripPrefix);
 			return cast;
 		}
+		// For tuple/struct returns: decode each field from ARC4-encoded bytes
+		if (auto const* tupleType = dynamic_cast<awst::WTuple const*>(_solidityReturnType))
+		{
+			// Wrap stripPrefix in SingleEvaluation so it's only read once
+			auto singleBytes = std::make_shared<awst::SingleEvaluation>();
+			singleBytes->sourceLocation = _loc;
+			singleBytes->wtype = awst::WType::bytesType();
+			singleBytes->source = std::move(stripPrefix);
+			singleBytes->id = 0; // unique per method
+
+			auto tuple = std::make_shared<awst::TupleExpression>();
+			tuple->sourceLocation = _loc;
+			tuple->wtype = _solidityReturnType;
+
+			int offset = 0;
+			for (size_t i = 0; i < tupleType->types().size(); ++i)
+			{
+				auto const* fieldType = tupleType->types()[i];
+				int fieldSize = 0;
+
+				if (fieldType == awst::WType::biguintType())
+					fieldSize = 32; // ARC4 uint256
+				else if (fieldType == awst::WType::uint64Type())
+					fieldSize = 8;
+				else if (fieldType == awst::WType::boolType())
+					fieldSize = 1; // ARC4 bool
+				else if (fieldType == awst::WType::accountType())
+					fieldSize = 32;
+				else if (auto const* bwt = dynamic_cast<awst::BytesWType const*>(fieldType))
+				{
+					if (bwt->length().has_value())
+						fieldSize = static_cast<int>(bwt->length().value());
+					else
+						fieldSize = 0; // dynamic — not handled
+				}
+
+				if (fieldSize == 0)
+				{
+					// Can't decode dynamic fields, return bytes for the rest
+					tuple->items.push_back(singleBytes);
+					break;
+				}
+
+				// extract3(bytes, offset, fieldSize)
+				auto extract = std::make_shared<awst::IntrinsicCall>();
+				extract->sourceLocation = _loc;
+				extract->opCode = "extract3";
+				extract->wtype = awst::WType::bytesType();
+				extract->stackArgs.push_back(singleBytes);
+				extract->stackArgs.push_back(makeUint64(std::to_string(offset), _loc));
+				extract->stackArgs.push_back(makeUint64(std::to_string(fieldSize), _loc));
+
+				// Cast extracted bytes to the correct type
+				std::shared_ptr<awst::Expression> fieldExpr;
+				if (fieldType == awst::WType::biguintType())
+				{
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = _loc;
+					cast->wtype = awst::WType::biguintType();
+					cast->expr = std::move(extract);
+					fieldExpr = std::move(cast);
+				}
+				else if (fieldType == awst::WType::uint64Type())
+				{
+					auto btoi = std::make_shared<awst::IntrinsicCall>();
+					btoi->sourceLocation = _loc;
+					btoi->opCode = "btoi";
+					btoi->wtype = awst::WType::uint64Type();
+					btoi->stackArgs.push_back(std::move(extract));
+					fieldExpr = std::move(btoi);
+				}
+				else if (fieldType == awst::WType::boolType())
+				{
+					auto getbit = std::make_shared<awst::IntrinsicCall>();
+					getbit->sourceLocation = _loc;
+					getbit->opCode = "getbit";
+					getbit->wtype = awst::WType::uint64Type();
+					getbit->stackArgs.push_back(std::move(extract));
+					getbit->stackArgs.push_back(makeUint64("0", _loc));
+					fieldExpr = std::move(getbit);
+				}
+				else if (fieldType == awst::WType::accountType())
+				{
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = _loc;
+					cast->wtype = awst::WType::accountType();
+					cast->expr = std::move(extract);
+					fieldExpr = std::move(cast);
+				}
+				else
+				{
+					// bytes or fixed bytes — cast to target type
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = _loc;
+					cast->wtype = fieldType;
+					cast->expr = std::move(extract);
+					fieldExpr = std::move(cast);
+				}
+
+				tuple->items.push_back(std::move(fieldExpr));
+				offset += fieldSize;
+			}
+
+			return tuple;
+		}
+
 		// For bytes/string: return stripped bytes directly
 		return stripPrefix;
 	}

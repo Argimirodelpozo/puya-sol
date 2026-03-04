@@ -1,0 +1,466 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper43.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 32 8 0 1
+    bytecblock 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x 0x8000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000 0xffffff 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffff 0x0000000000000000000000000000000000000000000000000000000000800000 0x151f7c75
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.CurrencyDelta._computeSlot(target: bytes, currency: bytes) -> bytes:
+CurrencyDelta._computeSlot:
+    proto 2 1
+    frame_dig -2
+    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
+    frame_dig -1
+    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
+    intc_0 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    keccak256
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper43.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn NumAppArgs
+    bz __puya_arc4_router_____bare_create__@9
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x56f7ed92 0x3883e5d8 0x399cda8b // method "TickBitmap.flipTick__chunk_0(byte[],uint64,uint64)void", method "Pool.tickSpacingToMaxLiquidityPerTick__chunk_2(uint64,uint64,uint256,uint256)uint256", method "CurrencyDelta._computeSlot(address,address)byte[32]"
+    txna ApplicationArgs 0
+    match TickBitmap.flipTick__chunk_0 Pool.tickSpacingToMaxLiquidityPerTick__chunk_2 /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper43.CurrencyDelta._computeSlot[routing]
+    err
+
+__puya_arc4_router_____bare_create__@9:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper43.TickBitmap.flipTick__chunk_0[routing]() -> void:
+TickBitmap.flipTick__chunk_0:
+    intc_2 // 0
+    dupn 5
+    bytec_2 // ""
+    dup
+    txna ApplicationArgs 1
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_1 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    swap
+    intc_1 // 8
+    bzero
+    swap
+    itob
+    dup
+    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000800000
+    b/
+    pushbytes 0x02
+    b%
+    bytec_2 // 0x
+    b!=
+    dup
+    bz TickBitmap.flipTick__chunk_0_ternary_false@3
+    dig 1
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
+    b|
+
+TickBitmap.flipTick__chunk_0_ternary_merge@4:
+    dig 3
+    swap
+    concat
+    bury 8
+    dup
+    bz TickBitmap.flipTick__chunk_0_ternary_false@6
+    dig 1
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
+    b|
+
+TickBitmap.flipTick__chunk_0_ternary_merge@7:
+    dig 3
+    swap
+    concat
+    len
+    intc_1 // 8
+    -
+    bury 6
+    dig 3
+    itob
+    dup
+    bury 13
+    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000800000
+    b/
+    pushbytes 0x02
+    b%
+    bytec_2 // 0x
+    b!=
+    dup
+    bury 6
+    bz TickBitmap.flipTick__chunk_0_ternary_false@9
+    dig 11
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
+    b|
+
+TickBitmap.flipTick__chunk_0_ternary_merge@10:
+    dig 3
+    swap
+    concat
+    bury 7
+    dig 4
+    bz TickBitmap.flipTick__chunk_0_ternary_false@12
+    dig 11
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
+    b|
+
+TickBitmap.flipTick__chunk_0_ternary_merge@13:
+    dig 3
+    swap
+    concat
+    len
+    intc_1 // 8
+    -
+    dig 7
+    swap
+    extract_uint64
+    bury 4
+    dig 7
+    dig 6
+    intc_1 // 8
+    extract3
+    dup
+    bury 12
+    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    bz TickBitmap.flipTick__chunk_0_ternary_false@21
+    bz TickBitmap.flipTick__chunk_0_ternary_false@16
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 11
+    b-
+    bytec_0 // 0x01
+    b+
+    bury 10
+
+TickBitmap.flipTick__chunk_0_ternary_merge@17:
+    dig 3
+    itob
+    dup
+    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz TickBitmap.flipTick__chunk_0_ternary_false@19
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    swap
+    b-
+    bytec_0 // 0x01
+    b+
+
+TickBitmap.flipTick__chunk_0_ternary_merge@20:
+    dig 10
+    swap
+    b%
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    swap
+    b-
+    bytec_0 // 0x01
+    b+
+
+TickBitmap.flipTick__chunk_0_ternary_merge@28:
+    bytec_2 // 0x
+    b!=
+    !
+    assert // revert
+    intc_3 // 1
+    return
+
+TickBitmap.flipTick__chunk_0_ternary_false@19:
+    b TickBitmap.flipTick__chunk_0_ternary_merge@20
+
+TickBitmap.flipTick__chunk_0_ternary_false@16:
+    dig 10
+    bury 10
+    b TickBitmap.flipTick__chunk_0_ternary_merge@17
+
+TickBitmap.flipTick__chunk_0_ternary_false@21:
+    bz TickBitmap.flipTick__chunk_0_ternary_false@23
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 11
+    b-
+    bytec_0 // 0x01
+    b+
+    bury 9
+
+TickBitmap.flipTick__chunk_0_ternary_merge@24:
+    dig 3
+    itob
+    dup
+    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz TickBitmap.flipTick__chunk_0_ternary_false@26
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    swap
+    b-
+    bytec_0 // 0x01
+    b+
+
+TickBitmap.flipTick__chunk_0_ternary_merge@27:
+    dig 9
+    swap
+    b%
+    b TickBitmap.flipTick__chunk_0_ternary_merge@28
+
+TickBitmap.flipTick__chunk_0_ternary_false@26:
+    b TickBitmap.flipTick__chunk_0_ternary_merge@27
+
+TickBitmap.flipTick__chunk_0_ternary_false@23:
+    dig 10
+    bury 9
+    b TickBitmap.flipTick__chunk_0_ternary_merge@24
+
+TickBitmap.flipTick__chunk_0_ternary_false@12:
+    dig 11
+    bytec 5 // 0xffffff
+    b&
+    b TickBitmap.flipTick__chunk_0_ternary_merge@13
+
+TickBitmap.flipTick__chunk_0_ternary_false@9:
+    dig 11
+    bytec 5 // 0xffffff
+    b&
+    b TickBitmap.flipTick__chunk_0_ternary_merge@10
+
+TickBitmap.flipTick__chunk_0_ternary_false@6:
+    dig 1
+    bytec 5 // 0xffffff
+    b&
+    b TickBitmap.flipTick__chunk_0_ternary_merge@7
+
+TickBitmap.flipTick__chunk_0_ternary_false@3:
+    dig 1
+    bytec 5 // 0xffffff
+    b&
+    b TickBitmap.flipTick__chunk_0_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper43.Pool.tickSpacingToMaxLiquidityPerTick__chunk_2[routing]() -> void:
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_2:
+    intc_2 // 0
+    dup
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 3
+    dup
+    cover 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    itob
+    dup
+    cover 2
+    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    cover 2
+    bytec_2 // 0x
+    bytec_0 // 0x01
+    uncover 2
+    select
+    swap
+    itob
+    dup
+    cover 3
+    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    cover 3
+    bytec_2 // 0x
+    bytec_0 // 0x01
+    uncover 2
+    select
+    b!=
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_2_ternary_false@9
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_2_ternary_false@4
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 3
+    b-
+    bytec_0 // 0x01
+    b+
+    bury 6
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_2_ternary_merge@5:
+    dup
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_2_ternary_false@7
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 2
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_2_ternary_merge@8:
+    dig 6
+    swap
+    b/
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    swap
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_2_ternary_merge@16:
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 4
+    b-
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x01
+    b+
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0xffffffffffffffffffffffffffffffff
+    swap
+    b/
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 9 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_2_ternary_false@7:
+    dig 1
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_2_ternary_merge@8
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_2_ternary_false@4:
+    dig 2
+    bury 6
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_2_ternary_merge@5
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_2_ternary_false@9:
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_2_ternary_false@11
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 3
+    b-
+    bytec_0 // 0x01
+    b+
+    bury 5
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_2_ternary_merge@12:
+    dup
+    bz Pool.tickSpacingToMaxLiquidityPerTick__chunk_2_ternary_false@14
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 2
+    b-
+    bytec_0 // 0x01
+    b+
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_2_ternary_merge@15:
+    dig 5
+    swap
+    b/
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_2_ternary_merge@16
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_2_ternary_false@14:
+    dig 1
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_2_ternary_merge@15
+
+Pool.tickSpacingToMaxLiquidityPerTick__chunk_2_ternary_false@11:
+    dig 2
+    bury 5
+    b Pool.tickSpacingToMaxLiquidityPerTick__chunk_2_ternary_merge@12
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper43.CurrencyDelta._computeSlot[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper43.CurrencyDelta._computeSlot[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub CurrencyDelta._computeSlot
+    bytec 9 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return

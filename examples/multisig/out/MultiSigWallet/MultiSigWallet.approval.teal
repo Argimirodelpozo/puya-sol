@@ -1,0 +1,895 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/multisig/contracts/MultiSigWallet.sol.MultiSigWallet.approval_program() -> uint64:
+main:
+    intcblock 64 0 1 32
+    bytecblock 0x151f7c75 0x "signerCount" "required" "txCount" "_isSigner" "owner" "_txExecuted" "_txConfirmationCount" "_confirmations" 0x00 0x0000000000000000000000000000000000000000000000000000000000000000 "_txDestination" "_txValue"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 6 // "owner"
+    bytec 11 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_3 // "required"
+    bytec_1 // 0x
+    app_global_put
+    bytec_2 // "signerCount"
+    bytec_1 // 0x
+    app_global_put
+    bytec 4 // "txCount"
+    bytec_1 // 0x
+    app_global_put
+    txna ApplicationArgs 0
+    bytec 6 // "owner"
+    txn Sender
+    app_global_put
+    bytec_3 // "required"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x62b512e4 0x139f63b8 0x6631cbfe 0xae8fa1e2 0x6211c7e2 0x4d1c23a4 0xc3a3f3d7 0x8e91d30f 0xd9d1866d 0xdd35715a 0x29e0a5c9 0xab38c7df 0xc59f89ab 0x7d8a1b97 0xea358dba 0x9154839c 0x0c262987 // method "addSigner(address)void", method "removeSigner(address)void", method "isSigner(address)bool", method "submitTransaction(address,uint512)uint512", method "confirmTransaction(uint512)void", method "revokeConfirmation(uint512)void", method "executeTransaction(uint512)void", method "getTransactionCount()uint512", method "getConfirmationCount(uint512)uint512", method "isConfirmed(uint512,address)bool", method "isExecuted(uint512)bool", method "getDestination(uint512)address", method "getValue(uint512)uint512", method "changeRequirement(uint512)void", method "getRequired()uint512", method "getSignerCount()uint512", method "getOwner()address"
+    txna ApplicationArgs 0
+    match addSigner removeSigner isSigner submitTransaction confirmTransaction revokeConfirmation executeTransaction getTransactionCount getConfirmationCount isConfirmed isExecuted getDestination getValue changeRequirement getRequired getSignerCount getOwner
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/multisig/contracts/MultiSigWallet.sol.MultiSigWallet.addSigner[routing]() -> void:
+addSigner:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_1 // 0
+    bytec 6 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    assert // not owner
+    sha256
+    bytec 5 // "_isSigner"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // already signer
+    intc_2 // 1
+    itob
+    box_put
+    intc_1 // 0
+    bytec_2 // "signerCount"
+    app_global_get_ex
+    assert // check signerCount exists
+    intc_2 // 1
+    itob
+    b+
+    bytec_2 // "signerCount"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/multisig/contracts/MultiSigWallet.sol.MultiSigWallet.removeSigner[routing]() -> void:
+removeSigner:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_1 // 0
+    bytec 6 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    assert // not owner
+    sha256
+    bytec 5 // "_isSigner"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // not signer
+    intc_1 // 0
+    itob
+    box_put
+    intc_1 // 0
+    bytec_2 // "signerCount"
+    app_global_get_ex
+    assert // check signerCount exists
+    intc_2 // 1
+    itob
+    b-
+    bytec_2 // "signerCount"
+    dig 1
+    app_global_put
+    intc_1 // 0
+    bytec_3 // "required"
+    app_global_get_ex
+    assert // check required exists
+    b<
+    bz removeSigner_after_if_else@3
+    intc_1 // 0
+    bytec_2 // "signerCount"
+    app_global_get_ex
+    assert // check signerCount exists
+    bytec_3 // "required"
+    swap
+    app_global_put
+
+removeSigner_after_if_else@3:
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/multisig/contracts/MultiSigWallet.sol.MultiSigWallet.isSigner[routing]() -> void:
+isSigner:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 5 // "_isSigner"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bytec 10 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/multisig/contracts/MultiSigWallet.sol.MultiSigWallet.submitTransaction[routing]() -> void:
+submitTransaction:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    sha256
+    bytec 5 // "_isSigner"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // not signer
+    intc_1 // 0
+    bytec 4 // "txCount"
+    app_global_get_ex
+    assert // check txCount exists
+    intc_2 // 1
+    itob
+    b+
+    bytec 4 // "txCount"
+    dig 1
+    app_global_put
+    intc_0 // 64
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 12 // "_txDestination"
+    dig 1
+    concat
+    uncover 5
+    box_put
+    bytec 13 // "_txValue"
+    dig 1
+    concat
+    dup
+    box_del
+    pop
+    uncover 4
+    box_put
+    bytec 7 // "_txExecuted"
+    dig 1
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    intc_1 // 0
+    itob
+    bytec 8 // "_txConfirmationCount"
+    uncover 2
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    dig 1
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/multisig/contracts/MultiSigWallet.sol.MultiSigWallet.confirmTransaction[routing]() -> void:
+confirmTransaction:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    sha256
+    bytec 5 // "_isSigner"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // not signer
+    intc_2 // 1
+    itob
+    dup
+    cover 2
+    b>=
+    bz confirmTransaction_bool_false@4
+    intc_1 // 0
+    bytec 4 // "txCount"
+    app_global_get_ex
+    assert // check txCount exists
+    dig 2
+    b>=
+    bz confirmTransaction_bool_false@4
+    intc_2 // 1
+
+confirmTransaction_bool_merge@5:
+    assert // tx does not exist
+    intc_0 // 64
+    bzero
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    dup
+    sha256
+    bytec 7 // "_txExecuted"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // already executed
+    dig 1
+    txn Sender
+    concat
+    sha256
+    bytec 9 // "_confirmations"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // already confirmed
+    txn Sender
+    uncover 2
+    swap
+    concat
+    sha256
+    bytec 9 // "_confirmations"
+    swap
+    concat
+    intc_2 // 1
+    itob
+    box_put
+    bytec 8 // "_txConfirmationCount"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 1
+    return
+
+confirmTransaction_bool_false@4:
+    intc_1 // 0
+    b confirmTransaction_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/multisig/contracts/MultiSigWallet.sol.MultiSigWallet.revokeConfirmation[routing]() -> void:
+revokeConfirmation:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    sha256
+    bytec 5 // "_isSigner"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // not signer
+    intc_2 // 1
+    itob
+    dup
+    cover 2
+    b>=
+    bz revokeConfirmation_bool_false@4
+    intc_1 // 0
+    bytec 4 // "txCount"
+    app_global_get_ex
+    assert // check txCount exists
+    dig 2
+    b>=
+    bz revokeConfirmation_bool_false@4
+    intc_2 // 1
+
+revokeConfirmation_bool_merge@5:
+    assert // tx does not exist
+    intc_0 // 64
+    bzero
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    dup
+    sha256
+    bytec 7 // "_txExecuted"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // already executed
+    dig 1
+    txn Sender
+    concat
+    sha256
+    bytec 9 // "_confirmations"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // not confirmed
+    txn Sender
+    uncover 2
+    swap
+    concat
+    sha256
+    bytec 9 // "_confirmations"
+    swap
+    concat
+    intc_1 // 0
+    itob
+    box_put
+    bytec 8 // "_txConfirmationCount"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dig 2
+    b-
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_2 // 1
+    return
+
+revokeConfirmation_bool_false@4:
+    intc_1 // 0
+    b revokeConfirmation_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/multisig/contracts/MultiSigWallet.sol.MultiSigWallet.executeTransaction[routing]() -> void:
+executeTransaction:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    sha256
+    bytec 5 // "_isSigner"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    assert // not signer
+    intc_2 // 1
+    itob
+    b>=
+    bz executeTransaction_bool_false@4
+    intc_1 // 0
+    bytec 4 // "txCount"
+    app_global_get_ex
+    assert // check txCount exists
+    dig 1
+    b>=
+    bz executeTransaction_bool_false@4
+    intc_2 // 1
+
+executeTransaction_bool_merge@5:
+    assert // tx does not exist
+    intc_0 // 64
+    bzero
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_txExecuted"
+    dig 1
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // already executed
+    bytec 8 // "_txConfirmationCount"
+    uncover 2
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    intc_1 // 0
+    bytec_3 // "required"
+    app_global_get_ex
+    assert // check required exists
+    b>=
+    assert // not enough confirmations
+    intc_2 // 1
+    itob
+    box_put
+    intc_2 // 1
+    return
+
+executeTransaction_bool_false@4:
+    intc_1 // 0
+    b executeTransaction_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/multisig/contracts/MultiSigWallet.sol.MultiSigWallet.getTransactionCount[routing]() -> void:
+getTransactionCount:
+    intc_1 // 0
+    bytec 4 // "txCount"
+    app_global_get_ex
+    assert // check txCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/multisig/contracts/MultiSigWallet.sol.MultiSigWallet.getConfirmationCount[routing]() -> void:
+getConfirmationCount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 8 // "_txConfirmationCount"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/multisig/contracts/MultiSigWallet.sol.MultiSigWallet.isConfirmed[routing]() -> void:
+isConfirmed:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_0 // 64
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    swap
+    concat
+    sha256
+    bytec 9 // "_confirmations"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bytec 10 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/multisig/contracts/MultiSigWallet.sol.MultiSigWallet.isExecuted[routing]() -> void:
+isExecuted:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 7 // "_txExecuted"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    bytec 10 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/multisig/contracts/MultiSigWallet.sol.MultiSigWallet.getDestination[routing]() -> void:
+getDestination:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 12 // "_txDestination"
+    swap
+    concat
+    box_get
+    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/multisig/contracts/MultiSigWallet.sol.MultiSigWallet.getValue[routing]() -> void:
+getValue:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 64
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 64
+    -
+    intc_0 // 64
+    extract3
+    sha256
+    bytec 13 // "_txValue"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/multisig/contracts/MultiSigWallet.sol.MultiSigWallet.changeRequirement[routing]() -> void:
+changeRequirement:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txn Sender
+    intc_1 // 0
+    bytec 6 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    assert // not owner
+    intc_1 // 0
+    bytec_2 // "signerCount"
+    app_global_get_ex
+    assert // check signerCount exists
+    dig 1
+    b>=
+    assert // exceeds signer count
+    intc_2 // 1
+    itob
+    dig 1
+    b<=
+    assert // at least 1 required
+    bytec_3 // "required"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/multisig/contracts/MultiSigWallet.sol.MultiSigWallet.getRequired[routing]() -> void:
+getRequired:
+    intc_1 // 0
+    bytec_3 // "required"
+    app_global_get_ex
+    assert // check required exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/multisig/contracts/MultiSigWallet.sol.MultiSigWallet.getSignerCount[routing]() -> void:
+getSignerCount:
+    intc_1 // 0
+    bytec_2 // "signerCount"
+    app_global_get_ex
+    assert // check signerCount exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/multisig/contracts/MultiSigWallet.sol.MultiSigWallet.getOwner[routing]() -> void:
+getOwner:
+    intc_1 // 0
+    bytec 6 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

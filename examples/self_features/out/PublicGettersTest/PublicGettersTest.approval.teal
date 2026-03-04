@@ -1,0 +1,189 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.approval_program() -> uint64:
+main:
+    intcblock 1 0 32
+    bytecblock "counter" "threshold" "admin" "paused" 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "threshold"
+    pushbytes 0x
+    app_global_put
+    bytec_2 // "admin"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_3 // "paused"
+    intc_1 // 0
+    app_global_put
+    bytec_0 // "counter"
+    pushbytes 0x
+    app_global_put
+    pushint 100
+    itob
+    bytec_1 // "threshold"
+    swap
+    app_global_put
+    bytec_2 // "admin"
+    txn Sender
+    app_global_put
+    bytec_3 // "paused"
+    intc_1 // 0
+    app_global_put
+    intc_1 // 0
+    itob
+    bytec_0 // "counter"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xf2289b12 0x17866912 0x4e37efbd 0x2fa47328 0xf461de0e 0x0a4fb6b3 0x9ad48402 0x5f026f4f // method "setThreshold(uint256)void", method "setAdmin(address)void", method "setPaused(bool)void", method "increment()void", method "threshold()uint256", method "admin()address", method "paused()bool", method "counter()uint256"
+    txna ApplicationArgs 0
+    match setThreshold setAdmin setPaused increment threshold admin paused counter
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.setThreshold[routing]() -> void:
+setThreshold:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_1 // "threshold"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.setAdmin[routing]() -> void:
+setAdmin:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    bytec_2 // "admin"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.setPaused[routing]() -> void:
+setPaused:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    bytec_3 // "paused"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.increment[routing]() -> void:
+increment:
+    intc_1 // 0
+    bytec_0 // "counter"
+    app_global_get_ex
+    assert // check counter exists
+    intc_0 // 1
+    itob
+    b+
+    bytec_0 // "counter"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.threshold[routing]() -> void:
+threshold:
+    intc_1 // 0
+    bytec_1 // "threshold"
+    app_global_get_ex
+    assert // check threshold exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.admin[routing]() -> void:
+admin:
+    intc_1 // 0
+    bytec_2 // "admin"
+    app_global_get_ex
+    assert // check admin exists
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.paused[routing]() -> void:
+paused:
+    intc_1 // 0
+    bytec_3 // "paused"
+    app_global_get_ex
+    assert // check paused exists
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M38_PublicGetters.sol.PublicGettersTest.counter[routing]() -> void:
+counter:
+    intc_1 // 0
+    bytec_0 // "counter"
+    app_global_get_ex
+    assert // check counter exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

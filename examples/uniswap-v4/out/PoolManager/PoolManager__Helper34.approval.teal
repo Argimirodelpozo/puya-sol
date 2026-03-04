@@ -1,0 +1,415 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper34.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 8 32 1 0
+    bytecblock 0x0000000000000000000000000000000100000000000000000000000000000000 0x 0x8000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffff
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.SafeCast.toInt128(1)_1(x: bytes) -> bytes:
+SafeCast.toInt128:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0x80000000000000000000000000000000
+    b>=
+    bz SafeCast.toInt128_after_if_else@2
+    bytec_1 // 0x
+    callsub CustomRevert.revertWith
+
+SafeCast.toInt128_after_if_else@2:
+    frame_dig -1
+    pushbytes 0xffffffffffffffffffffffffffffffff
+    b&
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.CustomRevert.revertWith(1)(selector: bytes) -> void:
+CustomRevert.revertWith:
+    proto 1 0
+    err // revert
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.CustomRevert.revertWith(2)_1(selector: bytes, value: uint64) -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.CustomRevert.revertWith(2)_1:
+    proto 2 0
+    err // revert
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper34.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn NumAppArgs
+    bz __puya_arc4_router_____bare_create__@9
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x3edd2ef7 0x0409ed88 0x7d6220da // method "TickMath.getSqrtPriceAtTick__chunk_0(uint64)(uint256,uint256,uint256,uint256)", method "BitMath.leastSignificantBit__chunk_1(uint256,uint64)uint64", method "SafeCast.toInt128(uint256)uint256"
+    txna ApplicationArgs 0
+    match TickMath.getSqrtPriceAtTick__chunk_0 BitMath.leastSignificantBit__chunk_1 /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper34.SafeCast.toInt128[routing]
+    err
+
+__puya_arc4_router_____bare_create__@9:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper34.TickMath.getSqrtPriceAtTick__chunk_0[routing]() -> void:
+TickMath.getSqrtPriceAtTick__chunk_0:
+    intc_3 // 0
+    dupn 4
+    bytec_1 // ""
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    intc_0 // 8
+    bzero
+    swap
+    itob
+    dup
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000800000
+    b/
+    pushbytes 0x02
+    b%
+    bytec_1 // 0x
+    b!=
+    dup
+    bz TickMath.getSqrtPriceAtTick__chunk_0_ternary_false@3
+    dig 1
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
+    b|
+
+TickMath.getSqrtPriceAtTick__chunk_0_ternary_merge@4:
+    dig 3
+    swap
+    concat
+    bury 5
+    dup
+    bz TickMath.getSqrtPriceAtTick__chunk_0_ternary_false@6
+    dig 1
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
+    b|
+
+TickMath.getSqrtPriceAtTick__chunk_0_ternary_merge@7:
+    dig 3
+    swap
+    concat
+    len
+    intc_0 // 8
+    -
+    dig 5
+    swap
+    extract_uint64
+    dup
+    bury 5
+    itob
+    dup
+    bury 8
+    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz TickMath.getSqrtPriceAtTick__chunk_0_ternary_false@9
+    dig 6
+    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b/
+    pushbytes 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe
+    b|
+
+TickMath.getSqrtPriceAtTick__chunk_0_ternary_merge@10:
+    dup
+    dig 8
+    b+
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b^
+    dup
+    bury 10
+    pushint 887272
+    itob
+    b>
+    bz TickMath.getSqrtPriceAtTick__chunk_0_after_if_else@12
+    bytec_1 // 0x
+    dig 4
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.CustomRevert.revertWith(2)_1
+
+TickMath.getSqrtPriceAtTick__chunk_0_after_if_else@12:
+    dig 8
+    dup
+    pushbytes 0x01
+    b&
+    pushbytes 0x01fffcb933bd6fad37aa2d162d1a594001
+    b*
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0x0100000000000000000000000000000000
+    b^
+    bury 9
+    pushint 2
+    itob
+    b&
+    intc_3 // 0
+    itob
+    dup
+    bury 8
+    b!=
+    bz TickMath.getSqrtPriceAtTick__chunk_0_after_if_else@14
+    dig 7
+    pushbytes 0xfff97272373d413259a46990580e213a
+    b*
+    bytec_0 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    bury 8
+
+TickMath.getSqrtPriceAtTick__chunk_0_after_if_else@14:
+    pushint 4
+    itob
+    dig 9
+    b&
+    dig 6
+    b!=
+    bz TickMath.getSqrtPriceAtTick__chunk_0_after_if_else@16
+    dig 7
+    pushbytes 0xfff2e50f5f656932ef12357cf3c7fdcc
+    b*
+    bytec_0 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    bury 8
+
+TickMath.getSqrtPriceAtTick__chunk_0_after_if_else@16:
+    intc_0 // 8
+    itob
+    dig 9
+    b&
+    dig 6
+    b!=
+    bz TickMath.getSqrtPriceAtTick__chunk_0_after_if_else@18
+    dig 7
+    pushbytes 0xffe5caca7e10e4e61c3624eaa0941cd0
+    b*
+    bytec_0 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    bury 8
+
+TickMath.getSqrtPriceAtTick__chunk_0_after_if_else@18:
+    pushint 16
+    itob
+    dig 9
+    b&
+    dig 6
+    b!=
+    bz TickMath.getSqrtPriceAtTick__chunk_0_after_if_else@20
+    dig 7
+    pushbytes 0xffcb9843d60f6159c9db58835c926644
+    b*
+    bytec_0 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    bury 8
+
+TickMath.getSqrtPriceAtTick__chunk_0_after_if_else@20:
+    intc_1 // 32
+    itob
+    dig 9
+    b&
+    dig 6
+    b!=
+    bz TickMath.getSqrtPriceAtTick__chunk_0_after_if_else@22
+    dig 7
+    pushbytes 0xff973b41fa98c081472e6896dfb254c0
+    b*
+    bytec_0 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    bury 8
+
+TickMath.getSqrtPriceAtTick__chunk_0_after_if_else@22:
+    pushint 64
+    itob
+    dig 9
+    b&
+    dig 6
+    b!=
+    bz TickMath.getSqrtPriceAtTick__chunk_0_after_if_else@24
+    dig 7
+    pushbytes 0xff2ea16466c96a3843ec78b326b52861
+    b*
+    bytec_0 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    bury 8
+
+TickMath.getSqrtPriceAtTick__chunk_0_after_if_else@24:
+    pushint 128
+    itob
+    dig 9
+    b&
+    dig 6
+    b!=
+    bz TickMath.getSqrtPriceAtTick__chunk_0_after_if_else@26
+    dig 7
+    pushbytes 0xfe5dee046a99a2a811c461f1969c3053
+    b*
+    bytec_0 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    bury 8
+
+TickMath.getSqrtPriceAtTick__chunk_0_after_if_else@26:
+    pushint 256
+    itob
+    dig 9
+    b&
+    dig 6
+    b!=
+    bz TickMath.getSqrtPriceAtTick__chunk_0_after_if_else@28
+    dig 7
+    pushbytes 0xfcbe86c7900a88aedcffc83b479aa3a4
+    b*
+    bytec_0 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    bury 8
+
+TickMath.getSqrtPriceAtTick__chunk_0_after_if_else@28:
+    intc_1 // 32
+    bzero
+    dig 9
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    swap
+    concat
+    dig 9
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+TickMath.getSqrtPriceAtTick__chunk_0_ternary_false@9:
+    dig 6
+    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b/
+    b TickMath.getSqrtPriceAtTick__chunk_0_ternary_merge@10
+
+TickMath.getSqrtPriceAtTick__chunk_0_ternary_false@6:
+    dig 1
+    bytec 6 // 0xffffff
+    b&
+    b TickMath.getSqrtPriceAtTick__chunk_0_ternary_merge@7
+
+TickMath.getSqrtPriceAtTick__chunk_0_ternary_false@3:
+    dig 1
+    bytec 6 // 0xffffff
+    b&
+    b TickMath.getSqrtPriceAtTick__chunk_0_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper34.BitMath.leastSignificantBit__chunk_1[routing]() -> void:
+BitMath.leastSignificantBit__chunk_1:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    intc_0 // 8
+    bzero
+    dig 1
+    itob
+    intc_1 // 32
+    bzero
+    uncover 3
+    pushint 256
+    %
+    pushint 255
+    swap
+    -
+    intc_2 // 1
+    setbit
+    uncover 3
+    swap
+    b/
+    pushbytes 0xd76453e0
+    swap
+    b/
+    pushbytes 0x1f
+    b&
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    pushbytes 0x001f0d1e100c1d070f090b19131c1706010e11080a1a141802121b1503160405
+    swap
+    intc_2 // 1
+    extract3
+    b|
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper34.SafeCast.toInt128[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper34.SafeCast.toInt128[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub SafeCast.toInt128
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
