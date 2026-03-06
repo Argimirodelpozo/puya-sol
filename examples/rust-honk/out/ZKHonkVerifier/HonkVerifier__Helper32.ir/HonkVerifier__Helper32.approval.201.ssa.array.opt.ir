@@ -1,0 +1,326 @@
+main /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper32.__puya_arc4_router__:
+    block@0: // L65448
+        let tmp%0#0: bool = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper32.__puya_arc4_router__()
+        return tmp%0#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(value: bytes[32]) -> biguint:
+    block@0: // L7934
+        let tmp%0#0: biguint = (b% value#0 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        return tmp%0#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.bytesToFr(proofSection: bytes) -> biguint:
+    block@0: // L30758
+        let scalar#1: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(proofSection#0)
+        return scalar#1
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.bytesToG1ProofPoint(proofSection: bytes) -> Encoded(uint256,uint256,uint256,uint256):
+    block@0: // L31109
+        let reinterpret_bytes[32]%0#0: bytes[32] = ((substring 0 32) proofSection#0)
+        let aggregate%value_len%0#0: uint64 = (len reinterpret_bytes[32]%0#0)
+        let aggregate%len_ok%0#0: bool = (<= aggregate%value_len%0#0 32u)
+        (assert aggregate%len_ok%0#0) // overflow
+        let aggregate%bzero%0#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%0#0: bytes[32] = (b| reinterpret_bytes[32]%0#0 aggregate%bzero%0#0)
+        let reinterpret_bytes[32]%1#0: bytes[32] = ((substring 32 64) proofSection#0)
+        let aggregate%value_len%1#0: uint64 = (len reinterpret_bytes[32]%1#0)
+        let aggregate%len_ok%1#0: bool = (<= aggregate%value_len%1#0 32u)
+        (assert aggregate%len_ok%1#0) // overflow
+        let aggregate%arc4_encoded%1#0: bytes[32] = (b| reinterpret_bytes[32]%1#0 aggregate%bzero%0#0)
+        let reinterpret_bytes[32]%2#0: bytes[32] = ((substring 64 96) proofSection#0)
+        let aggregate%value_len%2#0: uint64 = (len reinterpret_bytes[32]%2#0)
+        let aggregate%len_ok%2#0: bool = (<= aggregate%value_len%2#0 32u)
+        (assert aggregate%len_ok%2#0) // overflow
+        let aggregate%arc4_encoded%2#0: bytes[32] = (b| reinterpret_bytes[32]%2#0 aggregate%bzero%0#0)
+        let reinterpret_bytes[32]%3#0: bytes[32] = ((substring 96 128) proofSection#0)
+        let aggregate%value_len%3#0: uint64 = (len reinterpret_bytes[32]%3#0)
+        let aggregate%len_ok%3#0: bool = (<= aggregate%value_len%3#0 32u)
+        (assert aggregate%len_ok%3#0) // overflow
+        let aggregate%arc4_encoded%3#0: bytes[32] = (b| reinterpret_bytes[32]%3#0 aggregate%bzero%0#0)
+        let aggregate%head%1#0: bytes = (concat aggregate%arc4_encoded%0#0 aggregate%arc4_encoded%1#0)
+        let aggregate%head%2#0: bytes = (concat aggregate%head%1#0 aggregate%arc4_encoded%2#0)
+        let point#0: Encoded(uint256,uint256,uint256,uint256) = (concat aggregate%head%2#0 aggregate%arc4_encoded%3#0)
+        return point#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper32.__puya_arc4_router__() -> bool:
+    block@0: // L1
+        let tmp%0#0: uint64 = (txn NumAppArgs)
+        goto tmp%0#0 ? block@1 : block@8
+    block@1: // abi_routing_L1
+        let tmp%2#0: uint64 = (txn OnCompletion)
+        let tmp%3#0: bool = (! tmp%2#0)
+        (assert tmp%3#0)
+        let tmp%4#0: uint64 = (txn ApplicationID)
+        (assert tmp%4#0)
+        let tmp%6#0: bytes = (txna ApplicationArgs 0)
+        switch tmp%6#0 {method "ZKTranscriptLib.loadProof__chunk_1(byte[],uint256)((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256))" => block@3, method "__init__(uint64,uint64,byte[])void" => block@4, * => block@7}
+    block@3: // ZKTranscriptLib.loadProof__chunk_1_route_L27877
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper32.ZKTranscriptLib.loadProof__chunk_1[routing]()
+        goto block@7
+    block@4: // __init___route_L65448
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper32.__init__[routing]()
+        goto block@7
+    block@7: // after_if_else_L1
+        fail
+    block@8: // __bare_create___L65448
+        let tmp%7#0: uint64 = (txn OnCompletion)
+        let tmp%8#0: bool = (! tmp%7#0)
+        let tmp%9#0: uint64 = (txn ApplicationID)
+        let tmp%10#0: bool = (! tmp%9#0)
+        let tmp%11#0: bool = (&& tmp%8#0 tmp%10#0)
+        (assert tmp%11#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper32.ZKTranscriptLib.loadProof__chunk_1[routing]() -> void:
+    block@0: // L27877
+        let tmp%0#0: bytes = (txna ApplicationArgs 1)
+        let aggregate%array_length%0#0: uint64 = (extract_uint16 tmp%0#0 0u) // on error: invalid array length header
+        let add%0#0: uint64 = (+ aggregate%array_length%0#0 2u)
+        let len%0#0: uint64 = (len tmp%0#0)
+        let eq%0#0: bool = (== len%0#0 add%0#0)
+        (assert eq%0#0) // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+        let proof#0: bytes = ((extract 2 0) tmp%0#0)
+        let boundary#0: biguint = (txna ApplicationArgs 2)
+        let len%1#0: uint64 = (len boundary#0)
+        let eq%1#0: bool = (== len%1#0 32u)
+        (assert eq%1#0) // invalid number of bytes for arc4.uint256
+        let tmp%0#1: uint64 = (app_global_get "o")
+        goto tmp%0#1 ? block@2 : block@5
+    block@2: // if_body_L27877
+        let tmp%2#1: uint64 = (global GroupSize)
+        let tmp%3#1: bool = (>= tmp%2#1 2u)
+        (assert tmp%3#1) // helper: must be called in group
+        let tmp%4#1: uint64 = (gtxn 0 ApplicationID)
+        let tmp%5#1: uint64 = (app_global_get "o")
+        let tmp%6#0: bool = (== tmp%4#1 tmp%5#1)
+        (assert tmp%6#0) // helper: unauthorized caller
+        let tmp%7#0: bytes = (gtxn 0 Sender)
+        let tmp%8#0: bytes = (txn Sender)
+        let tmp%9#0: bool = (== tmp%7#0 tmp%8#0)
+        (assert tmp%9#0) // helper: sender mismatch
+        let tmp%10#0: uint64 = (app_global_get "p")
+        goto tmp%10#0 ? block@3 : block@5
+    block@3: // if_body_L27877
+        let tmp%12#0: uint64 = (txn GroupIndex)
+        let tmp%13#0: uint64 = (- tmp%12#0 1u)
+        let tmp%14#0: uint64 = ((gtxns ApplicationID) tmp%13#0)
+        let tmp%15#0: uint64 = (app_global_get "p")
+        let tmp%16#0: bool = (== tmp%14#0 tmp%15#0)
+        (assert tmp%16#0) // helper: wrong prev chunk
+        let tmp%17#0: uint64 = (txn GroupIndex)
+        let tmp%18#0: uint64 = (- tmp%17#0 1u)
+        let tmp%19#0: bytes = ((gtxnsa ApplicationArgs 0) tmp%18#0)
+        let tmp%20#0: bytes = (app_global_get "s")
+        let tmp%21#0: bool = (== tmp%19#0 tmp%20#0)
+        (assert tmp%21#0) // helper: wrong prev method
+        goto block@5
+    block@5: // after_if_else_L27877
+        let tmp%22#0: bytes = (gload 1 0)
+        let tmp%23#0: bytes = (gload 1 1)
+        let tmp%24#0: bytes = (concat tmp%22#0 tmp%23#0)
+        let tmp%25#0: bytes = (gload 2 0)
+        let tmp%26#0: bytes = (concat tmp%24#0 tmp%25#0)
+        let tmp%27#0: bytes = (gload 2 1)
+        let p#0: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)) = (concat tmp%26#0 tmp%27#0)
+        let i#0: biguint = (itob 0u)
+        goto block@7
+    block@7: // while_top_L30187
+        let i#1: biguint = φ(i#0 <- block@5, i#2 <- block@8)
+        let boundary#2: biguint = φ(boundary#0 <- block@5, boundary#3 <- block@8)
+        let reinterpret_biguint%1#0: biguint = (itob 28u)
+        let tmp%0#2: bool = (b< i#1 reinterpret_biguint%1#0)
+        goto tmp%0#2 ? block@8 : block@9
+    block@8: // while_body_L30187
+        let tmp%1#2: bytes = (bzero 8u)
+        let tmp%2#2: bytes = (concat tmp%1#2 boundary#2)
+        let tmp%5#2: uint64 = (len tmp%2#2)
+        let tmp%6#1: uint64 = (- tmp%5#2 8u)
+        let tmp%8#1: uint64 = (extract_uint64 tmp%2#2 tmp%6#1)
+        let reinterpret_biguint%2#0: biguint = (itob 32u)
+        let boundary#3: biguint = (b+ boundary#2 reinterpret_biguint%2#0)
+        let tmp%11#1: bytes = (concat tmp%1#2 boundary#3)
+        let tmp%15#1: uint64 = (len tmp%11#1)
+        let tmp%16#1: uint64 = (- tmp%15#1 8u)
+        let tmp%18#1: uint64 = (extract_uint64 tmp%11#1 tmp%16#1)
+        let tmp%19#1: bytes = (substring3 proof#0 tmp%8#1 tmp%18#1)
+        let tmp%20#1: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.bytesToFr(tmp%19#1)
+        let aggregate%extract%0#0: bytes = (extract3 p#0 14432u 896u)
+        let slot%0#0: Encoded(uint256[28])* = new()
+        let tmp%22#1: bytes = (concat tmp%1#2 i#1)
+        let tmp%25#1: uint64 = (len tmp%22#1)
+        let tmp%26#1: uint64 = (- tmp%25#1 8u)
+        let index%0#0: uint64 = (extract_uint64 tmp%22#1 tmp%26#1)
+        let aggregate%value_len%0#0: uint64 = (len tmp%20#1)
+        let aggregate%len_ok%0#0: bool = (<= aggregate%value_len%0#0 32u)
+        (assert aggregate%len_ok%0#0) // overflow
+        let aggregate%bzero%0#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%0#0: bytes[32] = (b| tmp%20#1 aggregate%bzero%0#0)
+        let aggregate%write_offset%0#0: uint64 = (* index%0#0 32u)
+        let aggregate%updated_array%0#0: bytes = (replace3 aggregate%extract%0#0 aggregate%write_offset%0#0 aggregate%arc4_encoded%0#0) // on error: index access is out of bounds
+        store(slot%0#0, aggregate%updated_array%0#0)
+        let i#2: biguint = (b+ i#1 1b)
+        goto block@7
+    block@9: // after_while_L30187
+        goto block@10
+    block@10: // while_top_L30373
+        let i#4: biguint = φ(i#0 <- block@9, i#5 <- block@11)
+        let boundary#4: biguint = φ(boundary#2 <- block@9, boundary#5 <- block@11)
+        let reinterpret_biguint%6#0: biguint = (itob 4u)
+        let tmp%30#0: bool = (b< i#4 reinterpret_biguint%6#0)
+        goto tmp%30#0 ? block@11 : block@12
+    block@11: // while_body_L30373
+        let tmp%31#0: bytes = (bzero 8u)
+        let tmp%32#0: bytes = (concat tmp%31#0 boundary#4)
+        let tmp%35#0: uint64 = (len tmp%32#0)
+        let tmp%36#0: uint64 = (- tmp%35#0 8u)
+        let tmp%38#0: uint64 = (extract_uint64 tmp%32#0 tmp%36#0)
+        let reinterpret_biguint%7#0: biguint = (itob 32u)
+        let boundary#5: biguint = (b+ boundary#4 reinterpret_biguint%7#0)
+        let tmp%41#0: bytes = (concat tmp%31#0 boundary#5)
+        let tmp%45#0: uint64 = (len tmp%41#0)
+        let tmp%46#0: uint64 = (- tmp%45#0 8u)
+        let tmp%48#0: uint64 = (extract_uint64 tmp%41#0 tmp%46#0)
+        let tmp%49#0: bytes = (substring3 proof#0 tmp%38#0 tmp%48#0)
+        let tmp%50#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.bytesToFr(tmp%49#0)
+        let aggregate%extract%1#0: bytes = (extract3 p#0 15328u 128u)
+        let slot%1#0: Encoded(uint256[4])* = new()
+        let tmp%52#0: bytes = (concat tmp%31#0 i#4)
+        let tmp%55#0: uint64 = (len tmp%52#0)
+        let tmp%56#0: uint64 = (- tmp%55#0 8u)
+        let index%1#0: uint64 = (extract_uint64 tmp%52#0 tmp%56#0)
+        let aggregate%value_len%1#0: uint64 = (len tmp%50#0)
+        let aggregate%len_ok%1#0: bool = (<= aggregate%value_len%1#0 32u)
+        (assert aggregate%len_ok%1#0) // overflow
+        let aggregate%bzero%1#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%1#0: bytes[32] = (b| tmp%50#0 aggregate%bzero%1#0)
+        let aggregate%write_offset%1#0: uint64 = (* index%1#0 32u)
+        let aggregate%updated_array%1#0: bytes = (replace3 aggregate%extract%1#0 aggregate%write_offset%1#0 aggregate%arc4_encoded%1#0) // on error: index access is out of bounds
+        store(slot%1#0, aggregate%updated_array%1#0)
+        let i#5: biguint = (b+ i#4 1b)
+        goto block@10
+    block@12: // after_while_L30373
+        let aggregate%extract%2#0: bytes = (extract3 p#0 14432u 896u)
+        let aggregate%extract%3#0: bytes = (extract3 p#0 10976u 3456u)
+        let aggregate%extract%4#0: bytes = (extract3 p#0 10944u 32u)
+        let aggregate%extract%5#0: bytes = (extract3 p#0 10816u 128u)
+        let aggregate%extract%6#0: bytes = (extract3 p#0 15584u 128u)
+        let aggregate%extract%7#0: bytes = (extract3 p#0 1024u 384u)
+        let aggregate%extract%8#0: bytes = (extract3 p#0 10784u 32u)
+        let aggregate%extract%9#0: bytes = (extract3 p#0 15328u 128u)
+        let aggregate%extract%10#0: bytes = (extract3 p#0 1408u 32u)
+        let aggregate%extract%11#0: bytes = (extract3 p#0 768u 128u)
+        let aggregate%extract%12#0: bytes = (extract3 p#0 512u 128u)
+        let aggregate%extract%13#0: bytes = (extract3 p#0 640u 128u)
+        let tmp%60#0: bytes = (bzero 8u)
+        let tmp%61#0: bytes = (concat tmp%60#0 boundary#4)
+        let tmp%64#0: uint64 = (len tmp%61#0)
+        let tmp%65#0: uint64 = (- tmp%64#0 8u)
+        let tmp%67#0: uint64 = (extract_uint64 tmp%61#0 tmp%65#0)
+        let reinterpret_biguint%10#0: biguint = (itob 128u)
+        let boundary#7: biguint = (b+ boundary#4 reinterpret_biguint%10#0)
+        let tmp%70#0: bytes = (concat tmp%60#0 boundary#7)
+        let tmp%74#0: uint64 = (len tmp%70#0)
+        let tmp%75#0: uint64 = (- tmp%74#0 8u)
+        let tmp%77#0: uint64 = (extract_uint64 tmp%70#0 tmp%75#0)
+        let tmp%78#0: bytes = (substring3 proof#0 tmp%67#0 tmp%77#0)
+        let tmp%79#0: Encoded(uint256,uint256,uint256,uint256) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.bytesToG1ProofPoint(tmp%78#0)
+        let aggregate%extract%14#0: bytes = (extract3 p#0 9504u 1280u)
+        let aggregate%extract%15#0: bytes = (extract3 p#0 1440u 8064u)
+        let aggregate%extract%16#0: bytes = ((extract 0 128) p#0)
+        let aggregate%extract%17#0: bytes = ((extract 128 128) p#0)
+        let aggregate%extract%18#0: bytes = (extract3 p#0 256u 128u)
+        let aggregate%extract%19#0: bytes = (extract3 p#0 384u 128u)
+        let aggregate%extract%20#0: bytes = (extract3 p#0 896u 128u)
+        let aggregate%head%1#0: bytes = (concat aggregate%extract%16#0 aggregate%extract%17#0)
+        let aggregate%head%2#0: bytes = (concat aggregate%head%1#0 aggregate%extract%18#0)
+        let aggregate%head%3#0: bytes = (concat aggregate%head%2#0 aggregate%extract%19#0)
+        let aggregate%head%4#0: bytes = (concat aggregate%head%3#0 aggregate%extract%12#0)
+        let aggregate%head%5#0: bytes = (concat aggregate%head%4#0 aggregate%extract%13#0)
+        let aggregate%head%6#0: bytes = (concat aggregate%head%5#0 aggregate%extract%11#0)
+        let aggregate%head%7#0: bytes = (concat aggregate%head%6#0 aggregate%extract%20#0)
+        let aggregate%head%8#0: bytes = (concat aggregate%head%7#0 aggregate%extract%7#0)
+        let aggregate%head%9#0: bytes = (concat aggregate%head%8#0 aggregate%extract%10#0)
+        let aggregate%head%10#0: bytes = (concat aggregate%head%9#0 aggregate%extract%15#0)
+        let aggregate%head%11#0: bytes = (concat aggregate%head%10#0 aggregate%extract%14#0)
+        let aggregate%head%12#0: bytes = (concat aggregate%head%11#0 aggregate%extract%8#0)
+        let aggregate%head%13#0: bytes = (concat aggregate%head%12#0 aggregate%extract%5#0)
+        let aggregate%head%14#0: bytes = (concat aggregate%head%13#0 aggregate%extract%4#0)
+        let aggregate%head%15#0: bytes = (concat aggregate%head%14#0 aggregate%extract%3#0)
+        let aggregate%head%16#0: bytes = (concat aggregate%head%15#0 aggregate%extract%2#0)
+        let aggregate%head%17#0: bytes = (concat aggregate%head%16#0 aggregate%extract%9#0)
+        let aggregate%head%18#0: bytes = (concat aggregate%head%17#0 tmp%79#0)
+        let p#5: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)) = (concat aggregate%head%18#0 aggregate%extract%6#0)
+        let aggregate%extract%21#0: bytes = (extract3 p#5 14432u 896u)
+        let aggregate%extract%22#0: bytes = (extract3 p#5 10976u 3456u)
+        let aggregate%extract%23#0: bytes = (extract3 p#5 10944u 32u)
+        let aggregate%extract%24#0: bytes = (extract3 p#5 10816u 128u)
+        let tmp%91#0: biguint = (b+ boundary#7 reinterpret_biguint%10#0)
+        let tmp%92#0: bytes = (concat tmp%60#0 tmp%91#0)
+        let tmp%96#0: uint64 = (len tmp%92#0)
+        let tmp%97#0: uint64 = (- tmp%96#0 8u)
+        let tmp%99#0: uint64 = (extract_uint64 tmp%92#0 tmp%97#0)
+        let tmp%100#0: bytes = (substring3 proof#0 tmp%77#0 tmp%99#0)
+        let tmp%101#0: Encoded(uint256,uint256,uint256,uint256) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.bytesToG1ProofPoint(tmp%100#0)
+        let aggregate%extract%25#0: bytes = (extract3 p#5 1024u 384u)
+        let aggregate%extract%26#0: bytes = (extract3 p#5 10784u 32u)
+        let aggregate%extract%27#0: bytes = (extract3 p#5 15328u 128u)
+        let aggregate%extract%28#0: bytes = (extract3 p#5 1408u 32u)
+        let aggregate%extract%29#0: bytes = (extract3 p#5 768u 128u)
+        let aggregate%extract%30#0: bytes = (extract3 p#5 512u 128u)
+        let aggregate%extract%31#0: bytes = (extract3 p#5 640u 128u)
+        let aggregate%extract%32#0: bytes = (extract3 p#5 15456u 128u)
+        let aggregate%extract%33#0: bytes = (extract3 p#5 9504u 1280u)
+        let aggregate%extract%34#0: bytes = (extract3 p#5 1440u 8064u)
+        let aggregate%extract%35#0: bytes = ((extract 0 128) p#5)
+        let aggregate%extract%36#0: bytes = ((extract 128 128) p#5)
+        let aggregate%extract%37#0: bytes = (extract3 p#5 256u 128u)
+        let aggregate%extract%38#0: bytes = (extract3 p#5 384u 128u)
+        let aggregate%extract%39#0: bytes = (extract3 p#5 896u 128u)
+        let aggregate%head%21#0: bytes = (concat aggregate%extract%35#0 aggregate%extract%36#0)
+        let aggregate%head%22#0: bytes = (concat aggregate%head%21#0 aggregate%extract%37#0)
+        let aggregate%head%23#0: bytes = (concat aggregate%head%22#0 aggregate%extract%38#0)
+        let aggregate%head%24#0: bytes = (concat aggregate%head%23#0 aggregate%extract%30#0)
+        let aggregate%head%25#0: bytes = (concat aggregate%head%24#0 aggregate%extract%31#0)
+        let aggregate%head%26#0: bytes = (concat aggregate%head%25#0 aggregate%extract%29#0)
+        let aggregate%head%27#0: bytes = (concat aggregate%head%26#0 aggregate%extract%39#0)
+        let aggregate%head%28#0: bytes = (concat aggregate%head%27#0 aggregate%extract%25#0)
+        let aggregate%head%29#0: bytes = (concat aggregate%head%28#0 aggregate%extract%28#0)
+        let aggregate%head%30#0: bytes = (concat aggregate%head%29#0 aggregate%extract%34#0)
+        let aggregate%head%31#0: bytes = (concat aggregate%head%30#0 aggregate%extract%33#0)
+        let aggregate%head%32#0: bytes = (concat aggregate%head%31#0 aggregate%extract%26#0)
+        let aggregate%head%33#0: bytes = (concat aggregate%head%32#0 aggregate%extract%24#0)
+        let aggregate%head%34#0: bytes = (concat aggregate%head%33#0 aggregate%extract%23#0)
+        let aggregate%head%35#0: bytes = (concat aggregate%head%34#0 aggregate%extract%22#0)
+        let aggregate%head%36#0: bytes = (concat aggregate%head%35#0 aggregate%extract%21#0)
+        let aggregate%head%37#0: bytes = (concat aggregate%head%36#0 aggregate%extract%27#0)
+        let aggregate%head%38#0: bytes = (concat aggregate%head%37#0 aggregate%extract%32#0)
+        let p#7: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)) = (concat aggregate%head%38#0 tmp%101#0)
+        let tmp%5#0: bytes = (concat 0x151f7c75 p#7)
+        (log tmp%5#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper32.__init__[routing]() -> void:
+    block@0: // L65448
+        let tmp%0#0: bytes = (txna ApplicationArgs 1)
+        let len%0#0: uint64 = (len tmp%0#0)
+        let eq%0#0: bool = (== len%0#0 8u)
+        (assert eq%0#0) // invalid number of bytes for arc4.uint64
+        let o#0: uint64 = (btoi tmp%0#0)
+        let tmp%2#0: bytes = (txna ApplicationArgs 2)
+        let len%1#0: uint64 = (len tmp%2#0)
+        let eq%1#0: bool = (== len%1#0 8u)
+        (assert eq%1#0) // invalid number of bytes for arc4.uint64
+        let p#0: uint64 = (btoi tmp%2#0)
+        let tmp%4#0: bytes = (txna ApplicationArgs 3)
+        let aggregate%array_length%0#0: uint64 = (extract_uint16 tmp%4#0 0u) // on error: invalid array length header
+        let add%0#0: uint64 = (+ aggregate%array_length%0#0 2u)
+        let len%2#0: uint64 = (len tmp%4#0)
+        let eq%2#0: bool = (== len%2#0 add%0#0)
+        (assert eq%2#0) // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+        let s#0: bytes = ((extract 2 0) tmp%4#0)
+        let tmp%0#1: uint64 = (app_global_get "o")
+        let tmp%1#1: bool = (! tmp%0#1)
+        (assert tmp%1#1) // helper: already initialized
+        (app_global_put "o" o#0)
+        (app_global_put "p" p#0)
+        (app_global_put "s" s#0)
+        exit 1u

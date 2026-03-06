@@ -1,0 +1,848 @@
+main /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper61.__puya_arc4_router__:
+    block@0: // L65448
+        let tmp%0#0: bool = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper61.__puya_arc4_router__()
+        return tmp%0#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.CommitmentSchemeLib.computeSquares(r: biguint) -> Encoded(uint256[28])*:
+    block@0: // L63212
+        let squares#0: Encoded(uint256[28])* = undefined
+        let aggregate%value_len%0#0: uint64 = (len r#0)
+        let aggregate%len_ok%0#0: bool = (<= aggregate%value_len%0#0 32u)
+        (assert aggregate%len_ok%0#0) // overflow
+        let aggregate%bzero%0#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%0#0: bytes[32] = (b| r#0 aggregate%bzero%0#0)
+        let slot_contents%0#0: Encoded(uint256[28]) = load(squares#0)
+        let aggregate%write_offset%0#0: uint64 = 0u
+        let aggregate%updated_array%0#0: bytes = ((replace2 0) slot_contents%0#0 aggregate%arc4_encoded%0#0) // on error: index access is out of bounds
+        store(squares#0, aggregate%updated_array%0#0)
+        let i#0: biguint = (itob 1u)
+        goto block@1
+    block@1: // while_top_L63342
+        let i#1: biguint = φ(i#0 <- block@0, i#2 <- block@2)
+        let squares#2: Encoded(uint256[28])* = φ(squares#0 <- block@0, squares#2 <- block@2)
+        let reinterpret_biguint%1#0: biguint = (itob 28u)
+        let tmp%0#0: bool = (b< i#1 reinterpret_biguint%1#0)
+        goto tmp%0#0 ? block@2 : block@3
+    block@2: // while_body_L63342
+        let tmp%1#0: bytes = (bzero 8u)
+        let tmp%2#0: biguint = (b+ i#1 115792089237316195423570985008687907853269984665640564039457584007913129639936b)
+        let tmp%3#0: biguint = (b- tmp%2#0 i#0)
+        let tmp%4#0: biguint = (b% tmp%3#0 115792089237316195423570985008687907853269984665640564039457584007913129639936b)
+        let tmp%5#0: bytes = (concat tmp%1#0 tmp%4#0)
+        let tmp%11#0: uint64 = (len tmp%5#0)
+        let tmp%12#0: uint64 = (- tmp%11#0 8u)
+        let tmp%14#0: uint64 = (extract_uint64 tmp%5#0 tmp%12#0)
+        let slot_contents%1#0: Encoded(uint256[28]) = load(squares#2)
+        let aggregate%bytes_offset%1#0: uint64 = (* tmp%14#0 32u)
+        let aggregate%encoded_element%1#0: bytes = (extract3 slot_contents%1#0 aggregate%bytes_offset%1#0 32u) // on error: index access is out of bounds
+        let tmp%16#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.sqr(aggregate%encoded_element%1#0)
+        let tmp%18#0: bytes = (concat tmp%1#0 i#1)
+        let tmp%21#0: uint64 = (len tmp%18#0)
+        let tmp%22#0: uint64 = (- tmp%21#0 8u)
+        let index%0#0: uint64 = (extract_uint64 tmp%18#0 tmp%22#0)
+        let aggregate%value_len%1#0: uint64 = (len tmp%16#0)
+        let aggregate%len_ok%1#0: bool = (<= aggregate%value_len%1#0 32u)
+        (assert aggregate%len_ok%1#0) // overflow
+        let aggregate%arc4_encoded%1#0: bytes[32] = (b| tmp%16#0 aggregate%bzero%0#0)
+        let slot_contents%2#0: Encoded(uint256[28]) = slot_contents%1#0
+        let aggregate%write_offset%1#0: uint64 = (* index%0#0 32u)
+        let aggregate%updated_array%1#0: bytes = (replace3 slot_contents%2#0 aggregate%write_offset%1#0 aggregate%arc4_encoded%1#0) // on error: index access is out of bounds
+        store(squares#2, aggregate%updated_array%1#0)
+        let i#2: biguint = (b+ i#1 1b)
+        goto block@1
+    block@3: // after_while_L63342
+        return squares#2
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(value: bytes[32]) -> biguint:
+    block@0: // L7934
+        let tmp%0#0: biguint = (b% value#0 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        return tmp%0#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.invert(value: biguint) -> biguint:
+    block@0: // L8182
+        let mem_0x100#0: biguint = 21888242871839275222246405745257275088548364400416034343698204186575808495615b
+        let __modexp_result#0: biguint = 1b
+        let __modexp_base#0: biguint = (b% value#0 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto block@1
+    block@1: // while_top_L8691
+        let __modexp_exp#1: biguint = φ(mem_0x100#0 <- block@0, __modexp_exp#3 <- block@4)
+        let __modexp_result#1: biguint = φ(__modexp_result#0 <- block@0, __modexp_result#3 <- block@4)
+        let __modexp_base#1: biguint = φ(__modexp_base#0 <- block@0, __modexp_base#3 <- block@4)
+        let tmp%4#0: bool = (b> __modexp_exp#1 0b)
+        goto tmp%4#0 ? block@2 : block@5
+    block@2: // while_body_L8691
+        let tmp%5#0: biguint = (b& __modexp_exp#1 1b)
+        let tmp%6#0: bool = (b!= tmp%5#0 0b)
+        goto tmp%6#0 ? block@3 : block@4
+    block@3: // if_body_L8691
+        let tmp%7#0: biguint = (b* __modexp_result#1 __modexp_base#1)
+        let __modexp_result#2: biguint = (b% tmp%7#0 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto block@4
+    block@4: // after_if_else_L8691
+        let __modexp_result#3: biguint = φ(__modexp_result#1 <- block@2, __modexp_result#2 <- block@3)
+        let __modexp_exp#3: biguint = (b/ __modexp_exp#1 2b)
+        let tmp%10#0: biguint = (b* __modexp_base#1 __modexp_base#1)
+        let __modexp_base#3: biguint = (b% tmp%10#0 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto block@1
+    block@5: // after_while_L8691
+        return __modexp_result#1
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.sqr(value: biguint) -> biguint:
+    block@0: // L9780
+        let tmp%0#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(value#0, value#0)
+        return tmp%0#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.accumulateArithmeticRelation(p: Encoded(uint256[40])*, evals: Encoded(uint256[26])*, domainSep: biguint) -> void:
+    block@0: // L34624
+        let q_arith#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 7u)
+        let reinterpret_biguint%0#0: biguint = (itob 3u)
+        let tmp%1#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.sub(q_arith#0, reinterpret_biguint%0#0)
+        let tmp%2#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 0u)
+        let tmp%3#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 28u)
+        let tmp%4#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%2#0, tmp%3#0)
+        let tmp%5#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 27u)
+        let tmp%6#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%4#0, tmp%5#0)
+        let tmp%7#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%1#0, tmp%6#0)
+        let accum#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%7#0, 10944121435919637611123202872628637544274182200208017171849102093287904247808b)
+        let tmp%9#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 2u)
+        let tmp%10#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 27u)
+        let tmp%11#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%9#0, tmp%10#0)
+        let tmp%12#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.add(accum#0, tmp%11#0)
+        let tmp%13#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 3u)
+        let tmp%14#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 28u)
+        let tmp%15#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%13#0, tmp%14#0)
+        let tmp%16#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.add(tmp%12#0, tmp%15#0)
+        let tmp%17#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 4u)
+        let tmp%18#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 29u)
+        let tmp%19#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%17#0, tmp%18#0)
+        let tmp%20#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.add(tmp%16#0, tmp%19#0)
+        let tmp%21#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 5u)
+        let tmp%22#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 30u)
+        let tmp%23#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%21#0, tmp%22#0)
+        let tmp%24#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.add(tmp%20#0, tmp%23#0)
+        let tmp%25#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 1u)
+        let accum#1: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.add(tmp%24#0, tmp%25#0)
+        let reinterpret_biguint%1#0: biguint = (itob 1u)
+        let tmp%27#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.sub(q_arith#0, reinterpret_biguint%1#0)
+        let tmp%28#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 38u)
+        let tmp%29#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%27#0, tmp%28#0)
+        let accum#2: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.add(accum#1, tmp%29#0)
+        let accum#3: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(accum#2, q_arith#0)
+        let accum#4: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(accum#3, domainSep#0)
+        let aggregate%value_len%0#0: uint64 = (len accum#4)
+        let aggregate%len_ok%0#0: bool = (<= aggregate%value_len%0#0 32u)
+        (assert aggregate%len_ok%0#0) // overflow
+        let aggregate%bzero%0#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%0#0: bytes[32] = (b| accum#4 aggregate%bzero%0#0)
+        let slot_contents%0#0: Encoded(uint256[26]) = load(evals#0)
+        let aggregate%write_offset%0#0: uint64 = 0u
+        let aggregate%updated_array%0#0: bytes = ((replace2 0) slot_contents%0#0 aggregate%arc4_encoded%0#0) // on error: index access is out of bounds
+        let tmp%33#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 27u)
+        let tmp%34#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 30u)
+        let tmp%35#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.add(tmp%33#0, tmp%34#0)
+        let tmp%36#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 35u)
+        let tmp%37#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.sub(tmp%35#0, tmp%36#0)
+        let tmp%38#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 0u)
+        let accum#5: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.add(tmp%37#0, tmp%38#0)
+        let reinterpret_biguint%2#0: biguint = (itob 2u)
+        let tmp%40#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.sub(q_arith#0, reinterpret_biguint%2#0)
+        let accum#6: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(accum#5, tmp%40#0)
+        let tmp%42#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.sub(q_arith#0, reinterpret_biguint%1#0)
+        let accum#7: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(accum#6, tmp%42#0)
+        let accum#8: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(accum#7, q_arith#0)
+        let accum#9: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(accum#8, domainSep#0)
+        let aggregate%value_len%1#0: uint64 = (len accum#9)
+        let aggregate%len_ok%1#0: bool = (<= aggregate%value_len%1#0 32u)
+        (assert aggregate%len_ok%1#0) // overflow
+        let aggregate%arc4_encoded%1#0: bytes[32] = (b| accum#9 aggregate%bzero%0#0)
+        let slot_contents%1#0: Encoded(uint256[26]) = aggregate%updated_array%0#0
+        let aggregate%write_offset%1#0: uint64 = 32u
+        let aggregate%updated_array%1#0: bytes = ((replace2 32) slot_contents%1#0 aggregate%arc4_encoded%1#0) // on error: index access is out of bounds
+        store(evals#0, aggregate%updated_array%1#0)
+        return 
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p: Encoded(uint256[40])*, _wire: uint64) -> biguint:
+    block@0: // L34435
+        let tmp%0#0: bytes = (bzero 8u)
+        let reinterpret_biguint%0#0: biguint = (itob _wire#0)
+        let tmp%1#0: bytes = (concat tmp%0#0 reinterpret_biguint%0#0)
+        let tmp%4#0: uint64 = (len tmp%1#0)
+        let tmp%5#0: uint64 = (- tmp%4#0 8u)
+        let tmp%7#0: uint64 = (extract_uint64 tmp%1#0 tmp%5#0)
+        let slot_contents%0#0: Encoded(uint256[40]) = load(p#0)
+        let aggregate%bytes_offset%0#0: uint64 = (* tmp%7#0 32u)
+        let aggregate%encoded_element%0#0: bytes = (extract3 slot_contents%0#0 aggregate%bytes_offset%0#0 32u) // on error: index access is out of bounds
+        return aggregate%encoded_element%0#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateLibraChallenge(previousChallenge: biguint, proof: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256))) -> <biguint, biguint, Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256))>:
+    block@0: // L22073
+        let aggregate%value_len%0#0: uint64 = 0u
+        let aggregate%len_ok%0#0: bool = 1u
+        let aggregate%bzero%0#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%0#0: bytes[32] = 0x0000000000000000000000000000000000000000000000000000000000000000
+        let aggregate%head%0#0: bytes = 0x0000000000000000000000000000000000000000000000000000000000000000
+        let aggregate%value_len%1#0: uint64 = 0u
+        let aggregate%len_ok%1#0: bool = 1u
+        let aggregate%arc4_encoded%1#0: bytes[32] = 0x0000000000000000000000000000000000000000000000000000000000000000
+        let aggregate%head%1#0: bytes = 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+        let aggregate%value_len%2#0: uint64 = 0u
+        let aggregate%len_ok%2#0: bool = 1u
+        let aggregate%arc4_encoded%2#0: bytes[32] = 0x0000000000000000000000000000000000000000000000000000000000000000
+        let aggregate%head%2#0: bytes = 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+        let aggregate%value_len%3#0: uint64 = 0u
+        let aggregate%len_ok%3#0: bool = 1u
+        let aggregate%arc4_encoded%3#0: bytes[32] = 0x0000000000000000000000000000000000000000000000000000000000000000
+        let aggregate%head%3#0: bytes = 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+        let aggregate%value_len%4#0: uint64 = 0u
+        let aggregate%len_ok%4#0: bool = 1u
+        let aggregate%arc4_encoded%4#0: bytes[32] = 0x0000000000000000000000000000000000000000000000000000000000000000
+        let aggregate%head%4#0: bytes = 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+        let aggregate%value_len%5#0: uint64 = 0u
+        let aggregate%len_ok%5#0: bool = 1u
+        let aggregate%arc4_encoded%5#0: bytes[32] = 0x0000000000000000000000000000000000000000000000000000000000000000
+        let aggregate%head%5#0: bytes = 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+        let challengeData#0: Encoded(uint256[6])* = new()
+        let aggregate%value_len%6#0: uint64 = (len previousChallenge#0)
+        let aggregate%len_ok%6#0: bool = (<= aggregate%value_len%6#0 32u)
+        (assert aggregate%len_ok%6#0) // overflow
+        let aggregate%arc4_encoded%6#0: bytes[32] = (b| previousChallenge#0 aggregate%bzero%0#0)
+        let slot_contents%0#0: Encoded(uint256[6]) = 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+        let aggregate%write_offset%0#0: uint64 = 0u
+        let aggregate%updated_array%0#0: bytes = ((replace2 0) slot_contents%0#0 aggregate%arc4_encoded%6#0) // on error: index access is out of bounds
+        store(challengeData#0, aggregate%updated_array%0#0)
+        let aggregate%extract%0#0: bytes = (extract3 proof#0 1024u 384u)
+        let slot%1#0: Encoded((uint256,uint256,uint256,uint256)[3])* = new()
+        store(slot%1#0, aggregate%extract%0#0)
+        let slot_contents%1#0: Encoded((uint256,uint256,uint256,uint256)[3]) = aggregate%extract%0#0
+        let aggregate%bytes_offset%1#0: uint64 = 0u
+        let aggregate%encoded_element%1#0: bytes = ((extract 0 128) slot_contents%1#0) // on error: index access is out of bounds
+        let aggregate%extract%1#0: bytes = ((extract 0 32) aggregate%encoded_element%1#0)
+        let aggregate%value_len%7#0: uint64 = (len aggregate%extract%1#0)
+        let aggregate%len_ok%7#0: bool = (<= aggregate%value_len%7#0 32u)
+        (assert aggregate%len_ok%7#0) // overflow
+        let aggregate%arc4_encoded%7#0: bytes[32] = (b| aggregate%extract%1#0 aggregate%bzero%0#0)
+        let slot_contents%2#0: Encoded(uint256[6]) = load(challengeData#0)
+        let aggregate%write_offset%1#0: uint64 = 32u
+        let aggregate%updated_array%1#0: bytes = ((replace2 32) slot_contents%2#0 aggregate%arc4_encoded%7#0) // on error: index access is out of bounds
+        store(challengeData#0, aggregate%updated_array%1#0)
+        let slot%2#0: Encoded((uint256,uint256,uint256,uint256)[3])* = new()
+        store(slot%2#0, aggregate%extract%0#0)
+        let slot_contents%3#0: Encoded((uint256,uint256,uint256,uint256)[3]) = aggregate%extract%0#0
+        let aggregate%bytes_offset%3#0: uint64 = 0u
+        let aggregate%encoded_element%3#0: bytes = ((extract 0 128) slot_contents%3#0) // on error: index access is out of bounds
+        let aggregate%extract%2#0: bytes = ((extract 32 32) aggregate%encoded_element%3#0)
+        let aggregate%value_len%8#0: uint64 = (len aggregate%extract%2#0)
+        let aggregate%len_ok%8#0: bool = (<= aggregate%value_len%8#0 32u)
+        (assert aggregate%len_ok%8#0) // overflow
+        let aggregate%arc4_encoded%8#0: bytes[32] = (b| aggregate%extract%2#0 aggregate%bzero%0#0)
+        let slot_contents%4#0: Encoded(uint256[6]) = load(challengeData#0)
+        let aggregate%write_offset%2#0: uint64 = 64u
+        let aggregate%updated_array%2#0: bytes = ((replace2 64) slot_contents%4#0 aggregate%arc4_encoded%8#0) // on error: index access is out of bounds
+        store(challengeData#0, aggregate%updated_array%2#0)
+        let slot%3#0: Encoded((uint256,uint256,uint256,uint256)[3])* = new()
+        store(slot%3#0, aggregate%extract%0#0)
+        let slot_contents%5#0: Encoded((uint256,uint256,uint256,uint256)[3]) = aggregate%extract%0#0
+        let aggregate%bytes_offset%5#0: uint64 = 0u
+        let aggregate%encoded_element%5#0: bytes = ((extract 0 128) slot_contents%5#0) // on error: index access is out of bounds
+        let aggregate%extract%3#0: bytes = ((extract 64 32) aggregate%encoded_element%5#0)
+        let aggregate%value_len%9#0: uint64 = (len aggregate%extract%3#0)
+        let aggregate%len_ok%9#0: bool = (<= aggregate%value_len%9#0 32u)
+        (assert aggregate%len_ok%9#0) // overflow
+        let aggregate%arc4_encoded%9#0: bytes[32] = (b| aggregate%extract%3#0 aggregate%bzero%0#0)
+        let slot_contents%6#0: Encoded(uint256[6]) = load(challengeData#0)
+        let aggregate%write_offset%3#0: uint64 = 96u
+        let aggregate%updated_array%3#0: bytes = ((replace2 96) slot_contents%6#0 aggregate%arc4_encoded%9#0) // on error: index access is out of bounds
+        store(challengeData#0, aggregate%updated_array%3#0)
+        let slot%4#0: Encoded((uint256,uint256,uint256,uint256)[3])* = new()
+        store(slot%4#0, aggregate%extract%0#0)
+        let slot_contents%7#0: Encoded((uint256,uint256,uint256,uint256)[3]) = aggregate%extract%0#0
+        let aggregate%bytes_offset%7#0: uint64 = 0u
+        let aggregate%encoded_element%7#0: bytes = ((extract 0 128) slot_contents%7#0) // on error: index access is out of bounds
+        let aggregate%extract%4#0: bytes = ((extract 96 32) aggregate%encoded_element%7#0)
+        let aggregate%value_len%10#0: uint64 = (len aggregate%extract%4#0)
+        let aggregate%len_ok%10#0: bool = (<= aggregate%value_len%10#0 32u)
+        (assert aggregate%len_ok%10#0) // overflow
+        let aggregate%arc4_encoded%10#0: bytes[32] = (b| aggregate%extract%4#0 aggregate%bzero%0#0)
+        let slot_contents%8#0: Encoded(uint256[6]) = load(challengeData#0)
+        let aggregate%write_offset%4#0: uint64 = 128u
+        let aggregate%updated_array%4#0: bytes = ((replace2 128) slot_contents%8#0 aggregate%arc4_encoded%10#0) // on error: index access is out of bounds
+        let aggregate%extract%5#0: bytes = (extract3 proof#0 1408u 32u)
+        let aggregate%value_len%11#0: uint64 = (len aggregate%extract%5#0)
+        let aggregate%len_ok%11#0: bool = (<= aggregate%value_len%11#0 32u)
+        (assert aggregate%len_ok%11#0) // overflow
+        let aggregate%arc4_encoded%11#0: bytes[32] = (b| aggregate%extract%5#0 aggregate%bzero%0#0)
+        let slot_contents%9#0: Encoded(uint256[6]) = aggregate%updated_array%4#0
+        let aggregate%write_offset%5#0: uint64 = 160u
+        let aggregate%updated_array%5#0: bytes = ((replace2 160) slot_contents%9#0 aggregate%arc4_encoded%11#0) // on error: index access is out of bounds
+        store(challengeData#0, aggregate%updated_array%5#0)
+        let slot_contents%10#0: Encoded(uint256[6]) = aggregate%updated_array%5#0
+        let aggregate%bytes_offset%10#0: uint64 = 0u
+        let aggregate%encoded_element%10#0: bytes = ((extract 0 32) slot_contents%10#0) // on error: index access is out of bounds
+        let tmp%7#0: bytes = (concat aggregate%bzero%0#0 aggregate%encoded_element%10#0)
+        let slot_contents%11#0: Encoded(uint256[6]) = aggregate%updated_array%5#0
+        let aggregate%bytes_offset%11#0: uint64 = 0u
+        let aggregate%encoded_element%11#0: bytes = ((extract 0 32) slot_contents%11#0) // on error: index access is out of bounds
+        let tmp%10#0: bytes = (concat aggregate%bzero%0#0 aggregate%encoded_element%11#0)
+        let tmp%11#0: uint64 = (len tmp%10#0)
+        let tmp%12#0: uint64 = (- tmp%11#0 32u)
+        let tmp%13#0: bytes = (extract3 tmp%7#0 tmp%12#0 32u)
+        let slot_contents%12#0: Encoded(uint256[6]) = aggregate%updated_array%5#0
+        let aggregate%bytes_offset%12#0: uint64 = 32u
+        let aggregate%encoded_element%12#0: bytes = ((extract 32 32) slot_contents%12#0) // on error: index access is out of bounds
+        let tmp%16#0: bytes = (concat aggregate%bzero%0#0 aggregate%encoded_element%12#0)
+        let slot_contents%13#0: Encoded(uint256[6]) = aggregate%updated_array%5#0
+        let aggregate%bytes_offset%13#0: uint64 = 32u
+        let aggregate%encoded_element%13#0: bytes = ((extract 32 32) slot_contents%13#0) // on error: index access is out of bounds
+        let tmp%19#0: bytes = (concat aggregate%bzero%0#0 aggregate%encoded_element%13#0)
+        let tmp%20#0: uint64 = (len tmp%19#0)
+        let tmp%21#0: uint64 = (- tmp%20#0 32u)
+        let tmp%22#0: bytes = (extract3 tmp%16#0 tmp%21#0 32u)
+        let tmp%23#0: bytes = (concat tmp%13#0 tmp%22#0)
+        let slot_contents%14#0: Encoded(uint256[6]) = aggregate%updated_array%5#0
+        let aggregate%bytes_offset%14#0: uint64 = 64u
+        let aggregate%encoded_element%14#0: bytes = ((extract 64 32) slot_contents%14#0) // on error: index access is out of bounds
+        let tmp%26#0: bytes = (concat aggregate%bzero%0#0 aggregate%encoded_element%14#0)
+        let slot_contents%15#0: Encoded(uint256[6]) = aggregate%updated_array%5#0
+        let aggregate%bytes_offset%15#0: uint64 = 64u
+        let aggregate%encoded_element%15#0: bytes = ((extract 64 32) slot_contents%15#0) // on error: index access is out of bounds
+        let tmp%29#0: bytes = (concat aggregate%bzero%0#0 aggregate%encoded_element%15#0)
+        let tmp%30#0: uint64 = (len tmp%29#0)
+        let tmp%31#0: uint64 = (- tmp%30#0 32u)
+        let tmp%32#0: bytes = (extract3 tmp%26#0 tmp%31#0 32u)
+        let tmp%33#0: bytes = (concat tmp%23#0 tmp%32#0)
+        let slot_contents%16#0: Encoded(uint256[6]) = aggregate%updated_array%5#0
+        let aggregate%bytes_offset%16#0: uint64 = 96u
+        let aggregate%encoded_element%16#0: bytes = ((extract 96 32) slot_contents%16#0) // on error: index access is out of bounds
+        let tmp%36#0: bytes = (concat aggregate%bzero%0#0 aggregate%encoded_element%16#0)
+        let slot_contents%17#0: Encoded(uint256[6]) = aggregate%updated_array%5#0
+        let aggregate%bytes_offset%17#0: uint64 = 96u
+        let aggregate%encoded_element%17#0: bytes = ((extract 96 32) slot_contents%17#0) // on error: index access is out of bounds
+        let tmp%39#0: bytes = (concat aggregate%bzero%0#0 aggregate%encoded_element%17#0)
+        let tmp%40#0: uint64 = (len tmp%39#0)
+        let tmp%41#0: uint64 = (- tmp%40#0 32u)
+        let tmp%42#0: bytes = (extract3 tmp%36#0 tmp%41#0 32u)
+        let tmp%43#0: bytes = (concat tmp%33#0 tmp%42#0)
+        let slot_contents%18#0: Encoded(uint256[6]) = aggregate%updated_array%5#0
+        let aggregate%bytes_offset%18#0: uint64 = 128u
+        let aggregate%encoded_element%18#0: bytes = ((extract 128 32) slot_contents%18#0) // on error: index access is out of bounds
+        let tmp%46#0: bytes = (concat aggregate%bzero%0#0 aggregate%encoded_element%18#0)
+        let slot_contents%19#0: Encoded(uint256[6]) = aggregate%updated_array%5#0
+        let aggregate%bytes_offset%19#0: uint64 = 128u
+        let aggregate%encoded_element%19#0: bytes = ((extract 128 32) slot_contents%19#0) // on error: index access is out of bounds
+        let tmp%49#0: bytes = (concat aggregate%bzero%0#0 aggregate%encoded_element%19#0)
+        let tmp%50#0: uint64 = (len tmp%49#0)
+        let tmp%51#0: uint64 = (- tmp%50#0 32u)
+        let tmp%52#0: bytes = (extract3 tmp%46#0 tmp%51#0 32u)
+        let tmp%53#0: bytes = (concat tmp%43#0 tmp%52#0)
+        let slot_contents%20#0: Encoded(uint256[6]) = aggregate%updated_array%5#0
+        let aggregate%bytes_offset%20#0: uint64 = 160u
+        let aggregate%encoded_element%20#0: bytes = ((extract 160 32) slot_contents%20#0) // on error: index access is out of bounds
+        let tmp%56#0: bytes = (concat aggregate%bzero%0#0 aggregate%encoded_element%20#0)
+        let slot_contents%21#0: Encoded(uint256[6]) = aggregate%updated_array%5#0
+        let aggregate%bytes_offset%21#0: uint64 = 160u
+        let aggregate%encoded_element%21#0: bytes = ((extract 160 32) slot_contents%21#0) // on error: index access is out of bounds
+        let tmp%59#0: bytes = (concat aggregate%bzero%0#0 aggregate%encoded_element%21#0)
+        let tmp%60#0: uint64 = (len tmp%59#0)
+        let tmp%61#0: uint64 = (- tmp%60#0 32u)
+        let tmp%62#0: bytes = (extract3 tmp%56#0 tmp%61#0 32u)
+        let tmp%63#0: bytes = (concat tmp%53#0 tmp%62#0)
+        let tmp%64#0: bytes = (keccak256 tmp%63#0)
+        let nextPreviousChallenge#1: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(tmp%64#0)
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.splitChallenge(nextPreviousChallenge#1)
+        let (libraChallenge#1: biguint, tmp%67#0: biguint) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.splitChallenge(nextPreviousChallenge#1)
+        return libraChallenge#1 nextPreviousChallenge#1 proof#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateShplonkZChallenge(proof: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)), prevChallenge: biguint) -> <biguint, biguint, Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256))>:
+    block@0: // L27170
+        let aggregate%value_len%0#0: uint64 = 0u
+        let aggregate%len_ok%0#0: bool = 1u
+        let aggregate%bzero%0#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%0#0: bytes[32] = 0x0000000000000000000000000000000000000000000000000000000000000000
+        let aggregate%head%0#0: bytes = 0x0000000000000000000000000000000000000000000000000000000000000000
+        let aggregate%value_len%1#0: uint64 = 0u
+        let aggregate%len_ok%1#0: bool = 1u
+        let aggregate%arc4_encoded%1#0: bytes[32] = 0x0000000000000000000000000000000000000000000000000000000000000000
+        let aggregate%head%1#0: bytes = 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+        let aggregate%value_len%2#0: uint64 = 0u
+        let aggregate%len_ok%2#0: bool = 1u
+        let aggregate%arc4_encoded%2#0: bytes[32] = 0x0000000000000000000000000000000000000000000000000000000000000000
+        let aggregate%head%2#0: bytes = 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+        let aggregate%value_len%3#0: uint64 = 0u
+        let aggregate%len_ok%3#0: bool = 1u
+        let aggregate%arc4_encoded%3#0: bytes[32] = 0x0000000000000000000000000000000000000000000000000000000000000000
+        let aggregate%head%3#0: bytes = 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+        let aggregate%value_len%4#0: uint64 = 0u
+        let aggregate%len_ok%4#0: bool = 1u
+        let aggregate%arc4_encoded%4#0: bytes[32] = 0x0000000000000000000000000000000000000000000000000000000000000000
+        let aggregate%head%4#0: bytes = 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+        let shplonkZChallengeElements#0: Encoded(uint256[5])* = new()
+        let aggregate%value_len%5#0: uint64 = (len prevChallenge#0)
+        let aggregate%len_ok%5#0: bool = (<= aggregate%value_len%5#0 32u)
+        (assert aggregate%len_ok%5#0) // overflow
+        let aggregate%arc4_encoded%5#0: bytes[32] = (b| prevChallenge#0 aggregate%bzero%0#0)
+        let slot_contents%0#0: Encoded(uint256[5]) = 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+        let aggregate%write_offset%0#0: uint64 = 0u
+        let aggregate%updated_array%0#0: bytes = ((replace2 0) slot_contents%0#0 aggregate%arc4_encoded%5#0) // on error: index access is out of bounds
+        let aggregate%extract%0#0: bytes = (extract3 proof#0 15456u 128u)
+        let aggregate%extract%1#0: bytes = ((extract 0 32) aggregate%extract%0#0)
+        let aggregate%value_len%6#0: uint64 = (len aggregate%extract%1#0)
+        let aggregate%len_ok%6#0: bool = (<= aggregate%value_len%6#0 32u)
+        (assert aggregate%len_ok%6#0) // overflow
+        let aggregate%arc4_encoded%6#0: bytes[32] = (b| aggregate%extract%1#0 aggregate%bzero%0#0)
+        let slot_contents%1#0: Encoded(uint256[5]) = aggregate%updated_array%0#0
+        let aggregate%write_offset%1#0: uint64 = 32u
+        let aggregate%updated_array%1#0: bytes = ((replace2 32) slot_contents%1#0 aggregate%arc4_encoded%6#0) // on error: index access is out of bounds
+        let aggregate%extract%3#0: bytes = ((extract 32 32) aggregate%extract%0#0)
+        let aggregate%value_len%7#0: uint64 = (len aggregate%extract%3#0)
+        let aggregate%len_ok%7#0: bool = (<= aggregate%value_len%7#0 32u)
+        (assert aggregate%len_ok%7#0) // overflow
+        let aggregate%arc4_encoded%7#0: bytes[32] = (b| aggregate%extract%3#0 aggregate%bzero%0#0)
+        let slot_contents%2#0: Encoded(uint256[5]) = aggregate%updated_array%1#0
+        let aggregate%write_offset%2#0: uint64 = 64u
+        let aggregate%updated_array%2#0: bytes = ((replace2 64) slot_contents%2#0 aggregate%arc4_encoded%7#0) // on error: index access is out of bounds
+        let aggregate%extract%5#0: bytes = ((extract 64 32) aggregate%extract%0#0)
+        let aggregate%value_len%8#0: uint64 = (len aggregate%extract%5#0)
+        let aggregate%len_ok%8#0: bool = (<= aggregate%value_len%8#0 32u)
+        (assert aggregate%len_ok%8#0) // overflow
+        let aggregate%arc4_encoded%8#0: bytes[32] = (b| aggregate%extract%5#0 aggregate%bzero%0#0)
+        let slot_contents%3#0: Encoded(uint256[5]) = aggregate%updated_array%2#0
+        let aggregate%write_offset%3#0: uint64 = 96u
+        let aggregate%updated_array%3#0: bytes = ((replace2 96) slot_contents%3#0 aggregate%arc4_encoded%8#0) // on error: index access is out of bounds
+        let aggregate%extract%7#0: bytes = ((extract 96 32) aggregate%extract%0#0)
+        let aggregate%value_len%9#0: uint64 = (len aggregate%extract%7#0)
+        let aggregate%len_ok%9#0: bool = (<= aggregate%value_len%9#0 32u)
+        (assert aggregate%len_ok%9#0) // overflow
+        let aggregate%arc4_encoded%9#0: bytes[32] = (b| aggregate%extract%7#0 aggregate%bzero%0#0)
+        let slot_contents%4#0: Encoded(uint256[5]) = aggregate%updated_array%3#0
+        let aggregate%write_offset%4#0: uint64 = 128u
+        let aggregate%updated_array%4#0: bytes = ((replace2 128) slot_contents%4#0 aggregate%arc4_encoded%9#0) // on error: index access is out of bounds
+        store(shplonkZChallengeElements#0, aggregate%updated_array%4#0)
+        let slot_contents%5#0: Encoded(uint256[5]) = aggregate%updated_array%4#0
+        let aggregate%bytes_offset%5#0: uint64 = 0u
+        let aggregate%encoded_element%5#0: bytes = ((extract 0 32) slot_contents%5#0) // on error: index access is out of bounds
+        let tmp%6#0: bytes = (concat aggregate%bzero%0#0 aggregate%encoded_element%5#0)
+        let slot_contents%6#0: Encoded(uint256[5]) = aggregate%updated_array%4#0
+        let aggregate%bytes_offset%6#0: uint64 = 0u
+        let aggregate%encoded_element%6#0: bytes = ((extract 0 32) slot_contents%6#0) // on error: index access is out of bounds
+        let tmp%9#0: bytes = (concat aggregate%bzero%0#0 aggregate%encoded_element%6#0)
+        let tmp%10#0: uint64 = (len tmp%9#0)
+        let tmp%11#0: uint64 = (- tmp%10#0 32u)
+        let tmp%12#0: bytes = (extract3 tmp%6#0 tmp%11#0 32u)
+        let slot_contents%7#0: Encoded(uint256[5]) = aggregate%updated_array%4#0
+        let aggregate%bytes_offset%7#0: uint64 = 32u
+        let aggregate%encoded_element%7#0: bytes = ((extract 32 32) slot_contents%7#0) // on error: index access is out of bounds
+        let tmp%15#0: bytes = (concat aggregate%bzero%0#0 aggregate%encoded_element%7#0)
+        let slot_contents%8#0: Encoded(uint256[5]) = aggregate%updated_array%4#0
+        let aggregate%bytes_offset%8#0: uint64 = 32u
+        let aggregate%encoded_element%8#0: bytes = ((extract 32 32) slot_contents%8#0) // on error: index access is out of bounds
+        let tmp%18#0: bytes = (concat aggregate%bzero%0#0 aggregate%encoded_element%8#0)
+        let tmp%19#0: uint64 = (len tmp%18#0)
+        let tmp%20#0: uint64 = (- tmp%19#0 32u)
+        let tmp%21#0: bytes = (extract3 tmp%15#0 tmp%20#0 32u)
+        let tmp%22#0: bytes = (concat tmp%12#0 tmp%21#0)
+        let slot_contents%9#0: Encoded(uint256[5]) = aggregate%updated_array%4#0
+        let aggregate%bytes_offset%9#0: uint64 = 64u
+        let aggregate%encoded_element%9#0: bytes = ((extract 64 32) slot_contents%9#0) // on error: index access is out of bounds
+        let tmp%25#0: bytes = (concat aggregate%bzero%0#0 aggregate%encoded_element%9#0)
+        let slot_contents%10#0: Encoded(uint256[5]) = aggregate%updated_array%4#0
+        let aggregate%bytes_offset%10#0: uint64 = 64u
+        let aggregate%encoded_element%10#0: bytes = ((extract 64 32) slot_contents%10#0) // on error: index access is out of bounds
+        let tmp%28#0: bytes = (concat aggregate%bzero%0#0 aggregate%encoded_element%10#0)
+        let tmp%29#0: uint64 = (len tmp%28#0)
+        let tmp%30#0: uint64 = (- tmp%29#0 32u)
+        let tmp%31#0: bytes = (extract3 tmp%25#0 tmp%30#0 32u)
+        let tmp%32#0: bytes = (concat tmp%22#0 tmp%31#0)
+        let slot_contents%11#0: Encoded(uint256[5]) = aggregate%updated_array%4#0
+        let aggregate%bytes_offset%11#0: uint64 = 96u
+        let aggregate%encoded_element%11#0: bytes = ((extract 96 32) slot_contents%11#0) // on error: index access is out of bounds
+        let tmp%35#0: bytes = (concat aggregate%bzero%0#0 aggregate%encoded_element%11#0)
+        let slot_contents%12#0: Encoded(uint256[5]) = aggregate%updated_array%4#0
+        let aggregate%bytes_offset%12#0: uint64 = 96u
+        let aggregate%encoded_element%12#0: bytes = ((extract 96 32) slot_contents%12#0) // on error: index access is out of bounds
+        let tmp%38#0: bytes = (concat aggregate%bzero%0#0 aggregate%encoded_element%12#0)
+        let tmp%39#0: uint64 = (len tmp%38#0)
+        let tmp%40#0: uint64 = (- tmp%39#0 32u)
+        let tmp%41#0: bytes = (extract3 tmp%35#0 tmp%40#0 32u)
+        let tmp%42#0: bytes = (concat tmp%32#0 tmp%41#0)
+        let slot_contents%13#0: Encoded(uint256[5]) = aggregate%updated_array%4#0
+        let aggregate%bytes_offset%13#0: uint64 = 128u
+        let aggregate%encoded_element%13#0: bytes = ((extract 128 32) slot_contents%13#0) // on error: index access is out of bounds
+        let tmp%45#0: bytes = (concat aggregate%bzero%0#0 aggregate%encoded_element%13#0)
+        let slot_contents%14#0: Encoded(uint256[5]) = aggregate%updated_array%4#0
+        let aggregate%bytes_offset%14#0: uint64 = 128u
+        let aggregate%encoded_element%14#0: bytes = ((extract 128 32) slot_contents%14#0) // on error: index access is out of bounds
+        let tmp%48#0: bytes = (concat aggregate%bzero%0#0 aggregate%encoded_element%14#0)
+        let tmp%49#0: uint64 = (len tmp%48#0)
+        let tmp%50#0: uint64 = (- tmp%49#0 32u)
+        let tmp%51#0: bytes = (extract3 tmp%45#0 tmp%50#0 32u)
+        let tmp%52#0: bytes = (concat tmp%42#0 tmp%51#0)
+        let tmp%53#0: bytes = (keccak256 tmp%52#0)
+        let nextPreviousChallenge#1: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(tmp%53#0)
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.splitChallenge(nextPreviousChallenge#1)
+        let (shplonkZ#1: biguint, tmp%56#0: biguint) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.splitChallenge(nextPreviousChallenge#1)
+        return shplonkZ#1 nextPreviousChallenge#1 proof#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.splitChallenge(challenge: biguint) -> <biguint, biguint>:
+    block@0: // L16219
+        let lo#0: biguint = (b& challenge#0 340282366920938463463374607431768211455b)
+        let tmp%1#0: bytes = (bzero 32u)
+        let hi#0: biguint = (b/ challenge#0 0x0000000000000000000000000000000100000000000000000000000000000000)
+        let tmp%5#0: bytes = (concat tmp%1#0 lo#0)
+        let tmp%8#0: uint64 = (len tmp%5#0)
+        let tmp%9#0: uint64 = (- tmp%8#0 32u)
+        let reinterpret_bytes[32]%0#0: bytes[32] = (extract3 tmp%5#0 tmp%9#0 32u)
+        let first#1: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(reinterpret_bytes[32]%0#0)
+        let tmp%12#0: bytes = (concat tmp%1#0 hi#0)
+        let tmp%15#0: uint64 = (len tmp%12#0)
+        let tmp%16#0: uint64 = (- tmp%15#0 32u)
+        let reinterpret_bytes[32]%1#0: bytes[32] = (extract3 tmp%12#0 tmp%16#0 32u)
+        let second#1: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(reinterpret_bytes[32]%1#0)
+        return first#1 second#1
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.add(a: biguint, b: biguint) -> biguint:
+    block@0: // L10108
+        let tmp%0#0: biguint = (b+ a#0 b#0)
+        let tmp%1#0: biguint = (b% tmp%0#0 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        return tmp%1#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(a: biguint, b: biguint) -> biguint:
+    block@0: // L10220
+        let tmp%0#0: biguint = (b* a#0 b#0)
+        let tmp%1#0: biguint = (b% tmp%0#0 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        return tmp%1#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.sub(a: biguint, b: biguint) -> biguint:
+    block@0: // L10332
+        let tmp%1#0: biguint = (b- 137680332109155470645817390753945182941818349066056598383155788194488938135553b b#0)
+        let tmp%2#0: biguint = (b% tmp%1#0 115792089237316195423570985008687907853269984665640564039457584007913129639936b)
+        let tmp%3#0: biguint = (b+ a#0 tmp%2#0)
+        let tmp%4#0: biguint = (b% tmp%3#0 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        return tmp%4#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper61.__puya_arc4_router__() -> bool:
+    block@0: // L1
+        let tmp%0#0: uint64 = (txn NumAppArgs)
+        goto tmp%0#0 ? block@1 : block@12
+    block@1: // abi_routing_L1
+        let tmp%2#0: uint64 = (txn OnCompletion)
+        let tmp%3#0: bool = (! tmp%2#0)
+        (assert tmp%3#0)
+        let tmp%4#0: uint64 = (txn ApplicationID)
+        (assert tmp%4#0)
+        let tmp%6#0: bytes = (txna ApplicationArgs 0)
+        switch tmp%6#0 {method "ZKTranscriptLib.generateLibraChallenge(uint256)(uint256,uint256)" => block@3, method "RelationsLib.accumulateArithmeticRelation(uint256[40],uint256[26])uint256[40]" => block@4, method "ZKTranscriptLib.generateShplonkZChallenge(uint256)(uint256,uint256)" => block@5, method "FrLib.invert(uint256)uint256" => block@6, method "CommitmentSchemeLib.computeSquares(uint256)uint256[28]" => block@7, method "__init__(uint64,uint64,byte[])void" => block@8, * => block@11}
+    block@3: // ZKTranscriptLib.generateLibraChallenge_route_L22073
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper61.ZKTranscriptLib.generateLibraChallenge[routing]()
+        goto block@11
+    block@4: // RelationsLib.accumulateArithmeticRelation_route_L34624
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper61.RelationsLib.accumulateArithmeticRelation[routing]()
+        goto block@11
+    block@5: // ZKTranscriptLib.generateShplonkZChallenge_route_L27170
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper61.ZKTranscriptLib.generateShplonkZChallenge[routing]()
+        goto block@11
+    block@6: // FrLib.invert_route_L8182
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper61.FrLib.invert[routing]()
+        goto block@11
+    block@7: // CommitmentSchemeLib.computeSquares_route_L63212
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper61.CommitmentSchemeLib.computeSquares[routing]()
+        goto block@11
+    block@8: // __init___route_L65448
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper61.__init__[routing]()
+        goto block@11
+    block@11: // after_if_else_L1
+        fail
+    block@12: // __bare_create___L65448
+        let tmp%7#0: uint64 = (txn OnCompletion)
+        let tmp%8#0: bool = (! tmp%7#0)
+        let tmp%9#0: uint64 = (txn ApplicationID)
+        let tmp%10#0: bool = (! tmp%9#0)
+        let tmp%11#0: bool = (&& tmp%8#0 tmp%10#0)
+        (assert tmp%11#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper61.ZKTranscriptLib.generateLibraChallenge[routing]() -> void:
+    block@0: // L22073
+        let previousChallenge#0: biguint = (txna ApplicationArgs 1)
+        let len%0#0: uint64 = (len previousChallenge#0)
+        let eq%0#0: bool = (== len%0#0 32u)
+        (assert eq%0#0) // invalid number of bytes for arc4.uint256
+        let tmp%0#1: uint64 = (app_global_get "o")
+        goto tmp%0#1 ? block@2 : block@5
+    block@2: // if_body_L22073
+        let tmp%2#1: uint64 = (global GroupSize)
+        let tmp%3#1: bool = (>= tmp%2#1 2u)
+        (assert tmp%3#1) // helper: must be called in group
+        let tmp%4#1: uint64 = (gtxn 0 ApplicationID)
+        let tmp%5#1: uint64 = (app_global_get "o")
+        let tmp%6#0: bool = (== tmp%4#1 tmp%5#1)
+        (assert tmp%6#0) // helper: unauthorized caller
+        let tmp%7#0: bytes = (gtxn 0 Sender)
+        let tmp%8#0: bytes = (txn Sender)
+        let tmp%9#0: bool = (== tmp%7#0 tmp%8#0)
+        (assert tmp%9#0) // helper: sender mismatch
+        let tmp%10#0: uint64 = (app_global_get "p")
+        goto tmp%10#0 ? block@3 : block@5
+    block@3: // if_body_L22073
+        let tmp%12#0: uint64 = (txn GroupIndex)
+        let tmp%13#0: uint64 = (- tmp%12#0 1u)
+        let tmp%14#0: uint64 = ((gtxns ApplicationID) tmp%13#0)
+        let tmp%15#0: uint64 = (app_global_get "p")
+        let tmp%16#0: bool = (== tmp%14#0 tmp%15#0)
+        (assert tmp%16#0) // helper: wrong prev chunk
+        let tmp%17#0: uint64 = (txn GroupIndex)
+        let tmp%18#0: uint64 = (- tmp%17#0 1u)
+        let tmp%19#0: bytes = ((gtxnsa ApplicationArgs 0) tmp%18#0)
+        let tmp%20#0: bytes = (app_global_get "s")
+        let tmp%21#0: bool = (== tmp%19#0 tmp%20#0)
+        (assert tmp%21#0) // helper: wrong prev method
+        goto block@5
+    block@5: // after_if_else_L22073
+        let tmp%22#0: bytes = (gload 1 0)
+        let tmp%23#0: bytes = (gload 1 1)
+        let tmp%24#0: bytes = (concat tmp%22#0 tmp%23#0)
+        let tmp%25#0: bytes = (gload 2 0)
+        let tmp%26#0: bytes = (concat tmp%24#0 tmp%25#0)
+        let tmp%27#0: bytes = (gload 2 1)
+        let proof#0: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)) = (concat tmp%26#0 tmp%27#0)
+        let (ZKTranscriptLib.generateLibraChallenge%0#0: biguint, ZKTranscriptLib.generateLibraChallenge%1#0: biguint, proof#1: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256))) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateLibraChallenge(previousChallenge#0, proof#0)
+        let aggregate%value_len%0#0: uint64 = (len ZKTranscriptLib.generateLibraChallenge%0#0)
+        let aggregate%len_ok%0#0: bool = (<= aggregate%value_len%0#0 32u)
+        (assert aggregate%len_ok%0#0) // overflow
+        let aggregate%bzero%0#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%0#0: bytes[32] = (b| ZKTranscriptLib.generateLibraChallenge%0#0 aggregate%bzero%0#0)
+        let aggregate%value_len%1#0: uint64 = (len ZKTranscriptLib.generateLibraChallenge%1#0)
+        let aggregate%len_ok%1#0: bool = (<= aggregate%value_len%1#0 32u)
+        (assert aggregate%len_ok%1#0) // overflow
+        let aggregate%arc4_encoded%1#0: bytes[32] = (b| ZKTranscriptLib.generateLibraChallenge%1#0 aggregate%bzero%0#0)
+        let aggregate%head%1#0: bytes = (concat aggregate%arc4_encoded%0#0 aggregate%arc4_encoded%1#0)
+        let tmp%5#0: bytes = (concat 0x151f7c75 aggregate%head%1#0)
+        (log tmp%5#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper61.RelationsLib.accumulateArithmeticRelation[routing]() -> void:
+    block@0: // L34624
+        let tmp%0#0: bytes = (txna ApplicationArgs 1)
+        let len%0#0: uint64 = (len tmp%0#0)
+        let eq%0#0: bool = (== len%0#0 1280u)
+        (assert eq%0#0) // invalid number of bytes for arc4.static_array<arc4.uint256, 40>
+        let p#0: Encoded(uint256[40])* = new()
+        store(p#0, tmp%0#0)
+        let tmp%1#0: bytes = (txna ApplicationArgs 2)
+        let len%1#0: uint64 = (len tmp%1#0)
+        let eq%1#0: bool = (== len%1#0 832u)
+        (assert eq%1#0) // invalid number of bytes for arc4.static_array<arc4.uint256, 26>
+        let evals#0: Encoded(uint256[26])* = new()
+        store(evals#0, tmp%1#0)
+        let tmp%0#1: uint64 = (app_global_get "o")
+        goto tmp%0#1 ? block@2 : block@5
+    block@2: // if_body_L34624
+        let tmp%2#1: uint64 = (global GroupSize)
+        let tmp%3#1: bool = (>= tmp%2#1 2u)
+        (assert tmp%3#1) // helper: must be called in group
+        let tmp%4#0: uint64 = (gtxn 0 ApplicationID)
+        let tmp%5#0: uint64 = (app_global_get "o")
+        let tmp%6#0: bool = (== tmp%4#0 tmp%5#0)
+        (assert tmp%6#0) // helper: unauthorized caller
+        let tmp%7#0: bytes = (gtxn 0 Sender)
+        let tmp%8#0: bytes = (txn Sender)
+        let tmp%9#0: bool = (== tmp%7#0 tmp%8#0)
+        (assert tmp%9#0) // helper: sender mismatch
+        let tmp%10#0: uint64 = (app_global_get "p")
+        goto tmp%10#0 ? block@3 : block@5
+    block@3: // if_body_L34624
+        let tmp%12#0: uint64 = (txn GroupIndex)
+        let tmp%13#0: uint64 = (- tmp%12#0 1u)
+        let tmp%14#0: uint64 = ((gtxns ApplicationID) tmp%13#0)
+        let tmp%15#0: uint64 = (app_global_get "p")
+        let tmp%16#0: bool = (== tmp%14#0 tmp%15#0)
+        (assert tmp%16#0) // helper: wrong prev chunk
+        let tmp%17#0: uint64 = (txn GroupIndex)
+        let tmp%18#0: uint64 = (- tmp%17#0 1u)
+        let tmp%19#0: bytes = ((gtxnsa ApplicationArgs 0) tmp%18#0)
+        let tmp%20#0: bytes = (app_global_get "s")
+        let tmp%21#0: bool = (== tmp%19#0 tmp%20#0)
+        (assert tmp%21#0) // helper: wrong prev method
+        goto block@5
+    block@5: // after_if_else_L34624
+        let domainSep#0: biguint = (gload 1 0)
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.accumulateArithmeticRelation(p#0, evals#0, domainSep#0)
+        let slot_contents%0#0: Encoded(uint256[40]) = load(p#0)
+        let tmp%3#0: bytes = (concat 0x151f7c75 slot_contents%0#0)
+        (log tmp%3#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper61.ZKTranscriptLib.generateShplonkZChallenge[routing]() -> void:
+    block@0: // L27170
+        let prevChallenge#0: biguint = (txna ApplicationArgs 1)
+        let len%0#0: uint64 = (len prevChallenge#0)
+        let eq%0#0: bool = (== len%0#0 32u)
+        (assert eq%0#0) // invalid number of bytes for arc4.uint256
+        let tmp%0#1: uint64 = (app_global_get "o")
+        goto tmp%0#1 ? block@2 : block@5
+    block@2: // if_body_L27170
+        let tmp%2#1: uint64 = (global GroupSize)
+        let tmp%3#1: bool = (>= tmp%2#1 2u)
+        (assert tmp%3#1) // helper: must be called in group
+        let tmp%4#1: uint64 = (gtxn 0 ApplicationID)
+        let tmp%5#1: uint64 = (app_global_get "o")
+        let tmp%6#0: bool = (== tmp%4#1 tmp%5#1)
+        (assert tmp%6#0) // helper: unauthorized caller
+        let tmp%7#0: bytes = (gtxn 0 Sender)
+        let tmp%8#0: bytes = (txn Sender)
+        let tmp%9#0: bool = (== tmp%7#0 tmp%8#0)
+        (assert tmp%9#0) // helper: sender mismatch
+        let tmp%10#0: uint64 = (app_global_get "p")
+        goto tmp%10#0 ? block@3 : block@5
+    block@3: // if_body_L27170
+        let tmp%12#0: uint64 = (txn GroupIndex)
+        let tmp%13#0: uint64 = (- tmp%12#0 1u)
+        let tmp%14#0: uint64 = ((gtxns ApplicationID) tmp%13#0)
+        let tmp%15#0: uint64 = (app_global_get "p")
+        let tmp%16#0: bool = (== tmp%14#0 tmp%15#0)
+        (assert tmp%16#0) // helper: wrong prev chunk
+        let tmp%17#0: uint64 = (txn GroupIndex)
+        let tmp%18#0: uint64 = (- tmp%17#0 1u)
+        let tmp%19#0: bytes = ((gtxnsa ApplicationArgs 0) tmp%18#0)
+        let tmp%20#0: bytes = (app_global_get "s")
+        let tmp%21#0: bool = (== tmp%19#0 tmp%20#0)
+        (assert tmp%21#0) // helper: wrong prev method
+        goto block@5
+    block@5: // after_if_else_L27170
+        let tmp%22#0: bytes = (gload 1 0)
+        let tmp%23#0: bytes = (gload 1 1)
+        let tmp%24#0: bytes = (concat tmp%22#0 tmp%23#0)
+        let tmp%25#0: bytes = (gload 2 0)
+        let tmp%26#0: bytes = (concat tmp%24#0 tmp%25#0)
+        let tmp%27#0: bytes = (gload 2 1)
+        let proof#0: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)) = (concat tmp%26#0 tmp%27#0)
+        let (ZKTranscriptLib.generateShplonkZChallenge%0#0: biguint, ZKTranscriptLib.generateShplonkZChallenge%1#0: biguint, proof#1: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256))) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateShplonkZChallenge(proof#0, prevChallenge#0)
+        let aggregate%value_len%0#0: uint64 = (len ZKTranscriptLib.generateShplonkZChallenge%0#0)
+        let aggregate%len_ok%0#0: bool = (<= aggregate%value_len%0#0 32u)
+        (assert aggregate%len_ok%0#0) // overflow
+        let aggregate%bzero%0#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%0#0: bytes[32] = (b| ZKTranscriptLib.generateShplonkZChallenge%0#0 aggregate%bzero%0#0)
+        let aggregate%value_len%1#0: uint64 = (len ZKTranscriptLib.generateShplonkZChallenge%1#0)
+        let aggregate%len_ok%1#0: bool = (<= aggregate%value_len%1#0 32u)
+        (assert aggregate%len_ok%1#0) // overflow
+        let aggregate%arc4_encoded%1#0: bytes[32] = (b| ZKTranscriptLib.generateShplonkZChallenge%1#0 aggregate%bzero%0#0)
+        let aggregate%head%1#0: bytes = (concat aggregate%arc4_encoded%0#0 aggregate%arc4_encoded%1#0)
+        let tmp%5#0: bytes = (concat 0x151f7c75 aggregate%head%1#0)
+        (log tmp%5#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper61.FrLib.invert[routing]() -> void:
+    block@0: // L8182
+        let value#0: biguint = (txna ApplicationArgs 1)
+        let len%0#0: uint64 = (len value#0)
+        let eq%0#0: bool = (== len%0#0 32u)
+        (assert eq%0#0) // invalid number of bytes for arc4.uint256
+        let tmp%0#1: uint64 = (app_global_get "o")
+        goto tmp%0#1 ? block@2 : block@5
+    block@2: // if_body_L8182
+        let tmp%2#1: uint64 = (global GroupSize)
+        let tmp%3#1: bool = (>= tmp%2#1 2u)
+        (assert tmp%3#1) // helper: must be called in group
+        let tmp%4#1: uint64 = (gtxn 0 ApplicationID)
+        let tmp%5#0: uint64 = (app_global_get "o")
+        let tmp%6#0: bool = (== tmp%4#1 tmp%5#0)
+        (assert tmp%6#0) // helper: unauthorized caller
+        let tmp%7#0: bytes = (gtxn 0 Sender)
+        let tmp%8#0: bytes = (txn Sender)
+        let tmp%9#0: bool = (== tmp%7#0 tmp%8#0)
+        (assert tmp%9#0) // helper: sender mismatch
+        let tmp%10#0: uint64 = (app_global_get "p")
+        goto tmp%10#0 ? block@3 : block@5
+    block@3: // if_body_L8182
+        let tmp%12#0: uint64 = (txn GroupIndex)
+        let tmp%13#0: uint64 = (- tmp%12#0 1u)
+        let tmp%14#0: uint64 = ((gtxns ApplicationID) tmp%13#0)
+        let tmp%15#0: uint64 = (app_global_get "p")
+        let tmp%16#0: bool = (== tmp%14#0 tmp%15#0)
+        (assert tmp%16#0) // helper: wrong prev chunk
+        let tmp%17#0: uint64 = (txn GroupIndex)
+        let tmp%18#0: uint64 = (- tmp%17#0 1u)
+        let tmp%19#0: bytes = ((gtxnsa ApplicationArgs 0) tmp%18#0)
+        let tmp%20#0: bytes = (app_global_get "s")
+        let tmp%21#0: bool = (== tmp%19#0 tmp%20#0)
+        (assert tmp%21#0) // helper: wrong prev method
+        goto block@5
+    block@5: // after_if_else_L8182
+        let tmp%22#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.invert(value#0)
+        let aggregate%value_len%0#0: uint64 = (len tmp%22#0)
+        let aggregate%len_ok%0#0: bool = (<= aggregate%value_len%0#0 32u)
+        (assert aggregate%len_ok%0#0) // overflow
+        let aggregate%bzero%0#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%0#0: bytes[32] = (b| tmp%22#0 aggregate%bzero%0#0)
+        let tmp%4#0: bytes = (concat 0x151f7c75 aggregate%arc4_encoded%0#0)
+        (log tmp%4#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper61.CommitmentSchemeLib.computeSquares[routing]() -> void:
+    block@0: // L63212
+        let r#0: biguint = (txna ApplicationArgs 1)
+        let len%0#0: uint64 = (len r#0)
+        let eq%0#0: bool = (== len%0#0 32u)
+        (assert eq%0#0) // invalid number of bytes for arc4.uint256
+        let tmp%0#1: uint64 = (app_global_get "o")
+        goto tmp%0#1 ? block@2 : block@5
+    block@2: // if_body_L63212
+        let tmp%2#1: uint64 = (global GroupSize)
+        let tmp%3#1: bool = (>= tmp%2#1 2u)
+        (assert tmp%3#1) // helper: must be called in group
+        let tmp%4#0: uint64 = (gtxn 0 ApplicationID)
+        let tmp%5#0: uint64 = (app_global_get "o")
+        let tmp%6#0: bool = (== tmp%4#0 tmp%5#0)
+        (assert tmp%6#0) // helper: unauthorized caller
+        let tmp%7#0: bytes = (gtxn 0 Sender)
+        let tmp%8#0: bytes = (txn Sender)
+        let tmp%9#0: bool = (== tmp%7#0 tmp%8#0)
+        (assert tmp%9#0) // helper: sender mismatch
+        let tmp%10#0: uint64 = (app_global_get "p")
+        goto tmp%10#0 ? block@3 : block@5
+    block@3: // if_body_L63212
+        let tmp%12#0: uint64 = (txn GroupIndex)
+        let tmp%13#0: uint64 = (- tmp%12#0 1u)
+        let tmp%14#0: uint64 = ((gtxns ApplicationID) tmp%13#0)
+        let tmp%15#0: uint64 = (app_global_get "p")
+        let tmp%16#0: bool = (== tmp%14#0 tmp%15#0)
+        (assert tmp%16#0) // helper: wrong prev chunk
+        let tmp%17#0: uint64 = (txn GroupIndex)
+        let tmp%18#0: uint64 = (- tmp%17#0 1u)
+        let tmp%19#0: bytes = ((gtxnsa ApplicationArgs 0) tmp%18#0)
+        let tmp%20#0: bytes = (app_global_get "s")
+        let tmp%21#0: bool = (== tmp%19#0 tmp%20#0)
+        (assert tmp%21#0) // helper: wrong prev method
+        goto block@5
+    block@5: // after_if_else_L63212
+        let tmp%22#0: Encoded(uint256[28])* = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.CommitmentSchemeLib.computeSquares(r#0)
+        let slot_contents%0#0: Encoded(uint256[28]) = load(tmp%22#0)
+        let tmp%3#0: bytes = (concat 0x151f7c75 slot_contents%0#0)
+        (log tmp%3#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper61.__init__[routing]() -> void:
+    block@0: // L65448
+        let tmp%0#0: bytes = (txna ApplicationArgs 1)
+        let len%0#0: uint64 = (len tmp%0#0)
+        let eq%0#0: bool = (== len%0#0 8u)
+        (assert eq%0#0) // invalid number of bytes for arc4.uint64
+        let o#0: uint64 = (btoi tmp%0#0)
+        let tmp%2#0: bytes = (txna ApplicationArgs 2)
+        let len%1#0: uint64 = (len tmp%2#0)
+        let eq%1#0: bool = (== len%1#0 8u)
+        (assert eq%1#0) // invalid number of bytes for arc4.uint64
+        let p#0: uint64 = (btoi tmp%2#0)
+        let tmp%4#0: bytes = (txna ApplicationArgs 3)
+        let aggregate%array_length%0#0: uint64 = (extract_uint16 tmp%4#0 0u) // on error: invalid array length header
+        let add%0#0: uint64 = (+ aggregate%array_length%0#0 2u)
+        let len%2#0: uint64 = (len tmp%4#0)
+        let eq%2#0: bool = (== len%2#0 add%0#0)
+        (assert eq%2#0) // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+        let s#0: bytes = ((extract 2 0) tmp%4#0)
+        let tmp%0#1: uint64 = (app_global_get "o")
+        let tmp%1#1: bool = (! tmp%0#1)
+        (assert tmp%1#1) // helper: already initialized
+        (app_global_put "o" o#0)
+        (app_global_put "p" p#0)
+        (app_global_put "s" s#0)
+        exit 1u

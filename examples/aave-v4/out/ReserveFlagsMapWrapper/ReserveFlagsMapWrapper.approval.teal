@@ -1,0 +1,408 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/ReserveFlagsMapWrapper.sol.ReserveFlagsMapWrapper.approval_program() -> uint64:
+main:
+    intcblock 1 0 8 2
+    bytecblock 0x151f7c75 0x00
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x18e1cbcf 0x00d1115e 0xefc30072 0x49144035 0x99ca09e4 0x864c375c 0x6ffa6da1 0xec9c04c8 0xb6eaf86f 0xbbf5a0c3 0x4473a461 0xed76f213 0x8000d58d // method "create(bool,bool,bool,bool)uint64", method "setPaused(uint64,bool)uint64", method "setFrozen(uint64,bool)uint64", method "setBorrowable(uint64,bool)uint64", method "setReceiveSharesEnabled(uint64,bool)uint64", method "paused(uint64)bool", method "frozen(uint64)bool", method "borrowable(uint64)bool", method "receiveSharesEnabled(uint64)bool", method "PAUSED_MASK()uint64", method "FROZEN_MASK()uint64", method "BORROWABLE_MASK()uint64", method "RECEIVE_SHARES_ENABLED_MASK()uint64"
+    txna ApplicationArgs 0
+    match create setPaused setFrozen setBorrowable setReceiveSharesEnabled paused frozen borrowable receiveSharesEnabled main_PAUSED_MASK_route@14 main_FROZEN_MASK_route@15 main_BORROWABLE_MASK_route@16 main_RECEIVE_SHARES_ENABLED_MASK_route@17
+    err
+
+main_RECEIVE_SHARES_ENABLED_MASK_route@17:
+    pushbytes 0x151f7c750000000000000008
+    log
+    intc_0 // 1
+    return
+
+main_BORROWABLE_MASK_route@16:
+    pushbytes 0x151f7c750000000000000004
+    log
+    intc_0 // 1
+    return
+
+main_FROZEN_MASK_route@15:
+    pushbytes 0x151f7c750000000000000002
+    log
+    intc_0 // 1
+    return
+
+main_PAUSED_MASK_route@14:
+    pushbytes 0x151f7c750000000000000001
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/ReserveFlagsMapWrapper.sol.ReserveFlagsMap.create(initPaused: uint64, initFrozen: uint64, initBorrowable: uint64, initReceiveSharesEnabled: uint64) -> uint64:
+ReserveFlagsMap.create:
+    proto 4 1
+    intc_1 // 0
+    intc_0 // 1
+    frame_dig -4
+    callsub ReserveFlagsMap._setStatus
+    intc_3 // 2
+    frame_dig -3
+    callsub ReserveFlagsMap._setStatus
+    pushint 4
+    frame_dig -2
+    callsub ReserveFlagsMap._setStatus
+    intc_2 // 8
+    frame_dig -1
+    callsub ReserveFlagsMap._setStatus
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/ReserveFlagsMapWrapper.sol.ReserveFlagsMap.setPaused(flags: uint64, status: uint64) -> uint64:
+ReserveFlagsMap.setPaused:
+    proto 2 1
+    frame_dig -2
+    intc_0 // 1
+    frame_dig -1
+    callsub ReserveFlagsMap._setStatus
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/ReserveFlagsMapWrapper.sol.ReserveFlagsMap.setFrozen(flags: uint64, status: uint64) -> uint64:
+ReserveFlagsMap.setFrozen:
+    proto 2 1
+    frame_dig -2
+    intc_3 // 2
+    frame_dig -1
+    callsub ReserveFlagsMap._setStatus
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/ReserveFlagsMapWrapper.sol.ReserveFlagsMap.setBorrowable(flags: uint64, status: uint64) -> uint64:
+ReserveFlagsMap.setBorrowable:
+    proto 2 1
+    frame_dig -2
+    pushint 4
+    frame_dig -1
+    callsub ReserveFlagsMap._setStatus
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/ReserveFlagsMapWrapper.sol.ReserveFlagsMap.setReceiveSharesEnabled(flags: uint64, status: uint64) -> uint64:
+ReserveFlagsMap.setReceiveSharesEnabled:
+    proto 2 1
+    frame_dig -2
+    intc_2 // 8
+    frame_dig -1
+    callsub ReserveFlagsMap._setStatus
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/ReserveFlagsMapWrapper.sol.ReserveFlagsMap.paused(flags: uint64) -> uint64:
+ReserveFlagsMap.paused:
+    proto 1 1
+    frame_dig -1
+    intc_0 // 1
+    &
+    intc_1 // 0
+    !=
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/ReserveFlagsMapWrapper.sol.ReserveFlagsMap.frozen(flags: uint64) -> uint64:
+ReserveFlagsMap.frozen:
+    proto 1 1
+    frame_dig -1
+    intc_3 // 2
+    &
+    intc_1 // 0
+    !=
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/ReserveFlagsMapWrapper.sol.ReserveFlagsMap.borrowable(flags: uint64) -> uint64:
+ReserveFlagsMap.borrowable:
+    proto 1 1
+    frame_dig -1
+    pushint 4
+    &
+    intc_1 // 0
+    !=
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/ReserveFlagsMapWrapper.sol.ReserveFlagsMap.receiveSharesEnabled(flags: uint64) -> uint64:
+ReserveFlagsMap.receiveSharesEnabled:
+    proto 1 1
+    frame_dig -1
+    intc_2 // 8
+    &
+    intc_1 // 0
+    !=
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/ReserveFlagsMapWrapper.sol.ReserveFlagsMap._setStatus(flags: uint64, mask: uint64, status: uint64) -> uint64:
+ReserveFlagsMap._setStatus:
+    proto 3 1
+    frame_dig -1
+    bz ReserveFlagsMap._setStatus_ternary_false@2
+    frame_dig -3
+    frame_dig -2
+    |
+    retsub
+
+ReserveFlagsMap._setStatus_ternary_false@2:
+    frame_dig -2
+    pushint 18446744073709551615
+    ^
+    frame_dig -3
+    &
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/ReserveFlagsMapWrapper.sol.ReserveFlagsMapWrapper.create[routing]() -> void:
+create:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    callsub ReserveFlagsMap.create
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/ReserveFlagsMapWrapper.sol.ReserveFlagsMapWrapper.setPaused[routing]() -> void:
+setPaused:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    callsub ReserveFlagsMap.setPaused
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/ReserveFlagsMapWrapper.sol.ReserveFlagsMapWrapper.setFrozen[routing]() -> void:
+setFrozen:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    callsub ReserveFlagsMap.setFrozen
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/ReserveFlagsMapWrapper.sol.ReserveFlagsMapWrapper.setBorrowable[routing]() -> void:
+setBorrowable:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    callsub ReserveFlagsMap.setBorrowable
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/ReserveFlagsMapWrapper.sol.ReserveFlagsMapWrapper.setReceiveSharesEnabled[routing]() -> void:
+setReceiveSharesEnabled:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    callsub ReserveFlagsMap.setReceiveSharesEnabled
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/ReserveFlagsMapWrapper.sol.ReserveFlagsMapWrapper.paused[routing]() -> void:
+paused:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    callsub ReserveFlagsMap.paused
+    bytec_1 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/ReserveFlagsMapWrapper.sol.ReserveFlagsMapWrapper.frozen[routing]() -> void:
+frozen:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    callsub ReserveFlagsMap.frozen
+    bytec_1 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/ReserveFlagsMapWrapper.sol.ReserveFlagsMapWrapper.borrowable[routing]() -> void:
+borrowable:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    callsub ReserveFlagsMap.borrowable
+    bytec_1 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/ReserveFlagsMapWrapper.sol.ReserveFlagsMapWrapper.receiveSharesEnabled[routing]() -> void:
+receiveSharesEnabled:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    callsub ReserveFlagsMap.receiveSharesEnabled
+    bytec_1 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

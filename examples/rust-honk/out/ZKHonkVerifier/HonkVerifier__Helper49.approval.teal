@@ -1,0 +1,720 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 32 1 8 0 288
+    bytecblock "o" "p" "s" 0x151f7c75 0x01
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    store 0
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(value: bytes) -> bytes:
+FrLib.fromBytes32:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateGateChallenges(previousChallenge: bytes) -> uint64, bytes:
+ZKTranscriptLib.generateGateChallenges:
+    proto 1 2
+    pushbytes ""
+    intc_3 // 0
+    itob
+
+ZKTranscriptLib.generateGateChallenges_while_top@1:
+    pushint 28
+    itob
+    frame_dig 1
+    b>
+    bz ZKTranscriptLib.generateGateChallenges_after_while@3
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    keccak256
+    callsub FrLib.fromBytes32
+    dup
+    frame_bury -1
+    callsub ZKTranscriptLib.splitChallenge
+    pop
+    intc_2 // 8
+    bzero
+    frame_dig 1
+    dup
+    cover 3
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    uncover 3
+    b|
+    frame_dig 0
+    dup
+    cover 2
+    loads
+    uncover 3
+    intc_0 // 32
+    *
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    stores
+    bytec 4 // 0x01
+    b+
+    frame_bury 1
+    b ZKTranscriptLib.generateGateChallenges_while_top@1
+
+ZKTranscriptLib.generateGateChallenges_after_while@3:
+    frame_dig 0
+    frame_dig -1
+    uncover 3
+    uncover 3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateSumcheckChallenges(proof: bytes, prevChallenge: bytes) -> uint64, bytes, bytes:
+ZKTranscriptLib.generateSumcheckChallenges:
+    proto 2 3
+    intc_3 // 0
+    dup
+    pushbytes ""
+    dup
+    intc_3 // 0
+    itob
+    dup
+
+ZKTranscriptLib.generateSumcheckChallenges_while_top@1:
+    pushint 28
+    itob
+    frame_dig 5
+    b>
+    bz ZKTranscriptLib.generateSumcheckChallenges_after_while@6
+    intc_0 // 32
+    bzero
+    dup
+    frame_bury 0
+    callsub _puya_lib.mem.new_slot
+    dup
+    cover 2
+    frame_bury 2
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    frame_dig -1
+    b|
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    replace2 0 // on error: index access is out of bounds
+    stores
+    frame_dig 4
+    frame_bury 1
+
+ZKTranscriptLib.generateSumcheckChallenges_while_top@3:
+    pushint 9
+    itob
+    frame_dig 1
+    b>
+    bz ZKTranscriptLib.generateSumcheckChallenges_after_while@5
+    frame_dig -2
+    pushints 1440 8064
+    extract3
+    intc_2 // 8
+    bzero
+    dup
+    frame_dig 5
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    intc 4 // 288
+    *
+    uncover 2
+    swap
+    intc 4 // 288
+    extract3 // on error: index access is out of bounds
+    dig 1
+    frame_dig 1
+    dup
+    cover 3
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    intc_1 // 1
+    itob
+    dig 2
+    b+
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    frame_dig 0
+    b|
+    frame_dig 2
+    dup
+    cover 2
+    loads
+    uncover 3
+    intc_0 // 32
+    *
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    stores
+    bytec 4 // 0x01
+    b+
+    frame_bury 1
+    b ZKTranscriptLib.generateSumcheckChallenges_while_top@3
+
+ZKTranscriptLib.generateSumcheckChallenges_after_while@5:
+    frame_dig 2
+    loads
+    dup
+    extract 0 32 // on error: index access is out of bounds
+    dig 1
+    extract 32 32 // on error: index access is out of bounds
+    concat
+    dig 1
+    extract 64 32 // on error: index access is out of bounds
+    concat
+    dig 1
+    extract 96 32 // on error: index access is out of bounds
+    concat
+    dig 1
+    extract 128 32 // on error: index access is out of bounds
+    concat
+    dig 1
+    extract 160 32 // on error: index access is out of bounds
+    concat
+    dig 1
+    extract 192 32 // on error: index access is out of bounds
+    concat
+    dig 1
+    extract 224 32 // on error: index access is out of bounds
+    concat
+    dig 1
+    pushint 256
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    concat
+    swap
+    intc 4 // 288
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    concat
+    keccak256
+    callsub FrLib.fromBytes32
+    dup
+    frame_bury -1
+    callsub ZKTranscriptLib.splitChallenge
+    pop
+    intc_2 // 8
+    bzero
+    frame_dig 5
+    dup
+    cover 3
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    frame_dig 0
+    b|
+    frame_dig 3
+    dup
+    cover 2
+    loads
+    uncover 3
+    intc_0 // 32
+    *
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    stores
+    bytec 4 // 0x01
+    b+
+    frame_bury 5
+    b ZKTranscriptLib.generateSumcheckChallenges_while_top@1
+
+ZKTranscriptLib.generateSumcheckChallenges_after_while@6:
+    frame_dig 3
+    frame_dig -1
+    frame_dig -2
+    frame_bury 2
+    frame_bury 1
+    frame_bury 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.splitChallenge(challenge: bytes) -> bytes, bytes:
+ZKTranscriptLib.splitChallenge:
+    proto 1 2
+    frame_dig -1
+    pushbytes 0xffffffffffffffffffffffffffffffff
+    b&
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    pushbytes 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    callsub FrLib.fromBytes32
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    callsub FrLib.fromBytes32
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.equal(a: bytes, b: bytes) -> uint64:
+equal:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b==
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.notEqual(a: bytes, b: bytes) -> uint64:
+notEqual:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b!=
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn NumAppArgs
+    bz __puya_arc4_router_____bare_create__@11
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x90d92b13 0xa89d3aa6 0x12f8e540 0x274cf065 0xa96ef989 // method "ZKTranscriptLib.generateTranscript__chunk_2(byte[32][])(uint256,((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256))", method "ZKTranscriptLib.generateGateChallenges(uint256)(uint256[28],uint256)", method "equal(uint256,uint256)bool", method "notEqual(uint256,uint256)bool", method "__init__(uint64,uint64,byte[])void"
+    txna ApplicationArgs 0
+    match ZKTranscriptLib.generateTranscript__chunk_2 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.ZKTranscriptLib.generateGateChallenges[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.equal[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.notEqual[routing] __init__
+    err
+
+__puya_arc4_router_____bare_create__@11:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.ZKTranscriptLib.generateTranscript__chunk_2[routing]() -> void:
+ZKTranscriptLib.generateTranscript__chunk_2:
+    txna ApplicationArgs 1
+    dup
+    intc_3 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 32>>
+    pushint 2
+    intc_3 // 0
+    extract3
+    pop
+    bytec_0 // "o"
+    app_global_get
+    bz ZKTranscriptLib.generateTranscript__chunk_2_after_if_else@5
+    global GroupSize
+    pushint 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_0 // "o"
+    app_global_get
+    ==
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec_1 // "p"
+    app_global_get
+    bz ZKTranscriptLib.generateTranscript__chunk_2_after_if_else@5
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns ApplicationID
+    bytec_1 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxnsa ApplicationArgs 0
+    bytec_2 // "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+ZKTranscriptLib.generateTranscript__chunk_2_after_if_else@5:
+    gload 1 0
+    gload 1 1
+    concat
+    gload 2 0
+    concat
+    gload 2 1
+    concat
+    gload 4 1
+    gload 5 0
+    uncover 2
+    dig 2
+    callsub ZKTranscriptLib.generateSumcheckChallenges
+    cover 2
+    popn 2
+    dig 2
+    callsub ZKTranscriptLib.generateSumcheckChallenges
+    cover 2
+    pop
+    loads
+    uncover 2
+    pushint 1920
+    uncover 2
+    replace3
+    swap
+    uncover 2
+    callsub ZKTranscriptLib.generateSumcheckChallenges
+    pop
+    bury 1
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    swap
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.ZKTranscriptLib.generateGateChallenges[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.ZKTranscriptLib.generateGateChallenges[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // "o"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.ZKTranscriptLib.generateGateChallenges[routing]_after_if_else@5
+    global GroupSize
+    pushint 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_0 // "o"
+    app_global_get
+    ==
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec_1 // "p"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.ZKTranscriptLib.generateGateChallenges[routing]_after_if_else@5
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns ApplicationID
+    bytec_1 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxnsa ApplicationArgs 0
+    bytec_2 // "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.ZKTranscriptLib.generateGateChallenges[routing]_after_if_else@5:
+    dup
+    callsub ZKTranscriptLib.generateGateChallenges
+    swap
+    loads
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 2
+    b|
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.equal[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.equal[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // "o"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.equal[routing]_after_if_else@5
+    global GroupSize
+    pushint 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_0 // "o"
+    app_global_get
+    ==
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec_1 // "p"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.equal[routing]_after_if_else@5
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns ApplicationID
+    bytec_1 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxnsa ApplicationArgs 0
+    bytec_2 // "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.equal[routing]_after_if_else@5:
+    dup2
+    callsub equal
+    pushbytes 0x00
+    intc_3 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.notEqual[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.notEqual[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // "o"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.notEqual[routing]_after_if_else@5
+    global GroupSize
+    pushint 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_0 // "o"
+    app_global_get
+    ==
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec_1 // "p"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.notEqual[routing]_after_if_else@5
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns ApplicationID
+    bytec_1 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxnsa ApplicationArgs 0
+    bytec_2 // "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.notEqual[routing]_after_if_else@5:
+    dup2
+    callsub notEqual
+    pushbytes 0x00
+    intc_3 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.__init__[routing]() -> void:
+__init__:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 3
+    dup
+    intc_3 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_0 // "o"
+    app_global_get
+    !
+    assert // helper: already initialized
+    bytec_0 // "o"
+    uncover 3
+    app_global_put
+    bytec_1 // "p"
+    uncover 2
+    app_global_put
+    bytec_2 // "s"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// _puya_lib.mem.new_slot() -> uint64:
+_puya_lib.mem.new_slot:
+    load 0
+    bitlen
+    load 0
+    pushint 256
+    dig 2
+    -
+    intc_3 // 0
+    setbit // on error: no available slots
+    store 0
+    retsub

@@ -1,0 +1,1983 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper16.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 128 32 896 384 1024 256 10976 3456 768 512 640 9504 1280 1440 8064 14432 15584 15328 15456 10944 10816 10784 1408
+    bytecblock "o" 0x01 "p" "s"
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(value: bytes) -> bytes:
+FrLib.fromBytes32:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.bytesToFr(proofSection: bytes) -> bytes:
+bytesToFr:
+    proto 1 1
+    frame_dig -1
+    callsub FrLib.fromBytes32
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.bytesToG1ProofPoint(proofSection: bytes) -> bytes:
+bytesToG1ProofPoint:
+    proto 1 1
+    frame_dig -1
+    substring 0 32
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    frame_dig -1
+    substring 32 64
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    frame_dig -1
+    substring 64 96
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    dig 3
+    b|
+    frame_dig -1
+    substring 96 128
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 4
+    b|
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper16.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn NumAppArgs
+    bz __puya_arc4_router_____bare_create__@8
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xd6a1cb3b 0xa96ef989 // method "ZKTranscriptLib.loadProof__chunk_0(byte[])(uint256,((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)))", method "__init__(uint64,uint64,byte[])void"
+    txna ApplicationArgs 0
+    match ZKTranscriptLib.loadProof__chunk_0 __init__
+    err
+
+__puya_arc4_router_____bare_create__@8:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper16.ZKTranscriptLib.loadProof__chunk_0[routing]() -> void:
+ZKTranscriptLib.loadProof__chunk_0:
+    pushint 0
+    dupn 8
+    txna ApplicationArgs 1
+    dup
+    pushint 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_0 // "o"
+    app_global_get
+    bz ZKTranscriptLib.loadProof__chunk_0_after_if_else@5
+    global GroupSize
+    pushint 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_0 // "o"
+    app_global_get
+    ==
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec_2 // "p"
+    app_global_get
+    bz ZKTranscriptLib.loadProof__chunk_0_after_if_else@5
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns ApplicationID
+    bytec_2 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    pushint 1
+    -
+    gtxnsa ApplicationArgs 0
+    bytec_3 // "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+ZKTranscriptLib.loadProof__chunk_0_after_if_else@5:
+    pushint 0
+    dup
+    intc 15 // 14432
+    intc_2 // 896
+    extract3
+    dig 1
+    intc 6 // 10976
+    intc 7 // 3456
+    extract3
+    dig 2
+    intc 19 // 10944
+    intc_1 // 32
+    extract3
+    dig 3
+    intc 20 // 10816
+    intc_0 // 128
+    extract3
+    dig 4
+    intc 16 // 15584
+    intc_0 // 128
+    extract3
+    dig 5
+    intc 4 // 1024
+    intc_3 // 384
+    extract3
+    dig 6
+    intc 21 // 10784
+    intc_1 // 32
+    extract3
+    dig 7
+    intc 17 // 15328
+    intc_0 // 128
+    extract3
+    dig 8
+    intc 22 // 1408
+    intc_1 // 32
+    extract3
+    dig 9
+    intc 8 // 768
+    intc_0 // 128
+    extract3
+    dig 10
+    intc 9 // 512
+    intc_0 // 128
+    extract3
+    dig 11
+    intc 10 // 640
+    intc_0 // 128
+    extract3
+    dig 12
+    intc 18 // 15456
+    intc_0 // 128
+    extract3
+    dig 13
+    intc 11 // 9504
+    intc 12 // 1280
+    extract3
+    dig 14
+    intc 13 // 1440
+    intc 14 // 8064
+    extract3
+    dig 16
+    dup
+    cover 17
+    substring 0 128
+    callsub bytesToG1ProofPoint
+    dig 16
+    extract 128 128
+    dig 17
+    intc 5 // 256
+    intc_0 // 128
+    extract3
+    dig 18
+    intc_3 // 384
+    intc_0 // 128
+    extract3
+    uncover 19
+    intc_2 // 896
+    intc_0 // 128
+    extract3
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 5
+    concat
+    swap
+    concat
+    uncover 7
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    uncover 3
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    dup
+    intc 15 // 14432
+    intc_2 // 896
+    extract3
+    dig 1
+    intc 6 // 10976
+    intc 7 // 3456
+    extract3
+    dig 2
+    intc 19 // 10944
+    intc_1 // 32
+    extract3
+    dig 3
+    intc 20 // 10816
+    intc_0 // 128
+    extract3
+    dig 4
+    intc 16 // 15584
+    intc_0 // 128
+    extract3
+    dig 5
+    intc 4 // 1024
+    intc_3 // 384
+    extract3
+    dig 6
+    intc 21 // 10784
+    intc_1 // 32
+    extract3
+    dig 7
+    intc 17 // 15328
+    intc_0 // 128
+    extract3
+    dig 8
+    intc 22 // 1408
+    intc_1 // 32
+    extract3
+    dig 9
+    intc 8 // 768
+    intc_0 // 128
+    extract3
+    dig 10
+    intc 9 // 512
+    intc_0 // 128
+    extract3
+    dig 11
+    intc 10 // 640
+    intc_0 // 128
+    extract3
+    dig 12
+    intc 18 // 15456
+    intc_0 // 128
+    extract3
+    dig 13
+    intc 11 // 9504
+    intc 12 // 1280
+    extract3
+    dig 14
+    intc 13 // 1440
+    intc 14 // 8064
+    extract3
+    dig 15
+    extract 0 128
+    dig 17
+    intc_0 // 128
+    intc 5 // 256
+    substring3
+    callsub bytesToG1ProofPoint
+    dig 17
+    intc 5 // 256
+    intc_0 // 128
+    extract3
+    dig 18
+    intc_3 // 384
+    intc_0 // 128
+    extract3
+    uncover 19
+    intc_2 // 896
+    intc_0 // 128
+    extract3
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 5
+    concat
+    swap
+    concat
+    uncover 7
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    uncover 3
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    dup
+    intc 15 // 14432
+    intc_2 // 896
+    extract3
+    dig 1
+    intc 6 // 10976
+    intc 7 // 3456
+    extract3
+    dig 2
+    intc 19 // 10944
+    intc_1 // 32
+    extract3
+    dig 3
+    intc 20 // 10816
+    intc_0 // 128
+    extract3
+    dig 4
+    intc 16 // 15584
+    intc_0 // 128
+    extract3
+    dig 5
+    intc 4 // 1024
+    intc_3 // 384
+    extract3
+    dig 6
+    intc 21 // 10784
+    intc_1 // 32
+    extract3
+    dig 7
+    intc 17 // 15328
+    intc_0 // 128
+    extract3
+    dig 8
+    intc 22 // 1408
+    intc_1 // 32
+    extract3
+    dig 9
+    intc 8 // 768
+    intc_0 // 128
+    extract3
+    dig 10
+    intc 9 // 512
+    intc_0 // 128
+    extract3
+    dig 11
+    intc 10 // 640
+    intc_0 // 128
+    extract3
+    dig 12
+    intc 18 // 15456
+    intc_0 // 128
+    extract3
+    dig 13
+    intc 11 // 9504
+    intc 12 // 1280
+    extract3
+    dig 14
+    intc 13 // 1440
+    intc 14 // 8064
+    extract3
+    dig 15
+    extract 0 128
+    dig 16
+    extract 128 128
+    dig 18
+    intc 5 // 256
+    intc_3 // 384
+    substring3
+    callsub bytesToG1ProofPoint
+    dig 18
+    intc_3 // 384
+    intc_0 // 128
+    extract3
+    uncover 19
+    intc_2 // 896
+    intc_0 // 128
+    extract3
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 5
+    concat
+    swap
+    concat
+    uncover 7
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    uncover 3
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    dup
+    intc 15 // 14432
+    intc_2 // 896
+    extract3
+    dig 1
+    intc 6 // 10976
+    intc 7 // 3456
+    extract3
+    dig 2
+    intc 19 // 10944
+    intc_1 // 32
+    extract3
+    dig 3
+    intc 20 // 10816
+    intc_0 // 128
+    extract3
+    dig 4
+    intc 16 // 15584
+    intc_0 // 128
+    extract3
+    dig 5
+    intc 4 // 1024
+    intc_3 // 384
+    extract3
+    dig 6
+    intc 21 // 10784
+    intc_1 // 32
+    extract3
+    dig 7
+    intc 17 // 15328
+    intc_0 // 128
+    extract3
+    dig 8
+    intc 22 // 1408
+    intc_1 // 32
+    extract3
+    dig 9
+    intc 8 // 768
+    intc_0 // 128
+    extract3
+    dig 11
+    intc_3 // 384
+    intc 9 // 512
+    substring3
+    callsub bytesToG1ProofPoint
+    dig 11
+    intc 10 // 640
+    intc_0 // 128
+    extract3
+    dig 12
+    intc 18 // 15456
+    intc_0 // 128
+    extract3
+    dig 13
+    intc 11 // 9504
+    intc 12 // 1280
+    extract3
+    dig 14
+    intc 13 // 1440
+    intc 14 // 8064
+    extract3
+    dig 15
+    extract 0 128
+    dig 16
+    extract 128 128
+    dig 17
+    intc 5 // 256
+    intc_0 // 128
+    extract3
+    dig 18
+    intc_3 // 384
+    intc_0 // 128
+    extract3
+    uncover 19
+    intc_2 // 896
+    intc_0 // 128
+    extract3
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 5
+    concat
+    swap
+    concat
+    uncover 7
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    uncover 3
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    dup
+    intc 15 // 14432
+    intc_2 // 896
+    extract3
+    dig 1
+    intc 6 // 10976
+    intc 7 // 3456
+    extract3
+    dig 2
+    intc 19 // 10944
+    intc_1 // 32
+    extract3
+    dig 3
+    intc 20 // 10816
+    intc_0 // 128
+    extract3
+    dig 4
+    intc 16 // 15584
+    intc_0 // 128
+    extract3
+    dig 5
+    intc 4 // 1024
+    intc_3 // 384
+    extract3
+    dig 6
+    intc 21 // 10784
+    intc_1 // 32
+    extract3
+    dig 7
+    intc 17 // 15328
+    intc_0 // 128
+    extract3
+    dig 8
+    intc 22 // 1408
+    intc_1 // 32
+    extract3
+    dig 9
+    intc 8 // 768
+    intc_0 // 128
+    extract3
+    dig 10
+    intc 9 // 512
+    intc_0 // 128
+    extract3
+    dig 12
+    intc 9 // 512
+    intc 10 // 640
+    substring3
+    callsub bytesToG1ProofPoint
+    dig 12
+    intc 18 // 15456
+    intc_0 // 128
+    extract3
+    dig 13
+    intc 11 // 9504
+    intc 12 // 1280
+    extract3
+    dig 14
+    intc 13 // 1440
+    intc 14 // 8064
+    extract3
+    dig 15
+    extract 0 128
+    dig 16
+    extract 128 128
+    dig 17
+    intc 5 // 256
+    intc_0 // 128
+    extract3
+    dig 18
+    intc_3 // 384
+    intc_0 // 128
+    extract3
+    uncover 19
+    intc_2 // 896
+    intc_0 // 128
+    extract3
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 5
+    concat
+    swap
+    concat
+    uncover 7
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    uncover 3
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    dup
+    intc 15 // 14432
+    intc_2 // 896
+    extract3
+    dig 1
+    intc 6 // 10976
+    intc 7 // 3456
+    extract3
+    dig 2
+    intc 19 // 10944
+    intc_1 // 32
+    extract3
+    dig 3
+    intc 20 // 10816
+    intc_0 // 128
+    extract3
+    dig 4
+    intc 16 // 15584
+    intc_0 // 128
+    extract3
+    dig 5
+    intc 4 // 1024
+    intc_3 // 384
+    extract3
+    dig 6
+    intc 21 // 10784
+    intc_1 // 32
+    extract3
+    dig 7
+    intc 17 // 15328
+    intc_0 // 128
+    extract3
+    dig 8
+    intc 22 // 1408
+    intc_1 // 32
+    extract3
+    dig 9
+    intc 8 // 768
+    intc_0 // 128
+    extract3
+    dig 10
+    intc 9 // 512
+    intc_0 // 128
+    extract3
+    dig 11
+    intc 10 // 640
+    intc_0 // 128
+    extract3
+    dig 12
+    intc 18 // 15456
+    intc_0 // 128
+    extract3
+    dig 13
+    intc 11 // 9504
+    intc 12 // 1280
+    extract3
+    dig 14
+    intc 13 // 1440
+    intc 14 // 8064
+    extract3
+    dig 15
+    extract 0 128
+    dig 16
+    extract 128 128
+    dig 17
+    intc 5 // 256
+    intc_0 // 128
+    extract3
+    dig 19
+    intc 10 // 640
+    intc 8 // 768
+    substring3
+    callsub bytesToG1ProofPoint
+    uncover 19
+    intc_2 // 896
+    intc_0 // 128
+    extract3
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 5
+    concat
+    swap
+    concat
+    uncover 7
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    uncover 3
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    dup
+    intc 15 // 14432
+    intc_2 // 896
+    extract3
+    dig 1
+    intc 6 // 10976
+    intc 7 // 3456
+    extract3
+    dig 2
+    intc 19 // 10944
+    intc_1 // 32
+    extract3
+    dig 3
+    intc 20 // 10816
+    intc_0 // 128
+    extract3
+    dig 4
+    intc 16 // 15584
+    intc_0 // 128
+    extract3
+    dig 5
+    intc 4 // 1024
+    intc_3 // 384
+    extract3
+    dig 6
+    intc 21 // 10784
+    intc_1 // 32
+    extract3
+    dig 7
+    intc 17 // 15328
+    intc_0 // 128
+    extract3
+    dig 8
+    intc 22 // 1408
+    intc_1 // 32
+    extract3
+    dig 10
+    intc 8 // 768
+    intc_2 // 896
+    substring3
+    callsub bytesToG1ProofPoint
+    dig 10
+    intc 9 // 512
+    intc_0 // 128
+    extract3
+    dig 11
+    intc 10 // 640
+    intc_0 // 128
+    extract3
+    dig 12
+    intc 18 // 15456
+    intc_0 // 128
+    extract3
+    dig 13
+    intc 11 // 9504
+    intc 12 // 1280
+    extract3
+    dig 14
+    intc 13 // 1440
+    intc 14 // 8064
+    extract3
+    dig 15
+    extract 0 128
+    dig 16
+    extract 128 128
+    dig 17
+    intc 5 // 256
+    intc_0 // 128
+    extract3
+    dig 18
+    intc_3 // 384
+    intc_0 // 128
+    extract3
+    uncover 19
+    intc_2 // 896
+    intc_0 // 128
+    extract3
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 5
+    concat
+    swap
+    concat
+    uncover 7
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    uncover 3
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    dup
+    intc 15 // 14432
+    intc_2 // 896
+    extract3
+    dig 1
+    intc 6 // 10976
+    intc 7 // 3456
+    extract3
+    dig 2
+    intc 19 // 10944
+    intc_1 // 32
+    extract3
+    dig 3
+    intc 20 // 10816
+    intc_0 // 128
+    extract3
+    dig 4
+    intc 16 // 15584
+    intc_0 // 128
+    extract3
+    dig 5
+    intc 4 // 1024
+    intc_3 // 384
+    extract3
+    dig 6
+    intc 21 // 10784
+    intc_1 // 32
+    extract3
+    dig 7
+    intc 17 // 15328
+    intc_0 // 128
+    extract3
+    dig 8
+    intc 22 // 1408
+    intc_1 // 32
+    extract3
+    dig 9
+    intc 8 // 768
+    intc_0 // 128
+    extract3
+    dig 10
+    intc 9 // 512
+    intc_0 // 128
+    extract3
+    dig 11
+    intc 10 // 640
+    intc_0 // 128
+    extract3
+    dig 12
+    intc 18 // 15456
+    intc_0 // 128
+    extract3
+    dig 13
+    intc 11 // 9504
+    intc 12 // 1280
+    extract3
+    dig 14
+    intc 13 // 1440
+    intc 14 // 8064
+    extract3
+    dig 15
+    extract 0 128
+    dig 16
+    extract 128 128
+    dig 17
+    intc 5 // 256
+    intc_0 // 128
+    extract3
+    uncover 18
+    intc_3 // 384
+    intc_0 // 128
+    extract3
+    dig 19
+    intc_2 // 896
+    intc 4 // 1024
+    substring3
+    callsub bytesToG1ProofPoint
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 5
+    concat
+    swap
+    concat
+    uncover 7
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    uncover 3
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    dig 1
+    intc 4 // 1024
+    pushint 1152
+    substring3
+    callsub bytesToG1ProofPoint
+    dig 1
+    intc 4 // 1024
+    intc_3 // 384
+    extract3
+    dup
+    uncover 2
+    replace2 0 // on error: index access is out of bounds
+    pop
+    dig 1
+    intc 15 // 14432
+    intc_2 // 896
+    extract3
+    dig 2
+    intc 6 // 10976
+    intc 7 // 3456
+    extract3
+    dig 3
+    intc 19 // 10944
+    intc_1 // 32
+    extract3
+    dig 4
+    intc 20 // 10816
+    intc_0 // 128
+    extract3
+    dig 5
+    intc 16 // 15584
+    intc_0 // 128
+    extract3
+    dig 6
+    intc 21 // 10784
+    intc_1 // 32
+    extract3
+    dig 7
+    intc 17 // 15328
+    intc_0 // 128
+    extract3
+    pushint 8
+    bzero
+    bury 12
+    intc_1 // 32
+    itob
+    bury 14
+    uncover 9
+    pushints 1152 1184
+    substring3
+    callsub bytesToFr
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    dup
+    bury 21
+    b|
+    dig 9
+    intc 8 // 768
+    intc_0 // 128
+    extract3
+    dig 10
+    intc 9 // 512
+    intc_0 // 128
+    extract3
+    dig 11
+    intc 10 // 640
+    intc_0 // 128
+    extract3
+    dig 12
+    intc 18 // 15456
+    intc_0 // 128
+    extract3
+    dig 13
+    intc 11 // 9504
+    intc 12 // 1280
+    extract3
+    dig 14
+    intc 13 // 1440
+    intc 14 // 8064
+    extract3
+    dig 15
+    extract 0 128
+    dig 16
+    extract 128 128
+    dig 17
+    intc 5 // 256
+    intc_0 // 128
+    extract3
+    dig 18
+    intc_3 // 384
+    intc_0 // 128
+    extract3
+    uncover 19
+    intc_2 // 896
+    intc_0 // 128
+    extract3
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 5
+    concat
+    swap
+    concat
+    uncover 12
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    uncover 3
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    bury 5
+    pushbytes 0x04a0
+    bury 9
+    pushint 0
+    itob
+    dup
+    bury 9
+    bury 7
+
+ZKTranscriptLib.loadProof__chunk_0_while_top@7:
+    pushint 28
+    itob
+    dig 7
+    b>
+    bz ZKTranscriptLib.loadProof__chunk_0_after_while@12
+    dig 7
+    bury 6
+
+ZKTranscriptLib.loadProof__chunk_0_while_top@9:
+    pushint 9
+    itob
+    dig 6
+    b>
+    bz ZKTranscriptLib.loadProof__chunk_0_after_while@11
+    dig 1
+    dup
+    dig 10
+    dup
+    cover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    swap
+    dig 6
+    b+
+    dup
+    bury 12
+    dig 2
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 3
+    cover 2
+    substring3
+    callsub bytesToFr
+    dig 6
+    intc 13 // 1440
+    intc 14 // 8064
+    extract3
+    dig 2
+    dig 10
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    pushint 288
+    *
+    pushint 288
+    extract3 // on error: index access is out of bounds
+    uncover 2
+    dig 8
+    dup
+    cover 3
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 3
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 3
+    dig 13
+    b|
+    swap
+    intc_1 // 32
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    pop
+    bytec_1 // 0x01
+    b+
+    bury 6
+    b ZKTranscriptLib.loadProof__chunk_0_while_top@9
+
+ZKTranscriptLib.loadProof__chunk_0_after_while@11:
+    dig 6
+    bytec_1 // 0x01
+    b+
+    bury 7
+    b ZKTranscriptLib.loadProof__chunk_0_while_top@7
+
+ZKTranscriptLib.loadProof__chunk_0_after_while@12:
+    dig 7
+    bury 7
+
+ZKTranscriptLib.loadProof__chunk_0_while_top@13:
+    pushint 40
+    itob
+    dig 7
+    b>
+    bz ZKTranscriptLib.loadProof__chunk_0_after_while@15
+    dig 1
+    dup
+    dig 10
+    dup
+    cover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    swap
+    dig 6
+    b+
+    dup
+    bury 12
+    dig 2
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 3
+    cover 2
+    substring3
+    callsub bytesToFr
+    dig 6
+    intc 11 // 9504
+    intc 12 // 1280
+    extract3
+    uncover 2
+    dig 9
+    dup
+    cover 4
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 2
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 2
+    dig 13
+    b|
+    swap
+    intc_1 // 32
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    pop
+    bytec_1 // 0x01
+    b+
+    bury 7
+    b ZKTranscriptLib.loadProof__chunk_0_while_top@13
+
+ZKTranscriptLib.loadProof__chunk_0_after_while@15:
+    dig 4
+    dup
+    intc 15 // 14432
+    intc_2 // 896
+    extract3
+    dig 1
+    intc 6 // 10976
+    intc 7 // 3456
+    extract3
+    dig 2
+    intc 19 // 10944
+    intc_1 // 32
+    extract3
+    dig 3
+    intc 20 // 10816
+    intc_0 // 128
+    extract3
+    dig 4
+    intc 16 // 15584
+    intc_0 // 128
+    extract3
+    dig 5
+    intc 4 // 1024
+    intc_3 // 384
+    extract3
+    dig 8
+    dup
+    dig 17
+    dup
+    cover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    swap
+    dig 13
+    dup
+    cover 11
+    b+
+    dig 2
+    dig 1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 12
+    dup
+    cover 8
+    uncover 3
+    dig 2
+    substring3
+    callsub bytesToFr
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    dig 22
+    dup
+    cover 14
+    b|
+    dig 11
+    intc 17 // 15328
+    intc_0 // 128
+    extract3
+    dig 12
+    intc 22 // 1408
+    intc_1 // 32
+    extract3
+    dig 13
+    intc 8 // 768
+    intc_0 // 128
+    extract3
+    dig 14
+    intc 9 // 512
+    intc_0 // 128
+    extract3
+    dig 15
+    intc 10 // 640
+    intc_0 // 128
+    extract3
+    dig 16
+    intc 18 // 15456
+    intc_0 // 128
+    extract3
+    dig 17
+    intc 11 // 9504
+    intc 12 // 1280
+    extract3
+    dig 18
+    intc 13 // 1440
+    intc 14 // 8064
+    extract3
+    dig 19
+    extract 0 128
+    dig 20
+    extract 128 128
+    dig 21
+    intc 5 // 256
+    intc_0 // 128
+    extract3
+    dig 22
+    intc_3 // 384
+    intc_0 // 128
+    extract3
+    uncover 23
+    intc_2 // 896
+    intc_0 // 128
+    extract3
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 5
+    concat
+    swap
+    concat
+    uncover 10
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    uncover 3
+    concat
+    uncover 7
+    concat
+    uncover 8
+    concat
+    uncover 8
+    concat
+    uncover 8
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 4
+    concat
+    intc_0 // 128
+    itob
+    dup
+    bury 11
+    uncover 3
+    dig 1
+    b+
+    dig 4
+    dig 1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 6
+    uncover 5
+    dig 2
+    substring3
+    callsub bytesToG1ProofPoint
+    dig 4
+    intc 4 // 1024
+    intc_3 // 384
+    extract3
+    dup
+    uncover 2
+    replace2 128 // on error: index access is out of bounds
+    pop
+    uncover 2
+    dig 3
+    b+
+    dig 5
+    dig 1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 7
+    uncover 4
+    dig 2
+    substring3
+    callsub bytesToG1ProofPoint
+    dig 3
+    intc 5 // 256
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    pop
+    dig 4
+    intc 15 // 14432
+    intc_2 // 896
+    extract3
+    dig 5
+    intc 6 // 10976
+    intc 7 // 3456
+    extract3
+    dig 6
+    intc 19 // 10944
+    intc_1 // 32
+    extract3
+    uncover 4
+    uncover 6
+    b+
+    dig 7
+    dig 1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 9
+    uncover 6
+    dig 2
+    substring3
+    callsub bytesToG1ProofPoint
+    dig 7
+    intc 16 // 15584
+    intc_0 // 128
+    extract3
+    dig 8
+    intc 21 // 10784
+    intc_1 // 32
+    extract3
+    dig 9
+    intc 17 // 15328
+    intc_0 // 128
+    extract3
+    dig 10
+    intc 22 // 1408
+    intc_1 // 32
+    extract3
+    dig 11
+    intc 8 // 768
+    intc_0 // 128
+    extract3
+    dig 12
+    intc 9 // 512
+    intc_0 // 128
+    extract3
+    dig 13
+    intc 10 // 640
+    intc_0 // 128
+    extract3
+    dig 14
+    intc 18 // 15456
+    intc_0 // 128
+    extract3
+    dig 15
+    intc 11 // 9504
+    intc 12 // 1280
+    extract3
+    dig 16
+    intc 13 // 1440
+    intc 14 // 8064
+    extract3
+    dig 17
+    extract 0 128
+    dig 18
+    extract 128 128
+    dig 19
+    intc 5 // 256
+    intc_0 // 128
+    extract3
+    dig 20
+    intc_3 // 384
+    intc_0 // 128
+    extract3
+    uncover 21
+    intc_2 // 896
+    intc_0 // 128
+    extract3
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 5
+    concat
+    swap
+    concat
+    uncover 14
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    uncover 3
+    concat
+    uncover 4
+    concat
+    uncover 6
+    concat
+    uncover 6
+    concat
+    uncover 6
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    dup
+    intc 15 // 14432
+    intc_2 // 896
+    extract3
+    dig 1
+    intc 6 // 10976
+    intc 7 // 3456
+    extract3
+    uncover 4
+    uncover 7
+    b+
+    dup
+    bury 17
+    uncover 5
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    uncover 5
+    uncover 5
+    uncover 2
+    substring3
+    callsub bytesToFr
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 4
+    b|
+    dig 3
+    intc 20 // 10816
+    intc_0 // 128
+    extract3
+    dig 4
+    intc 16 // 15584
+    intc_0 // 128
+    extract3
+    dig 5
+    intc 4 // 1024
+    intc_3 // 384
+    extract3
+    dig 6
+    intc 21 // 10784
+    intc_1 // 32
+    extract3
+    dig 7
+    intc 17 // 15328
+    intc_0 // 128
+    extract3
+    dig 8
+    intc 22 // 1408
+    intc_1 // 32
+    extract3
+    dig 9
+    intc 8 // 768
+    intc_0 // 128
+    extract3
+    dig 10
+    intc 9 // 512
+    intc_0 // 128
+    extract3
+    dig 11
+    intc 10 // 640
+    intc_0 // 128
+    extract3
+    dig 12
+    intc 18 // 15456
+    intc_0 // 128
+    extract3
+    dig 13
+    intc 11 // 9504
+    intc 12 // 1280
+    extract3
+    dig 14
+    intc 13 // 1440
+    intc 14 // 8064
+    extract3
+    dig 15
+    extract 0 128
+    dig 16
+    extract 128 128
+    dig 17
+    intc 5 // 256
+    intc_0 // 128
+    extract3
+    dig 18
+    intc_3 // 384
+    intc_0 // 128
+    extract3
+    uncover 19
+    intc_2 // 896
+    intc_0 // 128
+    extract3
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 5
+    concat
+    swap
+    concat
+    uncover 7
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    uncover 3
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    bury 5
+
+ZKTranscriptLib.loadProof__chunk_0_while_top@16:
+    dig 7
+    pushbytes 0x1b
+    b<
+    bz ZKTranscriptLib.loadProof__chunk_0_after_while@18
+    dig 1
+    dup
+    dig 10
+    dup
+    cover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    swap
+    dig 5
+    b+
+    dup
+    bury 12
+    dig 2
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 3
+    cover 2
+    substring3
+    callsub bytesToG1ProofPoint
+    dig 6
+    intc 6 // 10976
+    intc 7 // 3456
+    extract3
+    uncover 2
+    dig 10
+    dup
+    cover 3
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_0 // 128
+    *
+    uncover 3
+    replace3 // on error: index access is out of bounds
+    pop
+    bytec_1 // 0x01
+    b+
+    bury 8
+    b ZKTranscriptLib.loadProof__chunk_0_while_top@16
+
+ZKTranscriptLib.loadProof__chunk_0_after_while@18:
+    dig 8
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    dig 10
+    b|
+    dig 5
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper16.__init__[routing]() -> void:
+__init__:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 3
+    dup
+    pushint 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_0 // "o"
+    app_global_get
+    !
+    assert // helper: already initialized
+    bytec_0 // "o"
+    uncover 3
+    app_global_put
+    bytec_2 // "p"
+    uncover 2
+    app_global_put
+    bytec_3 // "s"
+    swap
+    app_global_put
+    pushint 1
+    return

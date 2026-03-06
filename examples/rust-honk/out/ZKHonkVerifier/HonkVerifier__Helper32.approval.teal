@@ -1,0 +1,630 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper32.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 32 128 8 896 384 14432 15328
+    bytecblock "o" "p" "s" 0x01
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(value: bytes) -> bytes:
+FrLib.fromBytes32:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.bytesToFr(proofSection: bytes) -> bytes:
+bytesToFr:
+    proto 1 1
+    frame_dig -1
+    callsub FrLib.fromBytes32
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.bytesToG1ProofPoint(proofSection: bytes) -> bytes:
+bytesToG1ProofPoint:
+    proto 1 1
+    frame_dig -1
+    substring 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    frame_dig -1
+    substring 32 64
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    frame_dig -1
+    substring 64 96
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 3
+    b|
+    frame_dig -1
+    substring 96 128
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    b|
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper32.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn NumAppArgs
+    bz __puya_arc4_router_____bare_create__@8
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xcd0e9d7f 0xa96ef989 // method "ZKTranscriptLib.loadProof__chunk_1(byte[],uint256)((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256))", method "__init__(uint64,uint64,byte[])void"
+    txna ApplicationArgs 0
+    match ZKTranscriptLib.loadProof__chunk_1 __init__
+    err
+
+__puya_arc4_router_____bare_create__@8:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper32.ZKTranscriptLib.loadProof__chunk_1[routing]() -> void:
+ZKTranscriptLib.loadProof__chunk_1:
+    pushint 0
+    dupn 2
+    txna ApplicationArgs 1
+    dup
+    pushint 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // "o"
+    app_global_get
+    bz ZKTranscriptLib.loadProof__chunk_1_after_if_else@5
+    global GroupSize
+    pushint 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_0 // "o"
+    app_global_get
+    ==
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec_1 // "p"
+    app_global_get
+    bz ZKTranscriptLib.loadProof__chunk_1_after_if_else@5
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns ApplicationID
+    bytec_1 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    pushint 1
+    -
+    gtxnsa ApplicationArgs 0
+    bytec_2 // "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+ZKTranscriptLib.loadProof__chunk_1_after_if_else@5:
+    gload 1 0
+    gload 1 1
+    concat
+    gload 2 0
+    concat
+    gload 2 1
+    concat
+    bury 3
+    pushint 0
+    itob
+    dup
+    bury 6
+    bury 4
+
+ZKTranscriptLib.loadProof__chunk_1_while_top@7:
+    pushint 28
+    itob
+    dig 4
+    b>
+    bz ZKTranscriptLib.loadProof__chunk_1_while_top@10
+    intc_2 // 8
+    bzero
+    dup
+    dig 2
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    itob
+    uncover 2
+    b+
+    dup
+    bury 4
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    dig 4
+    cover 2
+    substring3
+    callsub bytesToFr
+    dig 4
+    intc 5 // 14432
+    intc_3 // 896
+    extract3
+    uncover 2
+    dig 6
+    dup
+    cover 4
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 3
+    b|
+    swap
+    intc_0 // 32
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    pop
+    bytec_3 // 0x01
+    b+
+    bury 4
+    b ZKTranscriptLib.loadProof__chunk_1_while_top@7
+
+ZKTranscriptLib.loadProof__chunk_1_while_top@10:
+    pushint 4
+    itob
+    dig 5
+    b>
+    bz ZKTranscriptLib.loadProof__chunk_1_after_while@12
+    intc_2 // 8
+    bzero
+    dup
+    dig 2
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    itob
+    uncover 2
+    b+
+    dup
+    bury 4
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    dig 4
+    cover 2
+    substring3
+    callsub bytesToFr
+    dig 4
+    intc 6 // 15328
+    intc_1 // 128
+    extract3
+    uncover 2
+    dig 7
+    dup
+    cover 4
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 3
+    b|
+    swap
+    intc_0 // 32
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    pop
+    bytec_3 // 0x01
+    b+
+    bury 5
+    b ZKTranscriptLib.loadProof__chunk_1_while_top@10
+
+ZKTranscriptLib.loadProof__chunk_1_after_while@12:
+    dig 2
+    dup
+    intc 5 // 14432
+    intc_3 // 896
+    extract3
+    dig 1
+    pushints 10976 3456
+    extract3
+    dig 2
+    pushint 10944
+    intc_0 // 32
+    extract3
+    dig 3
+    pushint 10816
+    intc_1 // 128
+    extract3
+    dig 4
+    pushint 15584
+    intc_1 // 128
+    extract3
+    dig 5
+    pushint 1024
+    intc 4 // 384
+    extract3
+    dig 6
+    pushint 10784
+    intc_0 // 32
+    extract3
+    dig 7
+    intc 6 // 15328
+    intc_1 // 128
+    extract3
+    dig 8
+    pushint 1408
+    intc_0 // 32
+    extract3
+    dig 9
+    pushint 768
+    intc_1 // 128
+    extract3
+    dig 10
+    pushint 512
+    intc_1 // 128
+    extract3
+    dig 11
+    pushint 640
+    intc_1 // 128
+    extract3
+    intc_2 // 8
+    bzero
+    dup
+    dig 15
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    intc_1 // 128
+    itob
+    uncover 2
+    dig 1
+    b+
+    dig 3
+    dig 1
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    dig 19
+    dup
+    cover 13
+    uncover 4
+    dig 2
+    substring3
+    callsub bytesToG1ProofPoint
+    dig 18
+    pushints 9504 1280
+    extract3
+    dig 19
+    pushints 1440 8064
+    extract3
+    dig 20
+    extract 0 128
+    dig 21
+    extract 128 128
+    dig 22
+    pushint 256
+    intc_1 // 128
+    extract3
+    dig 23
+    intc 4 // 384
+    intc_1 // 128
+    extract3
+    uncover 24
+    intc_3 // 896
+    intc_1 // 128
+    extract3
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    uncover 10
+    concat
+    uncover 9
+    concat
+    uncover 9
+    concat
+    swap
+    concat
+    uncover 11
+    concat
+    uncover 8
+    concat
+    swap
+    concat
+    swap
+    concat
+    uncover 7
+    concat
+    uncover 9
+    concat
+    uncover 9
+    concat
+    uncover 9
+    concat
+    uncover 9
+    concat
+    uncover 6
+    concat
+    swap
+    concat
+    uncover 6
+    concat
+    dup
+    intc 5 // 14432
+    intc_3 // 896
+    extract3
+    dig 1
+    pushints 10976 3456
+    extract3
+    dig 2
+    pushint 10944
+    intc_0 // 32
+    extract3
+    dig 3
+    pushint 10816
+    intc_1 // 128
+    extract3
+    uncover 6
+    uncover 7
+    b+
+    uncover 7
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    uncover 7
+    uncover 7
+    uncover 2
+    substring3
+    callsub bytesToG1ProofPoint
+    dig 5
+    pushint 1024
+    intc 4 // 384
+    extract3
+    dig 6
+    pushint 10784
+    intc_0 // 32
+    extract3
+    dig 7
+    intc 6 // 15328
+    intc_1 // 128
+    extract3
+    dig 8
+    pushint 1408
+    intc_0 // 32
+    extract3
+    dig 9
+    pushint 768
+    intc_1 // 128
+    extract3
+    dig 10
+    pushint 512
+    intc_1 // 128
+    extract3
+    dig 11
+    pushint 640
+    intc_1 // 128
+    extract3
+    dig 12
+    pushint 15456
+    intc_1 // 128
+    extract3
+    dig 13
+    pushints 9504 1280
+    extract3
+    dig 14
+    pushints 1440 8064
+    extract3
+    dig 15
+    extract 0 128
+    dig 16
+    extract 128 128
+    dig 17
+    pushint 256
+    intc_1 // 128
+    extract3
+    dig 18
+    intc 4 // 384
+    intc_1 // 128
+    extract3
+    uncover 19
+    intc_3 // 896
+    intc_1 // 128
+    extract3
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 5
+    concat
+    swap
+    concat
+    uncover 7
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    uncover 3
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper32.__init__[routing]() -> void:
+__init__:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 3
+    dup
+    pushint 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_0 // "o"
+    app_global_get
+    !
+    assert // helper: already initialized
+    bytec_0 // "o"
+    uncover 3
+    app_global_put
+    bytec_1 // "p"
+    uncover 2
+    app_global_put
+    bytec_2 // "s"
+    swap
+    app_global_put
+    pushint 1
+    return

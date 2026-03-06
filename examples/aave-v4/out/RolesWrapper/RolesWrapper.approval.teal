@@ -1,0 +1,63 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/RolesWrapper.sol.RolesWrapper.approval_program() -> uint64:
+main:
+    intcblock 1
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xd125873e 0x2cf7c1f4 0x6a53a98a 0x8c7f42cc 0x64614a29 0x3f8ebb5e 0xa80b86b9 // method "DEFAULT_ADMIN_ROLE()uint64", method "HUB_ADMIN_ROLE()uint64", method "SPOKE_ADMIN_ROLE()uint64", method "USER_POSITION_UPDATER_ROLE()uint64", method "HUB_CONFIGURATOR_ROLE()uint64", method "SPOKE_CONFIGURATOR_ROLE()uint64", method "DEFICIT_ELIMINATOR_ROLE()uint64"
+    txna ApplicationArgs 0
+    match main_DEFAULT_ADMIN_ROLE_route@5 main_HUB_ADMIN_ROLE_route@6 main_SPOKE_ADMIN_ROLE_route@7 main_USER_POSITION_UPDATER_ROLE_route@8 main_HUB_CONFIGURATOR_ROLE_route@9 main_SPOKE_CONFIGURATOR_ROLE_route@10 main_DEFICIT_ELIMINATOR_ROLE_route@11
+    err
+
+main_DEFICIT_ELIMINATOR_ROLE_route@11:
+    pushbytes 0x151f7c750000000000000006
+    log
+    intc_0 // 1
+    return
+
+main_SPOKE_CONFIGURATOR_ROLE_route@10:
+    pushbytes 0x151f7c750000000000000005
+    log
+    intc_0 // 1
+    return
+
+main_HUB_CONFIGURATOR_ROLE_route@9:
+    pushbytes 0x151f7c750000000000000004
+    log
+    intc_0 // 1
+    return
+
+main_USER_POSITION_UPDATER_ROLE_route@8:
+    pushbytes 0x151f7c750000000000000003
+    log
+    intc_0 // 1
+    return
+
+main_SPOKE_ADMIN_ROLE_route@7:
+    pushbytes 0x151f7c750000000000000002
+    log
+    intc_0 // 1
+    return
+
+main_HUB_ADMIN_ROLE_route@6:
+    pushbytes 0x151f7c750000000000000001
+    log
+    intc_0 // 1
+    return
+
+main_DEFAULT_ADMIN_ROLE_route@5:
+    pushbytes 0x151f7c750000000000000000
+    log
+    intc_0 // 1
+    return

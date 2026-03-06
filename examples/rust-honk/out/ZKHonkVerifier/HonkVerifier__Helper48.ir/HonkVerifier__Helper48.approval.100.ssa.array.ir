@@ -1,0 +1,1328 @@
+main /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper48.__puya_arc4_router__:
+    block@0: // L65448
+        let tmp%0#0: bool = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper48.__puya_arc4_router__()
+        return tmp%0#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(value: bytes[32]) -> biguint:
+    block@0: // L7934
+        let tmp%0#0: biguint = (b% value#0 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        return tmp%0#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p: Encoded(uint256[40])*, _wire: uint64) -> biguint:
+    block@0: // L34435
+        let tmp%0#0: bytes = (bzero 8u)
+        let reinterpret_biguint%0#0: biguint = (itob _wire#0)
+        let tmp%1#0: bytes = (concat tmp%0#0 reinterpret_biguint%0#0)
+        let tmp%4#0: uint64 = (len tmp%1#0)
+        let tmp%5#0: uint64 = (- tmp%4#0 8u)
+        let tmp%7#0: uint64 = (extract_uint64 tmp%1#0 tmp%5#0)
+        let slot_contents%0#0: Encoded(uint256[40]) = load(p#0)
+        let aggregate%bytes_offset%0#0: uint64 = (* tmp%7#0 32u)
+        let aggregate%encoded_element%0#0: bytes = (extract3 slot_contents%0#0 aggregate%bytes_offset%0#0 32u) // on error: index access is out of bounds
+        let array_item%0#0: Encoded(uint256) = aggregate%encoded_element%0#0
+        let tmp%8#0: biguint = array_item%0#0
+        return tmp%8#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.add(a: biguint, b: biguint) -> biguint:
+    block@0: // L10108
+        let tmp%0#0: biguint = (b+ a#0 b#0)
+        let tmp%1#0: biguint = (b% tmp%0#0 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        return tmp%1#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.bytesToFr(proofSection: bytes) -> biguint:
+    block@0: // L30758
+        let scalar#1: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(proofSection#0)
+        return scalar#1
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(a: biguint, b: biguint) -> biguint:
+    block@0: // L10220
+        let tmp%0#0: biguint = (b* a#0 b#0)
+        let tmp%1#0: biguint = (b% tmp%0#0 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        return tmp%1#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.sub(a: biguint, b: biguint) -> biguint:
+    block@0: // L10332
+        let tmp%1#0: biguint = (b- 137680332109155470645817390753945182941818349066056598383155788194488938135553b b#0)
+        let tmp%2#0: biguint = (b% tmp%1#0 115792089237316195423570985008687907853269984665640564039457584007913129639936b)
+        let tmp%3#0: biguint = (b+ a#0 tmp%2#0)
+        let tmp%4#0: biguint = (b% tmp%3#0 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        return tmp%4#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper48.__puya_arc4_router__() -> bool:
+    block@0: // L1
+        let tmp%0#0: uint64 = (txn NumAppArgs)
+        goto tmp%0#0 ? block@1 : block@9
+    block@1: // abi_routing_L1
+        let tmp%2#0: uint64 = (txn OnCompletion)
+        let tmp%3#0: bool = (! tmp%2#0)
+        (assert tmp%3#0)
+        let tmp%4#0: uint64 = (txn ApplicationID)
+        (assert tmp%4#0)
+        let tmp%6#0: bytes = (txna ApplicationArgs 0)
+        switch tmp%6#0 {method "RelationsLib.accumulateAuxillaryRelation__chunk_2((uint256,uint256,uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256),uint256,uint256)((uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256),uint256,uint256,uint256,uint256,uint256,uint256,uint256)" => block@3, method "bytesToFr(byte[])uint256" => block@4, method "__init__(uint64,uint64,byte[])void" => block@5, * => block@8}
+    block@3: // RelationsLib.accumulateAuxillaryRelation__chunk_2_route_L45583
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper48.RelationsLib.accumulateAuxillaryRelation__chunk_2[routing]()
+        goto block@8
+    block@4: // bytesToFr_route_L30758
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper48.bytesToFr[routing]()
+        goto block@8
+    block@5: // __init___route_L65448
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper48.__init__[routing]()
+        goto block@8
+    block@8: // after_if_else_L1
+        fail
+    block@9: // __bare_create___L65448
+        let tmp%7#0: uint64 = (txn OnCompletion)
+        let tmp%8#0: bool = (! tmp%7#0)
+        let tmp%9#0: uint64 = (txn ApplicationID)
+        let tmp%10#0: bool = (! tmp%9#0)
+        let tmp%11#0: bool = (&& tmp%8#0 tmp%10#0)
+        (assert tmp%11#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper48.RelationsLib.accumulateAuxillaryRelation__chunk_2[routing]() -> void:
+    block@0: // L45583
+        let rp#0: Encoded(uint256,uint256,uint256,uint256,uint256,uint256) = (txna ApplicationArgs 1)
+        let len%0#0: uint64 = (len rp#0)
+        let eq%0#0: bool = (== len%0#0 192u)
+        (assert eq%0#0) // invalid number of bytes for RelationParameters
+        let tmp%1#0: bytes = (txna ApplicationArgs 2)
+        let len%1#0: uint64 = (len tmp%1#0)
+        let eq%1#0: bool = (== len%1#0 32u)
+        (assert eq%1#0) // invalid number of bytes for arc4.uint256
+        let domainSep#0: biguint = tmp%1#0
+        let ap#0: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = (txna ApplicationArgs 3)
+        let len%2#0: uint64 = (len ap#0)
+        let eq%2#0: bool = (== len%2#0 704u)
+        (assert eq%2#0) // invalid number of bytes for AuxParams
+        let tmp%4#0: bytes = (txna ApplicationArgs 4)
+        let len%3#0: uint64 = (len tmp%4#0)
+        let eq%3#0: bool = (== len%3#0 32u)
+        (assert eq%3#0) // invalid number of bytes for arc4.uint256
+        let limb_accumulator_identity#0: biguint = tmp%4#0
+        let tmp%6#0: bytes = (txna ApplicationArgs 5)
+        let len%4#0: uint64 = (len tmp%6#0)
+        let eq%4#0: bool = (== len%4#0 32u)
+        (assert eq%4#0) // invalid number of bytes for arc4.uint256
+        let non_native_field_identity#0: biguint = tmp%6#0
+        let tmp%0#1: uint64 = (app_global_get "o")
+        goto tmp%0#1 ? block@2 : block@5
+    block@2: // if_body_L45583
+        let tmp%2#1: uint64 = (global GroupSize)
+        let tmp%3#1: bool = (>= tmp%2#1 2u)
+        (assert tmp%3#1) // helper: must be called in group
+        let tmp%4#1: uint64 = (gtxn 0 ApplicationID)
+        let tmp%5#1: uint64 = (app_global_get "o")
+        let tmp%6#1: bool = (== tmp%4#1 tmp%5#1)
+        (assert tmp%6#1) // helper: unauthorized caller
+        let tmp%7#1: bytes = (gtxn 0 Sender)
+        let tmp%8#1: bytes = (txn Sender)
+        let tmp%9#1: bool = (== tmp%7#1 tmp%8#1)
+        (assert tmp%9#1) // helper: sender mismatch
+        let tmp%10#1: uint64 = (app_global_get "p")
+        goto tmp%10#1 ? block@3 : block@5
+    block@3: // if_body_L45583
+        let tmp%12#1: uint64 = (txn GroupIndex)
+        let tmp%13#1: uint64 = (- tmp%12#1 1u)
+        let tmp%14#1: uint64 = ((gtxns ApplicationID) tmp%13#1)
+        let tmp%15#1: uint64 = (app_global_get "p")
+        let tmp%16#1: bool = (== tmp%14#1 tmp%15#1)
+        (assert tmp%16#1) // helper: wrong prev chunk
+        let tmp%17#1: uint64 = (txn GroupIndex)
+        let tmp%18#0: uint64 = (- tmp%17#1 1u)
+        let tmp%19#0: bytes = ((gtxnsa ApplicationArgs 0) tmp%18#0)
+        let tmp%20#0: bytes = (app_global_get "s")
+        let tmp%21#0: bool = (== tmp%19#0 tmp%20#0)
+        (assert tmp%21#0) // helper: wrong prev method
+        goto block@5
+    block@5: // after_if_else_L45583
+        let p#0: Encoded(uint256[40])* = undefined
+        let aggregate%extract%0#0: bytes = (extract3 ap#0 512u 32u)
+        let tuple_item%0#0: Encoded(uint256) = aggregate%extract%0#0
+        let aggregate%extract%1#0: bytes = (extract3 ap#0 576u 32u)
+        let tuple_item%1#0: Encoded(uint256) = aggregate%extract%1#0
+        let aggregate%extract%2#0: bytes = (extract3 ap#0 480u 32u)
+        let tuple_item%2#0: Encoded(uint256) = aggregate%extract%2#0
+        let aggregate%extract%3#0: bytes = (extract3 ap#0 416u 32u)
+        let tuple_item%3#0: Encoded(uint256) = aggregate%extract%3#0
+        let aggregate%extract%4#0: bytes = (extract3 ap#0 352u 32u)
+        let tuple_item%4#0: Encoded(uint256) = aggregate%extract%4#0
+        let aggregate%extract%5#0: bytes = (extract3 ap#0 384u 32u)
+        let tuple_item%5#0: Encoded(uint256) = aggregate%extract%5#0
+        let aggregate%extract%6#0: bytes = (extract3 ap#0 672u 32u)
+        let tuple_item%6#0: Encoded(uint256) = aggregate%extract%6#0
+        let tmp%0#2: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 35u)
+        let tmp%1#2: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 27u)
+        let tmp%2#2: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.sub(tmp%0#2, tmp%1#2)
+        let aggregate%value_len%0#0: uint64 = (len tmp%2#2)
+        let aggregate%len_ok%0#0: bool = (<= aggregate%value_len%0#0 32u)
+        (assert aggregate%len_ok%0#0) // overflow
+        let aggregate%bzero%0#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%0#0: bytes[32] = (b| tmp%2#2 aggregate%bzero%0#0)
+        let aggregate%as_Encoded(uint256)%0#0: Encoded(uint256) = aggregate%arc4_encoded%0#0
+        let tmp%3#2: Encoded(uint256) = aggregate%as_Encoded(uint256)%0#0
+        let aggregate%extract%7#0: bytes = (extract3 ap#0 640u 32u)
+        let tuple_item%7#0: Encoded(uint256) = aggregate%extract%7#0
+        let aggregate%extract%8#0: bytes = (extract3 ap#0 128u 32u)
+        let tuple_item%8#0: Encoded(uint256) = aggregate%extract%8#0
+        let aggregate%extract%9#0: bytes = (extract3 ap#0 160u 32u)
+        let tuple_item%9#0: Encoded(uint256) = aggregate%extract%9#0
+        let aggregate%extract%10#0: bytes = (extract3 ap#0 0u 32u)
+        let tuple_item%10#0: Encoded(uint256) = aggregate%extract%10#0
+        let aggregate%extract%11#0: bytes = (extract3 ap#0 608u 32u)
+        let tuple_item%11#0: Encoded(uint256) = aggregate%extract%11#0
+        let aggregate%extract%12#0: bytes = (extract3 ap#0 192u 32u)
+        let tuple_item%12#0: Encoded(uint256) = aggregate%extract%12#0
+        let aggregate%extract%13#0: bytes = (extract3 ap#0 256u 32u)
+        let tuple_item%13#0: Encoded(uint256) = aggregate%extract%13#0
+        let aggregate%extract%14#0: bytes = (extract3 ap#0 448u 32u)
+        let tuple_item%14#0: Encoded(uint256) = aggregate%extract%14#0
+        let aggregate%extract%15#0: bytes = (extract3 ap#0 32u 32u)
+        let tuple_item%15#0: Encoded(uint256) = aggregate%extract%15#0
+        let aggregate%extract%16#0: bytes = (extract3 ap#0 64u 32u)
+        let tuple_item%16#0: Encoded(uint256) = aggregate%extract%16#0
+        let aggregate%extract%17#0: bytes = (extract3 ap#0 96u 32u)
+        let tuple_item%17#0: Encoded(uint256) = aggregate%extract%17#0
+        let aggregate%extract%18#0: bytes = (extract3 ap#0 224u 32u)
+        let tuple_item%18#0: Encoded(uint256) = aggregate%extract%18#0
+        let aggregate%extract%19#0: bytes = (extract3 ap#0 288u 32u)
+        let tuple_item%19#0: Encoded(uint256) = aggregate%extract%19#0
+        let aggregate%extract%20#0: bytes = (extract3 ap#0 544u 32u)
+        let tuple_item%20#0: Encoded(uint256) = aggregate%extract%20#0
+        let aggregate%head%0#0: bytes = (concat 0x tuple_item%10#0)
+        let aggregate%head%1#0: bytes = (concat aggregate%head%0#0 tuple_item%15#0)
+        let aggregate%head%2#0: bytes = (concat aggregate%head%1#0 tuple_item%16#0)
+        let aggregate%head%3#0: bytes = (concat aggregate%head%2#0 tuple_item%17#0)
+        let aggregate%head%4#0: bytes = (concat aggregate%head%3#0 tuple_item%8#0)
+        let aggregate%head%5#0: bytes = (concat aggregate%head%4#0 tuple_item%9#0)
+        let aggregate%head%6#0: bytes = (concat aggregate%head%5#0 tuple_item%12#0)
+        let aggregate%head%7#0: bytes = (concat aggregate%head%6#0 tuple_item%18#0)
+        let aggregate%head%8#0: bytes = (concat aggregate%head%7#0 tuple_item%13#0)
+        let aggregate%head%9#0: bytes = (concat aggregate%head%8#0 tuple_item%19#0)
+        let aggregate%head%10#0: bytes = (concat aggregate%head%9#0 tmp%3#2)
+        let aggregate%head%11#0: bytes = (concat aggregate%head%10#0 tuple_item%4#0)
+        let aggregate%head%12#0: bytes = (concat aggregate%head%11#0 tuple_item%5#0)
+        let aggregate%head%13#0: bytes = (concat aggregate%head%12#0 tuple_item%3#0)
+        let aggregate%head%14#0: bytes = (concat aggregate%head%13#0 tuple_item%14#0)
+        let aggregate%head%15#0: bytes = (concat aggregate%head%14#0 tuple_item%2#0)
+        let aggregate%head%16#0: bytes = (concat aggregate%head%15#0 tuple_item%0#0)
+        let aggregate%head%17#0: bytes = (concat aggregate%head%16#0 tuple_item%20#0)
+        let aggregate%head%18#0: bytes = (concat aggregate%head%17#0 tuple_item%1#0)
+        let aggregate%head%19#0: bytes = (concat aggregate%head%18#0 tuple_item%11#0)
+        let aggregate%head%20#0: bytes = (concat aggregate%head%19#0 tuple_item%7#0)
+        let aggregate%head%21#0: bytes = (concat aggregate%head%20#0 tuple_item%6#0)
+        let aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%0#0: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%head%21#0
+        let ap#5: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%0#0
+        let aggregate%extract%21#0: bytes = (extract3 ap#5 512u 32u)
+        let tuple_item%21#0: Encoded(uint256) = aggregate%extract%21#0
+        let aggregate%extract%22#0: bytes = (extract3 ap#5 576u 32u)
+        let tuple_item%22#0: Encoded(uint256) = aggregate%extract%22#0
+        let aggregate%extract%23#0: bytes = (extract3 ap#5 480u 32u)
+        let tuple_item%23#0: Encoded(uint256) = aggregate%extract%23#0
+        let aggregate%extract%24#0: bytes = (extract3 ap#5 416u 32u)
+        let tuple_item%24#0: Encoded(uint256) = aggregate%extract%24#0
+        let aggregate%extract%25#0: bytes = (extract3 ap#5 352u 32u)
+        let tuple_item%25#0: Encoded(uint256) = aggregate%extract%25#0
+        let aggregate%extract%26#0: bytes = (extract3 ap#5 384u 32u)
+        let tuple_item%26#0: Encoded(uint256) = aggregate%extract%26#0
+        let aggregate%extract%27#0: bytes = (extract3 ap#5 672u 32u)
+        let tuple_item%27#0: Encoded(uint256) = aggregate%extract%27#0
+        let aggregate%extract%28#0: bytes = (extract3 ap#5 320u 32u)
+        let tuple_item%28#0: Encoded(uint256) = aggregate%extract%28#0
+        let aggregate%extract%29#0: bytes = (extract3 ap#5 640u 32u)
+        let tuple_item%29#0: Encoded(uint256) = aggregate%extract%29#0
+        let aggregate%extract%30#0: bytes = (extract3 ap#5 128u 32u)
+        let tuple_item%30#0: Encoded(uint256) = aggregate%extract%30#0
+        let aggregate%extract%31#0: bytes = (extract3 ap#5 160u 32u)
+        let tuple_item%31#0: Encoded(uint256) = aggregate%extract%31#0
+        let aggregate%extract%32#0: bytes = (extract3 ap#5 0u 32u)
+        let tuple_item%32#0: Encoded(uint256) = aggregate%extract%32#0
+        let aggregate%extract%33#0: bytes = (extract3 ap#5 608u 32u)
+        let tuple_item%33#0: Encoded(uint256) = aggregate%extract%33#0
+        let aggregate%extract%34#0: bytes = (extract3 ap#5 192u 32u)
+        let tuple_item%34#0: Encoded(uint256) = aggregate%extract%34#0
+        let aggregate%extract%35#0: bytes = (extract3 ap#5 256u 32u)
+        let tuple_item%35#0: Encoded(uint256) = aggregate%extract%35#0
+        let aggregate%extract%36#0: bytes = (extract3 ap#5 448u 32u)
+        let tuple_item%36#0: Encoded(uint256) = aggregate%extract%36#0
+        let aggregate%extract%37#0: bytes = (extract3 ap#5 32u 32u)
+        let tuple_item%37#0: Encoded(uint256) = aggregate%extract%37#0
+        let aggregate%extract%38#0: bytes = (extract3 ap#5 64u 32u)
+        let tuple_item%38#0: Encoded(uint256) = aggregate%extract%38#0
+        let aggregate%extract%39#0: bytes = (extract3 ap#5 96u 32u)
+        let tuple_item%39#0: Encoded(uint256) = aggregate%extract%39#0
+        let aggregate%extract%40#0: bytes = (extract3 ap#5 224u 32u)
+        let tuple_item%40#0: Encoded(uint256) = aggregate%extract%40#0
+        let tmp%5#2: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 38u)
+        let tmp%6#2: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 30u)
+        let tmp%7#2: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.sub(tmp%5#2, tmp%6#2)
+        let aggregate%value_len%1#0: uint64 = (len tmp%7#2)
+        let aggregate%len_ok%1#0: bool = (<= aggregate%value_len%1#0 32u)
+        (assert aggregate%len_ok%1#0) // overflow
+        let aggregate%bzero%1#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%1#0: bytes[32] = (b| tmp%7#2 aggregate%bzero%1#0)
+        let aggregate%as_Encoded(uint256)%1#0: Encoded(uint256) = aggregate%arc4_encoded%1#0
+        let tmp%8#2: Encoded(uint256) = aggregate%as_Encoded(uint256)%1#0
+        let aggregate%extract%41#0: bytes = (extract3 ap#5 544u 32u)
+        let tuple_item%41#0: Encoded(uint256) = aggregate%extract%41#0
+        let aggregate%head%22#0: bytes = (concat 0x tuple_item%32#0)
+        let aggregate%head%23#0: bytes = (concat aggregate%head%22#0 tuple_item%37#0)
+        let aggregate%head%24#0: bytes = (concat aggregate%head%23#0 tuple_item%38#0)
+        let aggregate%head%25#0: bytes = (concat aggregate%head%24#0 tuple_item%39#0)
+        let aggregate%head%26#0: bytes = (concat aggregate%head%25#0 tuple_item%30#0)
+        let aggregate%head%27#0: bytes = (concat aggregate%head%26#0 tuple_item%31#0)
+        let aggregate%head%28#0: bytes = (concat aggregate%head%27#0 tuple_item%34#0)
+        let aggregate%head%29#0: bytes = (concat aggregate%head%28#0 tuple_item%40#0)
+        let aggregate%head%30#0: bytes = (concat aggregate%head%29#0 tuple_item%35#0)
+        let aggregate%head%31#0: bytes = (concat aggregate%head%30#0 tmp%8#2)
+        let aggregate%head%32#0: bytes = (concat aggregate%head%31#0 tuple_item%28#0)
+        let aggregate%head%33#0: bytes = (concat aggregate%head%32#0 tuple_item%25#0)
+        let aggregate%head%34#0: bytes = (concat aggregate%head%33#0 tuple_item%26#0)
+        let aggregate%head%35#0: bytes = (concat aggregate%head%34#0 tuple_item%24#0)
+        let aggregate%head%36#0: bytes = (concat aggregate%head%35#0 tuple_item%36#0)
+        let aggregate%head%37#0: bytes = (concat aggregate%head%36#0 tuple_item%23#0)
+        let aggregate%head%38#0: bytes = (concat aggregate%head%37#0 tuple_item%21#0)
+        let aggregate%head%39#0: bytes = (concat aggregate%head%38#0 tuple_item%41#0)
+        let aggregate%head%40#0: bytes = (concat aggregate%head%39#0 tuple_item%22#0)
+        let aggregate%head%41#0: bytes = (concat aggregate%head%40#0 tuple_item%33#0)
+        let aggregate%head%42#0: bytes = (concat aggregate%head%41#0 tuple_item%29#0)
+        let aggregate%head%43#0: bytes = (concat aggregate%head%42#0 tuple_item%27#0)
+        let aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%1#0: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%head%43#0
+        let ap#7: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%1#0
+        let aggregate%extract%42#0: bytes = (extract3 ap#7 512u 32u)
+        let tuple_item%42#0: Encoded(uint256) = aggregate%extract%42#0
+        let aggregate%extract%43#0: bytes = (extract3 ap#7 576u 32u)
+        let tuple_item%43#0: Encoded(uint256) = aggregate%extract%43#0
+        let aggregate%extract%44#0: bytes = (extract3 ap#7 480u 32u)
+        let tuple_item%44#0: Encoded(uint256) = aggregate%extract%44#0
+        let aggregate%extract%45#0: bytes = (extract3 ap#7 416u 32u)
+        let tuple_item%45#0: Encoded(uint256) = aggregate%extract%45#0
+        let aggregate%extract%46#0: bytes = (extract3 ap#7 352u 32u)
+        let tuple_item%46#0: Encoded(uint256) = aggregate%extract%46#0
+        let aggregate%extract%47#0: bytes = (extract3 ap#7 384u 32u)
+        let tuple_item%47#0: Encoded(uint256) = aggregate%extract%47#0
+        let aggregate%extract%48#0: bytes = (extract3 ap#7 672u 32u)
+        let tuple_item%48#0: Encoded(uint256) = aggregate%extract%48#0
+        let aggregate%extract%49#0: bytes = (extract3 ap#7 320u 32u)
+        let tuple_item%49#0: Encoded(uint256) = aggregate%extract%49#0
+        let tmp%10#2: biguint = tuple_item%49#0
+        let tmp%12#2: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%10#2, tmp%10#2)
+        let tmp%14#2: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.sub(tmp%12#2, tmp%10#2)
+        let aggregate%value_len%2#0: uint64 = (len tmp%14#2)
+        let aggregate%len_ok%2#0: bool = (<= aggregate%value_len%2#0 32u)
+        (assert aggregate%len_ok%2#0) // overflow
+        let aggregate%bzero%2#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%2#0: bytes[32] = (b| tmp%14#2 aggregate%bzero%2#0)
+        let aggregate%as_Encoded(uint256)%2#0: Encoded(uint256) = aggregate%arc4_encoded%2#0
+        let tmp%15#2: Encoded(uint256) = aggregate%as_Encoded(uint256)%2#0
+        let aggregate%extract%50#0: bytes = (extract3 ap#7 128u 32u)
+        let tuple_item%53#0: Encoded(uint256) = aggregate%extract%50#0
+        let aggregate%extract%51#0: bytes = (extract3 ap#7 160u 32u)
+        let tuple_item%54#0: Encoded(uint256) = aggregate%extract%51#0
+        let aggregate%extract%52#0: bytes = (extract3 ap#7 0u 32u)
+        let tuple_item%55#0: Encoded(uint256) = aggregate%extract%52#0
+        let aggregate%extract%53#0: bytes = (extract3 ap#7 608u 32u)
+        let tuple_item%56#0: Encoded(uint256) = aggregate%extract%53#0
+        let aggregate%extract%54#0: bytes = (extract3 ap#7 192u 32u)
+        let tuple_item%57#0: Encoded(uint256) = aggregate%extract%54#0
+        let aggregate%extract%55#0: bytes = (extract3 ap#7 256u 32u)
+        let tuple_item%58#0: Encoded(uint256) = aggregate%extract%55#0
+        let aggregate%extract%56#0: bytes = (extract3 ap#7 448u 32u)
+        let tuple_item%59#0: Encoded(uint256) = aggregate%extract%56#0
+        let aggregate%extract%57#0: bytes = (extract3 ap#7 32u 32u)
+        let tuple_item%60#0: Encoded(uint256) = aggregate%extract%57#0
+        let aggregate%extract%58#0: bytes = (extract3 ap#7 64u 32u)
+        let tuple_item%61#0: Encoded(uint256) = aggregate%extract%58#0
+        let aggregate%extract%59#0: bytes = (extract3 ap#7 96u 32u)
+        let tuple_item%62#0: Encoded(uint256) = aggregate%extract%59#0
+        let aggregate%extract%60#0: bytes = (extract3 ap#7 224u 32u)
+        let tuple_item%63#0: Encoded(uint256) = aggregate%extract%60#0
+        let aggregate%extract%61#0: bytes = (extract3 ap#7 288u 32u)
+        let tuple_item%64#0: Encoded(uint256) = aggregate%extract%61#0
+        let aggregate%extract%62#0: bytes = (extract3 ap#7 544u 32u)
+        let tuple_item%65#0: Encoded(uint256) = aggregate%extract%62#0
+        let aggregate%head%44#0: bytes = (concat 0x tuple_item%55#0)
+        let aggregate%head%45#0: bytes = (concat aggregate%head%44#0 tuple_item%60#0)
+        let aggregate%head%46#0: bytes = (concat aggregate%head%45#0 tuple_item%61#0)
+        let aggregate%head%47#0: bytes = (concat aggregate%head%46#0 tuple_item%62#0)
+        let aggregate%head%48#0: bytes = (concat aggregate%head%47#0 tuple_item%53#0)
+        let aggregate%head%49#0: bytes = (concat aggregate%head%48#0 tuple_item%54#0)
+        let aggregate%head%50#0: bytes = (concat aggregate%head%49#0 tuple_item%57#0)
+        let aggregate%head%51#0: bytes = (concat aggregate%head%50#0 tuple_item%63#0)
+        let aggregate%head%52#0: bytes = (concat aggregate%head%51#0 tuple_item%58#0)
+        let aggregate%head%53#0: bytes = (concat aggregate%head%52#0 tuple_item%64#0)
+        let aggregate%head%54#0: bytes = (concat aggregate%head%53#0 tuple_item%49#0)
+        let aggregate%head%55#0: bytes = (concat aggregate%head%54#0 tuple_item%46#0)
+        let aggregate%head%56#0: bytes = (concat aggregate%head%55#0 tuple_item%47#0)
+        let aggregate%head%57#0: bytes = (concat aggregate%head%56#0 tuple_item%45#0)
+        let aggregate%head%58#0: bytes = (concat aggregate%head%57#0 tuple_item%59#0)
+        let aggregate%head%59#0: bytes = (concat aggregate%head%58#0 tuple_item%44#0)
+        let aggregate%head%60#0: bytes = (concat aggregate%head%59#0 tuple_item%42#0)
+        let aggregate%head%61#0: bytes = (concat aggregate%head%60#0 tuple_item%65#0)
+        let aggregate%head%62#0: bytes = (concat aggregate%head%61#0 tuple_item%43#0)
+        let aggregate%head%63#0: bytes = (concat aggregate%head%62#0 tuple_item%56#0)
+        let aggregate%head%64#0: bytes = (concat aggregate%head%63#0 tmp%15#2)
+        let aggregate%head%65#0: bytes = (concat aggregate%head%64#0 tuple_item%48#0)
+        let aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%2#0: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%head%65#0
+        let ap#9: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%2#0
+        let aggregate%extract%63#0: bytes = (extract3 ap#9 512u 32u)
+        let tuple_item%66#0: Encoded(uint256) = aggregate%extract%63#0
+        let aggregate%extract%64#0: bytes = (extract3 ap#9 576u 32u)
+        let tuple_item%67#0: Encoded(uint256) = aggregate%extract%64#0
+        let aggregate%extract%65#0: bytes = (extract3 ap#9 480u 32u)
+        let tuple_item%68#0: Encoded(uint256) = aggregate%extract%65#0
+        let aggregate%extract%66#0: bytes = (extract3 ap#9 416u 32u)
+        let tuple_item%69#0: Encoded(uint256) = aggregate%extract%66#0
+        let aggregate%extract%67#0: bytes = (extract3 ap#9 320u 32u)
+        let tuple_item%70#0: Encoded(uint256) = aggregate%extract%67#0
+        let tmp%17#2: biguint = tuple_item%70#0
+        let reinterpret_biguint%0#0: biguint = (itob 1u)
+        let tmp%21#1: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%17#2, 21888242871839275222246405745257275088548364400416034343698204186575808495616b)
+        let tmp%22#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.add(tmp%21#1, reinterpret_biguint%0#0)
+        let aggregate%extract%68#0: bytes = (extract3 ap#9 288u 32u)
+        let tuple_item%71#0: Encoded(uint256) = aggregate%extract%68#0
+        let tmp%23#0: biguint = tuple_item%71#0
+        let tmp%24#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%22#0, tmp%23#0)
+        let aggregate%value_len%3#0: uint64 = (len tmp%24#0)
+        let aggregate%len_ok%3#0: bool = (<= aggregate%value_len%3#0 32u)
+        (assert aggregate%len_ok%3#0) // overflow
+        let aggregate%bzero%3#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%3#0: bytes[32] = (b| tmp%24#0 aggregate%bzero%3#0)
+        let aggregate%as_Encoded(uint256)%3#0: Encoded(uint256) = aggregate%arc4_encoded%3#0
+        let tmp%25#0: Encoded(uint256) = aggregate%as_Encoded(uint256)%3#0
+        let aggregate%extract%69#0: bytes = (extract3 ap#9 384u 32u)
+        let tuple_item%72#0: Encoded(uint256) = aggregate%extract%69#0
+        let aggregate%extract%70#0: bytes = (extract3 ap#9 672u 32u)
+        let tuple_item%73#0: Encoded(uint256) = aggregate%extract%70#0
+        let aggregate%extract%71#0: bytes = (extract3 ap#9 640u 32u)
+        let tuple_item%75#0: Encoded(uint256) = aggregate%extract%71#0
+        let aggregate%extract%72#0: bytes = (extract3 ap#9 128u 32u)
+        let tuple_item%76#0: Encoded(uint256) = aggregate%extract%72#0
+        let aggregate%extract%73#0: bytes = (extract3 ap#9 160u 32u)
+        let tuple_item%77#0: Encoded(uint256) = aggregate%extract%73#0
+        let aggregate%extract%74#0: bytes = (extract3 ap#9 0u 32u)
+        let tuple_item%78#0: Encoded(uint256) = aggregate%extract%74#0
+        let aggregate%extract%75#0: bytes = (extract3 ap#9 608u 32u)
+        let tuple_item%79#0: Encoded(uint256) = aggregate%extract%75#0
+        let aggregate%extract%76#0: bytes = (extract3 ap#9 192u 32u)
+        let tuple_item%80#0: Encoded(uint256) = aggregate%extract%76#0
+        let aggregate%extract%77#0: bytes = (extract3 ap#9 256u 32u)
+        let tuple_item%81#0: Encoded(uint256) = aggregate%extract%77#0
+        let aggregate%extract%78#0: bytes = (extract3 ap#9 448u 32u)
+        let tuple_item%82#0: Encoded(uint256) = aggregate%extract%78#0
+        let aggregate%extract%79#0: bytes = (extract3 ap#9 32u 32u)
+        let tuple_item%83#0: Encoded(uint256) = aggregate%extract%79#0
+        let aggregate%extract%80#0: bytes = (extract3 ap#9 64u 32u)
+        let tuple_item%84#0: Encoded(uint256) = aggregate%extract%80#0
+        let aggregate%extract%81#0: bytes = (extract3 ap#9 96u 32u)
+        let tuple_item%85#0: Encoded(uint256) = aggregate%extract%81#0
+        let aggregate%extract%82#0: bytes = (extract3 ap#9 224u 32u)
+        let tuple_item%86#0: Encoded(uint256) = aggregate%extract%82#0
+        let aggregate%extract%83#0: bytes = (extract3 ap#9 544u 32u)
+        let tuple_item%88#0: Encoded(uint256) = aggregate%extract%83#0
+        let aggregate%head%66#0: bytes = (concat 0x tuple_item%78#0)
+        let aggregate%head%67#0: bytes = (concat aggregate%head%66#0 tuple_item%83#0)
+        let aggregate%head%68#0: bytes = (concat aggregate%head%67#0 tuple_item%84#0)
+        let aggregate%head%69#0: bytes = (concat aggregate%head%68#0 tuple_item%85#0)
+        let aggregate%head%70#0: bytes = (concat aggregate%head%69#0 tuple_item%76#0)
+        let aggregate%head%71#0: bytes = (concat aggregate%head%70#0 tuple_item%77#0)
+        let aggregate%head%72#0: bytes = (concat aggregate%head%71#0 tuple_item%80#0)
+        let aggregate%head%73#0: bytes = (concat aggregate%head%72#0 tuple_item%86#0)
+        let aggregate%head%74#0: bytes = (concat aggregate%head%73#0 tuple_item%81#0)
+        let aggregate%head%75#0: bytes = (concat aggregate%head%74#0 tuple_item%71#0)
+        let aggregate%head%76#0: bytes = (concat aggregate%head%75#0 tuple_item%70#0)
+        let aggregate%head%77#0: bytes = (concat aggregate%head%76#0 tmp%25#0)
+        let aggregate%head%78#0: bytes = (concat aggregate%head%77#0 tuple_item%72#0)
+        let aggregate%head%79#0: bytes = (concat aggregate%head%78#0 tuple_item%69#0)
+        let aggregate%head%80#0: bytes = (concat aggregate%head%79#0 tuple_item%82#0)
+        let aggregate%head%81#0: bytes = (concat aggregate%head%80#0 tuple_item%68#0)
+        let aggregate%head%82#0: bytes = (concat aggregate%head%81#0 tuple_item%66#0)
+        let aggregate%head%83#0: bytes = (concat aggregate%head%82#0 tuple_item%88#0)
+        let aggregate%head%84#0: bytes = (concat aggregate%head%83#0 tuple_item%67#0)
+        let aggregate%head%85#0: bytes = (concat aggregate%head%84#0 tuple_item%79#0)
+        let aggregate%head%86#0: bytes = (concat aggregate%head%85#0 tuple_item%75#0)
+        let aggregate%head%87#0: bytes = (concat aggregate%head%86#0 tuple_item%73#0)
+        let aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%3#0: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%head%87#0
+        let ap#11: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%3#0
+        let aggregate%extract%84#0: bytes = (extract3 ap#11 352u 32u)
+        let tuple_item%89#0: Encoded(uint256) = aggregate%extract%84#0
+        let tmp%27#0: biguint = tuple_item%89#0
+        let tmp%28#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 2u)
+        let tmp%29#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 3u)
+        let tmp%30#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%28#0, tmp%29#0)
+        let tmp%31#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%27#0, tmp%30#0)
+        let tmp%32#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 10u)
+        let tmp%33#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%32#0, domainSep#0)
+        let _evals_13#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%31#0, tmp%33#0)
+        let aggregate%extract%85#0: bytes = (extract3 ap#11 640u 32u)
+        let tuple_item%90#0: Encoded(uint256) = aggregate%extract%85#0
+        let tmp%35#0: biguint = tuple_item%90#0
+        let tmp%36#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 2u)
+        let tmp%37#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 3u)
+        let tmp%38#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%36#0, tmp%37#0)
+        let tmp%39#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%35#0, tmp%38#0)
+        let tmp%40#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 10u)
+        let tmp%41#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%40#0, domainSep#0)
+        let _evals_14#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%39#0, tmp%41#0)
+        let aggregate%extract%86#0: bytes = (extract3 ap#11 512u 32u)
+        let tuple_item%91#0: Encoded(uint256) = aggregate%extract%86#0
+        let aggregate%extract%87#0: bytes = (extract3 ap#11 576u 32u)
+        let tuple_item%92#0: Encoded(uint256) = aggregate%extract%87#0
+        let aggregate%extract%88#0: bytes = (extract3 ap#11 192u 32u)
+        let tuple_item%93#0: Encoded(uint256) = aggregate%extract%88#0
+        let tmp%43#0: biguint = tuple_item%93#0
+        let tmp%44#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 2u)
+        let tmp%45#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 3u)
+        let tmp%46#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%44#0, tmp%45#0)
+        let tmp%47#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%43#0, tmp%46#0)
+        let aggregate%value_len%4#0: uint64 = (len tmp%47#0)
+        let aggregate%len_ok%4#0: bool = (<= aggregate%value_len%4#0 32u)
+        (assert aggregate%len_ok%4#0) // overflow
+        let aggregate%bzero%4#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%4#0: bytes[32] = (b| tmp%47#0 aggregate%bzero%4#0)
+        let aggregate%as_Encoded(uint256)%4#0: Encoded(uint256) = aggregate%arc4_encoded%4#0
+        let tmp%48#0: Encoded(uint256) = aggregate%as_Encoded(uint256)%4#0
+        let aggregate%extract%89#0: bytes = (extract3 ap#11 416u 32u)
+        let tuple_item%94#0: Encoded(uint256) = aggregate%extract%89#0
+        let aggregate%extract%90#0: bytes = (extract3 ap#11 384u 32u)
+        let tuple_item%96#0: Encoded(uint256) = aggregate%extract%90#0
+        let aggregate%extract%91#0: bytes = (extract3 ap#11 672u 32u)
+        let tuple_item%97#0: Encoded(uint256) = aggregate%extract%91#0
+        let aggregate%extract%92#0: bytes = (extract3 ap#11 320u 32u)
+        let tuple_item%98#0: Encoded(uint256) = aggregate%extract%92#0
+        let aggregate%extract%93#0: bytes = (extract3 ap#11 128u 32u)
+        let tuple_item%100#0: Encoded(uint256) = aggregate%extract%93#0
+        let aggregate%extract%94#0: bytes = (extract3 ap#11 160u 32u)
+        let tuple_item%101#0: Encoded(uint256) = aggregate%extract%94#0
+        let aggregate%extract%95#0: bytes = (extract3 ap#11 0u 32u)
+        let tuple_item%102#0: Encoded(uint256) = aggregate%extract%95#0
+        let aggregate%extract%96#0: bytes = (extract3 ap#11 608u 32u)
+        let tuple_item%103#0: Encoded(uint256) = aggregate%extract%96#0
+        let aggregate%extract%97#0: bytes = (extract3 ap#11 256u 32u)
+        let tuple_item%105#0: Encoded(uint256) = aggregate%extract%97#0
+        let aggregate%extract%98#0: bytes = (extract3 ap#11 448u 32u)
+        let tuple_item%106#0: Encoded(uint256) = aggregate%extract%98#0
+        let aggregate%extract%99#0: bytes = (extract3 ap#11 32u 32u)
+        let tuple_item%107#0: Encoded(uint256) = aggregate%extract%99#0
+        let aggregate%extract%100#0: bytes = (extract3 ap#11 64u 32u)
+        let tuple_item%108#0: Encoded(uint256) = aggregate%extract%100#0
+        let aggregate%extract%101#0: bytes = (extract3 ap#11 96u 32u)
+        let tuple_item%109#0: Encoded(uint256) = aggregate%extract%101#0
+        let aggregate%extract%102#0: bytes = (extract3 ap#11 224u 32u)
+        let tuple_item%110#0: Encoded(uint256) = aggregate%extract%102#0
+        let aggregate%extract%103#0: bytes = (extract3 ap#11 288u 32u)
+        let tuple_item%111#0: Encoded(uint256) = aggregate%extract%103#0
+        let aggregate%extract%104#0: bytes = (extract3 ap#11 544u 32u)
+        let tuple_item%112#0: Encoded(uint256) = aggregate%extract%104#0
+        let aggregate%head%88#0: bytes = (concat 0x tuple_item%102#0)
+        let aggregate%head%89#0: bytes = (concat aggregate%head%88#0 tuple_item%107#0)
+        let aggregate%head%90#0: bytes = (concat aggregate%head%89#0 tuple_item%108#0)
+        let aggregate%head%91#0: bytes = (concat aggregate%head%90#0 tuple_item%109#0)
+        let aggregate%head%92#0: bytes = (concat aggregate%head%91#0 tuple_item%100#0)
+        let aggregate%head%93#0: bytes = (concat aggregate%head%92#0 tuple_item%101#0)
+        let aggregate%head%94#0: bytes = (concat aggregate%head%93#0 tuple_item%93#0)
+        let aggregate%head%95#0: bytes = (concat aggregate%head%94#0 tuple_item%110#0)
+        let aggregate%head%96#0: bytes = (concat aggregate%head%95#0 tuple_item%105#0)
+        let aggregate%head%97#0: bytes = (concat aggregate%head%96#0 tuple_item%111#0)
+        let aggregate%head%98#0: bytes = (concat aggregate%head%97#0 tuple_item%98#0)
+        let aggregate%head%99#0: bytes = (concat aggregate%head%98#0 tuple_item%89#0)
+        let aggregate%head%100#0: bytes = (concat aggregate%head%99#0 tuple_item%96#0)
+        let aggregate%head%101#0: bytes = (concat aggregate%head%100#0 tuple_item%94#0)
+        let aggregate%head%102#0: bytes = (concat aggregate%head%101#0 tuple_item%106#0)
+        let aggregate%head%103#0: bytes = (concat aggregate%head%102#0 tmp%48#0)
+        let aggregate%head%104#0: bytes = (concat aggregate%head%103#0 tuple_item%91#0)
+        let aggregate%head%105#0: bytes = (concat aggregate%head%104#0 tuple_item%112#0)
+        let aggregate%head%106#0: bytes = (concat aggregate%head%105#0 tuple_item%92#0)
+        let aggregate%head%107#0: bytes = (concat aggregate%head%106#0 tuple_item%103#0)
+        let aggregate%head%108#0: bytes = (concat aggregate%head%107#0 tuple_item%90#0)
+        let aggregate%head%109#0: bytes = (concat aggregate%head%108#0 tuple_item%97#0)
+        let aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%4#0: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%head%109#0
+        let ap#13: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%4#0
+        let tmp%50#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 30u)
+        let aggregate%extract%105#0: bytes = (extract3 ap#13 224u 32u)
+        let tuple_item%113#0: Encoded(uint256) = aggregate%extract%105#0
+        let tmp%51#0: biguint = tuple_item%113#0
+        let access_type#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.sub(tmp%50#0, tmp%51#0)
+        let aggregate%extract%106#0: bytes = (extract3 ap#13 512u 32u)
+        let tuple_item%114#0: Encoded(uint256) = aggregate%extract%106#0
+        let aggregate%extract%107#0: bytes = (extract3 ap#13 576u 32u)
+        let tuple_item%115#0: Encoded(uint256) = aggregate%extract%107#0
+        let aggregate%extract%108#0: bytes = (extract3 ap#13 480u 32u)
+        let tuple_item%116#0: Encoded(uint256) = aggregate%extract%108#0
+        let tmp%53#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(access_type#0, access_type#0)
+        let tmp%54#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.sub(tmp%53#0, access_type#0)
+        let aggregate%value_len%5#0: uint64 = (len tmp%54#0)
+        let aggregate%len_ok%5#0: bool = (<= aggregate%value_len%5#0 32u)
+        (assert aggregate%len_ok%5#0) // overflow
+        let aggregate%bzero%5#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%5#0: bytes[32] = (b| tmp%54#0 aggregate%bzero%5#0)
+        let aggregate%as_Encoded(uint256)%5#0: Encoded(uint256) = aggregate%arc4_encoded%5#0
+        let tmp%55#0: Encoded(uint256) = aggregate%as_Encoded(uint256)%5#0
+        let aggregate%extract%109#0: bytes = (extract3 ap#13 352u 32u)
+        let tuple_item%117#0: Encoded(uint256) = aggregate%extract%109#0
+        let aggregate%extract%110#0: bytes = (extract3 ap#13 384u 32u)
+        let tuple_item%118#0: Encoded(uint256) = aggregate%extract%110#0
+        let aggregate%extract%111#0: bytes = (extract3 ap#13 672u 32u)
+        let tuple_item%119#0: Encoded(uint256) = aggregate%extract%111#0
+        let aggregate%extract%112#0: bytes = (extract3 ap#13 320u 32u)
+        let tuple_item%120#0: Encoded(uint256) = aggregate%extract%112#0
+        let aggregate%extract%113#0: bytes = (extract3 ap#13 640u 32u)
+        let tuple_item%121#0: Encoded(uint256) = aggregate%extract%113#0
+        let aggregate%extract%114#0: bytes = (extract3 ap#13 128u 32u)
+        let tuple_item%122#0: Encoded(uint256) = aggregate%extract%114#0
+        let aggregate%extract%115#0: bytes = (extract3 ap#13 160u 32u)
+        let tuple_item%123#0: Encoded(uint256) = aggregate%extract%115#0
+        let aggregate%extract%116#0: bytes = (extract3 ap#13 0u 32u)
+        let tuple_item%124#0: Encoded(uint256) = aggregate%extract%116#0
+        let aggregate%extract%117#0: bytes = (extract3 ap#13 608u 32u)
+        let tuple_item%125#0: Encoded(uint256) = aggregate%extract%117#0
+        let aggregate%extract%118#0: bytes = (extract3 ap#13 192u 32u)
+        let tuple_item%126#0: Encoded(uint256) = aggregate%extract%118#0
+        let aggregate%extract%119#0: bytes = (extract3 ap#13 256u 32u)
+        let tuple_item%127#0: Encoded(uint256) = aggregate%extract%119#0
+        let aggregate%extract%120#0: bytes = (extract3 ap#13 448u 32u)
+        let tuple_item%128#0: Encoded(uint256) = aggregate%extract%120#0
+        let aggregate%extract%121#0: bytes = (extract3 ap#13 32u 32u)
+        let tuple_item%129#0: Encoded(uint256) = aggregate%extract%121#0
+        let aggregate%extract%122#0: bytes = (extract3 ap#13 64u 32u)
+        let tuple_item%130#0: Encoded(uint256) = aggregate%extract%122#0
+        let aggregate%extract%123#0: bytes = (extract3 ap#13 96u 32u)
+        let tuple_item%131#0: Encoded(uint256) = aggregate%extract%123#0
+        let aggregate%extract%124#0: bytes = (extract3 ap#13 288u 32u)
+        let tuple_item%133#0: Encoded(uint256) = aggregate%extract%124#0
+        let aggregate%extract%125#0: bytes = (extract3 ap#13 544u 32u)
+        let tuple_item%134#0: Encoded(uint256) = aggregate%extract%125#0
+        let aggregate%head%110#0: bytes = (concat 0x tuple_item%124#0)
+        let aggregate%head%111#0: bytes = (concat aggregate%head%110#0 tuple_item%129#0)
+        let aggregate%head%112#0: bytes = (concat aggregate%head%111#0 tuple_item%130#0)
+        let aggregate%head%113#0: bytes = (concat aggregate%head%112#0 tuple_item%131#0)
+        let aggregate%head%114#0: bytes = (concat aggregate%head%113#0 tuple_item%122#0)
+        let aggregate%head%115#0: bytes = (concat aggregate%head%114#0 tuple_item%123#0)
+        let aggregate%head%116#0: bytes = (concat aggregate%head%115#0 tuple_item%126#0)
+        let aggregate%head%117#0: bytes = (concat aggregate%head%116#0 tuple_item%113#0)
+        let aggregate%head%118#0: bytes = (concat aggregate%head%117#0 tuple_item%127#0)
+        let aggregate%head%119#0: bytes = (concat aggregate%head%118#0 tuple_item%133#0)
+        let aggregate%head%120#0: bytes = (concat aggregate%head%119#0 tuple_item%120#0)
+        let aggregate%head%121#0: bytes = (concat aggregate%head%120#0 tuple_item%117#0)
+        let aggregate%head%122#0: bytes = (concat aggregate%head%121#0 tuple_item%118#0)
+        let aggregate%head%123#0: bytes = (concat aggregate%head%122#0 tmp%55#0)
+        let aggregate%head%124#0: bytes = (concat aggregate%head%123#0 tuple_item%128#0)
+        let aggregate%head%125#0: bytes = (concat aggregate%head%124#0 tuple_item%116#0)
+        let aggregate%head%126#0: bytes = (concat aggregate%head%125#0 tuple_item%114#0)
+        let aggregate%head%127#0: bytes = (concat aggregate%head%126#0 tuple_item%134#0)
+        let aggregate%head%128#0: bytes = (concat aggregate%head%127#0 tuple_item%115#0)
+        let aggregate%head%129#0: bytes = (concat aggregate%head%128#0 tuple_item%125#0)
+        let aggregate%head%130#0: bytes = (concat aggregate%head%129#0 tuple_item%121#0)
+        let aggregate%head%131#0: bytes = (concat aggregate%head%130#0 tuple_item%119#0)
+        let aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%5#0: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%head%131#0
+        let ap#15: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%5#0
+        let aggregate%extract%126#0: bytes = (extract3 ap#15 512u 32u)
+        let tuple_item%135#0: Encoded(uint256) = aggregate%extract%126#0
+        let aggregate%extract%127#0: bytes = (extract3 ap#15 576u 32u)
+        let tuple_item%136#0: Encoded(uint256) = aggregate%extract%127#0
+        let aggregate%extract%128#0: bytes = (extract3 ap#15 480u 32u)
+        let tuple_item%137#0: Encoded(uint256) = aggregate%extract%128#0
+        let aggregate%extract%129#0: bytes = (extract3 ap#15 416u 32u)
+        let tuple_item%138#0: Encoded(uint256) = aggregate%extract%129#0
+        let aggregate%extract%130#0: bytes = (extract3 ap#15 352u 32u)
+        let tuple_item%139#0: Encoded(uint256) = aggregate%extract%130#0
+        let aggregate%extract%131#0: bytes = (extract3 ap#15 384u 32u)
+        let tuple_item%140#0: Encoded(uint256) = aggregate%extract%131#0
+        let aggregate%extract%132#0: bytes = (extract3 ap#15 672u 32u)
+        let tuple_item%141#0: Encoded(uint256) = aggregate%extract%132#0
+        let aggregate%extract%133#0: bytes = (extract3 ap#15 320u 32u)
+        let tuple_item%142#0: Encoded(uint256) = aggregate%extract%133#0
+        let aggregate%extract%134#0: bytes = (extract3 ap#15 640u 32u)
+        let tuple_item%143#0: Encoded(uint256) = aggregate%extract%134#0
+        let aggregate%extract%135#0: bytes = (extract3 ap#15 128u 32u)
+        let tuple_item%144#0: Encoded(uint256) = aggregate%extract%135#0
+        let aggregate%extract%136#0: bytes = (extract3 ap#15 160u 32u)
+        let tuple_item%145#0: Encoded(uint256) = aggregate%extract%136#0
+        let aggregate%extract%137#0: bytes = (extract3 ap#15 0u 32u)
+        let tuple_item%146#0: Encoded(uint256) = aggregate%extract%137#0
+        let aggregate%extract%138#0: bytes = (extract3 ap#15 608u 32u)
+        let tuple_item%147#0: Encoded(uint256) = aggregate%extract%138#0
+        let aggregate%extract%139#0: bytes = (extract3 ap#15 192u 32u)
+        let tuple_item%148#0: Encoded(uint256) = aggregate%extract%139#0
+        let tmp%57#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 37u)
+        let aggregate%extract%140#0: bytes = (extract3 rp#0 64u 32u)
+        let tuple_item%149#0: Encoded(uint256) = aggregate%extract%140#0
+        let tmp%58#0: biguint = tuple_item%149#0
+        let tmp%59#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%57#0, tmp%58#0)
+        let aggregate%value_len%6#0: uint64 = (len tmp%59#0)
+        let aggregate%len_ok%6#0: bool = (<= aggregate%value_len%6#0 32u)
+        (assert aggregate%len_ok%6#0) // overflow
+        let aggregate%bzero%6#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%6#0: bytes[32] = (b| tmp%59#0 aggregate%bzero%6#0)
+        let aggregate%as_Encoded(uint256)%6#0: Encoded(uint256) = aggregate%arc4_encoded%6#0
+        let tmp%60#0: Encoded(uint256) = aggregate%as_Encoded(uint256)%6#0
+        let aggregate%extract%141#0: bytes = (extract3 ap#15 448u 32u)
+        let tuple_item%150#0: Encoded(uint256) = aggregate%extract%141#0
+        let aggregate%extract%142#0: bytes = (extract3 ap#15 32u 32u)
+        let tuple_item%151#0: Encoded(uint256) = aggregate%extract%142#0
+        let aggregate%extract%143#0: bytes = (extract3 ap#15 64u 32u)
+        let tuple_item%152#0: Encoded(uint256) = aggregate%extract%143#0
+        let aggregate%extract%144#0: bytes = (extract3 ap#15 96u 32u)
+        let tuple_item%153#0: Encoded(uint256) = aggregate%extract%144#0
+        let aggregate%extract%145#0: bytes = (extract3 ap#15 224u 32u)
+        let tuple_item%154#0: Encoded(uint256) = aggregate%extract%145#0
+        let aggregate%extract%146#0: bytes = (extract3 ap#15 288u 32u)
+        let tuple_item%155#0: Encoded(uint256) = aggregate%extract%146#0
+        let aggregate%extract%147#0: bytes = (extract3 ap#15 544u 32u)
+        let tuple_item%156#0: Encoded(uint256) = aggregate%extract%147#0
+        let aggregate%head%132#0: bytes = (concat 0x tuple_item%146#0)
+        let aggregate%head%133#0: bytes = (concat aggregate%head%132#0 tuple_item%151#0)
+        let aggregate%head%134#0: bytes = (concat aggregate%head%133#0 tuple_item%152#0)
+        let aggregate%head%135#0: bytes = (concat aggregate%head%134#0 tuple_item%153#0)
+        let aggregate%head%136#0: bytes = (concat aggregate%head%135#0 tuple_item%144#0)
+        let aggregate%head%137#0: bytes = (concat aggregate%head%136#0 tuple_item%145#0)
+        let aggregate%head%138#0: bytes = (concat aggregate%head%137#0 tuple_item%148#0)
+        let aggregate%head%139#0: bytes = (concat aggregate%head%138#0 tuple_item%154#0)
+        let aggregate%head%140#0: bytes = (concat aggregate%head%139#0 tmp%60#0)
+        let aggregate%head%141#0: bytes = (concat aggregate%head%140#0 tuple_item%155#0)
+        let aggregate%head%142#0: bytes = (concat aggregate%head%141#0 tuple_item%142#0)
+        let aggregate%head%143#0: bytes = (concat aggregate%head%142#0 tuple_item%139#0)
+        let aggregate%head%144#0: bytes = (concat aggregate%head%143#0 tuple_item%140#0)
+        let aggregate%head%145#0: bytes = (concat aggregate%head%144#0 tuple_item%138#0)
+        let aggregate%head%146#0: bytes = (concat aggregate%head%145#0 tuple_item%150#0)
+        let aggregate%head%147#0: bytes = (concat aggregate%head%146#0 tuple_item%137#0)
+        let aggregate%head%148#0: bytes = (concat aggregate%head%147#0 tuple_item%135#0)
+        let aggregate%head%149#0: bytes = (concat aggregate%head%148#0 tuple_item%156#0)
+        let aggregate%head%150#0: bytes = (concat aggregate%head%149#0 tuple_item%136#0)
+        let aggregate%head%151#0: bytes = (concat aggregate%head%150#0 tuple_item%147#0)
+        let aggregate%head%152#0: bytes = (concat aggregate%head%151#0 tuple_item%143#0)
+        let aggregate%head%153#0: bytes = (concat aggregate%head%152#0 tuple_item%141#0)
+        let aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%6#0: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%head%153#0
+        let ap#17: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%6#0
+        let aggregate%extract%148#0: bytes = (extract3 ap#17 512u 32u)
+        let tuple_item%157#0: Encoded(uint256) = aggregate%extract%148#0
+        let aggregate%extract%149#0: bytes = (extract3 ap#17 576u 32u)
+        let tuple_item%158#0: Encoded(uint256) = aggregate%extract%149#0
+        let aggregate%extract%150#0: bytes = (extract3 ap#17 480u 32u)
+        let tuple_item%159#0: Encoded(uint256) = aggregate%extract%150#0
+        let aggregate%extract%151#0: bytes = (extract3 ap#17 416u 32u)
+        let tuple_item%160#0: Encoded(uint256) = aggregate%extract%151#0
+        let aggregate%extract%152#0: bytes = (extract3 ap#17 352u 32u)
+        let tuple_item%161#0: Encoded(uint256) = aggregate%extract%152#0
+        let aggregate%extract%153#0: bytes = (extract3 ap#17 384u 32u)
+        let tuple_item%162#0: Encoded(uint256) = aggregate%extract%153#0
+        let aggregate%extract%154#0: bytes = (extract3 ap#17 672u 32u)
+        let tuple_item%163#0: Encoded(uint256) = aggregate%extract%154#0
+        let aggregate%extract%155#0: bytes = (extract3 ap#17 320u 32u)
+        let tuple_item%164#0: Encoded(uint256) = aggregate%extract%155#0
+        let aggregate%extract%156#0: bytes = (extract3 ap#17 640u 32u)
+        let tuple_item%165#0: Encoded(uint256) = aggregate%extract%156#0
+        let aggregate%extract%157#0: bytes = (extract3 ap#17 128u 32u)
+        let tuple_item%166#0: Encoded(uint256) = aggregate%extract%157#0
+        let aggregate%extract%158#0: bytes = (extract3 ap#17 160u 32u)
+        let tuple_item%167#0: Encoded(uint256) = aggregate%extract%158#0
+        let aggregate%extract%159#0: bytes = (extract3 ap#17 0u 32u)
+        let tuple_item%168#0: Encoded(uint256) = aggregate%extract%159#0
+        let aggregate%extract%160#0: bytes = (extract3 ap#17 608u 32u)
+        let tuple_item%169#0: Encoded(uint256) = aggregate%extract%160#0
+        let aggregate%extract%161#0: bytes = (extract3 ap#17 192u 32u)
+        let tuple_item%170#0: Encoded(uint256) = aggregate%extract%161#0
+        let aggregate%extract%162#0: bytes = (extract3 ap#17 256u 32u)
+        let tuple_item%171#0: Encoded(uint256) = aggregate%extract%162#0
+        let tmp%62#0: biguint = tuple_item%171#0
+        let tmp%63#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 36u)
+        let aggregate%extract%163#0: bytes = (extract3 rp#0 32u 32u)
+        let tuple_item%172#0: Encoded(uint256) = aggregate%extract%163#0
+        let tmp%64#0: biguint = tuple_item%172#0
+        let tmp%65#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%63#0, tmp%64#0)
+        let tmp%66#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.add(tmp%62#0, tmp%65#0)
+        let aggregate%value_len%7#0: uint64 = (len tmp%66#0)
+        let aggregate%len_ok%7#0: bool = (<= aggregate%value_len%7#0 32u)
+        (assert aggregate%len_ok%7#0) // overflow
+        let aggregate%bzero%7#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%7#0: bytes[32] = (b| tmp%66#0 aggregate%bzero%7#0)
+        let aggregate%as_Encoded(uint256)%7#0: Encoded(uint256) = aggregate%arc4_encoded%7#0
+        let tmp%67#0: Encoded(uint256) = aggregate%as_Encoded(uint256)%7#0
+        let aggregate%extract%164#0: bytes = (extract3 ap#17 448u 32u)
+        let tuple_item%173#0: Encoded(uint256) = aggregate%extract%164#0
+        let aggregate%extract%165#0: bytes = (extract3 ap#17 32u 32u)
+        let tuple_item%174#0: Encoded(uint256) = aggregate%extract%165#0
+        let aggregate%extract%166#0: bytes = (extract3 ap#17 64u 32u)
+        let tuple_item%175#0: Encoded(uint256) = aggregate%extract%166#0
+        let aggregate%extract%167#0: bytes = (extract3 ap#17 96u 32u)
+        let tuple_item%176#0: Encoded(uint256) = aggregate%extract%167#0
+        let aggregate%extract%168#0: bytes = (extract3 ap#17 224u 32u)
+        let tuple_item%177#0: Encoded(uint256) = aggregate%extract%168#0
+        let aggregate%extract%169#0: bytes = (extract3 ap#17 288u 32u)
+        let tuple_item%178#0: Encoded(uint256) = aggregate%extract%169#0
+        let aggregate%extract%170#0: bytes = (extract3 ap#17 544u 32u)
+        let tuple_item%179#0: Encoded(uint256) = aggregate%extract%170#0
+        let aggregate%head%154#0: bytes = (concat 0x tuple_item%168#0)
+        let aggregate%head%155#0: bytes = (concat aggregate%head%154#0 tuple_item%174#0)
+        let aggregate%head%156#0: bytes = (concat aggregate%head%155#0 tuple_item%175#0)
+        let aggregate%head%157#0: bytes = (concat aggregate%head%156#0 tuple_item%176#0)
+        let aggregate%head%158#0: bytes = (concat aggregate%head%157#0 tuple_item%166#0)
+        let aggregate%head%159#0: bytes = (concat aggregate%head%158#0 tuple_item%167#0)
+        let aggregate%head%160#0: bytes = (concat aggregate%head%159#0 tuple_item%170#0)
+        let aggregate%head%161#0: bytes = (concat aggregate%head%160#0 tuple_item%177#0)
+        let aggregate%head%162#0: bytes = (concat aggregate%head%161#0 tmp%67#0)
+        let aggregate%head%163#0: bytes = (concat aggregate%head%162#0 tuple_item%178#0)
+        let aggregate%head%164#0: bytes = (concat aggregate%head%163#0 tuple_item%164#0)
+        let aggregate%head%165#0: bytes = (concat aggregate%head%164#0 tuple_item%161#0)
+        let aggregate%head%166#0: bytes = (concat aggregate%head%165#0 tuple_item%162#0)
+        let aggregate%head%167#0: bytes = (concat aggregate%head%166#0 tuple_item%160#0)
+        let aggregate%head%168#0: bytes = (concat aggregate%head%167#0 tuple_item%173#0)
+        let aggregate%head%169#0: bytes = (concat aggregate%head%168#0 tuple_item%159#0)
+        let aggregate%head%170#0: bytes = (concat aggregate%head%169#0 tuple_item%157#0)
+        let aggregate%head%171#0: bytes = (concat aggregate%head%170#0 tuple_item%179#0)
+        let aggregate%head%172#0: bytes = (concat aggregate%head%171#0 tuple_item%158#0)
+        let aggregate%head%173#0: bytes = (concat aggregate%head%172#0 tuple_item%169#0)
+        let aggregate%head%174#0: bytes = (concat aggregate%head%173#0 tuple_item%165#0)
+        let aggregate%head%175#0: bytes = (concat aggregate%head%174#0 tuple_item%163#0)
+        let aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%7#0: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%head%175#0
+        let ap#19: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%7#0
+        let aggregate%extract%171#0: bytes = (extract3 ap#19 512u 32u)
+        let tuple_item%180#0: Encoded(uint256) = aggregate%extract%171#0
+        let aggregate%extract%172#0: bytes = (extract3 ap#19 576u 32u)
+        let tuple_item%181#0: Encoded(uint256) = aggregate%extract%172#0
+        let aggregate%extract%173#0: bytes = (extract3 ap#19 480u 32u)
+        let tuple_item%182#0: Encoded(uint256) = aggregate%extract%173#0
+        let aggregate%extract%174#0: bytes = (extract3 ap#19 416u 32u)
+        let tuple_item%183#0: Encoded(uint256) = aggregate%extract%174#0
+        let aggregate%extract%175#0: bytes = (extract3 ap#19 352u 32u)
+        let tuple_item%184#0: Encoded(uint256) = aggregate%extract%175#0
+        let aggregate%extract%176#0: bytes = (extract3 ap#19 384u 32u)
+        let tuple_item%185#0: Encoded(uint256) = aggregate%extract%176#0
+        let aggregate%extract%177#0: bytes = (extract3 ap#19 672u 32u)
+        let tuple_item%186#0: Encoded(uint256) = aggregate%extract%177#0
+        let aggregate%extract%178#0: bytes = (extract3 ap#19 320u 32u)
+        let tuple_item%187#0: Encoded(uint256) = aggregate%extract%178#0
+        let aggregate%extract%179#0: bytes = (extract3 ap#19 640u 32u)
+        let tuple_item%188#0: Encoded(uint256) = aggregate%extract%179#0
+        let aggregate%extract%180#0: bytes = (extract3 ap#19 128u 32u)
+        let tuple_item%189#0: Encoded(uint256) = aggregate%extract%180#0
+        let aggregate%extract%181#0: bytes = (extract3 ap#19 160u 32u)
+        let tuple_item%190#0: Encoded(uint256) = aggregate%extract%181#0
+        let aggregate%extract%182#0: bytes = (extract3 ap#19 0u 32u)
+        let tuple_item%191#0: Encoded(uint256) = aggregate%extract%182#0
+        let aggregate%extract%183#0: bytes = (extract3 ap#19 608u 32u)
+        let tuple_item%192#0: Encoded(uint256) = aggregate%extract%183#0
+        let aggregate%extract%184#0: bytes = (extract3 ap#19 192u 32u)
+        let tuple_item%193#0: Encoded(uint256) = aggregate%extract%184#0
+        let aggregate%extract%185#0: bytes = (extract3 ap#19 256u 32u)
+        let tuple_item%194#0: Encoded(uint256) = aggregate%extract%185#0
+        let tmp%69#0: biguint = tuple_item%194#0
+        let tmp%70#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 35u)
+        let aggregate%extract%186#0: bytes = (extract3 rp#0 0u 32u)
+        let tuple_item%195#0: Encoded(uint256) = aggregate%extract%186#0
+        let tmp%71#0: biguint = tuple_item%195#0
+        let tmp%72#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%70#0, tmp%71#0)
+        let tmp%73#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.add(tmp%69#0, tmp%72#0)
+        let aggregate%value_len%8#0: uint64 = (len tmp%73#0)
+        let aggregate%len_ok%8#0: bool = (<= aggregate%value_len%8#0 32u)
+        (assert aggregate%len_ok%8#0) // overflow
+        let aggregate%bzero%8#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%8#0: bytes[32] = (b| tmp%73#0 aggregate%bzero%8#0)
+        let aggregate%as_Encoded(uint256)%8#0: Encoded(uint256) = aggregate%arc4_encoded%8#0
+        let tmp%74#0: Encoded(uint256) = aggregate%as_Encoded(uint256)%8#0
+        let aggregate%extract%187#0: bytes = (extract3 ap#19 448u 32u)
+        let tuple_item%196#0: Encoded(uint256) = aggregate%extract%187#0
+        let aggregate%extract%188#0: bytes = (extract3 ap#19 32u 32u)
+        let tuple_item%197#0: Encoded(uint256) = aggregate%extract%188#0
+        let aggregate%extract%189#0: bytes = (extract3 ap#19 64u 32u)
+        let tuple_item%198#0: Encoded(uint256) = aggregate%extract%189#0
+        let aggregate%extract%190#0: bytes = (extract3 ap#19 96u 32u)
+        let tuple_item%199#0: Encoded(uint256) = aggregate%extract%190#0
+        let aggregate%extract%191#0: bytes = (extract3 ap#19 224u 32u)
+        let tuple_item%200#0: Encoded(uint256) = aggregate%extract%191#0
+        let aggregate%extract%192#0: bytes = (extract3 ap#19 288u 32u)
+        let tuple_item%201#0: Encoded(uint256) = aggregate%extract%192#0
+        let aggregate%extract%193#0: bytes = (extract3 ap#19 544u 32u)
+        let tuple_item%202#0: Encoded(uint256) = aggregate%extract%193#0
+        let aggregate%head%176#0: bytes = (concat 0x tuple_item%191#0)
+        let aggregate%head%177#0: bytes = (concat aggregate%head%176#0 tuple_item%197#0)
+        let aggregate%head%178#0: bytes = (concat aggregate%head%177#0 tuple_item%198#0)
+        let aggregate%head%179#0: bytes = (concat aggregate%head%178#0 tuple_item%199#0)
+        let aggregate%head%180#0: bytes = (concat aggregate%head%179#0 tuple_item%189#0)
+        let aggregate%head%181#0: bytes = (concat aggregate%head%180#0 tuple_item%190#0)
+        let aggregate%head%182#0: bytes = (concat aggregate%head%181#0 tuple_item%193#0)
+        let aggregate%head%183#0: bytes = (concat aggregate%head%182#0 tuple_item%200#0)
+        let aggregate%head%184#0: bytes = (concat aggregate%head%183#0 tmp%74#0)
+        let aggregate%head%185#0: bytes = (concat aggregate%head%184#0 tuple_item%201#0)
+        let aggregate%head%186#0: bytes = (concat aggregate%head%185#0 tuple_item%187#0)
+        let aggregate%head%187#0: bytes = (concat aggregate%head%186#0 tuple_item%184#0)
+        let aggregate%head%188#0: bytes = (concat aggregate%head%187#0 tuple_item%185#0)
+        let aggregate%head%189#0: bytes = (concat aggregate%head%188#0 tuple_item%183#0)
+        let aggregate%head%190#0: bytes = (concat aggregate%head%189#0 tuple_item%196#0)
+        let aggregate%head%191#0: bytes = (concat aggregate%head%190#0 tuple_item%182#0)
+        let aggregate%head%192#0: bytes = (concat aggregate%head%191#0 tuple_item%180#0)
+        let aggregate%head%193#0: bytes = (concat aggregate%head%192#0 tuple_item%202#0)
+        let aggregate%head%194#0: bytes = (concat aggregate%head%193#0 tuple_item%181#0)
+        let aggregate%head%195#0: bytes = (concat aggregate%head%194#0 tuple_item%192#0)
+        let aggregate%head%196#0: bytes = (concat aggregate%head%195#0 tuple_item%188#0)
+        let aggregate%head%197#0: bytes = (concat aggregate%head%196#0 tuple_item%186#0)
+        let aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%8#0: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%head%197#0
+        let ap#21: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%8#0
+        let aggregate%extract%194#0: bytes = (extract3 ap#21 512u 32u)
+        let tuple_item%203#0: Encoded(uint256) = aggregate%extract%194#0
+        let aggregate%extract%195#0: bytes = (extract3 ap#21 576u 32u)
+        let tuple_item%204#0: Encoded(uint256) = aggregate%extract%195#0
+        let aggregate%extract%196#0: bytes = (extract3 ap#21 480u 32u)
+        let tuple_item%205#0: Encoded(uint256) = aggregate%extract%196#0
+        let aggregate%extract%197#0: bytes = (extract3 ap#21 416u 32u)
+        let tuple_item%206#0: Encoded(uint256) = aggregate%extract%197#0
+        let aggregate%extract%198#0: bytes = (extract3 ap#21 352u 32u)
+        let tuple_item%207#0: Encoded(uint256) = aggregate%extract%198#0
+        let aggregate%extract%199#0: bytes = (extract3 ap#21 384u 32u)
+        let tuple_item%208#0: Encoded(uint256) = aggregate%extract%199#0
+        let aggregate%extract%200#0: bytes = (extract3 ap#21 672u 32u)
+        let tuple_item%209#0: Encoded(uint256) = aggregate%extract%200#0
+        let aggregate%extract%201#0: bytes = (extract3 ap#21 320u 32u)
+        let tuple_item%210#0: Encoded(uint256) = aggregate%extract%201#0
+        let aggregate%extract%202#0: bytes = (extract3 ap#21 640u 32u)
+        let tuple_item%211#0: Encoded(uint256) = aggregate%extract%202#0
+        let aggregate%extract%203#0: bytes = (extract3 ap#21 128u 32u)
+        let tuple_item%212#0: Encoded(uint256) = aggregate%extract%203#0
+        let aggregate%extract%204#0: bytes = (extract3 ap#21 160u 32u)
+        let tuple_item%213#0: Encoded(uint256) = aggregate%extract%204#0
+        let aggregate%extract%205#0: bytes = (extract3 ap#21 0u 32u)
+        let tuple_item%214#0: Encoded(uint256) = aggregate%extract%205#0
+        let aggregate%extract%206#0: bytes = (extract3 ap#21 608u 32u)
+        let tuple_item%215#0: Encoded(uint256) = aggregate%extract%206#0
+        let aggregate%extract%207#0: bytes = (extract3 ap#21 192u 32u)
+        let tuple_item%216#0: Encoded(uint256) = aggregate%extract%207#0
+        let tmp%76#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 38u)
+        let aggregate%extract%208#0: bytes = (extract3 ap#21 256u 32u)
+        let tuple_item%217#0: Encoded(uint256) = aggregate%extract%208#0
+        let tmp%77#0: biguint = tuple_item%217#0
+        let tmp%78#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.sub(tmp%76#0, tmp%77#0)
+        let aggregate%value_len%9#0: uint64 = (len tmp%78#0)
+        let aggregate%len_ok%9#0: bool = (<= aggregate%value_len%9#0 32u)
+        (assert aggregate%len_ok%9#0) // overflow
+        let aggregate%bzero%9#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%9#0: bytes[32] = (b| tmp%78#0 aggregate%bzero%9#0)
+        let aggregate%as_Encoded(uint256)%9#0: Encoded(uint256) = aggregate%arc4_encoded%9#0
+        let tmp%79#0: Encoded(uint256) = aggregate%as_Encoded(uint256)%9#0
+        let aggregate%extract%209#0: bytes = (extract3 ap#21 448u 32u)
+        let tuple_item%218#0: Encoded(uint256) = aggregate%extract%209#0
+        let aggregate%extract%210#0: bytes = (extract3 ap#21 32u 32u)
+        let tuple_item%219#0: Encoded(uint256) = aggregate%extract%210#0
+        let aggregate%extract%211#0: bytes = (extract3 ap#21 64u 32u)
+        let tuple_item%220#0: Encoded(uint256) = aggregate%extract%211#0
+        let aggregate%extract%212#0: bytes = (extract3 ap#21 96u 32u)
+        let tuple_item%221#0: Encoded(uint256) = aggregate%extract%212#0
+        let aggregate%extract%213#0: bytes = (extract3 ap#21 224u 32u)
+        let tuple_item%222#0: Encoded(uint256) = aggregate%extract%213#0
+        let aggregate%extract%214#0: bytes = (extract3 ap#21 288u 32u)
+        let tuple_item%223#0: Encoded(uint256) = aggregate%extract%214#0
+        let aggregate%extract%215#0: bytes = (extract3 ap#21 544u 32u)
+        let tuple_item%224#0: Encoded(uint256) = aggregate%extract%215#0
+        let aggregate%head%198#0: bytes = (concat 0x tuple_item%214#0)
+        let aggregate%head%199#0: bytes = (concat aggregate%head%198#0 tuple_item%219#0)
+        let aggregate%head%200#0: bytes = (concat aggregate%head%199#0 tuple_item%220#0)
+        let aggregate%head%201#0: bytes = (concat aggregate%head%200#0 tuple_item%221#0)
+        let aggregate%head%202#0: bytes = (concat aggregate%head%201#0 tuple_item%212#0)
+        let aggregate%head%203#0: bytes = (concat aggregate%head%202#0 tuple_item%213#0)
+        let aggregate%head%204#0: bytes = (concat aggregate%head%203#0 tuple_item%216#0)
+        let aggregate%head%205#0: bytes = (concat aggregate%head%204#0 tuple_item%222#0)
+        let aggregate%head%206#0: bytes = (concat aggregate%head%205#0 tmp%79#0)
+        let aggregate%head%207#0: bytes = (concat aggregate%head%206#0 tuple_item%223#0)
+        let aggregate%head%208#0: bytes = (concat aggregate%head%207#0 tuple_item%210#0)
+        let aggregate%head%209#0: bytes = (concat aggregate%head%208#0 tuple_item%207#0)
+        let aggregate%head%210#0: bytes = (concat aggregate%head%209#0 tuple_item%208#0)
+        let aggregate%head%211#0: bytes = (concat aggregate%head%210#0 tuple_item%206#0)
+        let aggregate%head%212#0: bytes = (concat aggregate%head%211#0 tuple_item%218#0)
+        let aggregate%head%213#0: bytes = (concat aggregate%head%212#0 tuple_item%205#0)
+        let aggregate%head%214#0: bytes = (concat aggregate%head%213#0 tuple_item%203#0)
+        let aggregate%head%215#0: bytes = (concat aggregate%head%214#0 tuple_item%224#0)
+        let aggregate%head%216#0: bytes = (concat aggregate%head%215#0 tuple_item%204#0)
+        let aggregate%head%217#0: bytes = (concat aggregate%head%216#0 tuple_item%215#0)
+        let aggregate%head%218#0: bytes = (concat aggregate%head%217#0 tuple_item%211#0)
+        let aggregate%head%219#0: bytes = (concat aggregate%head%218#0 tuple_item%209#0)
+        let aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%9#0: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%head%219#0
+        let ap#23: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%9#0
+        let tmp%81#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 37u)
+        let tmp%82#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 29u)
+        let value_delta#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.sub(tmp%81#0, tmp%82#0)
+        let aggregate%extract%216#0: bytes = (extract3 ap#23 512u 32u)
+        let tuple_item%225#0: Encoded(uint256) = aggregate%extract%216#0
+        let aggregate%extract%217#0: bytes = (extract3 ap#23 576u 32u)
+        let tuple_item%226#0: Encoded(uint256) = aggregate%extract%217#0
+        let aggregate%extract%218#0: bytes = (extract3 ap#23 480u 32u)
+        let tuple_item%227#0: Encoded(uint256) = aggregate%extract%218#0
+        let aggregate%extract%219#0: bytes = (extract3 ap#23 416u 32u)
+        let tuple_item%228#0: Encoded(uint256) = aggregate%extract%219#0
+        let aggregate%extract%220#0: bytes = (extract3 ap#23 352u 32u)
+        let tuple_item%229#0: Encoded(uint256) = aggregate%extract%220#0
+        let aggregate%extract%221#0: bytes = (extract3 ap#23 320u 32u)
+        let tuple_item%230#0: Encoded(uint256) = aggregate%extract%221#0
+        let tmp%84#0: biguint = tuple_item%230#0
+        let tmp%88#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%84#0, 21888242871839275222246405745257275088548364400416034343698204186575808495616b)
+        let tmp%89#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.add(tmp%88#0, reinterpret_biguint%0#0)
+        let tmp%90#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%89#0, value_delta#0)
+        let aggregate%extract%222#0: bytes = (extract3 ap#23 256u 32u)
+        let tuple_item%231#0: Encoded(uint256) = aggregate%extract%222#0
+        let tmp%91#0: biguint = tuple_item%231#0
+        let tmp%95#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%91#0, 21888242871839275222246405745257275088548364400416034343698204186575808495616b)
+        let tmp%96#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.add(tmp%95#0, reinterpret_biguint%0#0)
+        let tmp%97#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%90#0, tmp%96#0)
+        let aggregate%value_len%10#0: uint64 = (len tmp%97#0)
+        let aggregate%len_ok%10#0: bool = (<= aggregate%value_len%10#0 32u)
+        (assert aggregate%len_ok%10#0) // overflow
+        let aggregate%bzero%10#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%10#0: bytes[32] = (b| tmp%97#0 aggregate%bzero%10#0)
+        let aggregate%as_Encoded(uint256)%10#0: Encoded(uint256) = aggregate%arc4_encoded%10#0
+        let tmp%98#0: Encoded(uint256) = aggregate%as_Encoded(uint256)%10#0
+        let aggregate%extract%223#0: bytes = (extract3 ap#23 672u 32u)
+        let tuple_item%232#0: Encoded(uint256) = aggregate%extract%223#0
+        let aggregate%extract%224#0: bytes = (extract3 ap#23 640u 32u)
+        let tuple_item%234#0: Encoded(uint256) = aggregate%extract%224#0
+        let aggregate%extract%225#0: bytes = (extract3 ap#23 128u 32u)
+        let tuple_item%235#0: Encoded(uint256) = aggregate%extract%225#0
+        let aggregate%extract%226#0: bytes = (extract3 ap#23 160u 32u)
+        let tuple_item%236#0: Encoded(uint256) = aggregate%extract%226#0
+        let aggregate%extract%227#0: bytes = (extract3 ap#23 0u 32u)
+        let tuple_item%237#0: Encoded(uint256) = aggregate%extract%227#0
+        let aggregate%extract%228#0: bytes = (extract3 ap#23 608u 32u)
+        let tuple_item%238#0: Encoded(uint256) = aggregate%extract%228#0
+        let aggregate%extract%229#0: bytes = (extract3 ap#23 192u 32u)
+        let tuple_item%239#0: Encoded(uint256) = aggregate%extract%229#0
+        let aggregate%extract%230#0: bytes = (extract3 ap#23 448u 32u)
+        let tuple_item%241#0: Encoded(uint256) = aggregate%extract%230#0
+        let aggregate%extract%231#0: bytes = (extract3 ap#23 32u 32u)
+        let tuple_item%242#0: Encoded(uint256) = aggregate%extract%231#0
+        let aggregate%extract%232#0: bytes = (extract3 ap#23 64u 32u)
+        let tuple_item%243#0: Encoded(uint256) = aggregate%extract%232#0
+        let aggregate%extract%233#0: bytes = (extract3 ap#23 96u 32u)
+        let tuple_item%244#0: Encoded(uint256) = aggregate%extract%233#0
+        let aggregate%extract%234#0: bytes = (extract3 ap#23 224u 32u)
+        let tuple_item%245#0: Encoded(uint256) = aggregate%extract%234#0
+        let aggregate%extract%235#0: bytes = (extract3 ap#23 288u 32u)
+        let tuple_item%246#0: Encoded(uint256) = aggregate%extract%235#0
+        let aggregate%extract%236#0: bytes = (extract3 ap#23 544u 32u)
+        let tuple_item%247#0: Encoded(uint256) = aggregate%extract%236#0
+        let aggregate%head%220#0: bytes = (concat 0x tuple_item%237#0)
+        let aggregate%head%221#0: bytes = (concat aggregate%head%220#0 tuple_item%242#0)
+        let aggregate%head%222#0: bytes = (concat aggregate%head%221#0 tuple_item%243#0)
+        let aggregate%head%223#0: bytes = (concat aggregate%head%222#0 tuple_item%244#0)
+        let aggregate%head%224#0: bytes = (concat aggregate%head%223#0 tuple_item%235#0)
+        let aggregate%head%225#0: bytes = (concat aggregate%head%224#0 tuple_item%236#0)
+        let aggregate%head%226#0: bytes = (concat aggregate%head%225#0 tuple_item%239#0)
+        let aggregate%head%227#0: bytes = (concat aggregate%head%226#0 tuple_item%245#0)
+        let aggregate%head%228#0: bytes = (concat aggregate%head%227#0 tuple_item%231#0)
+        let aggregate%head%229#0: bytes = (concat aggregate%head%228#0 tuple_item%246#0)
+        let aggregate%head%230#0: bytes = (concat aggregate%head%229#0 tuple_item%230#0)
+        let aggregate%head%231#0: bytes = (concat aggregate%head%230#0 tuple_item%229#0)
+        let aggregate%head%232#0: bytes = (concat aggregate%head%231#0 tmp%98#0)
+        let aggregate%head%233#0: bytes = (concat aggregate%head%232#0 tuple_item%228#0)
+        let aggregate%head%234#0: bytes = (concat aggregate%head%233#0 tuple_item%241#0)
+        let aggregate%head%235#0: bytes = (concat aggregate%head%234#0 tuple_item%227#0)
+        let aggregate%head%236#0: bytes = (concat aggregate%head%235#0 tuple_item%225#0)
+        let aggregate%head%237#0: bytes = (concat aggregate%head%236#0 tuple_item%247#0)
+        let aggregate%head%238#0: bytes = (concat aggregate%head%237#0 tuple_item%226#0)
+        let aggregate%head%239#0: bytes = (concat aggregate%head%238#0 tuple_item%238#0)
+        let aggregate%head%240#0: bytes = (concat aggregate%head%239#0 tuple_item%234#0)
+        let aggregate%head%241#0: bytes = (concat aggregate%head%240#0 tuple_item%232#0)
+        let aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%10#0: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%head%241#0
+        let ap#25: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%10#0
+        let aggregate%extract%237#0: bytes = (extract3 ap#25 512u 32u)
+        let tuple_item%248#0: Encoded(uint256) = aggregate%extract%237#0
+        let aggregate%extract%238#0: bytes = (extract3 ap#25 576u 32u)
+        let tuple_item%249#0: Encoded(uint256) = aggregate%extract%238#0
+        let aggregate%extract%239#0: bytes = (extract3 ap#25 480u 32u)
+        let tuple_item%250#0: Encoded(uint256) = aggregate%extract%239#0
+        let aggregate%extract%240#0: bytes = (extract3 ap#25 416u 32u)
+        let tuple_item%251#0: Encoded(uint256) = aggregate%extract%240#0
+        let aggregate%extract%241#0: bytes = (extract3 ap#25 352u 32u)
+        let tuple_item%252#0: Encoded(uint256) = aggregate%extract%241#0
+        let aggregate%extract%242#0: bytes = (extract3 ap#25 384u 32u)
+        let tuple_item%253#0: Encoded(uint256) = aggregate%extract%242#0
+        let aggregate%extract%243#0: bytes = (extract3 ap#25 672u 32u)
+        let tuple_item%254#0: Encoded(uint256) = aggregate%extract%243#0
+        let aggregate%extract%244#0: bytes = (extract3 ap#25 320u 32u)
+        let tuple_item%255#0: Encoded(uint256) = aggregate%extract%244#0
+        let aggregate%extract%245#0: bytes = (extract3 ap#25 640u 32u)
+        let tuple_item%256#0: Encoded(uint256) = aggregate%extract%245#0
+        let aggregate%extract%246#0: bytes = (extract3 ap#25 128u 32u)
+        let tuple_item%257#0: Encoded(uint256) = aggregate%extract%246#0
+        let aggregate%extract%247#0: bytes = (extract3 ap#25 160u 32u)
+        let tuple_item%258#0: Encoded(uint256) = aggregate%extract%247#0
+        let aggregate%extract%248#0: bytes = (extract3 ap#25 0u 32u)
+        let tuple_item%259#0: Encoded(uint256) = aggregate%extract%248#0
+        let aggregate%extract%249#0: bytes = (extract3 ap#25 608u 32u)
+        let tuple_item%260#0: Encoded(uint256) = aggregate%extract%249#0
+        let aggregate%extract%250#0: bytes = (extract3 ap#25 192u 32u)
+        let tuple_item%261#0: Encoded(uint256) = aggregate%extract%250#0
+        let aggregate%extract%251#0: bytes = (extract3 ap#25 256u 32u)
+        let tuple_item%262#0: Encoded(uint256) = aggregate%extract%251#0
+        let tmp%100#0: biguint = tuple_item%262#0
+        let tmp%102#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%100#0, tmp%100#0)
+        let tmp%104#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.sub(tmp%102#0, tmp%100#0)
+        let aggregate%value_len%11#0: uint64 = (len tmp%104#0)
+        let aggregate%len_ok%11#0: bool = (<= aggregate%value_len%11#0 32u)
+        (assert aggregate%len_ok%11#0) // overflow
+        let aggregate%bzero%11#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%11#0: bytes[32] = (b| tmp%104#0 aggregate%bzero%11#0)
+        let aggregate%as_Encoded(uint256)%11#0: Encoded(uint256) = aggregate%arc4_encoded%11#0
+        let tmp%105#0: Encoded(uint256) = aggregate%as_Encoded(uint256)%11#0
+        let aggregate%extract%252#0: bytes = (extract3 ap#25 32u 32u)
+        let tuple_item%266#0: Encoded(uint256) = aggregate%extract%252#0
+        let aggregate%extract%253#0: bytes = (extract3 ap#25 64u 32u)
+        let tuple_item%267#0: Encoded(uint256) = aggregate%extract%253#0
+        let aggregate%extract%254#0: bytes = (extract3 ap#25 96u 32u)
+        let tuple_item%268#0: Encoded(uint256) = aggregate%extract%254#0
+        let aggregate%extract%255#0: bytes = (extract3 ap#25 224u 32u)
+        let tuple_item%269#0: Encoded(uint256) = aggregate%extract%255#0
+        let aggregate%extract%256#0: bytes = (extract3 ap#25 288u 32u)
+        let tuple_item%270#0: Encoded(uint256) = aggregate%extract%256#0
+        let aggregate%extract%257#0: bytes = (extract3 ap#25 544u 32u)
+        let tuple_item%271#0: Encoded(uint256) = aggregate%extract%257#0
+        let aggregate%head%242#0: bytes = (concat 0x tuple_item%259#0)
+        let aggregate%head%243#0: bytes = (concat aggregate%head%242#0 tuple_item%266#0)
+        let aggregate%head%244#0: bytes = (concat aggregate%head%243#0 tuple_item%267#0)
+        let aggregate%head%245#0: bytes = (concat aggregate%head%244#0 tuple_item%268#0)
+        let aggregate%head%246#0: bytes = (concat aggregate%head%245#0 tuple_item%257#0)
+        let aggregate%head%247#0: bytes = (concat aggregate%head%246#0 tuple_item%258#0)
+        let aggregate%head%248#0: bytes = (concat aggregate%head%247#0 tuple_item%261#0)
+        let aggregate%head%249#0: bytes = (concat aggregate%head%248#0 tuple_item%269#0)
+        let aggregate%head%250#0: bytes = (concat aggregate%head%249#0 tuple_item%262#0)
+        let aggregate%head%251#0: bytes = (concat aggregate%head%250#0 tuple_item%270#0)
+        let aggregate%head%252#0: bytes = (concat aggregate%head%251#0 tuple_item%255#0)
+        let aggregate%head%253#0: bytes = (concat aggregate%head%252#0 tuple_item%252#0)
+        let aggregate%head%254#0: bytes = (concat aggregate%head%253#0 tuple_item%253#0)
+        let aggregate%head%255#0: bytes = (concat aggregate%head%254#0 tuple_item%251#0)
+        let aggregate%head%256#0: bytes = (concat aggregate%head%255#0 tmp%105#0)
+        let aggregate%head%257#0: bytes = (concat aggregate%head%256#0 tuple_item%250#0)
+        let aggregate%head%258#0: bytes = (concat aggregate%head%257#0 tuple_item%248#0)
+        let aggregate%head%259#0: bytes = (concat aggregate%head%258#0 tuple_item%271#0)
+        let aggregate%head%260#0: bytes = (concat aggregate%head%259#0 tuple_item%249#0)
+        let aggregate%head%261#0: bytes = (concat aggregate%head%260#0 tuple_item%260#0)
+        let aggregate%head%262#0: bytes = (concat aggregate%head%261#0 tuple_item%256#0)
+        let aggregate%head%263#0: bytes = (concat aggregate%head%262#0 tuple_item%254#0)
+        let aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%11#0: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%head%263#0
+        let ap#27: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%11#0
+        let aggregate%extract%258#0: bytes = (extract3 ap#27 384u 32u)
+        let tuple_item%272#0: Encoded(uint256) = aggregate%extract%258#0
+        let tmp%107#0: biguint = tuple_item%272#0
+        let tmp%108#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 7u)
+        let tmp%109#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%107#0, tmp%108#0)
+        let tmp%110#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 10u)
+        let tmp%111#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%110#0, domainSep#0)
+        let _evals_15#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%109#0, tmp%111#0)
+        let aggregate%extract%259#0: bytes = (extract3 ap#27 640u 32u)
+        let tuple_item%273#0: Encoded(uint256) = aggregate%extract%259#0
+        let tmp%113#0: biguint = tuple_item%273#0
+        let tmp%114#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 7u)
+        let tmp%115#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%113#0, tmp%114#0)
+        let tmp%116#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 10u)
+        let tmp%117#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%116#0, domainSep#0)
+        let _evals_16#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%115#0, tmp%117#0)
+        let aggregate%extract%260#0: bytes = (extract3 ap#27 448u 32u)
+        let tuple_item%274#0: Encoded(uint256) = aggregate%extract%260#0
+        let tmp%119#0: biguint = tuple_item%274#0
+        let tmp%120#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 7u)
+        let tmp%121#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%119#0, tmp%120#0)
+        let tmp%122#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 10u)
+        let tmp%123#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%122#0, domainSep#0)
+        let _evals_17#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%121#0, tmp%123#0)
+        let aggregate%extract%261#0: bytes = (extract3 ap#27 416u 32u)
+        let tuple_item%275#0: Encoded(uint256) = aggregate%extract%261#0
+        let tmp%125#0: biguint = tuple_item%275#0
+        let tmp%126#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p#0, 7u)
+        let tmp%127#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(tmp%125#0, tmp%126#0)
+        let aggregate%value_len%12#0: uint64 = (len tmp%127#0)
+        let aggregate%len_ok%12#0: bool = (<= aggregate%value_len%12#0 32u)
+        (assert aggregate%len_ok%12#0) // overflow
+        let aggregate%bzero%12#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%12#0: bytes[32] = (b| tmp%127#0 aggregate%bzero%12#0)
+        let aggregate%as_Encoded(uint256)%12#0: Encoded(uint256) = aggregate%arc4_encoded%12#0
+        let tmp%128#0: Encoded(uint256) = aggregate%as_Encoded(uint256)%12#0
+        let aggregate%extract%262#0: bytes = (extract3 ap#27 576u 32u)
+        let tuple_item%276#0: Encoded(uint256) = aggregate%extract%262#0
+        let aggregate%extract%263#0: bytes = (extract3 ap#27 480u 32u)
+        let tuple_item%277#0: Encoded(uint256) = aggregate%extract%263#0
+        let aggregate%extract%264#0: bytes = (extract3 ap#27 352u 32u)
+        let tuple_item%279#0: Encoded(uint256) = aggregate%extract%264#0
+        let aggregate%extract%265#0: bytes = (extract3 ap#27 672u 32u)
+        let tuple_item%281#0: Encoded(uint256) = aggregate%extract%265#0
+        let aggregate%extract%266#0: bytes = (extract3 ap#27 320u 32u)
+        let tuple_item%282#0: Encoded(uint256) = aggregate%extract%266#0
+        let aggregate%extract%267#0: bytes = (extract3 ap#27 128u 32u)
+        let tuple_item%284#0: Encoded(uint256) = aggregate%extract%267#0
+        let aggregate%extract%268#0: bytes = (extract3 ap#27 160u 32u)
+        let tuple_item%285#0: Encoded(uint256) = aggregate%extract%268#0
+        let aggregate%extract%269#0: bytes = (extract3 ap#27 0u 32u)
+        let tuple_item%286#0: Encoded(uint256) = aggregate%extract%269#0
+        let aggregate%extract%270#0: bytes = (extract3 ap#27 608u 32u)
+        let tuple_item%287#0: Encoded(uint256) = aggregate%extract%270#0
+        let aggregate%extract%271#0: bytes = (extract3 ap#27 192u 32u)
+        let tuple_item%288#0: Encoded(uint256) = aggregate%extract%271#0
+        let aggregate%extract%272#0: bytes = (extract3 ap#27 256u 32u)
+        let tuple_item%289#0: Encoded(uint256) = aggregate%extract%272#0
+        let aggregate%extract%273#0: bytes = (extract3 ap#27 32u 32u)
+        let tuple_item%291#0: Encoded(uint256) = aggregate%extract%273#0
+        let aggregate%extract%274#0: bytes = (extract3 ap#27 64u 32u)
+        let tuple_item%292#0: Encoded(uint256) = aggregate%extract%274#0
+        let aggregate%extract%275#0: bytes = (extract3 ap#27 96u 32u)
+        let tuple_item%293#0: Encoded(uint256) = aggregate%extract%275#0
+        let aggregate%extract%276#0: bytes = (extract3 ap#27 224u 32u)
+        let tuple_item%294#0: Encoded(uint256) = aggregate%extract%276#0
+        let aggregate%extract%277#0: bytes = (extract3 ap#27 288u 32u)
+        let tuple_item%295#0: Encoded(uint256) = aggregate%extract%277#0
+        let aggregate%extract%278#0: bytes = (extract3 ap#27 544u 32u)
+        let tuple_item%296#0: Encoded(uint256) = aggregate%extract%278#0
+        let aggregate%head%264#0: bytes = (concat 0x tuple_item%286#0)
+        let aggregate%head%265#0: bytes = (concat aggregate%head%264#0 tuple_item%291#0)
+        let aggregate%head%266#0: bytes = (concat aggregate%head%265#0 tuple_item%292#0)
+        let aggregate%head%267#0: bytes = (concat aggregate%head%266#0 tuple_item%293#0)
+        let aggregate%head%268#0: bytes = (concat aggregate%head%267#0 tuple_item%284#0)
+        let aggregate%head%269#0: bytes = (concat aggregate%head%268#0 tuple_item%285#0)
+        let aggregate%head%270#0: bytes = (concat aggregate%head%269#0 tuple_item%288#0)
+        let aggregate%head%271#0: bytes = (concat aggregate%head%270#0 tuple_item%294#0)
+        let aggregate%head%272#0: bytes = (concat aggregate%head%271#0 tuple_item%289#0)
+        let aggregate%head%273#0: bytes = (concat aggregate%head%272#0 tuple_item%295#0)
+        let aggregate%head%274#0: bytes = (concat aggregate%head%273#0 tuple_item%282#0)
+        let aggregate%head%275#0: bytes = (concat aggregate%head%274#0 tuple_item%279#0)
+        let aggregate%head%276#0: bytes = (concat aggregate%head%275#0 tuple_item%272#0)
+        let aggregate%head%277#0: bytes = (concat aggregate%head%276#0 tuple_item%275#0)
+        let aggregate%head%278#0: bytes = (concat aggregate%head%277#0 tuple_item%274#0)
+        let aggregate%head%279#0: bytes = (concat aggregate%head%278#0 tuple_item%277#0)
+        let aggregate%head%280#0: bytes = (concat aggregate%head%279#0 tmp%128#0)
+        let aggregate%head%281#0: bytes = (concat aggregate%head%280#0 tuple_item%296#0)
+        let aggregate%head%282#0: bytes = (concat aggregate%head%281#0 tuple_item%276#0)
+        let aggregate%head%283#0: bytes = (concat aggregate%head%282#0 tuple_item%287#0)
+        let aggregate%head%284#0: bytes = (concat aggregate%head%283#0 tuple_item%273#0)
+        let aggregate%head%285#0: bytes = (concat aggregate%head%284#0 tuple_item%281#0)
+        let aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%12#0: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%head%285#0
+        let ap#29: Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%as_Encoded(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)%12#0
+        let aggregate%head%286#0: bytes = (concat 0x ap#29)
+        let aggregate%value_len%13#0: uint64 = (len limb_accumulator_identity#0)
+        let aggregate%len_ok%13#0: bool = (<= aggregate%value_len%13#0 32u)
+        (assert aggregate%len_ok%13#0) // overflow
+        let aggregate%bzero%13#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%13#0: bytes[32] = (b| limb_accumulator_identity#0 aggregate%bzero%13#0)
+        let aggregate%as_Encoded(uint256)%13#0: Encoded(uint256) = aggregate%arc4_encoded%13#0
+        let aggregate%head%287#0: bytes = (concat aggregate%head%286#0 aggregate%as_Encoded(uint256)%13#0)
+        let aggregate%value_len%14#0: uint64 = (len non_native_field_identity#0)
+        let aggregate%len_ok%14#0: bool = (<= aggregate%value_len%14#0 32u)
+        (assert aggregate%len_ok%14#0) // overflow
+        let aggregate%bzero%14#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%14#0: bytes[32] = (b| non_native_field_identity#0 aggregate%bzero%14#0)
+        let aggregate%as_Encoded(uint256)%14#0: Encoded(uint256) = aggregate%arc4_encoded%14#0
+        let aggregate%head%288#0: bytes = (concat aggregate%head%287#0 aggregate%as_Encoded(uint256)%14#0)
+        let aggregate%value_len%15#0: uint64 = (len _evals_13#0)
+        let aggregate%len_ok%15#0: bool = (<= aggregate%value_len%15#0 32u)
+        (assert aggregate%len_ok%15#0) // overflow
+        let aggregate%bzero%15#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%15#0: bytes[32] = (b| _evals_13#0 aggregate%bzero%15#0)
+        let aggregate%as_Encoded(uint256)%15#0: Encoded(uint256) = aggregate%arc4_encoded%15#0
+        let aggregate%head%289#0: bytes = (concat aggregate%head%288#0 aggregate%as_Encoded(uint256)%15#0)
+        let aggregate%value_len%16#0: uint64 = (len _evals_14#0)
+        let aggregate%len_ok%16#0: bool = (<= aggregate%value_len%16#0 32u)
+        (assert aggregate%len_ok%16#0) // overflow
+        let aggregate%bzero%16#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%16#0: bytes[32] = (b| _evals_14#0 aggregate%bzero%16#0)
+        let aggregate%as_Encoded(uint256)%16#0: Encoded(uint256) = aggregate%arc4_encoded%16#0
+        let aggregate%head%290#0: bytes = (concat aggregate%head%289#0 aggregate%as_Encoded(uint256)%16#0)
+        let aggregate%value_len%17#0: uint64 = (len _evals_15#0)
+        let aggregate%len_ok%17#0: bool = (<= aggregate%value_len%17#0 32u)
+        (assert aggregate%len_ok%17#0) // overflow
+        let aggregate%bzero%17#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%17#0: bytes[32] = (b| _evals_15#0 aggregate%bzero%17#0)
+        let aggregate%as_Encoded(uint256)%17#0: Encoded(uint256) = aggregate%arc4_encoded%17#0
+        let aggregate%head%291#0: bytes = (concat aggregate%head%290#0 aggregate%as_Encoded(uint256)%17#0)
+        let aggregate%value_len%18#0: uint64 = (len _evals_16#0)
+        let aggregate%len_ok%18#0: bool = (<= aggregate%value_len%18#0 32u)
+        (assert aggregate%len_ok%18#0) // overflow
+        let aggregate%bzero%18#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%18#0: bytes[32] = (b| _evals_16#0 aggregate%bzero%18#0)
+        let aggregate%as_Encoded(uint256)%18#0: Encoded(uint256) = aggregate%arc4_encoded%18#0
+        let aggregate%head%292#0: bytes = (concat aggregate%head%291#0 aggregate%as_Encoded(uint256)%18#0)
+        let aggregate%value_len%19#0: uint64 = (len _evals_17#0)
+        let aggregate%len_ok%19#0: bool = (<= aggregate%value_len%19#0 32u)
+        (assert aggregate%len_ok%19#0) // overflow
+        let aggregate%bzero%19#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%19#0: bytes[32] = (b| _evals_17#0 aggregate%bzero%19#0)
+        let aggregate%as_Encoded(uint256)%19#0: Encoded(uint256) = aggregate%arc4_encoded%19#0
+        let aggregate%head%293#0: bytes = (concat aggregate%head%292#0 aggregate%as_Encoded(uint256)%19#0)
+        let aggregate%as_Encoded((uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256),uint256,uint256,uint256,uint256,uint256,uint256,uint256)%0#0: Encoded((uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256),uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%head%293#0
+        let tmp%16#0: Encoded((uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256),uint256,uint256,uint256,uint256,uint256,uint256,uint256) = aggregate%as_Encoded((uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256),uint256,uint256,uint256,uint256,uint256,uint256,uint256)%0#0
+        let tmp%17#0: bytes = (concat 0x151f7c75 tmp%16#0)
+        (log tmp%17#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper48.bytesToFr[routing]() -> void:
+    block@0: // L30758
+        let tmp%0#0: bytes = (txna ApplicationArgs 1)
+        let aggregate%array_length%0#0: uint64 = (extract_uint16 tmp%0#0 0u) // on error: invalid array length header
+        let length%0#0: uint64 = aggregate%array_length%0#0
+        let add%0#0: uint64 = (+ length%0#0 2u)
+        let len%0#0: uint64 = (len tmp%0#0)
+        let eq%0#0: bool = (== len%0#0 add%0#0)
+        (assert eq%0#0) // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+        let proofSection#0: bytes = ((extract 2 0) tmp%0#0)
+        let tmp%0#1: uint64 = (app_global_get "o")
+        goto tmp%0#1 ? block@2 : block@5
+    block@2: // if_body_L30758
+        let tmp%2#1: uint64 = (global GroupSize)
+        let tmp%3#1: bool = (>= tmp%2#1 2u)
+        (assert tmp%3#1) // helper: must be called in group
+        let tmp%4#1: uint64 = (gtxn 0 ApplicationID)
+        let tmp%5#0: uint64 = (app_global_get "o")
+        let tmp%6#0: bool = (== tmp%4#1 tmp%5#0)
+        (assert tmp%6#0) // helper: unauthorized caller
+        let tmp%7#0: bytes = (gtxn 0 Sender)
+        let tmp%8#0: bytes = (txn Sender)
+        let tmp%9#0: bool = (== tmp%7#0 tmp%8#0)
+        (assert tmp%9#0) // helper: sender mismatch
+        let tmp%10#0: uint64 = (app_global_get "p")
+        goto tmp%10#0 ? block@3 : block@5
+    block@3: // if_body_L30758
+        let tmp%12#0: uint64 = (txn GroupIndex)
+        let tmp%13#0: uint64 = (- tmp%12#0 1u)
+        let tmp%14#0: uint64 = ((gtxns ApplicationID) tmp%13#0)
+        let tmp%15#0: uint64 = (app_global_get "p")
+        let tmp%16#0: bool = (== tmp%14#0 tmp%15#0)
+        (assert tmp%16#0) // helper: wrong prev chunk
+        let tmp%17#0: uint64 = (txn GroupIndex)
+        let tmp%18#0: uint64 = (- tmp%17#0 1u)
+        let tmp%19#0: bytes = ((gtxnsa ApplicationArgs 0) tmp%18#0)
+        let tmp%20#0: bytes = (app_global_get "s")
+        let tmp%21#0: bool = (== tmp%19#0 tmp%20#0)
+        (assert tmp%21#0) // helper: wrong prev method
+        goto block@5
+    block@5: // after_if_else_L30758
+        let tmp%22#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.bytesToFr(proofSection#0)
+        let aggregate%value_len%0#0: uint64 = (len tmp%22#0)
+        let aggregate%len_ok%0#0: bool = (<= aggregate%value_len%0#0 32u)
+        (assert aggregate%len_ok%0#0) // overflow
+        let aggregate%bzero%0#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%0#0: bytes[32] = (b| tmp%22#0 aggregate%bzero%0#0)
+        let aggregate%as_Encoded(uint256)%0#0: Encoded(uint256) = aggregate%arc4_encoded%0#0
+        let tmp%3#0: Encoded(uint256) = aggregate%as_Encoded(uint256)%0#0
+        let tmp%4#0: bytes = (concat 0x151f7c75 tmp%3#0)
+        (log tmp%4#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper48.__init__[routing]() -> void:
+    block@0: // L65448
+        let tmp%0#0: bytes = (txna ApplicationArgs 1)
+        let len%0#0: uint64 = (len tmp%0#0)
+        let eq%0#0: bool = (== len%0#0 8u)
+        (assert eq%0#0) // invalid number of bytes for arc4.uint64
+        let o#0: uint64 = (btoi tmp%0#0)
+        let tmp%2#0: bytes = (txna ApplicationArgs 2)
+        let len%1#0: uint64 = (len tmp%2#0)
+        let eq%1#0: bool = (== len%1#0 8u)
+        (assert eq%1#0) // invalid number of bytes for arc4.uint64
+        let p#0: uint64 = (btoi tmp%2#0)
+        let tmp%4#0: bytes = (txna ApplicationArgs 3)
+        let aggregate%array_length%0#0: uint64 = (extract_uint16 tmp%4#0 0u) // on error: invalid array length header
+        let length%0#0: uint64 = aggregate%array_length%0#0
+        let add%0#0: uint64 = (+ length%0#0 2u)
+        let len%2#0: uint64 = (len tmp%4#0)
+        let eq%2#0: bool = (== len%2#0 add%0#0)
+        (assert eq%2#0) // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+        let s#0: bytes = ((extract 2 0) tmp%4#0)
+        let tmp%0#1: uint64 = (app_global_get "o")
+        let tmp%1#1: bool = (! tmp%0#1)
+        (assert tmp%1#1) // helper: already initialized
+        (app_global_put "o" o#0)
+        (app_global_put "p" p#0)
+        (app_global_put "s" s#0)
+        exit 1u

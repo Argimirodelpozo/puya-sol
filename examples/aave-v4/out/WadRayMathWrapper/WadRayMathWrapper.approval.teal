@@ -1,0 +1,1049 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMathWrapper.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock 0x 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x033b2e3c9fd0803ce8000000 0x0de0b6b3a7640000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x12725dd1d243aba0e75fe645cc4873f9e65afe688c928e1f21 0x4f3a68dbc8f03f243baf513267aa9a3ee524f8e028 0x5af3107a4000 0x152d02c7e14af6800000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xdf0dff32 0xe012ffa8 0x90fe157e 0xb3c38f37 0x0ec0e6ba 0xf36b1dfe 0xb2f78729 0xb79f12e3 0x253b3242 0xb367abbc 0xc9d276af 0x3089854c 0xf53c6618 0xff3a1531 0xe16fb268 0xfec8527b 0x41513d52 0xac8f55fc 0xaf010fbe // method "WAD_DECIMALS()uint256", method "WAD()uint256", method "RAY()uint256", method "PERCENTAGE_FACTOR()uint256", method "wadMulDown(uint256,uint256)uint256", method "wadMulUp(uint256,uint256)uint256", method "wadDivDown(uint256,uint256)uint256", method "wadDivUp(uint256,uint256)uint256", method "rayMulDown(uint256,uint256)uint256", method "rayMulUp(uint256,uint256)uint256", method "rayDivDown(uint256,uint256)uint256", method "rayDivUp(uint256,uint256)uint256", method "toWad(uint256)uint256", method "toRay(uint256)uint256", method "fromWadDown(uint256)uint256", method "fromRayUp(uint256)uint256", method "bpsToWad(uint256)uint256", method "bpsToRay(uint256)uint256", method "roundRayUp(uint256)uint256"
+    txna ApplicationArgs 0
+    match main_WAD_DECIMALS_route@5 main_WAD_route@6 main_RAY_route@7 main_PERCENTAGE_FACTOR_route@8 wadMulDown wadMulUp wadDivDown wadDivUp rayMulDown rayMulUp rayDivDown rayDivUp toWad toRay fromWadDown fromRayUp bpsToWad bpsToRay roundRayUp
+    err
+
+main_PERCENTAGE_FACTOR_route@8:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000002710
+    log
+    intc_1 // 1
+    return
+
+main_RAY_route@7:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000033b2e3c9fd0803ce8000000
+    log
+    intc_1 // 1
+    return
+
+main_WAD_route@6:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000de0b6b3a7640000
+    log
+    intc_1 // 1
+    return
+
+main_WAD_DECIMALS_route@5:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000012
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMath.wadMulDown(a: bytes, b: bytes) -> bytes:
+WadRayMath.wadMulDown:
+    proto 2 1
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    frame_dig -1
+    bytec_0 // 0x
+    b!=
+    bz WadRayMath.wadMulDown_ternary_false@2
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig -1
+    b/
+
+WadRayMath.wadMulDown_ternary_merge@3:
+    frame_dig -2
+    b<
+    !
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    frame_dig 0
+    b|
+    bytec_0 // 0x
+    b==
+    !
+    assert // revert
+    frame_dig -2
+    frame_dig -1
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 5 // 0x0de0b6b3a7640000
+    b/
+    swap
+    retsub
+
+WadRayMath.wadMulDown_ternary_false@2:
+    bytec_0 // 0x
+    b WadRayMath.wadMulDown_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMath.wadMulUp(a: bytes, b: bytes) -> bytes:
+WadRayMath.wadMulUp:
+    proto 2 1
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    frame_dig -1
+    bytec_0 // 0x
+    b!=
+    bz WadRayMath.wadMulUp_ternary_false@2
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig -1
+    b/
+
+WadRayMath.wadMulUp_ternary_merge@3:
+    frame_dig -2
+    b<
+    !
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    frame_dig 0
+    b|
+    bytec_0 // 0x
+    b==
+    !
+    assert // revert
+    frame_dig -2
+    frame_dig -1
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 5 // 0x0de0b6b3a7640000
+    b/
+    swap
+    bytec 5 // 0x0de0b6b3a7640000
+    b%
+    bytec_0 // 0x
+    b>
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    b+
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    swap
+    retsub
+
+WadRayMath.wadMulUp_ternary_false@2:
+    bytec_0 // 0x
+    b WadRayMath.wadMulUp_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMath.wadDivDown(a: bytes, b: bytes) -> bytes:
+WadRayMath.wadDivDown:
+    proto 2 1
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    frame_dig -2
+    bytec 7 // 0x12725dd1d243aba0e75fe645cc4873f9e65afe688c928e1f21
+    b>
+    !
+    !
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    b|
+    bytec_0 // 0x
+    b!=
+    !
+    assert // revert
+    frame_dig -1
+    bytec_0 // 0x
+    b!=
+    bz WadRayMath.wadDivDown_ternary_false@5
+    frame_dig -2
+    bytec 5 // 0x0de0b6b3a7640000
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    b/
+    retsub
+
+WadRayMath.wadDivDown_ternary_false@5:
+    bytec_0 // 0x
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMath.wadDivUp(a: bytes, b: bytes) -> bytes:
+WadRayMath.wadDivUp:
+    proto 2 1
+    intc_2 // 0
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    frame_dig -2
+    bytec 7 // 0x12725dd1d243aba0e75fe645cc4873f9e65afe688c928e1f21
+    b>
+    !
+    !
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    b|
+    bytec_0 // 0x
+    b!=
+    !
+    assert // revert
+    frame_dig -2
+    bytec 5 // 0x0de0b6b3a7640000
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    bytec_0 // 0x
+    b!=
+    dup
+    bz WadRayMath.wadDivUp_ternary_false@5
+    frame_dig 1
+    frame_dig -1
+    b/
+    frame_bury 0
+
+WadRayMath.wadDivUp_ternary_merge@6:
+    frame_dig 2
+    bz WadRayMath.wadDivUp_ternary_false@8
+    frame_dig 1
+    frame_dig -1
+    b%
+
+WadRayMath.wadDivUp_ternary_merge@9:
+    bytec_0 // 0x
+    b>
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    frame_dig 0
+    b+
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 0
+    retsub
+
+WadRayMath.wadDivUp_ternary_false@8:
+    bytec_0 // 0x
+    b WadRayMath.wadDivUp_ternary_merge@9
+
+WadRayMath.wadDivUp_ternary_false@5:
+    bytec_0 // 0x
+    frame_bury 0
+    b WadRayMath.wadDivUp_ternary_merge@6
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMath.rayMulDown(a: bytes, b: bytes) -> bytes:
+WadRayMath.rayMulDown:
+    proto 2 1
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    frame_dig -1
+    bytec_0 // 0x
+    b!=
+    bz WadRayMath.rayMulDown_ternary_false@2
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig -1
+    b/
+
+WadRayMath.rayMulDown_ternary_merge@3:
+    frame_dig -2
+    b<
+    !
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    frame_dig 0
+    b|
+    bytec_0 // 0x
+    b==
+    !
+    assert // revert
+    frame_dig -2
+    frame_dig -1
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 4 // 0x033b2e3c9fd0803ce8000000
+    b/
+    swap
+    retsub
+
+WadRayMath.rayMulDown_ternary_false@2:
+    bytec_0 // 0x
+    b WadRayMath.rayMulDown_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMath.rayMulUp(a: bytes, b: bytes) -> bytes:
+WadRayMath.rayMulUp:
+    proto 2 1
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    frame_dig -1
+    bytec_0 // 0x
+    b!=
+    bz WadRayMath.rayMulUp_ternary_false@2
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig -1
+    b/
+
+WadRayMath.rayMulUp_ternary_merge@3:
+    frame_dig -2
+    b<
+    !
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    frame_dig 0
+    b|
+    bytec_0 // 0x
+    b==
+    !
+    assert // revert
+    frame_dig -2
+    frame_dig -1
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 4 // 0x033b2e3c9fd0803ce8000000
+    b/
+    swap
+    bytec 4 // 0x033b2e3c9fd0803ce8000000
+    b%
+    bytec_0 // 0x
+    b>
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    b+
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    swap
+    retsub
+
+WadRayMath.rayMulUp_ternary_false@2:
+    bytec_0 // 0x
+    b WadRayMath.rayMulUp_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMath.rayDivDown(a: bytes, b: bytes) -> bytes:
+WadRayMath.rayDivDown:
+    proto 2 1
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    frame_dig -2
+    bytec 8 // 0x4f3a68dbc8f03f243baf513267aa9a3ee524f8e028
+    b>
+    !
+    !
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    b|
+    bytec_0 // 0x
+    b!=
+    !
+    assert // revert
+    frame_dig -1
+    bytec_0 // 0x
+    b!=
+    bz WadRayMath.rayDivDown_ternary_false@5
+    frame_dig -2
+    bytec 4 // 0x033b2e3c9fd0803ce8000000
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    b/
+    retsub
+
+WadRayMath.rayDivDown_ternary_false@5:
+    bytec_0 // 0x
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMath.rayDivUp(a: bytes, b: bytes) -> bytes:
+WadRayMath.rayDivUp:
+    proto 2 1
+    intc_2 // 0
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    frame_dig -2
+    bytec 8 // 0x4f3a68dbc8f03f243baf513267aa9a3ee524f8e028
+    b>
+    !
+    !
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    b|
+    bytec_0 // 0x
+    b!=
+    !
+    assert // revert
+    frame_dig -2
+    bytec 4 // 0x033b2e3c9fd0803ce8000000
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    bytec_0 // 0x
+    b!=
+    dup
+    bz WadRayMath.rayDivUp_ternary_false@5
+    frame_dig 1
+    frame_dig -1
+    b/
+    frame_bury 0
+
+WadRayMath.rayDivUp_ternary_merge@6:
+    frame_dig 2
+    bz WadRayMath.rayDivUp_ternary_false@8
+    frame_dig 1
+    frame_dig -1
+    b%
+
+WadRayMath.rayDivUp_ternary_merge@9:
+    bytec_0 // 0x
+    b>
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    frame_dig 0
+    b+
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 0
+    retsub
+
+WadRayMath.rayDivUp_ternary_false@8:
+    bytec_0 // 0x
+    b WadRayMath.rayDivUp_ternary_merge@9
+
+WadRayMath.rayDivUp_ternary_false@5:
+    bytec_0 // 0x
+    frame_bury 0
+    b WadRayMath.rayDivUp_ternary_merge@6
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMath.toWad(a: bytes) -> bytes:
+WadRayMath.toWad:
+    proto 1 1
+    frame_dig -1
+    bytec 5 // 0x0de0b6b3a7640000
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 5 // 0x0de0b6b3a7640000
+    b/
+    frame_dig -1
+    b==
+    !
+    !
+    assert // revert
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMath.toRay(a: bytes) -> bytes:
+WadRayMath.toRay:
+    proto 1 1
+    frame_dig -1
+    bytec 4 // 0x033b2e3c9fd0803ce8000000
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 4 // 0x033b2e3c9fd0803ce8000000
+    b/
+    frame_dig -1
+    b==
+    !
+    !
+    assert // revert
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMath.fromWadDown(a: bytes) -> bytes:
+WadRayMath.fromWadDown:
+    proto 1 1
+    frame_dig -1
+    bytec 5 // 0x0de0b6b3a7640000
+    b/
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMath.fromRayUp(a: bytes) -> bytes:
+WadRayMath.fromRayUp:
+    proto 1 1
+    frame_dig -1
+    bytec 4 // 0x033b2e3c9fd0803ce8000000
+    b/
+    frame_dig -1
+    bytec 4 // 0x033b2e3c9fd0803ce8000000
+    b%
+    bytec_0 // 0x
+    b>
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    b+
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMath.bpsToWad(a: bytes) -> bytes:
+WadRayMath.bpsToWad:
+    proto 1 1
+    frame_dig -1
+    bytec 9 // 0x5af3107a4000
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 9 // 0x5af3107a4000
+    b/
+    frame_dig -1
+    b==
+    !
+    !
+    assert // revert
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMath.bpsToRay(a: bytes) -> bytes:
+WadRayMath.bpsToRay:
+    proto 1 1
+    frame_dig -1
+    bytec 10 // 0x152d02c7e14af6800000
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 10 // 0x152d02c7e14af6800000
+    b/
+    frame_dig -1
+    b==
+    !
+    !
+    assert // revert
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMath.roundRayUp(a: bytes) -> bytes:
+WadRayMath.roundRayUp:
+    proto 1 1
+    frame_dig -1
+    bytec 4 // 0x033b2e3c9fd0803ce8000000
+    b/
+    frame_dig -1
+    bytec 4 // 0x033b2e3c9fd0803ce8000000
+    b%
+    bytec_0 // 0x
+    b>
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    b+
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 4 // 0x033b2e3c9fd0803ce8000000
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 4 // 0x033b2e3c9fd0803ce8000000
+    b/
+    uncover 2
+    b==
+    !
+    !
+    assert // revert
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMathWrapper.wadMulDown[routing]() -> void:
+wadMulDown:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub WadRayMath.wadMulDown
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMathWrapper.wadMulUp[routing]() -> void:
+wadMulUp:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub WadRayMath.wadMulUp
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMathWrapper.wadDivDown[routing]() -> void:
+wadDivDown:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub WadRayMath.wadDivDown
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMathWrapper.wadDivUp[routing]() -> void:
+wadDivUp:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub WadRayMath.wadDivUp
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMathWrapper.rayMulDown[routing]() -> void:
+rayMulDown:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub WadRayMath.rayMulDown
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMathWrapper.rayMulUp[routing]() -> void:
+rayMulUp:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub WadRayMath.rayMulUp
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMathWrapper.rayDivDown[routing]() -> void:
+rayDivDown:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub WadRayMath.rayDivDown
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMathWrapper.rayDivUp[routing]() -> void:
+rayDivUp:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub WadRayMath.rayDivUp
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMathWrapper.toWad[routing]() -> void:
+toWad:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub WadRayMath.toWad
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMathWrapper.toRay[routing]() -> void:
+toRay:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub WadRayMath.toRay
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMathWrapper.fromWadDown[routing]() -> void:
+fromWadDown:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub WadRayMath.fromWadDown
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMathWrapper.fromRayUp[routing]() -> void:
+fromRayUp:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub WadRayMath.fromRayUp
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMathWrapper.bpsToWad[routing]() -> void:
+bpsToWad:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub WadRayMath.bpsToWad
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMathWrapper.bpsToRay[routing]() -> void:
+bpsToRay:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub WadRayMath.bpsToRay
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WadRayMathWrapper.sol.WadRayMathWrapper.roundRayUp[routing]() -> void:
+roundRayUp:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub WadRayMath.roundRayUp
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

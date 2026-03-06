@@ -1,0 +1,716 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 8 128 255
+    bytecblock "map" "_p" 0x 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000002 0x00
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "_p"
+    bytec_2 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x39aae42e 0xa52483a6 0xd6c31955 0xfdc3dd40 0xe3a7ce99 0xc0b63ecc 0xd4f70b2d 0xb4359d1f 0x21759777 0x70ce2847 // method "BORROWING_MASK()uint256", method "COLLATERAL_MASK()uint256", method "setBorrowing(uint256,bool)void", method "setUsingAsCollateral(uint256,bool)void", method "isUsingAsCollateralOrBorrowing(uint256)bool", method "isBorrowing(uint256)bool", method "isUsingAsCollateral(uint256)bool", method "bucketId(uint256)uint256", method "isolateBorrowing(uint256)uint256", method "isolateCollateral(uint256)uint256"
+    txna ApplicationArgs 0
+    match main_BORROWING_MASK_route@5 main_COLLATERAL_MASK_route@6 setBorrowing setUsingAsCollateral isUsingAsCollateralOrBorrowing isBorrowing isUsingAsCollateral bucketId isolateBorrowing isolateCollateral
+    err
+
+main_COLLATERAL_MASK_route@6:
+    pushbytes 0x151f7c75aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    log
+    intc_1 // 1
+    return
+
+main_BORROWING_MASK_route@5:
+    pushbytes 0x151f7c755555555555555555555555555555555555555555555555555555555555555555
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMap.setBorrowing(self: bytes, reserveId: bytes, borrowing: uint64) -> bytes:
+PositionStatusMap.setBorrowing:
+    proto 3 1
+    intc_0 // 32
+    bzero
+    dup
+    intc_3 // 8
+    bzero
+    intc 4 // 128
+    itob
+    frame_dig -2
+    swap
+    b%
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b*
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc 5 // 255
+    swap
+    -
+    intc_1 // 1
+    setbit
+    swap
+    frame_dig -1
+    bz PositionStatusMap.setBorrowing_else_body@2
+    frame_dig -2
+    callsub PositionStatusMap.bucketId
+    dig 1
+    swap
+    concat
+    frame_dig -2
+    callsub PositionStatusMap.bucketId
+    dig 2
+    swap
+    concat
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "map"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    frame_dig 0
+    b|
+    frame_dig -2
+    callsub PositionStatusMap.bucketId
+    dig 2
+    swap
+    concat
+    frame_dig -2
+    callsub PositionStatusMap.bucketId
+    uncover 3
+    swap
+    concat
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "map"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+PositionStatusMap.setBorrowing_after_if_else@3:
+    frame_dig -3
+    swap
+    retsub
+
+PositionStatusMap.setBorrowing_else_body@2:
+    frame_dig -2
+    callsub PositionStatusMap.bucketId
+    dig 1
+    swap
+    concat
+    frame_dig -2
+    callsub PositionStatusMap.bucketId
+    dig 2
+    swap
+    concat
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "map"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    frame_dig 0
+    b~
+    b&
+    frame_dig -2
+    callsub PositionStatusMap.bucketId
+    dig 2
+    swap
+    concat
+    frame_dig -2
+    callsub PositionStatusMap.bucketId
+    uncover 3
+    swap
+    concat
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "map"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    b PositionStatusMap.setBorrowing_after_if_else@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMap.setUsingAsCollateral(self: bytes, reserveId: bytes, usingAsCollateral: uint64) -> bytes:
+PositionStatusMap.setUsingAsCollateral:
+    proto 3 1
+    intc_1 // 1
+    itob
+    intc_0 // 32
+    bzero
+    dup
+    uncover 2
+    intc_3 // 8
+    bzero
+    intc 4 // 128
+    itob
+    frame_dig -2
+    swap
+    b%
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b*
+    uncover 2
+    b+
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc 5 // 255
+    swap
+    -
+    intc_1 // 1
+    setbit
+    swap
+    frame_dig -1
+    bz PositionStatusMap.setUsingAsCollateral_else_body@2
+    frame_dig -2
+    callsub PositionStatusMap.bucketId
+    dig 1
+    swap
+    concat
+    frame_dig -2
+    callsub PositionStatusMap.bucketId
+    dig 2
+    swap
+    concat
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "map"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    frame_dig 0
+    b|
+    frame_dig -2
+    callsub PositionStatusMap.bucketId
+    dig 2
+    swap
+    concat
+    frame_dig -2
+    callsub PositionStatusMap.bucketId
+    uncover 3
+    swap
+    concat
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "map"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+PositionStatusMap.setUsingAsCollateral_after_if_else@3:
+    frame_dig -3
+    swap
+    retsub
+
+PositionStatusMap.setUsingAsCollateral_else_body@2:
+    frame_dig -2
+    callsub PositionStatusMap.bucketId
+    dig 1
+    swap
+    concat
+    frame_dig -2
+    callsub PositionStatusMap.bucketId
+    dig 2
+    swap
+    concat
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "map"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    frame_dig 0
+    b~
+    b&
+    frame_dig -2
+    callsub PositionStatusMap.bucketId
+    dig 2
+    swap
+    concat
+    frame_dig -2
+    callsub PositionStatusMap.bucketId
+    uncover 3
+    swap
+    concat
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "map"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    b PositionStatusMap.setUsingAsCollateral_after_if_else@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMap.isUsingAsCollateralOrBorrowing(self: bytes, reserveId: bytes) -> uint64, bytes:
+PositionStatusMap.isUsingAsCollateralOrBorrowing:
+    proto 2 2
+    frame_dig -2
+    frame_dig -1
+    callsub PositionStatusMap.getBucketWord
+    frame_bury -2
+    intc_0 // 32
+    bzero
+    intc_3 // 8
+    bzero
+    intc 4 // 128
+    itob
+    frame_dig -1
+    swap
+    b%
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b*
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc 5 // 255
+    swap
+    -
+    intc_1 // 1
+    setbit
+    b/
+    pushint 3
+    itob
+    b&
+    intc_2 // 0
+    itob
+    b!=
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMap.isBorrowing(self: bytes, reserveId: bytes) -> uint64, bytes:
+PositionStatusMap.isBorrowing:
+    proto 2 2
+    frame_dig -2
+    frame_dig -1
+    callsub PositionStatusMap.getBucketWord
+    frame_bury -2
+    intc_0 // 32
+    bzero
+    intc_3 // 8
+    bzero
+    intc 4 // 128
+    itob
+    frame_dig -1
+    swap
+    b%
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b*
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc 5 // 255
+    swap
+    -
+    intc_1 // 1
+    setbit
+    b/
+    intc_1 // 1
+    itob
+    b&
+    intc_2 // 0
+    itob
+    b!=
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMap.isUsingAsCollateral(self: bytes, reserveId: bytes) -> uint64, bytes:
+PositionStatusMap.isUsingAsCollateral:
+    proto 2 2
+    frame_dig -2
+    frame_dig -1
+    callsub PositionStatusMap.getBucketWord
+    frame_bury -2
+    intc_0 // 32
+    bzero
+    intc_3 // 8
+    bzero
+    intc 4 // 128
+    itob
+    frame_dig -1
+    swap
+    b%
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b*
+    intc_1 // 1
+    itob
+    swap
+    dig 1
+    b+
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc 5 // 255
+    swap
+    -
+    uncover 2
+    swap
+    intc_1 // 1
+    setbit
+    uncover 2
+    swap
+    b/
+    b&
+    intc_2 // 0
+    itob
+    b!=
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMap.getBucketWord(self: bytes, reserveId: bytes) -> bytes, bytes:
+PositionStatusMap.getBucketWord:
+    proto 2 2
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    callsub PositionStatusMap.bucketId
+    dig 1
+    swap
+    concat
+    frame_dig -1
+    callsub PositionStatusMap.bucketId
+    uncover 2
+    swap
+    concat
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "map"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMap.bucketId(reserveId: bytes) -> bytes:
+PositionStatusMap.bucketId:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    b/
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMap.isolateBorrowing(word: bytes) -> bytes:
+PositionStatusMap.isolateBorrowing:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0x5555555555555555555555555555555555555555555555555555555555555555
+    b&
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMap.isolateCollateral(word: bytes) -> bytes:
+PositionStatusMap.isolateCollateral:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    b&
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.setBorrowing[routing]() -> void:
+setBorrowing:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_2 // 0
+    getbit
+    intc_2 // 0
+    bytec_1 // "_p"
+    app_global_get_ex
+    assert // check _p exists
+    cover 2
+    callsub PositionStatusMap.setBorrowing
+    pop
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.setUsingAsCollateral[routing]() -> void:
+setUsingAsCollateral:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_2 // 0
+    getbit
+    intc_2 // 0
+    bytec_1 // "_p"
+    app_global_get_ex
+    assert // check _p exists
+    cover 2
+    callsub PositionStatusMap.setUsingAsCollateral
+    pop
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.isUsingAsCollateralOrBorrowing[routing]() -> void:
+isUsingAsCollateralOrBorrowing:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_2 // 0
+    bytec_1 // "_p"
+    app_global_get_ex
+    assert // check _p exists
+    swap
+    callsub PositionStatusMap.isUsingAsCollateralOrBorrowing
+    pop
+    bytec 5 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.isBorrowing[routing]() -> void:
+isBorrowing:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_2 // 0
+    bytec_1 // "_p"
+    app_global_get_ex
+    assert // check _p exists
+    swap
+    callsub PositionStatusMap.isBorrowing
+    pop
+    bytec 5 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.isUsingAsCollateral[routing]() -> void:
+isUsingAsCollateral:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_2 // 0
+    bytec_1 // "_p"
+    app_global_get_ex
+    assert // check _p exists
+    swap
+    callsub PositionStatusMap.isUsingAsCollateral
+    pop
+    bytec 5 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.bucketId[routing]() -> void:
+bucketId:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub PositionStatusMap.bucketId
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.isolateBorrowing[routing]() -> void:
+isolateBorrowing:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub PositionStatusMap.isolateBorrowing
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PositionStatusMapWrapper.sol.PositionStatusMapWrapper.isolateCollateral[routing]() -> void:
+isolateCollateral:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub PositionStatusMap.isolateCollateral
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

@@ -1,0 +1,3016 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.approval_program() -> uint64:
+main:
+    intcblock 32 0 1 24 160
+    bytecblock 0x 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000 "HUB" "ASSET_ID" 0x010000000000000000000000000000000000000000000000000000000000000000 0x01 "_cachedDomainSeparator" "ASSET" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "_cachedThis" "_cachedChainId" "_cachedNameHash" "_cachedVersionHash" "MAX_ALLOWED_SPOKE_CAP" "DECIMALS" "ASSET_UNITS" 0x151f7c7580 0x0000000000000000000000000000000000000000000000010000000000000000 "_balances" 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f 0x785c496d240dd1eb5960cfd81621f30e53d3f15364136e7c36bfef270df01188 0xe2ab93dc "_nonces" "_allowances"
+    intc_1 // 0
+    dupn 5
+    txn ApplicationID
+    bnz main_after_if_else@15
+    bytec 10 // "_cachedThis"
+    bytec_0 // 0x
+    app_global_put
+    bytec 11 // "_cachedChainId"
+    bytec_0 // 0x
+    app_global_put
+    bytec 12 // "_cachedNameHash"
+    bytec_0 // 0x
+    app_global_put
+    bytec 13 // "_cachedVersionHash"
+    bytec_0 // 0x
+    app_global_put
+    bytec 7 // "_cachedDomainSeparator"
+    bytec_0 // 0x
+    app_global_put
+    bytec 14 // "MAX_ALLOWED_SPOKE_CAP"
+    intc_1 // 0
+    app_global_put
+    bytec_3 // "HUB"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 4 // "ASSET_ID"
+    bytec_0 // 0x
+    app_global_put
+    bytec 8 // "ASSET"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 15 // "DECIMALS"
+    intc_1 // 0
+    app_global_put
+    bytec 16 // "ASSET_UNITS"
+    bytec_0 // 0x
+    app_global_put
+    txna ApplicationArgs 0
+    bury 5
+    txna ApplicationArgs 1
+    bury 6
+    bytec 10 // "_cachedThis"
+    global CurrentApplicationAddress
+    app_global_put
+    global CurrentApplicationID
+    itob
+    bytec 11 // "_cachedChainId"
+    swap
+    app_global_put
+    bytec_0 // ""
+    bury 2
+    bytec_0 // ""
+    bnz main_after_if_else@3
+    pushbytes "1"
+    bury 2
+
+main_after_if_else@3:
+    bytec_0 // ""
+    bz main_ternary_false@5
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bury 4
+
+main_ternary_merge@6:
+    bytec_0 // ""
+    bz main_ternary_false@8
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bury 1
+
+main_ternary_merge@9:
+    bytec 12 // "_cachedNameHash"
+    dig 4
+    app_global_put
+    bytec 13 // "_cachedVersionHash"
+    dig 1
+    app_global_put
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bury 3
+    bytec_0 // ""
+    bnz main_after_if_else@11
+    global CurrentApplicationAddress
+    intc_0 // 32
+    bzero
+    dup
+    dig 6
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 20 // 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f
+    swap
+    concat
+    dig 1
+    dig 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    keccak256
+    bury 3
+
+main_after_if_else@11:
+    bytec 7 // "_cachedDomainSeparator"
+    dig 3
+    app_global_put
+    itxn LastLog
+    extract 4 0
+    dig 6
+    dup
+    uncover 2
+    b<
+    assert
+    itxn_begin
+    dig 5
+    dup
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x8c7b5bd4 // method "getAssetCount()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    bytec_3 // "HUB"
+    swap
+    app_global_put
+    bytec 4 // "ASSET_ID"
+    dig 1
+    app_global_put
+    itxn_begin
+    intc_0 // 32
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 0
+    bytec_3 // "HUB"
+    app_global_get_ex
+    assert // check HUB exists
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x6e01273e // method "getAssetUnderlyingAndDecimals(uint256)(address,uint64)"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 32
+    bytec 8 // "ASSET"
+    swap
+    app_global_put
+    itxn LastLog
+    pushint 36
+    extract_uint64
+    bytec 15 // "DECIMALS"
+    dig 1
+    app_global_put
+    pushint 10
+    itob
+    swap
+    itob
+    callsub MathUtils.uncheckedExp
+    bytec 16 // "ASSET_UNITS"
+    swap
+    app_global_put
+    itxn LastLog
+    extract 4 0
+    btoi
+    bytec 14 // "MAX_ALLOWED_SPOKE_CAP"
+    swap
+    app_global_put
+    itxn_begin
+    intc_1 // 0
+    bytec_3 // "HUB"
+    app_global_get_ex
+    assert // check HUB exists
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x8b0457b2 // method "MAX_ALLOWED_SPOKE_CAP()uint64"
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_1 // 0
+    dup
+    extract 8 1
+    bytec_0 // 0x
+    b!=
+    !
+    assert // InvalidInitialization
+    intc_1 // 0
+    extract_uint64
+    pushint 18446744073709551615
+    !=
+    bz main_after_if_else@67
+    pushbytes 0x80d71e94ffffffffffffffff
+    log
+
+main_after_if_else@67:
+    intc_2 // 1
+    return
+
+main_ternary_false@8:
+    dig 1
+    keccak256
+    bury 1
+    b main_ternary_merge@9
+
+main_ternary_false@5:
+    bytec 21 // 0x785c496d240dd1eb5960cfd81621f30e53d3f15364136e7c36bfef270df01188
+    bury 4
+    b main_ternary_merge@6
+
+main_after_if_else@15:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x80554a5e 0xd8a2d283 0x58bb790e 0xdbcf5b6b 0x24c55eab 0x2b7b03ad 0x5c889a14 0xc5e69182 0x5c099068 0x866a5ed3 0x4a8dd08f 0x2f6c50fa 0x6c38a682 0xd57260e0 0x7acc7e37 0x65d88cf9 0xd3d95a7e 0x24def7f0 0x5f593f9f 0x85278695 0x8dcfa74c 0xcc86cacc 0x3e0e0c43 0xdf4200c8 0x41af5d22 0xa99cd153 0x70abc9ef 0xb8779ee7 0xd1c0e0b1 0xbd0b8e46 0xac302e00 0x2f3b1eaf 0x6debbb09 0x19750616 0x005b52b8 0x79fab465 0x83bad7cc 0x198c9820 0x5d854d0e 0xfafb6a08 0x6df41f6d // method "initialize(string,string)void", method "deposit(uint256,address)uint256", method "mint(uint256,address)uint256", method "withdraw(uint256,address,address)uint256", method "redeem(uint256,address,address)uint256", method "depositWithSig((uint8[32],uint256,uint8[32],uint256,uint256),byte[])uint256", method "mintWithSig((uint8[32],uint256,uint8[32],uint256,uint256),byte[])uint256", method "withdrawWithSig((uint8[32],uint256,uint8[32],uint256,uint256),byte[])uint256", method "redeemWithSig((uint8[32],uint256,uint8[32],uint256,uint256),byte[])uint256", method "depositWithPermit(uint256,address,uint256,uint64,byte[32],byte[32])uint256", method "permit(address,address,uint256,uint256,uint64,byte[32],byte[32])void", method "usePermitNonce()uint256", method "renounceAllowance(address)void", method "previewDeposit(uint256)uint256", method "previewMint(uint256)uint256", method "previewWithdraw(uint256)uint256", method "previewRedeem(uint256)uint256", method "convertToShares(uint256)uint256", method "convertToAssets(uint256)uint256", method "maxDeposit(address)uint256", method "maxMint(address)uint256", method "maxWithdraw(address)uint256", method "maxRedeem(address)uint256", method "totalAssets()uint256", method "hub()address", method "assetId()uint256", method "asset()address", method "decimals()uint64", method "nonces(address)uint256", method "DOMAIN_SEPARATOR()byte[32]", method "eip712Domain()(byte[1],string,string,uint256,address,byte[32],uint256[])", method "useNonce(uint256)uint256", method "nonces(address,uint256)uint256", method "name()string", method "symbol()string", method "totalSupply()uint256", method "balanceOf(address)uint256", method "transfer(address,uint256)bool", method "allowance(address,address)uint256", method "approve(address,uint256)bool", method "transferFrom(address,address,uint256)bool"
+    txna ApplicationArgs 0
+    match initialize deposit mint withdraw redeem depositWithSig mintWithSig withdrawWithSig redeemWithSig depositWithPermit permit usePermitNonce renounceAllowance previewDeposit previewMint previewWithdraw previewRedeem convertToShares convertToAssets maxDeposit maxMint maxWithdraw maxRedeem totalAssets hub assetId asset decimals(0) nonces(1) DOMAIN_SEPARATOR(0) eip712Domain useNonce nonces(2) name symbol totalSupply balanceOf transfer allowance approve transferFrom
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.ECDSA.tryRecoverCalldata(hash: bytes, signature: bytes) -> bytes, uint64, bytes:
+ECDSA.tryRecoverCalldata:
+    proto 2 3
+    intc_1 // 0
+    frame_dig -1
+    len
+    dup
+    pushint 65
+    ==
+    bz ECDSA.tryRecoverCalldata_else_body@2
+    frame_dig -1
+    extract 0 32
+    pushint 8
+    bzero
+    intc_0 // 32
+    bzero
+    frame_dig 0
+    extract 0 32
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    frame_dig -2
+    swap
+    dig 2
+    uncover 3
+    callsub ECDSA.tryRecover
+    uncover 4
+    uncover 4
+    retsub
+
+ECDSA.tryRecoverCalldata_else_body@2:
+    intc_0 // 32
+    bzero
+    frame_dig 1
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    pushint 2
+    uncover 2
+    uncover 4
+    uncover 4
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.ECDSA.tryRecover(4)(hash: bytes, v: uint64, r: bytes, s: bytes) -> bytes, uint64, bytes:
+ECDSA.tryRecover:
+    proto 4 3
+    frame_dig -1
+    pushbytes 0x7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0
+    b>
+    bz ECDSA.tryRecover_after_if_else@2
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    pushint 3
+    frame_dig -1
+    retsub
+
+ECDSA.tryRecover_after_if_else@2:
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    intc_2 // 1
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.ECDSA.recover(4)(hash: bytes, v: uint64, r: bytes, s: bytes) -> bytes:
+ECDSA.recover:
+    proto 4 1
+    frame_dig -4
+    frame_dig -3
+    frame_dig -2
+    frame_dig -1
+    callsub ECDSA.tryRecover
+    popn 2
+    frame_dig -4
+    frame_dig -3
+    frame_dig -2
+    frame_dig -1
+    callsub ECDSA.tryRecover
+    pop
+    bury 1
+    frame_dig -4
+    frame_dig -3
+    frame_dig -2
+    frame_dig -1
+    callsub ECDSA.tryRecover
+    cover 2
+    popn 2
+    callsub ECDSA._throwError
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.ECDSA._throwError(error: uint64, errorArg: bytes) -> void:
+ECDSA._throwError:
+    proto 2 0
+    frame_dig -2
+    bnz ECDSA._throwError_else_body@2
+    retsub
+
+ECDSA._throwError_else_body@2:
+    frame_dig -2
+    intc_2 // 1
+    ==
+    !
+    assert // ECDSAInvalidSignature
+    frame_dig -2
+    pushint 2
+    ==
+    !
+    assert // ECDSAInvalidSignatureLength
+    frame_dig -2
+    pushint 3
+    ==
+    !
+    assert // ECDSAInvalidSignatureS
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.EIP712Hash.hash(1)_2(params: bytes) -> bytes, bytes:
+EIP712Hash.hash:
+    proto 1 2
+    frame_dig -1
+    extract 0 32
+    pushbytes 0xdecc632fabbd6d9f578203db4396740eb2d81cf0fd7681b726d116e49cbc240c
+    swap
+    concat
+    frame_dig -1
+    extract 32 32
+    concat
+    frame_dig -1
+    extract 64 32
+    concat
+    frame_dig -1
+    extract 96 32
+    concat
+    frame_dig -1
+    extract 128 32
+    concat
+    keccak256
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.EIP712Hash.hash(1)_3(params: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.EIP712Hash.hash(1)_3:
+    proto 1 2
+    frame_dig -1
+    extract 0 32
+    pushbytes 0x12737e595645af6fb99e7985f3dff6fb716ac1ec517c0d2b21313985dc207343
+    swap
+    concat
+    frame_dig -1
+    extract 32 32
+    concat
+    frame_dig -1
+    extract 64 32
+    concat
+    frame_dig -1
+    extract 96 32
+    concat
+    frame_dig -1
+    extract 128 32
+    concat
+    keccak256
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.EIP712Hash.hash(1)_4(params: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.EIP712Hash.hash(1)_4:
+    proto 1 2
+    frame_dig -1
+    extract 0 32
+    pushbytes 0xe81b79af873473ec5cb79baa56499159fca87ff2e3333f24183127408a14acb5
+    swap
+    concat
+    frame_dig -1
+    extract 32 32
+    concat
+    frame_dig -1
+    extract 64 32
+    concat
+    frame_dig -1
+    extract 96 32
+    concat
+    frame_dig -1
+    extract 128 32
+    concat
+    keccak256
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.EIP712Hash.hash(1)_5(params: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.EIP712Hash.hash(1)_5:
+    proto 1 2
+    frame_dig -1
+    extract 0 32
+    pushbytes 0x03929148275eed00e4c3ef9c0ee72e49ec6cb96c7a34941708e052f9a511334e
+    swap
+    concat
+    frame_dig -1
+    extract 32 32
+    concat
+    frame_dig -1
+    extract 64 32
+    concat
+    frame_dig -1
+    extract 96 32
+    concat
+    frame_dig -1
+    extract 128 32
+    concat
+    keccak256
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.MathUtils.min(a: bytes, b: bytes) -> bytes:
+MathUtils.min:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b^
+    frame_dig -2
+    frame_dig -1
+    b<
+    bytec_0 // 0x
+    bytec 6 // 0x01
+    uncover 2
+    select
+    b*
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    b^
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.MathUtils.zeroFloorSub(a: bytes, b: bytes) -> bytes:
+MathUtils.zeroFloorSub:
+    proto 2 1
+    frame_dig -2
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig -1
+    b-
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -2
+    frame_dig -1
+    b>
+    bytec_0 // 0x
+    bytec 6 // 0x01
+    uncover 2
+    select
+    b*
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.MathUtils.uncheckedExp(a: bytes, b: bytes) -> bytes:
+MathUtils.uncheckedExp:
+    proto 2 1
+    bytec 6 // 0x01
+    frame_dig -2
+    frame_dig -1
+
+MathUtils.uncheckedExp_while_top@1:
+    frame_dig 2
+    bytec_0 // 0x
+    b>
+    bz MathUtils.uncheckedExp_after_while@5
+    frame_dig 2
+    bytec 6 // 0x01
+    b&
+    bytec_0 // 0x
+    b!=
+    bz MathUtils.uncheckedExp_after_if_else@4
+    frame_dig 0
+    frame_dig 1
+    b*
+    frame_bury 0
+
+MathUtils.uncheckedExp_after_if_else@4:
+    frame_dig 2
+    pushbytes 0x02
+    b/
+    frame_bury 2
+    frame_dig 1
+    dup
+    b*
+    frame_bury 1
+    b MathUtils.uncheckedExp_while_top@1
+
+MathUtils.uncheckedExp_after_while@5:
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.SafeERC20.safeTransferFrom(token: bytes, from: bytes, to: bytes, value: bytes) -> void:
+SafeERC20.safeTransferFrom:
+    proto 4 0
+    frame_dig -4
+    frame_dig -3
+    frame_dig -2
+    frame_dig -1
+    intc_2 // 1
+    callsub SafeERC20._safeTransferFrom
+    assert // SafeERC20FailedOperation
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.SafeERC20._safeTransferFrom(token: bytes, from: bytes, to: bytes, value: bytes, bubble: uint64) -> uint64:
+SafeERC20._safeTransferFrom:
+    proto 5 1
+    bytec_0 // 0x
+    bytec 6 // 0x01
+    frame_dig -1
+    select
+    bytec_0 // 0x
+    b&
+    bytec_0 // 0x
+    b!=
+    !
+    assert // revert
+    intc_2 // 1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.SignatureChecker.isValidSignatureNowCalldata(signer: bytes, hash: bytes, signature: bytes) -> uint64:
+SignatureChecker.isValidSignatureNowCalldata:
+    proto 3 1
+    frame_dig -2
+    frame_dig -1
+    callsub ECDSA.tryRecoverCalldata
+    popn 2
+    frame_dig -2
+    frame_dig -1
+    callsub ECDSA.tryRecoverCalldata
+    pop
+    bury 1
+    bnz SignatureChecker.isValidSignatureNowCalldata_bool_false@4
+    frame_dig 0
+    frame_dig -3
+    ==
+    bz SignatureChecker.isValidSignatureNowCalldata_bool_false@4
+    intc_2 // 1
+
+SignatureChecker.isValidSignatureNowCalldata_bool_merge@5:
+    swap
+    retsub
+
+SignatureChecker.isValidSignatureNowCalldata_bool_false@4:
+    intc_1 // 0
+    b SignatureChecker.isValidSignatureNowCalldata_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.initialize[routing]() -> void:
+initialize:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 2
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    intc_1 // 0
+    dup
+    extract 8 1
+    bytec_0 // 0x
+    b!=
+    !
+    assert // InvalidInitialization
+    intc_1 // 0
+    extract_uint64
+    !
+    assert // InvalidInitialization
+    callsub _checkInitializing
+    callsub _checkInitializing
+    callsub _checkInitializing
+    pushbytes 0x80d71e940000000000000001
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.deposit[routing]() -> void:
+deposit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    dig 2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewDeposit
+    swap
+    uncover 2
+    uncover 3
+    dig 3
+    callsub _deposit
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.mint[routing]() -> void:
+mint:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    dig 2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewMint
+    swap
+    uncover 2
+    dig 2
+    uncover 4
+    callsub _deposit
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.withdraw[routing]() -> void:
+withdraw:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    dig 3
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewWithdraw
+    swap
+    uncover 3
+    uncover 3
+    uncover 4
+    dig 4
+    callsub _withdraw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.redeem[routing]() -> void:
+redeem:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    dig 3
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewRedeem
+    swap
+    uncover 3
+    uncover 3
+    dig 3
+    uncover 5
+    callsub _withdraw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.depositWithSig[routing]() -> void:
+depositWithSig:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc 4 // 160
+    ==
+    assert // invalid number of bytes for TokenizedDeposit
+    txna ApplicationArgs 2
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    dig 1
+    extract 0 32
+    uncover 2
+    callsub EIP712Hash.hash
+    dup
+    extract 96 32
+    dig 1
+    extract 128 32
+    uncover 4
+    uncover 4
+    uncover 3
+    uncover 3
+    uncover 5
+    callsub _verifyAndConsumeIntent
+    dup
+    extract 0 32
+    dig 1
+    extract 64 32
+    uncover 2
+    extract 32 32
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewDeposit
+    cover 3
+    dig 3
+    callsub _deposit
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.mintWithSig[routing]() -> void:
+mintWithSig:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc 4 // 160
+    ==
+    assert // invalid number of bytes for TokenizedMint
+    txna ApplicationArgs 2
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    dig 1
+    extract 0 32
+    uncover 2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.EIP712Hash.hash(1)_3
+    dup
+    extract 96 32
+    dig 1
+    extract 128 32
+    uncover 4
+    uncover 4
+    uncover 3
+    uncover 3
+    uncover 5
+    callsub _verifyAndConsumeIntent
+    dup
+    extract 0 32
+    dig 1
+    extract 64 32
+    uncover 2
+    extract 32 32
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewMint
+    uncover 3
+    uncover 3
+    dig 2
+    uncover 4
+    callsub _deposit
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.withdrawWithSig[routing]() -> void:
+withdrawWithSig:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc 4 // 160
+    ==
+    assert // invalid number of bytes for TokenizedWithdraw
+    txna ApplicationArgs 2
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    dig 1
+    extract 0 32
+    uncover 2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.EIP712Hash.hash(1)_4
+    dup
+    extract 96 32
+    dig 1
+    extract 128 32
+    uncover 4
+    uncover 4
+    uncover 3
+    uncover 3
+    uncover 5
+    callsub _verifyAndConsumeIntent
+    dup
+    extract 0 32
+    dig 1
+    extract 64 32
+    uncover 2
+    extract 32 32
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewWithdraw
+    dig 3
+    uncover 3
+    uncover 4
+    uncover 4
+    dig 4
+    callsub _withdraw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.redeemWithSig[routing]() -> void:
+redeemWithSig:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc 4 // 160
+    ==
+    assert // invalid number of bytes for TokenizedRedeem
+    txna ApplicationArgs 2
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    dig 1
+    extract 0 32
+    uncover 2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.EIP712Hash.hash(1)_5
+    dup
+    extract 96 32
+    dig 1
+    extract 128 32
+    uncover 4
+    uncover 4
+    uncover 3
+    uncover 3
+    uncover 5
+    callsub _verifyAndConsumeIntent
+    dup
+    extract 0 32
+    dig 1
+    extract 64 32
+    uncover 2
+    extract 32 32
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewRedeem
+    dig 3
+    uncover 3
+    uncover 4
+    dig 3
+    uncover 5
+    callsub _withdraw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.depositWithPermit[routing]() -> void:
+depositWithPermit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    txna ApplicationArgs 5
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 6
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    dig 2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewDeposit
+    swap
+    uncover 2
+    uncover 3
+    dig 3
+    callsub _deposit
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.permit[routing]() -> void:
+permit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 5
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 6
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 7
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    global LatestTimestamp
+    itob
+    dig 4
+    b<=
+    assert // InvalidSignature
+    pushbytes 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9
+    dig 7
+    concat
+    dig 6
+    concat
+    dig 5
+    concat
+    intc_1 // 0
+    itob
+    dig 8
+    swap
+    callsub _useNonce
+    concat
+    uncover 4
+    concat
+    keccak256
+    callsub _hashTypedData
+    cover 3
+    callsub ECDSA.recover
+    dig 3
+    ==
+    assert // InvalidSignature
+    intc_2 // 1
+    callsub _approve(4)
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.usePermitNonce[routing]() -> void:
+usePermitNonce:
+    txn Sender
+    intc_1 // 0
+    itob
+    callsub _useNonce
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.renounceAllowance[routing]() -> void:
+renounceAllowance:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.allowance
+    intc_1 // 0
+    itob
+    dup
+    cover 2
+    b==
+    bnz renounceAllowance_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.renounceAllowance@4
+    dig 1
+    txn Sender
+    dig 2
+    intc_2 // 1
+    callsub _approve(4)
+
+renounceAllowance_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.renounceAllowance@4:
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewDeposit[routing]() -> void:
+previewDeposit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewDeposit
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewMint[routing]() -> void:
+previewMint:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewMint
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewWithdraw[routing]() -> void:
+previewWithdraw:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewWithdraw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewRedeem[routing]() -> void:
+previewRedeem:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewRedeem
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.convertToShares[routing]() -> void:
+convertToShares:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewDeposit
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.convertToAssets[routing]() -> void:
+convertToAssets:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewRedeem
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.maxDeposit[routing]() -> void:
+maxDeposit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.maxDeposit
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.maxMint[routing]() -> void:
+maxMint:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.maxDeposit
+    dup
+    bytec 9 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b==
+    bz maxMint_after_if_else@3
+    bytec 9 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+maxMint_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.maxMint@4:
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+maxMint_after_if_else@3:
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewDeposit
+    b maxMint_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.maxMint@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.maxWithdraw[routing]() -> void:
+maxWithdraw:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub _maxRemovableAssets
+    swap
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.balanceOf
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewRedeem
+    swap
+    callsub MathUtils.min
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.maxRedeem[routing]() -> void:
+maxRedeem:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub _maxRemovableAssets
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewDeposit
+    swap
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.balanceOf
+    swap
+    callsub MathUtils.min
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.totalAssets[routing]() -> void:
+totalAssets:
+    intc_1 // 0
+    extract 4 32
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewRedeem
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.hub[routing]() -> void:
+hub:
+    intc_1 // 0
+    bytec_3 // "HUB"
+    app_global_get_ex
+    assert // check HUB exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.assetId[routing]() -> void:
+assetId:
+    intc_1 // 0
+    bytec 4 // "ASSET_ID"
+    app_global_get_ex
+    assert // check ASSET_ID exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.asset[routing]() -> void:
+asset:
+    intc_1 // 0
+    bytec 8 // "ASSET"
+    app_global_get_ex
+    assert // check ASSET exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.decimals(0)[routing]() -> void:
+decimals(0):
+    intc_1 // 0
+    bytec 15 // "DECIMALS"
+    app_global_get_ex
+    assert // check DECIMALS exists
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.nonces(1)[routing]() -> void:
+nonces(1):
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_1 // 0
+    itob
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.nonces(2)
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.DOMAIN_SEPARATOR(0)[routing]() -> void:
+DOMAIN_SEPARATOR(0):
+    intc_1 // 0
+    bytec_0 // ""
+    bz DOMAIN_SEPARATOR(0)_else_body@3
+    callsub _buildDomainSeparator
+    bury 1
+
+DOMAIN_SEPARATOR(0)_after_if_else@6:
+    bytec_1 // 0x151f7c75
+    dig 1
+    concat
+    log
+    intc_2 // 1
+    return
+
+DOMAIN_SEPARATOR(0)_else_body@3:
+    intc_1 // 0
+    bytec 7 // "_cachedDomainSeparator"
+    app_global_get_ex
+    swap
+    bury 2
+    assert // check _cachedDomainSeparator exists
+    callsub _cachedDomainSeparatorInvalidated
+    bz DOMAIN_SEPARATOR(0)_after_if_else@6
+    callsub _buildDomainSeparator
+    bury 1
+    b DOMAIN_SEPARATOR(0)_after_if_else@6
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.eip712Domain[routing]() -> void:
+eip712Domain:
+    bytec_0 // ""
+    intc_1 // 0
+    global CurrentApplicationID
+    itob
+    global CurrentApplicationAddress
+    intc_0 // 32
+    bzero
+    uncover 2
+    b|
+    pushbytes 0x0f0067007b
+    swap
+    concat
+    swap
+    concat
+    swap
+    concat
+    swap
+    loads
+    dup
+    len
+    intc_0 // 32
+    /
+    itob
+    extract 6 2
+    swap
+    concat
+    swap
+    pushbytes 0x007e0012546f6b656e697a6174696f6e2053706f6b65000131
+    concat
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.useNonce[routing]() -> void:
+useNonce:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn Sender
+    swap
+    callsub _useNonce
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.nonces(2)[routing]() -> void:
+nonces(2):
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.nonces(2)
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.name[routing]() -> void:
+name:
+    intc_1 // 0
+    dup
+    pushint 36
+    extract_uint16
+    dig 1
+    pushint 38
+    extract_uint16
+    substring3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.symbol[routing]() -> void:
+symbol:
+    intc_1 // 0
+    dup
+    pushint 38
+    extract_uint16
+    dig 1
+    len
+    substring3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.totalSupply[routing]() -> void:
+totalSupply:
+    intc_1 // 0
+    extract 4 32
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.balanceOf[routing]() -> void:
+balanceOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.balanceOf
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.transfer[routing]() -> void:
+transfer:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn Sender
+    cover 2
+    callsub _transfer
+    bytec 17 // 0x151f7c7580
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.allowance[routing]() -> void:
+allowance:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.allowance
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.approve[routing]() -> void:
+approve:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn Sender
+    cover 2
+    intc_2 // 1
+    callsub _approve(4)
+    bytec 17 // 0x151f7c7580
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.transferFrom[routing]() -> void:
+transferFrom:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    dig 2
+    txn Sender
+    dig 2
+    callsub _spendAllowance
+    callsub _transfer
+    bytec 17 // 0x151f7c7580
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewDeposit(assets: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewDeposit:
+    proto 1 1
+    itxn_begin
+    intc_0 // 32
+    bzero
+    intc_1 // 0
+    bytec 4 // "ASSET_ID"
+    app_global_get_ex
+    assert // check ASSET_ID exists
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 0
+    bytec_3 // "HUB"
+    app_global_get_ex
+    assert // check HUB exists
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0xa3198419 // method "previewAddByAssets(uint256,uint256)uint256"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewMint(shares: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewMint:
+    proto 1 1
+    itxn_begin
+    intc_0 // 32
+    bzero
+    intc_1 // 0
+    bytec 4 // "ASSET_ID"
+    app_global_get_ex
+    assert // check ASSET_ID exists
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 0
+    bytec_3 // "HUB"
+    app_global_get_ex
+    assert // check HUB exists
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x125f62c6 // method "previewAddByShares(uint256,uint256)uint256"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewWithdraw(assets: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewWithdraw:
+    proto 1 1
+    itxn_begin
+    intc_0 // 32
+    bzero
+    intc_1 // 0
+    bytec 4 // "ASSET_ID"
+    app_global_get_ex
+    assert // check ASSET_ID exists
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 0
+    bytec_3 // "HUB"
+    app_global_get_ex
+    assert // check HUB exists
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x65478877 // method "previewRemoveByAssets(uint256,uint256)uint256"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewRedeem(shares: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewRedeem:
+    proto 1 1
+    itxn_begin
+    intc_0 // 32
+    bzero
+    intc_1 // 0
+    bytec 4 // "ASSET_ID"
+    app_global_get_ex
+    assert // check ASSET_ID exists
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 0
+    bytec_3 // "HUB"
+    app_global_get_ex
+    assert // check HUB exists
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x8b7b4745 // method "previewRemoveByShares(uint256,uint256)uint256"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.maxDeposit(_param0: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.maxDeposit:
+    proto 1 1
+    bytec_0 // ""
+    itxn_begin
+    intc_0 // 32
+    bzero
+    intc_1 // 0
+    bytec 4 // "ASSET_ID"
+    app_global_get_ex
+    assert // check ASSET_ID exists
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    global CurrentApplicationAddress
+    intc_1 // 0
+    bytec_3 // "HUB"
+    app_global_get_ex
+    assert // check HUB exists
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 22 // method "getSpokeConfig(uint256,address)struct SpokeConfig"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 28 1
+    bytec_0 // 0x
+    b!=
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.maxDeposit_if_body@3
+    frame_dig 1
+    extract 29 1
+    bytec_0 // 0x
+    b!=
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.maxDeposit_after_if_else@4
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.maxDeposit_if_body@3:
+    intc_1 // 0
+    itob
+    frame_bury 0
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.maxDeposit_after_if_else@4:
+    frame_dig 1
+    pushint 4
+    extract_uint64
+    dup
+    frame_bury 0
+    intc_1 // 0
+    bytec 14 // "MAX_ALLOWED_SPOKE_CAP"
+    app_global_get_ex
+    assert // check MAX_ALLOWED_SPOKE_CAP exists
+    ==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.maxDeposit_after_if_else@6
+    bytec 9 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_bury 0
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.maxDeposit_after_if_else@6:
+    frame_dig 0
+    itob
+    intc_1 // 0
+    bytec 16 // "ASSET_UNITS"
+    app_global_get_ex
+    assert // check ASSET_UNITS exists
+    b*
+    intc_1 // 0
+    extract 4 32
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.previewMint
+    callsub MathUtils.zeroFloorSub
+    frame_bury 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance._deposit(caller: bytes, receiver: bytes, assets: bytes, shares: bytes) -> void:
+_deposit:
+    proto 4 0
+    intc_1 // 0
+    bytec 8 // "ASSET"
+    app_global_get_ex
+    assert // check ASSET exists
+    intc_1 // 0
+    bytec_3 // "HUB"
+    app_global_get_ex
+    assert // check HUB exists
+    frame_dig -4
+    swap
+    frame_dig -2
+    callsub SafeERC20.safeTransferFrom
+    itxn_begin
+    intc_0 // 32
+    bzero
+    intc_1 // 0
+    bytec 4 // "ASSET_ID"
+    app_global_get_ex
+    assert // check ASSET_ID exists
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 0
+    bytec_3 // "HUB"
+    app_global_get_ex
+    assert // check HUB exists
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0xac976e02 // method "add(uint256,uint256)uint256"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    frame_dig -3
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    !
+    assert // ERC20InvalidReceiver
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    frame_dig -3
+    frame_dig -1
+    callsub _update
+    frame_dig -2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    frame_dig -2
+    dig 1
+    b|
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    frame_dig -1
+    uncover 2
+    b|
+    frame_dig -4
+    frame_dig -3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    pushbytes 0xad7463af // method "Deposit(address,address,uint256,uint256)"
+    swap
+    concat
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance._withdraw(caller: bytes, receiver: bytes, owner: bytes, assets: bytes, shares: bytes) -> void:
+_withdraw:
+    proto 5 0
+    frame_dig -5
+    frame_dig -3
+    !=
+    bz _withdraw_after_if_else@2
+    frame_dig -3
+    frame_dig -5
+    frame_dig -1
+    callsub _spendAllowance
+
+_withdraw_after_if_else@2:
+    frame_dig -3
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    !
+    assert // ERC20InvalidSender
+    frame_dig -3
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    frame_dig -1
+    callsub _update
+    itxn_begin
+    intc_0 // 32
+    bzero
+    intc_1 // 0
+    bytec 4 // "ASSET_ID"
+    app_global_get_ex
+    assert // check ASSET_ID exists
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 0
+    bytec_3 // "HUB"
+    app_global_get_ex
+    assert // check HUB exists
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x4147a499 // method "remove(uint256,uint256,address)uint256"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    frame_dig -4
+    itxn_field ApplicationArgs
+    itxn_submit
+    frame_dig -2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    frame_dig -2
+    dig 1
+    b|
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    frame_dig -1
+    uncover 2
+    b|
+    frame_dig -5
+    frame_dig -4
+    concat
+    frame_dig -3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    pushbytes 0x897bf2cf // method "Withdraw(address,address,address,uint256,uint256)"
+    swap
+    concat
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance._maxRemovableAssets() -> bytes:
+_maxRemovableAssets:
+    proto 0 1
+    itxn_begin
+    intc_0 // 32
+    bzero
+    dup
+    intc_1 // 0
+    bytec 4 // "ASSET_ID"
+    app_global_get_ex
+    assert // check ASSET_ID exists
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    global CurrentApplicationAddress
+    intc_1 // 0
+    bytec_3 // "HUB"
+    app_global_get_ex
+    assert // check HUB exists
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 22 // method "getSpokeConfig(uint256,address)struct SpokeConfig"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 28 1
+    bytec_0 // 0x
+    b!=
+    bz _maxRemovableAssets_if_body@3
+    frame_dig 1
+    extract 29 1
+    bytec_0 // 0x
+    b!=
+    bz _maxRemovableAssets_after_if_else@4
+
+_maxRemovableAssets_if_body@3:
+    intc_1 // 0
+    itob
+    frame_bury 0
+    retsub
+
+_maxRemovableAssets_after_if_else@4:
+    itxn_begin
+    intc_1 // 0
+    bytec 4 // "ASSET_ID"
+    app_global_get_ex
+    assert // check ASSET_ID exists
+    frame_dig 0
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 0
+    bytec_3 // "HUB"
+    app_global_get_ex
+    assert // check HUB exists
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x50e0fd43 // method "getAssetLiquidity(uint256)uint256"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    frame_bury 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance._verifyAndConsumeIntent(signer: bytes, intentHash: bytes, nonce: bytes, deadline: bytes, signature: bytes) -> void:
+_verifyAndConsumeIntent:
+    proto 5 0
+    global LatestTimestamp
+    itob
+    frame_dig -2
+    b<=
+    assert // InvalidSignature
+    frame_dig -4
+    callsub _hashTypedData
+    frame_dig -5
+    swap
+    frame_dig -1
+    callsub SignatureChecker.isValidSignatureNowCalldata
+    assert // InvalidSignature
+    frame_dig -3
+    bytec 18 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    frame_dig -5
+    swap
+    callsub _useNonce
+    frame_dig -3
+    b==
+    assert // InvalidAccountNonce
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance._hashTypedData(structHash: bytes) -> bytes:
+_hashTypedData:
+    proto 1 1
+    bytec_0 // ""
+    bz _hashTypedData_else_body@2
+    callsub _buildDomainSeparator
+    pop
+
+_hashTypedData_after_if_else@5:
+    pushbytes 0xad3228b676f7d3cd4284a5443f17f1962b36e491b30a40b2405849e597ba5fb5
+    retsub
+
+_hashTypedData_else_body@2:
+    intc_1 // 0
+    bytec 7 // "_cachedDomainSeparator"
+    app_global_get_ex
+    bury 1
+    assert // check _cachedDomainSeparator exists
+    callsub _cachedDomainSeparatorInvalidated
+    bz _hashTypedData_after_if_else@5
+    callsub _buildDomainSeparator
+    pop
+    b _hashTypedData_after_if_else@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance._buildDomainSeparator() -> bytes:
+_buildDomainSeparator:
+    proto 0 1
+    intc_1 // 0
+    bytec_0 // ""
+    bz _buildDomainSeparator_else_body@2
+    bytec 21 // 0x785c496d240dd1eb5960cfd81621f30e53d3f15364136e7c36bfef270df01188
+    frame_bury 0
+    pushbytes 0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6
+
+_buildDomainSeparator_after_if_else@3:
+    global CurrentApplicationAddress
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig 0
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 20 // 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f
+    swap
+    concat
+    dig 1
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    keccak256
+    swap
+    retsub
+
+_buildDomainSeparator_else_body@2:
+    intc_1 // 0
+    bytec 12 // "_cachedNameHash"
+    app_global_get_ex
+    swap
+    frame_bury 0
+    assert // check _cachedNameHash exists
+    intc_1 // 0
+    bytec 13 // "_cachedVersionHash"
+    app_global_get_ex
+    assert // check _cachedVersionHash exists
+    b _buildDomainSeparator_after_if_else@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance._cachedDomainSeparatorInvalidated() -> uint64:
+_cachedDomainSeparatorInvalidated:
+    intc_1 // 0
+    bytec 11 // "_cachedChainId"
+    app_global_get_ex
+    assert // check _cachedChainId exists
+    intc_1 // 0
+    bytec 10 // "_cachedThis"
+    app_global_get_ex
+    assert // check _cachedThis exists
+    intc_1 // 0
+    itob
+    uncover 2
+    b==
+    bytec_0 // 0x
+    bytec 6 // 0x01
+    uncover 2
+    select
+    global CurrentApplicationAddress
+    uncover 2
+    b==
+    bytec_0 // 0x
+    bytec 6 // 0x01
+    uncover 2
+    select
+    b&
+    bytec_0 // 0x
+    b==
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.nonces(2)(owner: bytes, key: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.nonces(2):
+    proto 2 1
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_dig -2
+    swap
+    concat
+    sha256
+    bytec 23 // "_nonces"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    frame_dig -1
+    bytec 18 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b*
+    swap
+    itob
+    b|
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance._useNonce(owner: bytes, key: bytes) -> bytes:
+_useNonce:
+    proto 2 1
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_dig -2
+    swap
+    concat
+    sha256
+    bytec 23 // "_nonces"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    intc_2 // 1
+    +
+    itob
+    swap
+    dig 1
+    box_put
+    frame_dig -1
+    bytec 18 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b*
+    b|
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.balanceOf(account: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.balanceOf:
+    proto 1 1
+    frame_dig -1
+    sha256
+    bytec 19 // "_balances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.allowance(owner: bytes, spender: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.allowance:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    concat
+    sha256
+    bytec 24 // "_allowances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance._transfer(from: bytes, to: bytes, value: bytes) -> void:
+_transfer:
+    proto 3 0
+    frame_dig -3
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    !
+    assert // ERC20InvalidSender
+    frame_dig -2
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    !
+    assert // ERC20InvalidReceiver
+    frame_dig -3
+    frame_dig -2
+    frame_dig -1
+    callsub _update
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance._update(from: bytes, to: bytes, value: bytes) -> void:
+_update:
+    proto 3 0
+    frame_dig -3
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    bnz _update_after_if_else@5
+    frame_dig -3
+    sha256
+    bytec 19 // "_balances"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    frame_dig -1
+    b<
+    !
+    assert // ERC20InsufficientBalance
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig -1
+    b-
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 1
+    box_del
+    pop
+    box_put
+
+_update_after_if_else@5:
+    frame_dig -2
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    bnz _update_after_if_else@8
+    frame_dig -2
+    sha256
+    bytec 19 // "_balances"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    frame_dig -1
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+
+_update_after_if_else@8:
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    b|
+    frame_dig -3
+    frame_dig -2
+    concat
+    swap
+    concat
+    pushbytes 0x28918861 // method "Transfer(address,address,uint256)"
+    swap
+    concat
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance._approve(4)(owner: bytes, spender: bytes, value: bytes, emitEvent: uint64) -> void:
+_approve(4):
+    proto 4 0
+    frame_dig -4
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    !
+    assert // ERC20InvalidApprover
+    frame_dig -3
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    !
+    assert // ERC20InvalidSpender
+    frame_dig -4
+    frame_dig -3
+    concat
+    dup
+    sha256
+    bytec 24 // "_allowances"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    frame_dig -2
+    box_put
+    frame_dig -1
+    bz _approve(4)_after_if_else@6
+    frame_dig -2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -2
+    b|
+    frame_dig 0
+    swap
+    concat
+    pushbytes 0x18e09461 // method "Approval(address,address,uint256)"
+    swap
+    concat
+    log
+
+_approve(4)_after_if_else@6:
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance._spendAllowance(owner: bytes, spender: bytes, value: bytes) -> void:
+_spendAllowance:
+    proto 3 0
+    frame_dig -3
+    frame_dig -2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance.allowance
+    dup
+    bytec 9 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<
+    bz _spendAllowance_after_if_else@4
+    frame_dig 0
+    dup
+    frame_dig -1
+    b<
+    !
+    assert // ERC20InsufficientAllowance
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig -1
+    b-
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -3
+    frame_dig -2
+    uncover 2
+    intc_1 // 0
+    callsub _approve(4)
+
+_spendAllowance_after_if_else@4:
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/TokenizationSpokeInstance.sol.TokenizationSpokeInstance._checkInitializing() -> void:
+_checkInitializing:
+    intc_1 // 0
+    extract 8 1
+    bytec_0 // 0x
+    b!=
+    assert // NotInitializing
+    retsub

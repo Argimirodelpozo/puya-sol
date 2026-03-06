@@ -1,0 +1,287 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/UnitPriceFeed.sol.UnitPriceFeed.approval_program() -> uint64:
+main:
+    intcblock 0 32 1
+    bytecblock 0x "UNITS" 0x151f7c75 "description" "DECIMALS" 0xffffffffffffffffffff
+    intc_0 // 0
+    dupn 3
+    bytec_0 // ""
+    txn ApplicationID
+    bnz main_after_if_else@7
+    bytec_3 // "description"
+    bytec_0 // 0x
+    app_global_put
+    bytec 4 // "DECIMALS"
+    intc_0 // 0
+    app_global_put
+    bytec_1 // "UNITS"
+    bytec_0 // 0x
+    app_global_put
+    txna ApplicationArgs 0
+    btoi
+    dup
+    bury 2
+    txna ApplicationArgs 1
+    bury 3
+    pushbytes 0x01
+    bury 4
+    pushint 10
+    itob
+    bury 6
+    itob
+    bury 4
+
+main_while_top@2:
+    dig 3
+    bytec_0 // 0x
+    b>
+    bz main_after_while@6
+    dig 3
+    pushbytes 0x01
+    b&
+    bytec_0 // 0x
+    b!=
+    bz main_after_if_else@5
+    dig 2
+    dig 5
+    b*
+    bury 3
+
+main_after_if_else@5:
+    dig 3
+    pushbytes 0x02
+    b/
+    bury 4
+    dig 4
+    dup
+    b*
+    bury 5
+    b main_while_top@2
+
+main_after_while@6:
+    dig 2
+    callsub SafeCast.toInt256
+    bytec_1 // "UNITS"
+    swap
+    app_global_put
+    bytec 4 // "DECIMALS"
+    dig 1
+    app_global_put
+    bytec_3 // "description"
+    dig 2
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@7:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xe3838de6 0x5c4dd8c1 0x93ae9ddc 0xb8779ee7 0x06ad6653 // method "version()uint256", method "getRoundData(uint256)(uint256,uint256,uint256,uint256,uint256)", method "latestRoundData()(uint256,uint256,uint256,uint256,uint256)", method "decimals()uint64", method "description()string"
+    txna ApplicationArgs 0
+    match main_version_route@10 getRoundData latestRoundData decimals description
+    err
+
+main_version_route@10:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/UnitPriceFeed.sol.SafeCast.toInt256(value: bytes) -> bytes:
+SafeCast.toInt256:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b>
+    !
+    assert // SafeCastOverflowedUintToInt
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/UnitPriceFeed.sol.UnitPriceFeed.getRoundData[routing]() -> void:
+getRoundData:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 0
+    swap
+    intc_0 // 0
+    swap
+    intc_0 // 0
+    swap
+    intc_0 // 0
+    swap
+    intc_0 // 0
+    swap
+    global LatestTimestamp
+    itob
+    bytec 5 // 0xffffffffffffffffffff
+    b&
+    b<=
+    bz getRoundData_after_if_else@3
+    intc_0 // 0
+    bytec_1 // "UNITS"
+    app_global_get_ex
+    swap
+    bury 3
+    assert // check UNITS exists
+    dig 5
+    dup
+    bury 6
+    dup
+    bury 5
+    dup
+    bury 4
+    bury 1
+
+getRoundData_after_if_else@3:
+    dupn 2
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    dig 3
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    concat
+    dig 4
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    concat
+    dig 5
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    concat
+    dig 6
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/UnitPriceFeed.sol.UnitPriceFeed.latestRoundData[routing]() -> void:
+latestRoundData:
+    global LatestTimestamp
+    itob
+    bytec 5 // 0xffffffffffffffffffff
+    b&
+    intc_0 // 0
+    bytec_1 // "UNITS"
+    app_global_get_ex
+    assert // check UNITS exists
+    global LatestTimestamp
+    itob
+    global LatestTimestamp
+    itob
+    dig 3
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    uncover 4
+    dig 1
+    b|
+    dig 4
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 4
+    dig 2
+    b|
+    dig 1
+    swap
+    concat
+    uncover 4
+    dig 3
+    b|
+    concat
+    uncover 3
+    uncover 3
+    b|
+    concat
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/UnitPriceFeed.sol.UnitPriceFeed.decimals[routing]() -> void:
+decimals:
+    intc_0 // 0
+    bytec 4 // "DECIMALS"
+    app_global_get_ex
+    assert // check DECIMALS exists
+    itob
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/UnitPriceFeed.sol.UnitPriceFeed.description[routing]() -> void:
+description:
+    intc_0 // 0
+    bytec_3 // "description"
+    app_global_get_ex
+    assert // check description exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

@@ -1,0 +1,408 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PercentageMathWrapper.sol.PercentageMathWrapper.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    bytecblock 0x 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 0x2710 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x068db8bac710cb295e9e1b089a027525460aa64c2f837b4a2339c0ebedfa43
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb3c38f37 0x4925d0a6 0x637c73cd 0xaad33e40 0x225b848c 0x3a64ab68 // method "PERCENTAGE_FACTOR()uint256", method "percentMulDown(uint256,uint256)uint256", method "percentMulUp(uint256,uint256)uint256", method "percentDivDown(uint256,uint256)uint256", method "percentDivUp(uint256,uint256)uint256", method "fromBpsDown(uint256)uint256"
+    txna ApplicationArgs 0
+    match main_PERCENTAGE_FACTOR_route@5 percentMulDown percentMulUp percentDivDown percentDivUp fromBpsDown
+    err
+
+main_PERCENTAGE_FACTOR_route@5:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000002710
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PercentageMathWrapper.sol.PercentageMath.percentMulDown(value: bytes, percentage: bytes) -> bytes:
+PercentageMath.percentMulDown:
+    proto 2 1
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    frame_dig -1
+    bytec_0 // 0x
+    b!=
+    bz PercentageMath.percentMulDown_ternary_false@2
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig -1
+    b/
+
+PercentageMath.percentMulDown_ternary_merge@3:
+    frame_dig -2
+    b<
+    !
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    frame_dig 0
+    b|
+    bytec_0 // 0x
+    b==
+    !
+    assert // revert
+    frame_dig -2
+    frame_dig -1
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_3 // 0x2710
+    b/
+    swap
+    retsub
+
+PercentageMath.percentMulDown_ternary_false@2:
+    bytec_0 // 0x
+    b PercentageMath.percentMulDown_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PercentageMathWrapper.sol.PercentageMath.percentMulUp(value: bytes, percentage: bytes) -> bytes:
+PercentageMath.percentMulUp:
+    proto 2 1
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    frame_dig -1
+    bytec_0 // 0x
+    b!=
+    bz PercentageMath.percentMulUp_ternary_false@2
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig -1
+    b/
+
+PercentageMath.percentMulUp_ternary_merge@3:
+    frame_dig -2
+    b<
+    !
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    frame_dig 0
+    b|
+    bytec_0 // 0x
+    b==
+    !
+    assert // revert
+    frame_dig -2
+    frame_dig -1
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec_3 // 0x2710
+    b/
+    swap
+    bytec_3 // 0x2710
+    b%
+    bytec_0 // 0x
+    b>
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    b+
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    swap
+    retsub
+
+PercentageMath.percentMulUp_ternary_false@2:
+    bytec_0 // 0x
+    b PercentageMath.percentMulUp_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PercentageMathWrapper.sol.PercentageMath.percentDivDown(value: bytes, percentage: bytes) -> bytes:
+PercentageMath.percentDivDown:
+    proto 2 1
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    frame_dig -2
+    bytec 6 // 0x068db8bac710cb295e9e1b089a027525460aa64c2f837b4a2339c0ebedfa43
+    b>
+    !
+    !
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    b|
+    bytec_0 // 0x
+    b!=
+    !
+    assert // revert
+    frame_dig -1
+    bytec_0 // 0x
+    b!=
+    bz PercentageMath.percentDivDown_ternary_false@5
+    frame_dig -2
+    bytec_3 // 0x2710
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    b/
+    retsub
+
+PercentageMath.percentDivDown_ternary_false@5:
+    bytec_0 // 0x
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PercentageMathWrapper.sol.PercentageMath.percentDivUp(value: bytes, percentage: bytes) -> bytes:
+PercentageMath.percentDivUp:
+    proto 2 1
+    pushint 0
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    frame_dig -2
+    bytec 6 // 0x068db8bac710cb295e9e1b089a027525460aa64c2f837b4a2339c0ebedfa43
+    b>
+    !
+    !
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    b|
+    bytec_0 // 0x
+    b!=
+    !
+    assert // revert
+    frame_dig -2
+    bytec_3 // 0x2710
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    bytec_0 // 0x
+    b!=
+    dup
+    bz PercentageMath.percentDivUp_ternary_false@5
+    frame_dig 1
+    frame_dig -1
+    b/
+    frame_bury 0
+
+PercentageMath.percentDivUp_ternary_merge@6:
+    frame_dig 2
+    bz PercentageMath.percentDivUp_ternary_false@8
+    frame_dig 1
+    frame_dig -1
+    b%
+
+PercentageMath.percentDivUp_ternary_merge@9:
+    bytec_0 // 0x
+    b>
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    frame_dig 0
+    b+
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 0
+    retsub
+
+PercentageMath.percentDivUp_ternary_false@8:
+    bytec_0 // 0x
+    b PercentageMath.percentDivUp_ternary_merge@9
+
+PercentageMath.percentDivUp_ternary_false@5:
+    bytec_0 // 0x
+    frame_bury 0
+    b PercentageMath.percentDivUp_ternary_merge@6
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PercentageMathWrapper.sol.PercentageMath.fromBpsDown(value: bytes) -> bytes:
+PercentageMath.fromBpsDown:
+    proto 1 1
+    pushint 10000
+    itob
+    frame_dig -1
+    swap
+    b/
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PercentageMathWrapper.sol.PercentageMathWrapper.percentMulDown[routing]() -> void:
+percentMulDown:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub PercentageMath.percentMulDown
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PercentageMathWrapper.sol.PercentageMathWrapper.percentMulUp[routing]() -> void:
+percentMulUp:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub PercentageMath.percentMulUp
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PercentageMathWrapper.sol.PercentageMathWrapper.percentDivDown[routing]() -> void:
+percentDivDown:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub PercentageMath.percentDivDown
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PercentageMathWrapper.sol.PercentageMathWrapper.percentDivUp[routing]() -> void:
+percentDivUp:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub PercentageMath.percentDivUp
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/PercentageMathWrapper.sol.PercentageMathWrapper.fromBpsDown[routing]() -> void:
+fromBpsDown:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub PercentageMath.fromBpsDown
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

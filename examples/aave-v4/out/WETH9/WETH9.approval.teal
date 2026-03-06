@@ -1,0 +1,470 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 8
+    bytecblock 0x "balanceOf" 0x010000000000000000000000000000000000000000000000000000000000000000 "allowance" 0x151f7c75 "name" "symbol" "decimals"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 5 // "name"
+    pushbytes "Wrapped Ether"
+    app_global_put
+    bytec 6 // "symbol"
+    pushbytes "WETH"
+    app_global_put
+    bytec 7 // "decimals"
+    pushint 18
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x76e0504c 0x92e03b1c 0x3195d6a1 0x79fab465 0xfafb6a08 0x198c9820 0x6df41f6d 0x19750616 0x005b52b8 0xb8779ee7 // method "()void", method "deposit()void", method "withdraw(uint256)void", method "totalSupply()uint256", method "approve(address,uint256)bool", method "transfer(address,uint256)bool", method "transferFrom(address,address,uint256)bool", method "name()string", method "symbol()string", method "decimals()uint64"
+    txna ApplicationArgs 0
+    match /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.[routing] deposit withdraw main_totalSupply_route@8 approve transfer transferFrom name symbol decimals
+    err
+
+main_totalSupply_route@8:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.[routing]:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.deposit
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.deposit[routing]() -> void:
+deposit:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.deposit
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.withdraw[routing]() -> void:
+withdraw:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn Sender
+    sha256
+    bytec_1 // "balanceOf"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b>=
+    assert
+    txn Sender
+    sha256
+    bytec_1 // "balanceOf"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 2
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    txn Sender
+    sha256
+    bytec_1 // "balanceOf"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    itxn_begin
+    intc_3 // 8
+    bzero
+    dig 2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    txn Sender
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field Amount
+    itxn_submit
+    txn Sender
+    swap
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 2
+    b|
+    concat
+    pushbytes 0x7b868f0a // method "Withdrawal(address,uint256)"
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.approve[routing]() -> void:
+approve:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn Sender
+    dig 3
+    concat
+    sha256
+    bytec_3 // "allowance"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    txn Sender
+    swap
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 2
+    b|
+    swap
+    uncover 2
+    concat
+    swap
+    concat
+    pushbytes 0x18e09461 // method "Approval(address,address,uint256)"
+    swap
+    concat
+    log
+    pushbytes 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.transfer[routing]() -> void:
+transfer:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn Sender
+    cover 2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.transferFrom
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.transferFrom[routing]() -> void:
+transferFrom:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.transferFrom
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.name[routing]() -> void:
+name:
+    intc_2 // 0
+    bytec 5 // "name"
+    app_global_get_ex
+    assert // check name exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.symbol[routing]() -> void:
+symbol:
+    intc_2 // 0
+    bytec 6 // "symbol"
+    app_global_get_ex
+    assert // check symbol exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.decimals[routing]() -> void:
+decimals:
+    intc_2 // 0
+    bytec 7 // "decimals"
+    app_global_get_ex
+    assert // check decimals exists
+    itob
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.deposit() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.deposit:
+    txn Sender
+    sha256
+    bytec_1 // "balanceOf"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    gtxn 0 Amount
+    itob
+    b+
+    txn Sender
+    sha256
+    bytec_1 // "balanceOf"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    txn Sender
+    gtxn 0 Amount
+    itob
+    concat
+    pushbytes 0x18a962c4 // method "Deposit(address,uint256)"
+    swap
+    concat
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.transferFrom(src: bytes, dst: bytes, wad: bytes) -> uint64:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.transferFrom:
+    proto 3 1
+    frame_dig -3
+    sha256
+    bytec_1 // "balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    frame_dig -1
+    b>=
+    assert
+    frame_dig -3
+    txn Sender
+    !=
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.transferFrom_after_if_else@3
+    frame_dig -3
+    txn Sender
+    concat
+    sha256
+    bytec_3 // "allowance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b!=
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.transferFrom_after_if_else@3
+    frame_dig -3
+    txn Sender
+    concat
+    sha256
+    bytec_3 // "allowance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    frame_dig -1
+    b>=
+    assert
+    frame_dig -3
+    txn Sender
+    concat
+    sha256
+    bytec_3 // "allowance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig -1
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -3
+    txn Sender
+    concat
+    sha256
+    bytec_3 // "allowance"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/WETH9.sol.WETH9.transferFrom_after_if_else@3:
+    frame_dig 0
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig -1
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 1
+    box_del
+    pop
+    box_put
+    frame_dig -2
+    sha256
+    bytec_1 // "balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    frame_dig -1
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    b|
+    frame_dig -3
+    frame_dig -2
+    concat
+    swap
+    concat
+    pushbytes 0x28918861 // method "Transfer(address,address,uint256)"
+    swap
+    concat
+    log
+    intc_1 // 1
+    swap
+    retsub

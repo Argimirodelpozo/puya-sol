@@ -1,0 +1,1089 @@
+main /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper15.__puya_arc4_router__:
+    block@0: // L65448
+        let tmp%0#0: bool = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper15.__puya_arc4_router__()
+        return tmp%0#0
+
+subroutine _puya_lib.arc4.dynamic_array_replace_byte_length_head(array: bytes, new_item: bytes, index: uint64) -> bytes:
+    block@0: // L254
+        let tmp%0#0: bytes = ((substring 0 2) array#0)
+        let size_b#0: bytes = tmp%0#0
+        let tmp%1#0: uint64 = (btoi size_b#0)
+        let array_length#0: uint64 = tmp%1#0
+        let tmp%2#0: bytes = ((extract 2 0) array#0)
+        let tmp%3#0: bytes = _puya_lib.arc4.static_array_replace_byte_length_head(tmp%2#0, new_item#0, index#0, array_length#0)
+        let tmp%4#0: bytes = (concat size_b#0 tmp%3#0)
+        return tmp%4#0
+
+subroutine _puya_lib.arc4.dynamic_array_replace_dynamic_element(source: bytes, new_item: bytes, index: uint64) -> bytes:
+    block@0: // L278
+        let tmp%0#0: bytes = ((substring 0 2) source#0)
+        let size_b#0: bytes = tmp%0#0
+        let tmp%1#0: uint64 = (btoi size_b#0)
+        let array_length#0: uint64 = tmp%1#0
+        let tmp%2#0: bytes = ((extract 2 0) source#0)
+        let tmp%3#0: bytes = _puya_lib.arc4.static_array_replace_dynamic_element(tmp%2#0, new_item#0, index#0, array_length#0)
+        let tmp%4#0: bytes = (concat size_b#0 tmp%3#0)
+        return tmp%4#0
+
+subroutine _puya_lib.arc4.static_array_replace_dynamic_element(array_head_and_tail: bytes, new_item: bytes, index: uint64, array_length: uint64) -> bytes:
+    block@0: // L291
+        let tmp%0#0: uint64 = (* index#0 2u)
+        let tmp%1#0: uint64 = (extract_uint16 array_head_and_tail#0 tmp%0#0)
+        let original_offset#0: uint64 = tmp%1#0
+        let tmp%2#0: uint64 = (+ index#0 1u)
+        let tmp%3#0: uint64 = (* tmp%2#0 2u)
+        let tmp%4#0: uint64 = (extract_uint16 array_head_and_tail#0 tmp%3#0)
+        let next_item_offset#0: uint64 = tmp%4#0
+        let tmp%5#0: uint64 = (len array_head_and_tail#0)
+        let end_of_tail#0: uint64 = tmp%5#0
+        let tmp%6#0: uint64 = (- array_length#0 index#0)
+        let tmp%7#0: uint64 = (- tmp%6#0 1u)
+        let is_before_end#0: uint64 = tmp%7#0
+        let tmp%8#0: uint64 = (select end_of_tail#0 next_item_offset#0 is_before_end#0)
+        let end_offset#0: uint64 = tmp%8#0
+        let tmp%9#0: uint64 = (- end_offset#0 original_offset#0)
+        let original_item_length#0: uint64 = tmp%9#0
+        let tmp%10#0: uint64 = (len new_item#0)
+        let new_item_length#0: uint64 = tmp%10#0
+        let tmp%11#0: bytes = (substring3 array_head_and_tail#0 0u original_offset#0)
+        let tmp%12#0: bytes = (concat tmp%11#0 new_item#0)
+        let tmp%13#0: bytes = (substring3 array_head_and_tail#0 end_offset#0 end_of_tail#0)
+        let tmp%14#0: bytes = (concat tmp%12#0 tmp%13#0)
+        let new_head_and_tail#0: bytes = tmp%14#0
+        let tmp%15#0: uint64 = (* array_length#0 2u)
+        let tmp%16#0: uint64 = (+ index#0 1u)
+        let tmp%17#0: uint64 = (* tmp%16#0 2u)
+        (assert 2u) // Step cannot be zero
+        let value_internal%0#0: uint64 = tmp%17#0
+        goto block@1
+    block@1: // for_header_L309
+        let value_internal%0#1: uint64 = φ(value_internal%0#0 <- block@0, value_internal%0#2 <- block@3)
+        let new_head_and_tail#1: bytes = φ(new_head_and_tail#0 <- block@0, new_head_and_tail#2 <- block@3)
+        let continue_looping%0#0: bool = (< value_internal%0#1 tmp%15#0)
+        goto continue_looping%0#0 ? block@2 : block@4
+    block@2: // for_body_L310
+        let head_offset#0: uint64 = value_internal%0#1
+        let tmp%18#0: uint64 = (extract_uint16 new_head_and_tail#1 head_offset#0)
+        let tail_offset#0: uint64 = tmp%18#0
+        let tmp%19#0: uint64 = (+ tail_offset#0 new_item_length#0)
+        let tail_offset#1: uint64 = tmp%19#0
+        let tmp%20#0: uint64 = (- tail_offset#1 original_item_length#0)
+        let tail_offset#2: uint64 = tmp%20#0
+        let tmp%21#0: bytes = (itob tail_offset#2)
+        let tmp%22#0: bytes = ((extract 6 2) tmp%21#0)
+        let tail_offset_bytes#0: bytes = tmp%22#0
+        let tmp%23#0: bytes = (replace3 new_head_and_tail#1 head_offset#0 tail_offset_bytes#0)
+        let new_head_and_tail#2: bytes = tmp%23#0
+        goto block@3
+    block@3: // for_footer_L309
+        let value_internal%0#2: uint64 = (+ value_internal%0#1 2u)
+        goto block@1
+    block@4: // after_for_L309
+        return new_head_and_tail#1
+
+subroutine _puya_lib.arc4.static_array_replace_byte_length_head(array_head_and_tail: bytes, new_item: bytes, index: uint64, array_length: uint64) -> bytes:
+    block@0: // L318
+        let tmp%0#0: bool = (< index#0 array_length#0)
+        (assert tmp%0#0) // Index out of bounds
+        let tmp%1#0: uint64 = (* index#0 2u)
+        let tmp%2#0: uint64 = (extract_uint16 array_head_and_tail#0 tmp%1#0)
+        let offset_for_index#0: uint64 = tmp%2#0
+        let tmp%3#0: uint64 = (extract_uint16 array_head_and_tail#0 offset_for_index#0)
+        let old_item_length#0: uint64 = tmp%3#0
+        let tmp%4#0: uint64 = (+ offset_for_index#0 old_item_length#0)
+        let tmp%5#0: uint64 = (+ tmp%4#0 2u)
+        let old_item_end#0: uint64 = tmp%5#0
+        let tmp%6#0: bytes = (substring3 array_head_and_tail#0 0u offset_for_index#0)
+        let tmp%7#0: bytes = (concat tmp%6#0 new_item#0)
+        let tmp%8#0: uint64 = (len array_head_and_tail#0)
+        let tmp%9#0: bytes = (substring3 array_head_and_tail#0 old_item_end#0 tmp%8#0)
+        let tmp%10#0: bytes = (concat tmp%7#0 tmp%9#0)
+        let tmp%11#0: bytes = _puya_lib.arc4._recalculate_head_for_elements_with_byte_length_head(tmp%10#0, array_length#0, index#0)
+        return tmp%11#0
+
+subroutine _puya_lib.arc4._recalculate_head_for_elements_with_byte_length_head(array_head_and_tail: bytes, length: uint64, start_at_index: uint64) -> bytes:
+    block@0: // L347
+        let tmp%0#0: uint64 = (* length#0 2u)
+        let tmp%1#0: uint64 = (* start_at_index#0 2u)
+        let tmp%2#0: uint64 = (extract_uint16 array_head_and_tail#0 tmp%1#0)
+        let tmp%3#0: uint64 = (select tmp%0#0 tmp%2#0 start_at_index#0)
+        let tail_offset#0: uint64 = tmp%3#0
+        let tmp%4#0: uint64 = (* length#0 2u)
+        let tmp%5#0: uint64 = (* start_at_index#0 2u)
+        (assert 2u) // Step cannot be zero
+        let value_internal%0#0: uint64 = tmp%5#0
+        goto block@1
+    block@1: // for_header_L369
+        let value_internal%0#1: uint64 = φ(value_internal%0#0 <- block@0, value_internal%0#2 <- block@3)
+        let tail_offset#1: uint64 = φ(tail_offset#0 <- block@0, tail_offset#2 <- block@3)
+        let array_head_and_tail#1: bytes = φ(array_head_and_tail#0 <- block@0, array_head_and_tail#2 <- block@3)
+        let continue_looping%0#0: bool = (< value_internal%0#1 tmp%4#0)
+        goto continue_looping%0#0 ? block@2 : block@4
+    block@2: // for_body_L370
+        let head_offset#0: uint64 = value_internal%0#1
+        let tmp%6#0: bytes = (itob tail_offset#1)
+        let tmp%7#0: bytes = ((extract 6 2) tmp%6#0)
+        let tail_offset_bytes#0: bytes = tmp%7#0
+        let tmp%8#0: bytes = (replace3 array_head_and_tail#1 head_offset#0 tail_offset_bytes#0)
+        let array_head_and_tail#2: bytes = tmp%8#0
+        let tmp%9#0: uint64 = (extract_uint16 array_head_and_tail#2 tail_offset#1)
+        let tmp%10#0: uint64 = (+ tmp%9#0 2u)
+        let tmp%11#0: uint64 = (+ tail_offset#1 tmp%10#0)
+        let tail_offset#2: uint64 = tmp%11#0
+        let tmp%12#0: uint64 = (+ head_offset#0 2u)
+        let head_offset#1: uint64 = tmp%12#0
+        goto block@3
+    block@3: // for_footer_L369
+        let value_internal%0#2: uint64 = (+ value_internal%0#1 2u)
+        goto block@1
+    block@4: // after_for_L369
+        return array_head_and_tail#1
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(value: bytes[32]) -> biguint:
+    block@0: // L7934
+        let reinterpret_biguint%0#0: biguint = value#0
+        let tmp%0#0: biguint = (b% reinterpret_biguint%0#0 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        return tmp%0#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateShplonkNuChallenge(proof: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)), prevChallenge: biguint) -> <biguint, biguint, Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256))>:
+    block@0: // L26255
+        let i#0: biguint = undefined
+        let proof%is_original#0: bool = 1u
+        let proof%out#0: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)) = proof#0
+        let shplonkNu#0: biguint = 0b
+        let nextPreviousChallenge#0: biguint = 0b
+        let encoded_array%0#0: Encoded(uint256[33]) = bytes_encode<uint256[33]>(0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x)
+        let slot%0#0: Encoded(uint256[33])* = new()
+        store(slot%0#0, encoded_array%0#0)
+        let shplonkNuChallengeElements#0: Encoded(uint256[33])* = slot%0#0
+        let encoded_value%0#0: Encoded(uint256) = bytes_encode<uint256>(prevChallenge#0)
+        let slot_contents%0#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#0)
+        let updated_array%0#0: Encoded(uint256[33]) = replace_value(slot_contents%0#0, 0u, encoded_value%0#0)
+        store(shplonkNuChallengeElements#0, updated_array%0#0)
+        let shplonkNuChallengeElements#1: Encoded(uint256[33])* = shplonkNuChallengeElements#0
+        let reinterpret_biguint%0#0: biguint = (itob 1u)
+        let i#1: biguint = reinterpret_biguint%0#0
+        goto block@1
+    block@1: // while_top_L26589
+        let i#2: biguint = φ(i#1 <- block@0, i#3 <- block@2)
+        let shplonkNuChallengeElements#2: Encoded(uint256[33])* = φ(shplonkNuChallengeElements#1 <- block@0, shplonkNuChallengeElements#3 <- block@2)
+        let reinterpret_biguint%1#0: biguint = (itob 28u)
+        let tmp%0#0: bool = (b<= i#2 reinterpret_biguint%1#0)
+        goto tmp%0#0 ? block@2 : block@3
+    block@2: // while_body_L26589
+        let tuple_item%0#0: Encoded(uint256[28]) = extract_value(proof#0, 16)
+        let slot%1#0: Encoded(uint256[28])* = new()
+        store(slot%1#0, tuple_item%0#0)
+        let tmp%1#0: bytes = (bzero 8u)
+        let tmp%2#0: biguint = (b+ i#2 115792089237316195423570985008687907853269984665640564039457584007913129639936b)
+        let reinterpret_biguint%2#0: biguint = (itob 1u)
+        let tmp%3#0: biguint = (b- tmp%2#0 reinterpret_biguint%2#0)
+        let tmp%4#0: biguint = (b% tmp%3#0 115792089237316195423570985008687907853269984665640564039457584007913129639936b)
+        let tmp%5#0: bytes = (concat tmp%1#0 tmp%4#0)
+        let tmp%6#0: bytes = (bzero 8u)
+        let tmp%7#0: biguint = (b+ i#2 115792089237316195423570985008687907853269984665640564039457584007913129639936b)
+        let reinterpret_biguint%3#0: biguint = (itob 1u)
+        let tmp%8#0: biguint = (b- tmp%7#0 reinterpret_biguint%3#0)
+        let tmp%9#0: biguint = (b% tmp%8#0 115792089237316195423570985008687907853269984665640564039457584007913129639936b)
+        let tmp%10#0: bytes = (concat tmp%6#0 tmp%9#0)
+        let tmp%11#0: uint64 = (len tmp%10#0)
+        let tmp%12#0: uint64 = (- tmp%11#0 8u)
+        let tmp%13#0: bytes = (extract3 tmp%5#0 tmp%12#0 8u)
+        let tmp%14#0: uint64 = (btoi tmp%13#0)
+        let slot_contents%1#0: Encoded(uint256[28]) = load(slot%1#0)
+        let array_item%0#0: Encoded(uint256) = extract_value(slot_contents%1#0, tmp%14#0)
+        let tmp%15#0: biguint = decode_bytes<biguint>(array_item%0#0)
+        let tmp%16#0: bytes = (bzero 8u)
+        let tmp%17#0: bytes = (concat tmp%16#0 i#2)
+        let tmp%18#0: bytes = (bzero 8u)
+        let tmp%19#0: bytes = (concat tmp%18#0 i#2)
+        let tmp%20#0: uint64 = (len tmp%19#0)
+        let tmp%21#0: uint64 = (- tmp%20#0 8u)
+        let tmp%22#0: bytes = (extract3 tmp%17#0 tmp%21#0 8u)
+        let index%0#0: uint64 = (btoi tmp%22#0)
+        let encoded_value%1#0: Encoded(uint256) = bytes_encode<uint256>(tmp%15#0)
+        let slot_contents%2#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#2)
+        let updated_array%1#0: Encoded(uint256[33]) = replace_value(slot_contents%2#0, index%0#0, encoded_value%1#0)
+        store(shplonkNuChallengeElements#2, updated_array%1#0)
+        let shplonkNuChallengeElements#3: Encoded(uint256[33])* = shplonkNuChallengeElements#2
+        let tmp%23#0: biguint = (b+ i#2 1b)
+        let i#3: biguint = tmp%23#0
+        goto block@1
+    block@3: // after_while_L26589
+        let reinterpret_biguint%4#0: biguint = (itob 0u)
+        let libraIdx#0: biguint = reinterpret_biguint%4#0
+        let reinterpret_biguint%5#0: biguint = (itob 28u)
+        let reinterpret_biguint%6#0: biguint = (itob 1u)
+        let tmp%24#0: biguint = (b+ reinterpret_biguint%5#0 reinterpret_biguint%6#0)
+        let i#4: biguint = tmp%24#0
+        goto block@4
+    block@4: // while_top_L26782
+        let i#5: biguint = φ(i#4 <- block@3, i#6 <- block@5)
+        let libraIdx#1: biguint = φ(libraIdx#0 <- block@3, libraIdx#2 <- block@5)
+        let shplonkNuChallengeElements#4: Encoded(uint256[33])* = φ(shplonkNuChallengeElements#2 <- block@3, shplonkNuChallengeElements#5 <- block@5)
+        let reinterpret_biguint%7#0: biguint = (itob 28u)
+        let reinterpret_biguint%8#0: biguint = (itob 4u)
+        let tmp%25#0: biguint = (b+ reinterpret_biguint%7#0 reinterpret_biguint%8#0)
+        let tmp%26#0: bool = (b<= i#5 tmp%25#0)
+        goto tmp%26#0 ? block@5 : block@6
+    block@5: // while_body_L26782
+        let tuple_item%1#0: Encoded(uint256[4]) = extract_value(proof#0, 17)
+        let slot%2#0: Encoded(uint256[4])* = new()
+        store(slot%2#0, tuple_item%1#0)
+        let tmp%27#0: bytes = (bzero 8u)
+        let tmp%28#0: bytes = (concat tmp%27#0 libraIdx#1)
+        let tmp%29#0: bytes = (bzero 8u)
+        let tmp%30#0: bytes = (concat tmp%29#0 libraIdx#1)
+        let tmp%31#0: uint64 = (len tmp%30#0)
+        let tmp%32#0: uint64 = (- tmp%31#0 8u)
+        let tmp%33#0: bytes = (extract3 tmp%28#0 tmp%32#0 8u)
+        let tmp%34#0: uint64 = (btoi tmp%33#0)
+        let slot_contents%3#0: Encoded(uint256[4]) = load(slot%2#0)
+        let array_item%1#0: Encoded(uint256) = extract_value(slot_contents%3#0, tmp%34#0)
+        let tmp%35#0: biguint = decode_bytes<biguint>(array_item%1#0)
+        let tmp%36#0: bytes = (bzero 8u)
+        let tmp%37#0: bytes = (concat tmp%36#0 i#5)
+        let tmp%38#0: bytes = (bzero 8u)
+        let tmp%39#0: bytes = (concat tmp%38#0 i#5)
+        let tmp%40#0: uint64 = (len tmp%39#0)
+        let tmp%41#0: uint64 = (- tmp%40#0 8u)
+        let tmp%42#0: bytes = (extract3 tmp%37#0 tmp%41#0 8u)
+        let index%1#0: uint64 = (btoi tmp%42#0)
+        let encoded_value%2#0: Encoded(uint256) = bytes_encode<uint256>(tmp%35#0)
+        let slot_contents%4#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let updated_array%2#0: Encoded(uint256[33]) = replace_value(slot_contents%4#0, index%1#0, encoded_value%2#0)
+        store(shplonkNuChallengeElements#4, updated_array%2#0)
+        let shplonkNuChallengeElements#5: Encoded(uint256[33])* = shplonkNuChallengeElements#4
+        let tmp%43#0: biguint = (b+ libraIdx#1 1b)
+        let libraIdx#2: biguint = tmp%43#0
+        let tmp%44#0: biguint = (b+ i#5 1b)
+        let i#6: biguint = tmp%44#0
+        goto block@4
+    block@6: // after_while_L26782
+        let tmp%45#0: bytes = (bzero 32u)
+        let slot_contents%5#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%2#0: Encoded(uint256) = extract_value(slot_contents%5#0, 0u)
+        let tmp%46#0: biguint = decode_bytes<biguint>(array_item%2#0)
+        let tmp%47#0: bytes = (concat tmp%45#0 tmp%46#0)
+        let tmp%48#0: bytes = (bzero 32u)
+        let slot_contents%6#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%3#0: Encoded(uint256) = extract_value(slot_contents%6#0, 0u)
+        let tmp%49#0: biguint = decode_bytes<biguint>(array_item%3#0)
+        let tmp%50#0: bytes = (concat tmp%48#0 tmp%49#0)
+        let tmp%51#0: uint64 = (len tmp%50#0)
+        let tmp%52#0: uint64 = (- tmp%51#0 32u)
+        let tmp%53#0: bytes = (extract3 tmp%47#0 tmp%52#0 32u)
+        let tmp%54#0: bytes = (bzero 32u)
+        let slot_contents%7#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%4#0: Encoded(uint256) = extract_value(slot_contents%7#0, 1u)
+        let tmp%55#0: biguint = decode_bytes<biguint>(array_item%4#0)
+        let tmp%56#0: bytes = (concat tmp%54#0 tmp%55#0)
+        let tmp%57#0: bytes = (bzero 32u)
+        let slot_contents%8#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%5#0: Encoded(uint256) = extract_value(slot_contents%8#0, 1u)
+        let tmp%58#0: biguint = decode_bytes<biguint>(array_item%5#0)
+        let tmp%59#0: bytes = (concat tmp%57#0 tmp%58#0)
+        let tmp%60#0: uint64 = (len tmp%59#0)
+        let tmp%61#0: uint64 = (- tmp%60#0 32u)
+        let tmp%62#0: bytes = (extract3 tmp%56#0 tmp%61#0 32u)
+        let tmp%63#0: bytes = (concat tmp%53#0 tmp%62#0)
+        let tmp%64#0: bytes = (bzero 32u)
+        let slot_contents%9#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%6#0: Encoded(uint256) = extract_value(slot_contents%9#0, 2u)
+        let tmp%65#0: biguint = decode_bytes<biguint>(array_item%6#0)
+        let tmp%66#0: bytes = (concat tmp%64#0 tmp%65#0)
+        let tmp%67#0: bytes = (bzero 32u)
+        let slot_contents%10#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%7#0: Encoded(uint256) = extract_value(slot_contents%10#0, 2u)
+        let tmp%68#0: biguint = decode_bytes<biguint>(array_item%7#0)
+        let tmp%69#0: bytes = (concat tmp%67#0 tmp%68#0)
+        let tmp%70#0: uint64 = (len tmp%69#0)
+        let tmp%71#0: uint64 = (- tmp%70#0 32u)
+        let tmp%72#0: bytes = (extract3 tmp%66#0 tmp%71#0 32u)
+        let tmp%73#0: bytes = (concat tmp%63#0 tmp%72#0)
+        let tmp%74#0: bytes = (bzero 32u)
+        let slot_contents%11#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%8#0: Encoded(uint256) = extract_value(slot_contents%11#0, 3u)
+        let tmp%75#0: biguint = decode_bytes<biguint>(array_item%8#0)
+        let tmp%76#0: bytes = (concat tmp%74#0 tmp%75#0)
+        let tmp%77#0: bytes = (bzero 32u)
+        let slot_contents%12#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%9#0: Encoded(uint256) = extract_value(slot_contents%12#0, 3u)
+        let tmp%78#0: biguint = decode_bytes<biguint>(array_item%9#0)
+        let tmp%79#0: bytes = (concat tmp%77#0 tmp%78#0)
+        let tmp%80#0: uint64 = (len tmp%79#0)
+        let tmp%81#0: uint64 = (- tmp%80#0 32u)
+        let tmp%82#0: bytes = (extract3 tmp%76#0 tmp%81#0 32u)
+        let tmp%83#0: bytes = (concat tmp%73#0 tmp%82#0)
+        let tmp%84#0: bytes = (bzero 32u)
+        let slot_contents%13#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%10#0: Encoded(uint256) = extract_value(slot_contents%13#0, 4u)
+        let tmp%85#0: biguint = decode_bytes<biguint>(array_item%10#0)
+        let tmp%86#0: bytes = (concat tmp%84#0 tmp%85#0)
+        let tmp%87#0: bytes = (bzero 32u)
+        let slot_contents%14#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%11#0: Encoded(uint256) = extract_value(slot_contents%14#0, 4u)
+        let tmp%88#0: biguint = decode_bytes<biguint>(array_item%11#0)
+        let tmp%89#0: bytes = (concat tmp%87#0 tmp%88#0)
+        let tmp%90#0: uint64 = (len tmp%89#0)
+        let tmp%91#0: uint64 = (- tmp%90#0 32u)
+        let tmp%92#0: bytes = (extract3 tmp%86#0 tmp%91#0 32u)
+        let tmp%93#0: bytes = (concat tmp%83#0 tmp%92#0)
+        let tmp%94#0: bytes = (bzero 32u)
+        let slot_contents%15#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%12#0: Encoded(uint256) = extract_value(slot_contents%15#0, 5u)
+        let tmp%95#0: biguint = decode_bytes<biguint>(array_item%12#0)
+        let tmp%96#0: bytes = (concat tmp%94#0 tmp%95#0)
+        let tmp%97#0: bytes = (bzero 32u)
+        let slot_contents%16#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%13#0: Encoded(uint256) = extract_value(slot_contents%16#0, 5u)
+        let tmp%98#0: biguint = decode_bytes<biguint>(array_item%13#0)
+        let tmp%99#0: bytes = (concat tmp%97#0 tmp%98#0)
+        let tmp%100#0: uint64 = (len tmp%99#0)
+        let tmp%101#0: uint64 = (- tmp%100#0 32u)
+        let tmp%102#0: bytes = (extract3 tmp%96#0 tmp%101#0 32u)
+        let tmp%103#0: bytes = (concat tmp%93#0 tmp%102#0)
+        let tmp%104#0: bytes = (bzero 32u)
+        let slot_contents%17#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%14#0: Encoded(uint256) = extract_value(slot_contents%17#0, 6u)
+        let tmp%105#0: biguint = decode_bytes<biguint>(array_item%14#0)
+        let tmp%106#0: bytes = (concat tmp%104#0 tmp%105#0)
+        let tmp%107#0: bytes = (bzero 32u)
+        let slot_contents%18#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%15#0: Encoded(uint256) = extract_value(slot_contents%18#0, 6u)
+        let tmp%108#0: biguint = decode_bytes<biguint>(array_item%15#0)
+        let tmp%109#0: bytes = (concat tmp%107#0 tmp%108#0)
+        let tmp%110#0: uint64 = (len tmp%109#0)
+        let tmp%111#0: uint64 = (- tmp%110#0 32u)
+        let tmp%112#0: bytes = (extract3 tmp%106#0 tmp%111#0 32u)
+        let tmp%113#0: bytes = (concat tmp%103#0 tmp%112#0)
+        let tmp%114#0: bytes = (bzero 32u)
+        let slot_contents%19#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%16#0: Encoded(uint256) = extract_value(slot_contents%19#0, 7u)
+        let tmp%115#0: biguint = decode_bytes<biguint>(array_item%16#0)
+        let tmp%116#0: bytes = (concat tmp%114#0 tmp%115#0)
+        let tmp%117#0: bytes = (bzero 32u)
+        let slot_contents%20#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%17#0: Encoded(uint256) = extract_value(slot_contents%20#0, 7u)
+        let tmp%118#0: biguint = decode_bytes<biguint>(array_item%17#0)
+        let tmp%119#0: bytes = (concat tmp%117#0 tmp%118#0)
+        let tmp%120#0: uint64 = (len tmp%119#0)
+        let tmp%121#0: uint64 = (- tmp%120#0 32u)
+        let tmp%122#0: bytes = (extract3 tmp%116#0 tmp%121#0 32u)
+        let tmp%123#0: bytes = (concat tmp%113#0 tmp%122#0)
+        let tmp%124#0: bytes = (bzero 32u)
+        let slot_contents%21#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%18#0: Encoded(uint256) = extract_value(slot_contents%21#0, 8u)
+        let tmp%125#0: biguint = decode_bytes<biguint>(array_item%18#0)
+        let tmp%126#0: bytes = (concat tmp%124#0 tmp%125#0)
+        let tmp%127#0: bytes = (bzero 32u)
+        let slot_contents%22#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%19#0: Encoded(uint256) = extract_value(slot_contents%22#0, 8u)
+        let tmp%128#0: biguint = decode_bytes<biguint>(array_item%19#0)
+        let tmp%129#0: bytes = (concat tmp%127#0 tmp%128#0)
+        let tmp%130#0: uint64 = (len tmp%129#0)
+        let tmp%131#0: uint64 = (- tmp%130#0 32u)
+        let tmp%132#0: bytes = (extract3 tmp%126#0 tmp%131#0 32u)
+        let tmp%133#0: bytes = (concat tmp%123#0 tmp%132#0)
+        let tmp%134#0: bytes = (bzero 32u)
+        let slot_contents%23#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%20#0: Encoded(uint256) = extract_value(slot_contents%23#0, 9u)
+        let tmp%135#0: biguint = decode_bytes<biguint>(array_item%20#0)
+        let tmp%136#0: bytes = (concat tmp%134#0 tmp%135#0)
+        let tmp%137#0: bytes = (bzero 32u)
+        let slot_contents%24#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%21#0: Encoded(uint256) = extract_value(slot_contents%24#0, 9u)
+        let tmp%138#0: biguint = decode_bytes<biguint>(array_item%21#0)
+        let tmp%139#0: bytes = (concat tmp%137#0 tmp%138#0)
+        let tmp%140#0: uint64 = (len tmp%139#0)
+        let tmp%141#0: uint64 = (- tmp%140#0 32u)
+        let tmp%142#0: bytes = (extract3 tmp%136#0 tmp%141#0 32u)
+        let tmp%143#0: bytes = (concat tmp%133#0 tmp%142#0)
+        let tmp%144#0: bytes = (bzero 32u)
+        let slot_contents%25#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%22#0: Encoded(uint256) = extract_value(slot_contents%25#0, 10u)
+        let tmp%145#0: biguint = decode_bytes<biguint>(array_item%22#0)
+        let tmp%146#0: bytes = (concat tmp%144#0 tmp%145#0)
+        let tmp%147#0: bytes = (bzero 32u)
+        let slot_contents%26#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%23#0: Encoded(uint256) = extract_value(slot_contents%26#0, 10u)
+        let tmp%148#0: biguint = decode_bytes<biguint>(array_item%23#0)
+        let tmp%149#0: bytes = (concat tmp%147#0 tmp%148#0)
+        let tmp%150#0: uint64 = (len tmp%149#0)
+        let tmp%151#0: uint64 = (- tmp%150#0 32u)
+        let tmp%152#0: bytes = (extract3 tmp%146#0 tmp%151#0 32u)
+        let tmp%153#0: bytes = (concat tmp%143#0 tmp%152#0)
+        let tmp%154#0: bytes = (bzero 32u)
+        let slot_contents%27#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%24#0: Encoded(uint256) = extract_value(slot_contents%27#0, 11u)
+        let tmp%155#0: biguint = decode_bytes<biguint>(array_item%24#0)
+        let tmp%156#0: bytes = (concat tmp%154#0 tmp%155#0)
+        let tmp%157#0: bytes = (bzero 32u)
+        let slot_contents%28#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%25#0: Encoded(uint256) = extract_value(slot_contents%28#0, 11u)
+        let tmp%158#0: biguint = decode_bytes<biguint>(array_item%25#0)
+        let tmp%159#0: bytes = (concat tmp%157#0 tmp%158#0)
+        let tmp%160#0: uint64 = (len tmp%159#0)
+        let tmp%161#0: uint64 = (- tmp%160#0 32u)
+        let tmp%162#0: bytes = (extract3 tmp%156#0 tmp%161#0 32u)
+        let tmp%163#0: bytes = (concat tmp%153#0 tmp%162#0)
+        let tmp%164#0: bytes = (bzero 32u)
+        let slot_contents%29#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%26#0: Encoded(uint256) = extract_value(slot_contents%29#0, 12u)
+        let tmp%165#0: biguint = decode_bytes<biguint>(array_item%26#0)
+        let tmp%166#0: bytes = (concat tmp%164#0 tmp%165#0)
+        let tmp%167#0: bytes = (bzero 32u)
+        let slot_contents%30#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%27#0: Encoded(uint256) = extract_value(slot_contents%30#0, 12u)
+        let tmp%168#0: biguint = decode_bytes<biguint>(array_item%27#0)
+        let tmp%169#0: bytes = (concat tmp%167#0 tmp%168#0)
+        let tmp%170#0: uint64 = (len tmp%169#0)
+        let tmp%171#0: uint64 = (- tmp%170#0 32u)
+        let tmp%172#0: bytes = (extract3 tmp%166#0 tmp%171#0 32u)
+        let tmp%173#0: bytes = (concat tmp%163#0 tmp%172#0)
+        let tmp%174#0: bytes = (bzero 32u)
+        let slot_contents%31#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%28#0: Encoded(uint256) = extract_value(slot_contents%31#0, 13u)
+        let tmp%175#0: biguint = decode_bytes<biguint>(array_item%28#0)
+        let tmp%176#0: bytes = (concat tmp%174#0 tmp%175#0)
+        let tmp%177#0: bytes = (bzero 32u)
+        let slot_contents%32#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%29#0: Encoded(uint256) = extract_value(slot_contents%32#0, 13u)
+        let tmp%178#0: biguint = decode_bytes<biguint>(array_item%29#0)
+        let tmp%179#0: bytes = (concat tmp%177#0 tmp%178#0)
+        let tmp%180#0: uint64 = (len tmp%179#0)
+        let tmp%181#0: uint64 = (- tmp%180#0 32u)
+        let tmp%182#0: bytes = (extract3 tmp%176#0 tmp%181#0 32u)
+        let tmp%183#0: bytes = (concat tmp%173#0 tmp%182#0)
+        let tmp%184#0: bytes = (bzero 32u)
+        let slot_contents%33#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%30#0: Encoded(uint256) = extract_value(slot_contents%33#0, 14u)
+        let tmp%185#0: biguint = decode_bytes<biguint>(array_item%30#0)
+        let tmp%186#0: bytes = (concat tmp%184#0 tmp%185#0)
+        let tmp%187#0: bytes = (bzero 32u)
+        let slot_contents%34#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%31#0: Encoded(uint256) = extract_value(slot_contents%34#0, 14u)
+        let tmp%188#0: biguint = decode_bytes<biguint>(array_item%31#0)
+        let tmp%189#0: bytes = (concat tmp%187#0 tmp%188#0)
+        let tmp%190#0: uint64 = (len tmp%189#0)
+        let tmp%191#0: uint64 = (- tmp%190#0 32u)
+        let tmp%192#0: bytes = (extract3 tmp%186#0 tmp%191#0 32u)
+        let tmp%193#0: bytes = (concat tmp%183#0 tmp%192#0)
+        let tmp%194#0: bytes = (bzero 32u)
+        let slot_contents%35#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%32#0: Encoded(uint256) = extract_value(slot_contents%35#0, 15u)
+        let tmp%195#0: biguint = decode_bytes<biguint>(array_item%32#0)
+        let tmp%196#0: bytes = (concat tmp%194#0 tmp%195#0)
+        let tmp%197#0: bytes = (bzero 32u)
+        let slot_contents%36#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%33#0: Encoded(uint256) = extract_value(slot_contents%36#0, 15u)
+        let tmp%198#0: biguint = decode_bytes<biguint>(array_item%33#0)
+        let tmp%199#0: bytes = (concat tmp%197#0 tmp%198#0)
+        let tmp%200#0: uint64 = (len tmp%199#0)
+        let tmp%201#0: uint64 = (- tmp%200#0 32u)
+        let tmp%202#0: bytes = (extract3 tmp%196#0 tmp%201#0 32u)
+        let tmp%203#0: bytes = (concat tmp%193#0 tmp%202#0)
+        let tmp%204#0: bytes = (bzero 32u)
+        let slot_contents%37#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%34#0: Encoded(uint256) = extract_value(slot_contents%37#0, 16u)
+        let tmp%205#0: biguint = decode_bytes<biguint>(array_item%34#0)
+        let tmp%206#0: bytes = (concat tmp%204#0 tmp%205#0)
+        let tmp%207#0: bytes = (bzero 32u)
+        let slot_contents%38#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%35#0: Encoded(uint256) = extract_value(slot_contents%38#0, 16u)
+        let tmp%208#0: biguint = decode_bytes<biguint>(array_item%35#0)
+        let tmp%209#0: bytes = (concat tmp%207#0 tmp%208#0)
+        let tmp%210#0: uint64 = (len tmp%209#0)
+        let tmp%211#0: uint64 = (- tmp%210#0 32u)
+        let tmp%212#0: bytes = (extract3 tmp%206#0 tmp%211#0 32u)
+        let tmp%213#0: bytes = (concat tmp%203#0 tmp%212#0)
+        let tmp%214#0: bytes = (bzero 32u)
+        let slot_contents%39#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%36#0: Encoded(uint256) = extract_value(slot_contents%39#0, 17u)
+        let tmp%215#0: biguint = decode_bytes<biguint>(array_item%36#0)
+        let tmp%216#0: bytes = (concat tmp%214#0 tmp%215#0)
+        let tmp%217#0: bytes = (bzero 32u)
+        let slot_contents%40#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%37#0: Encoded(uint256) = extract_value(slot_contents%40#0, 17u)
+        let tmp%218#0: biguint = decode_bytes<biguint>(array_item%37#0)
+        let tmp%219#0: bytes = (concat tmp%217#0 tmp%218#0)
+        let tmp%220#0: uint64 = (len tmp%219#0)
+        let tmp%221#0: uint64 = (- tmp%220#0 32u)
+        let tmp%222#0: bytes = (extract3 tmp%216#0 tmp%221#0 32u)
+        let tmp%223#0: bytes = (concat tmp%213#0 tmp%222#0)
+        let tmp%224#0: bytes = (bzero 32u)
+        let slot_contents%41#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%38#0: Encoded(uint256) = extract_value(slot_contents%41#0, 18u)
+        let tmp%225#0: biguint = decode_bytes<biguint>(array_item%38#0)
+        let tmp%226#0: bytes = (concat tmp%224#0 tmp%225#0)
+        let tmp%227#0: bytes = (bzero 32u)
+        let slot_contents%42#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%39#0: Encoded(uint256) = extract_value(slot_contents%42#0, 18u)
+        let tmp%228#0: biguint = decode_bytes<biguint>(array_item%39#0)
+        let tmp%229#0: bytes = (concat tmp%227#0 tmp%228#0)
+        let tmp%230#0: uint64 = (len tmp%229#0)
+        let tmp%231#0: uint64 = (- tmp%230#0 32u)
+        let tmp%232#0: bytes = (extract3 tmp%226#0 tmp%231#0 32u)
+        let tmp%233#0: bytes = (concat tmp%223#0 tmp%232#0)
+        let tmp%234#0: bytes = (bzero 32u)
+        let slot_contents%43#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%40#0: Encoded(uint256) = extract_value(slot_contents%43#0, 19u)
+        let tmp%235#0: biguint = decode_bytes<biguint>(array_item%40#0)
+        let tmp%236#0: bytes = (concat tmp%234#0 tmp%235#0)
+        let tmp%237#0: bytes = (bzero 32u)
+        let slot_contents%44#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%41#0: Encoded(uint256) = extract_value(slot_contents%44#0, 19u)
+        let tmp%238#0: biguint = decode_bytes<biguint>(array_item%41#0)
+        let tmp%239#0: bytes = (concat tmp%237#0 tmp%238#0)
+        let tmp%240#0: uint64 = (len tmp%239#0)
+        let tmp%241#0: uint64 = (- tmp%240#0 32u)
+        let tmp%242#0: bytes = (extract3 tmp%236#0 tmp%241#0 32u)
+        let tmp%243#0: bytes = (concat tmp%233#0 tmp%242#0)
+        let tmp%244#0: bytes = (bzero 32u)
+        let slot_contents%45#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%42#0: Encoded(uint256) = extract_value(slot_contents%45#0, 20u)
+        let tmp%245#0: biguint = decode_bytes<biguint>(array_item%42#0)
+        let tmp%246#0: bytes = (concat tmp%244#0 tmp%245#0)
+        let tmp%247#0: bytes = (bzero 32u)
+        let slot_contents%46#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%43#0: Encoded(uint256) = extract_value(slot_contents%46#0, 20u)
+        let tmp%248#0: biguint = decode_bytes<biguint>(array_item%43#0)
+        let tmp%249#0: bytes = (concat tmp%247#0 tmp%248#0)
+        let tmp%250#0: uint64 = (len tmp%249#0)
+        let tmp%251#0: uint64 = (- tmp%250#0 32u)
+        let tmp%252#0: bytes = (extract3 tmp%246#0 tmp%251#0 32u)
+        let tmp%253#0: bytes = (concat tmp%243#0 tmp%252#0)
+        let tmp%254#0: bytes = (bzero 32u)
+        let slot_contents%47#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%44#0: Encoded(uint256) = extract_value(slot_contents%47#0, 21u)
+        let tmp%255#0: biguint = decode_bytes<biguint>(array_item%44#0)
+        let tmp%256#0: bytes = (concat tmp%254#0 tmp%255#0)
+        let tmp%257#0: bytes = (bzero 32u)
+        let slot_contents%48#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%45#0: Encoded(uint256) = extract_value(slot_contents%48#0, 21u)
+        let tmp%258#0: biguint = decode_bytes<biguint>(array_item%45#0)
+        let tmp%259#0: bytes = (concat tmp%257#0 tmp%258#0)
+        let tmp%260#0: uint64 = (len tmp%259#0)
+        let tmp%261#0: uint64 = (- tmp%260#0 32u)
+        let tmp%262#0: bytes = (extract3 tmp%256#0 tmp%261#0 32u)
+        let tmp%263#0: bytes = (concat tmp%253#0 tmp%262#0)
+        let tmp%264#0: bytes = (bzero 32u)
+        let slot_contents%49#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%46#0: Encoded(uint256) = extract_value(slot_contents%49#0, 22u)
+        let tmp%265#0: biguint = decode_bytes<biguint>(array_item%46#0)
+        let tmp%266#0: bytes = (concat tmp%264#0 tmp%265#0)
+        let tmp%267#0: bytes = (bzero 32u)
+        let slot_contents%50#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%47#0: Encoded(uint256) = extract_value(slot_contents%50#0, 22u)
+        let tmp%268#0: biguint = decode_bytes<biguint>(array_item%47#0)
+        let tmp%269#0: bytes = (concat tmp%267#0 tmp%268#0)
+        let tmp%270#0: uint64 = (len tmp%269#0)
+        let tmp%271#0: uint64 = (- tmp%270#0 32u)
+        let tmp%272#0: bytes = (extract3 tmp%266#0 tmp%271#0 32u)
+        let tmp%273#0: bytes = (concat tmp%263#0 tmp%272#0)
+        let tmp%274#0: bytes = (bzero 32u)
+        let slot_contents%51#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%48#0: Encoded(uint256) = extract_value(slot_contents%51#0, 23u)
+        let tmp%275#0: biguint = decode_bytes<biguint>(array_item%48#0)
+        let tmp%276#0: bytes = (concat tmp%274#0 tmp%275#0)
+        let tmp%277#0: bytes = (bzero 32u)
+        let slot_contents%52#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%49#0: Encoded(uint256) = extract_value(slot_contents%52#0, 23u)
+        let tmp%278#0: biguint = decode_bytes<biguint>(array_item%49#0)
+        let tmp%279#0: bytes = (concat tmp%277#0 tmp%278#0)
+        let tmp%280#0: uint64 = (len tmp%279#0)
+        let tmp%281#0: uint64 = (- tmp%280#0 32u)
+        let tmp%282#0: bytes = (extract3 tmp%276#0 tmp%281#0 32u)
+        let tmp%283#0: bytes = (concat tmp%273#0 tmp%282#0)
+        let tmp%284#0: bytes = (bzero 32u)
+        let slot_contents%53#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%50#0: Encoded(uint256) = extract_value(slot_contents%53#0, 24u)
+        let tmp%285#0: biguint = decode_bytes<biguint>(array_item%50#0)
+        let tmp%286#0: bytes = (concat tmp%284#0 tmp%285#0)
+        let tmp%287#0: bytes = (bzero 32u)
+        let slot_contents%54#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%51#0: Encoded(uint256) = extract_value(slot_contents%54#0, 24u)
+        let tmp%288#0: biguint = decode_bytes<biguint>(array_item%51#0)
+        let tmp%289#0: bytes = (concat tmp%287#0 tmp%288#0)
+        let tmp%290#0: uint64 = (len tmp%289#0)
+        let tmp%291#0: uint64 = (- tmp%290#0 32u)
+        let tmp%292#0: bytes = (extract3 tmp%286#0 tmp%291#0 32u)
+        let tmp%293#0: bytes = (concat tmp%283#0 tmp%292#0)
+        let tmp%294#0: bytes = (bzero 32u)
+        let slot_contents%55#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%52#0: Encoded(uint256) = extract_value(slot_contents%55#0, 25u)
+        let tmp%295#0: biguint = decode_bytes<biguint>(array_item%52#0)
+        let tmp%296#0: bytes = (concat tmp%294#0 tmp%295#0)
+        let tmp%297#0: bytes = (bzero 32u)
+        let slot_contents%56#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%53#0: Encoded(uint256) = extract_value(slot_contents%56#0, 25u)
+        let tmp%298#0: biguint = decode_bytes<biguint>(array_item%53#0)
+        let tmp%299#0: bytes = (concat tmp%297#0 tmp%298#0)
+        let tmp%300#0: uint64 = (len tmp%299#0)
+        let tmp%301#0: uint64 = (- tmp%300#0 32u)
+        let tmp%302#0: bytes = (extract3 tmp%296#0 tmp%301#0 32u)
+        let tmp%303#0: bytes = (concat tmp%293#0 tmp%302#0)
+        let tmp%304#0: bytes = (bzero 32u)
+        let slot_contents%57#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%54#0: Encoded(uint256) = extract_value(slot_contents%57#0, 26u)
+        let tmp%305#0: biguint = decode_bytes<biguint>(array_item%54#0)
+        let tmp%306#0: bytes = (concat tmp%304#0 tmp%305#0)
+        let tmp%307#0: bytes = (bzero 32u)
+        let slot_contents%58#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%55#0: Encoded(uint256) = extract_value(slot_contents%58#0, 26u)
+        let tmp%308#0: biguint = decode_bytes<biguint>(array_item%55#0)
+        let tmp%309#0: bytes = (concat tmp%307#0 tmp%308#0)
+        let tmp%310#0: uint64 = (len tmp%309#0)
+        let tmp%311#0: uint64 = (- tmp%310#0 32u)
+        let tmp%312#0: bytes = (extract3 tmp%306#0 tmp%311#0 32u)
+        let tmp%313#0: bytes = (concat tmp%303#0 tmp%312#0)
+        let tmp%314#0: bytes = (bzero 32u)
+        let slot_contents%59#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%56#0: Encoded(uint256) = extract_value(slot_contents%59#0, 27u)
+        let tmp%315#0: biguint = decode_bytes<biguint>(array_item%56#0)
+        let tmp%316#0: bytes = (concat tmp%314#0 tmp%315#0)
+        let tmp%317#0: bytes = (bzero 32u)
+        let slot_contents%60#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%57#0: Encoded(uint256) = extract_value(slot_contents%60#0, 27u)
+        let tmp%318#0: biguint = decode_bytes<biguint>(array_item%57#0)
+        let tmp%319#0: bytes = (concat tmp%317#0 tmp%318#0)
+        let tmp%320#0: uint64 = (len tmp%319#0)
+        let tmp%321#0: uint64 = (- tmp%320#0 32u)
+        let tmp%322#0: bytes = (extract3 tmp%316#0 tmp%321#0 32u)
+        let tmp%323#0: bytes = (concat tmp%313#0 tmp%322#0)
+        let tmp%324#0: bytes = (bzero 32u)
+        let slot_contents%61#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%58#0: Encoded(uint256) = extract_value(slot_contents%61#0, 28u)
+        let tmp%325#0: biguint = decode_bytes<biguint>(array_item%58#0)
+        let tmp%326#0: bytes = (concat tmp%324#0 tmp%325#0)
+        let tmp%327#0: bytes = (bzero 32u)
+        let slot_contents%62#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%59#0: Encoded(uint256) = extract_value(slot_contents%62#0, 28u)
+        let tmp%328#0: biguint = decode_bytes<biguint>(array_item%59#0)
+        let tmp%329#0: bytes = (concat tmp%327#0 tmp%328#0)
+        let tmp%330#0: uint64 = (len tmp%329#0)
+        let tmp%331#0: uint64 = (- tmp%330#0 32u)
+        let tmp%332#0: bytes = (extract3 tmp%326#0 tmp%331#0 32u)
+        let tmp%333#0: bytes = (concat tmp%323#0 tmp%332#0)
+        let tmp%334#0: bytes = (bzero 32u)
+        let slot_contents%63#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%60#0: Encoded(uint256) = extract_value(slot_contents%63#0, 29u)
+        let tmp%335#0: biguint = decode_bytes<biguint>(array_item%60#0)
+        let tmp%336#0: bytes = (concat tmp%334#0 tmp%335#0)
+        let tmp%337#0: bytes = (bzero 32u)
+        let slot_contents%64#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%61#0: Encoded(uint256) = extract_value(slot_contents%64#0, 29u)
+        let tmp%338#0: biguint = decode_bytes<biguint>(array_item%61#0)
+        let tmp%339#0: bytes = (concat tmp%337#0 tmp%338#0)
+        let tmp%340#0: uint64 = (len tmp%339#0)
+        let tmp%341#0: uint64 = (- tmp%340#0 32u)
+        let tmp%342#0: bytes = (extract3 tmp%336#0 tmp%341#0 32u)
+        let tmp%343#0: bytes = (concat tmp%333#0 tmp%342#0)
+        let tmp%344#0: bytes = (bzero 32u)
+        let slot_contents%65#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%62#0: Encoded(uint256) = extract_value(slot_contents%65#0, 30u)
+        let tmp%345#0: biguint = decode_bytes<biguint>(array_item%62#0)
+        let tmp%346#0: bytes = (concat tmp%344#0 tmp%345#0)
+        let tmp%347#0: bytes = (bzero 32u)
+        let slot_contents%66#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%63#0: Encoded(uint256) = extract_value(slot_contents%66#0, 30u)
+        let tmp%348#0: biguint = decode_bytes<biguint>(array_item%63#0)
+        let tmp%349#0: bytes = (concat tmp%347#0 tmp%348#0)
+        let tmp%350#0: uint64 = (len tmp%349#0)
+        let tmp%351#0: uint64 = (- tmp%350#0 32u)
+        let tmp%352#0: bytes = (extract3 tmp%346#0 tmp%351#0 32u)
+        let tmp%353#0: bytes = (concat tmp%343#0 tmp%352#0)
+        let tmp%354#0: bytes = (bzero 32u)
+        let slot_contents%67#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%64#0: Encoded(uint256) = extract_value(slot_contents%67#0, 31u)
+        let tmp%355#0: biguint = decode_bytes<biguint>(array_item%64#0)
+        let tmp%356#0: bytes = (concat tmp%354#0 tmp%355#0)
+        let tmp%357#0: bytes = (bzero 32u)
+        let slot_contents%68#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%65#0: Encoded(uint256) = extract_value(slot_contents%68#0, 31u)
+        let tmp%358#0: biguint = decode_bytes<biguint>(array_item%65#0)
+        let tmp%359#0: bytes = (concat tmp%357#0 tmp%358#0)
+        let tmp%360#0: uint64 = (len tmp%359#0)
+        let tmp%361#0: uint64 = (- tmp%360#0 32u)
+        let tmp%362#0: bytes = (extract3 tmp%356#0 tmp%361#0 32u)
+        let tmp%363#0: bytes = (concat tmp%353#0 tmp%362#0)
+        let tmp%364#0: bytes = (bzero 32u)
+        let slot_contents%69#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%66#0: Encoded(uint256) = extract_value(slot_contents%69#0, 32u)
+        let tmp%365#0: biguint = decode_bytes<biguint>(array_item%66#0)
+        let tmp%366#0: bytes = (concat tmp%364#0 tmp%365#0)
+        let tmp%367#0: bytes = (bzero 32u)
+        let slot_contents%70#0: Encoded(uint256[33]) = load(shplonkNuChallengeElements#4)
+        let array_item%67#0: Encoded(uint256) = extract_value(slot_contents%70#0, 32u)
+        let tmp%368#0: biguint = decode_bytes<biguint>(array_item%67#0)
+        let tmp%369#0: bytes = (concat tmp%367#0 tmp%368#0)
+        let tmp%370#0: uint64 = (len tmp%369#0)
+        let tmp%371#0: uint64 = (- tmp%370#0 32u)
+        let tmp%372#0: bytes = (extract3 tmp%366#0 tmp%371#0 32u)
+        let tmp%373#0: bytes = (concat tmp%363#0 tmp%372#0)
+        let tmp%374#0: bytes = (keccak256 tmp%373#0)
+        let tmp%375#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(tmp%374#0)
+        let nextPreviousChallenge#1: biguint = tmp%375#0
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.splitChallenge(nextPreviousChallenge#1)
+        let (tmp%376#0: biguint, tmp%377#0: biguint) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.splitChallenge(nextPreviousChallenge#1)
+        let shplonkNu#1: biguint = tmp%376#0
+        return shplonkNu#1 nextPreviousChallenge#1 proof#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateShplonkZChallenge(proof: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)), prevChallenge: biguint) -> <biguint, biguint, Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256))>:
+    block@0: // L27170
+        let proof%is_original#0: bool = 1u
+        let proof%out#0: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)) = proof#0
+        let shplonkZ#0: biguint = 0b
+        let nextPreviousChallenge#0: biguint = 0b
+        let encoded_array%0#0: Encoded(uint256[5]) = bytes_encode<uint256[5]>(0x, 0x, 0x, 0x, 0x)
+        let slot%0#0: Encoded(uint256[5])* = new()
+        store(slot%0#0, encoded_array%0#0)
+        let shplonkZChallengeElements#0: Encoded(uint256[5])* = slot%0#0
+        let encoded_value%0#0: Encoded(uint256) = bytes_encode<uint256>(prevChallenge#0)
+        let slot_contents%0#0: Encoded(uint256[5]) = load(shplonkZChallengeElements#0)
+        let updated_array%0#0: Encoded(uint256[5]) = replace_value(slot_contents%0#0, 0u, encoded_value%0#0)
+        store(shplonkZChallengeElements#0, updated_array%0#0)
+        let shplonkZChallengeElements#1: Encoded(uint256[5])* = shplonkZChallengeElements#0
+        let tuple_item%0#0: Encoded(uint256,uint256,uint256,uint256) = extract_value(proof#0, 18)
+        let tuple_item%1#0: Encoded(uint256) = extract_value(tuple_item%0#0, 0)
+        let tmp%0#0: biguint = decode_bytes<biguint>(tuple_item%1#0)
+        let encoded_value%1#0: Encoded(uint256) = bytes_encode<uint256>(tmp%0#0)
+        let slot_contents%1#0: Encoded(uint256[5]) = load(shplonkZChallengeElements#1)
+        let updated_array%1#0: Encoded(uint256[5]) = replace_value(slot_contents%1#0, 1u, encoded_value%1#0)
+        store(shplonkZChallengeElements#1, updated_array%1#0)
+        let shplonkZChallengeElements#2: Encoded(uint256[5])* = shplonkZChallengeElements#1
+        let tuple_item%2#0: Encoded(uint256,uint256,uint256,uint256) = extract_value(proof#0, 18)
+        let tuple_item%3#0: Encoded(uint256) = extract_value(tuple_item%2#0, 1)
+        let tmp%1#0: biguint = decode_bytes<biguint>(tuple_item%3#0)
+        let encoded_value%2#0: Encoded(uint256) = bytes_encode<uint256>(tmp%1#0)
+        let slot_contents%2#0: Encoded(uint256[5]) = load(shplonkZChallengeElements#2)
+        let updated_array%2#0: Encoded(uint256[5]) = replace_value(slot_contents%2#0, 2u, encoded_value%2#0)
+        store(shplonkZChallengeElements#2, updated_array%2#0)
+        let shplonkZChallengeElements#3: Encoded(uint256[5])* = shplonkZChallengeElements#2
+        let tuple_item%4#0: Encoded(uint256,uint256,uint256,uint256) = extract_value(proof#0, 18)
+        let tuple_item%5#0: Encoded(uint256) = extract_value(tuple_item%4#0, 2)
+        let tmp%2#0: biguint = decode_bytes<biguint>(tuple_item%5#0)
+        let encoded_value%3#0: Encoded(uint256) = bytes_encode<uint256>(tmp%2#0)
+        let slot_contents%3#0: Encoded(uint256[5]) = load(shplonkZChallengeElements#3)
+        let updated_array%3#0: Encoded(uint256[5]) = replace_value(slot_contents%3#0, 3u, encoded_value%3#0)
+        store(shplonkZChallengeElements#3, updated_array%3#0)
+        let shplonkZChallengeElements#4: Encoded(uint256[5])* = shplonkZChallengeElements#3
+        let tuple_item%6#0: Encoded(uint256,uint256,uint256,uint256) = extract_value(proof#0, 18)
+        let tuple_item%7#0: Encoded(uint256) = extract_value(tuple_item%6#0, 3)
+        let tmp%3#0: biguint = decode_bytes<biguint>(tuple_item%7#0)
+        let encoded_value%4#0: Encoded(uint256) = bytes_encode<uint256>(tmp%3#0)
+        let slot_contents%4#0: Encoded(uint256[5]) = load(shplonkZChallengeElements#4)
+        let updated_array%4#0: Encoded(uint256[5]) = replace_value(slot_contents%4#0, 4u, encoded_value%4#0)
+        store(shplonkZChallengeElements#4, updated_array%4#0)
+        let shplonkZChallengeElements#5: Encoded(uint256[5])* = shplonkZChallengeElements#4
+        let tmp%4#0: bytes = (bzero 32u)
+        let slot_contents%5#0: Encoded(uint256[5]) = load(shplonkZChallengeElements#5)
+        let array_item%0#0: Encoded(uint256) = extract_value(slot_contents%5#0, 0u)
+        let tmp%5#0: biguint = decode_bytes<biguint>(array_item%0#0)
+        let tmp%6#0: bytes = (concat tmp%4#0 tmp%5#0)
+        let tmp%7#0: bytes = (bzero 32u)
+        let slot_contents%6#0: Encoded(uint256[5]) = load(shplonkZChallengeElements#5)
+        let array_item%1#0: Encoded(uint256) = extract_value(slot_contents%6#0, 0u)
+        let tmp%8#0: biguint = decode_bytes<biguint>(array_item%1#0)
+        let tmp%9#0: bytes = (concat tmp%7#0 tmp%8#0)
+        let tmp%10#0: uint64 = (len tmp%9#0)
+        let tmp%11#0: uint64 = (- tmp%10#0 32u)
+        let tmp%12#0: bytes = (extract3 tmp%6#0 tmp%11#0 32u)
+        let tmp%13#0: bytes = (bzero 32u)
+        let slot_contents%7#0: Encoded(uint256[5]) = load(shplonkZChallengeElements#5)
+        let array_item%2#0: Encoded(uint256) = extract_value(slot_contents%7#0, 1u)
+        let tmp%14#0: biguint = decode_bytes<biguint>(array_item%2#0)
+        let tmp%15#0: bytes = (concat tmp%13#0 tmp%14#0)
+        let tmp%16#0: bytes = (bzero 32u)
+        let slot_contents%8#0: Encoded(uint256[5]) = load(shplonkZChallengeElements#5)
+        let array_item%3#0: Encoded(uint256) = extract_value(slot_contents%8#0, 1u)
+        let tmp%17#0: biguint = decode_bytes<biguint>(array_item%3#0)
+        let tmp%18#0: bytes = (concat tmp%16#0 tmp%17#0)
+        let tmp%19#0: uint64 = (len tmp%18#0)
+        let tmp%20#0: uint64 = (- tmp%19#0 32u)
+        let tmp%21#0: bytes = (extract3 tmp%15#0 tmp%20#0 32u)
+        let tmp%22#0: bytes = (concat tmp%12#0 tmp%21#0)
+        let tmp%23#0: bytes = (bzero 32u)
+        let slot_contents%9#0: Encoded(uint256[5]) = load(shplonkZChallengeElements#5)
+        let array_item%4#0: Encoded(uint256) = extract_value(slot_contents%9#0, 2u)
+        let tmp%24#0: biguint = decode_bytes<biguint>(array_item%4#0)
+        let tmp%25#0: bytes = (concat tmp%23#0 tmp%24#0)
+        let tmp%26#0: bytes = (bzero 32u)
+        let slot_contents%10#0: Encoded(uint256[5]) = load(shplonkZChallengeElements#5)
+        let array_item%5#0: Encoded(uint256) = extract_value(slot_contents%10#0, 2u)
+        let tmp%27#0: biguint = decode_bytes<biguint>(array_item%5#0)
+        let tmp%28#0: bytes = (concat tmp%26#0 tmp%27#0)
+        let tmp%29#0: uint64 = (len tmp%28#0)
+        let tmp%30#0: uint64 = (- tmp%29#0 32u)
+        let tmp%31#0: bytes = (extract3 tmp%25#0 tmp%30#0 32u)
+        let tmp%32#0: bytes = (concat tmp%22#0 tmp%31#0)
+        let tmp%33#0: bytes = (bzero 32u)
+        let slot_contents%11#0: Encoded(uint256[5]) = load(shplonkZChallengeElements#5)
+        let array_item%6#0: Encoded(uint256) = extract_value(slot_contents%11#0, 3u)
+        let tmp%34#0: biguint = decode_bytes<biguint>(array_item%6#0)
+        let tmp%35#0: bytes = (concat tmp%33#0 tmp%34#0)
+        let tmp%36#0: bytes = (bzero 32u)
+        let slot_contents%12#0: Encoded(uint256[5]) = load(shplonkZChallengeElements#5)
+        let array_item%7#0: Encoded(uint256) = extract_value(slot_contents%12#0, 3u)
+        let tmp%37#0: biguint = decode_bytes<biguint>(array_item%7#0)
+        let tmp%38#0: bytes = (concat tmp%36#0 tmp%37#0)
+        let tmp%39#0: uint64 = (len tmp%38#0)
+        let tmp%40#0: uint64 = (- tmp%39#0 32u)
+        let tmp%41#0: bytes = (extract3 tmp%35#0 tmp%40#0 32u)
+        let tmp%42#0: bytes = (concat tmp%32#0 tmp%41#0)
+        let tmp%43#0: bytes = (bzero 32u)
+        let slot_contents%13#0: Encoded(uint256[5]) = load(shplonkZChallengeElements#5)
+        let array_item%8#0: Encoded(uint256) = extract_value(slot_contents%13#0, 4u)
+        let tmp%44#0: biguint = decode_bytes<biguint>(array_item%8#0)
+        let tmp%45#0: bytes = (concat tmp%43#0 tmp%44#0)
+        let tmp%46#0: bytes = (bzero 32u)
+        let slot_contents%14#0: Encoded(uint256[5]) = load(shplonkZChallengeElements#5)
+        let array_item%9#0: Encoded(uint256) = extract_value(slot_contents%14#0, 4u)
+        let tmp%47#0: biguint = decode_bytes<biguint>(array_item%9#0)
+        let tmp%48#0: bytes = (concat tmp%46#0 tmp%47#0)
+        let tmp%49#0: uint64 = (len tmp%48#0)
+        let tmp%50#0: uint64 = (- tmp%49#0 32u)
+        let tmp%51#0: bytes = (extract3 tmp%45#0 tmp%50#0 32u)
+        let tmp%52#0: bytes = (concat tmp%42#0 tmp%51#0)
+        let tmp%53#0: bytes = (keccak256 tmp%52#0)
+        let tmp%54#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(tmp%53#0)
+        let nextPreviousChallenge#1: biguint = tmp%54#0
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.splitChallenge(nextPreviousChallenge#1)
+        let (tmp%55#0: biguint, tmp%56#0: biguint) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.splitChallenge(nextPreviousChallenge#1)
+        let shplonkZ#1: biguint = tmp%55#0
+        return shplonkZ#1 nextPreviousChallenge#1 proof#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateTranscript__chunk_11(proof: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)), publicInputs: Encoded(uint8[32][])*, circuitSize: biguint, publicInputsSize: biguint, pubInputsOffset: biguint, previousChallenge: biguint, t: Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256)) -> <Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256), Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)), Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256)>:
+    block@0: // L14971
+        let proof%is_original#0: bool = 1u
+        let proof%out#0: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)) = proof#0
+        let t%is_original#0: bool = 1u
+        let t%out#0: Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256) = t#0
+        let (ZKTranscriptLib.generateShplonkNuChallenge%0#0: biguint, ZKTranscriptLib.generateShplonkNuChallenge%1#0: biguint, ZKTranscriptLib.generateShplonkNuChallenge%2#0: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256))) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateShplonkNuChallenge(proof#0, previousChallenge#0)
+        let proof#1: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)) = ZKTranscriptLib.generateShplonkNuChallenge%2#0
+        goto proof%is_original#0 ? block@1 : block@2
+    block@1: // if_body_L1
+        let proof%out#1: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)) = proof#1
+        goto block@2
+    block@2: // after_if_else_L1
+        let previousChallenge#1: biguint = ZKTranscriptLib.generateShplonkNuChallenge%1#0
+        let (ZKTranscriptLib.generateShplonkZChallenge%0#0: biguint, ZKTranscriptLib.generateShplonkZChallenge%1#0: biguint, ZKTranscriptLib.generateShplonkZChallenge%2#0: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256))) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateShplonkZChallenge(proof#1, previousChallenge#1)
+        let proof#3: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)) = ZKTranscriptLib.generateShplonkZChallenge%2#0
+        goto proof%is_original#0 ? block@3 : block@4
+    block@3: // if_body_L1
+        let proof%out#2: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)) = proof#3
+        goto block@4
+    block@4: // after_if_else_L1
+        let (ZKTranscriptLib.generateShplonkZChallenge%3#0: biguint, ZKTranscriptLib.generateShplonkZChallenge%4#0: biguint, ZKTranscriptLib.generateShplonkZChallenge%5#0: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256))) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateShplonkZChallenge(proof#3, previousChallenge#1)
+        let proof#5: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)) = ZKTranscriptLib.generateShplonkZChallenge%5#0
+        goto proof%is_original#0 ? block@5 : block@6
+    block@5: // if_body_L1
+        let proof%out#3: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)) = proof#5
+        goto block@6
+    block@6: // after_if_else_L1
+        let tmp%0#0: Encoded(uint256) = bytes_encode<uint256>(ZKTranscriptLib.generateShplonkZChallenge%3#0)
+        let updated_tuple%0#0: Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256) = replace_value(t#0, 8, tmp%0#0)
+        let t#4: Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256) = updated_tuple%0#0
+        goto t%is_original#0 ? block@7 : block@8
+    block@7: // if_body_L1
+        let t%out#1: Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256) = t#4
+        goto block@8
+    block@8: // after_if_else_L1
+        let (ZKTranscriptLib.generateShplonkZChallenge%6#0: biguint, ZKTranscriptLib.generateShplonkZChallenge%7#0: biguint, ZKTranscriptLib.generateShplonkZChallenge%8#0: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256))) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateShplonkZChallenge(proof#5, previousChallenge#1)
+        let proof#8: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)) = ZKTranscriptLib.generateShplonkZChallenge%8#0
+        goto proof%is_original#0 ? block@9 : block@10
+    block@9: // if_body_L1
+        let proof%out#4: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)) = proof#8
+        goto block@10
+    block@10: // after_if_else_L1
+        let previousChallenge#5: biguint = ZKTranscriptLib.generateShplonkZChallenge%7#0
+        return t#4 proof#8 t#4
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.splitChallenge(challenge: biguint) -> <biguint, biguint>:
+    block@0: // L16219
+        let first#0: biguint = 0b
+        let second#0: biguint = 0b
+        let challengeU256#0: biguint = challenge#0
+        let tmp%0#0: biguint = (b& challengeU256#0 340282366920938463463374607431768211455b)
+        let lo#0: biguint = tmp%0#0
+        let tmp%1#0: bytes = (bzero 32u)
+        let tmp%2#0: uint64 = (- 255u 128u)
+        let reinterpret_biguint%0#0: biguint = (setbit tmp%1#0 tmp%2#0 1u)
+        let tmp%3#0: biguint = (b/ challengeU256#0 reinterpret_biguint%0#0)
+        let hi#0: biguint = tmp%3#0
+        let tmp%4#0: bytes = (bzero 32u)
+        let tmp%5#0: bytes = (concat tmp%4#0 lo#0)
+        let tmp%6#0: bytes = (bzero 32u)
+        let tmp%7#0: bytes = (concat tmp%6#0 lo#0)
+        let tmp%8#0: uint64 = (len tmp%7#0)
+        let tmp%9#0: uint64 = (- tmp%8#0 32u)
+        let reinterpret_bytes[32]%0#0: bytes[32] = (extract3 tmp%5#0 tmp%9#0 32u)
+        let tmp%10#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(reinterpret_bytes[32]%0#0)
+        let first#1: biguint = tmp%10#0
+        let tmp%11#0: bytes = (bzero 32u)
+        let tmp%12#0: bytes = (concat tmp%11#0 hi#0)
+        let tmp%13#0: bytes = (bzero 32u)
+        let tmp%14#0: bytes = (concat tmp%13#0 hi#0)
+        let tmp%15#0: uint64 = (len tmp%14#0)
+        let tmp%16#0: uint64 = (- tmp%15#0 32u)
+        let reinterpret_bytes[32]%1#0: bytes[32] = (extract3 tmp%12#0 tmp%16#0 32u)
+        let tmp%17#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(reinterpret_bytes[32]%1#0)
+        let second#1: biguint = tmp%17#0
+        return first#1 second#1
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper15.__puya_arc4_router__() -> bool:
+    block@0: // L1
+        let tmp%0#0: uint64 = (txn NumAppArgs)
+        let tmp%1#0: bool = (!= tmp%0#0 0u)
+        goto tmp%1#0 ? block@1 : block@8
+    block@1: // abi_routing_L1
+        let tmp%2#0: uint64 = (txn OnCompletion)
+        let tmp%3#0: bool = (== tmp%2#0 NoOp)
+        (assert tmp%3#0)
+        let tmp%4#0: uint64 = (txn ApplicationID)
+        let tmp%5#0: bool = (!= tmp%4#0 0u)
+        goto tmp%5#0 ? block@2 : block@6
+    block@2: // call_NoOp_L1
+        let tmp%6#0: bytes = (txna ApplicationArgs 0)
+        switch tmp%6#0 {method "ZKTranscriptLib.generateTranscript__chunk_11(byte[32][])((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256)" => block@3, method "__init__(uint64,uint64,byte[])void" => block@4, * => block@5}
+    block@3: // ZKTranscriptLib.generateTranscript__chunk_11_route_L14971
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper15.ZKTranscriptLib.generateTranscript__chunk_11[routing]()
+        goto block@5
+    block@4: // __init___route_L65448
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper15.__init__[routing]()
+        goto block@5
+    block@5: // switch_case_next_L1
+        goto block@7
+    block@6: // create_NoOp_L1
+        goto block@7
+    block@7: // after_if_else_L1
+        goto block@9
+    block@8: // __bare_create___L65448
+        let tmp%7#0: uint64 = (txn OnCompletion)
+        let tmp%8#0: bool = (== tmp%7#0 NoOp)
+        let tmp%9#0: uint64 = (txn ApplicationID)
+        let tmp%10#0: bool = (== tmp%9#0 0u)
+        let tmp%11#0: bool = (&& tmp%8#0 tmp%10#0)
+        (assert tmp%11#0)
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper15.__bare_create__()
+        exit 1u
+    block@9: // after_if_else_L1
+        exit 0u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper15.ZKTranscriptLib.generateTranscript__chunk_11[routing]() -> void:
+    block@0: // L14971
+        let tmp%0#0: bytes = (txna ApplicationArgs 1)
+        let length%0#0: uint64 = array_len(tmp%0#0)
+        let mul%0#0: uint64 = (* length%0#0 32u)
+        let add%0#0: uint64 = (+ mul%0#0 2u)
+        let len%0#0: uint64 = (len tmp%0#0)
+        let eq%0#0: bool = (== len%0#0 add%0#0)
+        (assert eq%0#0) // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 32>>
+        let as_Encoded(len+uint8[32][])%0#0: Encoded(len+uint8[32][]) = tmp%0#0
+        let decoded_array%0#0: Encoded(uint8[32][]) = decode_bytes<Encoded(uint8[32][])>(as_Encoded(len+uint8[32][])%0#0)
+        let slot%0#0: Encoded(uint8[32][])* = new()
+        store(slot%0#0, decoded_array%0#0)
+        let tmp%1#0: Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper15.ZKTranscriptLib.generateTranscript__chunk_11(slot%0#0)
+        let tmp%2#0: bytes = (concat 0x151f7c75 tmp%1#0)
+        (log tmp%2#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper15.__init__[routing]() -> void:
+    block@0: // L65448
+        let tmp%0#0: bytes = (txna ApplicationArgs 1)
+        let len%0#0: uint64 = (len tmp%0#0)
+        let eq%0#0: bool = (== len%0#0 8u)
+        (assert eq%0#0) // invalid number of bytes for arc4.uint64
+        let as_Encoded(uint64)%0#0: Encoded(uint64) = tmp%0#0
+        let tmp%1#0: uint64 = decode_bytes<uint64>(as_Encoded(uint64)%0#0)
+        let tmp%2#0: bytes = (txna ApplicationArgs 2)
+        let len%1#0: uint64 = (len tmp%2#0)
+        let eq%1#0: bool = (== len%1#0 8u)
+        (assert eq%1#0) // invalid number of bytes for arc4.uint64
+        let as_Encoded(uint64)%1#0: Encoded(uint64) = tmp%2#0
+        let tmp%3#0: uint64 = decode_bytes<uint64>(as_Encoded(uint64)%1#0)
+        let tmp%4#0: bytes = (txna ApplicationArgs 3)
+        let length%0#0: uint64 = array_len(tmp%4#0)
+        let mul%0#0: uint64 = (* length%0#0 1u)
+        let add%0#0: uint64 = (+ mul%0#0 2u)
+        let len%2#0: uint64 = (len tmp%4#0)
+        let eq%2#0: bool = (== len%2#0 add%0#0)
+        (assert eq%2#0) // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+        let as_Encoded(len+uint8[])%0#0: Encoded(len+uint8[]) = tmp%4#0
+        let tmp%5#0: bytes = decode_bytes<bytes>(as_Encoded(len+uint8[])%0#0)
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper15.__init__(tmp%1#0, tmp%3#0, tmp%5#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper15.ZKTranscriptLib.generateTranscript__chunk_11(publicInputs: Encoded(uint8[32][])*) -> Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256):
+    block@0: // L14971
+        let tmp%0#0: uint64 = (app_global_get "o")
+        let tmp%1#0: bool = (> tmp%0#0 0u)
+        goto tmp%1#0 ? block@1 : block@4
+    block@1: // if_body_L14971
+        let tmp%2#0: uint64 = (global GroupSize)
+        let tmp%3#0: bool = (>= tmp%2#0 2u)
+        (assert tmp%3#0) // helper: must be called in group
+        let tmp%4#0: uint64 = (gtxn 0 ApplicationID)
+        let tmp%5#0: uint64 = (app_global_get "o")
+        let tmp%6#0: bool = (== tmp%4#0 tmp%5#0)
+        (assert tmp%6#0) // helper: unauthorized caller
+        let tmp%7#0: bytes = (gtxn 0 Sender)
+        let tmp%8#0: bytes = (txn Sender)
+        let tmp%9#0: bool = (== tmp%7#0 tmp%8#0)
+        (assert tmp%9#0) // helper: sender mismatch
+        let tmp%10#0: uint64 = (app_global_get "p")
+        let tmp%11#0: bool = (> tmp%10#0 0u)
+        goto tmp%11#0 ? block@2 : block@3
+    block@2: // if_body_L14971
+        let tmp%12#0: uint64 = (txn GroupIndex)
+        let tmp%13#0: uint64 = (- tmp%12#0 1u)
+        let tmp%14#0: uint64 = ((gtxns ApplicationID) tmp%13#0)
+        let tmp%15#0: uint64 = (app_global_get "p")
+        let tmp%16#0: bool = (== tmp%14#0 tmp%15#0)
+        (assert tmp%16#0) // helper: wrong prev chunk
+        let tmp%17#0: uint64 = (txn GroupIndex)
+        let tmp%18#0: uint64 = (- tmp%17#0 1u)
+        let tmp%19#0: bytes = ((gtxnsa ApplicationArgs 0) tmp%18#0)
+        let tmp%20#0: bytes = (app_global_get "s")
+        let tmp%21#0: bool = (== tmp%19#0 tmp%20#0)
+        (assert tmp%21#0) // helper: wrong prev method
+        goto block@3
+    block@3: // after_if_else_L14971
+        goto block@4
+    block@4: // after_if_else_L14971
+        let tmp%22#0: bytes = (gload 1 0)
+        let tmp%23#0: bytes = (gload 1 1)
+        let tmp%24#0: bytes = (concat tmp%22#0 tmp%23#0)
+        let tmp%25#0: bytes = (gload 2 0)
+        let tmp%26#0: bytes = (concat tmp%24#0 tmp%25#0)
+        let tmp%27#0: bytes = (gload 2 1)
+        let reinterpret_Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256))%0#0: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)) = (concat tmp%26#0 tmp%27#0)
+        let proof#0: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)) = reinterpret_Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256))%0#0
+        let reinterpret_biguint%0#0: biguint = (gload 3 0)
+        let circuitSize#0: biguint = reinterpret_biguint%0#0
+        let reinterpret_biguint%1#0: biguint = (gload 3 1)
+        let publicInputsSize#0: biguint = reinterpret_biguint%1#0
+        let reinterpret_biguint%2#0: biguint = (gload 4 0)
+        let pubInputsOffset#0: biguint = reinterpret_biguint%2#0
+        let reinterpret_biguint%3#0: biguint = (gload 4 1)
+        let previousChallenge#0: biguint = reinterpret_biguint%3#0
+        let reinterpret_Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256)%0#0: Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256) = (gload 5 0)
+        let t#0: Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256) = reinterpret_Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256)%0#0
+        let (ZKTranscriptLib.generateTranscript__chunk_11%0#0: Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256), ZKTranscriptLib.generateTranscript__chunk_11%1#0: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)), ZKTranscriptLib.generateTranscript__chunk_11%2#0: Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256)) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateTranscript__chunk_11(proof#0, publicInputs#0, circuitSize#0, publicInputsSize#0, pubInputsOffset#0, previousChallenge#0, t#0)
+        let proof#1: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)) = ZKTranscriptLib.generateTranscript__chunk_11%1#0
+        let t#1: Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256) = ZKTranscriptLib.generateTranscript__chunk_11%2#0
+        return ZKTranscriptLib.generateTranscript__chunk_11%0#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper15.__bare_create__() -> void:
+    block@0: // L65448
+        return 
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper15.__init__(o: uint64, p: uint64, s: bytes) -> void:
+    block@0: // L65448
+        let tmp%0#0: uint64 = (app_global_get "o")
+        let tmp%1#0: bool = (== tmp%0#0 0u)
+        (assert tmp%1#0) // helper: already initialized
+        (app_global_put "o" o#0)
+        (app_global_put "p" p#0)
+        (app_global_put "s" s#0)
+        return 

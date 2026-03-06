@@ -1,0 +1,777 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtilsWrapper.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock 0x 0x010000000000000000000000000000000000000000000000000000000000000000 0x01 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x8000000000000000000000000000000000000000000000000000000000000000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xba418e3f 0x66963baf 0x2e74168f 0x21c37bbb 0xac976e02 0xe6a58c4c 0xfb7c0f02 0x36d010f8 0x51f97dfd 0x985f2d3a 0xacaf4bed 0x02d8e521 // method "SECONDS_PER_YEAR()uint256", method "calculateLinearInterest(uint256,uint64)uint256", method "min(uint256,uint256)uint256", method "zeroFloorSub(uint256,uint256)uint256", method "add(uint256,uint256)uint256", method "uncheckedAdd(uint256,uint256)uint256", method "signedSub(uint256,uint256)uint256", method "uncheckedSub(uint256,uint256)uint256", method "uncheckedExp(uint256,uint256)uint256", method "divUp(uint256,uint256)uint256", method "mulDivDown(uint256,uint256,uint256)uint256", method "mulDivUp(uint256,uint256,uint256)uint256"
+    txna ApplicationArgs 0
+    match main_SECONDS_PER_YEAR_route@5 calculateLinearInterest min zeroFloorSub add uncheckedAdd signedSub uncheckedSub uncheckedExp divUp mulDivDown mulDivUp
+    err
+
+main_SECONDS_PER_YEAR_route@5:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000001e13380
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtils.calculateLinearInterest(rate: bytes, lastUpdateTimestamp: uint64) -> bytes:
+MathUtils.calculateLinearInterest:
+    proto 2 1
+    frame_dig -1
+    itob
+    global LatestTimestamp
+    itob
+    dig 1
+    b<
+    !
+    assert // revert
+    global LatestTimestamp
+    itob
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -2
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0x01e13380
+    b/
+    pushbytes 0x033b2e3c9fd0803ce8000000
+    b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtils.min(a: bytes, b: bytes) -> bytes:
+MathUtils.min:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b^
+    frame_dig -2
+    frame_dig -1
+    b<
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    b^
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtils.zeroFloorSub(a: bytes, b: bytes) -> bytes:
+MathUtils.zeroFloorSub:
+    proto 2 1
+    frame_dig -2
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig -1
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -2
+    frame_dig -1
+    b>
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtils.add(a: bytes, b: bytes) -> bytes:
+MathUtils.add:
+    proto 2 1
+    frame_dig -1
+    bytec 5 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b^
+    bytec 5 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz MathUtils.add_after_if_else@2
+    frame_dig -2
+    frame_dig -1
+    b+
+    retsub
+
+MathUtils.add_after_if_else@2:
+    frame_dig -2
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig -1
+    b~
+    bytec_2 // 0x01
+    b+
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtils.uncheckedAdd(a: bytes, b: bytes) -> bytes:
+MathUtils.uncheckedAdd:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b+
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtils.signedSub(a: bytes, b: bytes) -> bytes:
+MathUtils.signedSub:
+    proto 2 1
+    frame_dig -2
+    callsub SafeCast.toInt256
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig -1
+    callsub SafeCast.toInt256
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtils.uncheckedSub(a: bytes, b: bytes) -> bytes:
+MathUtils.uncheckedSub:
+    proto 2 1
+    frame_dig -2
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig -1
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtils.uncheckedExp(a: bytes, b: bytes) -> bytes:
+MathUtils.uncheckedExp:
+    proto 2 1
+    bytec_2 // 0x01
+    frame_dig -2
+    frame_dig -1
+
+MathUtils.uncheckedExp_while_top@1:
+    frame_dig 2
+    bytec_0 // 0x
+    b>
+    bz MathUtils.uncheckedExp_after_while@5
+    frame_dig 2
+    bytec_2 // 0x01
+    b&
+    bytec_0 // 0x
+    b!=
+    bz MathUtils.uncheckedExp_after_if_else@4
+    frame_dig 0
+    frame_dig 1
+    b*
+    frame_bury 0
+
+MathUtils.uncheckedExp_after_if_else@4:
+    frame_dig 2
+    pushbytes 0x02
+    b/
+    frame_bury 2
+    frame_dig 1
+    dup
+    b*
+    frame_bury 1
+    b MathUtils.uncheckedExp_while_top@1
+
+MathUtils.uncheckedExp_after_while@5:
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtils.divUp(a: bytes, b: bytes) -> bytes:
+MathUtils.divUp:
+    proto 2 1
+    intc_2 // 0
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    !
+    assert // revert
+    frame_dig -1
+    bytec_0 // 0x
+    b!=
+    dup
+    bz MathUtils.divUp_ternary_false@2
+    frame_dig -2
+    frame_dig -1
+    b/
+    frame_bury 0
+
+MathUtils.divUp_ternary_merge@3:
+    frame_dig 1
+    bz MathUtils.divUp_ternary_false@5
+    frame_dig -2
+    frame_dig -1
+    b%
+
+MathUtils.divUp_ternary_merge@6:
+    bytec_0 // 0x
+    b>
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    frame_dig 0
+    b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 0
+    retsub
+
+MathUtils.divUp_ternary_false@5:
+    bytec_0 // 0x
+    b MathUtils.divUp_ternary_merge@6
+
+MathUtils.divUp_ternary_false@2:
+    bytec_0 // 0x
+    frame_bury 0
+    b MathUtils.divUp_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtils.mulDivDown(a: bytes, b: bytes, c: bytes) -> bytes:
+MathUtils.mulDivDown:
+    proto 3 1
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    !
+    assert // revert
+    frame_dig -2
+    bytec_0 // 0x
+    b==
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    frame_dig -2
+    bytec_0 // 0x
+    b!=
+    bz MathUtils.mulDivDown_ternary_false@2
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig -2
+    b/
+
+MathUtils.mulDivDown_ternary_merge@3:
+    frame_dig -3
+    b<
+    !
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    frame_dig 0
+    b|
+    bytec_0 // 0x
+    b==
+    !
+    assert // revert
+    frame_dig -1
+    bytec_0 // 0x
+    b!=
+    bz MathUtils.mulDivDown_ternary_false@5
+    frame_dig -3
+    frame_dig -2
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    b/
+
+MathUtils.mulDivDown_ternary_merge@6:
+    swap
+    retsub
+
+MathUtils.mulDivDown_ternary_false@5:
+    bytec_0 // 0x
+    b MathUtils.mulDivDown_ternary_merge@6
+
+MathUtils.mulDivDown_ternary_false@2:
+    bytec_0 // 0x
+    b MathUtils.mulDivDown_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtils.mulDivUp(a: bytes, b: bytes, c: bytes) -> bytes:
+MathUtils.mulDivUp:
+    proto 3 1
+    intc_2 // 0
+    dup
+    bytec_0 // ""
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    !
+    assert // revert
+    frame_dig -2
+    bytec_0 // 0x
+    b==
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    frame_dig -2
+    bytec_0 // 0x
+    b!=
+    bz MathUtils.mulDivUp_ternary_false@2
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig -2
+    b/
+
+MathUtils.mulDivUp_ternary_merge@3:
+    frame_dig -3
+    b<
+    !
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    frame_dig 3
+    b|
+    bytec_0 // 0x
+    b==
+    !
+    assert // revert
+    frame_dig -3
+    frame_dig -2
+    b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 0
+    frame_dig -1
+    bytec_0 // 0x
+    b!=
+    dup
+    frame_bury 2
+    bz MathUtils.mulDivUp_ternary_false@5
+    frame_dig 0
+    frame_dig -1
+    b/
+    frame_bury 1
+
+MathUtils.mulDivUp_ternary_merge@6:
+    frame_dig 2
+    bz MathUtils.mulDivUp_ternary_false@8
+    frame_dig 0
+    frame_dig -1
+    b%
+
+MathUtils.mulDivUp_ternary_merge@9:
+    bytec_0 // 0x
+    b>
+    bytec_0 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    frame_dig 1
+    b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 0
+    retsub
+
+MathUtils.mulDivUp_ternary_false@8:
+    bytec_0 // 0x
+    b MathUtils.mulDivUp_ternary_merge@9
+
+MathUtils.mulDivUp_ternary_false@5:
+    bytec_0 // 0x
+    frame_bury 1
+    b MathUtils.mulDivUp_ternary_merge@6
+
+MathUtils.mulDivUp_ternary_false@2:
+    bytec_0 // 0x
+    b MathUtils.mulDivUp_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.SafeCast.toInt256(value: bytes) -> bytes:
+SafeCast.toInt256:
+    proto 1 1
+    frame_dig -1
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b>
+    !
+    assert // SafeCastOverflowedUintToInt
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtilsWrapper.calculateLinearInterest[routing]() -> void:
+calculateLinearInterest:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    callsub MathUtils.calculateLinearInterest
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtilsWrapper.min[routing]() -> void:
+min:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub MathUtils.min
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtilsWrapper.zeroFloorSub[routing]() -> void:
+zeroFloorSub:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub MathUtils.zeroFloorSub
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtilsWrapper.add[routing]() -> void:
+add:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub MathUtils.add
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtilsWrapper.uncheckedAdd[routing]() -> void:
+uncheckedAdd:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub MathUtils.uncheckedAdd
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtilsWrapper.signedSub[routing]() -> void:
+signedSub:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub MathUtils.signedSub
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtilsWrapper.uncheckedSub[routing]() -> void:
+uncheckedSub:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub MathUtils.uncheckedSub
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtilsWrapper.uncheckedExp[routing]() -> void:
+uncheckedExp:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub MathUtils.uncheckedExp
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtilsWrapper.divUp[routing]() -> void:
+divUp:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub MathUtils.divUp
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtilsWrapper.mulDivDown[routing]() -> void:
+mulDivDown:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub MathUtils.mulDivDown
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/MathUtilsWrapper.sol.MathUtilsWrapper.mulDivUp[routing]() -> void:
+mulDivUp:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub MathUtils.mulDivUp
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

@@ -1,0 +1,1875 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper42.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 32 576 672 608 544 512 480 416 352 384 640 256 448 288 320
+    bytecblock "o" 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001 "p" 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000000
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.RelationsLib.wire(p: uint64, _wire: uint64) -> bytes:
+RelationsLib.wire:
+    proto 2 1
+    pushint 8
+    bzero
+    frame_dig -1
+    itob
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    frame_dig -2
+    loads
+    swap
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.add(a: bytes, b: bytes) -> bytes:
+add:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b+
+    bytec_1 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.mul(a: bytes, b: bytes) -> bytes:
+mul:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b*
+    bytec_1 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.sub(a: bytes, b: bytes) -> bytes:
+sub:
+    proto 2 1
+    pushbytes 0x0130644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    frame_dig -1
+    b-
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -2
+    b+
+    bytec_1 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper42.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn NumAppArgs
+    bz __puya_arc4_router_____bare_create__@8
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x5414bf5d 0xa96ef989 // method "RelationsLib.accumulateRelationEvaluations__chunk_1__chunk_5(uint256[40],uint256[25],uint256[26])((uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256),uint256,uint256)", method "__init__(uint64,uint64,byte[])void"
+    txna ApplicationArgs 0
+    match RelationsLib.accumulateRelationEvaluations__chunk_1__chunk_5 __init__
+    err
+
+__puya_arc4_router_____bare_create__@8:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper42.RelationsLib.accumulateRelationEvaluations__chunk_1__chunk_5[routing]() -> void:
+RelationsLib.accumulateRelationEvaluations__chunk_1__chunk_5:
+    txna ApplicationArgs 1
+    len
+    pushint 1280
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 40>
+    txna ApplicationArgs 2
+    len
+    pushint 800
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 25>
+    txna ApplicationArgs 3
+    len
+    pushint 832
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 26>
+    bytec_0 // "o"
+    app_global_get
+    bz RelationsLib.accumulateRelationEvaluations__chunk_1__chunk_5_after_if_else@5
+    global GroupSize
+    pushint 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_0 // "o"
+    app_global_get
+    ==
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec_2 // "p"
+    app_global_get
+    bz RelationsLib.accumulateRelationEvaluations__chunk_1__chunk_5_after_if_else@5
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns ApplicationID
+    bytec_2 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    pushint 1
+    -
+    gtxnsa ApplicationArgs 0
+    pushbytes "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+RelationsLib.accumulateRelationEvaluations__chunk_1__chunk_5_after_if_else@5:
+    gload 1 0
+    gload 2 1
+    gload 3 0
+    pushbytes ""
+    gload 3 1
+    dig 3
+    intc 5 // 512
+    intc_0 // 32
+    extract3
+    dig 4
+    intc_1 // 576
+    intc_0 // 32
+    extract3
+    dig 5
+    intc 6 // 480
+    intc_0 // 32
+    extract3
+    dig 6
+    intc 7 // 416
+    intc_0 // 32
+    extract3
+    dig 7
+    intc 8 // 352
+    intc_0 // 32
+    extract3
+    dig 8
+    intc 9 // 384
+    intc_0 // 32
+    extract3
+    dig 9
+    intc_2 // 672
+    intc_0 // 32
+    extract3
+    dig 8
+    pushint 35
+    callsub RelationsLib.wire
+    dig 9
+    pushint 27
+    callsub RelationsLib.wire
+    callsub sub
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    dig 12
+    intc 10 // 640
+    intc_0 // 32
+    extract3
+    dig 13
+    extract 128 32
+    dig 14
+    extract 160 32
+    dig 15
+    extract 0 32
+    dig 16
+    intc_3 // 608
+    intc_0 // 32
+    extract3
+    dig 17
+    extract 192 32
+    dig 18
+    intc 11 // 256
+    intc_0 // 32
+    extract3
+    dig 19
+    intc 12 // 448
+    intc_0 // 32
+    extract3
+    dig 20
+    extract 32 32
+    dig 21
+    extract 64 32
+    dig 22
+    extract 96 32
+    dig 23
+    extract 224 32
+    dig 24
+    intc 13 // 288
+    intc_0 // 32
+    extract3
+    uncover 25
+    intc 4 // 544
+    intc_0 // 32
+    extract3
+    uncover 10
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 9
+    concat
+    uncover 8
+    concat
+    uncover 6
+    concat
+    uncover 3
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    uncover 5
+    concat
+    uncover 8
+    concat
+    uncover 7
+    concat
+    uncover 7
+    concat
+    uncover 2
+    concat
+    uncover 6
+    concat
+    uncover 7
+    concat
+    swap
+    concat
+    uncover 5
+    concat
+    swap
+    concat
+    swap
+    concat
+    uncover 2
+    concat
+    dup
+    intc 5 // 512
+    intc_0 // 32
+    extract3
+    dig 1
+    intc_1 // 576
+    intc_0 // 32
+    extract3
+    dig 2
+    intc 6 // 480
+    intc_0 // 32
+    extract3
+    dig 3
+    intc 7 // 416
+    intc_0 // 32
+    extract3
+    dig 4
+    intc 8 // 352
+    intc_0 // 32
+    extract3
+    dig 5
+    intc 9 // 384
+    intc_0 // 32
+    extract3
+    dig 6
+    intc_2 // 672
+    intc_0 // 32
+    extract3
+    dig 7
+    intc 14 // 320
+    intc_0 // 32
+    extract3
+    dig 8
+    intc 10 // 640
+    intc_0 // 32
+    extract3
+    dig 9
+    extract 128 32
+    dig 10
+    extract 160 32
+    dig 11
+    extract 0 32
+    dig 12
+    intc_3 // 608
+    intc_0 // 32
+    extract3
+    dig 13
+    extract 192 32
+    dig 14
+    intc 11 // 256
+    intc_0 // 32
+    extract3
+    dig 15
+    intc 12 // 448
+    intc_0 // 32
+    extract3
+    dig 16
+    extract 32 32
+    dig 17
+    extract 64 32
+    dig 18
+    extract 96 32
+    dig 19
+    extract 224 32
+    dig 23
+    pushint 38
+    callsub RelationsLib.wire
+    dig 24
+    pushint 30
+    callsub RelationsLib.wire
+    callsub sub
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 22
+    b|
+    uncover 21
+    intc 4 // 544
+    intc_0 // 32
+    extract3
+    uncover 10
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 9
+    concat
+    uncover 8
+    concat
+    uncover 6
+    concat
+    uncover 3
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    uncover 5
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 6
+    concat
+    uncover 2
+    concat
+    uncover 5
+    concat
+    uncover 6
+    concat
+    swap
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    swap
+    concat
+    dup
+    intc 5 // 512
+    intc_0 // 32
+    extract3
+    dig 1
+    intc_1 // 576
+    intc_0 // 32
+    extract3
+    dig 2
+    intc 6 // 480
+    intc_0 // 32
+    extract3
+    dig 3
+    intc 7 // 416
+    intc_0 // 32
+    extract3
+    dig 4
+    intc 8 // 352
+    intc_0 // 32
+    extract3
+    dig 5
+    intc 9 // 384
+    intc_0 // 32
+    extract3
+    dig 6
+    intc_2 // 672
+    intc_0 // 32
+    extract3
+    dig 7
+    intc 14 // 320
+    intc_0 // 32
+    extract3
+    dup
+    dig 1
+    callsub mul
+    dig 1
+    callsub sub
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 10
+    b|
+    dig 9
+    extract 128 32
+    dig 10
+    extract 160 32
+    dig 11
+    extract 0 32
+    dig 12
+    intc_3 // 608
+    intc_0 // 32
+    extract3
+    dig 13
+    extract 192 32
+    dig 14
+    intc 11 // 256
+    intc_0 // 32
+    extract3
+    dig 15
+    intc 12 // 448
+    intc_0 // 32
+    extract3
+    dig 16
+    extract 32 32
+    dig 17
+    extract 64 32
+    dig 18
+    extract 96 32
+    dig 19
+    extract 224 32
+    dig 20
+    intc 13 // 288
+    intc_0 // 32
+    extract3
+    uncover 21
+    intc 4 // 544
+    intc_0 // 32
+    extract3
+    uncover 10
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 9
+    concat
+    uncover 8
+    concat
+    uncover 6
+    concat
+    uncover 3
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    uncover 5
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 6
+    concat
+    uncover 2
+    concat
+    uncover 5
+    concat
+    uncover 6
+    concat
+    swap
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    swap
+    concat
+    dup
+    intc 5 // 512
+    intc_0 // 32
+    extract3
+    dig 1
+    intc_1 // 576
+    intc_0 // 32
+    extract3
+    dig 2
+    intc 6 // 480
+    intc_0 // 32
+    extract3
+    dig 3
+    intc 7 // 416
+    intc_0 // 32
+    extract3
+    dig 4
+    intc 14 // 320
+    intc_0 // 32
+    extract3
+    pushint 1
+    itob
+    dig 1
+    bytec_3 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000000
+    callsub mul
+    dig 1
+    callsub add
+    dig 7
+    intc 13 // 288
+    intc_0 // 32
+    extract3
+    swap
+    dig 1
+    callsub mul
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 9
+    b|
+    dig 8
+    intc 9 // 384
+    intc_0 // 32
+    extract3
+    dig 9
+    intc_2 // 672
+    intc_0 // 32
+    extract3
+    dig 10
+    intc 10 // 640
+    intc_0 // 32
+    extract3
+    dig 11
+    extract 128 32
+    dig 12
+    extract 160 32
+    dig 13
+    extract 0 32
+    dig 14
+    intc_3 // 608
+    intc_0 // 32
+    extract3
+    dig 15
+    extract 192 32
+    dig 16
+    intc 11 // 256
+    intc_0 // 32
+    extract3
+    dig 17
+    intc 12 // 448
+    intc_0 // 32
+    extract3
+    dig 18
+    extract 32 32
+    dig 19
+    extract 64 32
+    dig 20
+    extract 96 32
+    dig 21
+    extract 224 32
+    uncover 22
+    intc 4 // 544
+    intc_0 // 32
+    extract3
+    uncover 9
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 8
+    concat
+    uncover 7
+    concat
+    uncover 5
+    concat
+    uncover 2
+    concat
+    uncover 3
+    concat
+    uncover 8
+    concat
+    uncover 9
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 7
+    concat
+    uncover 2
+    concat
+    uncover 6
+    concat
+    uncover 7
+    concat
+    swap
+    concat
+    uncover 5
+    concat
+    swap
+    concat
+    swap
+    concat
+    swap
+    concat
+    dup
+    intc 8 // 352
+    intc_0 // 32
+    extract3
+    dig 1
+    intc 10 // 640
+    intc_0 // 32
+    extract3
+    dig 2
+    intc 5 // 512
+    intc_0 // 32
+    extract3
+    dig 3
+    intc_1 // 576
+    intc_0 // 32
+    extract3
+    dig 4
+    extract 192 32
+    dig 9
+    pushint 2
+    callsub RelationsLib.wire
+    dig 10
+    pushint 3
+    callsub RelationsLib.wire
+    callsub mul
+    dig 1
+    swap
+    callsub mul
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 8
+    b|
+    dig 6
+    intc 7 // 416
+    intc_0 // 32
+    extract3
+    dig 7
+    intc 9 // 384
+    intc_0 // 32
+    extract3
+    dig 8
+    intc_2 // 672
+    intc_0 // 32
+    extract3
+    dig 9
+    intc 14 // 320
+    intc_0 // 32
+    extract3
+    dig 10
+    extract 128 32
+    dig 11
+    extract 160 32
+    dig 12
+    extract 0 32
+    dig 13
+    intc_3 // 608
+    intc_0 // 32
+    extract3
+    dig 14
+    intc 11 // 256
+    intc_0 // 32
+    extract3
+    dig 15
+    intc 12 // 448
+    intc_0 // 32
+    extract3
+    dig 16
+    extract 32 32
+    dig 17
+    extract 64 32
+    dig 18
+    extract 96 32
+    dig 19
+    extract 224 32
+    dig 20
+    intc 13 // 288
+    intc_0 // 32
+    extract3
+    uncover 21
+    intc 4 // 544
+    intc_0 // 32
+    extract3
+    uncover 9
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 8
+    concat
+    uncover 7
+    concat
+    uncover 12
+    concat
+    uncover 3
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    uncover 4
+    concat
+    uncover 11
+    concat
+    uncover 5
+    concat
+    uncover 5
+    concat
+    uncover 2
+    concat
+    uncover 4
+    concat
+    uncover 5
+    concat
+    swap
+    concat
+    uncover 3
+    concat
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dig 4
+    pushint 30
+    callsub RelationsLib.wire
+    dig 1
+    extract 224 32
+    swap
+    dig 1
+    callsub sub
+    dig 2
+    intc 5 // 512
+    intc_0 // 32
+    extract3
+    dig 3
+    intc_1 // 576
+    intc_0 // 32
+    extract3
+    dig 4
+    intc 6 // 480
+    intc_0 // 32
+    extract3
+    dig 3
+    dig 4
+    callsub mul
+    uncover 4
+    callsub sub
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 7
+    b|
+    dig 5
+    intc 8 // 352
+    intc_0 // 32
+    extract3
+    dig 6
+    intc 9 // 384
+    intc_0 // 32
+    extract3
+    dig 7
+    intc_2 // 672
+    intc_0 // 32
+    extract3
+    dig 8
+    intc 14 // 320
+    intc_0 // 32
+    extract3
+    dig 9
+    intc 10 // 640
+    intc_0 // 32
+    extract3
+    dig 10
+    extract 128 32
+    dig 11
+    extract 160 32
+    dig 12
+    extract 0 32
+    dig 13
+    intc_3 // 608
+    intc_0 // 32
+    extract3
+    dig 14
+    extract 192 32
+    dig 15
+    intc 11 // 256
+    intc_0 // 32
+    extract3
+    dig 16
+    intc 12 // 448
+    intc_0 // 32
+    extract3
+    dig 17
+    extract 32 32
+    dig 18
+    extract 64 32
+    dig 19
+    extract 96 32
+    dig 20
+    intc 13 // 288
+    intc_0 // 32
+    extract3
+    uncover 21
+    intc 4 // 544
+    intc_0 // 32
+    extract3
+    uncover 9
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 8
+    concat
+    uncover 7
+    concat
+    uncover 5
+    concat
+    uncover 15
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    uncover 5
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 6
+    concat
+    uncover 2
+    concat
+    uncover 5
+    concat
+    uncover 6
+    concat
+    swap
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    swap
+    concat
+    dup
+    intc 5 // 512
+    intc_0 // 32
+    extract3
+    dig 1
+    intc_1 // 576
+    intc_0 // 32
+    extract3
+    dig 2
+    intc 6 // 480
+    intc_0 // 32
+    extract3
+    dig 3
+    intc 7 // 416
+    intc_0 // 32
+    extract3
+    dig 4
+    intc 8 // 352
+    intc_0 // 32
+    extract3
+    dig 5
+    intc 9 // 384
+    intc_0 // 32
+    extract3
+    dig 6
+    intc_2 // 672
+    intc_0 // 32
+    extract3
+    dig 7
+    intc 14 // 320
+    intc_0 // 32
+    extract3
+    dig 8
+    intc 10 // 640
+    intc_0 // 32
+    extract3
+    dig 9
+    extract 128 32
+    dig 10
+    extract 160 32
+    dig 11
+    extract 0 32
+    dig 12
+    intc_3 // 608
+    intc_0 // 32
+    extract3
+    dig 13
+    extract 192 32
+    dig 18
+    pushint 37
+    callsub RelationsLib.wire
+    dig 21
+    extract 64 32
+    callsub mul
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 17
+    b|
+    dig 15
+    intc 12 // 448
+    intc_0 // 32
+    extract3
+    dig 16
+    extract 32 32
+    dig 17
+    extract 64 32
+    dig 18
+    extract 96 32
+    dig 19
+    extract 224 32
+    dig 20
+    intc 13 // 288
+    intc_0 // 32
+    extract3
+    uncover 21
+    intc 4 // 544
+    intc_0 // 32
+    extract3
+    uncover 10
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 9
+    concat
+    uncover 8
+    concat
+    uncover 6
+    concat
+    uncover 3
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    uncover 5
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 6
+    concat
+    uncover 2
+    concat
+    uncover 5
+    concat
+    uncover 6
+    concat
+    swap
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    swap
+    concat
+    dup
+    intc 5 // 512
+    intc_0 // 32
+    extract3
+    dig 1
+    intc_1 // 576
+    intc_0 // 32
+    extract3
+    dig 2
+    intc 6 // 480
+    intc_0 // 32
+    extract3
+    dig 3
+    intc 7 // 416
+    intc_0 // 32
+    extract3
+    dig 4
+    intc 8 // 352
+    intc_0 // 32
+    extract3
+    dig 5
+    intc 9 // 384
+    intc_0 // 32
+    extract3
+    dig 6
+    intc_2 // 672
+    intc_0 // 32
+    extract3
+    dig 7
+    intc 14 // 320
+    intc_0 // 32
+    extract3
+    dig 8
+    intc 10 // 640
+    intc_0 // 32
+    extract3
+    dig 9
+    extract 128 32
+    dig 10
+    extract 160 32
+    dig 11
+    extract 0 32
+    dig 12
+    intc_3 // 608
+    intc_0 // 32
+    extract3
+    dig 13
+    extract 192 32
+    dig 14
+    intc 11 // 256
+    intc_0 // 32
+    extract3
+    dig 19
+    pushint 36
+    callsub RelationsLib.wire
+    dig 22
+    extract 32 32
+    callsub mul
+    callsub add
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 17
+    b|
+    dig 15
+    intc 12 // 448
+    intc_0 // 32
+    extract3
+    dig 16
+    extract 32 32
+    dig 17
+    extract 64 32
+    dig 18
+    extract 96 32
+    dig 19
+    extract 224 32
+    dig 20
+    intc 13 // 288
+    intc_0 // 32
+    extract3
+    uncover 21
+    intc 4 // 544
+    intc_0 // 32
+    extract3
+    uncover 10
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 9
+    concat
+    uncover 8
+    concat
+    uncover 6
+    concat
+    uncover 3
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    uncover 5
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 6
+    concat
+    uncover 2
+    concat
+    uncover 5
+    concat
+    uncover 6
+    concat
+    swap
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    swap
+    concat
+    dup
+    intc 5 // 512
+    intc_0 // 32
+    extract3
+    dig 1
+    intc_1 // 576
+    intc_0 // 32
+    extract3
+    dig 2
+    intc 6 // 480
+    intc_0 // 32
+    extract3
+    dig 3
+    intc 7 // 416
+    intc_0 // 32
+    extract3
+    dig 4
+    intc 8 // 352
+    intc_0 // 32
+    extract3
+    dig 5
+    intc 9 // 384
+    intc_0 // 32
+    extract3
+    dig 6
+    intc_2 // 672
+    intc_0 // 32
+    extract3
+    dig 7
+    intc 14 // 320
+    intc_0 // 32
+    extract3
+    dig 8
+    intc 10 // 640
+    intc_0 // 32
+    extract3
+    dig 9
+    extract 128 32
+    dig 10
+    extract 160 32
+    dig 11
+    extract 0 32
+    dig 12
+    intc_3 // 608
+    intc_0 // 32
+    extract3
+    dig 13
+    extract 192 32
+    dig 14
+    intc 11 // 256
+    intc_0 // 32
+    extract3
+    dig 19
+    pushint 35
+    callsub RelationsLib.wire
+    uncover 22
+    extract 0 32
+    callsub mul
+    callsub add
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 17
+    b|
+    dig 15
+    intc 12 // 448
+    intc_0 // 32
+    extract3
+    dig 16
+    extract 32 32
+    dig 17
+    extract 64 32
+    dig 18
+    extract 96 32
+    dig 19
+    extract 224 32
+    dig 20
+    intc 13 // 288
+    intc_0 // 32
+    extract3
+    uncover 21
+    intc 4 // 544
+    intc_0 // 32
+    extract3
+    uncover 10
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 9
+    concat
+    uncover 8
+    concat
+    uncover 6
+    concat
+    uncover 3
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    uncover 5
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 6
+    concat
+    uncover 2
+    concat
+    uncover 5
+    concat
+    uncover 6
+    concat
+    swap
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    swap
+    concat
+    dup
+    intc 5 // 512
+    intc_0 // 32
+    extract3
+    dig 1
+    intc_1 // 576
+    intc_0 // 32
+    extract3
+    dig 2
+    intc 6 // 480
+    intc_0 // 32
+    extract3
+    dig 3
+    intc 7 // 416
+    intc_0 // 32
+    extract3
+    dig 4
+    intc 8 // 352
+    intc_0 // 32
+    extract3
+    dig 5
+    intc 9 // 384
+    intc_0 // 32
+    extract3
+    dig 6
+    intc_2 // 672
+    intc_0 // 32
+    extract3
+    dig 7
+    intc 14 // 320
+    intc_0 // 32
+    extract3
+    dig 8
+    intc 10 // 640
+    intc_0 // 32
+    extract3
+    dig 9
+    extract 128 32
+    dig 10
+    extract 160 32
+    dig 11
+    extract 0 32
+    dig 12
+    intc_3 // 608
+    intc_0 // 32
+    extract3
+    dig 13
+    extract 192 32
+    dig 18
+    pushint 38
+    callsub RelationsLib.wire
+    dig 15
+    intc 11 // 256
+    intc_0 // 32
+    extract3
+    callsub sub
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 17
+    b|
+    dig 15
+    intc 12 // 448
+    intc_0 // 32
+    extract3
+    dig 16
+    extract 32 32
+    dig 17
+    extract 64 32
+    dig 18
+    extract 96 32
+    dig 19
+    extract 224 32
+    dig 20
+    intc 13 // 288
+    intc_0 // 32
+    extract3
+    uncover 21
+    intc 4 // 544
+    intc_0 // 32
+    extract3
+    uncover 10
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 9
+    concat
+    uncover 8
+    concat
+    uncover 6
+    concat
+    uncover 3
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    uncover 5
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 6
+    concat
+    uncover 2
+    concat
+    uncover 5
+    concat
+    uncover 6
+    concat
+    swap
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    swap
+    concat
+    dig 4
+    pushint 37
+    callsub RelationsLib.wire
+    dig 5
+    pushint 29
+    callsub RelationsLib.wire
+    callsub sub
+    dig 1
+    intc 5 // 512
+    intc_0 // 32
+    extract3
+    dig 2
+    intc_1 // 576
+    intc_0 // 32
+    extract3
+    dig 3
+    intc 6 // 480
+    intc_0 // 32
+    extract3
+    dig 4
+    intc 7 // 416
+    intc_0 // 32
+    extract3
+    dig 5
+    intc 8 // 352
+    intc_0 // 32
+    extract3
+    dig 6
+    intc 14 // 320
+    intc_0 // 32
+    extract3
+    dup
+    bytec_3 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000000
+    callsub mul
+    dig 9
+    callsub add
+    uncover 7
+    callsub mul
+    dig 7
+    intc 11 // 256
+    intc_0 // 32
+    extract3
+    dup
+    bytec_3 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000000
+    callsub mul
+    uncover 10
+    callsub add
+    uncover 2
+    swap
+    callsub mul
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 9
+    b|
+    dig 8
+    intc_2 // 672
+    intc_0 // 32
+    extract3
+    dig 9
+    intc 10 // 640
+    intc_0 // 32
+    extract3
+    dig 10
+    extract 128 32
+    dig 11
+    extract 160 32
+    dig 12
+    extract 0 32
+    dig 13
+    intc_3 // 608
+    intc_0 // 32
+    extract3
+    dig 14
+    extract 192 32
+    dig 15
+    intc 12 // 448
+    intc_0 // 32
+    extract3
+    dig 16
+    extract 32 32
+    dig 17
+    extract 64 32
+    dig 18
+    extract 96 32
+    dig 19
+    extract 224 32
+    dig 20
+    intc 13 // 288
+    intc_0 // 32
+    extract3
+    uncover 21
+    intc 4 // 544
+    intc_0 // 32
+    extract3
+    uncover 9
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 8
+    concat
+    uncover 7
+    concat
+    uncover 5
+    concat
+    uncover 3
+    concat
+    uncover 8
+    concat
+    uncover 2
+    concat
+    uncover 7
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 6
+    concat
+    uncover 2
+    concat
+    uncover 5
+    concat
+    uncover 6
+    concat
+    swap
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    swap
+    concat
+    dup
+    intc 5 // 512
+    intc_0 // 32
+    extract3
+    dig 1
+    intc_1 // 576
+    intc_0 // 32
+    extract3
+    dig 2
+    intc 6 // 480
+    intc_0 // 32
+    extract3
+    dig 3
+    intc 7 // 416
+    intc_0 // 32
+    extract3
+    dig 4
+    intc 8 // 352
+    intc_0 // 32
+    extract3
+    dig 5
+    intc 9 // 384
+    intc_0 // 32
+    extract3
+    dig 6
+    intc_2 // 672
+    intc_0 // 32
+    extract3
+    dig 7
+    intc 14 // 320
+    intc_0 // 32
+    extract3
+    dig 8
+    intc 10 // 640
+    intc_0 // 32
+    extract3
+    dig 9
+    extract 128 32
+    dig 10
+    extract 160 32
+    dig 11
+    extract 0 32
+    dig 12
+    intc_3 // 608
+    intc_0 // 32
+    extract3
+    dig 13
+    extract 192 32
+    dig 14
+    intc 11 // 256
+    intc_0 // 32
+    extract3
+    dup
+    dig 1
+    callsub mul
+    dig 1
+    callsub sub
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 17
+    b|
+    dig 16
+    extract 32 32
+    dig 17
+    extract 64 32
+    dig 18
+    extract 96 32
+    dig 19
+    extract 224 32
+    dig 20
+    intc 13 // 288
+    intc_0 // 32
+    extract3
+    uncover 21
+    intc 4 // 544
+    intc_0 // 32
+    extract3
+    uncover 10
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 9
+    concat
+    uncover 8
+    concat
+    uncover 6
+    concat
+    uncover 3
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    uncover 5
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 6
+    concat
+    uncover 2
+    concat
+    uncover 5
+    concat
+    uncover 6
+    concat
+    swap
+    concat
+    uncover 4
+    concat
+    swap
+    concat
+    swap
+    concat
+    swap
+    concat
+    dup
+    intc 9 // 384
+    intc_0 // 32
+    extract3
+    dig 1
+    intc 10 // 640
+    intc_0 // 32
+    extract3
+    dig 2
+    intc 12 // 448
+    intc_0 // 32
+    extract3
+    dig 3
+    intc 7 // 416
+    intc_0 // 32
+    extract3
+    uncover 7
+    pushint 7
+    callsub RelationsLib.wire
+    dig 1
+    swap
+    callsub mul
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 6
+    b|
+    dig 5
+    intc_1 // 576
+    intc_0 // 32
+    extract3
+    dig 6
+    intc 6 // 480
+    intc_0 // 32
+    extract3
+    dig 7
+    intc 8 // 352
+    intc_0 // 32
+    extract3
+    dig 8
+    intc_2 // 672
+    intc_0 // 32
+    extract3
+    dig 9
+    intc 14 // 320
+    intc_0 // 32
+    extract3
+    dig 10
+    extract 128 32
+    dig 11
+    extract 160 32
+    dig 12
+    extract 0 32
+    dig 13
+    intc_3 // 608
+    intc_0 // 32
+    extract3
+    dig 14
+    extract 192 32
+    dig 15
+    intc 11 // 256
+    intc_0 // 32
+    extract3
+    dig 16
+    extract 32 32
+    dig 17
+    extract 64 32
+    dig 18
+    extract 96 32
+    dig 19
+    extract 224 32
+    dig 20
+    intc 13 // 288
+    intc_0 // 32
+    extract3
+    uncover 21
+    intc 4 // 544
+    intc_0 // 32
+    extract3
+    uncover 9
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 8
+    concat
+    uncover 7
+    concat
+    uncover 5
+    concat
+    uncover 3
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    uncover 3
+    concat
+    uncover 4
+    concat
+    uncover 10
+    concat
+    uncover 7
+    concat
+    uncover 7
+    concat
+    uncover 4
+    concat
+    uncover 5
+    concat
+    swap
+    concat
+    uncover 3
+    concat
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dig 3
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    dig 2
+    b|
+    concat
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper42.__init__[routing]() -> void:
+__init__:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 3
+    dup
+    pushint 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_0 // "o"
+    app_global_get
+    !
+    assert // helper: already initialized
+    bytec_0 // "o"
+    uncover 3
+    app_global_put
+    bytec_2 // "p"
+    uncover 2
+    app_global_put
+    pushbytes "s"
+    swap
+    app_global_put
+    pushint 1
+    return

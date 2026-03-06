@@ -1,0 +1,296 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 1 0 32 2
+    bytecblock "f" 0x 0x151f7c75 0x00
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn NumAppArgs
+    bz __puya_arc4_router_____bare_create__@16
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x86d2e71c 0x3a93e0ef 0x677c80fd 0xefb4382a 0xfc74b9e8 0x8e031c01 0x26b93f16 0xe10a3627 0x08be42dc 0x0152a0fe // method "__finish_loadVerificationKey()(uint256,uint256,uint256,(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256))", method "verify(byte[],uint8[32][])bool", method "__finish_verify()bool", method "__finish_computePublicInputDelta()uint256", method "__finish_verifySumcheck()bool", method "__finish_computeNextTargetSum()uint256", method "__finish_verifyShplemini()bool", method "__finish_checkEvalsConsistency()bool", method "__finish_batchMul()(uint256,uint256)", method "__auth__()void"
+    txna ApplicationArgs 0
+    match __finish_loadVerificationKey verify __finish_verify __finish_computePublicInputDelta __finish_verifySumcheck __finish_computeNextTargetSum __finish_verifyShplemini __finish_checkEvalsConsistency __finish_batchMul __puya_arc4_router_____auth___route@12
+    err
+
+__puya_arc4_router_____auth___route@12:
+    intc_0 // 1
+    return
+
+__puya_arc4_router_____bare_create__@16:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier.__finish_loadVerificationKey[routing]() -> void:
+__finish_loadVerificationKey:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gloads 0
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier.verify[routing]() -> void:
+verify:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txna ApplicationArgs 2
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 32
+    *
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 32>>
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    ==
+    assert // orchestrator: reentrant call
+    bytec_0 // "f"
+    txna ApplicationArgs 0
+    app_global_put
+    store 1
+    store 0
+    pushbytes 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier.__finish_verify[routing]() -> void:
+__finish_verify:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gloads 0
+    btoi
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier.__finish_computePublicInputDelta[routing]() -> void:
+__finish_computePublicInputDelta:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gloads 0
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier.__finish_verifySumcheck[routing]() -> void:
+__finish_verifySumcheck:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gloads 0
+    btoi
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier.__finish_computeNextTargetSum[routing]() -> void:
+__finish_computeNextTargetSum:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gloads 0
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier.__finish_verifyShplemini[routing]() -> void:
+__finish_verifyShplemini:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gloads 0
+    btoi
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier.__finish_checkEvalsConsistency[routing]() -> void:
+__finish_checkEvalsConsistency:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gloads 0
+    btoi
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier.__finish_batchMul[routing]() -> void:
+__finish_batchMul:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gloads 0
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

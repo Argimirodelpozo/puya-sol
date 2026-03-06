@@ -1,0 +1,356 @@
+main /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper14.__puya_arc4_router__:
+    block@0: // L65448
+        let tmp%0#0: bool = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper14.__puya_arc4_router__()
+        return tmp%0#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper14.__puya_arc4_router__() -> bool:
+    block@0: // L1
+        let tmp%0#0: uint64 = (txn NumAppArgs)
+        goto tmp%0#0 ? block@1 : block@8
+    block@1: // abi_routing_L1
+        let tmp%2#0: uint64 = (txn OnCompletion)
+        let tmp%3#0: bool = (! tmp%2#0)
+        (assert tmp%3#0)
+        let tmp%4#0: uint64 = (txn ApplicationID)
+        (assert tmp%4#0)
+        let tmp%6#0: bytes = (txna ApplicationArgs 0)
+        switch tmp%6#0 {method "ZKTranscriptLib.generateTranscript__chunk_3__chunk_0(byte[32][])uint256" => block@3, method "__init__(uint64,uint64,byte[])void" => block@4, * => block@7}
+    block@3: // ZKTranscriptLib.generateTranscript__chunk_3__chunk_0_route_L14971
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper14.ZKTranscriptLib.generateTranscript__chunk_3__chunk_0[routing]()
+        goto block@7
+    block@4: // __init___route_L65448
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper14.__init__[routing]()
+        goto block@7
+    block@7: // after_if_else_L1
+        fail
+    block@8: // __bare_create___L65448
+        let tmp%7#0: uint64 = (txn OnCompletion)
+        let tmp%8#0: bool = (! tmp%7#0)
+        let tmp%9#0: uint64 = (txn ApplicationID)
+        let tmp%10#0: bool = (! tmp%9#0)
+        let tmp%11#0: bool = (&& tmp%8#0 tmp%10#0)
+        (assert tmp%11#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper14.ZKTranscriptLib.generateTranscript__chunk_3__chunk_0[routing]() -> void:
+    block@0: // L14971
+        let tmp%0#0: bytes = (txna ApplicationArgs 1)
+        let aggregate%array_length%0#0: uint64 = (extract_uint16 tmp%0#0 0u) // on error: invalid array length header
+        let mul%0#0: uint64 = (* aggregate%array_length%0#0 32u)
+        let add%0#0: uint64 = (+ mul%0#0 2u)
+        let len%0#0: uint64 = (len tmp%0#0)
+        let eq%0#0: bool = (== len%0#0 add%0#0)
+        (assert eq%0#0) // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 32>>
+        let aggregate%decoded_array%0#0: bytes = (extract3 tmp%0#0 2u 0u)
+        let publicInputs#0: Encoded(uint8[32][])* = new()
+        store(publicInputs#0, aggregate%decoded_array%0#0)
+        let tmp%0#1: uint64 = (app_global_get "o")
+        goto tmp%0#1 ? block@2 : block@5
+    block@2: // if_body_L14971
+        let tmp%2#1: uint64 = (global GroupSize)
+        let tmp%3#1: bool = (>= tmp%2#1 2u)
+        (assert tmp%3#1) // helper: must be called in group
+        let tmp%4#0: uint64 = (gtxn 0 ApplicationID)
+        let tmp%5#0: uint64 = (app_global_get "o")
+        let tmp%6#0: bool = (== tmp%4#0 tmp%5#0)
+        (assert tmp%6#0) // helper: unauthorized caller
+        let tmp%7#0: bytes = (gtxn 0 Sender)
+        let tmp%8#0: bytes = (txn Sender)
+        let tmp%9#0: bool = (== tmp%7#0 tmp%8#0)
+        (assert tmp%9#0) // helper: sender mismatch
+        let tmp%10#0: uint64 = (app_global_get "p")
+        goto tmp%10#0 ? block@3 : block@5
+    block@3: // if_body_L14971
+        let tmp%12#0: uint64 = (txn GroupIndex)
+        let tmp%13#0: uint64 = (- tmp%12#0 1u)
+        let tmp%14#0: uint64 = ((gtxns ApplicationID) tmp%13#0)
+        let tmp%15#0: uint64 = (app_global_get "p")
+        let tmp%16#0: bool = (== tmp%14#0 tmp%15#0)
+        (assert tmp%16#0) // helper: wrong prev chunk
+        let tmp%17#0: uint64 = (txn GroupIndex)
+        let tmp%18#0: uint64 = (- tmp%17#0 1u)
+        let tmp%19#0: bytes = ((gtxnsa ApplicationArgs 0) tmp%18#0)
+        let tmp%20#0: bytes = (app_global_get "s")
+        let tmp%21#0: bool = (== tmp%19#0 tmp%20#0)
+        (assert tmp%21#0) // helper: wrong prev method
+        goto block@5
+    block@5: // after_if_else_L14971
+        let tmp%22#0: bytes = (gload 1 0)
+        let tmp%23#0: bytes = (gload 1 1)
+        let tmp%24#0: bytes = (concat tmp%22#0 tmp%23#0)
+        let tmp%25#0: bytes = (gload 2 0)
+        let tmp%26#0: bytes = (concat tmp%24#0 tmp%25#0)
+        let tmp%27#0: bytes = (gload 2 1)
+        let proof#0: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)) = (concat tmp%26#0 tmp%27#0)
+        let prevChallenge#0: biguint = undefined
+        let aggregate%bzero%0#0: bytes = (bzero 32u)
+        let rhoChallengeElements#0: Encoded(uint256[55])* = new()
+        let aggregate%value_len%55#0: uint64 = (len prevChallenge#0)
+        let aggregate%len_ok%55#0: bool = (<= aggregate%value_len%55#0 32u)
+        (assert aggregate%len_ok%55#0) // overflow
+        let aggregate%arc4_encoded%55#0: bytes[32] = (b| prevChallenge#0 aggregate%bzero%0#0)
+        let aggregate%updated_array%0#0: bytes = ((replace2 0) 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 aggregate%arc4_encoded%55#0) // on error: index access is out of bounds
+        store(rhoChallengeElements#0, aggregate%updated_array%0#0)
+        let i#1: biguint = (itob 1u)
+        goto block@7
+    block@7: // while_top_L24192
+        let i#2: biguint = φ(i#1 <- block@5, i#3 <- block@8)
+        let rhoChallengeElements#2: Encoded(uint256[55])* = φ(rhoChallengeElements#0 <- block@5, rhoChallengeElements#2 <- block@8)
+        let reinterpret_biguint%1#0: biguint = (itob 40u)
+        let tmp%0#2: bool = (b<= i#2 reinterpret_biguint%1#0)
+        goto tmp%0#2 ? block@8 : block@9
+    block@8: // while_body_L24192
+        let aggregate%extract%0#0: bytes = (extract3 proof#0 9504u 1280u)
+        let slot%1#0: Encoded(uint256[40])* = new()
+        store(slot%1#0, aggregate%extract%0#0)
+        let tmp%1#2: bytes = (bzero 8u)
+        let tmp%2#2: biguint = (b+ i#2 115792089237316195423570985008687907853269984665640564039457584007913129639936b)
+        let tmp%3#2: biguint = (b- tmp%2#2 i#1)
+        let tmp%4#1: biguint = (b% tmp%3#2 115792089237316195423570985008687907853269984665640564039457584007913129639936b)
+        let tmp%5#1: bytes = (concat tmp%1#2 tmp%4#1)
+        let tmp%11#1: uint64 = (len tmp%5#1)
+        let tmp%12#1: uint64 = (- tmp%11#1 8u)
+        let tmp%14#1: uint64 = (extract_uint64 tmp%5#1 tmp%12#1)
+        let aggregate%bytes_offset%1#0: uint64 = (* tmp%14#1 32u)
+        let aggregate%encoded_element%1#0: bytes = (extract3 aggregate%extract%0#0 aggregate%bytes_offset%1#0 32u) // on error: index access is out of bounds
+        let tmp%17#1: bytes = (concat tmp%1#2 i#2)
+        let tmp%20#1: uint64 = (len tmp%17#1)
+        let tmp%21#1: uint64 = (- tmp%20#1 8u)
+        let index%0#0: uint64 = (extract_uint64 tmp%17#1 tmp%21#1)
+        let aggregate%value_len%56#0: uint64 = (len aggregate%encoded_element%1#0)
+        let aggregate%len_ok%56#0: bool = (<= aggregate%value_len%56#0 32u)
+        (assert aggregate%len_ok%56#0) // overflow
+        let aggregate%arc4_encoded%56#0: bytes[32] = (b| aggregate%encoded_element%1#0 aggregate%bzero%0#0)
+        let slot_contents%2#0: Encoded(uint256[55]) = load(rhoChallengeElements#2)
+        let aggregate%write_offset%1#0: uint64 = (* index%0#0 32u)
+        let aggregate%updated_array%1#0: bytes = (replace3 slot_contents%2#0 aggregate%write_offset%1#0 aggregate%arc4_encoded%56#0) // on error: index access is out of bounds
+        store(rhoChallengeElements#2, aggregate%updated_array%1#0)
+        let i#3: biguint = (b+ i#2 1b)
+        goto block@7
+    block@9: // after_while_L24192
+        let aggregate%extract%1#0: bytes = (extract3 proof#0 10784u 32u)
+        let tmp%25#1: bytes = (bzero 8u)
+        let tmp%26#1: bytes = (concat tmp%25#1 i#2)
+        let tmp%29#0: uint64 = (len tmp%26#1)
+        let tmp%30#0: uint64 = (- tmp%29#0 8u)
+        let index%1#0: uint64 = (extract_uint64 tmp%26#1 tmp%30#0)
+        let aggregate%value_len%57#0: uint64 = (len aggregate%extract%1#0)
+        let aggregate%len_ok%57#0: bool = (<= aggregate%value_len%57#0 32u)
+        (assert aggregate%len_ok%57#0) // overflow
+        let aggregate%arc4_encoded%57#0: bytes[32] = (b| aggregate%extract%1#0 aggregate%bzero%0#0)
+        let slot_contents%3#0: Encoded(uint256[55]) = load(rhoChallengeElements#2)
+        let aggregate%write_offset%2#0: uint64 = (* index%1#0 32u)
+        let aggregate%updated_array%2#0: bytes = (replace3 slot_contents%3#0 aggregate%write_offset%2#0 aggregate%arc4_encoded%57#0) // on error: index access is out of bounds
+        store(rhoChallengeElements#2, aggregate%updated_array%2#0)
+        let i#4: biguint = (b+ i#2 i#1)
+        let aggregate%extract%2#0: bytes = (extract3 proof#0 1024u 384u)
+        let slot%2#0: Encoded((uint256,uint256,uint256,uint256)[3])* = new()
+        store(slot%2#0, aggregate%extract%2#0)
+        let aggregate%encoded_element%4#0: bytes = ((extract 128 128) aggregate%extract%2#0) // on error: index access is out of bounds
+        let aggregate%extract%3#0: bytes = ((extract 0 32) aggregate%encoded_element%4#0)
+        let tmp%35#0: bytes = (concat tmp%25#1 i#4)
+        let tmp%38#0: uint64 = (len tmp%35#0)
+        let tmp%39#0: uint64 = (- tmp%38#0 8u)
+        let index%2#0: uint64 = (extract_uint64 tmp%35#0 tmp%39#0)
+        let aggregate%value_len%58#0: uint64 = 32u
+        let aggregate%len_ok%58#0: bool = 1u
+        let aggregate%arc4_encoded%58#0: bytes[32] = (b| aggregate%extract%3#0 aggregate%bzero%0#0)
+        let slot_contents%5#0: Encoded(uint256[55]) = load(rhoChallengeElements#2)
+        let aggregate%write_offset%3#0: uint64 = (* index%2#0 32u)
+        let aggregate%updated_array%3#0: bytes = (replace3 slot_contents%5#0 aggregate%write_offset%3#0 aggregate%arc4_encoded%58#0) // on error: index access is out of bounds
+        store(rhoChallengeElements#2, aggregate%updated_array%3#0)
+        let slot%3#0: Encoded((uint256,uint256,uint256,uint256)[3])* = new()
+        store(slot%3#0, aggregate%extract%2#0)
+        let aggregate%extract%4#0: bytes = ((extract 32 32) aggregate%encoded_element%4#0)
+        let tmp%43#0: biguint = (b+ i#4 i#1)
+        let tmp%44#0: bytes = (concat tmp%25#1 tmp%43#0)
+        let tmp%48#0: uint64 = (len tmp%44#0)
+        let tmp%49#0: uint64 = (- tmp%48#0 8u)
+        let index%3#0: uint64 = (extract_uint64 tmp%44#0 tmp%49#0)
+        let aggregate%value_len%59#0: uint64 = 32u
+        let aggregate%len_ok%59#0: bool = 1u
+        let aggregate%arc4_encoded%59#0: bytes[32] = (b| aggregate%extract%4#0 aggregate%bzero%0#0)
+        let slot_contents%7#0: Encoded(uint256[55]) = load(rhoChallengeElements#2)
+        let aggregate%write_offset%4#0: uint64 = (* index%3#0 32u)
+        let aggregate%updated_array%4#0: bytes = (replace3 slot_contents%7#0 aggregate%write_offset%4#0 aggregate%arc4_encoded%59#0) // on error: index access is out of bounds
+        store(rhoChallengeElements#2, aggregate%updated_array%4#0)
+        let slot%4#0: Encoded((uint256,uint256,uint256,uint256)[3])* = new()
+        store(slot%4#0, aggregate%extract%2#0)
+        let aggregate%extract%5#0: bytes = ((extract 64 32) aggregate%encoded_element%4#0)
+        let reinterpret_biguint%7#0: biguint = (itob 2u)
+        let tmp%53#0: biguint = (b+ i#4 reinterpret_biguint%7#0)
+        let tmp%54#0: bytes = (concat tmp%25#1 tmp%53#0)
+        let tmp%58#0: uint64 = (len tmp%54#0)
+        let tmp%59#0: uint64 = (- tmp%58#0 8u)
+        let index%4#0: uint64 = (extract_uint64 tmp%54#0 tmp%59#0)
+        let aggregate%value_len%60#0: uint64 = 32u
+        let aggregate%len_ok%60#0: bool = 1u
+        let aggregate%arc4_encoded%60#0: bytes[32] = (b| aggregate%extract%5#0 aggregate%bzero%0#0)
+        let slot_contents%9#0: Encoded(uint256[55]) = load(rhoChallengeElements#2)
+        let aggregate%write_offset%5#0: uint64 = (* index%4#0 32u)
+        let aggregate%updated_array%5#0: bytes = (replace3 slot_contents%9#0 aggregate%write_offset%5#0 aggregate%arc4_encoded%60#0) // on error: index access is out of bounds
+        store(rhoChallengeElements#2, aggregate%updated_array%5#0)
+        let slot%5#0: Encoded((uint256,uint256,uint256,uint256)[3])* = new()
+        store(slot%5#0, aggregate%extract%2#0)
+        let aggregate%extract%6#0: bytes = ((extract 96 32) aggregate%encoded_element%4#0)
+        let reinterpret_biguint%9#0: biguint = (itob 3u)
+        let tmp%63#0: biguint = (b+ i#4 reinterpret_biguint%9#0)
+        let tmp%64#0: bytes = (concat tmp%25#1 tmp%63#0)
+        let tmp%68#0: uint64 = (len tmp%64#0)
+        let tmp%69#0: uint64 = (- tmp%68#0 8u)
+        let index%5#0: uint64 = (extract_uint64 tmp%64#0 tmp%69#0)
+        let aggregate%value_len%61#0: uint64 = 32u
+        let aggregate%len_ok%61#0: bool = 1u
+        let aggregate%arc4_encoded%61#0: bytes[32] = (b| aggregate%extract%6#0 aggregate%bzero%0#0)
+        let slot_contents%11#0: Encoded(uint256[55]) = load(rhoChallengeElements#2)
+        let aggregate%write_offset%6#0: uint64 = (* index%5#0 32u)
+        let aggregate%updated_array%6#0: bytes = (replace3 slot_contents%11#0 aggregate%write_offset%6#0 aggregate%arc4_encoded%61#0) // on error: index access is out of bounds
+        store(rhoChallengeElements#2, aggregate%updated_array%6#0)
+        let reinterpret_biguint%11#0: biguint = (itob 4u)
+        let i#5: biguint = (b+ i#4 reinterpret_biguint%11#0)
+        let slot%6#0: Encoded((uint256,uint256,uint256,uint256)[3])* = new()
+        store(slot%6#0, aggregate%extract%2#0)
+        let aggregate%encoded_element%12#0: bytes = (extract3 aggregate%extract%2#0 256u 128u) // on error: index access is out of bounds
+        let aggregate%extract%7#0: bytes = ((extract 0 32) aggregate%encoded_element%12#0)
+        let tmp%74#0: bytes = (concat tmp%25#1 i#5)
+        let tmp%77#0: uint64 = (len tmp%74#0)
+        let tmp%78#0: uint64 = (- tmp%77#0 8u)
+        let index%6#0: uint64 = (extract_uint64 tmp%74#0 tmp%78#0)
+        let aggregate%value_len%62#0: uint64 = 32u
+        let aggregate%len_ok%62#0: bool = 1u
+        let aggregate%arc4_encoded%62#0: bytes[32] = (b| aggregate%extract%7#0 aggregate%bzero%0#0)
+        let slot_contents%13#0: Encoded(uint256[55]) = load(rhoChallengeElements#2)
+        let aggregate%write_offset%7#0: uint64 = (* index%6#0 32u)
+        let aggregate%updated_array%7#0: bytes = (replace3 slot_contents%13#0 aggregate%write_offset%7#0 aggregate%arc4_encoded%62#0) // on error: index access is out of bounds
+        store(rhoChallengeElements#2, aggregate%updated_array%7#0)
+        let slot%7#0: Encoded((uint256,uint256,uint256,uint256)[3])* = new()
+        store(slot%7#0, aggregate%extract%2#0)
+        let aggregate%extract%8#0: bytes = ((extract 32 32) aggregate%encoded_element%12#0)
+        let tmp%82#0: biguint = (b+ i#5 i#1)
+        let tmp%83#0: bytes = (concat tmp%25#1 tmp%82#0)
+        let tmp%87#0: uint64 = (len tmp%83#0)
+        let tmp%88#0: uint64 = (- tmp%87#0 8u)
+        let index%7#0: uint64 = (extract_uint64 tmp%83#0 tmp%88#0)
+        let aggregate%value_len%63#0: uint64 = 32u
+        let aggregate%len_ok%63#0: bool = 1u
+        let aggregate%arc4_encoded%63#0: bytes[32] = (b| aggregate%extract%8#0 aggregate%bzero%0#0)
+        let slot_contents%15#0: Encoded(uint256[55]) = load(rhoChallengeElements#2)
+        let aggregate%write_offset%8#0: uint64 = (* index%7#0 32u)
+        let aggregate%updated_array%8#0: bytes = (replace3 slot_contents%15#0 aggregate%write_offset%8#0 aggregate%arc4_encoded%63#0) // on error: index access is out of bounds
+        store(rhoChallengeElements#2, aggregate%updated_array%8#0)
+        let slot%8#0: Encoded((uint256,uint256,uint256,uint256)[3])* = new()
+        store(slot%8#0, aggregate%extract%2#0)
+        let aggregate%extract%9#0: bytes = ((extract 64 32) aggregate%encoded_element%12#0)
+        let tmp%92#0: biguint = (b+ i#5 reinterpret_biguint%7#0)
+        let tmp%93#0: bytes = (concat tmp%25#1 tmp%92#0)
+        let tmp%97#0: uint64 = (len tmp%93#0)
+        let tmp%98#0: uint64 = (- tmp%97#0 8u)
+        let index%8#0: uint64 = (extract_uint64 tmp%93#0 tmp%98#0)
+        let aggregate%value_len%64#0: uint64 = 32u
+        let aggregate%len_ok%64#0: bool = 1u
+        let aggregate%arc4_encoded%64#0: bytes[32] = (b| aggregate%extract%9#0 aggregate%bzero%0#0)
+        let slot_contents%17#0: Encoded(uint256[55]) = load(rhoChallengeElements#2)
+        let aggregate%write_offset%9#0: uint64 = (* index%8#0 32u)
+        let aggregate%updated_array%9#0: bytes = (replace3 slot_contents%17#0 aggregate%write_offset%9#0 aggregate%arc4_encoded%64#0) // on error: index access is out of bounds
+        store(rhoChallengeElements#2, aggregate%updated_array%9#0)
+        let slot%9#0: Encoded((uint256,uint256,uint256,uint256)[3])* = new()
+        store(slot%9#0, aggregate%extract%2#0)
+        let aggregate%extract%10#0: bytes = ((extract 96 32) aggregate%encoded_element%12#0)
+        let tmp%102#0: biguint = (b+ i#5 reinterpret_biguint%9#0)
+        let tmp%103#0: bytes = (concat tmp%25#1 tmp%102#0)
+        let tmp%107#0: uint64 = (len tmp%103#0)
+        let tmp%108#0: uint64 = (- tmp%107#0 8u)
+        let index%9#0: uint64 = (extract_uint64 tmp%103#0 tmp%108#0)
+        let aggregate%value_len%65#0: uint64 = 32u
+        let aggregate%len_ok%65#0: bool = 1u
+        let aggregate%arc4_encoded%65#0: bytes[32] = (b| aggregate%extract%10#0 aggregate%bzero%0#0)
+        let slot_contents%19#0: Encoded(uint256[55]) = load(rhoChallengeElements#2)
+        let aggregate%write_offset%10#0: uint64 = (* index%9#0 32u)
+        let aggregate%updated_array%10#0: bytes = (replace3 slot_contents%19#0 aggregate%write_offset%10#0 aggregate%arc4_encoded%65#0) // on error: index access is out of bounds
+        let i#6: biguint = (b+ i#5 reinterpret_biguint%11#0)
+        let aggregate%extract%11#0: bytes = (extract3 proof#0 10816u 128u)
+        let aggregate%extract%12#0: bytes = ((extract 0 32) aggregate%extract%11#0)
+        let tmp%113#0: bytes = (concat tmp%25#1 i#6)
+        let tmp%116#0: uint64 = (len tmp%113#0)
+        let tmp%117#0: uint64 = (- tmp%116#0 8u)
+        let index%10#0: uint64 = (extract_uint64 tmp%113#0 tmp%117#0)
+        let aggregate%value_len%66#0: uint64 = 32u
+        let aggregate%len_ok%66#0: bool = 1u
+        let aggregate%arc4_encoded%66#0: bytes[32] = (b| aggregate%extract%12#0 aggregate%bzero%0#0)
+        let aggregate%write_offset%11#0: uint64 = (* index%10#0 32u)
+        let aggregate%updated_array%11#0: bytes = (replace3 aggregate%updated_array%10#0 aggregate%write_offset%11#0 aggregate%arc4_encoded%66#0) // on error: index access is out of bounds
+        let aggregate%extract%14#0: bytes = ((extract 32 32) aggregate%extract%11#0)
+        let tmp%121#0: biguint = (b+ i#6 i#1)
+        let tmp%122#0: bytes = (concat tmp%25#1 tmp%121#0)
+        let tmp%126#0: uint64 = (len tmp%122#0)
+        let tmp%127#0: uint64 = (- tmp%126#0 8u)
+        let index%11#0: uint64 = (extract_uint64 tmp%122#0 tmp%127#0)
+        let aggregate%value_len%67#0: uint64 = 32u
+        let aggregate%len_ok%67#0: bool = 1u
+        let aggregate%arc4_encoded%67#0: bytes[32] = (b| aggregate%extract%14#0 aggregate%bzero%0#0)
+        let aggregate%write_offset%12#0: uint64 = (* index%11#0 32u)
+        let aggregate%updated_array%12#0: bytes = (replace3 aggregate%updated_array%11#0 aggregate%write_offset%12#0 aggregate%arc4_encoded%67#0) // on error: index access is out of bounds
+        let aggregate%extract%16#0: bytes = ((extract 64 32) aggregate%extract%11#0)
+        let tmp%131#0: biguint = (b+ i#6 reinterpret_biguint%7#0)
+        let tmp%132#0: bytes = (concat tmp%25#1 tmp%131#0)
+        let tmp%136#0: uint64 = (len tmp%132#0)
+        let tmp%137#0: uint64 = (- tmp%136#0 8u)
+        let index%12#0: uint64 = (extract_uint64 tmp%132#0 tmp%137#0)
+        let aggregate%value_len%68#0: uint64 = 32u
+        let aggregate%len_ok%68#0: bool = 1u
+        let aggregate%arc4_encoded%68#0: bytes[32] = (b| aggregate%extract%16#0 aggregate%bzero%0#0)
+        let aggregate%write_offset%13#0: uint64 = (* index%12#0 32u)
+        let aggregate%updated_array%13#0: bytes = (replace3 aggregate%updated_array%12#0 aggregate%write_offset%13#0 aggregate%arc4_encoded%68#0) // on error: index access is out of bounds
+        let aggregate%extract%18#0: bytes = ((extract 96 32) aggregate%extract%11#0)
+        let tmp%141#0: biguint = (b+ i#6 reinterpret_biguint%9#0)
+        let tmp%142#0: bytes = (concat tmp%25#1 tmp%141#0)
+        let tmp%146#0: uint64 = (len tmp%142#0)
+        let tmp%147#0: uint64 = (- tmp%146#0 8u)
+        let index%13#0: uint64 = (extract_uint64 tmp%142#0 tmp%147#0)
+        let aggregate%value_len%69#0: uint64 = 32u
+        let aggregate%len_ok%69#0: bool = 1u
+        let aggregate%arc4_encoded%69#0: bytes[32] = (b| aggregate%extract%18#0 aggregate%bzero%0#0)
+        let aggregate%write_offset%14#0: uint64 = (* index%13#0 32u)
+        let aggregate%updated_array%14#0: bytes = (replace3 aggregate%updated_array%13#0 aggregate%write_offset%14#0 aggregate%arc4_encoded%69#0) // on error: index access is out of bounds
+        let i#7: biguint = (b+ i#6 reinterpret_biguint%11#0)
+        let aggregate%extract%19#0: bytes = (extract3 proof#0 10944u 32u)
+        let tmp%152#0: bytes = (concat tmp%25#1 i#7)
+        let tmp%155#0: uint64 = (len tmp%152#0)
+        let tmp%156#0: uint64 = (- tmp%155#0 8u)
+        let index%14#0: uint64 = (extract_uint64 tmp%152#0 tmp%156#0)
+        let aggregate%value_len%70#0: uint64 = (len aggregate%extract%19#0)
+        let aggregate%len_ok%70#0: bool = (<= aggregate%value_len%70#0 32u)
+        (assert aggregate%len_ok%70#0) // overflow
+        let aggregate%arc4_encoded%70#0: bytes[32] = (b| aggregate%extract%19#0 aggregate%bzero%0#0)
+        let aggregate%write_offset%15#0: uint64 = (* index%14#0 32u)
+        let aggregate%updated_array%15#0: bytes = (replace3 aggregate%updated_array%14#0 aggregate%write_offset%15#0 aggregate%arc4_encoded%70#0) // on error: index access is out of bounds
+        store(rhoChallengeElements#2, aggregate%updated_array%15#0)
+        (log 0x151f7c750000000000000000000000000000000000000000000000000000000000000000)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper14.__init__[routing]() -> void:
+    block@0: // L65448
+        let tmp%0#0: bytes = (txna ApplicationArgs 1)
+        let len%0#0: uint64 = (len tmp%0#0)
+        let eq%0#0: bool = (== len%0#0 8u)
+        (assert eq%0#0) // invalid number of bytes for arc4.uint64
+        let o#0: uint64 = (btoi tmp%0#0)
+        let tmp%2#0: bytes = (txna ApplicationArgs 2)
+        let len%1#0: uint64 = (len tmp%2#0)
+        let eq%1#0: bool = (== len%1#0 8u)
+        (assert eq%1#0) // invalid number of bytes for arc4.uint64
+        let p#0: uint64 = (btoi tmp%2#0)
+        let tmp%4#0: bytes = (txna ApplicationArgs 3)
+        let aggregate%array_length%0#0: uint64 = (extract_uint16 tmp%4#0 0u) // on error: invalid array length header
+        let add%0#0: uint64 = (+ aggregate%array_length%0#0 2u)
+        let len%2#0: uint64 = (len tmp%4#0)
+        let eq%2#0: bool = (== len%2#0 add%0#0)
+        (assert eq%2#0) // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+        let s#0: bytes = ((extract 2 0) tmp%4#0)
+        let tmp%0#1: uint64 = (app_global_get "o")
+        let tmp%1#1: bool = (! tmp%0#1)
+        (assert tmp%1#1) // helper: already initialized
+        (app_global_put "o" o#0)
+        (app_global_put "p" p#0)
+        (app_global_put "s" s#0)
+        exit 1u

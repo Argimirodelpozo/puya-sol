@@ -1,0 +1,285 @@
+main /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper59.__puya_arc4_router__:
+    block@0: // L65448
+        let tmp%0#0: bool = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper59.__puya_arc4_router__()
+        return tmp%0#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.pow(base: biguint, v: biguint) -> biguint:
+    block@0: // L8918
+        let __modexp_result#0: biguint = 1b
+        let __modexp_base#0: biguint = (b% base#0 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        let __modexp_exp#1: biguint = v#0
+        goto block@1
+    block@1: // while_top_L9419
+        let tmp%1#0: bool = (b> __modexp_exp#1 0b)
+        goto tmp%1#0 ? block@2 : block@5
+    block@2: // while_body_L9419
+        let tmp%2#0: biguint = (b& __modexp_exp#1 1b)
+        let tmp%3#0: bool = (b!= tmp%2#0 0b)
+        goto tmp%3#0 ? block@3 : block@4
+    block@3: // if_body_L9419
+        let tmp%4#0: biguint = (b* __modexp_result#0 __modexp_base#0)
+        let __modexp_result#0: biguint = (b% tmp%4#0 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto block@4
+    block@4: // after_if_else_L9419
+        let __modexp_exp#1: biguint = (b/ __modexp_exp#1 2b)
+        let tmp%7#0: biguint = (b* __modexp_base#0 __modexp_base#0)
+        let __modexp_base#0: biguint = (b% tmp%7#0 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        goto block@1
+    block@5: // after_while_L9419
+        return __modexp_result#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerificationKey.loadVerificationKey() -> Encoded(uint256,uint256,uint256,(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256)):
+    block@0: // L222
+        return 0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000500000000000000000000000000000000000000000000000000000000000000021d4e2b662cf75598ae75c80cb6190d6d86bc92fd69f1420fc9e6d5be8ba09e2c30210ded34398f54e3048f65c3f1dac749cc5022828668a6b345712af7369cbb1c3736f27bc34afe8eb1021704555717e76024100c144933330df5d9a6fb7e7f215612b168ecf42291b6df40da24069d5a0d5f2599d8be1ec34c5095e0922151059aecd0bba76edd4de929d587575b50c50f4be99a4615bfbd4ece89cb1442f1121b12b8bfa67425811621a1be826bcc5add41edb51fdce6c134c8e3ff5b15782ad6f88dd8a25590c065ad43adb6f3d4ccba5a7312f27dd564b12325a2594ae5038c0c60a3dfed43a24eefcc0331f08074bea7bb5c7f65191ec2c3fe59a239cc17bebc96661564acc3f5c59647e9270570e0c238916df6390c8590445f256d1d0bf23741444a9bf150d33f19d70a31863256e71d2bb1adf96b04d61f2c95a2c41b8058db3a5b9890b24d2545b7dd4aca37844bb0964691811a3dfe7b9fd24f8f28362861904e4b69161d7f43201c9213ede6e74eb63800123b82c73ad0156c403058b7f62cbcbdc8763b05935e9965bea86cd205281d331fb426ef4232ffe5c52b312f13fea65176bc0fe06aef8724f256898d215c78835f40bfe56fbf3f0de30ac6c48b063b744bbeecb29c8962cf27853ae788601a92a0420ba047a7f7a643265a8af9070f8bd5e18bc97a13c985d35a59c188d3d5ee626bbc4589bba9ff9f024236bda126650fb5228cf424a0878775499e69e8bd2c39af33bd5fa0b4079a233cda9292be02cfa2da9d0fc7b0eab0eb1a867b06854066589b967455259b3209dfd2992ac1708f0dd1d28c2ad910d9cf21a1510948580f406bc9416113d620205f76eebda12f565c98c775c4e4f3534b5dcc29e57eed899b1a1a880534dcb90ca0bc4b1cd9eadbbf49eae56a99a4502ef13d965226a634d0981555e4a4da561a8a818e6c61f68cefa329f2fabc95c80ad56a538d852f75eda858ed1a616c741b8afad764d2cbe67c94249535bba7fcbd3f412f868487222aa54f3268ab64a201b70a90a334c9bd5096aad8a0cc5d4c1d1cdb0fe415445bd0c84309caaf213e13240f97a584b45184c8ec31319b5f6c04ee19ec1dfec87ed47d6d04aa158de22dad22022121d689f57fb38ca21349cefb5d240b07ceb4be26ea429b6dc9d9e02dbea5caeded6749d2ef2e2074dbea56c8d54fa043a54c6e6a40238fb0a52c8e1f299b74e3867e8c8bc149ef3a308007a3bd6f9935088ec247cce992c33a533606652c2a72cb81284b190e235ee029a9463f36b2e29a1775c984b9d9b2714bab268e8d1e619fde85a71e430b77974326d790cb64c87558085332df639b8ce4102849ce9f77669190ed63388b3cc4a6d4e0d895c683ae0057f36a00e62416de5e2f8d58d08d4b4bb3a63e23e091e7a1f13c581c8a98c75014d5ec8a20890c62a50fff3b4e49a2e6e05bc63d8438368182639ef435c89f30e3a3a9053d97bea5f21820cafe7ffbef14880565ed976d53ed31c844187447d21f09100e8e569d3aec2e89eeb660cac820de50be4c53b608dd67c6977f5f1746fcf0fb6475d81ccd9318ca593957d2677420236138b3659a6b95b580bcc09a3dfbdadfa58a38222c150c756ba6a0c66b05655349f04c61dff94dddf3a4d0117fafda741f9518c42f000f87a1201ebad9bd23fed33824ae4ba2a1a307a45fb15594f8d553d2ebf9c285248460656ec9bc0ad940051e3b0751d25bb97885d8bc362eb06b96ea78d82f840a5eebc538dc40185864706e22d850e3c02ce38e325761a59132bdb9e9d795be161edd8773a3b74c0553b690b4b80b2a5cbd4a1a25fda097bef23e349531b43e287139da895215c216aebe8cce7d3b944f4a3b051bd407126007921cb1fbc5fc20d671263cad88c119d0a5d172679309087e385f8e76d4cfa834fab61ebd66030f9e6dfd3e6f4584b28e2cb00483dc2ffd9bf5f7ae2cc3f1ea0869c5ae71d9a1101e267b586089a8bb447e83ab3b7029ed788cc214e0be44485e2f39afbb7ae613410d68bce429dc36e23023cfe21c5f2ced7e136529a4bcd4317232f2fc16b61054a26ae3aeeeedc653cf5c5e3c09e2258141e67f4a5a48b50cbf48958b40bd2d14190edcf9b2aa697b677c779083aaf0151cc4f673dcf4bdba392d6280e3762e9e762a66fed77eb0e72645e5ba54f32c1d1bfbc4bd862361dafd7ebd6c68dd0b4a012fbc876f57da669215383f3595383f787bca153e972e6cfb9dfebeaa1b000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000020af3884ecad3331429af995779c2602e93ca1ea976e9e1bc64bbcdbb9fe792121f18803add8ad686e13dc2a989dcfb010cb69b0b38200df51787b7104bc74fb6
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.pairing(rhs: Encoded(uint256,uint256), lhs: Encoded(uint256,uint256)) -> <bool, Encoded(uint256,uint256), Encoded(uint256,uint256)>:
+    block@0: // L31623
+        let tmp%0#0: bytes = (bzero 32u)
+        let aggregate%extract%0#0: bytes = ((extract 0 32) rhs#0)
+        let tmp%2#0: bytes = (concat tmp%0#0 aggregate%extract%0#0)
+        let tmp%6#0: uint64 = (len tmp%2#0)
+        let tmp%7#0: uint64 = (- tmp%6#0 32u)
+        let tmp%8#0: bytes = (extract3 tmp%2#0 tmp%7#0 32u)
+        let aggregate%extract%1#0: bytes = ((extract 32 32) rhs#0)
+        let tmp%11#0: bytes = (concat tmp%0#0 aggregate%extract%1#0)
+        let tmp%15#0: uint64 = (len tmp%11#0)
+        let tmp%16#0: uint64 = (- tmp%15#0 32u)
+        let tmp%17#0: bytes = (extract3 tmp%11#0 tmp%16#0 32u)
+        let tmp%18#0: bytes = (concat tmp%8#0 tmp%17#0)
+        let tmp%50#0: bytes = (concat tmp%18#0 0x198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c21800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed090689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b12c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa)
+        let aggregate%extract%2#0: bytes = ((extract 0 32) lhs#0)
+        let tmp%53#0: bytes = (concat tmp%0#0 aggregate%extract%2#0)
+        let tmp%57#0: uint64 = (len tmp%53#0)
+        let tmp%58#0: uint64 = (- tmp%57#0 32u)
+        let tmp%59#0: bytes = (extract3 tmp%53#0 tmp%58#0 32u)
+        let tmp%60#0: bytes = (concat tmp%50#0 tmp%59#0)
+        let aggregate%extract%3#0: bytes = ((extract 32 32) lhs#0)
+        let tmp%63#0: bytes = (concat tmp%0#0 aggregate%extract%3#0)
+        let tmp%67#0: uint64 = (len tmp%63#0)
+        let tmp%68#0: uint64 = (- tmp%67#0 32u)
+        let tmp%69#0: bytes = (extract3 tmp%63#0 tmp%68#0 32u)
+        let tmp%70#0: bytes = (concat tmp%60#0 tmp%69#0)
+        let input#0: bytes = (concat tmp%70#0 0x260e01b251f6f1c7e7ff4e580791dee8ea51d87a358e038b4efe30fac09383c10118c4d5b837bcc2bc89b5b398b5974e9f5944073b32078b7e231fec938883b004fc6369f7110fe3d25156c1bb9a72859cf2a04641f99ba4ee413c80da6a5fe422febda3c0c0632a56475b4214e5615e11e6dd3f96e6cea2854a87d4dacc5e55)
+        let tmp%126#0: bytes = (bzero 24u)
+        let tmp%127#0: bytes = ((extract 0 64) input#0)
+        let tmp%128#0: bytes = ((extract 192 64) input#0)
+        let tmp%129#0: bytes = (concat tmp%127#0 tmp%128#0)
+        let tmp%130#0: bytes = ((extract 96 32) input#0)
+        let tmp%131#0: bytes = ((extract 64 32) input#0)
+        let tmp%132#0: bytes = (concat tmp%130#0 tmp%131#0)
+        let tmp%133#0: bytes = ((extract 160 32) input#0)
+        let tmp%134#0: bytes = ((extract 128 32) input#0)
+        let tmp%135#0: bytes = (concat tmp%133#0 tmp%134#0)
+        let tmp%136#0: bytes = (concat tmp%132#0 tmp%135#0)
+        let tmp%137#0: bytes = (extract3 input#0 288u 32u)
+        let tmp%138#0: bytes = (extract3 input#0 256u 32u)
+        let tmp%139#0: bytes = (concat tmp%137#0 tmp%138#0)
+        let tmp%140#0: bytes = (extract3 input#0 352u 32u)
+        let tmp%141#0: bytes = (extract3 input#0 320u 32u)
+        let tmp%142#0: bytes = (concat tmp%140#0 tmp%141#0)
+        let tmp%143#0: bytes = (concat tmp%139#0 tmp%142#0)
+        let tmp%144#0: bytes = (concat tmp%136#0 tmp%143#0)
+        let tmp%145#0: bool = ((ec_pairing_check BN254g1) tmp%129#0 tmp%144#0)
+        let tmp%147#0: bytes = (itob tmp%145#0)
+        let result#0: bytes = (concat tmp%126#0 tmp%147#0)
+        let tmp%149#0: uint64 = (btoi result#0)
+        let tmp%151#0: bool = (&& 1u tmp%149#0)
+        return tmp%151#0 rhs#0 lhs#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper59.__puya_arc4_router__() -> bool:
+    block@0: // L1
+        let tmp%0#0: uint64 = (txn NumAppArgs)
+        goto tmp%0#0 ? block@1 : block@10
+    block@1: // abi_routing_L1
+        let tmp%2#0: uint64 = (txn OnCompletion)
+        let tmp%3#0: bool = (! tmp%2#0)
+        (assert tmp%3#0)
+        let tmp%4#0: uint64 = (txn ApplicationID)
+        (assert tmp%4#0)
+        let tmp%6#0: bytes = (txna ApplicationArgs 0)
+        switch tmp%6#0 {method "HonkVerificationKey.loadVerificationKey()(uint256,uint256,uint256,(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256))" => block@3, method "pairing((uint256,uint256),(uint256,uint256))bool" => block@4, method "FrLib.pow(uint256,uint256)uint256" => block@5, method "__init__(uint64,uint64,byte[])void" => block@6, * => block@9}
+    block@3: // HonkVerificationKey.loadVerificationKey_route_L222
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper59.HonkVerificationKey.loadVerificationKey[routing]()
+        goto block@9
+    block@4: // pairing_route_L31623
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper59.pairing[routing]()
+        goto block@9
+    block@5: // FrLib.pow_route_L8918
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper59.FrLib.pow[routing]()
+        goto block@9
+    block@6: // __init___route_L65448
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper59.__init__[routing]()
+        goto block@9
+    block@9: // after_if_else_L1
+        fail
+    block@10: // __bare_create___L65448
+        let tmp%7#0: uint64 = (txn OnCompletion)
+        let tmp%8#0: bool = (! tmp%7#0)
+        let tmp%9#0: uint64 = (txn ApplicationID)
+        let tmp%10#0: bool = (! tmp%9#0)
+        let tmp%11#0: bool = (&& tmp%8#0 tmp%10#0)
+        (assert tmp%11#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper59.HonkVerificationKey.loadVerificationKey[routing]() -> void:
+    block@0: // L222
+        let tmp%0#1: uint64 = (app_global_get "o")
+        goto tmp%0#1 ? block@2 : block@5
+    block@2: // if_body_L222
+        let tmp%2#0: uint64 = (global GroupSize)
+        let tmp%3#0: bool = (>= tmp%2#0 2u)
+        (assert tmp%3#0) // helper: must be called in group
+        let tmp%4#0: uint64 = (gtxn 0 ApplicationID)
+        let tmp%5#0: uint64 = (app_global_get "o")
+        let tmp%6#0: bool = (== tmp%4#0 tmp%5#0)
+        (assert tmp%6#0) // helper: unauthorized caller
+        let tmp%7#0: bytes = (gtxn 0 Sender)
+        let tmp%8#0: bytes = (txn Sender)
+        let tmp%9#0: bool = (== tmp%7#0 tmp%8#0)
+        (assert tmp%9#0) // helper: sender mismatch
+        let tmp%10#0: uint64 = (app_global_get "p")
+        goto tmp%10#0 ? block@3 : block@5
+    block@3: // if_body_L222
+        let tmp%12#0: uint64 = (txn GroupIndex)
+        let tmp%13#0: uint64 = (- tmp%12#0 1u)
+        let tmp%14#0: uint64 = ((gtxns ApplicationID) tmp%13#0)
+        let tmp%15#0: uint64 = (app_global_get "p")
+        let tmp%16#0: bool = (== tmp%14#0 tmp%15#0)
+        (assert tmp%16#0) // helper: wrong prev chunk
+        let tmp%17#0: uint64 = (txn GroupIndex)
+        let tmp%18#0: uint64 = (- tmp%17#0 1u)
+        let tmp%19#0: bytes = ((gtxnsa ApplicationArgs 0) tmp%18#0)
+        let tmp%20#0: bytes = (app_global_get "s")
+        let tmp%21#0: bool = (== tmp%19#0 tmp%20#0)
+        (assert tmp%21#0) // helper: wrong prev method
+        goto block@5
+    block@5: // after_if_else_L222
+        let tmp%22#0: Encoded(uint256,uint256,uint256,(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256),(uint256,uint256)) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerificationKey.loadVerificationKey()
+        let tmp%1#0: bytes = (concat 0x151f7c75 tmp%22#0)
+        (log tmp%1#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper59.pairing[routing]() -> void:
+    block@0: // L31623
+        let rhs#0: Encoded(uint256,uint256) = (txna ApplicationArgs 1)
+        let len%0#0: uint64 = (len rhs#0)
+        let eq%0#0: bool = (== len%0#0 64u)
+        (assert eq%0#0) // invalid number of bytes for G1Point
+        let lhs#0: Encoded(uint256,uint256) = (txna ApplicationArgs 2)
+        let len%1#0: uint64 = (len lhs#0)
+        let eq%1#0: bool = (== len%1#0 64u)
+        (assert eq%1#0) // invalid number of bytes for G1Point
+        let tmp%0#1: uint64 = (app_global_get "o")
+        goto tmp%0#1 ? block@2 : block@5
+    block@2: // if_body_L31623
+        let tmp%2#1: uint64 = (global GroupSize)
+        let tmp%3#1: bool = (>= tmp%2#1 2u)
+        (assert tmp%3#1) // helper: must be called in group
+        let tmp%4#1: uint64 = (gtxn 0 ApplicationID)
+        let tmp%5#0: uint64 = (app_global_get "o")
+        let tmp%6#0: bool = (== tmp%4#1 tmp%5#0)
+        (assert tmp%6#0) // helper: unauthorized caller
+        let tmp%7#0: bytes = (gtxn 0 Sender)
+        let tmp%8#0: bytes = (txn Sender)
+        let tmp%9#0: bool = (== tmp%7#0 tmp%8#0)
+        (assert tmp%9#0) // helper: sender mismatch
+        let tmp%10#0: uint64 = (app_global_get "p")
+        goto tmp%10#0 ? block@3 : block@5
+    block@3: // if_body_L31623
+        let tmp%12#0: uint64 = (txn GroupIndex)
+        let tmp%13#0: uint64 = (- tmp%12#0 1u)
+        let tmp%14#0: uint64 = ((gtxns ApplicationID) tmp%13#0)
+        let tmp%15#0: uint64 = (app_global_get "p")
+        let tmp%16#0: bool = (== tmp%14#0 tmp%15#0)
+        (assert tmp%16#0) // helper: wrong prev chunk
+        let tmp%17#0: uint64 = (txn GroupIndex)
+        let tmp%18#0: uint64 = (- tmp%17#0 1u)
+        let tmp%19#0: bytes = ((gtxnsa ApplicationArgs 0) tmp%18#0)
+        let tmp%20#0: bytes = (app_global_get "s")
+        let tmp%21#0: bool = (== tmp%19#0 tmp%20#0)
+        (assert tmp%21#0) // helper: wrong prev method
+        goto block@5
+    block@5: // after_if_else_L31623
+        let (pairing%0#0: bool, rhs#0: Encoded(uint256,uint256), lhs#0: Encoded(uint256,uint256)) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.pairing(rhs#0, lhs#0)
+        let aggregate%encoded_bool%0#0: bytes[1] = (setbit 0x00 0u pairing%0#0)
+        let tmp%4#0: bytes = (concat 0x151f7c75 aggregate%encoded_bool%0#0)
+        (log tmp%4#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper59.FrLib.pow[routing]() -> void:
+    block@0: // L8918
+        let base#0: biguint = (txna ApplicationArgs 1)
+        let len%0#0: uint64 = (len base#0)
+        let eq%0#0: bool = (== len%0#0 32u)
+        (assert eq%0#0) // invalid number of bytes for arc4.uint256
+        let v#0: biguint = (txna ApplicationArgs 2)
+        let len%1#0: uint64 = (len v#0)
+        let eq%1#0: bool = (== len%1#0 32u)
+        (assert eq%1#0) // invalid number of bytes for arc4.uint256
+        let tmp%0#1: uint64 = (app_global_get "o")
+        goto tmp%0#1 ? block@2 : block@5
+    block@2: // if_body_L8918
+        let tmp%2#1: uint64 = (global GroupSize)
+        let tmp%3#1: bool = (>= tmp%2#1 2u)
+        (assert tmp%3#1) // helper: must be called in group
+        let tmp%4#1: uint64 = (gtxn 0 ApplicationID)
+        let tmp%5#1: uint64 = (app_global_get "o")
+        let tmp%6#1: bool = (== tmp%4#1 tmp%5#1)
+        (assert tmp%6#1) // helper: unauthorized caller
+        let tmp%7#0: bytes = (gtxn 0 Sender)
+        let tmp%8#0: bytes = (txn Sender)
+        let tmp%9#0: bool = (== tmp%7#0 tmp%8#0)
+        (assert tmp%9#0) // helper: sender mismatch
+        let tmp%10#0: uint64 = (app_global_get "p")
+        goto tmp%10#0 ? block@3 : block@5
+    block@3: // if_body_L8918
+        let tmp%12#0: uint64 = (txn GroupIndex)
+        let tmp%13#0: uint64 = (- tmp%12#0 1u)
+        let tmp%14#0: uint64 = ((gtxns ApplicationID) tmp%13#0)
+        let tmp%15#0: uint64 = (app_global_get "p")
+        let tmp%16#0: bool = (== tmp%14#0 tmp%15#0)
+        (assert tmp%16#0) // helper: wrong prev chunk
+        let tmp%17#0: uint64 = (txn GroupIndex)
+        let tmp%18#0: uint64 = (- tmp%17#0 1u)
+        let tmp%19#0: bytes = ((gtxnsa ApplicationArgs 0) tmp%18#0)
+        let tmp%20#0: bytes = (app_global_get "s")
+        let tmp%21#0: bool = (== tmp%19#0 tmp%20#0)
+        (assert tmp%21#0) // helper: wrong prev method
+        goto block@5
+    block@5: // after_if_else_L8918
+        let tmp%22#0: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.pow(base#0, v#0)
+        let aggregate%value_len%0#0: uint64 = (len tmp%22#0)
+        let aggregate%len_ok%0#0: bool = (<= aggregate%value_len%0#0 32u)
+        (assert aggregate%len_ok%0#0) // overflow
+        let aggregate%bzero%0#0: bytes = (bzero 32u)
+        let aggregate%arc4_encoded%0#0: bytes[32] = (b| tmp%22#0 aggregate%bzero%0#0)
+        let tmp%6#0: bytes = (concat 0x151f7c75 aggregate%arc4_encoded%0#0)
+        (log tmp%6#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper59.__init__[routing]() -> void:
+    block@0: // L65448
+        let tmp%0#0: bytes = (txna ApplicationArgs 1)
+        let len%0#0: uint64 = (len tmp%0#0)
+        let eq%0#0: bool = (== len%0#0 8u)
+        (assert eq%0#0) // invalid number of bytes for arc4.uint64
+        let o#0: uint64 = (btoi tmp%0#0)
+        let tmp%2#0: bytes = (txna ApplicationArgs 2)
+        let len%1#0: uint64 = (len tmp%2#0)
+        let eq%1#0: bool = (== len%1#0 8u)
+        (assert eq%1#0) // invalid number of bytes for arc4.uint64
+        let p#0: uint64 = (btoi tmp%2#0)
+        let tmp%4#0: bytes = (txna ApplicationArgs 3)
+        let aggregate%array_length%0#0: uint64 = (extract_uint16 tmp%4#0 0u) // on error: invalid array length header
+        let add%0#0: uint64 = (+ aggregate%array_length%0#0 2u)
+        let len%2#0: uint64 = (len tmp%4#0)
+        let eq%2#0: bool = (== len%2#0 add%0#0)
+        (assert eq%2#0) // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+        let s#0: bytes = ((extract 2 0) tmp%4#0)
+        let tmp%0#1: uint64 = (app_global_get "o")
+        let tmp%1#1: bool = (! tmp%0#1)
+        (assert tmp%1#1) // helper: already initialized
+        (app_global_put "o" o#0)
+        (app_global_put "p" p#0)
+        (app_global_put "s" s#0)
+        exit 1u

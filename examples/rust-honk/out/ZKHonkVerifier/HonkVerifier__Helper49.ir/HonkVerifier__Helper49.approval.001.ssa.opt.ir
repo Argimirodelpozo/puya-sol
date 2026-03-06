@@ -1,0 +1,641 @@
+main /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.__puya_arc4_router__:
+    block@0: // L65448
+        let tmp%0#0: bool = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.__puya_arc4_router__()
+        return tmp%0#0
+
+subroutine _puya_lib.arc4.dynamic_array_replace_byte_length_head(array: bytes, new_item: bytes, index: uint64) -> bytes:
+    block@0: // L254
+        let size_b#0: bytes = ((substring 0 2) array#0)
+        let array_length#0: uint64 = (btoi size_b#0)
+        let array_head_and_tail#0: bytes = ((extract 2 0) array#0)
+        let tmp%0#1: bool = (< index#0 array_length#0)
+        (assert tmp%0#1) // Index out of bounds
+        let tmp%1#1: uint64 = (* index#0 2u)
+        let offset_for_index#0: uint64 = (extract_uint16 array_head_and_tail#0 tmp%1#1)
+        let old_item_length#0: uint64 = (extract_uint16 array_head_and_tail#0 offset_for_index#0)
+        let tmp%4#1: uint64 = (+ offset_for_index#0 old_item_length#0)
+        let old_item_end#0: uint64 = (+ tmp%4#1 2u)
+        let tmp%6#0: bytes = (substring3 array_head_and_tail#0 0u offset_for_index#0)
+        let tmp%7#0: bytes = (concat tmp%6#0 new_item#0)
+        let tmp%8#0: uint64 = (len array_head_and_tail#0)
+        let tmp%9#0: bytes = (substring3 array_head_and_tail#0 old_item_end#0 tmp%8#0)
+        let tmp%10#0: bytes = (concat tmp%7#0 tmp%9#0)
+        let tmp%11#0: bytes = _puya_lib.arc4._recalculate_head_for_elements_with_byte_length_head(tmp%10#0, array_length#0, index#0)
+        let tmp%4#0: bytes = (concat size_b#0 tmp%11#0)
+        return tmp%4#0
+
+subroutine _puya_lib.arc4.dynamic_array_replace_dynamic_element(source: bytes, new_item: bytes, index: uint64) -> bytes:
+    block@0: // L278
+        let size_b#0: bytes = ((substring 0 2) source#0)
+        let array_length#0: uint64 = (btoi size_b#0)
+        let array_head_and_tail#0: bytes = ((extract 2 0) source#0)
+        let tmp%0#1: uint64 = (* index#0 2u)
+        let original_offset#0: uint64 = (extract_uint16 array_head_and_tail#0 tmp%0#1)
+        let tmp%2#1: uint64 = (+ index#0 1u)
+        let tmp%3#1: uint64 = (* tmp%2#1 2u)
+        let next_item_offset#0: uint64 = (extract_uint16 array_head_and_tail#0 tmp%3#1)
+        let end_of_tail#0: uint64 = (len array_head_and_tail#0)
+        let tmp%6#0: uint64 = (- array_length#0 index#0)
+        let is_before_end#0: uint64 = (- tmp%6#0 1u)
+        let end_offset#0: uint64 = (select end_of_tail#0 next_item_offset#0 is_before_end#0)
+        let original_item_length#0: uint64 = (- end_offset#0 original_offset#0)
+        let new_item_length#0: uint64 = (len new_item#0)
+        let tmp%11#0: bytes = (substring3 array_head_and_tail#0 0u original_offset#0)
+        let tmp%12#0: bytes = (concat tmp%11#0 new_item#0)
+        let tmp%13#0: bytes = (substring3 array_head_and_tail#0 end_offset#0 end_of_tail#0)
+        let new_head_and_tail#0: bytes = (concat tmp%12#0 tmp%13#0)
+        let tmp%15#0: uint64 = (* array_length#0 2u)
+        goto block@2
+    block@2: // for_header_L309
+        let head_offset#0: uint64 = φ(tmp%3#1 <- block@0, value_internal%0#2 <- block@3)
+        let new_head_and_tail#1: bytes = φ(new_head_and_tail#0 <- block@0, new_head_and_tail#2 <- block@3)
+        let continue_looping%0#0: bool = (< head_offset#0 tmp%15#0)
+        goto continue_looping%0#0 ? block@3 : block@5
+    block@3: // for_body_L310
+        let tail_offset#0: uint64 = (extract_uint16 new_head_and_tail#1 head_offset#0)
+        let tail_offset#1: uint64 = (+ tail_offset#0 new_item_length#0)
+        let tail_offset#2: uint64 = (- tail_offset#1 original_item_length#0)
+        let tmp%21#0: bytes = (itob tail_offset#2)
+        let tail_offset_bytes#0: bytes = ((extract 6 2) tmp%21#0)
+        let new_head_and_tail#2: bytes = (replace3 new_head_and_tail#1 head_offset#0 tail_offset_bytes#0)
+        let value_internal%0#2: uint64 = (+ head_offset#0 2u)
+        goto block@2
+    block@5: // after_for_L309
+        let tmp%4#0: bytes = (concat size_b#0 new_head_and_tail#1)
+        return tmp%4#0
+
+subroutine _puya_lib.arc4.static_array_replace_dynamic_element(array_head_and_tail: bytes, new_item: bytes, index: uint64, array_length: uint64) -> bytes:
+    block@0: // L291
+        let tmp%0#0: uint64 = (* index#0 2u)
+        let original_offset#0: uint64 = (extract_uint16 array_head_and_tail#0 tmp%0#0)
+        let tmp%2#0: uint64 = (+ index#0 1u)
+        let tmp%3#0: uint64 = (* tmp%2#0 2u)
+        let next_item_offset#0: uint64 = (extract_uint16 array_head_and_tail#0 tmp%3#0)
+        let end_of_tail#0: uint64 = (len array_head_and_tail#0)
+        let tmp%6#0: uint64 = (- array_length#0 index#0)
+        let is_before_end#0: uint64 = (- tmp%6#0 1u)
+        let end_offset#0: uint64 = (select end_of_tail#0 next_item_offset#0 is_before_end#0)
+        let original_item_length#0: uint64 = (- end_offset#0 original_offset#0)
+        let new_item_length#0: uint64 = (len new_item#0)
+        let tmp%11#0: bytes = (substring3 array_head_and_tail#0 0u original_offset#0)
+        let tmp%12#0: bytes = (concat tmp%11#0 new_item#0)
+        let tmp%13#0: bytes = (substring3 array_head_and_tail#0 end_offset#0 end_of_tail#0)
+        let new_head_and_tail#0: bytes = (concat tmp%12#0 tmp%13#0)
+        let tmp%15#0: uint64 = (* array_length#0 2u)
+        goto block@1
+    block@1: // for_header_L309
+        let head_offset#0: uint64 = φ(tmp%3#0 <- block@0, value_internal%0#2 <- block@2)
+        let new_head_and_tail#1: bytes = φ(new_head_and_tail#0 <- block@0, new_head_and_tail#2 <- block@2)
+        let continue_looping%0#0: bool = (< head_offset#0 tmp%15#0)
+        goto continue_looping%0#0 ? block@2 : block@4
+    block@2: // for_body_L310
+        let tail_offset#0: uint64 = (extract_uint16 new_head_and_tail#1 head_offset#0)
+        let tail_offset#1: uint64 = (+ tail_offset#0 new_item_length#0)
+        let tail_offset#2: uint64 = (- tail_offset#1 original_item_length#0)
+        let tmp%21#0: bytes = (itob tail_offset#2)
+        let tail_offset_bytes#0: bytes = ((extract 6 2) tmp%21#0)
+        let new_head_and_tail#2: bytes = (replace3 new_head_and_tail#1 head_offset#0 tail_offset_bytes#0)
+        let value_internal%0#2: uint64 = (+ head_offset#0 2u)
+        goto block@1
+    block@4: // after_for_L309
+        return new_head_and_tail#1
+
+subroutine _puya_lib.arc4.static_array_replace_byte_length_head(array_head_and_tail: bytes, new_item: bytes, index: uint64, array_length: uint64) -> bytes:
+    block@0: // L318
+        let tmp%0#0: bool = (< index#0 array_length#0)
+        (assert tmp%0#0) // Index out of bounds
+        let tmp%1#0: uint64 = (* index#0 2u)
+        let offset_for_index#0: uint64 = (extract_uint16 array_head_and_tail#0 tmp%1#0)
+        let old_item_length#0: uint64 = (extract_uint16 array_head_and_tail#0 offset_for_index#0)
+        let tmp%4#0: uint64 = (+ offset_for_index#0 old_item_length#0)
+        let old_item_end#0: uint64 = (+ tmp%4#0 2u)
+        let tmp%6#0: bytes = (substring3 array_head_and_tail#0 0u offset_for_index#0)
+        let tmp%7#0: bytes = (concat tmp%6#0 new_item#0)
+        let tmp%8#0: uint64 = (len array_head_and_tail#0)
+        let tmp%9#0: bytes = (substring3 array_head_and_tail#0 old_item_end#0 tmp%8#0)
+        let array_head_and_tail#1: bytes = (concat tmp%7#0 tmp%9#0)
+        let tmp%0#1: uint64 = (* array_length#0 2u)
+        let tmp%2#1: uint64 = (extract_uint16 array_head_and_tail#1 tmp%1#0)
+        let tail_offset#0: uint64 = (select tmp%0#1 tmp%2#1 index#0)
+        goto block@2
+    block@2: // for_header_L369
+        let head_offset#0: uint64 = φ(tmp%1#0 <- block@0, value_internal%0#2 <- block@3)
+        let tail_offset#1: uint64 = φ(tail_offset#0 <- block@0, tail_offset#2 <- block@3)
+        let array_head_and_tail#2: bytes = φ(array_head_and_tail#1 <- block@0, array_head_and_tail#3 <- block@3)
+        let continue_looping%0#0: bool = (< head_offset#0 tmp%0#1)
+        goto continue_looping%0#0 ? block@3 : block@5
+    block@3: // for_body_L370
+        let tmp%6#1: bytes = (itob tail_offset#1)
+        let tail_offset_bytes#0: bytes = ((extract 6 2) tmp%6#1)
+        let array_head_and_tail#3: bytes = (replace3 array_head_and_tail#2 head_offset#0 tail_offset_bytes#0)
+        let tmp%9#1: uint64 = (extract_uint16 array_head_and_tail#3 tail_offset#1)
+        let tmp%10#1: uint64 = (+ tmp%9#1 2u)
+        let tail_offset#2: uint64 = (+ tail_offset#1 tmp%10#1)
+        let value_internal%0#2: uint64 = (+ head_offset#0 2u)
+        goto block@2
+    block@5: // after_for_L369
+        return array_head_and_tail#2
+
+subroutine _puya_lib.arc4._recalculate_head_for_elements_with_byte_length_head(array_head_and_tail: bytes, length: uint64, start_at_index: uint64) -> bytes:
+    block@0: // L347
+        let tmp%0#0: uint64 = (* length#0 2u)
+        let tmp%1#0: uint64 = (* start_at_index#0 2u)
+        let tmp%2#0: uint64 = (extract_uint16 array_head_and_tail#0 tmp%1#0)
+        let tail_offset#0: uint64 = (select tmp%0#0 tmp%2#0 start_at_index#0)
+        goto block@1
+    block@1: // for_header_L369
+        let head_offset#0: uint64 = φ(tmp%1#0 <- block@0, value_internal%0#2 <- block@2)
+        let tail_offset#1: uint64 = φ(tail_offset#0 <- block@0, tail_offset#2 <- block@2)
+        let array_head_and_tail#1: bytes = φ(array_head_and_tail#0 <- block@0, array_head_and_tail#2 <- block@2)
+        let continue_looping%0#0: bool = (< head_offset#0 tmp%0#0)
+        goto continue_looping%0#0 ? block@2 : block@4
+    block@2: // for_body_L370
+        let tmp%6#0: bytes = (itob tail_offset#1)
+        let tail_offset_bytes#0: bytes = ((extract 6 2) tmp%6#0)
+        let array_head_and_tail#2: bytes = (replace3 array_head_and_tail#1 head_offset#0 tail_offset_bytes#0)
+        let tmp%9#0: uint64 = (extract_uint16 array_head_and_tail#2 tail_offset#1)
+        let tmp%10#0: uint64 = (+ tmp%9#0 2u)
+        let tail_offset#2: uint64 = (+ tail_offset#1 tmp%10#0)
+        let value_internal%0#2: uint64 = (+ head_offset#0 2u)
+        goto block@1
+    block@4: // after_for_L369
+        return array_head_and_tail#1
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(value: bytes[32]) -> biguint:
+    block@0: // L7934
+        let tmp%0#0: biguint = (b% value#0 21888242871839275222246405745257275088548364400416034343698204186575808495617b)
+        return tmp%0#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateGateChallenges(previousChallenge: biguint) -> <Encoded(uint256[28])*, biguint>:
+    block@0: // L21574
+        let gateChallenges#2: Encoded(uint256[28])* = undefined
+        let i#1: biguint = (itob 0u)
+        goto block@1
+    block@1: // while_top_L21765
+        let i#2: biguint = φ(i#1 <- block@0, i#3 <- block@2)
+        let previousChallenge#1: biguint = φ(previousChallenge#0 <- block@0, previousChallenge#2 <- block@2)
+        let gateChallenges#0: Encoded(uint256[28])* = φ(gateChallenges#2 <- block@0, gateChallenges#0 <- block@2)
+        let reinterpret_biguint%1#0: biguint = (itob 28u)
+        let tmp%0#0: bool = (b< i#2 reinterpret_biguint%1#0)
+        goto tmp%0#0 ? block@2 : block@3
+    block@2: // while_body_L21765
+        let tmp%1#0: bytes = (bzero 32u)
+        let tmp%2#0: bytes = (concat tmp%1#0 previousChallenge#1)
+        let tmp%5#0: uint64 = (len tmp%2#0)
+        let tmp%6#0: uint64 = (- tmp%5#0 32u)
+        let tmp%7#0: bytes = (extract3 tmp%2#0 tmp%6#0 32u)
+        let tmp%8#0: bytes = (keccak256 tmp%7#0)
+        let previousChallenge#2: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(tmp%8#0)
+        let (tmp%10#0: biguint, tmp%11#0: biguint) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.splitChallenge(previousChallenge#2)
+        let tmp%12#0: bytes = (bzero 8u)
+        let tmp%13#0: bytes = (concat tmp%12#0 i#2)
+        let tmp%16#0: uint64 = (len tmp%13#0)
+        let tmp%17#0: uint64 = (- tmp%16#0 8u)
+        let tmp%18#0: bytes = (extract3 tmp%13#0 tmp%17#0 8u)
+        let index%0#0: uint64 = (extract_uint64 tmp%13#0 tmp%17#0)
+        let encoded_value%0#0: Encoded(uint256) = bytes_encode<uint256>(tmp%10#0)
+        let slot_contents%0#0: Encoded(uint256[28]) = load(gateChallenges#0)
+        let updated_array%0#0: Encoded(uint256[28]) = replace_value(slot_contents%0#0, index%0#0, encoded_value%0#0)
+        store(gateChallenges#0, updated_array%0#0)
+        let i#3: biguint = (b+ i#2 1b)
+        goto block@1
+    block@3: // after_while_L21765
+        return gateChallenges#0 previousChallenge#1
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateSumcheckChallenges(proof: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)), prevChallenge: biguint) -> <Encoded(uint256[28])*, biguint, Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256))>:
+    block@0: // L22847
+        let sumcheckChallenges#3: Encoded(uint256[28])* = undefined
+        let i#1: biguint = (itob 0u)
+        goto block@1
+    block@1: // while_top_L23069
+        let i#2: biguint = φ(i#1 <- block@0, i#4 <- block@5)
+        let prevChallenge#1: biguint = φ(prevChallenge#0 <- block@0, prevChallenge#2 <- block@5)
+        let sumcheckChallenges#1: Encoded(uint256[28])* = φ(sumcheckChallenges#3 <- block@0, sumcheckChallenges#1 <- block@5)
+        let reinterpret_biguint%1#0: biguint = (itob 28u)
+        let tmp%0#0: bool = (b< i#2 reinterpret_biguint%1#0)
+        goto tmp%0#0 ? block@2 : block@6
+    block@2: // while_body_L23069
+        let encoded_array%0#0: Encoded(uint256[10]) = bytes_encode<uint256[10]>(0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x, 0x)
+        let univariateChal#0: Encoded(uint256[10])* = new()
+        store(univariateChal#0, encoded_array%0#0)
+        let encoded_value%0#0: Encoded(uint256) = bytes_encode<uint256>(prevChallenge#1)
+        let slot_contents%0#0: Encoded(uint256[10]) = load(univariateChal#0)
+        let updated_array%0#0: Encoded(uint256[10]) = replace_value(slot_contents%0#0, 0u, encoded_value%0#0)
+        store(univariateChal#0, updated_array%0#0)
+        goto block@3
+    block@3: // while_top_L23349
+        let j#1: biguint = φ(i#1 <- block@2, j#2 <- block@4)
+        let univariateChal#2: Encoded(uint256[10])* = φ(univariateChal#0 <- block@2, univariateChal#2 <- block@4)
+        let reinterpret_biguint%3#0: biguint = (itob 9u)
+        let tmp%1#0: bool = (b< j#1 reinterpret_biguint%3#0)
+        goto tmp%1#0 ? block@4 : block@5
+    block@4: // while_body_L23349
+        let tuple_item%0#0: Encoded(uint256[9][28]) = extract_value(proof#0, 10)
+        let slot%1#0: Encoded(uint256[9][28])* = new()
+        store(slot%1#0, tuple_item%0#0)
+        let tmp%2#0: bytes = (bzero 8u)
+        let tmp%3#0: bytes = (concat tmp%2#0 i#2)
+        let tmp%6#0: uint64 = (len tmp%3#0)
+        let tmp%7#0: uint64 = (- tmp%6#0 8u)
+        let tmp%8#0: bytes = (extract3 tmp%3#0 tmp%7#0 8u)
+        let tmp%9#0: uint64 = (extract_uint64 tmp%3#0 tmp%7#0)
+        let slot_contents%1#0: Encoded(uint256[9][28]) = load(slot%1#0)
+        let array_item%0#0: Encoded(uint256[9]) = extract_value(slot_contents%1#0, tmp%9#0)
+        let slot%2#0: Encoded(uint256[9])* = new()
+        store(slot%2#0, array_item%0#0)
+        let tmp%11#0: bytes = (concat tmp%2#0 j#1)
+        let tmp%14#0: uint64 = (len tmp%11#0)
+        let tmp%15#0: uint64 = (- tmp%14#0 8u)
+        let tmp%16#0: bytes = (extract3 tmp%11#0 tmp%15#0 8u)
+        let tmp%17#0: uint64 = (extract_uint64 tmp%11#0 tmp%15#0)
+        let slot_contents%2#0: Encoded(uint256[9]) = load(slot%2#0)
+        let array_item%1#0: Encoded(uint256) = extract_value(slot_contents%2#0, tmp%17#0)
+        let tmp%18#0: biguint = decode_bytes<biguint>(array_item%1#0)
+        let reinterpret_biguint%4#0: biguint = (itob 1u)
+        let tmp%20#0: biguint = (b+ j#1 reinterpret_biguint%4#0)
+        let tmp%21#0: bytes = (concat tmp%2#0 tmp%20#0)
+        let tmp%25#0: uint64 = (len tmp%21#0)
+        let tmp%26#0: uint64 = (- tmp%25#0 8u)
+        let tmp%27#0: bytes = (extract3 tmp%21#0 tmp%26#0 8u)
+        let index%0#0: uint64 = (extract_uint64 tmp%21#0 tmp%26#0)
+        let encoded_value%1#0: Encoded(uint256) = bytes_encode<uint256>(tmp%18#0)
+        let slot_contents%3#0: Encoded(uint256[10]) = load(univariateChal#2)
+        let updated_array%1#0: Encoded(uint256[10]) = replace_value(slot_contents%3#0, index%0#0, encoded_value%1#0)
+        store(univariateChal#2, updated_array%1#0)
+        let j#2: biguint = (b+ j#1 1b)
+        goto block@3
+    block@5: // after_while_L23349
+        let slot_contents%4#0: Encoded(uint256[10]) = load(univariateChal#2)
+        let array_item%2#0: Encoded(uint256) = extract_value(slot_contents%4#0, 0u)
+        let tmp%29#0: biguint = decode_bytes<biguint>(array_item%2#0)
+        let slot_contents%5#0: Encoded(uint256[10]) = load(univariateChal#2)
+        let array_item%3#0: Encoded(uint256) = extract_value(slot_contents%5#0, 1u)
+        let tmp%30#0: biguint = decode_bytes<biguint>(array_item%3#0)
+        let tmp%31#0: bytes = (concat tmp%29#0 tmp%30#0)
+        let slot_contents%6#0: Encoded(uint256[10]) = load(univariateChal#2)
+        let array_item%4#0: Encoded(uint256) = extract_value(slot_contents%6#0, 2u)
+        let tmp%32#0: biguint = decode_bytes<biguint>(array_item%4#0)
+        let tmp%33#0: bytes = (concat tmp%31#0 tmp%32#0)
+        let slot_contents%7#0: Encoded(uint256[10]) = load(univariateChal#2)
+        let array_item%5#0: Encoded(uint256) = extract_value(slot_contents%7#0, 3u)
+        let tmp%34#0: biguint = decode_bytes<biguint>(array_item%5#0)
+        let tmp%35#0: bytes = (concat tmp%33#0 tmp%34#0)
+        let slot_contents%8#0: Encoded(uint256[10]) = load(univariateChal#2)
+        let array_item%6#0: Encoded(uint256) = extract_value(slot_contents%8#0, 4u)
+        let tmp%36#0: biguint = decode_bytes<biguint>(array_item%6#0)
+        let tmp%37#0: bytes = (concat tmp%35#0 tmp%36#0)
+        let slot_contents%9#0: Encoded(uint256[10]) = load(univariateChal#2)
+        let array_item%7#0: Encoded(uint256) = extract_value(slot_contents%9#0, 5u)
+        let tmp%38#0: biguint = decode_bytes<biguint>(array_item%7#0)
+        let tmp%39#0: bytes = (concat tmp%37#0 tmp%38#0)
+        let slot_contents%10#0: Encoded(uint256[10]) = load(univariateChal#2)
+        let array_item%8#0: Encoded(uint256) = extract_value(slot_contents%10#0, 6u)
+        let tmp%40#0: biguint = decode_bytes<biguint>(array_item%8#0)
+        let tmp%41#0: bytes = (concat tmp%39#0 tmp%40#0)
+        let slot_contents%11#0: Encoded(uint256[10]) = load(univariateChal#2)
+        let array_item%9#0: Encoded(uint256) = extract_value(slot_contents%11#0, 7u)
+        let tmp%42#0: biguint = decode_bytes<biguint>(array_item%9#0)
+        let tmp%43#0: bytes = (concat tmp%41#0 tmp%42#0)
+        let slot_contents%12#0: Encoded(uint256[10]) = load(univariateChal#2)
+        let array_item%10#0: Encoded(uint256) = extract_value(slot_contents%12#0, 8u)
+        let tmp%44#0: biguint = decode_bytes<biguint>(array_item%10#0)
+        let tmp%45#0: bytes = (concat tmp%43#0 tmp%44#0)
+        let slot_contents%13#0: Encoded(uint256[10]) = load(univariateChal#2)
+        let array_item%11#0: Encoded(uint256) = extract_value(slot_contents%13#0, 9u)
+        let tmp%46#0: biguint = decode_bytes<biguint>(array_item%11#0)
+        let tmp%47#0: bytes = (concat tmp%45#0 tmp%46#0)
+        let tmp%48#0: bytes = (keccak256 tmp%47#0)
+        let prevChallenge#2: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(tmp%48#0)
+        let (tmp%50#0: biguint, tmp%51#0: biguint) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.splitChallenge(prevChallenge#2)
+        let tmp%52#0: bytes = (bzero 8u)
+        let tmp%53#0: bytes = (concat tmp%52#0 i#2)
+        let tmp%56#0: uint64 = (len tmp%53#0)
+        let tmp%57#0: uint64 = (- tmp%56#0 8u)
+        let tmp%58#0: bytes = (extract3 tmp%53#0 tmp%57#0 8u)
+        let index%1#0: uint64 = (extract_uint64 tmp%53#0 tmp%57#0)
+        let encoded_value%2#0: Encoded(uint256) = bytes_encode<uint256>(tmp%50#0)
+        let slot_contents%14#0: Encoded(uint256[28]) = load(sumcheckChallenges#1)
+        let updated_array%2#0: Encoded(uint256[28]) = replace_value(slot_contents%14#0, index%1#0, encoded_value%2#0)
+        store(sumcheckChallenges#1, updated_array%2#0)
+        let i#4: biguint = (b+ i#2 1b)
+        goto block@1
+    block@6: // after_while_L23069
+        return sumcheckChallenges#1 prevChallenge#1 proof#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateTranscript__chunk_2(proof: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)), publicInputs: Encoded(uint8[32][])*, circuitSize: biguint, publicInputsSize: biguint, pubInputsOffset: biguint, previousChallenge: biguint, t: Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256)) -> <biguint, Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256), Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)), Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256)>:
+    block@0: // L14971
+        let (ZKTranscriptLib.generateSumcheckChallenges%0#0: Encoded(uint256[28])*, ZKTranscriptLib.generateSumcheckChallenges%1#0: biguint, proof#1: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256))) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateSumcheckChallenges(proof#0, previousChallenge#0)
+        let (ZKTranscriptLib.generateSumcheckChallenges%3#0: Encoded(uint256[28])*, ZKTranscriptLib.generateSumcheckChallenges%4#0: biguint, proof#3: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256))) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateSumcheckChallenges(proof#1, previousChallenge#0)
+        let slot_contents%0#0: Encoded(uint256[28]) = load(ZKTranscriptLib.generateSumcheckChallenges%3#0)
+        let t#3: Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256) = replace_value(t#0, 4, slot_contents%0#0)
+        let (ZKTranscriptLib.generateSumcheckChallenges%6#0: Encoded(uint256[28])*, previousChallenge#4: biguint, proof#6: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256))) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateSumcheckChallenges(proof#3, previousChallenge#0)
+        return previousChallenge#4 t#3 proof#6 t#3
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.splitChallenge(challenge: biguint) -> <biguint, biguint>:
+    block@0: // L16219
+        let lo#0: biguint = (b& challenge#0 340282366920938463463374607431768211455b)
+        let tmp%1#0: bytes = (bzero 32u)
+        let tmp%2#0: uint64 = 127u
+        let reinterpret_biguint%0#0: biguint = 0x0000000000000000000000000000000100000000000000000000000000000000
+        let hi#0: biguint = (b/ challenge#0 0x0000000000000000000000000000000100000000000000000000000000000000)
+        let tmp%5#0: bytes = (concat tmp%1#0 lo#0)
+        let tmp%8#0: uint64 = (len tmp%5#0)
+        let tmp%9#0: uint64 = (- tmp%8#0 32u)
+        let reinterpret_bytes[32]%0#0: bytes[32] = (extract3 tmp%5#0 tmp%9#0 32u)
+        let first#1: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(reinterpret_bytes[32]%0#0)
+        let tmp%12#0: bytes = (concat tmp%1#0 hi#0)
+        let tmp%15#0: uint64 = (len tmp%12#0)
+        let tmp%16#0: uint64 = (- tmp%15#0 32u)
+        let reinterpret_bytes[32]%1#0: bytes[32] = (extract3 tmp%12#0 tmp%16#0 32u)
+        let second#1: biguint = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(reinterpret_bytes[32]%1#0)
+        return first#1 second#1
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.equal(a: biguint, b: biguint) -> bool:
+    block@0: // L10763
+        let tmp%0#0: bool = (b== a#0 b#0)
+        return tmp%0#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.notEqual(a: biguint, b: biguint) -> bool:
+    block@0: // L10668
+        let tmp%0#0: bool = (b!= a#0 b#0)
+        return tmp%0#0
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.__puya_arc4_router__() -> bool:
+    block@0: // L1
+        let tmp%0#0: uint64 = (txn NumAppArgs)
+        let tmp%1#0: bool = (!= tmp%0#0 0u)
+        goto tmp%0#0 ? block@1 : block@11
+    block@1: // abi_routing_L1
+        let tmp%2#0: uint64 = (txn OnCompletion)
+        let tmp%3#0: bool = (! tmp%2#0)
+        (assert tmp%3#0)
+        let tmp%4#0: uint64 = (txn ApplicationID)
+        let tmp%5#0: bool = (!= tmp%4#0 0u)
+        goto tmp%4#0 ? block@2 : block@10
+    block@2: // call_NoOp_L1
+        let tmp%6#0: bytes = (txna ApplicationArgs 0)
+        switch tmp%6#0 {method "ZKTranscriptLib.generateTranscript__chunk_2(byte[32][])(uint256,((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256))" => block@3, method "ZKTranscriptLib.generateGateChallenges(uint256)(uint256[28],uint256)" => block@4, method "equal(uint256,uint256)bool" => block@5, method "notEqual(uint256,uint256)bool" => block@6, method "__init__(uint64,uint64,byte[])void" => block@7, * => block@10}
+    block@3: // ZKTranscriptLib.generateTranscript__chunk_2_route_L14971
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.ZKTranscriptLib.generateTranscript__chunk_2[routing]()
+        goto block@10
+    block@4: // ZKTranscriptLib.generateGateChallenges_route_L21574
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.ZKTranscriptLib.generateGateChallenges[routing]()
+        goto block@10
+    block@5: // equal_route_L10763
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.equal[routing]()
+        goto block@10
+    block@6: // notEqual_route_L10668
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.notEqual[routing]()
+        goto block@10
+    block@7: // __init___route_L65448
+        /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.__init__[routing]()
+        goto block@10
+    block@10: // after_if_else_L1
+        fail
+    block@11: // __bare_create___L65448
+        let tmp%7#0: uint64 = (txn OnCompletion)
+        let tmp%8#0: bool = (! tmp%7#0)
+        let tmp%9#0: uint64 = (txn ApplicationID)
+        let tmp%10#0: bool = (! tmp%9#0)
+        let tmp%11#0: bool = (&& tmp%8#0 tmp%10#0)
+        (assert tmp%11#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.ZKTranscriptLib.generateTranscript__chunk_2[routing]() -> void:
+    block@0: // L14971
+        let tmp%0#0: bytes = (txna ApplicationArgs 1)
+        let length%0#0: uint64 = array_len(tmp%0#0)
+        let mul%0#0: uint64 = (* length%0#0 32u)
+        let add%0#0: uint64 = (+ mul%0#0 2u)
+        let len%0#0: uint64 = (len tmp%0#0)
+        let eq%0#0: bool = (== len%0#0 add%0#0)
+        (assert eq%0#0) // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 32>>
+        let decoded_array%0#0: Encoded(uint8[32][]) = decode_bytes<Encoded(uint8[32][])>(tmp%0#0)
+        let publicInputs#0: Encoded(uint8[32][])* = new()
+        store(publicInputs#0, decoded_array%0#0)
+        let tmp%0#1: uint64 = (app_global_get "o")
+        let tmp%1#1: bool = (> tmp%0#1 0u)
+        goto tmp%0#1 ? block@2 : block@5
+    block@2: // if_body_L14971
+        let tmp%2#1: uint64 = (global GroupSize)
+        let tmp%3#1: bool = (>= tmp%2#1 2u)
+        (assert tmp%3#1) // helper: must be called in group
+        let tmp%4#1: uint64 = (gtxn 0 ApplicationID)
+        let tmp%5#0: uint64 = (app_global_get "o")
+        let tmp%6#0: bool = (== tmp%4#1 tmp%5#0)
+        (assert tmp%6#0) // helper: unauthorized caller
+        let tmp%7#0: bytes = (gtxn 0 Sender)
+        let tmp%8#0: bytes = (txn Sender)
+        let tmp%9#0: bool = (== tmp%7#0 tmp%8#0)
+        (assert tmp%9#0) // helper: sender mismatch
+        let tmp%10#0: uint64 = (app_global_get "p")
+        let tmp%11#0: bool = (> tmp%10#0 0u)
+        goto tmp%10#0 ? block@3 : block@5
+    block@3: // if_body_L14971
+        let tmp%12#0: uint64 = (txn GroupIndex)
+        let tmp%13#0: uint64 = (- tmp%12#0 1u)
+        let tmp%14#0: uint64 = ((gtxns ApplicationID) tmp%13#0)
+        let tmp%15#0: uint64 = (app_global_get "p")
+        let tmp%16#0: bool = (== tmp%14#0 tmp%15#0)
+        (assert tmp%16#0) // helper: wrong prev chunk
+        let tmp%17#0: uint64 = (txn GroupIndex)
+        let tmp%18#0: uint64 = (- tmp%17#0 1u)
+        let tmp%19#0: bytes = ((gtxnsa ApplicationArgs 0) tmp%18#0)
+        let tmp%20#0: bytes = (app_global_get "s")
+        let tmp%21#0: bool = (== tmp%19#0 tmp%20#0)
+        (assert tmp%21#0) // helper: wrong prev method
+        goto block@5
+    block@5: // after_if_else_L14971
+        let tmp%22#0: bytes = (gload 1 0)
+        let tmp%23#0: bytes = (gload 1 1)
+        let tmp%24#0: bytes = (concat tmp%22#0 tmp%23#0)
+        let tmp%25#0: bytes = (gload 2 0)
+        let tmp%26#0: bytes = (concat tmp%24#0 tmp%25#0)
+        let tmp%27#0: bytes = (gload 2 1)
+        let proof#0: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)) = (concat tmp%26#0 tmp%27#0)
+        let circuitSize#0: biguint = (gload 3 0)
+        let publicInputsSize#0: biguint = (gload 3 1)
+        let pubInputsOffset#0: biguint = (gload 4 0)
+        let previousChallenge#0: biguint = (gload 4 1)
+        let t#0: Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256) = (gload 5 0)
+        let (ZKTranscriptLib.generateTranscript__chunk_2%0#0: biguint, ZKTranscriptLib.generateTranscript__chunk_2%1#0: Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256), proof#1: Encoded((uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)[3],uint256,uint256[9][28],uint256[40],uint256,(uint256,uint256,uint256,uint256),uint256,(uint256,uint256,uint256,uint256)[27],uint256[28],uint256[4],(uint256,uint256,uint256,uint256),(uint256,uint256,uint256,uint256)), t#1: Encoded((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256)) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateTranscript__chunk_2(proof#0, publicInputs#0, circuitSize#0, publicInputsSize#0, pubInputsOffset#0, previousChallenge#0, t#0)
+        let tmp%3#0: Encoded(uint256,((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256)) = bytes_encode<(uint256,((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256))>(ZKTranscriptLib.generateTranscript__chunk_2%0#0, ZKTranscriptLib.generateTranscript__chunk_2%1#0)
+        let tmp%4#0: bytes = (concat 0x151f7c75 tmp%3#0)
+        (log tmp%4#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.ZKTranscriptLib.generateGateChallenges[routing]() -> void:
+    block@0: // L21574
+        let tmp%0#0: bytes = (txna ApplicationArgs 1)
+        let len%0#0: uint64 = (len tmp%0#0)
+        let eq%0#0: bool = (== len%0#0 32u)
+        (assert eq%0#0) // invalid number of bytes for arc4.uint256
+        let previousChallenge#0: biguint = decode_bytes<biguint>(tmp%0#0)
+        let tmp%0#1: uint64 = (app_global_get "o")
+        let tmp%1#1: bool = (> tmp%0#1 0u)
+        goto tmp%0#1 ? block@2 : block@5
+    block@2: // if_body_L21574
+        let tmp%2#1: uint64 = (global GroupSize)
+        let tmp%3#1: bool = (>= tmp%2#1 2u)
+        (assert tmp%3#1) // helper: must be called in group
+        let tmp%4#1: uint64 = (gtxn 0 ApplicationID)
+        let tmp%5#1: uint64 = (app_global_get "o")
+        let tmp%6#0: bool = (== tmp%4#1 tmp%5#1)
+        (assert tmp%6#0) // helper: unauthorized caller
+        let tmp%7#0: bytes = (gtxn 0 Sender)
+        let tmp%8#0: bytes = (txn Sender)
+        let tmp%9#0: bool = (== tmp%7#0 tmp%8#0)
+        (assert tmp%9#0) // helper: sender mismatch
+        let tmp%10#0: uint64 = (app_global_get "p")
+        let tmp%11#0: bool = (> tmp%10#0 0u)
+        goto tmp%10#0 ? block@3 : block@5
+    block@3: // if_body_L21574
+        let tmp%12#0: uint64 = (txn GroupIndex)
+        let tmp%13#0: uint64 = (- tmp%12#0 1u)
+        let tmp%14#0: uint64 = ((gtxns ApplicationID) tmp%13#0)
+        let tmp%15#0: uint64 = (app_global_get "p")
+        let tmp%16#0: bool = (== tmp%14#0 tmp%15#0)
+        (assert tmp%16#0) // helper: wrong prev chunk
+        let tmp%17#0: uint64 = (txn GroupIndex)
+        let tmp%18#0: uint64 = (- tmp%17#0 1u)
+        let tmp%19#0: bytes = ((gtxnsa ApplicationArgs 0) tmp%18#0)
+        let tmp%20#0: bytes = (app_global_get "s")
+        let tmp%21#0: bool = (== tmp%19#0 tmp%20#0)
+        (assert tmp%21#0) // helper: wrong prev method
+        goto block@5
+    block@5: // after_if_else_L21574
+        let (tmp%22#0: Encoded(uint256[28])*, tmp%23#0: biguint) = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateGateChallenges(previousChallenge#0)
+        let tmp%4#0: Encoded(uint256[28],uint256) = bytes_encode<(uint256[28],uint256)>(tmp%22#0, tmp%23#0)
+        let tmp%5#0: bytes = (concat 0x151f7c75 tmp%4#0)
+        (log tmp%5#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.equal[routing]() -> void:
+    block@0: // L10763
+        let tmp%0#0: bytes = (txna ApplicationArgs 1)
+        let len%0#0: uint64 = (len tmp%0#0)
+        let eq%0#0: bool = (== len%0#0 32u)
+        (assert eq%0#0) // invalid number of bytes for arc4.uint256
+        let a#0: biguint = decode_bytes<biguint>(tmp%0#0)
+        let tmp%2#0: bytes = (txna ApplicationArgs 2)
+        let len%1#0: uint64 = (len tmp%2#0)
+        let eq%1#0: bool = (== len%1#0 32u)
+        (assert eq%1#0) // invalid number of bytes for arc4.uint256
+        let b#0: biguint = decode_bytes<biguint>(tmp%2#0)
+        let tmp%0#1: uint64 = (app_global_get "o")
+        let tmp%1#1: bool = (> tmp%0#1 0u)
+        goto tmp%0#1 ? block@2 : block@5
+    block@2: // if_body_L10763
+        let tmp%2#1: uint64 = (global GroupSize)
+        let tmp%3#1: bool = (>= tmp%2#1 2u)
+        (assert tmp%3#1) // helper: must be called in group
+        let tmp%4#1: uint64 = (gtxn 0 ApplicationID)
+        let tmp%5#1: uint64 = (app_global_get "o")
+        let tmp%6#1: bool = (== tmp%4#1 tmp%5#1)
+        (assert tmp%6#1) // helper: unauthorized caller
+        let tmp%7#0: bytes = (gtxn 0 Sender)
+        let tmp%8#0: bytes = (txn Sender)
+        let tmp%9#0: bool = (== tmp%7#0 tmp%8#0)
+        (assert tmp%9#0) // helper: sender mismatch
+        let tmp%10#0: uint64 = (app_global_get "p")
+        let tmp%11#0: bool = (> tmp%10#0 0u)
+        goto tmp%10#0 ? block@3 : block@5
+    block@3: // if_body_L10763
+        let tmp%12#0: uint64 = (txn GroupIndex)
+        let tmp%13#0: uint64 = (- tmp%12#0 1u)
+        let tmp%14#0: uint64 = ((gtxns ApplicationID) tmp%13#0)
+        let tmp%15#0: uint64 = (app_global_get "p")
+        let tmp%16#0: bool = (== tmp%14#0 tmp%15#0)
+        (assert tmp%16#0) // helper: wrong prev chunk
+        let tmp%17#0: uint64 = (txn GroupIndex)
+        let tmp%18#0: uint64 = (- tmp%17#0 1u)
+        let tmp%19#0: bytes = ((gtxnsa ApplicationArgs 0) tmp%18#0)
+        let tmp%20#0: bytes = (app_global_get "s")
+        let tmp%21#0: bool = (== tmp%19#0 tmp%20#0)
+        (assert tmp%21#0) // helper: wrong prev method
+        goto block@5
+    block@5: // after_if_else_L10763
+        let tmp%22#0: bool = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.equal(a#0, b#0)
+        let tmp%5#0: Encoded(bool8) = bytes_encode<bool8>(tmp%22#0)
+        let tmp%6#0: bytes = (concat 0x151f7c75 tmp%5#0)
+        (log tmp%6#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.notEqual[routing]() -> void:
+    block@0: // L10668
+        let tmp%0#0: bytes = (txna ApplicationArgs 1)
+        let len%0#0: uint64 = (len tmp%0#0)
+        let eq%0#0: bool = (== len%0#0 32u)
+        (assert eq%0#0) // invalid number of bytes for arc4.uint256
+        let a#0: biguint = decode_bytes<biguint>(tmp%0#0)
+        let tmp%2#0: bytes = (txna ApplicationArgs 2)
+        let len%1#0: uint64 = (len tmp%2#0)
+        let eq%1#0: bool = (== len%1#0 32u)
+        (assert eq%1#0) // invalid number of bytes for arc4.uint256
+        let b#0: biguint = decode_bytes<biguint>(tmp%2#0)
+        let tmp%0#1: uint64 = (app_global_get "o")
+        let tmp%1#1: bool = (> tmp%0#1 0u)
+        goto tmp%0#1 ? block@2 : block@5
+    block@2: // if_body_L10668
+        let tmp%2#1: uint64 = (global GroupSize)
+        let tmp%3#1: bool = (>= tmp%2#1 2u)
+        (assert tmp%3#1) // helper: must be called in group
+        let tmp%4#1: uint64 = (gtxn 0 ApplicationID)
+        let tmp%5#1: uint64 = (app_global_get "o")
+        let tmp%6#1: bool = (== tmp%4#1 tmp%5#1)
+        (assert tmp%6#1) // helper: unauthorized caller
+        let tmp%7#0: bytes = (gtxn 0 Sender)
+        let tmp%8#0: bytes = (txn Sender)
+        let tmp%9#0: bool = (== tmp%7#0 tmp%8#0)
+        (assert tmp%9#0) // helper: sender mismatch
+        let tmp%10#0: uint64 = (app_global_get "p")
+        let tmp%11#0: bool = (> tmp%10#0 0u)
+        goto tmp%10#0 ? block@3 : block@5
+    block@3: // if_body_L10668
+        let tmp%12#0: uint64 = (txn GroupIndex)
+        let tmp%13#0: uint64 = (- tmp%12#0 1u)
+        let tmp%14#0: uint64 = ((gtxns ApplicationID) tmp%13#0)
+        let tmp%15#0: uint64 = (app_global_get "p")
+        let tmp%16#0: bool = (== tmp%14#0 tmp%15#0)
+        (assert tmp%16#0) // helper: wrong prev chunk
+        let tmp%17#0: uint64 = (txn GroupIndex)
+        let tmp%18#0: uint64 = (- tmp%17#0 1u)
+        let tmp%19#0: bytes = ((gtxnsa ApplicationArgs 0) tmp%18#0)
+        let tmp%20#0: bytes = (app_global_get "s")
+        let tmp%21#0: bool = (== tmp%19#0 tmp%20#0)
+        (assert tmp%21#0) // helper: wrong prev method
+        goto block@5
+    block@5: // after_if_else_L10668
+        let tmp%22#0: bool = /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.notEqual(a#0, b#0)
+        let tmp%5#0: Encoded(bool8) = bytes_encode<bool8>(tmp%22#0)
+        let tmp%6#0: bytes = (concat 0x151f7c75 tmp%5#0)
+        (log tmp%6#0)
+        exit 1u
+
+subroutine /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper49.__init__[routing]() -> void:
+    block@0: // L65448
+        let tmp%0#0: bytes = (txna ApplicationArgs 1)
+        let len%0#0: uint64 = (len tmp%0#0)
+        let eq%0#0: bool = (== len%0#0 8u)
+        (assert eq%0#0) // invalid number of bytes for arc4.uint64
+        let o#0: uint64 = decode_bytes<uint64>(tmp%0#0)
+        let tmp%2#0: bytes = (txna ApplicationArgs 2)
+        let len%1#0: uint64 = (len tmp%2#0)
+        let eq%1#0: bool = (== len%1#0 8u)
+        (assert eq%1#0) // invalid number of bytes for arc4.uint64
+        let p#0: uint64 = decode_bytes<uint64>(tmp%2#0)
+        let tmp%4#0: bytes = (txna ApplicationArgs 3)
+        let length%0#0: uint64 = array_len(tmp%4#0)
+        let mul%0#0: uint64 = length%0#0
+        let add%0#0: uint64 = (+ length%0#0 2u)
+        let len%2#0: uint64 = (len tmp%4#0)
+        let eq%2#0: bool = (== len%2#0 add%0#0)
+        (assert eq%2#0) // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+        let s#0: bytes = decode_bytes<bytes>(tmp%4#0)
+        let tmp%0#1: uint64 = (app_global_get "o")
+        let tmp%1#1: bool = (! tmp%0#1)
+        (assert tmp%1#1) // helper: already initialized
+        (app_global_put "o" o#0)
+        (app_global_put "p" p#0)
+        (app_global_put "s" s#0)
+        exit 1u

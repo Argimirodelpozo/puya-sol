@@ -1,0 +1,780 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper19.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 32 8 0 1
+    bytecblock "o" "p" "" 0x01
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(value: bytes) -> bytes:
+FrLib.fromBytes32:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateAlphaChallenges(previousChallenge: bytes, proof: bytes) -> uint64, bytes, bytes:
+ZKTranscriptLib.generateAlphaChallenges:
+    proto 2 3
+    intc_2 // 0
+    bytec_2 // ""
+    dup
+    intc_0 // 32
+    bzero
+    dup
+    cover 2
+    frame_dig -2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    frame_dig -2
+    dig 1
+    b|
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    replace2 0 // on error: index access is out of bounds
+    frame_dig -1
+    pushints 768 128
+    extract3
+    dup
+    extract 0 32
+    dig 3
+    b|
+    uncover 2
+    swap
+    replace2 32 // on error: index access is out of bounds
+    dig 1
+    extract 32 32
+    dig 3
+    b|
+    replace2 64 // on error: index access is out of bounds
+    dig 1
+    extract 64 32
+    dig 3
+    b|
+    replace2 96 // on error: index access is out of bounds
+    swap
+    extract 96 32
+    dig 2
+    b|
+    replace2 128 // on error: index access is out of bounds
+    frame_dig -1
+    pushints 896 128
+    extract3
+    dup
+    extract 0 32
+    dig 3
+    b|
+    uncover 2
+    swap
+    replace2 160 // on error: index access is out of bounds
+    dig 1
+    extract 32 32
+    dig 3
+    b|
+    replace2 192 // on error: index access is out of bounds
+    dig 1
+    extract 64 32
+    dig 3
+    b|
+    replace2 224 // on error: index access is out of bounds
+    swap
+    extract 96 32
+    dig 2
+    b|
+    pushint 256
+    swap
+    replace3 // on error: index access is out of bounds
+    dup
+    extract 0 32 // on error: index access is out of bounds
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    extract 32 32 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    extract 64 32 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    extract 96 32 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    extract 128 32 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    extract 160 32 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    extract 192 32 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    extract 224 32 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    swap
+    pushint 256
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    keccak256
+    callsub FrLib.fromBytes32
+    dup
+    cover 3
+    dup
+    callsub ZKTranscriptLib.splitChallenge
+    popn 2
+    dup
+    callsub ZKTranscriptLib.splitChallenge
+    pop
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    dig 3
+    loads
+    swap
+    replace2 0 // on error: index access is out of bounds
+    swap
+    callsub ZKTranscriptLib.splitChallenge
+    bury 1
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    replace2 32 // on error: index access is out of bounds
+    stores
+    intc_3 // 1
+    itob
+    dup
+
+ZKTranscriptLib.generateAlphaChallenges_while_top@1:
+    pushint 2
+    itob
+    frame_bury 0
+    frame_dig 5
+    pushbytes 0x0c
+    b<
+    bz ZKTranscriptLib.generateAlphaChallenges_after_while@3
+    frame_dig 2
+    dup
+    frame_dig 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    keccak256
+    callsub FrLib.fromBytes32
+    dup
+    frame_bury 3
+    callsub ZKTranscriptLib.splitChallenge
+    bury 1
+    intc_1 // 8
+    bzero
+    frame_dig 0
+    frame_dig 5
+    dup
+    cover 4
+    b*
+    frame_dig 4
+    b+
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    uncover 3
+    b|
+    frame_dig 1
+    dup
+    cover 2
+    loads
+    uncover 3
+    intc_0 // 32
+    *
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    stores
+    bytec_3 // 0x01
+    b+
+    frame_bury 5
+    b ZKTranscriptLib.generateAlphaChallenges_while_top@1
+
+ZKTranscriptLib.generateAlphaChallenges_after_while@3:
+    frame_dig 2
+    dup
+    frame_dig 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    keccak256
+    callsub FrLib.fromBytes32
+    dup
+    callsub ZKTranscriptLib.splitChallenge
+    popn 2
+    dup
+    callsub ZKTranscriptLib.splitChallenge
+    pop
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    frame_dig 1
+    dup
+    cover 2
+    loads
+    pushint 768
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    dig 1
+    swap
+    stores
+    swap
+    frame_dig -1
+    frame_bury 2
+    frame_bury 1
+    frame_bury 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateGateChallenges(previousChallenge: bytes) -> uint64, bytes:
+ZKTranscriptLib.generateGateChallenges:
+    proto 1 2
+    bytec_2 // ""
+    intc_2 // 0
+    itob
+
+ZKTranscriptLib.generateGateChallenges_while_top@1:
+    pushint 28
+    itob
+    frame_dig 1
+    b>
+    bz ZKTranscriptLib.generateGateChallenges_after_while@3
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    keccak256
+    callsub FrLib.fromBytes32
+    dup
+    frame_bury -1
+    callsub ZKTranscriptLib.splitChallenge
+    pop
+    intc_1 // 8
+    bzero
+    frame_dig 1
+    dup
+    cover 3
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    uncover 3
+    b|
+    frame_dig 0
+    dup
+    cover 2
+    loads
+    uncover 3
+    intc_0 // 32
+    *
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    stores
+    bytec_3 // 0x01
+    b+
+    frame_bury 1
+    b ZKTranscriptLib.generateGateChallenges_while_top@1
+
+ZKTranscriptLib.generateGateChallenges_after_while@3:
+    frame_dig 0
+    frame_dig -1
+    uncover 3
+    uncover 3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.generateLibraChallenge(previousChallenge: bytes, proof: bytes) -> bytes, bytes, bytes:
+ZKTranscriptLib.generateLibraChallenge:
+    proto 2 3
+    intc_0 // 32
+    bzero
+    frame_dig -2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    frame_dig -2
+    dig 1
+    b|
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    replace2 0 // on error: index access is out of bounds
+    frame_dig -1
+    pushints 1024 384
+    extract3
+    extract 0 128 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    dig 3
+    b|
+    uncover 2
+    swap
+    replace2 32 // on error: index access is out of bounds
+    dig 1
+    extract 32 32
+    dig 3
+    b|
+    replace2 64 // on error: index access is out of bounds
+    dig 1
+    extract 64 32
+    dig 3
+    b|
+    replace2 96 // on error: index access is out of bounds
+    swap
+    extract 96 32
+    dig 2
+    b|
+    replace2 128 // on error: index access is out of bounds
+    frame_dig -1
+    pushint 1408
+    intc_0 // 32
+    extract3
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    replace2 160 // on error: index access is out of bounds
+    dup
+    extract 0 32 // on error: index access is out of bounds
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    extract 32 32 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    extract 64 32 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    extract 96 32 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    extract 128 32 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    swap
+    extract 160 32 // on error: index access is out of bounds
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    keccak256
+    callsub FrLib.fromBytes32
+    dup
+    callsub ZKTranscriptLib.splitChallenge
+    popn 2
+    dup
+    callsub ZKTranscriptLib.splitChallenge
+    pop
+    swap
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.splitChallenge(challenge: bytes) -> bytes, bytes:
+ZKTranscriptLib.splitChallenge:
+    proto 1 2
+    frame_dig -1
+    pushbytes 0xffffffffffffffffffffffffffffffff
+    b&
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    pushbytes 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    callsub FrLib.fromBytes32
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    callsub FrLib.fromBytes32
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper19.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn NumAppArgs
+    bz __puya_arc4_router_____bare_create__@8
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x512fe1ab 0xa96ef989 // method "ZKTranscriptLib.generateTranscript__chunk_1(byte[32][])(uint256,((uint256,uint256,uint256,uint256,uint256,uint256),uint256[25],uint256[28],uint256,uint256[28],uint256,uint256,uint256,uint256,uint256))", method "__init__(uint64,uint64,byte[])void"
+    txna ApplicationArgs 0
+    match ZKTranscriptLib.generateTranscript__chunk_1 __init__
+    err
+
+__puya_arc4_router_____bare_create__@8:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper19.ZKTranscriptLib.generateTranscript__chunk_1[routing]() -> void:
+ZKTranscriptLib.generateTranscript__chunk_1:
+    txna ApplicationArgs 1
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 32>>
+    pushint 2
+    intc_2 // 0
+    extract3
+    pop
+    bytec_0 // "o"
+    app_global_get
+    bz ZKTranscriptLib.generateTranscript__chunk_1_after_if_else@5
+    global GroupSize
+    pushint 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_0 // "o"
+    app_global_get
+    ==
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec_1 // "p"
+    app_global_get
+    bz ZKTranscriptLib.generateTranscript__chunk_1_after_if_else@5
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns ApplicationID
+    bytec_1 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxnsa ApplicationArgs 0
+    pushbytes "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+ZKTranscriptLib.generateTranscript__chunk_1_after_if_else@5:
+    gload 1 0
+    gload 1 1
+    concat
+    gload 2 0
+    concat
+    gload 2 1
+    concat
+    gload 5 0
+    gload 4 1
+    uncover 2
+    callsub ZKTranscriptLib.generateAlphaChallenges
+    cover 3
+    bury 1
+    dup
+    callsub ZKTranscriptLib.generateGateChallenges
+    popn 2
+    dup
+    callsub ZKTranscriptLib.generateGateChallenges
+    pop
+    loads
+    uncover 2
+    pushint 992
+    uncover 2
+    replace3
+    swap
+    callsub ZKTranscriptLib.generateGateChallenges
+    bury 1
+    dup
+    uncover 3
+    callsub ZKTranscriptLib.generateLibraChallenge
+    cover 2
+    popn 2
+    dig 1
+    swap
+    callsub ZKTranscriptLib.generateLibraChallenge
+    cover 2
+    pop
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    uncover 4
+    pushint 1888
+    uncover 2
+    replace3
+    uncover 3
+    uncover 3
+    callsub ZKTranscriptLib.generateLibraChallenge
+    pop
+    bury 1
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper19.__init__[routing]() -> void:
+__init__:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 3
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_0 // "o"
+    app_global_get
+    !
+    assert // helper: already initialized
+    bytec_0 // "o"
+    uncover 3
+    app_global_put
+    bytec_1 // "p"
+    uncover 2
+    app_global_put
+    pushbytes "s"
+    swap
+    app_global_put
+    intc_3 // 1
+    return

@@ -1,0 +1,965 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper30.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 32 1 2 8
+    bytecblock "o" "p" "s"
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.FrLib.fromBytes32(value: bytes) -> bytes:
+FrLib.fromBytes32:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.ZKTranscriptLib.splitChallenge(challenge: bytes) -> bytes, bytes:
+ZKTranscriptLib.splitChallenge:
+    proto 1 2
+    frame_dig -1
+    pushbytes 0xffffffffffffffffffffffffffffffff
+    b&
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    pushbytes 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    callsub FrLib.fromBytes32
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    callsub FrLib.fromBytes32
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper30.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn NumAppArgs
+    bz __puya_arc4_router_____bare_create__@8
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xf5ffce8a 0xa96ef989 // method "ZKTranscriptLib.generateRhoChallenge__chunk_1(uint256,uint256,uint256,uint256[55])(uint256,uint256)", method "__init__(uint64,uint64,byte[])void"
+    txna ApplicationArgs 0
+    match ZKTranscriptLib.generateRhoChallenge__chunk_1 __init__
+    err
+
+__puya_arc4_router_____bare_create__@8:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper30.ZKTranscriptLib.generateRhoChallenge__chunk_1[routing]() -> void:
+ZKTranscriptLib.generateRhoChallenge__chunk_1:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    dup
+    len
+    pushint 1760
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 55>
+    bytec_0 // "o"
+    app_global_get
+    bz ZKTranscriptLib.generateRhoChallenge__chunk_1_after_if_else@5
+    global GroupSize
+    intc_2 // 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_0 // "o"
+    app_global_get
+    ==
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec_1 // "p"
+    app_global_get
+    bz ZKTranscriptLib.generateRhoChallenge__chunk_1_after_if_else@5
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns ApplicationID
+    bytec_1 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxnsa ApplicationArgs 0
+    bytec_2 // "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+ZKTranscriptLib.generateRhoChallenge__chunk_1_after_if_else@5:
+    intc_0 // 32
+    bzero
+    dig 1
+    dup
+    extract 0 32 // on error: index access is out of bounds
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    extract 32 32 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    extract 64 32 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    extract 96 32 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    extract 128 32 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    extract 160 32 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    extract 192 32 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    extract 224 32 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 256
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 288
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 320
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 352
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 384
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 416
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 448
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 480
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 512
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 544
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 576
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 608
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 640
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 672
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 704
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 736
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 768
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 800
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 832
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 864
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 896
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 928
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 960
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 992
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1024
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1056
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1088
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1120
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1152
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1184
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1216
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1248
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1280
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1312
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1344
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1376
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1408
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1440
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1472
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1504
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1536
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1568
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1600
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1632
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1664
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    pushint 1696
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    swap
+    pushint 1728
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    keccak256
+    callsub FrLib.fromBytes32
+    dup
+    callsub ZKTranscriptLib.splitChallenge
+    popn 2
+    dup
+    callsub ZKTranscriptLib.splitChallenge
+    pop
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    uncover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/rust-honk/contracts/zkVerifier.sol.HonkVerifier__Helper30.__init__[routing]() -> void:
+__init__:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 3
+    dup
+    pushint 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_0 // "o"
+    app_global_get
+    !
+    assert // helper: already initialized
+    bytec_0 // "o"
+    uncover 3
+    app_global_put
+    bytec_1 // "p"
+    uncover 2
+    app_global_put
+    bytec_2 // "s"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
