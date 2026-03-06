@@ -1,0 +1,689 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 16
+    bytecblock 0x 0x0000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 "_interestRateData" 0x151f7c75 0x01 "HUB" 0x033b2e3c9fd0803ce8000000 0x152d02c7e14af6800000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    txna ApplicationArgs 0
+    dup
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // InvalidAddress
+    bytec 6 // "HUB"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x35a9e214 0x5f33b0db 0x19e2e01b 0x04e18e3f 0x5b4236ed 0xa1bbad99 0xe9d7a99c 0x19451065 // method "setInterestRateData(uint256,byte[])void", method "getInterestRateData(uint256)(uint64,uint64,uint64,uint64)", method "getOptimalUsageRatio(uint256)uint256", method "getBaseVariableBorrowRate(uint256)uint256", method "getVariableRateSlope1(uint256)uint256", method "getVariableRateSlope2(uint256)uint256", method "getMaxVariableBorrowRate(uint256)uint256", method "calculateInterestRate(uint256,uint256,uint256,uint256,uint256)uint256"
+    txna ApplicationArgs 0
+    match setInterestRateData getInterestRateData getOptimalUsageRatio getBaseVariableBorrowRate getVariableRateSlope1 getVariableRateSlope2 getMaxVariableBorrowRate calculateInterestRate
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.WadRayMath.rayMulUp(a: bytes, b: bytes) -> bytes:
+WadRayMath.rayMulUp:
+    proto 2 1
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    bytec_0 // 0x
+    bytec 5 // 0x01
+    uncover 2
+    select
+    frame_dig -1
+    bytec_0 // 0x
+    b!=
+    bz WadRayMath.rayMulUp_ternary_false@2
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig -1
+    b/
+
+WadRayMath.rayMulUp_ternary_merge@3:
+    frame_dig -2
+    b<
+    !
+    bytec_0 // 0x
+    bytec 5 // 0x01
+    uncover 2
+    select
+    frame_dig 0
+    b|
+    bytec_0 // 0x
+    b==
+    !
+    assert // revert
+    frame_dig -2
+    frame_dig -1
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 7 // 0x033b2e3c9fd0803ce8000000
+    b/
+    swap
+    bytec 7 // 0x033b2e3c9fd0803ce8000000
+    b%
+    bytec_0 // 0x
+    b>
+    bytec_0 // 0x
+    bytec 5 // 0x01
+    uncover 2
+    select
+    b+
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    swap
+    retsub
+
+WadRayMath.rayMulUp_ternary_false@2:
+    bytec_0 // 0x
+    b WadRayMath.rayMulUp_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.WadRayMath.rayDivUp(a: bytes, b: bytes) -> bytes:
+WadRayMath.rayDivUp:
+    proto 2 1
+    intc_2 // 0
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    bytec_0 // 0x
+    bytec 5 // 0x01
+    uncover 2
+    select
+    frame_dig -2
+    pushbytes 0x4f3a68dbc8f03f243baf513267aa9a3ee524f8e028
+    b>
+    !
+    !
+    bytec_0 // 0x
+    bytec 5 // 0x01
+    uncover 2
+    select
+    b|
+    bytec_0 // 0x
+    b!=
+    !
+    assert // revert
+    frame_dig -2
+    bytec 7 // 0x033b2e3c9fd0803ce8000000
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    bytec_0 // 0x
+    b!=
+    dup
+    bz WadRayMath.rayDivUp_ternary_false@5
+    frame_dig 1
+    frame_dig -1
+    b/
+    frame_bury 0
+
+WadRayMath.rayDivUp_ternary_merge@6:
+    frame_dig 2
+    bz WadRayMath.rayDivUp_ternary_false@8
+    frame_dig 1
+    frame_dig -1
+    b%
+
+WadRayMath.rayDivUp_ternary_merge@9:
+    bytec_0 // 0x
+    b>
+    bytec_0 // 0x
+    bytec 5 // 0x01
+    uncover 2
+    select
+    frame_dig 0
+    b+
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 0
+    retsub
+
+WadRayMath.rayDivUp_ternary_false@8:
+    bytec_0 // 0x
+    b WadRayMath.rayDivUp_ternary_merge@9
+
+WadRayMath.rayDivUp_ternary_false@5:
+    bytec_0 // 0x
+    frame_bury 0
+    b WadRayMath.rayDivUp_ternary_merge@6
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.WadRayMath.bpsToRay(a: bytes) -> bytes:
+WadRayMath.bpsToRay:
+    proto 1 1
+    frame_dig -1
+    bytec 8 // 0x152d02c7e14af6800000
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 8 // 0x152d02c7e14af6800000
+    b/
+    frame_dig -1
+    b==
+    !
+    !
+    assert // revert
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.setInterestRateData[routing]() -> void:
+setInterestRateData:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dupn 2
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    dup
+    extract 2 0
+    swap
+    intc_2 // 0
+    bytec 6 // "HUB"
+    app_global_get_ex
+    assert // check HUB exists
+    txn Sender
+    ==
+    assert // OnlyHub
+    dup
+    extract 2 8
+    swap
+    pushint 2
+    extract_uint64
+    dup
+    pushint 100
+    >=
+    bz setInterestRateData_bool_false@4
+    dup
+    pushint 9900
+    <=
+    bz setInterestRateData_bool_false@4
+    intc_1 // 1
+
+setInterestRateData_bool_merge@5:
+    assert // InvalidOptimalUsageRatio
+    dig 3
+    dup
+    extract 18 8
+    dig 1
+    pushint 18
+    extract_uint64
+    dig 2
+    extract 26 8
+    dig 3
+    pushint 26
+    extract_uint64
+    dig 2
+    dig 1
+    <=
+    assert // Slope2MustBeGteSlope1
+    dig 4
+    extract 10 8
+    uncover 5
+    pushint 10
+    extract_uint64
+    uncover 4
+    +
+    uncover 2
+    +
+    pushint 100000
+    <=
+    assert // InvalidMaxRate
+    intc_0 // 32
+    bzero
+    dup
+    dig 10
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_3 // "_interestRateData"
+    swap
+    concat
+    dig 8
+    box_put
+    dig 9
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    intc_2 // 0
+    bytec 6 // "HUB"
+    app_global_get_ex
+    assert // check HUB exists
+    swap
+    concat
+    dig 5
+    concat
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    pushbytes 0x5853de8e // method "UpdateRateData(address,uint256,uint256,uint256,uint256,uint256)"
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+setInterestRateData_bool_false@4:
+    intc_2 // 0
+    b setInterestRateData_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.getInterestRateData[routing]() -> void:
+getInterestRateData:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_3 // "_interestRateData"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.getOptimalUsageRatio[routing]() -> void:
+getOptimalUsageRatio:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_3 // "_interestRateData"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 0 8
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.getBaseVariableBorrowRate[routing]() -> void:
+getBaseVariableBorrowRate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_3 // "_interestRateData"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 8 8
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.getVariableRateSlope1[routing]() -> void:
+getVariableRateSlope1:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_3 // "_interestRateData"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 16 8
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.getVariableRateSlope2[routing]() -> void:
+getVariableRateSlope2:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_3 // "_interestRateData"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 24 8
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.getMaxVariableBorrowRate[routing]() -> void:
+getMaxVariableBorrowRate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_3 // "_interestRateData"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    pushint 8
+    extract_uint64
+    dig 1
+    intc_3 // 16
+    extract_uint64
+    +
+    swap
+    pushint 24
+    extract_uint64
+    +
+    itob
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.calculateInterestRate[routing]() -> void:
+calculateInterestRate:
+    intc_2 // 0
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    cover 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 5
+    dup
+    cover 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    cover 3
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_3 // "_interestRateData"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    cover 2
+    dup
+    intc_2 // 0
+    extract_uint64
+    dup
+    cover 3
+    assert // InterestRateDataNotSet
+    pushint 8
+    extract_uint64
+    callsub WadRayMath.bpsToRay
+    swap
+    intc_2 // 0
+    itob
+    b==
+    bz calculateInterestRate_after_if_else@3
+    dup
+
+calculateInterestRate_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.calculateInterestRate@7:
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 4
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+calculateInterestRate_after_if_else@3:
+    dig 6
+    dig 6
+    dup
+    cover 2
+    b+
+    dig 6
+    b+
+    callsub WadRayMath.rayDivUp
+    dup
+    dig 3
+    callsub WadRayMath.bpsToRay
+    dup
+    bury 11
+    b<=
+    bz calculateInterestRate_else_body@5
+    dig 3
+    intc_3 // 16
+    extract_uint64
+    callsub WadRayMath.bpsToRay
+    swap
+    callsub WadRayMath.rayMulUp
+    dig 8
+    callsub WadRayMath.rayDivUp
+    dig 1
+    b+
+    bury 1
+
+calculateInterestRate_after_if_else@6:
+    dup
+    b calculateInterestRate_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AssetInterestRateStrategy.sol.AssetInterestRateStrategy.calculateInterestRate@7
+
+calculateInterestRate_else_body@5:
+    dig 3
+    dup
+    intc_3 // 16
+    extract_uint64
+    callsub WadRayMath.bpsToRay
+    swap
+    pushint 24
+    extract_uint64
+    callsub WadRayMath.bpsToRay
+    uncover 2
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 10
+    dup
+    cover 2
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 2
+    swap
+    callsub WadRayMath.rayMulUp
+    pushbytes 0x010000000000000000000000000000000000000000033b2e3c9fd0803ce8000000
+    uncover 2
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    callsub WadRayMath.rayDivUp
+    b+
+    dig 1
+    b+
+    bury 1
+    b calculateInterestRate_after_if_else@6

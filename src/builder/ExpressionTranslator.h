@@ -90,12 +90,18 @@ private:
 	/// Extra statements to emit after the current expression (e.g., array length update).
 	std::vector<std::shared_ptr<awst::Statement>> m_pendingStatements;
 
+	/// Statements that must execute before the current expression (e.g., biguint exp loop).
+	std::vector<std::shared_ptr<awst::Statement>> m_prePendingStatements;
+
 	void push(std::shared_ptr<awst::Expression> _expr);
 	std::shared_ptr<awst::Expression> pop();
 
 public:
 	/// Consume any pending statements generated during expression translation.
 	std::vector<std::shared_ptr<awst::Statement>> takePendingStatements();
+
+	/// Consume any pre-pending statements (must execute before the expression).
+	std::vector<std::shared_ptr<awst::Statement>> takePrePendingStatements();
 
 	/// Register a parameter remap: when an Identifier references the AST declaration
 	/// with ID _declId, resolve it as a VarExpression with _uniqueName instead.
@@ -131,6 +137,14 @@ private:
 	/// For `Type storage p = _mapping[key]`, stores the StateGet(BoxValueExpression)
 	/// so that later references to `p` resolve to the box, not a local variable.
 	std::map<int64_t, std::shared_ptr<awst::Expression>> m_storageAliases;
+
+	/// Whether currently translating expressions inside a Solidity `unchecked` block.
+	/// When true, arithmetic operations wrap mod 2^256 (e.g., multiplication results truncated).
+	bool m_inUncheckedBlock = false;
+public:
+	void setInUncheckedBlock(bool _v) { m_inUncheckedBlock = _v; }
+	bool inUncheckedBlock() const { return m_inUncheckedBlock; }
+private:
 
 	/// Map Solidity binary operator token to AWST equivalent.
 	/// Determines whether to use UInt64, BigUInt, or Bytes operation.

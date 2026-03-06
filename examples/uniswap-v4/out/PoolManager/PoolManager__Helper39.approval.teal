@@ -3,50 +3,148 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper39.__puya_arc4_router__() -> uint64:
 main:
-    intcblock 32 0 2 1
-    bytecblock 0x 0xffffffffffffffffffffffffffffffff 0x151f7c75
+    intcblock 1 32 2 0
+    bytecblock "o" 0x 0x0000000000000000000000000000000100000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 "p" 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0xffffffffffffffffffffffffffffffff "s" 0x8000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000080000000000000000000000000000000 0x151f7c75
     b __puya_arc4_router__
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.Lock.lock() -> void:
-Lock.lock:
-    pushbytes 0x0d9ca8b06efb1c360cb744b39f1b4595a7c7afbc1d1e0971e0d3b5fbe56f8c7a
-    bytec_0 // 0x
-    app_global_put
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.CustomRevert.bubbleUpAndRevertWith(revertingContract: bytes, revertingFunctionSelector: bytes, additionalContext: bytes) -> void:
+CustomRevert.bubbleUpAndRevertWith:
+    proto 3 0
+    err // revert
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.Hooks.callHook(self: bytes, data: bytes) -> bytes:
+Hooks.callHook:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    bytec_1 // 0x
+    callsub CustomRevert.bubbleUpAndRevertWith
+    bytec_1 // 0x
+    callsub CustomRevert.revertWith
+    pushbytes 0x80
     retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.sub(a: bytes, b: bytes) -> bytes:
+sub:
+    proto 2 1
+    intc_3 // 0
+    dupn 2
+    frame_dig -2
+    bytec 8 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz sub_ternary_false@2
+    frame_dig -2
+    bytec_2 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    bytec 5 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b|
+    frame_bury 0
+
+sub_ternary_merge@3:
+    frame_dig -2
+    bytec 9 // 0x0000000000000000000000000000000080000000000000000000000000000000
+    b/
+    pushbytes 0x02
+    b%
+    bytec_1 // 0x
+    b!=
+    bz sub_ternary_false@5
+    frame_dig -2
+    bytec 5 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b|
+    frame_bury 1
+
+sub_ternary_merge@6:
+    frame_dig -1
+    bytec 8 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz sub_ternary_false@8
+    frame_dig -1
+    bytec_2 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    bytec 5 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b|
+    frame_bury 2
+
+sub_ternary_merge@9:
+    frame_dig -1
+    bytec 9 // 0x0000000000000000000000000000000080000000000000000000000000000000
+    b/
+    pushbytes 0x02
+    b%
+    bytec_1 // 0x
+    b!=
+    bz sub_ternary_false@11
+    frame_dig -1
+    bytec 5 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b|
+
+sub_ternary_merge@12:
+    frame_dig 0
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig 2
+    b-
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 1
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    uncover 2
+    b-
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    swap
+    callsub SafeCast.toInt128
+    swap
+    callsub SafeCast.toInt128
+    callsub toBalanceDelta
+    frame_bury 0
+    retsub
+
+sub_ternary_false@11:
+    frame_dig -1
+    bytec 6 // 0xffffffffffffffffffffffffffffffff
+    b&
+    b sub_ternary_merge@12
+
+sub_ternary_false@8:
+    frame_dig -1
+    bytec_2 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    frame_bury 2
+    b sub_ternary_merge@9
+
+sub_ternary_false@5:
+    frame_dig -2
+    bytec 6 // 0xffffffffffffffffffffffffffffffff
+    b&
+    frame_bury 1
+    b sub_ternary_merge@6
+
+sub_ternary_false@2:
+    frame_dig -2
+    bytec_2 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    frame_bury 0
+    b sub_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.toBalanceDelta(_amount0: bytes, _amount1: bytes) -> bytes:
 toBalanceDelta:
     proto 2 1
     frame_dig -2
-    pushbytes 0x0000000000000000000000000000000100000000000000000000000000000000
+    bytec_2 // 0x0000000000000000000000000000000100000000000000000000000000000000
     b*
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec_1 // 0xffffffffffffffffffffffffffffffff
+    bytec 6 // 0xffffffffffffffffffffffffffffffff
     frame_dig -1
     b&
     b|
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.SafeCast.toInt128(1)_0(x: bytes) -> bytes:
-SafeCast.toInt128:
-    proto 1 1
-    frame_dig -1
-    bytec_1 // 0xffffffffffffffffffffffffffffffff
-    b&
-    dup
-    frame_dig -1
-    b!=
-    bz SafeCast.toInt128_after_if_else@2
-    bytec_0 // 0x
-    callsub CustomRevert.revertWith
-
-SafeCast.toInt128_after_if_else@2:
-    frame_dig 0
-    swap
     retsub
 
 
@@ -54,6 +152,25 @@ SafeCast.toInt128_after_if_else@2:
 CustomRevert.revertWith:
     proto 1 0
     err // revert
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.SafeCast.toInt128(1)_0(x: bytes) -> bytes:
+SafeCast.toInt128:
+    proto 1 1
+    frame_dig -1
+    bytec 6 // 0xffffffffffffffffffffffffffffffff
+    b&
+    dup
+    frame_dig -1
+    b!=
+    bz SafeCast.toInt128_after_if_else@2
+    bytec_1 // 0x
+    callsub CustomRevert.revertWith
+
+SafeCast.toInt128_after_if_else@2:
+    frame_dig 0
+    swap
+    retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper39.__puya_arc4_router__() -> uint64:
@@ -65,9 +182,9 @@ __puya_arc4_router__:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x3cec1301 0xcc221cac 0x8bbc80f5 // method "Pool.swap__chunk_2((uint8[32],uint256,uint256,uint256,byte[],byte[],byte[]),(uint256,uint64,uint8,uint256,uint64),uint256,uint256,uint256,(uint256,uint64,uint256),byte[32],(uint256,uint64,uint8,uint256,uint256,uint256,uint256,uint256),uint256,uint64,bool)(uint256,uint256,uint64,(uint256,uint64,uint256))", method "Pool.initialize__chunk_2((uint8[32],uint256,uint256,uint256,byte[],byte[],byte[]),uint256,uint64,uint64)uint64", method "Lock.lock()void"
+    pushbytess 0x091b32a7 0x49f18a47 0xa96ef989 // method "sub(uint256,uint256)uint256", method "Hooks.callHook(address,byte[])byte[]", method "__init__(uint64,uint64,byte[])void"
     txna ApplicationArgs 0
-    match Pool.swap__chunk_2 Pool.initialize__chunk_2 /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper39.Lock.lock[routing]
+    match /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper39.sub[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper39.Hooks.callHook[routing] __init__
     err
 
 __puya_arc4_router_____bare_create__@9:
@@ -79,263 +196,186 @@ __puya_arc4_router_____bare_create__@9:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper39.Pool.swap__chunk_2[routing]() -> void:
-Pool.swap__chunk_2:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper39.sub[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper39.sub[routing]:
     txna ApplicationArgs 1
     dup
     len
-    dig 1
-    pushint 128
-    extract_uint16 // on error: invalid tuple encoding
-    dup
-    pushint 134
+    intc_1 // 32
     ==
-    assert // invalid tail pointer at index 4 of (uint8[32],uint256,uint256,uint256,(len+uint8[]),(len+uint8[]),(len+uint8[]))
-    dig 2
-    swap
-    dig 2
-    substring3
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    pushint 136
-    +
-    dig 2
-    pushint 130
-    extract_uint16 // on error: invalid tuple encoding
-    dup
-    dig 2
-    ==
-    assert // invalid tail pointer at index 5 of (uint8[32],uint256,uint256,uint256,(len+uint8[]),(len+uint8[]),(len+uint8[]))
-    dig 3
-    swap
-    dig 3
-    substring3
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    intc_2 // 2
-    +
-    +
-    dig 2
-    pushint 132
-    extract_uint16 // on error: invalid tuple encoding
-    dup
-    dig 2
-    ==
-    assert // invalid tail pointer at index 6 of (uint8[32],uint256,uint256,uint256,(len+uint8[]),(len+uint8[]),(len+uint8[]))
-    uncover 3
-    swap
-    dig 3
-    substring3
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    intc_2 // 2
-    +
-    +
-    ==
-    assert // invalid number of bytes for State
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    pushint 81
-    ==
-    assert // invalid number of bytes for SwapParams
-    txna ApplicationArgs 3
-    dup
-    cover 2
-    len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 4
-    dup
-    cover 2
-    len
-    intc_0 // 32
+    bytec_0 // "o"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper39.sub[routing]_after_if_else@5
+    global GroupSize
+    intc_2 // 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_0 // "o"
+    app_global_get
     ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 5
-    dup
-    cover 3
-    len
-    dup
-    cover 3
-    intc_0 // 32
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
     ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 6
-    dup
-    cover 3
-    len
-    pushint 72
+    assert // helper: sender mismatch
+    bytec 4 // "p"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper39.sub[routing]_after_if_else@5
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns ApplicationID
+    bytec 4 // "p"
+    app_global_get
     ==
-    assert // invalid number of bytes for SwapResult
-    txna ApplicationArgs 7
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxnsa ApplicationArgs 0
+    bytec 7 // "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper39.sub[routing]_after_if_else@5:
+    dup2
+    callsub sub
+    dup
     len
-    intc_0 // 32
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec 10 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper39.Hooks.callHook[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper39.Hooks.callHook[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 8
+    txna ApplicationArgs 2
+    dup
+    intc_3 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
     len
-    pushint 201
     ==
-    assert // invalid number of bytes for StepComputations
-    txna ApplicationArgs 9
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_0 // "o"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper39.Hooks.callHook[routing]_after_if_else@5
+    global GroupSize
+    intc_2 // 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_0 // "o"
+    app_global_get
+    ==
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec 4 // "p"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper39.Hooks.callHook[routing]_after_if_else@5
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns ApplicationID
+    bytec 4 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxnsa ApplicationArgs 0
+    bytec 7 // "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper39.Hooks.callHook[routing]_after_if_else@5:
+    dup2
+    callsub Hooks.callHook
+    dup
     len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 10
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec 10 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper39.__init__[routing]() -> void:
+__init__:
+    txna ApplicationArgs 1
     dup
     len
     pushint 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    cover 2
-    txna ApplicationArgs 11
-    dup
-    len
-    intc_3 // 1
-    ==
-    assert // invalid number of bytes for arc4.bool
-    intc_1 // 0
-    getbit
-    swap
-    extract 0 32
-    dup
-    cover 3
-    intc_1 // 0
-    itob
-    b<
-    !=
-    bz Pool.swap__chunk_2_else_body@8
-    dig 6
-    callsub SafeCast.toInt128
-    cover 2
-    b-
-    callsub SafeCast.toInt128
-    callsub toBalanceDelta
-
-Pool.swap__chunk_2_after_if_else@9:
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    swap
-    dig 1
-    b|
-    dig 4
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 5
-    uncover 2
-    b|
-    concat
-    dig 1
-    itob
-    concat
-    dig 2
-    concat
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_3 // 1
-    return
-
-Pool.swap__chunk_2_else_body@8:
-    b-
-    callsub SafeCast.toInt128
-    dig 5
-    callsub SafeCast.toInt128
-    callsub toBalanceDelta
-    b Pool.swap__chunk_2_after_if_else@9
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper39.Pool.initialize__chunk_2[routing]() -> void:
-Pool.initialize__chunk_2:
-    txna ApplicationArgs 1
-    dup
-    len
-    dig 1
-    pushint 128
-    extract_uint16 // on error: invalid tuple encoding
-    dup
-    pushint 134
-    ==
-    assert // invalid tail pointer at index 4 of (uint8[32],uint256,uint256,uint256,(len+uint8[]),(len+uint8[]),(len+uint8[]))
-    dig 2
-    swap
-    dig 2
-    substring3
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    pushint 136
-    +
-    dig 2
-    pushint 130
-    extract_uint16 // on error: invalid tuple encoding
-    dup
-    dig 2
-    ==
-    assert // invalid tail pointer at index 5 of (uint8[32],uint256,uint256,uint256,(len+uint8[]),(len+uint8[]),(len+uint8[]))
-    dig 3
-    swap
-    dig 3
-    substring3
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    intc_2 // 2
-    +
-    +
-    dig 2
-    pushint 132
-    extract_uint16 // on error: invalid tuple encoding
-    dup
-    dig 2
-    ==
-    assert // invalid tail pointer at index 6 of (uint8[32],uint256,uint256,uint256,(len+uint8[]),(len+uint8[]),(len+uint8[]))
-    uncover 3
-    swap
-    dig 3
-    substring3
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    intc_2 // 2
-    +
-    +
-    ==
-    assert // invalid number of bytes for State
     txna ApplicationArgs 2
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 3
-    len
-    pushint 8
-    ==
-    assert // invalid number of bytes for arc4.uint64
-    txna ApplicationArgs 4
     dup
     len
     pushint 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    bytec_2 // 0x151f7c75
+    btoi
+    txna ApplicationArgs 3
+    dup
+    intc_3 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_0 // "o"
+    app_global_get
+    !
+    assert // helper: already initialized
+    bytec_0 // "o"
+    uncover 3
+    app_global_put
+    bytec 4 // "p"
+    uncover 2
+    app_global_put
+    bytec 7 // "s"
     swap
-    concat
-    log
-    intc_3 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper39.Lock.lock[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper39.Lock.lock[routing]:
-    callsub Lock.lock
-    intc_3 // 1
+    app_global_put
+    intc_0 // 1
     return

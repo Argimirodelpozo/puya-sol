@@ -154,6 +154,9 @@ private:
 	std::shared_ptr<awst::Expression> handleGas(
 		awst::SourceLocation const& _loc
 	);
+	std::shared_ptr<awst::Expression> handleTimestamp(
+		awst::SourceLocation const& _loc
+	);
 	std::shared_ptr<awst::Expression> handleSload(
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
 		awst::SourceLocation const& _loc
@@ -245,11 +248,13 @@ private:
 		awst::SourceLocation const& _loc
 	);
 
-	/// Check if a biguint value is "negative" (bit 255 set) in two's complement.
-	/// Returns a bool-typed expression.
+	/// Check if a value is "negative" in two's complement.
+	/// For biguint: checks bit 255. For uint64: checks bit 63.
+	/// _origType is the type before ensureBiguint conversion; nullptr defaults to biguint (256-bit).
 	std::shared_ptr<awst::Expression> isNegative256(
 		std::shared_ptr<awst::Expression> _val,
-		awst::SourceLocation const& _loc
+		awst::SourceLocation const& _loc,
+		awst::WType const* _origType = nullptr
 	);
 
 	/// Negate a 256-bit two's complement value: ~x + 1 (mod 2^256).
@@ -470,6 +475,9 @@ private:
 	// ── Variable tracking ───────────────────────────────────────────────
 
 	std::map<std::string, awst::WType const*> m_locals;
+	/// Variables that were upgraded from uint64 to biguint within the assembly block.
+	/// Maps variable name to original type so we can emit coercion back at block end.
+	std::map<std::string, awst::WType const*> m_upgradedLocals;
 
 	/// Tracks local variables with known compile-time constant uint64 values.
 	/// Used to resolve dynamic memory offsets and calldata accesses.
@@ -528,6 +536,14 @@ private:
 		awst::SourceLocation const& _loc
 	);
 
+	/// EVM-safe div/mod: returns 0 when divisor is 0 (EVM semantics).
+	std::shared_ptr<awst::Expression> safeDivMod(
+		std::shared_ptr<awst::Expression> _left,
+		awst::BigUIntBinaryOperator _op,
+		std::shared_ptr<awst::Expression> _right,
+		awst::SourceLocation const& _loc
+	);
+
 	/// Safe btoi: extract last 8 bytes before btoi to handle biguint > 8 bytes.
 	/// AVM b&/b|/b^ pad shorter operands, producing results > 8 bytes even for
 	/// small values. This pattern ensures btoi never overflows.
@@ -535,6 +551,11 @@ private:
 		std::shared_ptr<awst::Expression> _biguintExpr,
 		awst::SourceLocation const& _loc
 	);
+
+	/// Track the last mstore value for dynamic-length keccak256 patterns.
+	/// When keccak256(begin, add(length, 0x20)) follows mstore(end, value),
+	/// the extra 0x20 represents the appended mstore value.
+	std::shared_ptr<awst::Expression> m_lastMstoreValue;
 
 	TypeMapper& m_typeMapper;
 	std::string m_sourceFile;

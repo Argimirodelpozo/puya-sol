@@ -1,7 +1,7 @@
 """Uniswap V4 TickBitmap — adapted from TickBitmap.t.sol"""
 import pytest
 import algokit_utils as au
-from helpers import call_compress, call_flipTick, to_int64
+from helpers import to_int64, grouped_call
 
 @pytest.mark.localnet
 @pytest.mark.parametrize("tick,expected_wordPos,expected_bitPos", [
@@ -9,24 +9,18 @@ from helpers import call_compress, call_flipTick, to_int64
     (255, 0, 255),
     (256, 1, 0),
 ])
-def test_position(helper33, tick, expected_wordPos, expected_bitPos):
-    r = helper33.send.call(au.AppClientMethodCallParams(
-        method="TickBitmap.position",
-        args=[tick],
-    ))
-    result = r.abi_return
+def test_position(helper46, tick, expected_wordPos, expected_bitPos, orchestrator, algod_client, account):
+    r = grouped_call(helper46, "TickBitmap.position", [tick], orchestrator, algod_client, account)
+    result = r
     if isinstance(result, (list, tuple)):
         assert result[1] == expected_bitPos
     else:
         assert result is not None
 
 @pytest.mark.localnet
-def test_position_negative(helper33):
-    r = helper33.send.call(au.AppClientMethodCallParams(
-        method="TickBitmap.position",
-        args=[to_int64(-1)],
-    ))
-    result = r.abi_return
+def test_position_negative(helper46, orchestrator, algod_client, account):
+    r = grouped_call(helper46, "TickBitmap.position", [to_int64(-1)], orchestrator, algod_client, account)
+    result = r
     if isinstance(result, (list, tuple)):
         assert result[1] == 255
 
@@ -36,9 +30,11 @@ def test_position_negative(helper33):
     (100, 10),
     (255, 1),
 ])
-def test_compress(helper41, helper6, tick, tickSpacing):
+def test_compress(helper42, tick, tickSpacing, orchestrator, algod_client, account):
     """compress(tick, tickSpacing) returns tick/tickSpacing rounded toward negative infinity."""
-    r = call_compress(helper41, helper6, tick, tickSpacing)
+    tick_arg = to_int64(tick) if tick < 0 else tick
+    ts_arg = to_int64(tickSpacing) if tickSpacing < 0 else tickSpacing
+    r = grouped_call(helper42, "TickBitmap.compress", [tick_arg, ts_arg], orchestrator, algod_client, account)
     assert r is not None
 
 @pytest.mark.localnet
@@ -46,13 +42,17 @@ def test_compress(helper41, helper6, tick, tickSpacing):
     (-100, 10),
     (-256, 1),
 ])
-def test_compress_negative(helper41, helper6, tick, tickSpacing):
-    r = call_compress(helper41, helper6, tick, tickSpacing)
+def test_compress_negative(helper42, tick, tickSpacing, orchestrator, algod_client, account):
+    tick_arg = to_int64(tick) if tick < 0 else tick
+    ts_arg = to_int64(tickSpacing) if tickSpacing < 0 else tickSpacing
+    r = grouped_call(helper42, "TickBitmap.compress", [tick_arg, ts_arg], orchestrator, algod_client, account)
     assert r is not None
 
 @pytest.mark.localnet
-@pytest.mark.xfail(reason="flipTick is now chunked; chunk_0 returns void and chunk_1 requires intermediate state")
-def test_flipTick_toggle(helper43, helper41):
+@pytest.mark.xfail(reason="flipTick reverts for negative tick — compress/modulo issue with negative ticks")
+def test_flipTick_toggle(helper37, orchestrator, algod_client, account):
     """Flip a tick twice should not error (toggles state)."""
-    call_flipTick(helper43, helper41, -230, 1)
-    call_flipTick(helper43, helper41, -230, 1)
+    tick_arg = to_int64(-230)
+    bitmap = b''  # empty bitmap state
+    grouped_call(helper37, "TickBitmap.flipTick", [bitmap, tick_arg, 1], orchestrator, algod_client, account)
+    grouped_call(helper37, "TickBitmap.flipTick", [bitmap, tick_arg, 1], orchestrator, algod_client, account)

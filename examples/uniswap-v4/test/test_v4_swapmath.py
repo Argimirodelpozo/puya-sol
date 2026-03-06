@@ -2,7 +2,7 @@
 import pytest
 import algokit_utils as au
 from constants import SQRT_PRICE_1_1, MAX_UINT160
-from helpers import to_int256
+from helpers import to_int256, grouped_call
 
 @pytest.mark.localnet
 @pytest.mark.parametrize("zeroForOne,sqrtPriceNextX96,sqrtPriceLimitX96,expected", [
@@ -11,18 +11,12 @@ from helpers import to_int256
     (True, 100, 200, 200),   # zeroForOne=true, limit > next → returns max(next, limit) = limit
     (False, 200, 100, 100),  # zeroForOne=false, next > limit → returns min(next, limit) = limit
 ])
-def test_getSqrtPriceTarget(helper1, zeroForOne, sqrtPriceNextX96, sqrtPriceLimitX96, expected):
-    r = helper1.send.call(au.AppClientMethodCallParams(
-        method="SwapMath.getSqrtPriceTarget",
-        args=[zeroForOne, sqrtPriceNextX96, sqrtPriceLimitX96],
-    ))
-    assert r.abi_return == expected
+def test_getSqrtPriceTarget(helper38, zeroForOne, sqrtPriceNextX96, sqrtPriceLimitX96, expected, orchestrator, algod_client, account):
+    r = grouped_call(helper38, "SwapMath.getSqrtPriceTarget", [zeroForOne, sqrtPriceNextX96, sqrtPriceLimitX96], orchestrator, algod_client, account)
+    assert r == expected
 
 @pytest.mark.localnet
-def test_getSqrtPriceTarget_zeroForOne_equal(helper1):
+def test_getSqrtPriceTarget_zeroForOne_equal(helper38, orchestrator, algod_client, account):
     """When limit equals next, returns either (they're the same)."""
-    r = helper1.send.call(au.AppClientMethodCallParams(
-        method="SwapMath.getSqrtPriceTarget",
-        args=[True, 100, 100],
-    ))
-    assert r.abi_return == 100
+    r = grouped_call(helper38, "SwapMath.getSqrtPriceTarget", [True, 100, 100], orchestrator, algod_client, account)
+    assert r == 100

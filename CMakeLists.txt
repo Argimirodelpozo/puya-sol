@@ -48,6 +48,7 @@ set(SOURCES
 	src/splitter/CallGraphAnalyzer.cpp
 	src/splitter/ContractSplitter.cpp
 	src/splitter/FunctionSplitter.cpp
+	src/splitter/FunctionInliner.cpp
 	src/splitter/ConstantExternalizer.cpp
 )
 

@@ -7,6 +7,7 @@
 #include "splitter/CallGraphAnalyzer.h"
 #include "splitter/ContractSplitter.h"
 #include "splitter/FunctionSplitter.h"
+#include "splitter/FunctionInliner.h"
 #include "splitter/ConstantExternalizer.h"
 
 #include <libsolidity/interface/CompilerStack.h>
@@ -147,7 +148,9 @@ struct Options
 	uint64_t opupBudget = 0;
 	bool splitContracts = false;
 	bool allowMidFunctionSplit = false;
+	bool inlineAll = false;
 	int optimizationLevel = 1;
+	bool outputIr = false;
 };
 
 void printUsage(char const* _progName)
@@ -167,7 +170,9 @@ void printUsage(char const* _progName)
 		<< "  --opup-budget <N>      Inject ensure_budget(N) into public methods (OpUp)\n"
 		<< "  --split-contracts      Auto-split oversized contracts into cooperating helpers\n"
 		<< "  --allow-mid-function-split  Allow splitting oversized functions at statement boundaries\n"
+		<< "  --inline-all               Fully inline all subroutine calls before splitting\n"
 		<< "  --optimization-level <N>   Puya optimization level: 0, 1, 2 (default: 1)\n"
+		<< "  --output-ir            Output all intermediate representations (SSA IR, MIR, TEAL)\n"
 		<< "  --help                 Show this help message\n";
 }
 
@@ -201,8 +206,12 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.splitContracts = true;
 		else if (arg == "--allow-mid-function-split")
 			opts.allowMidFunctionSplit = true;
+		else if (arg == "--inline-all")
+			opts.inlineAll = true;
 		else if (arg == "--optimization-level" && i + 1 < _argc)
 			opts.optimizationLevel = std::stoi(_argv[++i]);
+		else if (arg == "--output-ir")
+			opts.outputIr = true;
 		else if (arg == "--help")
 		{
 			printUsage(_argv[0]);
@@ -509,6 +518,238 @@ int main(int _argc, char* _argv[])
 			}
 		}
 
+		// ─── Phase -1: Full function inlining (BEFORE splitting) ─────────────
+		// When --inline-all is set, recursively inline all subroutine calls
+		// in the contract's public methods (e.g., verify()). This produces
+		// monolithic functions that can then be split into sequential chunks
+		// forming a linear pipeline for group transaction execution.
+		if (opts.inlineAll && opts.splitContracts)
+		{
+			logger.info("Phase -1: Full function inlining...");
+			puyasol::splitter::FunctionInliner inliner;
+
+			// Find the primary entry point to inline. For most contracts this is
+			// the first non-internal public method. For UltraHonk, it's "verify".
+			std::set<std::string> targetNames;
+			for (auto const& method: primaryContract->methods)
+			{
+				if (method.memberName != "__bare_create__" &&
+					method.memberName.substr(0, 2) != "__" &&
+					method.memberName != "loadVerificationKey")
+				{
+					// Only inline verify (the main entry point that calls everything)
+					if (method.memberName == "verify")
+						targetNames.insert(method.memberName);
+				}
+			}
+			if (targetNames.empty())
+			{
+				// Fallback: inline all public methods
+				for (auto const& method: primaryContract->methods)
+					if (method.memberName != "__bare_create__" &&
+						method.memberName.substr(0, 2) != "__")
+						targetNames.insert(method.memberName);
+			}
+
+			auto inlineResult = inliner.inlineAll(targetNames, primaryContract, roots);
+			if (inlineResult.didInline)
+			{
+				logger.info("  Inlined " + std::to_string(inlineResult.inlinedFunctions.size()) +
+					" unique functions, " + std::to_string(inlineResult.totalStatements) +
+					" statements in target");
+
+				// After inlining, remove ALL contract methods that are NOT:
+				// - The target method (verify)
+				// - loadVerificationKey (separate entry point)
+				// - __bare_create__ (bare method)
+				// Internal methods like verifySumcheck, computePublicInputDelta
+				// are now dead — their code lives inside verify's body.
+				primaryContract->methods.erase(
+					std::remove_if(primaryContract->methods.begin(), primaryContract->methods.end(),
+						[&](puyasol::awst::ContractMethod const& m) {
+							if (targetNames.count(m.memberName))
+								return false; // keep target
+							if (m.memberName == "__bare_create__" ||
+								m.memberName == "loadVerificationKey" ||
+								m.memberName.substr(0, 2) == "__")
+								return false; // keep infrastructure methods
+							return true; // remove everything else
+						}),
+					primaryContract->methods.end()
+				);
+
+				// Scan verify's inlined body for all SubroutineID references
+				// to determine which subroutines are still needed.
+				std::set<std::string> referencedIds;
+				for (auto const& method: primaryContract->methods)
+				{
+					if (!targetNames.count(method.memberName) || !method.body)
+						continue;
+					// Walk the entire inlined body to find SubroutineCallExpressions
+					std::function<void(puyasol::awst::Expression const&)> scanExpr;
+					std::function<void(puyasol::awst::Statement const&)> scanStmt;
+					scanExpr = [&](puyasol::awst::Expression const& e)
+					{
+						if (e.nodeType() == "SubroutineCallExpression")
+						{
+							auto const& call = static_cast<puyasol::awst::SubroutineCallExpression const&>(e);
+							if (auto const* sid = std::get_if<puyasol::awst::SubroutineID>(&call.target))
+								referencedIds.insert(sid->target);
+							for (auto const& arg: call.args)
+								if (arg.value) scanExpr(*arg.value);
+							return;
+						}
+						// Recurse into all expression children
+						auto recurseExpr = [&](std::shared_ptr<puyasol::awst::Expression> const& ex) {
+							if (ex) scanExpr(*ex);
+						};
+						std::string type = e.nodeType();
+						if (type == "BigUIntBinaryOperation") {
+							auto const& op = static_cast<puyasol::awst::BigUIntBinaryOperation const&>(e);
+							recurseExpr(op.left); recurseExpr(op.right);
+						} else if (type == "UInt64BinaryOperation") {
+							auto const& op = static_cast<puyasol::awst::UInt64BinaryOperation const&>(e);
+							recurseExpr(op.left); recurseExpr(op.right);
+						} else if (type == "BytesBinaryOperation") {
+							auto const& op = static_cast<puyasol::awst::BytesBinaryOperation const&>(e);
+							recurseExpr(op.left); recurseExpr(op.right);
+						} else if (type == "BytesUnaryOperation") {
+							auto const& op = static_cast<puyasol::awst::BytesUnaryOperation const&>(e);
+							recurseExpr(op.expr);
+						} else if (type == "NumericComparisonExpression") {
+							auto const& op = static_cast<puyasol::awst::NumericComparisonExpression const&>(e);
+							recurseExpr(op.lhs); recurseExpr(op.rhs);
+						} else if (type == "BytesComparisonExpression") {
+							auto const& op = static_cast<puyasol::awst::BytesComparisonExpression const&>(e);
+							recurseExpr(op.lhs); recurseExpr(op.rhs);
+						} else if (type == "BooleanBinaryOperation") {
+							auto const& op = static_cast<puyasol::awst::BooleanBinaryOperation const&>(e);
+							recurseExpr(op.left); recurseExpr(op.right);
+						} else if (type == "Not") {
+							recurseExpr(static_cast<puyasol::awst::Not const&>(e).expr);
+						} else if (type == "AssertExpression") {
+							recurseExpr(static_cast<puyasol::awst::AssertExpression const&>(e).condition);
+						} else if (type == "ConditionalExpression") {
+							auto const& c = static_cast<puyasol::awst::ConditionalExpression const&>(e);
+							recurseExpr(c.condition); recurseExpr(c.trueExpr); recurseExpr(c.falseExpr);
+						} else if (type == "AssignmentExpression") {
+							auto const& a = static_cast<puyasol::awst::AssignmentExpression const&>(e);
+							recurseExpr(a.target); recurseExpr(a.value);
+						} else if (type == "IntrinsicCall") {
+							for (auto const& arg: static_cast<puyasol::awst::IntrinsicCall const&>(e).stackArgs)
+								recurseExpr(arg);
+						} else if (type == "PuyaLibCall") {
+							for (auto const& arg: static_cast<puyasol::awst::PuyaLibCall const&>(e).args)
+								recurseExpr(arg.value);
+						} else if (type == "ReinterpretCast") {
+							recurseExpr(static_cast<puyasol::awst::ReinterpretCast const&>(e).expr);
+						} else if (type == "Copy") {
+							recurseExpr(static_cast<puyasol::awst::Copy const&>(e).value);
+						} else if (type == "CheckedMaybe") {
+							recurseExpr(static_cast<puyasol::awst::CheckedMaybe const&>(e).expr);
+						} else if (type == "ARC4Encode") {
+							recurseExpr(static_cast<puyasol::awst::ARC4Encode const&>(e).value);
+						} else if (type == "ARC4Decode") {
+							recurseExpr(static_cast<puyasol::awst::ARC4Decode const&>(e).value);
+						} else if (type == "SingleEvaluation") {
+							recurseExpr(static_cast<puyasol::awst::SingleEvaluation const&>(e).source);
+						} else if (type == "FieldExpression") {
+							recurseExpr(static_cast<puyasol::awst::FieldExpression const&>(e).base);
+						} else if (type == "IndexExpression") {
+							auto const& idx = static_cast<puyasol::awst::IndexExpression const&>(e);
+							recurseExpr(idx.base); recurseExpr(idx.index);
+						} else if (type == "TupleExpression") {
+							for (auto const& item: static_cast<puyasol::awst::TupleExpression const&>(e).items)
+								recurseExpr(item);
+						} else if (type == "TupleItemExpression") {
+							recurseExpr(static_cast<puyasol::awst::TupleItemExpression const&>(e).base);
+						} else if (type == "StateGet") {
+							auto const& sg = static_cast<puyasol::awst::StateGet const&>(e);
+							recurseExpr(sg.field); recurseExpr(sg.defaultValue);
+						} else if (type == "BoxValueExpression") {
+							recurseExpr(static_cast<puyasol::awst::BoxValueExpression const&>(e).key);
+						} else if (type == "NewStruct") {
+							for (auto const& [_, v]: static_cast<puyasol::awst::NewStruct const&>(e).values)
+								recurseExpr(v);
+						} else if (type == "Emit") {
+							recurseExpr(static_cast<puyasol::awst::Emit const&>(e).value);
+						} else if (type == "NewArray") {
+							for (auto const& v: static_cast<puyasol::awst::NewArray const&>(e).values)
+								recurseExpr(v);
+						} else if (type == "ArrayLength") {
+							recurseExpr(static_cast<puyasol::awst::ArrayLength const&>(e).array);
+						} else if (type == "CommaExpression") {
+							for (auto const& ex: static_cast<puyasol::awst::CommaExpression const&>(e).expressions)
+								recurseExpr(ex);
+						}
+					};
+					scanStmt = [&](puyasol::awst::Statement const& s)
+					{
+						std::string type = s.nodeType();
+						if (type == "ExpressionStatement")
+							{ if (auto const& ex = static_cast<puyasol::awst::ExpressionStatement const&>(s).expr) scanExpr(*ex); }
+						else if (type == "AssignmentStatement")
+							{ auto const& a = static_cast<puyasol::awst::AssignmentStatement const&>(s); if (a.target) scanExpr(*a.target); if (a.value) scanExpr(*a.value); }
+						else if (type == "ReturnStatement")
+							{ if (auto const& v = static_cast<puyasol::awst::ReturnStatement const&>(s).value) scanExpr(*v); }
+						else if (type == "IfElse") {
+							auto const& ie = static_cast<puyasol::awst::IfElse const&>(s);
+							if (ie.condition) scanExpr(*ie.condition);
+							if (ie.ifBranch) for (auto const& st: ie.ifBranch->body) if (st) scanStmt(*st);
+							if (ie.elseBranch) for (auto const& st: ie.elseBranch->body) if (st) scanStmt(*st);
+						} else if (type == "WhileLoop") {
+							auto const& wl = static_cast<puyasol::awst::WhileLoop const&>(s);
+							if (wl.condition) scanExpr(*wl.condition);
+							if (wl.loopBody) for (auto const& st: wl.loopBody->body) if (st) scanStmt(*st);
+						} else if (type == "Block") {
+							for (auto const& st: static_cast<puyasol::awst::Block const&>(s).body) if (st) scanStmt(*st);
+						} else if (type == "UInt64AugmentedAssignment") {
+							auto const& ua = static_cast<puyasol::awst::UInt64AugmentedAssignment const&>(s);
+							if (ua.target) scanExpr(*ua.target); if (ua.value) scanExpr(*ua.value);
+						} else if (type == "BigUIntAugmentedAssignment") {
+							auto const& ba = static_cast<puyasol::awst::BigUIntAugmentedAssignment const&>(s);
+							if (ba.target) scanExpr(*ba.target); if (ba.value) scanExpr(*ba.value);
+						}
+					};
+					for (auto const& stmt: method.body->body)
+						if (stmt) scanStmt(*stmt);
+				}
+
+				// Remove subroutines that are NOT referenced by the inlined body
+				size_t removedCount = 0;
+				roots.erase(
+					std::remove_if(roots.begin(), roots.end(),
+						[&](std::shared_ptr<puyasol::awst::RootNode> const& r) {
+							auto const* sub = dynamic_cast<puyasol::awst::Subroutine const*>(r.get());
+							if (!sub)
+								return false;
+							// Keep the verify subroutine created by inliner
+							if (targetNames.count(sub->name))
+								return false;
+							// Keep subroutines still referenced by the inlined body
+							if (referencedIds.count(sub->id))
+								return false;
+							++removedCount;
+							return true;
+						}),
+					roots.end()
+				);
+
+				logger.info("  Removed " + std::to_string(removedCount) +
+					" subroutines (kept " + std::to_string(referencedIds.size()) +
+					" referenced), " +
+					std::to_string(primaryContract->methods.size()) + " methods");
+
+				// Re-collect subroutines after inlining
+				subroutines.clear();
+				for (auto const& root: roots)
+				{
+					if (dynamic_cast<puyasol::awst::Subroutine const*>(root.get()))
+						subroutines.push_back(root);
+				}
+			}
+		}
+
 		// ─── Phase 0: Mid-function splitting (BEFORE contract splitting) ─────
 		// Run FunctionSplitter globally so that chunks become independent
 		// subroutines that can be distributed across helper contracts.
@@ -522,7 +763,7 @@ int main(int _argc, char* _argv[])
 			// Target ~2000 instructions ≈ ~4000 bytes per chunk.
 			// Shared deps (FrLib, Transcript utils) add ~3-5KB when duplicated.
 			// Most helpers fit 8KB; 2-3 outliers may need further optimization.
-			constexpr size_t maxChunkInstructions = 2000;
+			constexpr size_t maxChunkInstructions = 2500;
 
 			funcResult = funcSplitter.splitOversizedFunctions(roots, maxChunkInstructions);
 			if (funcResult.didSplit)
@@ -623,7 +864,8 @@ int main(int _argc, char* _argv[])
 						optionsPath,
 						contractAWST.contractId,
 						opts.outputDir,
-						opts.optimizationLevel
+						opts.optimizationLevel,
+						opts.outputIr
 					);
 					logger.info("Wrote: " + optionsPath);
 
@@ -693,11 +935,11 @@ int main(int _argc, char* _argv[])
 	if (contractNames.size() <= 1)
 	{
 		std::string contractName = contractNames.empty() ? "" : contractNames[0];
-		puyasol::json::OptionsWriter::write(optionsPath, contractName, opts.outputDir, opts.optimizationLevel);
+		puyasol::json::OptionsWriter::write(optionsPath, contractName, opts.outputDir, opts.optimizationLevel, opts.outputIr);
 	}
 	else
 	{
-		puyasol::json::OptionsWriter::writeMultiple(optionsPath, contractNames, opts.outputDir, opts.optimizationLevel);
+		puyasol::json::OptionsWriter::writeMultiple(optionsPath, contractNames, opts.outputDir, opts.optimizationLevel, opts.outputIr);
 	}
 	logger.info("Wrote: " + optionsPath);
 

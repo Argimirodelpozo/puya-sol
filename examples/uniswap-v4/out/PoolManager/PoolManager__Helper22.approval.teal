@@ -4,17 +4,14 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper22.__puya_arc4_router__() -> uint64:
 main:
     intcblock 32 0 2 8
-    bytecblock 0x151f7c75
+    bytecblock "o" "p" "s" 0x010000000000000000000000000000000000000000000000000000000000000000
     b __puya_arc4_router__
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.Slot0Library.sqrtPriceX96(_packed: bytes) -> bytes:
-Slot0Library.sqrtPriceX96:
-    proto 1 1
-    pushbytes 0xffffffffffffffffffffffffffffffffffffffff
-    frame_dig -1
-    b&
-    retsub
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.CustomRevert.revertWith(2)_2(selector: bytes, value: bytes) -> void:
+CustomRevert.revertWith:
+    proto 2 0
+    err // revert
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper22.__puya_arc4_router__() -> uint64:
@@ -26,9 +23,9 @@ __puya_arc4_router__:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x53d41e6e 0xf040c003 // method "Pool.initialize__chunk_1__chunk_10((uint8[32],uint256,uint256,uint256,byte[],byte[],byte[]),uint256,uint64,uint64,uint256,uint256,uint256,uint256)(uint256,uint256,uint256,uint256)", method "Slot0Library.sqrtPriceX96(byte[32])uint256"
+    pushbytess 0x09dc137b 0xa96ef989 // method "Pool.initialize__chunk_1__chunk_2((uint8[32],uint256,uint256,uint256,byte[],byte[],byte[]),uint256,uint64,uint64,uint256,uint256,uint256,uint256)(uint256,uint256,uint256,uint256,uint64)", method "__init__(uint64,uint64,byte[])void"
     txna ApplicationArgs 0
-    match Pool.initialize__chunk_1__chunk_10 /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper22.Slot0Library.sqrtPriceX96[routing]
+    match Pool.initialize__chunk_1__chunk_2 __init__
     err
 
 __puya_arc4_router_____bare_create__@8:
@@ -40,8 +37,8 @@ __puya_arc4_router_____bare_create__@8:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper22.Pool.initialize__chunk_1__chunk_10[routing]() -> void:
-Pool.initialize__chunk_1__chunk_10:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper22.Pool.initialize__chunk_1__chunk_2[routing]() -> void:
+Pool.initialize__chunk_1__chunk_2:
     txna ApplicationArgs 1
     dup
     len
@@ -95,6 +92,7 @@ Pool.initialize__chunk_1__chunk_10:
     ==
     assert // invalid number of bytes for State
     txna ApplicationArgs 2
+    dup
     len
     intc_0 // 32
     ==
@@ -137,39 +135,96 @@ Pool.initialize__chunk_1__chunk_10:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    uncover 6
+    bytec_0 // "o"
+    app_global_get
+    bz Pool.initialize__chunk_1__chunk_2_after_if_else@5
+    global GroupSize
+    intc_2 // 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_0 // "o"
+    app_global_get
+    ==
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec_1 // "p"
+    app_global_get
+    bz Pool.initialize__chunk_1__chunk_2_after_if_else@5
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns ApplicationID
+    bytec_1 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    pushint 1
+    -
+    gtxnsa ApplicationArgs 0
+    bytec_2 // "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+Pool.initialize__chunk_1__chunk_2_after_if_else@5:
+    dig 8
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    pushint 4295128739
+    itob
+    b-
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0xfffd8963efd1fc6a506488495d951d5163961682
+    b>
+    bz Pool.initialize__chunk_1__chunk_2_after_if_else@8
+    pushbytes 0x
+    dig 9
+    callsub CustomRevert.revertWith
+
+Pool.initialize__chunk_1__chunk_2_after_if_else@8:
+    dig 6
     intc_0 // 32
     <=
     assert // overflow
     intc_0 // 32
     bzero
-    uncover 7
+    dig 8
     dig 1
     b|
-    uncover 6
+    dig 6
     intc_0 // 32
     <=
     assert // overflow
-    uncover 6
+    dig 7
     dig 2
     b|
     concat
-    uncover 4
+    dig 4
     intc_0 // 32
     <=
     assert // overflow
-    uncover 4
+    dig 5
     dig 2
     b|
     concat
+    dig 2
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 3
     uncover 2
-    intc_0 // 32
-    <=
-    assert // overflow
-    cover 2
     b|
     concat
-    bytec_0 // 0x151f7c75
+    intc_1 // 0
+    itob
+    concat
+    pushbytes 0x151f7c75
     swap
     concat
     log
@@ -177,26 +232,45 @@ Pool.initialize__chunk_1__chunk_10:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper22.Slot0Library.sqrtPriceX96[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper22.Slot0Library.sqrtPriceX96[routing]:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper22.__init__[routing]() -> void:
+__init__:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_3 // 8
     ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub Slot0Library.sqrtPriceX96
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec_0 // 0x151f7c75
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 3
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_0 // "o"
+    app_global_get
+    !
+    assert // helper: already initialized
+    bytec_0 // "o"
+    uncover 3
+    app_global_put
+    bytec_1 // "p"
+    uncover 2
+    app_global_put
+    bytec_2 // "s"
     swap
-    concat
-    log
+    app_global_put
     pushint 1
     return

@@ -1,5 +1,6 @@
 """Uniswap V4 PoolIdLibrary — adapted from PoolId.t.sol"""
 import pytest
+from helpers import grouped_call
 import algokit_utils as au
 
 
@@ -12,18 +13,18 @@ def make_pool_key(currency0=None, currency1=None, fee=3000, tick_spacing=60, hoo
 
 
 @pytest.mark.localnet
-def test_toId_deterministic(helper24):
+def test_toId_deterministic(helper46, orchestrator, algod_client, account):
     """Same input produces same output."""
     key = make_pool_key()
-    r1 = helper24.send.call(au.AppClientMethodCallParams(method="PoolIdLibrary.toId", args=[key]))
-    r2 = helper24.send.call(au.AppClientMethodCallParams(method="PoolIdLibrary.toId", args=[key]))
-    assert r1.abi_return == r2.abi_return
+    r1 = grouped_call(helper46, "PoolIdLibrary.toId", [key], orchestrator, algod_client, account)
+    r2 = grouped_call(helper46, "PoolIdLibrary.toId", [key], orchestrator, algod_client, account)
+    assert r1 == r2
 
 @pytest.mark.localnet
-def test_toId_different_inputs(helper24):
+def test_toId_different_inputs(helper46, orchestrator, algod_client, account):
     """Different fees produce different IDs."""
     key1 = make_pool_key(fee=3000)
     key2 = make_pool_key(fee=500)
-    r1 = helper24.send.call(au.AppClientMethodCallParams(method="PoolIdLibrary.toId", args=[key1]))
-    r2 = helper24.send.call(au.AppClientMethodCallParams(method="PoolIdLibrary.toId", args=[key2]))
-    assert r1.abi_return != r2.abi_return
+    r1 = grouped_call(helper46, "PoolIdLibrary.toId", [key1], orchestrator, algod_client, account)
+    r2 = grouped_call(helper46, "PoolIdLibrary.toId", [key2], orchestrator, algod_client, account)
+    assert r1 != r2

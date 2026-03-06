@@ -544,7 +544,7 @@ size_t SizeEstimator::estimateMethod(awst::ContractMethod const& _method)
 /// Helper: estimate the ABI-encoded byte size of a WType.
 /// This approximates how many bytes of ARC4-encoded data the type needs
 /// (not bytecode — raw data bytes).
-static size_t estimateABIEncodedSize(awst::WType const* _wtype)
+size_t SizeEstimator::estimateABIEncodedSize(awst::WType const* _wtype)
 {
 	if (!_wtype)
 		return 64; // default biguint
@@ -557,6 +557,13 @@ static size_t estimateABIEncodedSize(awst::WType const* _wtype)
 		if (_wtype->name() == "uint64" || _wtype->name() == "bool")
 			return 8;
 		return 64;
+	case awst::WTypeKind::ARC4UIntN:
+	{
+		auto const* uintN = dynamic_cast<awst::ARC4UIntN const*>(_wtype);
+		if (uintN)
+			return uintN->n() / 8; // uint256 → 32, uint128 → 16, etc.
+		return 32;
+	}
 	case awst::WTypeKind::Bytes:
 	{
 		auto const* bt = dynamic_cast<awst::BytesWType const*>(_wtype);

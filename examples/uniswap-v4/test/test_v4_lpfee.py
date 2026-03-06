@@ -1,75 +1,56 @@
 """Uniswap V4 LPFeeLibrary — adapted from LPFeeLibrary.t.sol"""
 import pytest
+from helpers import grouped_call
 import algokit_utils as au
 from constants import MAX_LP_FEE, DYNAMIC_FEE_FLAG
 
 @pytest.mark.localnet
-def test_isDynamicFee_returnsTrue(helper16):
-    r = helper16.send.call(au.AppClientMethodCallParams(
-        method="LPFeeLibrary.isDynamicFee", args=[DYNAMIC_FEE_FLAG],
-    ))
-    assert r.abi_return != 0
+def test_isDynamicFee_returnsTrue(helper37, orchestrator, algod_client, account):
+    r = grouped_call(helper37, "LPFeeLibrary.isDynamicFee", [DYNAMIC_FEE_FLAG], orchestrator, algod_client, account)
+    assert r != 0
 
 @pytest.mark.localnet
 @pytest.mark.parametrize("fee", [0, 500, 3000, MAX_LP_FEE])
-def test_isDynamicFee_returnsFalse(helper16, fee):
-    r = helper16.send.call(au.AppClientMethodCallParams(
-        method="LPFeeLibrary.isDynamicFee", args=[fee],
-    ))
-    assert r.abi_return == 0
+def test_isDynamicFee_returnsFalse(helper37, fee, orchestrator, algod_client, account):
+    r = grouped_call(helper37, "LPFeeLibrary.isDynamicFee", [fee], orchestrator, algod_client, account)
+    assert r == 0
 
 @pytest.mark.localnet
-def test_validate_doesNotRevertWithNoFee(helper32):
-    helper32.send.call(au.AppClientMethodCallParams(
-        method="LPFeeLibrary.validate", args=[0],
-    ))
+def test_validate_doesNotRevertWithNoFee(helper50, orchestrator, algod_client, account):
+    grouped_call(helper50, "LPFeeLibrary.validate", [0], orchestrator, algod_client, account)
 
 @pytest.mark.localnet
-def test_validate_doesNotRevert(helper32):
-    helper32.send.call(au.AppClientMethodCallParams(
-        method="LPFeeLibrary.validate", args=[3000],
-    ))
+def test_validate_doesNotRevert(helper50, orchestrator, algod_client, account):
+    grouped_call(helper50, "LPFeeLibrary.validate", [3000], orchestrator, algod_client, account)
 
 @pytest.mark.localnet
-def test_validate_doesNotRevertWithMaxFee(helper32):
-    helper32.send.call(au.AppClientMethodCallParams(
-        method="LPFeeLibrary.validate", args=[MAX_LP_FEE],
-    ))
+def test_validate_doesNotRevertWithMaxFee(helper50, orchestrator, algod_client, account):
+    grouped_call(helper50, "LPFeeLibrary.validate", [MAX_LP_FEE], orchestrator, algod_client, account)
 
 @pytest.mark.localnet
-def test_validate_revertsWithLPFeeTooLarge(helper32):
+def test_validate_revertsWithLPFeeTooLarge(helper50, orchestrator, algod_client, account):
     with pytest.raises(Exception):
-        helper32.send.call(au.AppClientMethodCallParams(
-        method="LPFeeLibrary.validate", args=[MAX_LP_FEE + 1],
-        ))
+        grouped_call(helper50, "LPFeeLibrary.validate", [MAX_LP_FEE + 1], orchestrator, algod_client, account)
 
 @pytest.mark.localnet
-def test_getInitialLPFee_forStaticFeeIsCorrect(helper35):
-    r = helper35.send.call(au.AppClientMethodCallParams(
-        method="LPFeeLibrary.getInitialLPFee", args=[3000],
-    ))
-    assert r.abi_return == 3000
+def test_getInitialLPFee_forStaticFeeIsCorrect(helper40, orchestrator, algod_client, account):
+    r = grouped_call(helper40, "LPFeeLibrary.getInitialLPFee", [3000], orchestrator, algod_client, account)
+    assert r == 3000
 
 @pytest.mark.localnet
-def test_getInitialLPFee_revertsWithLPFeeTooLarge(helper35):
+def test_getInitialLPFee_revertsWithLPFeeTooLarge(helper40, orchestrator, algod_client, account):
     with pytest.raises(Exception):
-        helper35.send.call(au.AppClientMethodCallParams(
-        method="LPFeeLibrary.getInitialLPFee", args=[MAX_LP_FEE + 1],
-        ))
+        grouped_call(helper40, "LPFeeLibrary.getInitialLPFee", [MAX_LP_FEE + 1], orchestrator, algod_client, account)
 
 @pytest.mark.localnet
-def test_getInitialLPFee_forDynamicFeeIsZero(helper35):
-    r = helper35.send.call(au.AppClientMethodCallParams(
-        method="LPFeeLibrary.getInitialLPFee", args=[DYNAMIC_FEE_FLAG],
-    ))
-    assert r.abi_return == 0
+def test_getInitialLPFee_forDynamicFeeIsZero(helper40, orchestrator, algod_client, account):
+    r = grouped_call(helper40, "LPFeeLibrary.getInitialLPFee", [DYNAMIC_FEE_FLAG], orchestrator, algod_client, account)
+    assert r == 0
 
 @pytest.mark.localnet
-def test_getInitialLPFee_revertsWithNonExactDynamicFee(helper35):
+def test_getInitialLPFee_revertsWithNonExactDynamicFee(helper40, orchestrator, algod_client, account):
     with pytest.raises(Exception):
-        helper35.send.call(au.AppClientMethodCallParams(
-        method="LPFeeLibrary.getInitialLPFee", args=[DYNAMIC_FEE_FLAG + 1],
-        ))
+        grouped_call(helper40, "LPFeeLibrary.getInitialLPFee", [DYNAMIC_FEE_FLAG + 1], orchestrator, algod_client, account)
 
 @pytest.mark.localnet
 @pytest.mark.parametrize("fee,expected", [
@@ -78,22 +59,16 @@ def test_getInitialLPFee_revertsWithNonExactDynamicFee(helper35):
     (MAX_LP_FEE, MAX_LP_FEE),
     (DYNAMIC_FEE_FLAG, 0),
 ])
-def test_fuzz_getInitialLPFee(helper35, fee, expected):
-    r = helper35.send.call(au.AppClientMethodCallParams(
-        method="LPFeeLibrary.getInitialLPFee", args=[fee],
-    ))
-    assert r.abi_return == expected
+def test_fuzz_getInitialLPFee(helper40, fee, expected, orchestrator, algod_client, account):
+    r = grouped_call(helper40, "LPFeeLibrary.getInitialLPFee", [fee], orchestrator, algod_client, account)
+    assert r == expected
 
 @pytest.mark.localnet
-def test_isValid_true(helper32):
-    r = helper32.send.call(au.AppClientMethodCallParams(
-        method="LPFeeLibrary.isValid", args=[3000],
-    ))
-    assert r.abi_return != 0
+def test_isValid_true(helper50, orchestrator, algod_client, account):
+    r = grouped_call(helper50, "LPFeeLibrary.isValid", [3000], orchestrator, algod_client, account)
+    assert r != 0
 
 @pytest.mark.localnet
-def test_isValid_false(helper32):
-    r = helper32.send.call(au.AppClientMethodCallParams(
-        method="LPFeeLibrary.isValid", args=[MAX_LP_FEE + 1],
-    ))
-    assert r.abi_return == 0
+def test_isValid_false(helper50, orchestrator, algod_client, account):
+    r = grouped_call(helper50, "LPFeeLibrary.isValid", [MAX_LP_FEE + 1], orchestrator, algod_client, account)
+    assert r == 0

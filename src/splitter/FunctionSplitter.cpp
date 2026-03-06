@@ -93,7 +93,7 @@ FunctionSplitter::SplitResult FunctionSplitter::splitOversizedFunctions(
 
 			// Need enough top-level statements to have meaningful split points
 			auto const& stmts = sub->body->body;
-			if (stmts.size() < 4)
+			if (stmts.size() < 2)
 				continue;
 
 			logger.info("  Mid-function splitting '" + sub->name +
@@ -116,6 +116,8 @@ FunctionSplitter::SplitResult FunctionSplitter::splitOversizedFunctions(
 			clone->body->body = sub->body->body;
 
 			_roots[ri] = clone;
+			// Update subById to point at clone (old pointer is now dangling)
+			subById[clone->id] = clone.get();
 
 			auto chunks = splitFunction(clone, _maxFunctionInstructions, subById);
 			if (!chunks.empty())
@@ -185,7 +187,7 @@ std::vector<size_t> FunctionSplitter::findSplitPoints(
 	for (size_t i = 0; i < _infos.size(); ++i)
 	{
 		accum += _infos[i].cost;
-		if (accum > _maxCost && i > 0 && i < _infos.size() - 1)
+		if (accum > _maxCost && i > 0)
 		{
 			splits.push_back(i);
 			accum = _infos[i].cost; // current stmt starts new chunk
@@ -211,11 +213,14 @@ std::vector<FunctionSplitter::VarInfo> FunctionSplitter::computeLiveVars(
 	for (size_t i = _splitPoint; i < _infos.size(); ++i)
 		usedAfter.insert(_infos[i].uses.begin(), _infos[i].uses.end());
 
-	// Live across = defined before AND used after, excluding function params
+	// Live across = defined before AND used after.
+	// Include redefined params: if a param is reassigned in the first chunk,
+	// the next chunk needs the NEW value, not the original parameter value.
+	// (e.g., Yul `r := shr(127, mul(r, r))` reassigns param `r`)
 	std::vector<VarInfo> live;
 	for (auto const& var: definedBefore)
 	{
-		if (_paramNames.count(var) || !usedAfter.count(var))
+		if (!usedAfter.count(var))
 			continue;
 
 		VarInfo vi;
@@ -339,8 +344,19 @@ std::vector<std::shared_ptr<awst::Subroutine>> FunctionSplitter::splitFunction(
 		chunk->name = _func->name + "__chunk_" + std::to_string(c);
 		chunk->pure = _func->pure;
 
-		// Args: original function params + live vars from previous split
-		chunk->args = _func->args;
+		// Args: original function params + live vars from previous split.
+		// When a param is redefined and appears as a live var, skip the
+		// original param (the live var provides the updated value).
+		std::set<std::string> liveNames;
+		if (c > 0)
+			for (auto const& lv: liveAtSplits[c - 1])
+				liveNames.insert(lv.name);
+
+		for (auto const& arg: _func->args)
+		{
+			if (!liveNames.count(arg.name))
+				chunk->args.push_back(arg);
+		}
 		if (c > 0)
 		{
 			for (auto const& lv: liveAtSplits[c - 1])
@@ -390,9 +406,13 @@ std::vector<std::shared_ptr<awst::Subroutine>> FunctionSplitter::splitFunction(
 		// For intermediate chunks: rewrite inner returns and add final return with live vars
 		if (!isLast)
 		{
+			// Ensure live-out vars have default init before any inner returns
+			auto const& liveOut = liveAtSplits[c];
+			if (!liveOut.empty())
+				ensureLiveOutVarsInitialized(*body, liveOut, _func->sourceLocation);
+
 			// Rewrite any inner ReturnStatements to match chunk return type.
 			// Do this BEFORE appending the final return statement.
-			auto const& liveOut = liveAtSplits[c];
 			if (!liveOut.empty())
 				rewriteInnerReturns(*body, chunk->returnType, liveOut, _func->sourceLocation);
 
@@ -448,9 +468,16 @@ std::vector<std::shared_ptr<awst::Subroutine>> FunctionSplitter::splitFunction(
 		call->wtype = chunks[c]->returnType;
 		call->target = awst::SubroutineID{chunks[c]->id};
 
-		// Pass original function params
+		// Pass original function params (skip those replaced by live vars)
+		std::set<std::string> callLiveNames;
+		if (c > 0)
+			for (auto const& lv: liveAtSplits[c - 1])
+				callLiveNames.insert(lv.name);
+
 		for (auto const& arg: _func->args)
 		{
+			if (callLiveNames.count(arg.name))
+				continue;
 			auto var = std::make_shared<awst::VarExpression>();
 			var->sourceLocation = _func->sourceLocation;
 			var->wtype = arg.wtype;
@@ -1791,6 +1818,7 @@ bool FunctionSplitter::expandRewrittenCallees(
 		// 3. AssignmentStatement → value=SubroutineCallExpression
 		std::string calleeName;
 		awst::SubroutineCallExpression const* callExpr = nullptr;
+		std::shared_ptr<awst::Expression> assignTarget; // non-null if caller assigns the result
 
 		auto tryExtractRewrittenCall = [&](awst::Expression const* _expr) -> bool
 		{
@@ -1819,14 +1847,16 @@ bool FunctionSplitter::expandRewrittenCallees(
 				if (es.expr && es.expr->nodeType() == "AssignmentExpression")
 				{
 					auto const& ae = static_cast<awst::AssignmentExpression const&>(*es.expr);
-					tryExtractRewrittenCall(ae.value.get());
+					if (tryExtractRewrittenCall(ae.value.get()))
+						assignTarget = ae.target;
 				}
 			}
 		}
 		else if (stmt->nodeType() == "AssignmentStatement")
 		{
 			auto const& as = static_cast<awst::AssignmentStatement const&>(*stmt);
-			tryExtractRewrittenCall(as.value.get());
+			if (tryExtractRewrittenCall(as.value.get()))
+				assignTarget = as.target;
 		}
 
 		if (calleeName.empty())
@@ -1848,21 +1878,33 @@ bool FunctionSplitter::expandRewrittenCallees(
 
 		// The rewritten function's body is a sequence of chunk calls
 		// with live var threading. Copy these statements directly,
-		// SKIPPING any ReturnStatement (the caller handles its own return).
-		// Variable names match because the caller passes variables with
-		// the same names as the callee's parameters.
+		// converting the final ReturnStatement appropriately:
+		// - If the caller assigned the result (assignTarget != null),
+		//   convert ReturnStatement to AssignmentStatement
+		// - Otherwise convert to ExpressionStatement
 		for (auto const& inlinedStmt: rewrittenBody)
 		{
 			if (inlinedStmt && inlinedStmt->nodeType() == "ReturnStatement")
 			{
-				// If the return has a value, convert to an assignment or expression stmt
 				auto const& rs = static_cast<awst::ReturnStatement const&>(*inlinedStmt);
 				if (rs.value)
 				{
-					auto exprStmt = std::make_shared<awst::ExpressionStatement>();
-					exprStmt->sourceLocation = rs.sourceLocation;
-					exprStmt->expr = rs.value;
-					newBody.push_back(exprStmt);
+					if (assignTarget)
+					{
+						// Caller was assigning: target = returnValue
+						auto assign = std::make_shared<awst::AssignmentStatement>();
+						assign->sourceLocation = rs.sourceLocation;
+						assign->target = assignTarget;
+						assign->value = rs.value;
+						newBody.push_back(assign);
+					}
+					else
+					{
+						auto exprStmt = std::make_shared<awst::ExpressionStatement>();
+						exprStmt->sourceLocation = rs.sourceLocation;
+						exprStmt->expr = rs.value;
+						newBody.push_back(exprStmt);
+					}
 				}
 				// else: void return, skip entirely
 			}
@@ -2159,8 +2201,41 @@ std::shared_ptr<awst::Expression> FunctionSplitter::buildDefault(
 		val->value.resize(32, 0);
 		return val;
 	}
-	if (_type->kind() == awst::WTypeKind::ARC4Struct ||
-		_type->kind() == awst::WTypeKind::ARC4Tuple ||
+	if (_type->kind() == awst::WTypeKind::ARC4Struct)
+	{
+		auto const* structType = dynamic_cast<awst::ARC4Struct const*>(_type);
+		if (structType)
+		{
+			// Compute total byte size of the struct (all fields concatenated)
+			std::function<size_t(awst::WType const*)> arc4Size = [&](awst::WType const* t) -> size_t {
+				if (auto const* uintN = dynamic_cast<awst::ARC4UIntN const*>(t))
+					return uintN->n() / 8;
+				if (auto const* fixedBytes = dynamic_cast<awst::BytesWType const*>(t))
+					if (fixedBytes->length().has_value())
+						return *fixedBytes->length();
+				if (t == awst::WType::boolType())
+					return 1;
+				if (auto const* innerStruct = dynamic_cast<awst::ARC4Struct const*>(t))
+				{
+					size_t total = 0;
+					for (auto const& [fname, ftype]: innerStruct->fields())
+						total += arc4Size(ftype);
+					return total;
+				}
+				return 32; // fallback
+			};
+			size_t totalSize = 0;
+			for (auto const& [fname, ftype]: structType->fields())
+				totalSize += arc4Size(ftype);
+			auto val = std::make_shared<awst::BytesConstant>();
+			val->wtype = _type;
+			val->sourceLocation = _loc;
+			val->encoding = awst::BytesEncoding::Base16;
+			val->value.resize(totalSize, 0);
+			return val;
+		}
+	}
+	if (_type->kind() == awst::WTypeKind::ARC4Tuple ||
 		_type->kind() == awst::WTypeKind::WTuple)
 	{
 		auto const* tupleType = dynamic_cast<awst::WTuple const*>(_type);
@@ -2270,6 +2345,114 @@ void FunctionSplitter::rewriteInnerReturns(
 	};
 
 	walkBlock(_body);
+}
+
+void FunctionSplitter::ensureLiveOutVarsInitialized(
+	awst::Block& _body,
+	std::vector<VarInfo> const& _liveOut,
+	awst::SourceLocation const& _loc
+)
+{
+	if (_liveOut.empty())
+		return;
+
+	// Check if any statements in the body (before an inner return) might
+	// reference a live-out variable that hasn't been assigned yet.
+	// Collect the set of variables assigned by top-level statements.
+	// If we hit a conditional with a ReturnStatement before a variable is assigned,
+	// that variable needs a default initialization.
+
+	std::set<std::string> liveOutNames;
+	for (auto const& lv: _liveOut)
+		liveOutNames.insert(lv.name);
+
+	// Collect all assigned vars in order, looking for inner returns
+	std::set<std::string> assignedVars;
+	bool hasInnerReturn = false;
+
+	// Check if a block (recursively) contains a ReturnStatement
+	std::function<bool(awst::Block const&)> containsReturn = [&](awst::Block const& block) -> bool {
+		for (auto const& stmt: block.body)
+		{
+			if (!stmt) continue;
+			if (stmt->nodeType() == "ReturnStatement") return true;
+			if (stmt->nodeType() == "IfElse")
+			{
+				auto const& ie = static_cast<awst::IfElse const&>(*stmt);
+				if (ie.ifBranch && containsReturn(static_cast<awst::Block const&>(*ie.ifBranch)))
+					return true;
+				if (ie.elseBranch && containsReturn(static_cast<awst::Block const&>(*ie.elseBranch)))
+					return true;
+			}
+		}
+		return false;
+	};
+
+	for (auto const& stmt: _body.body)
+	{
+		if (!stmt) continue;
+		std::string type = stmt->nodeType();
+		// Track assignments
+		if (type == "AssignmentStatement")
+		{
+			auto const& as = static_cast<awst::AssignmentStatement const&>(*stmt);
+			if (as.target && as.target->nodeType() == "VarExpression")
+			{
+				auto const& ve = static_cast<awst::VarExpression const&>(*as.target);
+				assignedVars.insert(ve.name);
+			}
+		}
+		// Check for inner returns in IfElse
+		if (type == "IfElse")
+		{
+			auto const& ie = static_cast<awst::IfElse const&>(*stmt);
+			if ((ie.ifBranch && containsReturn(static_cast<awst::Block const&>(*ie.ifBranch))) ||
+				(ie.elseBranch && containsReturn(static_cast<awst::Block const&>(*ie.elseBranch))))
+			{
+				hasInnerReturn = true;
+				break;
+			}
+		}
+	}
+
+	if (!hasInnerReturn)
+		return;
+
+	// Find live-out vars that haven't been assigned before the inner return
+	std::vector<VarInfo const*> uninitVars;
+	for (auto const& lv: _liveOut)
+	{
+		if (!assignedVars.count(lv.name))
+			uninitVars.push_back(&lv);
+	}
+
+	if (uninitVars.empty())
+		return;
+
+	auto& logger = Logger::instance();
+	// Insert default initialization assignments at the beginning of the body
+	std::vector<std::shared_ptr<awst::Statement>> inits;
+	for (auto const* lv: uninitVars)
+	{
+		logger.info("    Inserting default init for live-out var '" + lv->name +
+			"' (type: " + lv->wtype->name() + ") before inner return");
+
+		auto assign = std::make_shared<awst::AssignmentStatement>();
+		assign->sourceLocation = _loc;
+
+		auto target = std::make_shared<awst::VarExpression>();
+		target->sourceLocation = _loc;
+		target->wtype = lv->wtype;
+		target->name = lv->name;
+		assign->target = target;
+
+		assign->value = buildDefault(lv->wtype, _loc);
+
+		inits.push_back(assign);
+	}
+
+	// Prepend inits before the existing body
+	_body.body.insert(_body.body.begin(), inits.begin(), inits.end());
 }
 
 } // namespace puyasol::splitter

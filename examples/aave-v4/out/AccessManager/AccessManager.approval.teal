@@ -1,0 +1,2729 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.approval_program() -> uint64:
+main:
+    intcblock 0 1 32 8 18446744073709551615 432000 604800
+    bytecblock 0x 0x151f7c75 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000 0x00320000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x00000000000000000000000000000000 "_executionId" "_roles" 0x00230000000000000000000000000000000000000000000000000000000000000000000000 "_schedules" "_targets" "__ctor_pending" 0x01 0x00 0x0032 "members" 0x0000000000000000000000000000000000000000000000000000000100000000 0x0000000000000000000000000000000000000000000000010000000000000000 "allowedRoles" 0x0023 0x0000000000000000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 5 // "_executionId"
+    bytec_0 // 0x
+    app_global_put
+    bytec 10 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x990f30ae 0xd0796431 0x9eaa573a 0xcff2e621 0xd4440f57 0x87d5450b 0x2c0acd81 0xda750b23 0x13e92886 0x3dbc6d43 0x90f58e75 0xf1066799 0x891c374a 0xc4de170b 0xf18a83a8 0xb512555c 0x2df02a27 0x2844db9e 0x344aff40 0xd96b8a7d 0x06edc32e 0xc6d5152e 0xac9cba0e 0x85d382e1 0x2a32cdd1 0x3b5ca086 0x2c8366d8 0x669ac04b 0x04951c29 0xdd9828d5 0x3ce7a8fa // method "__postInit(address)void", method "canCall(address,address,byte[4])(bool,uint64)", method "expiration()uint64", method "minSetback()uint64", method "isTargetClosed(address)bool", method "getTargetFunctionRole(address,byte[4])uint64", method "getTargetAdminDelay(address)uint64", method "getRoleAdmin(uint64)uint64", method "getRoleGuardian(uint64)uint64", method "getRoleGrantDelay(uint64)uint64", method "getAccess(uint64,address)(uint64,uint64,uint64,uint64)", method "hasRole(uint64,address)(bool,uint64)", method "labelRole(uint64,string)void", method "grantRole(uint64,address,uint64)void", method "revokeRole(uint64,address)void", method "renounceRole(uint64,address)void", method "setRoleAdmin(uint64,uint64)void", method "setRoleGuardian(uint64,uint64)void", method "setGrantDelay(uint64,uint64)void", method "setTargetFunctionRole(address,uint8[4][],uint64)void", method "setTargetAdminDelay(address,uint64)void", method "setTargetClosed(address,bool)void", method "getSchedule(byte[32])uint64", method "getNonce(byte[32])uint64", method "schedule(address,byte[],uint64)(byte[32],uint64)", method "execute(address,byte[])uint64", method "cancel(address,address,byte[])uint64", method "consumeScheduledOp(address,byte[])void", method "hashOperation(address,address,byte[])byte[32]", method "updateAuthority(address,address)void", method "multicall(byte[])byte[]"
+    txna ApplicationArgs 0
+    match __postInit canCall main_expiration_route@7 main_minSetback_route@8 isTargetClosed getTargetFunctionRole getTargetAdminDelay getRoleAdmin getRoleGuardian getRoleGrantDelay getAccess hasRole labelRole grantRole revokeRole renounceRole setRoleAdmin setRoleGuardian setGrantDelay setTargetFunctionRole setTargetAdminDelay setTargetClosed getSchedule getNonce schedule execute cancel consumeScheduledOp hashOperation updateAuthority multicall
+    err
+
+main_minSetback_route@8:
+    pushbytes 0x151f7c750000000000069780
+    log
+    intc_1 // 1
+    return
+
+main_expiration_route@7:
+    pushbytes 0x151f7c750000000000093a80
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.Address.functionCallWithValue(target: bytes, data: bytes, value: bytes) -> bytes:
+Address.functionCallWithValue:
+    proto 3 1
+    intc_0 // 0
+    itob
+    dup
+    frame_dig -1
+    b<
+    !
+    assert // InsufficientBalance
+    frame_dig -3
+    frame_dig -1
+    frame_dig -2
+    callsub LowLevelCall.callNoReturn
+    dup
+    bz Address.functionCallWithValue_else_body@6
+    callsub LowLevelCall.returnDataSize
+    frame_dig 0
+    b>
+    bz Address.functionCallWithValue_else_body@6
+    callsub LowLevelCall.returnData
+    frame_bury 0
+    retsub
+
+Address.functionCallWithValue_else_body@6:
+    frame_dig 1
+    !
+    assert // AddressEmptyCode
+    callsub LowLevelCall.returnDataSize
+    frame_dig 0
+    b>
+    assert // FailedCall
+    b LowLevelCall.bubbleRevert
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.Hashes.efficientKeccak256(a: bytes, b: bytes) -> bytes:
+Hashes.efficientKeccak256:
+    proto 2 1
+    intc_2 // 32
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    concat
+    keccak256
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.LowLevelCall.callNoReturn(3)(target: bytes, value: bytes, data: bytes) -> uint64:
+LowLevelCall.callNoReturn:
+    proto 3 1
+    intc_1 // 1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.LowLevelCall.returnDataSize() -> bytes:
+LowLevelCall.returnDataSize:
+    bytec_0 // 0x
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.LowLevelCall.returnData() -> bytes:
+LowLevelCall.returnData:
+    pushbytes 0x80
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.LowLevelCall.bubbleRevert(0)() -> void:
+LowLevelCall.bubbleRevert:
+    err // revert
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.Math.ternary(condition: uint64, a: bytes, b: bytes) -> bytes:
+Math.ternary:
+    proto 3 1
+    frame_dig -2
+    frame_dig -1
+    b^
+    frame_dig -3
+    callsub SafeCast.toUint
+    b*
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    b^
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.Math.max(a: bytes, b: bytes) -> bytes:
+Math.max:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b>
+    frame_dig -2
+    frame_dig -1
+    callsub Math.ternary
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.SafeCast.toUint48(value: bytes) -> uint64:
+SafeCast.toUint48:
+    proto 1 1
+    pushint 281474976710655
+    itob
+    frame_dig -1
+    b<
+    !
+    assert // SafeCastOverflowedUintDowncast
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.SafeCast.toUint(b: uint64) -> bytes:
+SafeCast.toUint:
+    proto 1 1
+    frame_dig -1
+    !
+    !
+    bytec_0 // 0x
+    bytec 11 // 0x01
+    uncover 2
+    select
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.Time.timestamp() -> uint64:
+Time.timestamp:
+    global LatestTimestamp
+    itob
+    callsub SafeCast.toUint48
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.Time.toDelay(duration: uint64) -> bytes:
+Time.toDelay:
+    proto 1 1
+    frame_dig -1
+    itob
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.Time._getFullAt(self: bytes, timepoint: uint64) -> uint64, uint64, uint64:
+Time._getFullAt:
+    proto 2 3
+    bytec_0 // ""
+    frame_dig -2
+    callsub Time.unpack
+    popn 3
+    frame_dig -2
+    callsub Time.unpack
+    popn 2
+    frame_dig -2
+    callsub Time.unpack
+    pop
+    bury 1
+    frame_dig -2
+    callsub Time.unpack
+    dup
+    cover 3
+    cover 4
+    popn 2
+    frame_dig -1
+    <=
+    bz Time._getFullAt_ternary_false@2
+    intc_0 // 0
+    frame_bury 0
+    intc_0 // 0
+
+Time._getFullAt_ternary_merge@3:
+    frame_dig 0
+    swap
+    uncover 5
+    uncover 5
+    uncover 5
+    retsub
+
+Time._getFullAt_ternary_false@2:
+    frame_dig 2
+    swap
+    frame_bury 0
+    frame_dig 1
+    swap
+    b Time._getFullAt_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.Time.getFull(self: bytes) -> uint64, uint64, uint64:
+Time.getFull:
+    proto 1 3
+    callsub Time.timestamp
+    frame_dig -1
+    swap
+    callsub Time._getFullAt
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.Time.get(self: bytes) -> uint64:
+Time.get:
+    proto 1 1
+    frame_dig -1
+    callsub Time.getFull
+    popn 2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.Time.withUpdate(self: bytes, newValue: uint64, minSetback: uint64) -> bytes, uint64:
+Time.withUpdate:
+    proto 3 2
+    intc_0 // 0
+    frame_dig -3
+    callsub Time.get
+    dup
+    intc_3 // 8
+    bzero
+    swap
+    frame_dig -1
+    itob
+    swap
+    frame_dig -2
+    >
+    dup
+    bz Time.withUpdate_ternary_false@2
+    frame_dig 1
+    frame_dig -2
+    -
+
+Time.withUpdate_ternary_merge@3:
+    itob
+    frame_dig 3
+    swap
+    callsub Math.max
+    frame_dig 2
+    swap
+    concat
+    frame_bury 0
+    frame_dig 4
+    bz Time.withUpdate_ternary_false@5
+    frame_dig 1
+    frame_dig -2
+    -
+
+Time.withUpdate_ternary_merge@6:
+    itob
+    frame_dig 3
+    swap
+    callsub Math.max
+    frame_dig 2
+    swap
+    concat
+    len
+    intc_3 // 8
+    -
+    frame_dig 0
+    swap
+    extract_uint64
+    callsub Time.timestamp
+    +
+    frame_dig 1
+    frame_dig -2
+    dig 2
+    callsub Time.pack
+    frame_bury 0
+    frame_bury 1
+    retsub
+
+Time.withUpdate_ternary_false@5:
+    intc_0 // 0
+    b Time.withUpdate_ternary_merge@6
+
+Time.withUpdate_ternary_false@2:
+    intc_0 // 0
+    b Time.withUpdate_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.Time.unpack(self: bytes) -> uint64, uint64, uint64:
+Time.unpack:
+    proto 1 3
+    intc_3 // 8
+    bzero
+    dup
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    frame_dig -1
+    bytec 15 // 0x0000000000000000000000000000000000000000000000000000000100000000
+    b/
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    frame_dig -1
+    bytec 16 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    swap
+    cover 2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.Time.pack(valueBefore: uint64, valueAfter: uint64, effect: uint64) -> bytes:
+Time.pack:
+    proto 3 1
+    frame_dig -1
+    itob
+    bytec 16 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b*
+    frame_dig -3
+    itob
+    bytec 15 // 0x0000000000000000000000000000000000000000000000000000000100000000
+    b*
+    b|
+    frame_dig -2
+    itob
+    b|
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.__postInit[routing]() -> void:
+__postInit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    bytec 10 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 10 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    dup
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    !
+    assert // AccessManagerInvalidInitialAdmin
+    intc_0 // 0
+    swap
+    intc_0 // 0
+    dup
+    callsub _grantRole
+    pop
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.canCall[routing]() -> void:
+canCall:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    pushint 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.canCall
+    bytec 12 // 0x00
+    intc_0 // 0
+    uncover 3
+    setbit
+    swap
+    itob
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.isTargetClosed[routing]() -> void:
+isTargetClosed:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.isTargetClosed
+    bytec 12 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getTargetFunctionRole[routing]() -> void:
+getTargetFunctionRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getTargetFunctionRole
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getTargetAdminDelay[routing]() -> void:
+getTargetAdminDelay:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getTargetAdminDelay
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getRoleAdmin[routing]() -> void:
+getRoleAdmin:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getRoleAdmin
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getRoleGuardian[routing]() -> void:
+getRoleGuardian:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getRoleGuardian
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getRoleGrantDelay[routing]() -> void:
+getRoleGrantDelay:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getRoleGrantDelay
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getAccess[routing]() -> void:
+getAccess:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getAccess
+    uncover 3
+    itob
+    uncover 3
+    itob
+    concat
+    uncover 2
+    itob
+    concat
+    swap
+    itob
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.hasRole[routing]() -> void:
+hasRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.hasRole
+    bytec 12 // 0x00
+    intc_0 // 0
+    uncover 3
+    setbit
+    swap
+    itob
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.labelRole[routing]() -> void:
+labelRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    dup
+    btoi
+    txna ApplicationArgs 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    callsub _checkAuthorized
+    dig 1
+    !
+    !
+    assert // AccessManagerLockedRole
+    swap
+    intc 4 // 18446744073709551615
+    ==
+    !
+    assert // AccessManagerLockedRole
+    swap
+    pushbytes 0x000a
+    concat
+    swap
+    concat
+    pushbytes 0x328b816f // method "RoleLabel(uint64,string)"
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.grantRole[routing]() -> void:
+grantRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    callsub _checkAuthorized
+    dig 2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getRoleGrantDelay
+    uncover 3
+    uncover 3
+    uncover 2
+    uncover 3
+    callsub _grantRole
+    pop
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.revokeRole[routing]() -> void:
+revokeRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub _checkAuthorized
+    callsub _revokeRole
+    pop
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.renounceRole[routing]() -> void:
+renounceRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    dup
+    txn Sender
+    !=
+    !
+    assert // AccessManagerBadConfirmation
+    callsub _revokeRole
+    pop
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.setRoleAdmin[routing]() -> void:
+setRoleAdmin:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    dup
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    callsub _checkAuthorized
+    dig 1
+    !
+    !
+    assert // AccessManagerLockedRole
+    dig 1
+    intc 4 // 18446744073709551615
+    ==
+    !
+    assert // AccessManagerLockedRole
+    swap
+    itob
+    sha256
+    bytec 6 // "_roles"
+    swap
+    concat
+    dup
+    box_get
+    bytec_3 // 0x00320000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 18 32
+    dig 1
+    extract 10 8
+    dig 2
+    intc_0 // 0
+    extract_uint16
+    dig 3
+    len
+    uncover 4
+    cover 2
+    substring3
+    extract 2 0
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec 13 // 0x0032
+    dig 5
+    concat
+    uncover 2
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dig 1
+    box_del
+    pop
+    box_put
+    concat
+    pushbytes 0xfd4cf890 // method "RoleAdminChanged(uint64,uint64)"
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.setRoleGuardian[routing]() -> void:
+setRoleGuardian:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    dup
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    callsub _checkAuthorized
+    dig 1
+    !
+    !
+    assert // AccessManagerLockedRole
+    dig 1
+    intc 4 // 18446744073709551615
+    ==
+    !
+    assert // AccessManagerLockedRole
+    swap
+    itob
+    sha256
+    bytec 6 // "_roles"
+    swap
+    concat
+    dup
+    box_get
+    bytec_3 // 0x00320000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 2 8
+    dig 1
+    extract 18 32
+    dig 2
+    intc_0 // 0
+    extract_uint16
+    dig 3
+    len
+    uncover 4
+    cover 2
+    substring3
+    extract 2 0
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec 13 // 0x0032
+    uncover 3
+    concat
+    dig 4
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dig 1
+    box_del
+    pop
+    box_put
+    concat
+    pushbytes 0x6bc787c6 // method "RoleGuardianChanged(uint64,uint64)"
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.setGrantDelay[routing]() -> void:
+setGrantDelay:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    dup
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    dup
+    btoi
+    callsub _checkAuthorized
+    dig 2
+    intc 4 // 18446744073709551615
+    ==
+    !
+    assert // AccessManagerLockedRole
+    uncover 2
+    itob
+    sha256
+    bytec 6 // "_roles"
+    swap
+    concat
+    dup
+    box_get
+    bytec_3 // 0x00320000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 18 32
+    dig 2
+    intc 5 // 432000
+    callsub Time.withUpdate
+    popn 2
+    dup
+    box_get
+    bytec_3 // 0x00320000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 2 8
+    swap
+    extract 18 32
+    dig 3
+    intc 5 // 432000
+    callsub Time.withUpdate
+    pop
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    dig 2
+    box_get
+    bytec_3 // 0x00320000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 10 8
+    dig 1
+    intc_0 // 0
+    extract_uint16
+    dig 2
+    len
+    uncover 3
+    cover 2
+    substring3
+    extract 2 0
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec 13 // 0x0032
+    uncover 4
+    concat
+    uncover 2
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dig 1
+    box_del
+    pop
+    swap
+    dig 1
+    box_put
+    extract 18 32
+    swap
+    intc 5 // 432000
+    callsub Time.withUpdate
+    bury 1
+    itob
+    cover 2
+    concat
+    swap
+    concat
+    pushbytes 0xade953cf // method "RoleGrantDelayChanged(uint64,uint64,uint64)"
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.setTargetFunctionRole[routing]() -> void:
+setTargetFunctionRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 4
+    *
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 4>>
+    txna ApplicationArgs 3
+    dup
+    cover 2
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    swap
+    callsub _checkAuthorized
+    pushint 2
+    intc_0 // 0
+    extract3
+    intc_0 // 0
+    itob
+
+setTargetFunctionRole_while_top@2:
+    dig 1
+    len
+    pushint 4
+    /
+    itob
+    dig 1
+    b>
+    bz setTargetFunctionRole_after_while@4
+    intc_3 // 8
+    bzero
+    dig 1
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dig 3
+    swap
+    pushint 4
+    *
+    pushint 4
+    extract3 // on error: index access is out of bounds
+    dup
+    sha256
+    bytec 17 // "allowedRoles"
+    swap
+    concat
+    dig 5
+    itob
+    box_put
+    dig 6
+    swap
+    concat
+    dig 5
+    concat
+    pushbytes 0x6559d6a1 // method "TargetFunctionRoleUpdated(address,byte[4],uint64)"
+    swap
+    concat
+    log
+    bytec 11 // 0x01
+    b+
+    bury 1
+    b setTargetFunctionRole_while_top@2
+
+setTargetFunctionRole_after_while@4:
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.setTargetAdminDelay[routing]() -> void:
+setTargetAdminDelay:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    dup
+    btoi
+    callsub _checkAuthorized
+    dig 2
+    sha256
+    bytec 9 // "_targets"
+    swap
+    concat
+    dup
+    box_get
+    bytec 7 // 0x00230000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 2 32
+    dig 2
+    intc 5 // 432000
+    callsub Time.withUpdate
+    popn 2
+    dup
+    box_get
+    bytec 7 // 0x00230000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 2 32
+    dig 2
+    intc 5 // 432000
+    callsub Time.withUpdate
+    pop
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    dig 1
+    box_get
+    bytec 7 // 0x00230000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    intc_0 // 0
+    extract_uint16
+    dig 1
+    len
+    dig 2
+    cover 2
+    substring3
+    extract 2 0
+    swap
+    extract 34 1
+    dig 1
+    len
+    itob
+    extract 6 2
+    uncover 2
+    concat
+    bytec 18 // 0x0023
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dig 1
+    box_del
+    pop
+    swap
+    dig 1
+    box_put
+    extract 2 32
+    swap
+    intc 5 // 432000
+    callsub Time.withUpdate
+    bury 1
+    itob
+    cover 2
+    concat
+    swap
+    concat
+    pushbytes 0x3e51c473 // method "TargetAdminDelayUpdated(address,uint64,uint64)"
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.setTargetClosed[routing]() -> void:
+setTargetClosed:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_0 // 0
+    getbit
+    callsub _checkAuthorized
+    dig 1
+    sha256
+    bytec 9 // "_targets"
+    swap
+    concat
+    dup
+    box_get
+    bytec 7 // 0x00230000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 2 32
+    dig 1
+    intc_0 // 0
+    extract_uint16
+    dig 2
+    len
+    uncover 3
+    cover 2
+    substring3
+    extract 2 0
+    uncover 3
+    itob
+    dup
+    bitlen
+    intc_3 // 8
+    <=
+    assert // overflow
+    extract 7 1
+    dig 1
+    len
+    itob
+    extract 6 2
+    uncover 2
+    concat
+    bytec 18 // 0x0023
+    uncover 3
+    concat
+    dig 2
+    concat
+    swap
+    concat
+    dig 2
+    box_del
+    pop
+    uncover 2
+    swap
+    box_put
+    concat
+    pushbytes 0x7d660982 // method "TargetClosed(address,bool)"
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getSchedule[routing]() -> void:
+getSchedule:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getSchedule
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getNonce[routing]() -> void:
+getNonce:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 8 // "_schedules"
+    swap
+    concat
+    box_get
+    bytec 4 // 0x00000000000000000000000000000000
+    cover 2
+    select
+    extract 8 8
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.schedule[routing]() -> void:
+schedule:
+    intc_0 // 0
+    dupn 2
+    bytec_0 // ""
+    dup
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    dup
+    cover 2
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    dup
+    cover 2
+    cover 3
+    txn Sender
+    dup
+    cover 4
+    uncover 3
+    uncover 2
+    callsub _canCallExtended
+    bury 1
+    callsub Time.timestamp
+    dig 1
+    +
+    cover 2
+    !
+    !
+    assert // AccessManagerUnauthorizedCall
+    bz schedule_after_if_else@5
+    dig 2
+    dig 1
+    <
+    !
+    assert // AccessManagerUnauthorizedCall
+
+schedule_after_if_else@5:
+    intc_3 // 8
+    bzero
+    dig 3
+    itob
+    dig 2
+    itob
+    dup2
+    callsub Math.max
+    dig 3
+    swap
+    concat
+    bury 12
+    callsub Math.max
+    concat
+    len
+    intc_3 // 8
+    -
+    bury 7
+    dig 1
+    dig 6
+    concat
+    dig 4
+    concat
+    keccak256
+    dup
+    bury 11
+    sha256
+    bytec 8 // "_schedules"
+    swap
+    concat
+    dup
+    bury 12
+    box_get
+    bytec 4 // 0x00000000000000000000000000000000
+    cover 2
+    select
+    intc_0 // 0
+    extract_uint64
+    dup
+    bury 9
+    bz schedule_after_if_else@8
+    dig 7
+    intc 6 // 604800
+    +
+    callsub Time.timestamp
+    <=
+    assert // AccessManagerAlreadyScheduled
+
+schedule_after_if_else@8:
+    dig 10
+    dup
+    box_get
+    bytec 4 // 0x00000000000000000000000000000000
+    cover 2
+    select
+    dup
+    intc_3 // 8
+    extract_uint64
+    intc_1 // 1
+    +
+    swap
+    extract 8 8
+    dig 11
+    dig 10
+    intc_3 // 8
+    extract3
+    dup
+    uncover 2
+    concat
+    uncover 2
+    itob
+    swap
+    extract 0 8
+    dig 1
+    concat
+    uncover 3
+    swap
+    box_put
+    dig 11
+    swap
+    concat
+    dup
+    uncover 2
+    concat
+    dig 3
+    concat
+    dig 7
+    concat
+    pushbytes 0x0072
+    concat
+    dig 6
+    concat
+    pushbytes 0x87935bd6 // method "OperationScheduled(byte[32],uint64,uint64,address,address,byte[])"
+    swap
+    concat
+    log
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.execute[routing]() -> void:
+execute:
+    intc_0 // 0
+    bytec_0 // ""
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    dup
+    cover 2
+    txn Sender
+    dup
+    cover 3
+    dup
+    dig 3
+    dig 3
+    callsub _canCallExtended
+    pop
+    cover 3
+    cover 2
+    callsub _canCallExtended
+    cover 2
+    pop
+    bnz execute_after_if_else@4
+    dup
+    !
+    !
+    assert // AccessManagerUnauthorizedCall
+
+execute_after_if_else@4:
+    dig 1
+    dig 4
+    concat
+    dig 3
+    concat
+    keccak256
+    bury 6
+    intc_0 // 0
+    bury 5
+    dup
+    bnz execute_if_body@6
+    dig 5
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getSchedule
+    bz execute_after_if_else@7
+
+execute_if_body@6:
+    dig 5
+    callsub _consumeScheduledOp
+    bury 5
+
+execute_after_if_else@7:
+    intc_0 // 0
+    bytec 5 // "_executionId"
+    app_global_get_ex
+    assert // check _executionId exists
+    dig 3
+    dup
+    substring 0 4
+    dig 6
+    dup
+    uncover 2
+    callsub _hashExecutionId
+    bytec 5 // "_executionId"
+    swap
+    app_global_put
+    gtxn 0 Amount
+    itob
+    swap
+    cover 2
+    callsub Address.functionCallWithValue
+    pop
+    bytec 5 // "_executionId"
+    swap
+    app_global_put
+    dig 4
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.cancel[routing]() -> void:
+cancel:
+    bytec_0 // ""
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txn Sender
+    dup
+    cover 3
+    cover 4
+    dup
+    substring 0 4
+    cover 4
+    dig 3
+    uncover 2
+    concat
+    swap
+    concat
+    keccak256
+    dup
+    cover 3
+    sha256
+    bytec 8 // "_schedules"
+    swap
+    concat
+    dup
+    cover 3
+    box_get
+    bytec 4 // 0x00000000000000000000000000000000
+    cover 2
+    select
+    intc_0 // 0
+    extract_uint64
+    !
+    !
+    assert // AccessManagerNotScheduled
+    !=
+    bz cancel_after_if_else@8
+    intc_0 // 0
+    dig 4
+    dup
+    cover 2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.hasRole
+    pop
+    swap
+    dig 6
+    dig 5
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getTargetFunctionRole
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getRoleGuardian
+    swap
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.hasRole
+    pop
+    bury 7
+    bnz cancel_after_if_else@8
+    dig 5
+    assert // AccessManagerUnauthorizedCancel
+
+cancel_after_if_else@8:
+    dupn 2
+    box_get
+    bytec 4 // 0x00000000000000000000000000000000
+    cover 2
+    select
+    extract 8 8
+    bytec 19 // 0x0000000000000000
+    swap
+    concat
+    swap
+    dig 1
+    box_put
+    extract 8 8
+    dig 2
+    dig 1
+    concat
+    pushbytes 0xadd1bc15 // method "OperationCanceled(byte[32],uint64)"
+    swap
+    concat
+    log
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.consumeScheduledOp[routing]() -> void:
+consumeScheduledOp:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txn Sender
+    itxn LastLog
+    extract 4 0
+    bytec_0 // 0x
+    !=
+    !
+    assert // AccessManagerUnauthorizedConsume
+    uncover 2
+    dig 1
+    concat
+    uncover 2
+    concat
+    keccak256
+    callsub _consumeScheduledOp
+    pop
+    itxn_begin
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0xcd513da5 // method "isConsumingScheduledOp()byte[4]"
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.hashOperation[routing]() -> void:
+hashOperation:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    cover 2
+    concat
+    swap
+    concat
+    keccak256
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.updateAuthority[routing]() -> void:
+updateAuthority:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub _checkAuthorized
+    itxn_begin
+    swap
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0xcdda4ea6 // method "setAuthority(address)void"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.multicall[routing]() -> void:
+multicall:
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_0 // ""
+    swap
+    len
+    dup
+    bzero
+    bytec_0 // 0x
+
+multicall_while_top@2:
+    dig 2
+    itob
+    dig 1
+    b>
+    bz multicall_after_while@4
+    dig 3
+    !
+    !
+    assert // revert
+    intc_3 // 8
+    bzero
+    dig 1
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dig 3
+    swap
+    bytec_0 // 0x
+    replace3
+    bury 3
+    bytec 11 // 0x01
+    b+
+    bury 1
+    b multicall_while_top@2
+
+multicall_after_while@4:
+    dig 1
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.canCall(caller: bytes, target: bytes, selector: bytes) -> uint64, uint64:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.canCall:
+    proto 3 2
+    bytec_0 // ""
+    dup
+    frame_dig -2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.isTargetClosed
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.canCall_else_body@2
+    intc_0 // 0
+    dup
+    uncover 3
+    uncover 3
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.canCall_else_body@2:
+    frame_dig -3
+    global CurrentApplicationAddress
+    ==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.canCall_else_body@4
+    intc_0 // 0
+    bytec 5 // "_executionId"
+    app_global_get_ex
+    assert // check _executionId exists
+    frame_dig -2
+    frame_dig -1
+    callsub _hashExecutionId
+    ==
+    intc_0 // 0
+    uncover 3
+    uncover 3
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.canCall_else_body@4:
+    frame_dig -2
+    frame_dig -1
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getTargetFunctionRole
+    dup
+    frame_dig -3
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.hasRole
+    pop
+    swap
+    frame_dig -3
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.hasRole
+    frame_bury 0
+    pop
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.canCall_ternary_false@6
+    frame_dig 0
+    dup
+    !
+    frame_bury 1
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.canCall_ternary_merge@7:
+    frame_dig 1
+    swap
+    uncover 3
+    uncover 3
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.canCall_ternary_false@6:
+    intc_0 // 0
+    frame_bury 1
+    intc_0 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.canCall_ternary_merge@7
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.isTargetClosed(target: bytes) -> uint64:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.isTargetClosed:
+    proto 1 1
+    frame_dig -1
+    sha256
+    bytec 9 // "_targets"
+    swap
+    concat
+    box_get
+    bytec 7 // 0x00230000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 34 1
+    bytec_0 // 0x
+    b!=
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getTargetFunctionRole(target: bytes, selector: bytes) -> uint64:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getTargetFunctionRole:
+    proto 2 1
+    frame_dig -1
+    sha256
+    bytec 17 // "allowedRoles"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getTargetAdminDelay(target: bytes) -> uint64:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getTargetAdminDelay:
+    proto 1 1
+    frame_dig -1
+    sha256
+    bytec 9 // "_targets"
+    swap
+    concat
+    box_get
+    bytec 7 // 0x00230000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 2 32
+    callsub Time.get
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getRoleAdmin(roleId: uint64) -> uint64:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getRoleAdmin:
+    proto 1 1
+    frame_dig -1
+    itob
+    sha256
+    bytec 6 // "_roles"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x00320000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    pushint 2
+    extract_uint64
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getRoleGuardian(roleId: uint64) -> uint64:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getRoleGuardian:
+    proto 1 1
+    frame_dig -1
+    itob
+    sha256
+    bytec 6 // "_roles"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x00320000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    pushint 10
+    extract_uint64
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getRoleGrantDelay(roleId: uint64) -> uint64:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getRoleGrantDelay:
+    proto 1 1
+    frame_dig -1
+    itob
+    sha256
+    bytec 6 // "_roles"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x00320000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 18 32
+    callsub Time.get
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getAccess(roleId: uint64, account: bytes) -> uint64, uint64, uint64, uint64:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getAccess:
+    proto 2 4
+    frame_dig -1
+    sha256
+    bytec 14 // "members"
+    swap
+    concat
+    dup
+    box_get
+    bytec_2 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    intc_0 // 0
+    extract_uint64
+    swap
+    extract 8 32
+    callsub Time.getFull
+    popn 3
+    dig 1
+    box_get
+    bytec_2 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 8 32
+    callsub Time.getFull
+    popn 2
+    swap
+    dig 2
+    box_get
+    bytec_2 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 8 32
+    callsub Time.getFull
+    pop
+    cover 2
+    pop
+    uncover 3
+    box_get
+    bytec_2 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 8 32
+    callsub Time.getFull
+    cover 2
+    popn 2
+    swap
+    cover 3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.hasRole(roleId: uint64, account: bytes) -> uint64, uint64:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.hasRole:
+    proto 2 2
+    bytec_0 // ""
+    dup
+    frame_dig -2
+    intc 4 // 18446744073709551615
+    ==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.hasRole_else_body@2
+    intc_1 // 1
+    intc_0 // 0
+    uncover 3
+    uncover 3
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.hasRole_else_body@2:
+    frame_dig -2
+    frame_dig -1
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getAccess
+    popn 3
+    dup
+    frame_bury 1
+    frame_dig -2
+    frame_dig -1
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getAccess
+    popn 2
+    frame_bury 0
+    pop
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.hasRole_bool_false@5
+    callsub Time.timestamp
+    frame_dig 1
+    >=
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.hasRole_bool_false@5
+    intc_1 // 1
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.hasRole_bool_merge@6:
+    frame_dig 0
+    uncover 3
+    uncover 3
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.hasRole_bool_false@5:
+    intc_0 // 0
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.hasRole_bool_merge@6
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager._grantRole(roleId: uint64, account: bytes, grantDelay: uint64, executionDelay: uint64) -> uint64:
+_grantRole:
+    proto 4 1
+    frame_dig -4
+    intc 4 // 18446744073709551615
+    ==
+    !
+    assert // AccessManagerLockedRole
+    frame_dig -3
+    sha256
+    bytec 14 // "members"
+    swap
+    concat
+    dup
+    box_get
+    bytec_2 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_0 // 0
+    extract_uint64
+    dup
+    !
+    cover 2
+    bnz _grantRole_else_body@4
+    callsub Time.timestamp
+    frame_dig -2
+    +
+    dup
+    cover 2
+    frame_dig -1
+    callsub Time.toDelay
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    swap
+    itob
+    swap
+    concat
+    box_put
+
+_grantRole_after_if_else@5:
+    frame_dig -1
+    itob
+    frame_dig 0
+    dup
+    cover 2
+    itob
+    dup
+    bitlen
+    intc_3 // 8
+    <=
+    assert // overflow
+    extract 7 1
+    frame_dig -4
+    itob
+    uncover 4
+    itob
+    swap
+    frame_dig -3
+    concat
+    uncover 3
+    concat
+    swap
+    concat
+    swap
+    concat
+    pushbytes 0x0cc119fa // method "RoleGranted(uint64,address,uint64,uint64,bool)"
+    swap
+    concat
+    log
+    swap
+    retsub
+
+_grantRole_else_body@4:
+    dup
+    box_get
+    bytec_2 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 8 32
+    frame_dig -1
+    intc_0 // 0
+    callsub Time.withUpdate
+    popn 2
+    dup
+    box_get
+    bytec_2 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 8 32
+    frame_dig -1
+    intc_0 // 0
+    callsub Time.withUpdate
+    pop
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    dig 1
+    box_get
+    bytec_2 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 0 8
+    swap
+    concat
+    swap
+    dig 1
+    box_put
+    extract 8 32
+    frame_dig -1
+    intc_0 // 0
+    callsub Time.withUpdate
+    bury 1
+    b _grantRole_after_if_else@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager._revokeRole(roleId: uint64, account: bytes) -> uint64:
+_revokeRole:
+    proto 2 1
+    frame_dig -2
+    intc 4 // 18446744073709551615
+    ==
+    !
+    assert // AccessManagerLockedRole
+    frame_dig -1
+    sha256
+    bytec 14 // "members"
+    swap
+    concat
+    dup
+    box_get
+    bytec_2 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_0 // 0
+    extract_uint64
+    bnz _revokeRole_after_if_else@4
+    intc_0 // 0
+    swap
+    retsub
+
+_revokeRole_after_if_else@4:
+    frame_dig 0
+    box_del
+    pop
+    frame_dig -2
+    itob
+    frame_dig -1
+    concat
+    pushbytes 0xc2e685a9 // method "RoleRevoked(uint64,address)"
+    swap
+    concat
+    log
+    intc_1 // 1
+    swap
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getSchedule(id: bytes) -> uint64:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getSchedule:
+    proto 1 1
+    frame_dig -1
+    sha256
+    bytec 8 // "_schedules"
+    swap
+    concat
+    box_get
+    bytec 4 // 0x00000000000000000000000000000000
+    cover 2
+    select
+    intc_0 // 0
+    extract_uint64
+    dup
+    intc 6 // 604800
+    +
+    callsub Time.timestamp
+    <=
+    intc_0 // 0
+    swap
+    select
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager._consumeScheduledOp(operationId: bytes) -> uint64:
+_consumeScheduledOp:
+    proto 1 1
+    frame_dig -1
+    sha256
+    bytec 8 // "_schedules"
+    swap
+    concat
+    dup
+    box_get
+    bytec 4 // 0x00000000000000000000000000000000
+    cover 2
+    select
+    dup
+    intc_0 // 0
+    extract_uint64
+    dig 1
+    extract 8 8
+    uncover 2
+    intc_3 // 8
+    extract_uint64
+    dig 2
+    !
+    !
+    assert // AccessManagerNotScheduled
+    callsub Time.timestamp
+    dig 3
+    <
+    !
+    assert // AccessManagerNotReady
+    uncover 2
+    intc 6 // 604800
+    +
+    callsub Time.timestamp
+    <=
+    !
+    assert // AccessManagerExpired
+    dig 2
+    box_get
+    bytec 4 // 0x00000000000000000000000000000000
+    cover 2
+    select
+    extract 8 8
+    bytec 19 // 0x0000000000000000
+    swap
+    concat
+    uncover 3
+    swap
+    box_put
+    frame_dig -1
+    uncover 2
+    concat
+    pushbytes 0x19bd0db5 // method "OperationExecuted(byte[32],uint64)"
+    swap
+    concat
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager._checkAuthorized() -> void:
+_checkAuthorized:
+    proto 0 0
+    txn Sender
+    dupn 2
+    txna ApplicationArgs 0
+    callsub _canCallSelf
+    pop
+    swap
+    txna ApplicationArgs 0
+    callsub _canCallSelf
+    cover 2
+    pop
+    bnz _checkAuthorized_after_if_else@5
+    frame_dig 1
+    bnz _checkAuthorized_else_body@3
+    txna ApplicationArgs 0
+    callsub _getAdminRestrictions
+    popn 3
+    err // AccessManagerUnauthorizedAccount
+
+_checkAuthorized_else_body@3:
+    global CurrentApplicationAddress
+    txna ApplicationArgs 0
+    frame_dig 0
+    uncover 2
+    concat
+    swap
+    concat
+    keccak256
+    callsub _consumeScheduledOp
+    pop
+
+_checkAuthorized_after_if_else@5:
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager._getAdminRestrictions(data: bytes) -> uint64, uint64, uint64:
+_getAdminRestrictions:
+    proto 1 3
+    intc_0 // 0
+    bytec_0 // ""
+    frame_dig -1
+    len
+    pushint 4
+    <
+    bz _getAdminRestrictions_after_if_else@2
+    intc_0 // 0
+    dupn 2
+    uncover 4
+    uncover 4
+    retsub
+
+_getAdminRestrictions_after_if_else@2:
+    frame_dig -1
+    substring 0 4
+    dup
+    frame_bury 0
+    bytec_0 // 0x
+    ==
+    dup
+    frame_bury 1
+    bnz _getAdminRestrictions_if_body@7
+    frame_dig 1
+    bnz _getAdminRestrictions_if_body@7
+    frame_dig 1
+    bnz _getAdminRestrictions_if_body@7
+    frame_dig 1
+    bnz _getAdminRestrictions_if_body@7
+    frame_dig 1
+    bz _getAdminRestrictions_after_if_else@8
+
+_getAdminRestrictions_if_body@7:
+    intc_1 // 1
+    intc_0 // 0
+    dup
+    uncover 4
+    uncover 4
+    retsub
+
+_getAdminRestrictions_after_if_else@8:
+    frame_dig 1
+    bnz _getAdminRestrictions_if_body@11
+    frame_dig 1
+    bnz _getAdminRestrictions_if_body@11
+    frame_dig 1
+    bz _getAdminRestrictions_after_if_else@12
+
+_getAdminRestrictions_if_body@11:
+    frame_dig -1
+    substring 4 36
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getTargetAdminDelay
+    intc_1 // 1
+    intc_0 // 0
+    uncover 2
+    uncover 4
+    uncover 4
+    retsub
+
+_getAdminRestrictions_after_if_else@12:
+    frame_dig 1
+    bnz _getAdminRestrictions_if_body@14
+    frame_dig 1
+    bz _getAdminRestrictions_after_if_else@15
+
+_getAdminRestrictions_if_body@14:
+    frame_dig -1
+    substring 4 36
+    btoi
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getRoleAdmin
+    intc_1 // 1
+    swap
+    intc_0 // 0
+    uncover 4
+    uncover 4
+    retsub
+
+_getAdminRestrictions_after_if_else@15:
+    global CurrentApplicationAddress
+    frame_dig 0
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.getTargetFunctionRole
+    intc_0 // 0
+    swap
+    intc_0 // 0
+    uncover 4
+    uncover 4
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager._canCallExtended(caller: bytes, target: bytes, data: bytes) -> uint64, uint64:
+_canCallExtended:
+    proto 3 2
+    bytec_0 // ""
+    frame_dig -2
+    global CurrentApplicationAddress
+    ==
+    bz _canCallExtended_else_body@2
+    frame_dig -3
+    frame_dig -1
+    callsub _canCallSelf
+    uncover 2
+    retsub
+
+_canCallExtended_else_body@2:
+    frame_dig -1
+    len
+    pushint 4
+    <
+    bz _canCallExtended_ternary_false@4
+    intc_0 // 0
+    frame_bury 0
+    intc_0 // 0
+
+_canCallExtended_ternary_merge@5:
+    frame_dig 0
+    swap
+    uncover 2
+    retsub
+
+_canCallExtended_ternary_false@4:
+    frame_dig -1
+    substring 0 4
+    frame_dig -3
+    frame_dig -2
+    uncover 2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.canCall
+    swap
+    frame_bury 0
+    b _canCallExtended_ternary_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager._canCallSelf(caller: bytes, data: bytes) -> uint64, uint64:
+_canCallSelf:
+    proto 2 2
+    bytec_0 // ""
+    dupn 2
+    frame_dig -1
+    len
+    pushint 4
+    <
+    bz _canCallSelf_after_if_else@2
+    intc_0 // 0
+    dup
+    frame_bury 1
+    frame_bury 0
+    retsub
+
+_canCallSelf_after_if_else@2:
+    frame_dig -2
+    global CurrentApplicationAddress
+    ==
+    bz _canCallSelf_after_if_else@4
+    global CurrentApplicationAddress
+    frame_dig -1
+    substring 0 4
+    intc_0 // 0
+    bytec 5 // "_executionId"
+    app_global_get_ex
+    assert // check _executionId exists
+    cover 2
+    callsub _hashExecutionId
+    ==
+    intc_0 // 0
+    frame_bury 1
+    frame_bury 0
+    retsub
+
+_canCallSelf_after_if_else@4:
+    frame_dig -1
+    callsub _getAdminRestrictions
+    popn 2
+    frame_dig -1
+    callsub _getAdminRestrictions
+    pop
+    frame_bury 2
+    pop
+    frame_dig -1
+    callsub _getAdminRestrictions
+    frame_bury 1
+    popn 2
+    bnz _canCallSelf_after_if_else@7
+    global CurrentApplicationAddress
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.isTargetClosed
+    bz _canCallSelf_after_if_else@7
+    intc_0 // 0
+    dup
+    frame_bury 1
+    frame_bury 0
+    retsub
+
+_canCallSelf_after_if_else@7:
+    frame_dig 2
+    dup
+    frame_dig -2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.hasRole
+    pop
+    swap
+    frame_dig -2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager.hasRole
+    frame_bury 0
+    pop
+    bnz _canCallSelf_after_if_else@9
+    intc_0 // 0
+    dup
+    frame_bury 1
+    frame_bury 0
+    retsub
+
+_canCallSelf_after_if_else@9:
+    intc_3 // 8
+    bzero
+    frame_dig 1
+    itob
+    frame_dig 0
+    itob
+    dup2
+    callsub Math.max
+    dig 3
+    swap
+    concat
+    cover 2
+    callsub Math.max
+    uncover 2
+    swap
+    concat
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    !
+    frame_bury 0
+    frame_bury 1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/AccessManager.sol.AccessManager._hashExecutionId(target: bytes, selector: bytes) -> bytes:
+_hashExecutionId:
+    proto 2 1
+    intc_2 // 32
+    bzero
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    frame_dig -1
+    callsub Hashes.efficientKeccak256
+    retsub

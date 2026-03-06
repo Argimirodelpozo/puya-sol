@@ -3,286 +3,518 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper10.__puya_arc4_router__() -> uint64:
 main:
-    intcblock 8 1 256 255
-    bytecblock 0x 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
+    intcblock 0 32 1 2
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x 0x01 0xffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000002 "o" 0x0000000000000000000000000000000000000001000000000000000000000000 "p" 0x01000000000000000000000000
     b __puya_arc4_router__
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.BitMath.mostSignificantBit(x: bytes) -> uint64:
-BitMath.mostSignificantBit:
-    proto 1 1
-    pushint 0
-    itob
-    frame_dig -1
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.FullMath.mulDiv(a: bytes, b: bytes, denominator: bytes) -> bytes:
+FullMath.mulDiv:
+    proto 3 1
+    frame_dig -3
+    frame_dig -2
+    b*
+    dupn 2
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    uncover 2
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b%
+    dup
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 2
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    uncover 2
     b<
+    bytec_1 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    cover 2
+    frame_dig -1
+    dig 1
+    b>
     assert
-    intc_0 // 8
-    bzero
-    pushbytes 0xffffffffffffffffffffffffffffffff
-    frame_dig -1
-    b<
-    bytec_0 // 0x
-    bytec_1 // 0x01
-    uncover 2
-    select
-    pushint 32
-    bzero
-    swap
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
-    b*
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
-    dup
+    intc_0 // 0
     itob
-    swap
-    intc_2 // 256
-    %
-    intc_3 // 255
-    swap
-    -
-    dig 2
-    swap
-    intc_1 // 1
-    setbit
+    b==
+    bz FullMath.mulDiv_after_if_else@2
     frame_dig -1
-    swap
     b/
-    pushbytes 0xffffffffffffffff
-    b>
-    bytec_0 // 0x
-    bytec_1 // 0x01
-    uncover 2
-    select
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000040
-    b*
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    b|
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
-    dup
-    itob
-    swap
-    intc_2 // 256
-    %
-    intc_3 // 255
-    swap
-    -
-    dig 2
-    swap
-    intc_1 // 1
-    setbit
-    frame_dig -1
-    swap
-    b/
-    pushbytes 0xffffffff
-    b>
-    bytec_0 // 0x
-    bytec_1 // 0x01
-    uncover 2
-    select
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000020
-    b*
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    b|
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
-    dup
-    itob
-    swap
-    intc_2 // 256
-    %
-    intc_3 // 255
-    swap
-    -
-    dig 2
-    swap
-    intc_1 // 1
-    setbit
-    frame_dig -1
-    swap
-    b/
-    pushbytes 0xffff
-    b>
-    bytec_0 // 0x
-    bytec_1 // 0x01
-    uncover 2
-    select
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000010
-    b*
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    b|
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
-    dup
-    itob
-    swap
-    intc_2 // 256
-    %
-    intc_3 // 255
-    swap
-    -
-    dig 2
-    swap
-    intc_1 // 1
-    setbit
-    frame_dig -1
-    swap
-    b/
-    pushbytes 0xff
-    b>
-    bytec_0 // 0x
-    bytec_1 // 0x01
-    uncover 2
-    select
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
-    b*
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    b|
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
-    dup
-    itob
-    swap
-    intc_2 // 256
-    %
-    intc_3 // 255
-    swap
-    -
-    dig 2
-    swap
-    intc_1 // 1
-    setbit
-    frame_dig -1
-    swap
-    b/
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
-    intc_2 // 256
-    %
-    intc_3 // 255
-    swap
-    -
-    uncover 2
-    swap
-    intc_1 // 1
-    setbit
-    pushbytes 0x8421084210842108cc6318c6db6d54be
-    swap
-    b/
-    pushbytes 0x1f
-    b&
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
-    pushbytes 0x0706060506020500060203020504000106050205030304010505030400000000
-    swap
-    intc_1 // 1
-    extract3
-    b|
-    concat
-    dup
-    len
-    intc_0 // 8
-    -
-    extract_uint64
+    frame_bury 0
     retsub
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.TickMath.getTickAtSqrtPrice__chunk_0(sqrtPriceX96: bytes) -> bytes, bytes, uint64:
-TickMath.getTickAtSqrtPrice__chunk_0:
-    proto 1 3
-    pushint 4295128739
+FullMath.mulDiv_after_if_else@2:
+    frame_dig 0
+    frame_dig -1
+    b%
+    frame_dig 1
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 1
+    uncover 3
+    dup
+    cover 3
+    b>
+    bytec_1 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    swap
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    uncover 2
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    frame_dig -1
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    b&
+    frame_dig -1
+    dig 1
+    b/
+    frame_bury -1
+    swap
+    dig 1
+    b/
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 2
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 2
+    b/
+    bytec_2 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 2
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b|
+    pushint 3
     itob
     frame_dig -1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    intc_3 // 2
+    itob
+    b^
+    frame_dig -1
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000002
     swap
     b-
-    pushbytes 0xfffd8963efd1fc6a506488495d951d5163961682
-    b>
-    bz TickMath.getTickAtSqrtPrice__chunk_0_after_if_else@2
-    bytec_0 // 0x
-    frame_dig -1
-    callsub CustomRevert.revertWith
-
-TickMath.getTickAtSqrtPrice__chunk_0_after_if_else@2:
-    frame_dig -1
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000100000000
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     b*
-    dup
-    pushint 0
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 0
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.CustomRevert.revertWith(2)_2(selector: bytes, value: bytes) -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.FullMath.mulDivRoundingUp(a: bytes, b: bytes, denominator: bytes) -> bytes:
+FullMath.mulDivRoundingUp:
+    proto 3 1
+    frame_dig -3
+    frame_dig -2
+    frame_dig -1
+    callsub FullMath.mulDiv
+    frame_dig -3
+    frame_dig -2
+    b*
+    frame_dig -1
+    b%
+    intc_0 // 0
+    itob
+    dup
+    cover 3
+    b!=
+    bz FullMath.mulDivRoundingUp_after_if_else@2
+    bytec_2 // 0x01
+    b+
+    dup
+    frame_dig 0
+    b>
+    assert
+
+FullMath.mulDivRoundingUp_after_if_else@2:
+    swap
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.SafeCast.toUint160(x: bytes) -> bytes:
+SafeCast.toUint160:
+    proto 1 1
+    frame_dig -1
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
+    dup
+    frame_dig -1
+    b!=
+    bz SafeCast.toUint160_after_if_else@2
+    bytec_1 // 0x
+    callsub CustomRevert.revertWith
+
+SafeCast.toUint160_after_if_else@2:
+    frame_dig 0
+    swap
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp(sqrtPX96: bytes, liquidity: bytes, amount: bytes, add: uint64) -> bytes:
+SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp:
+    proto 4 1
+    intc_0 // 0
+    dupn 3
+    itob
+    frame_dig -2
+    b==
+    bz SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp_after_if_else@2
+    frame_dig -4
+    frame_bury 0
+    retsub
+
+SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp_after_if_else@2:
+    frame_dig -3
+    bytec 6 // 0x0000000000000000000000000000000000000001000000000000000000000000
+    b*
+    frame_bury 1
+    frame_dig -1
+    bz SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp_else_body@8
+    frame_dig -2
+    frame_dig -4
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury 2
+    frame_dig -2
+    b/
+    frame_dig -4
+    b==
+    bz SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp_after_if_else@7
+    frame_dig 1
+    dup
+    frame_dig 2
+    b+
+    dup
+    frame_bury 0
+    b<=
+    bz SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp_after_if_else@7
+    frame_dig 1
+    frame_dig -4
+    frame_dig 0
+    callsub FullMath.mulDivRoundingUp
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
+    frame_bury 0
+    retsub
+
+SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp_after_if_else@7:
+    frame_dig 1
+    dup
+    frame_dig -4
+    b/
+    frame_dig -2
+    b+
+    callsub UnsafeMath.divRoundingUp
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
+    frame_bury 0
+    retsub
+
+SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp_else_body@8:
+    frame_dig -2
+    frame_dig -4
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_dig -2
+    b/
+    frame_dig -4
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
+    b==
+    bytec_1 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    frame_dig 1
+    dup
+    cover 3
+    dig 2
+    b>
+    bytec_1 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    b&
+    bytec_1 // 0x
+    b==
+    !
+    assert // revert
+    dig 1
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -4
+    swap
+    callsub FullMath.mulDivRoundingUp
+    callsub SafeCast.toUint160
+    frame_bury 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown(sqrtPX96: bytes, liquidity: bytes, amount: bytes, add: uint64) -> bytes:
+SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown:
+    proto 4 1
+    frame_dig -1
+    bz SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown_else_body@5
+    frame_dig -2
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffff
+    b<=
+    bz SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown_ternary_false@3
+    frame_dig -2
+    bytec 6 // 0x0000000000000000000000000000000000000001000000000000000000000000
+    b*
+    frame_dig -3
+    b/
+
+SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown_ternary_merge@4:
+    frame_dig -4
+    b+
+    callsub SafeCast.toUint160
+    retsub
+
+SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown_ternary_false@3:
+    frame_dig -2
+    bytec 8 // 0x01000000000000000000000000
+    frame_dig -3
+    callsub FullMath.mulDiv
+    b SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown_ternary_merge@4
+
+SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown_else_body@5:
+    frame_dig -2
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffff
+    b<=
+    bz SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown_ternary_false@7
+    frame_dig -2
+    bytec 6 // 0x0000000000000000000000000000000000000001000000000000000000000000
+    b*
+    frame_dig -3
+    callsub UnsafeMath.divRoundingUp
+
+SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown_ternary_merge@8:
+    frame_dig -4
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
+    dig 1
+    b>
+    !
+    !
+    assert // revert
+    frame_dig -4
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
+    retsub
+
+SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown_ternary_false@7:
+    frame_dig -2
+    bytec 8 // 0x01000000000000000000000000
+    frame_dig -3
+    callsub FullMath.mulDivRoundingUp
+    b SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown_ternary_merge@8
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.SqrtPriceMath.getNextSqrtPriceFromOutput(sqrtPX96: bytes, liquidity: bytes, amountOut: bytes, zeroForOne: uint64) -> bytes:
+SqrtPriceMath.getNextSqrtPriceFromOutput:
+    proto 4 1
+    frame_dig -4
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
+    bytec_1 // 0x
+    b==
+    bytec_1 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    frame_dig -3
+    pushbytes 0xffffffffffffffffffffffffffffffff
+    b&
+    bytec_1 // 0x
+    b==
+    bytec_1 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    b|
+    bytec_1 // 0x
+    b!=
+    !
+    assert // revert
+    frame_dig -1
+    bz SqrtPriceMath.getNextSqrtPriceFromOutput_ternary_false@2
+    frame_dig -4
+    frame_dig -3
+    frame_dig -2
+    intc_0 // 0
+    callsub SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown
+    retsub
+
+SqrtPriceMath.getNextSqrtPriceFromOutput_ternary_false@2:
+    frame_dig -4
+    frame_dig -3
+    frame_dig -2
+    intc_0 // 0
+    callsub SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.UnsafeMath.divRoundingUp(x: bytes, y: bytes) -> bytes:
+UnsafeMath.divRoundingUp:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b/
+    frame_dig -2
+    frame_dig -1
+    b%
+    bytec_1 // 0x
+    b>
+    bytec_1 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.CustomRevert.revertWith(1)(selector: bytes) -> void:
 CustomRevert.revertWith:
-    proto 2 0
+    proto 1 0
     err // revert
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper10.__puya_arc4_router__() -> uint64:
 __puya_arc4_router__:
     txn NumAppArgs
-    bz __puya_arc4_router_____bare_create__@4
-    pushbytes 0x72239392 // method "Pool.initialize__chunk_1__chunk_0((uint8[32],uint256,uint256,uint256,byte[],byte[],byte[]),uint256,uint64,uint64)(uint256,uint256,uint256)"
-    txna ApplicationArgs 0
-    match __puya_arc4_router___Pool.initialize__chunk_1__chunk_0_route@2
-    err
-
-__puya_arc4_router___Pool.initialize__chunk_1__chunk_0_route@2:
+    bz __puya_arc4_router_____bare_create__@8
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
-    b Pool.initialize__chunk_1__chunk_0
+    txn ApplicationID
+    assert
+    pushbytess 0xaa80b6e9 0xa96ef989 // method "SqrtPriceMath.getNextSqrtPriceFromOutput(uint256,uint256,uint256,bool)uint256", method "__init__(uint64,uint64,byte[])void"
+    txna ApplicationArgs 0
+    match /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper10.SqrtPriceMath.getNextSqrtPriceFromOutput[routing] __init__
+    err
 
-__puya_arc4_router_____bare_create__@4:
+__puya_arc4_router_____bare_create__@8:
     txn OnCompletion
     !
     txn ApplicationID
@@ -291,111 +523,131 @@ __puya_arc4_router_____bare_create__@4:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper10.Pool.initialize__chunk_1__chunk_0[routing]() -> void:
-Pool.initialize__chunk_1__chunk_0:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper10.SqrtPriceMath.getNextSqrtPriceFromOutput[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper10.SqrtPriceMath.getNextSqrtPriceFromOutput[routing]:
     txna ApplicationArgs 1
     dup
     len
-    dig 1
-    pushint 128
-    extract_uint16 // on error: invalid tuple encoding
-    dup
-    pushint 134
+    intc_1 // 32
     ==
-    assert // invalid tail pointer at index 4 of (uint8[32],uint256,uint256,uint256,(len+uint8[]),(len+uint8[]),(len+uint8[]))
-    dig 2
-    swap
-    dig 2
-    substring3
-    pushint 0
-    extract_uint16 // on error: invalid array length header
-    pushint 136
-    +
-    dig 2
-    pushint 130
-    extract_uint16 // on error: invalid tuple encoding
-    dup
-    dig 2
-    ==
-    assert // invalid tail pointer at index 5 of (uint8[32],uint256,uint256,uint256,(len+uint8[]),(len+uint8[]),(len+uint8[]))
-    dig 3
-    swap
-    dig 3
-    substring3
-    pushint 0
-    extract_uint16 // on error: invalid array length header
-    pushint 2
-    +
-    +
-    dig 2
-    pushint 132
-    extract_uint16 // on error: invalid tuple encoding
-    dup
-    dig 2
-    ==
-    assert // invalid tail pointer at index 6 of (uint8[32],uint256,uint256,uint256,(len+uint8[]),(len+uint8[]),(len+uint8[]))
-    uncover 3
-    swap
-    dig 3
-    substring3
-    pushint 0
-    extract_uint16 // on error: invalid array length header
-    pushint 2
-    +
-    +
-    ==
-    assert // invalid number of bytes for State
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    pushint 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
+    dup
     len
-    intc_0 // 8
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint64
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
+    dup
     len
-    intc_0 // 8
+    intc_2 // 1
     ==
-    assert // invalid number of bytes for arc4.uint64
-    dup
-    callsub TickMath.getTickAtSqrtPrice__chunk_0
-    popn 2
-    swap
-    callsub TickMath.getTickAtSqrtPrice__chunk_0
-    pop
-    bury 1
-    dup
-    callsub BitMath.mostSignificantBit
-    itob
-    pushint 32
-    bzero
-    swap
-    dig 1
-    b|
+    assert // invalid number of bytes for arc4.bool
+    intc_0 // 0
+    getbit
+    bytec 5 // "o"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper10.SqrtPriceMath.getNextSqrtPriceFromOutput[routing]_after_if_else@5
+    global GroupSize
+    intc_3 // 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec 5 // "o"
+    app_global_get
+    ==
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec 7 // "p"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper10.SqrtPriceMath.getNextSqrtPriceFromOutput[routing]_after_if_else@5
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns ApplicationID
+    bytec 7 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxnsa ApplicationArgs 0
+    pushbytes "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper10.SqrtPriceMath.getNextSqrtPriceFromOutput[routing]_after_if_else@5:
     dig 3
+    dig 3
+    dig 3
+    dig 3
+    callsub SqrtPriceMath.getNextSqrtPriceFromOutput
+    dup
     len
-    pushint 32
+    intc_1 // 32
     <=
     assert // overflow
-    uncover 3
-    dig 2
+    intc_1 // 32
+    bzero
     b|
-    concat
-    dig 2
-    len
-    pushint 32
-    <=
-    assert // overflow
-    cover 2
-    b|
-    concat
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper10.__init__[routing]() -> void:
+__init__:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 3
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec 5 // "o"
+    app_global_get
+    !
+    assert // helper: already initialized
+    bytec 5 // "o"
+    uncover 3
+    app_global_put
+    bytec 7 // "p"
+    uncover 2
+    app_global_put
+    pushbytes "s"
+    swap
+    app_global_put
+    intc_2 // 1
     return

@@ -145,6 +145,15 @@ private:
 		std::vector<std::shared_ptr<awst::RootNode>> const& _roots
 	);
 
+	/// Insert default initializations for live-out variables that are
+	/// referenced in inner returns but not yet assigned at the return point.
+	/// Must be called before rewriteInnerReturns.
+	void ensureLiveOutVarsInitialized(
+		awst::Block& _body,
+		std::vector<VarInfo> const& _liveOut,
+		awst::SourceLocation const& _loc
+	);
+
 	/// Rewrite inner ReturnStatements in an intermediate (non-last) chunk body
 	/// to match the chunk's return type. Early returns from the original function
 	/// need their value padded with default values for live variables that are

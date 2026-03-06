@@ -396,7 +396,11 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 
 					if (!hasNamedReturns)
 					{
-						// No named returns — skip implicit return
+						// No named returns — append default return with zero value
+						auto defReturn = std::make_shared<awst::ReturnStatement>();
+						defReturn->sourceLocation = loc;
+						defReturn->value = StorageMapper::makeDefaultValue(sub->returnType, loc);
+						sub->body->body.push_back(std::move(defReturn));
 					}
 					else
 					{
@@ -616,6 +620,14 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					}
 
 					sub->body->body.push_back(std::move(implicitReturn));
+				}
+				else
+				{
+					// No named returns — append default return with zero value
+					auto defReturn = std::make_shared<awst::ReturnStatement>();
+					defReturn->sourceLocation = loc;
+					defReturn->value = StorageMapper::makeDefaultValue(sub->returnType, loc);
+					sub->body->body.push_back(std::move(defReturn));
 				}
 			}
 

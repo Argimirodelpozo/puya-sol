@@ -110,6 +110,13 @@ private:
 		std::set<std::string>& _ids
 	);
 
+	/// Build validation assertions to prepend to each helper method body.
+	/// Checks: GroupSize >= 2, gtxn[0].AppID == orchestrator, gtxn[0].Sender == txn.Sender.
+	/// If prev_chunk state is set (p > 0), also validates prev chunk app_id and method selector.
+	std::vector<std::shared_ptr<awst::Statement>> buildValidationBlock(
+		awst::SourceLocation const& _loc
+	);
+
 	/// Build a clear program that always approves.
 	awst::ContractMethod buildClearProgram(
 		awst::SourceLocation const& _loc,

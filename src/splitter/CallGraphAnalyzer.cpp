@@ -69,12 +69,14 @@ CallGraphAnalyzer::SplitRecommendation CallGraphAnalyzer::analyze(
 		std::to_string(SizeEstimator::AVMMaxBytes) + " max)");
 
 	// Perform bin-packing with tighter threshold for better distribution.
-	// With the 3x byte multiplier in SizeEstimator, target ~1600 instruction units
+	// With the 3x byte multiplier in SizeEstimator, target ~1300 instruction units
 	// per partition to stay under 8KB after shared dep duplication and ARC4 overhead.
+	// The /6 divisor accounts for biguint-heavy code (wrapping patterns) having
+	// higher actual-to-estimated byte ratios.
 	// Non-split code uses a higher threshold since ABI codec overhead is smaller.
 	size_t packingThreshold = _rewrittenFunctions.empty()
 		? SizeEstimator::SplitThresholdBytes / 3
-		: SizeEstimator::SplitThresholdBytes / 5;
+		: SizeEstimator::SplitThresholdBytes / 6;
 	auto partitions = binPack(_sizes, packingThreshold, _rewrittenFunctions, _mutableSharedFunctions);
 
 	if (partitions.empty())
@@ -928,7 +930,7 @@ std::vector<std::vector<std::string>> CallGraphAnalyzer::binPack(
 
 		assigned.insert(name);
 
-		// Also place cluster members
+		// Also place cluster members (only if they fit within the partition threshold)
 		for (auto const& [member, leader]: clusterLeader)
 		{
 			if (leader == name && !assigned.count(member))
@@ -952,6 +954,11 @@ std::vector<std::vector<std::string>> CallGraphAnalyzer::binPack(
 
 				if (partIdx > 0 && partIdx - 1 < partitionSizes.size())
 				{
+					// Check if adding the member would exceed the partition threshold.
+					// If so, skip — the member will be placed independently later.
+					if (partitionSizes[partIdx - 1] + memberSize > _maxSize)
+						continue;
+
 					partitions[partIdx].push_back(member);
 					partitionSizes[partIdx - 1] += memberSize;
 					// Add member and its deps to partition's dep set

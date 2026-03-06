@@ -1,7 +1,7 @@
 """
 Uniswap V4 — Helper Contract Deployment Tests
 
-Tests that all 47 helper contracts + the orchestrator deploy successfully.
+Tests that all 53 helper contracts + the orchestrator deploy successfully.
 """
 import pytest
 import algokit_utils as au
@@ -17,7 +17,7 @@ def test_deploy_orchestrator(localnet: au.AlgorandClient, account: SigningAccoun
 
 
 @pytest.mark.localnet
-@pytest.mark.parametrize("helper_num", range(1, 48))
+@pytest.mark.parametrize("helper_num", range(1, 54))
 def test_deploy_helper(
     localnet: au.AlgorandClient, account: SigningAccount, helper_num: int
 ) -> None:

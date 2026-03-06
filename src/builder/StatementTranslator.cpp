@@ -41,6 +41,11 @@ std::shared_ptr<awst::Block> StatementTranslator::translateBlock(
 	auto awstBlock = std::make_shared<awst::Block>();
 	awstBlock->sourceLocation = makeLoc(_block.location());
 
+	// Track unchecked blocks for wrapping arithmetic
+	bool const wasUnchecked = m_exprTranslator.inUncheckedBlock();
+	if (_block.unchecked())
+		m_exprTranslator.setInUncheckedBlock(true);
+
 	for (auto const& stmt: _block.statements())
 	{
 		// Flatten unchecked blocks (and any nested blocks) into the parent
@@ -63,6 +68,7 @@ std::shared_ptr<awst::Block> StatementTranslator::translateBlock(
 		}
 	}
 
+	m_exprTranslator.setInUncheckedBlock(wasUnchecked);
 	return awstBlock;
 }
 
@@ -102,12 +108,17 @@ bool StatementTranslator::visit(solidity::frontend::ExpressionStatement const& _
 	auto loc = makeLoc(_node.location());
 	auto expr = m_exprTranslator.translate(_node.expression());
 
+	// Flush pre-pending statements BEFORE the expression statement
+	// (e.g., biguint exponentiation loops that compute values used by the expression)
+	for (auto& pending: m_exprTranslator.takePrePendingStatements())
+		push(std::move(pending));
+
 	auto stmt = std::make_shared<awst::ExpressionStatement>();
 	stmt->sourceLocation = loc;
 	stmt->expr = std::move(expr);
 	push(stmt);
 
-	// Pick up any pending statements from the expression translator
+	// Pick up any post-pending statements from the expression translator
 	// (e.g., array length increment after push)
 	for (auto& pending: m_exprTranslator.takePendingStatements())
 		push(std::move(pending));
@@ -175,6 +186,10 @@ bool StatementTranslator::visit(solidity::frontend::Return const& _node)
 			}
 		}
 	}
+
+	// Flush pre-pending statements (e.g., biguint exponentiation loops)
+	for (auto& pending: m_exprTranslator.takePrePendingStatements())
+		push(std::move(pending));
 
 	// Pick up any pending statements from the expression translator
 	// (e.g., inner transaction submits that must execute before return)
@@ -541,7 +556,9 @@ bool StatementTranslator::visit(solidity::frontend::VariableDeclarationStatement
 					aliasExpr = stateGet;
 				}
 				m_exprTranslator.addStorageAlias(decl.id(), aliasExpr);
-				// Emit pending statements but skip the local variable assignment
+				// Emit pre-pending + pending statements but skip the local variable assignment
+				for (auto& pending: m_exprTranslator.takePrePendingStatements())
+					push(std::move(pending));
 				for (auto& pending: m_exprTranslator.takePendingStatements())
 					push(std::move(pending));
 				return false;
@@ -552,6 +569,10 @@ bool StatementTranslator::visit(solidity::frontend::VariableDeclarationStatement
 		assign->sourceLocation = loc;
 		assign->target = std::move(target);
 		assign->value = std::move(value);
+
+		// Flush pre-pending statements (e.g., biguint exponentiation loops)
+		for (auto& pending: m_exprTranslator.takePrePendingStatements())
+			push(std::move(pending));
 
 		// Pick up any pending statements from the expression translator
 		for (auto& pending: m_exprTranslator.takePendingStatements())
@@ -568,6 +589,10 @@ bool StatementTranslator::visit(solidity::frontend::VariableDeclarationStatement
 	{
 		// Tuple destructuring: (type1 var1, type2 var2) = expr
 		auto rhsExpr = m_exprTranslator.translate(*initialValue);
+
+		// Flush pre-pending statements
+		for (auto& pending: m_exprTranslator.takePrePendingStatements())
+			push(std::move(pending));
 
 		// Pick up any pending statements (e.g., inner transaction submits)
 		for (auto& pending: m_exprTranslator.takePendingStatements())
@@ -627,7 +652,7 @@ bool StatementTranslator::visit(solidity::frontend::EmitStatement const& _node)
 	else
 		eventName = "Event";
 
-	// Try to resolve the EventDefinition to build the full signature
+	// Resolve EventDefinition
 	solidity::frontend::EventDefinition const* eventDef = nullptr;
 	if (auto const* ident = dynamic_cast<solidity::frontend::Identifier const*>(&eventCall.expression()))
 	{
@@ -635,7 +660,27 @@ bool StatementTranslator::visit(solidity::frontend::EmitStatement const& _node)
 		eventDef = dynamic_cast<solidity::frontend::EventDefinition const*>(decl);
 	}
 
-	// Build event signature: EventName(type1,type2,...)
+	// Helper: map a Solidity type to its ARC4 signature name
+	auto arc4SigName = [this](solidity::frontend::Type const* _type) -> std::string {
+		auto* wtype = m_typeMapper.map(_type);
+		if (wtype == awst::WType::biguintType()) return "uint256";
+		if (wtype == awst::WType::uint64Type()) return "uint64";
+		if (wtype == awst::WType::boolType()) return "bool";
+		if (wtype == awst::WType::accountType()) return "address";
+		if (wtype == awst::WType::bytesType()) return "byte[]";
+		if (wtype == awst::WType::stringType()) return "string";
+		if (wtype->kind() == awst::WTypeKind::Bytes)
+		{
+			auto const* bw = static_cast<awst::BytesWType const*>(wtype);
+			if (bw->length().has_value())
+				return "byte[" + std::to_string(bw->length().value()) + "]";
+			return "byte[]";
+		}
+		return _type->toString(true);
+	};
+
+	// Build ARC4 event signature: EventName(arc4type1,arc4type2,...)
+	// Include ALL parameters (indexed + non-indexed) in the signature
 	std::string eventSignature = eventName + "(";
 	if (eventDef)
 	{
@@ -643,142 +688,106 @@ bool StatementTranslator::visit(solidity::frontend::EmitStatement const& _node)
 		for (auto const& param: eventDef->parameters())
 		{
 			if (!first) eventSignature += ",";
-			eventSignature += param->type()->toString(true);
+			eventSignature += arc4SigName(param->type());
 			first = false;
 		}
 	}
 	eventSignature += ")";
 
 	Logger::instance().debug(
-		"event '" + eventName + "' signature: " + eventSignature, loc
+		"event '" + eventName + "' ARC-28 signature: " + eventSignature, loc
 	);
 
-	// Build: log(concat(keccak256(signature)[:4], abi_encode(non_indexed_args)))
-	// Step 1: compute keccak256(signature) to get the event selector
-	auto sigBytes = std::make_shared<awst::BytesConstant>();
-	sigBytes->sourceLocation = loc;
-	sigBytes->wtype = awst::WType::bytesType();
-	sigBytes->encoding = awst::BytesEncoding::Utf8;
-	sigBytes->value = std::vector<uint8_t>(eventSignature.begin(), eventSignature.end());
+	// Collect non-indexed argument expressions and their ARC4 field info
+	struct FieldInfo {
+		std::string name;
+		awst::WType const* arc4Type;
+		std::shared_ptr<awst::Expression> value;
+	};
+	std::vector<FieldInfo> fields;
 
-	auto selectorHash = std::make_shared<awst::IntrinsicCall>();
-	selectorHash->sourceLocation = loc;
-	selectorHash->wtype = awst::WType::bytesType();
-	selectorHash->opCode = "keccak256";
-	selectorHash->stackArgs.push_back(sigBytes);
-
-	// Step 2: extract first 4 bytes as selector
-	auto selectorExtract = std::make_shared<awst::IntrinsicCall>();
-	selectorExtract->sourceLocation = loc;
-	selectorExtract->wtype = awst::WType::bytesType();
-	selectorExtract->opCode = "extract3";
-	selectorExtract->stackArgs.push_back(selectorHash);
-
-	auto zeroConst = std::make_shared<awst::IntegerConstant>();
-	zeroConst->sourceLocation = loc;
-	zeroConst->wtype = awst::WType::uint64Type();
-	zeroConst->value = "0";
-	selectorExtract->stackArgs.push_back(zeroConst);
-
-	auto fourConst = std::make_shared<awst::IntegerConstant>();
-	fourConst->sourceLocation = loc;
-	fourConst->wtype = awst::WType::uint64Type();
-	fourConst->value = "4";
-	selectorExtract->stackArgs.push_back(fourConst);
-
-	// Step 3: translate and ABI-encode the non-indexed event arguments
-	// Collect non-indexed argument expressions
-	std::vector<std::shared_ptr<awst::Expression>> nonIndexedArgs;
 	auto const& callArgs = eventCall.arguments();
 	if (eventDef)
 	{
 		auto const& params = eventDef->parameters();
 		for (size_t i = 0; i < callArgs.size() && i < params.size(); ++i)
 		{
-			if (!params[i]->isIndexed())
-				nonIndexedArgs.push_back(m_exprTranslator.translate(*callArgs[i]));
-		}
-	}
-	else
-	{
-		// No event definition found — include all arguments
-		for (auto const& arg: callArgs)
-			nonIndexedArgs.push_back(m_exprTranslator.translate(*arg));
-	}
+			// ARC-28 has no indexed params — include ALL params in the log body
+			auto translated = m_exprTranslator.translate(*callArgs[i]);
+			auto* arc4Type = m_typeMapper.mapToARC4Type(translated->wtype);
 
-	// Step 4: build the log data as selector + encoded args
-	std::shared_ptr<awst::Expression> logData;
-	if (nonIndexedArgs.empty())
-	{
-		// No arguments, just log the selector
-		logData = selectorExtract;
-	}
-	else
-	{
-		// Concatenate selector with each argument (serialized as bytes)
-		logData = selectorExtract;
-		for (auto& arg: nonIndexedArgs)
-		{
-			// Convert argument to bytes if needed
-			std::shared_ptr<awst::Expression> argBytes = arg;
-			if (arg->wtype == awst::WType::uint64Type())
+			// ARC4Encode the value if it's not already an ARC4 type
+			std::shared_ptr<awst::Expression> arc4Value;
+			if (translated->wtype->kind() >= awst::WTypeKind::ARC4UIntN
+				&& translated->wtype->kind() <= awst::WTypeKind::ARC4Struct)
 			{
-				auto itob = std::make_shared<awst::IntrinsicCall>();
-				itob->sourceLocation = loc;
-				itob->wtype = awst::WType::bytesType();
-				itob->opCode = "itob";
-				itob->stackArgs.push_back(std::move(arg));
-				argBytes = std::move(itob);
+				arc4Value = std::move(translated);
 			}
-			else if (arg->wtype == awst::WType::biguintType())
+			else
 			{
-				// biguint → bytes: reinterpret cast then zero-pad to 32 bytes
-				auto cast = std::make_shared<awst::ReinterpretCast>();
-				cast->sourceLocation = loc;
-				cast->wtype = awst::WType::bytesType();
-				cast->expr = std::move(arg);
-				argBytes = std::move(cast);
-			}
-			else if (arg->wtype == awst::WType::boolType())
-			{
-				// bool → itob(1 or 0)
-				auto itob = std::make_shared<awst::IntrinsicCall>();
-				itob->sourceLocation = loc;
-				itob->wtype = awst::WType::bytesType();
-				itob->opCode = "itob";
-				itob->stackArgs.push_back(std::move(arg));
-				argBytes = std::move(itob);
-			}
-			else if (dynamic_cast<awst::ReferenceArray const*>(arg->wtype))
-			{
-				// Dynamic/static array → ARC4Encode to bytes for event emission
 				auto encode = std::make_shared<awst::ARC4Encode>();
 				encode->sourceLocation = loc;
-				encode->wtype = awst::WType::bytesType();
-				encode->value = std::move(arg);
-				argBytes = std::move(encode);
+				encode->wtype = arc4Type;
+				encode->value = std::move(translated);
+				arc4Value = std::move(encode);
 			}
 
-			auto concat = std::make_shared<awst::IntrinsicCall>();
-			concat->sourceLocation = loc;
-			concat->wtype = awst::WType::bytesType();
-			concat->opCode = "concat";
-			concat->stackArgs.push_back(std::move(logData));
-			concat->stackArgs.push_back(std::move(argBytes));
-			logData = std::move(concat);
+			std::string fieldName = params[i]->name().empty()
+				? "_" + std::to_string(i)
+				: params[i]->name();
+			fields.push_back({fieldName, arc4Type, std::move(arc4Value)});
+		}
+	}
+	else
+	{
+		for (size_t i = 0; i < callArgs.size(); ++i)
+		{
+			auto translated = m_exprTranslator.translate(*callArgs[i]);
+			auto* arc4Type = m_typeMapper.mapToARC4Type(translated->wtype);
+
+			std::shared_ptr<awst::Expression> arc4Value;
+			if (translated->wtype->kind() >= awst::WTypeKind::ARC4UIntN
+				&& translated->wtype->kind() <= awst::WTypeKind::ARC4Struct)
+			{
+				arc4Value = std::move(translated);
+			}
+			else
+			{
+				auto encode = std::make_shared<awst::ARC4Encode>();
+				encode->sourceLocation = loc;
+				encode->wtype = arc4Type;
+				encode->value = std::move(translated);
+				arc4Value = std::move(encode);
+			}
+			fields.push_back({"_" + std::to_string(i), arc4Type, std::move(arc4Value)});
 		}
 	}
 
-	// Step 5: log(logData)
-	auto logCall = std::make_shared<awst::IntrinsicCall>();
-	logCall->sourceLocation = loc;
-	logCall->wtype = awst::WType::voidType();
-	logCall->opCode = "log";
-	logCall->stackArgs.push_back(std::move(logData));
+	// Build ARC4Struct wtype for the event
+	std::vector<std::pair<std::string, awst::WType const*>> structFields;
+	for (auto const& f: fields)
+		structFields.emplace_back(f.name, f.arc4Type);
+	auto const* structType = m_typeMapper.createType<awst::ARC4Struct>(
+		eventName, std::move(structFields), true
+	);
+
+	// Build NewStruct with the ARC4-encoded field values
+	auto newStruct = std::make_shared<awst::NewStruct>();
+	newStruct->sourceLocation = loc;
+	newStruct->wtype = structType;
+	for (auto& f: fields)
+		newStruct->values[f.name] = std::move(f.value);
+
+	// Emit the ARC-28 event
+	auto emit = std::make_shared<awst::Emit>();
+	emit->sourceLocation = loc;
+	emit->wtype = awst::WType::voidType();
+	emit->signature = eventSignature;
+	emit->value = std::move(newStruct);
 
 	auto stmt = std::make_shared<awst::ExpressionStatement>();
 	stmt->sourceLocation = loc;
-	stmt->expr = logCall;
+	stmt->expr = emit;
 	push(stmt);
 
 	return false;
@@ -859,7 +868,20 @@ bool StatementTranslator::visit(solidity::frontend::InlineAssembly const& _node)
 		if (!initExpr)
 			continue;
 
-		if (auto const* literal = dynamic_cast<solidity::frontend::Literal const*>(initExpr.get()))
+		// Prefer the type annotation's rational value — handles scientific notation
+		// (e.g., 1e18, 1e27), subdenominations (365 days), and expressions.
+		auto const* exprType = initExpr->annotation().type;
+		auto const* ratType = dynamic_cast<solidity::frontend::RationalNumberType const*>(exprType);
+		if (ratType && !ratType->isFractional())
+		{
+			auto const& val = ratType->value();
+			solidity::u256 intVal = solidity::u256(val.numerator() / val.denominator());
+			std::ostringstream oss;
+			oss << intVal;
+			std::string name = yulId->name.str();
+			constants[name] = oss.str();
+		}
+		else if (auto const* literal = dynamic_cast<solidity::frontend::Literal const*>(initExpr.get()))
 		{
 			std::string name = yulId->name.str();
 			std::string value = literal->value();
@@ -867,8 +889,6 @@ bool StatementTranslator::visit(solidity::frontend::InlineAssembly const& _node)
 			// Convert hex literal to decimal
 			if (value.size() > 2 && value.substr(0, 2) == "0x")
 			{
-				// Parse hex string to boost multiprecision and convert to decimal
-				// We can use the u256 type from solidity
 				try
 				{
 					solidity::u256 numVal(value);
@@ -886,24 +906,6 @@ bool StatementTranslator::visit(solidity::frontend::InlineAssembly const& _node)
 			else
 			{
 				constants[name] = value;
-			}
-		}
-		else
-		{
-			// Fallback: handle constant expressions (e.g. `5 * 32`) by checking
-			// the expression's type annotation for a RationalNumberType.
-			auto const* exprType = initExpr->annotation().type;
-			if (auto const* ratType = dynamic_cast<solidity::frontend::RationalNumberType const*>(exprType))
-			{
-				if (!ratType->isFractional())
-				{
-					auto const& val = ratType->value();
-					solidity::u256 intVal = solidity::u256(val.numerator() / val.denominator());
-					std::ostringstream oss;
-					oss << intVal;
-					std::string name = yulId->name.str();
-					constants[name] = oss.str();
-				}
 			}
 		}
 	}

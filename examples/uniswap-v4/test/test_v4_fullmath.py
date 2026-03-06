@@ -1,55 +1,68 @@
 """Uniswap V4 FullMath — adapted from FullMath.t.sol"""
 import pytest
+from helpers import grouped_call, call_with_budget
 import algokit_utils as au
 from constants import MAX_UINT256, Q128
 
+
+def _call_mulDiv(helper36, a, b, denominator, orchestrator, algod_client, account, budget_pad_id=None):
+    """Call FullMath.mulDiv (single method on Helper36)."""
+    if budget_pad_id:
+        return call_with_budget(helper36, "FullMath.mulDiv", [a, b, denominator], budget_pad_id, algod_client, account, orchestrator=orchestrator)
+    return grouped_call(helper36, "FullMath.mulDiv", [a, b, denominator], orchestrator, algod_client, account)
+
+
+def _call_mulDivRoundingUp(helper35, a, b, denominator, orchestrator, algod_client, account, budget_pad_id=None):
+    """Call FullMath.mulDivRoundingUp (single method on Helper35)."""
+    if budget_pad_id:
+        return call_with_budget(helper35, "FullMath.mulDivRoundingUp", [a, b, denominator], budget_pad_id, algod_client, account, orchestrator=orchestrator)
+    return grouped_call(helper35, "FullMath.mulDivRoundingUp", [a, b, denominator], orchestrator, algod_client, account)
+
+
 @pytest.mark.localnet
-def test_mulDiv_revertsWith0Denominator_case1(helper45):
+def test_mulDiv_revertsWith0Denominator_case1(helper36, orchestrator, algod_client, account):
     with pytest.raises(Exception):
-        helper45.send.call(au.AppClientMethodCallParams(method="FullMath.mulDiv", args=[Q128, 5, 0]))
+        _call_mulDiv(helper36, Q128, 5, 0, orchestrator, algod_client, account)
 
 @pytest.mark.localnet
-def test_mulDiv_revertsWith0Denominator_case2(helper45):
+def test_mulDiv_revertsWith0Denominator_case2(helper36, orchestrator, algod_client, account):
     with pytest.raises(Exception):
-        helper45.send.call(au.AppClientMethodCallParams(method="FullMath.mulDiv", args=[1, 5, 0]))
+        _call_mulDiv(helper36, 1, 5, 0, orchestrator, algod_client, account)
 
 @pytest.mark.localnet
-def test_mulDiv_revertsWithOverflowingNumeratorAndZeroDenominator(helper45):
+def test_mulDiv_revertsWithOverflowingNumeratorAndZeroDenominator(helper36, orchestrator, algod_client, account):
     with pytest.raises(Exception):
-        helper45.send.call(au.AppClientMethodCallParams(method="FullMath.mulDiv", args=[Q128, Q128, 0]))
+        _call_mulDiv(helper36, Q128, Q128, 0, orchestrator, algod_client, account)
 
 @pytest.mark.localnet
-def test_mulDiv_revertsIfOutputOverflows(helper45):
+def test_mulDiv_revertsIfOutputOverflows(helper36, orchestrator, algod_client, account):
     with pytest.raises(Exception):
-        helper45.send.call(au.AppClientMethodCallParams(method="FullMath.mulDiv", args=[Q128, Q128, 1]))
+        _call_mulDiv(helper36, Q128, Q128, 1, orchestrator, algod_client, account)
 
 @pytest.mark.localnet
-def test_mulDiv_revertsOverflowWithAllMaxInputs(helper45):
+def test_mulDiv_revertsOverflowWithAllMaxInputs(helper36, orchestrator, algod_client, account):
     with pytest.raises(Exception):
-        helper45.send.call(au.AppClientMethodCallParams(method="FullMath.mulDiv", args=[MAX_UINT256, MAX_UINT256, MAX_UINT256 - 1]))
+        _call_mulDiv(helper36, MAX_UINT256, MAX_UINT256, MAX_UINT256 - 1, orchestrator, algod_client, account)
 
 @pytest.mark.localnet
-@pytest.mark.xfail(reason="Compiler bug: mulDiv phantom overflow with all-max inputs triggers wrapping arithmetic issue")
-def test_mulDiv_validAllMaxInputs(helper45):
-    r = helper45.send.call(au.AppClientMethodCallParams(method="FullMath.mulDiv", args=[MAX_UINT256, MAX_UINT256, MAX_UINT256]))
-    assert r.abi_return == MAX_UINT256
+def test_mulDiv_validAllMaxInputs(helper36, orchestrator, algod_client, account):
+    r = _call_mulDiv(helper36, MAX_UINT256, MAX_UINT256, MAX_UINT256, orchestrator, algod_client, account)
+    assert r == MAX_UINT256
 
 @pytest.mark.localnet
-def test_mulDiv_validWithoutPhantomOverflow(helper45):
-    r = helper45.send.call(au.AppClientMethodCallParams(method="FullMath.mulDiv", args=[Q128, 50 * Q128 // 100, 150 * Q128 // 100]))
-    assert r.abi_return == Q128 // 3
+def test_mulDiv_validWithoutPhantomOverflow(helper36, orchestrator, algod_client, account):
+    r = _call_mulDiv(helper36, Q128, 50 * Q128 // 100, 150 * Q128 // 100, orchestrator, algod_client, account)
+    assert r == Q128 // 3
 
 @pytest.mark.localnet
-@pytest.mark.xfail(reason="Compiler bug: mulDiv phantom overflow path requires correct wrapping NOT and sub")
-def test_mulDiv_validWithPhantomOverflow(helper45):
-    r = helper45.send.call(au.AppClientMethodCallParams(method="FullMath.mulDiv", args=[Q128, 35 * Q128, 8 * Q128]))
-    assert r.abi_return == 4375 * Q128 // 1000
+def test_mulDiv_validWithPhantomOverflow(helper36, orchestrator, algod_client, account):
+    r = _call_mulDiv(helper36, Q128, 35 * Q128, 8 * Q128, orchestrator, algod_client, account)
+    assert r == 4375 * Q128 // 1000
 
 @pytest.mark.localnet
-@pytest.mark.xfail(reason="Compiler bug: mulDiv phantom overflow path requires correct wrapping NOT and sub")
-def test_mulDiv_phantomOverflowRepeatingDecimal(helper45):
-    r = helper45.send.call(au.AppClientMethodCallParams(method="FullMath.mulDiv", args=[Q128, 1000 * Q128, 3000 * Q128]))
-    assert r.abi_return == Q128 // 3
+def test_mulDiv_phantomOverflowRepeatingDecimal(helper36, orchestrator, algod_client, account):
+    r = _call_mulDiv(helper36, Q128, 1000 * Q128, 3000 * Q128, orchestrator, algod_client, account)
+    assert r == Q128 // 3
 
 @pytest.mark.localnet
 @pytest.mark.parametrize("x,y,d,expected", [
@@ -59,38 +72,36 @@ def test_mulDiv_phantomOverflowRepeatingDecimal(helper45):
     (1, Q128, Q128, 1),
     (MAX_UINT256 // 2, 2, MAX_UINT256, 0),
 ])
-def test_fuzz_mulDiv(helper45, x, y, d, expected):
-    r = helper45.send.call(au.AppClientMethodCallParams(method="FullMath.mulDiv", args=[x, y, d]))
-    assert r.abi_return == expected
+def test_fuzz_mulDiv(helper36, x, y, d, expected, orchestrator, algod_client, account):
+    r = _call_mulDiv(helper36, x, y, d, orchestrator, algod_client, account)
+    assert r == expected
 
 @pytest.mark.localnet
-def test_mulDivRoundingUp_revertsWith0Denominator_case1(helper44):
+def test_mulDivRoundingUp_revertsWith0Denominator_case1(helper35, orchestrator, algod_client, account):
     with pytest.raises(Exception):
-        helper44.send.call(au.AppClientMethodCallParams(method="FullMath.mulDivRoundingUp", args=[Q128, 5, 0]))
+        _call_mulDivRoundingUp(helper35, Q128, 5, 0, orchestrator, algod_client, account)
 
 @pytest.mark.localnet
-def test_mulDivRoundingUp_revertsWith0Denominator_case2(helper44):
+def test_mulDivRoundingUp_revertsWith0Denominator_case2(helper35, orchestrator, algod_client, account):
     with pytest.raises(Exception):
-        helper44.send.call(au.AppClientMethodCallParams(method="FullMath.mulDivRoundingUp", args=[1, 5, 0]))
+        _call_mulDivRoundingUp(helper35, 1, 5, 0, orchestrator, algod_client, account)
 
 @pytest.mark.localnet
-@pytest.mark.xfail(reason="Compiler bug: mulDivRoundingUp with all-max inputs triggers wrapping arithmetic issue")
-def test_mulDivRoundingUp_validWithAllMaxInputs(helper44):
-    r = helper44.send.call(au.AppClientMethodCallParams(method="FullMath.mulDivRoundingUp", args=[MAX_UINT256, MAX_UINT256, MAX_UINT256]))
-    assert r.abi_return == MAX_UINT256
+def test_mulDivRoundingUp_validWithAllMaxInputs(helper35, orchestrator, algod_client, account, budget_pad_id):
+    r = _call_mulDivRoundingUp(helper35, MAX_UINT256, MAX_UINT256, MAX_UINT256, orchestrator, algod_client, account, budget_pad_id=budget_pad_id)
+    assert r == MAX_UINT256
 
 @pytest.mark.localnet
-def test_mulDivRoundingUp_validWithNoPhantomOverflow(helper44):
-    r = helper44.send.call(au.AppClientMethodCallParams(method="FullMath.mulDivRoundingUp", args=[Q128, 50 * Q128 // 100, 150 * Q128 // 100]))
-    assert r.abi_return == Q128 // 3 + 1
+def test_mulDivRoundingUp_validWithNoPhantomOverflow(helper35, orchestrator, algod_client, account):
+    r = _call_mulDivRoundingUp(helper35, Q128, 50 * Q128 // 100, 150 * Q128 // 100, orchestrator, algod_client, account)
+    assert r == Q128 // 3 + 1
 
 @pytest.mark.localnet
-@pytest.mark.xfail(reason="Compiler bug: mulDivRoundingUp phantom overflow path requires correct wrapping NOT and sub")
-def test_mulDivRoundingUp_validWithPhantomOverflow(helper44):
-    r = helper44.send.call(au.AppClientMethodCallParams(method="FullMath.mulDivRoundingUp", args=[Q128, 35 * Q128, 8 * Q128]))
-    assert r.abi_return == 4375 * Q128 // 1000
+def test_mulDivRoundingUp_validWithPhantomOverflow(helper35, orchestrator, algod_client, account, budget_pad_id):
+    r = _call_mulDivRoundingUp(helper35, Q128, 35 * Q128, 8 * Q128, orchestrator, algod_client, account, budget_pad_id=budget_pad_id)
+    assert r == 4375 * Q128 // 1000
 
 @pytest.mark.localnet
-def test_mulDivRoundingUp_revertsIfMulDivOverflows(helper44):
+def test_mulDivRoundingUp_revertsIfMulDivOverflows(helper35, orchestrator, algod_client, account):
     with pytest.raises(Exception):
-        helper44.send.call(au.AppClientMethodCallParams(method="FullMath.mulDivRoundingUp", args=[Q128, Q128, 1]))
+        _call_mulDivRoundingUp(helper35, Q128, Q128, 1, orchestrator, algod_client, account)

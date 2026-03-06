@@ -224,7 +224,7 @@ awst::WType const* TypeMapper::mapToARC4Type(awst::WType const* _type)
 	if (_type == awst::WType::bytesType())
 		return createType<awst::ARC4DynamicArray>(arc4Byte);
 	if (_type == awst::WType::stringType())
-		return createType<awst::ARC4DynamicArray>(arc4Byte);
+		return createType<awst::ARC4DynamicArray>(arc4Byte, std::string("string"));
 
 	if (_type->kind() == awst::WTypeKind::Bytes)
 	{

@@ -3,198 +3,187 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.__puya_arc4_router__() -> uint64:
 main:
-    intcblock 32 1 0 8
-    bytecblock 0x 0x0000000000000000000000000000000100000000000000000000000000000000 0x151f7c75 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x8000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000
+    intcblock 32 1 8 0
+    bytecblock "o" "p" 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000100000000000000000000000000000000 "s" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000 0xffffff 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000100
     b __puya_arc4_router__
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.BalanceDeltaLibrary.amount0(balanceDelta: bytes) -> bytes:
-BalanceDeltaLibrary.amount0:
-    proto 1 1
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolIdLibrary.toId(poolKey: bytes) -> bytes, bytes:
+PoolIdLibrary.toId:
+    proto 1 2
+    intc_0 // 32
+    bzero
     frame_dig -1
-    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b>=
-    bz BalanceDeltaLibrary.amount0_ternary_false@2
+    extract 0 32
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     frame_dig -1
-    bytec_1 // 0x0000000000000000000000000000000100000000000000000000000000000000
-    b/
-    bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
-    b|
+    extract 32 32
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    frame_dig -1
+    extract 64 8
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    frame_dig -1
+    extract 72 8
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    frame_dig -1
+    extract 80 32
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    keccak256
+    frame_dig -1
     retsub
 
-BalanceDeltaLibrary.amount0_ternary_false@2:
-    frame_dig -1
-    bytec_1 // 0x0000000000000000000000000000000100000000000000000000000000000000
-    b/
-    retsub
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.BeforeSwapDeltaLibrary.getSpecifiedDelta(delta: bytes) -> bytes:
-BeforeSwapDeltaLibrary.getSpecifiedDelta:
-    proto 1 1
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.TickBitmap.position(tick: uint64) -> uint64, uint64:
+TickBitmap.position:
+    proto 1 2
     frame_dig -1
-    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b>=
-    bz BeforeSwapDeltaLibrary.getSpecifiedDelta_ternary_false@2
-    frame_dig -1
-    bytec_1 // 0x0000000000000000000000000000000100000000000000000000000000000000
-    b/
-    bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
-    b|
-    retsub
-
-BeforeSwapDeltaLibrary.getSpecifiedDelta_ternary_false@2:
-    frame_dig -1
-    bytec_1 // 0x0000000000000000000000000000000100000000000000000000000000000000
-    b/
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.LiquidityMath.addDelta(x: bytes, y: bytes) -> bytes:
-LiquidityMath.addDelta:
-    proto 2 1
-    frame_dig -2
-    bytec 5 // 0xffffffffffffffffffffffffffffffff
-    b&
-    frame_dig -1
-    pushbytes 0x0000000000000000000000000000000080000000000000000000000000000000
+    itob
+    dup
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000800000
     b/
     pushbytes 0x02
     b%
-    bytec_0 // 0x
+    pushbytes 0x
     b!=
-    bz LiquidityMath.addDelta_ternary_false@2
-    frame_dig -1
-    bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
-    b|
-
-LiquidityMath.addDelta_ternary_merge@3:
+    dup
+    bz TickBitmap.position_ternary_false@2
     frame_dig 0
-    b+
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    bytec_1 // 0x0000000000000000000000000000000100000000000000000000000000000000
-    b/
-    bytec_0 // 0x
-    b!=
-    !
-    assert // revert
-    swap
-    retsub
-
-LiquidityMath.addDelta_ternary_false@2:
-    frame_dig -1
-    bytec 5 // 0xffffffffffffffffffffffffffffffff
-    b&
-    b LiquidityMath.addDelta_ternary_merge@3
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.Pool.checkPoolInitialized(self: bytes) -> bytes:
-Pool.checkPoolInitialized:
-    proto 1 1
-    frame_dig -1
-    extract 0 32
-    callsub Slot0Library.sqrtPriceX96
-    intc_2 // 0
-    itob
-    b==
-    bz Pool.checkPoolInitialized_after_if_else@2
-    bytec_0 // 0x
-    callsub CustomRevert.revertWith
-
-Pool.checkPoolInitialized_after_if_else@2:
-    frame_dig -1
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.Pool.setLPFee(self: bytes, lpFee: uint64) -> bytes:
-Pool.setLPFee:
-    proto 2 1
-    frame_dig -2
-    callsub Pool.checkPoolInitialized
-    dup
-    frame_bury -2
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.ProtocolFeeLibrary.isValidProtocolFee(self: uint64) -> uint64:
-ProtocolFeeLibrary.isValidProtocolFee:
-    proto 1 1
-    frame_dig -1
-    itob
-    dup
-    pushbytes 0x0fff
-    b&
-    pushbytes 0x03e9
-    b<
-    bytec_0 // 0x
-    pushbytes 0x01
-    uncover 2
-    select
-    swap
-    pushbytes 0xfff000
-    b&
-    pushbytes 0x3e9000
-    b<
-    bytec_0 // 0x
-    pushbytes 0x01
-    uncover 2
-    select
-    b&
-    bytec_0 // 0x
-    b!=
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.Slot0Library.setTick(_packed: bytes, _tick: uint64) -> bytes:
-Slot0Library.setTick:
-    proto 2 1
-    pushbytes 0xffffffffffffffffff000000ffffffffffffffffffffffffffffffffffffffff
-    frame_dig -2
-    b&
-    frame_dig -1
-    itob
-    pushbytes 0xffffff
-    b&
-    pushbytes 0x0000000000000000000000010000000000000000000000000000000000000000
-    b*
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
     b|
-    retsub
 
+TickBitmap.position_ternary_merge@3:
+    pushbytes 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz TickBitmap.position_ternary_false@8
+    frame_dig 1
+    bz TickBitmap.position_ternary_false@6
+    frame_dig 0
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
+    b|
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.Slot0Library.sqrtPriceX96(_packed: bytes) -> bytes:
-Slot0Library.sqrtPriceX96:
-    proto 1 1
-    pushbytes 0xffffffffffffffffffffffffffffffffffffffff
-    frame_dig -1
+TickBitmap.position_ternary_merge@7:
+    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000100
+    b/
+    pushbytes 0xff00000000000000000000000000000000000000000000000000000000000000
+    b|
+
+TickBitmap.position_ternary_merge@12:
+    frame_dig 0
+    pushbytes 0xff
     b&
+    intc_2 // 8
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    swap
+    uncover 3
+    uncover 3
     retsub
 
+TickBitmap.position_ternary_false@6:
+    frame_dig 0
+    bytec 6 // 0xffffff
+    b&
+    b TickBitmap.position_ternary_merge@7
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.CustomRevert.revertWith(1)(selector: bytes) -> void:
-CustomRevert.revertWith:
-    proto 1 0
-    err // revert
+TickBitmap.position_ternary_false@8:
+    frame_dig 1
+    bz TickBitmap.position_ternary_false@10
+    frame_dig 0
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
+    b|
+
+TickBitmap.position_ternary_merge@11:
+    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000100
+    b/
+    b TickBitmap.position_ternary_merge@12
+
+TickBitmap.position_ternary_false@10:
+    frame_dig 0
+    bytec 6 // 0xffffff
+    b&
+    b TickBitmap.position_ternary_merge@11
+
+TickBitmap.position_ternary_false@2:
+    frame_dig 0
+    bytec 6 // 0xffffff
+    b&
+    b TickBitmap.position_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.__puya_arc4_router__() -> uint64:
 __puya_arc4_router__:
     txn NumAppArgs
-    bz __puya_arc4_router_____bare_create__@12
+    bz __puya_arc4_router_____bare_create__@10
     txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
-    pushbytess 0x3f7f985c 0x1d31090e 0x3dace590 0xb0d07731 0x677a3e17 0xafdf4801 // method "Pool.setLPFee((uint8[32],uint256,uint256,uint256,byte[],byte[],byte[]),uint64)void", method "Slot0Library.setTick(byte[32],uint64)byte[32]", method "LiquidityMath.addDelta(uint256,uint256)uint256", method "BalanceDeltaLibrary.amount0(uint256)uint256", method "BeforeSwapDeltaLibrary.getSpecifiedDelta(uint256)uint256", method "ProtocolFeeLibrary.isValidProtocolFee(uint64)bool"
+    pushbytess 0xca21403e 0x8e6071cf 0xdb957eaf 0xa96ef989 // method "TickMath.getSqrtPriceAtTick__chunk_1(uint256,uint256,uint256,uint256,uint64)uint256", method "TickBitmap.position(uint64)(uint64,uint64)", method "PoolIdLibrary.toId((uint8[32],uint8[32],uint64,uint64,uint8[32]))byte[32]", method "__init__(uint64,uint64,byte[])void"
     txna ApplicationArgs 0
-    match /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.Pool.setLPFee[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.Slot0Library.setTick[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.LiquidityMath.addDelta[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.BalanceDeltaLibrary.amount0[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.BeforeSwapDeltaLibrary.getSpecifiedDelta[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.ProtocolFeeLibrary.isValidProtocolFee[routing]
+    match TickMath.getSqrtPriceAtTick__chunk_1 /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.TickBitmap.position[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.PoolIdLibrary.toId[routing] __init__
     err
 
-__puya_arc4_router_____bare_create__@12:
+__puya_arc4_router_____bare_create__@10:
     txn OnCompletion
     !
     txn ApplicationID
@@ -203,195 +192,390 @@ __puya_arc4_router_____bare_create__@12:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.Pool.setLPFee[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.Pool.setLPFee[routing]:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.TickMath.getSqrtPriceAtTick__chunk_1[routing]() -> void:
+TickMath.getSqrtPriceAtTick__chunk_1:
+    intc_3 // 0
+    dup
     txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
     dup
     len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 5
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bytec_0 // "o"
+    app_global_get
+    bz TickMath.getSqrtPriceAtTick__chunk_1_after_if_else@5
+    global GroupSize
+    pushint 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_0 // "o"
+    app_global_get
+    ==
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec_1 // "p"
+    app_global_get
+    bz TickMath.getSqrtPriceAtTick__chunk_1_after_if_else@5
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns ApplicationID
+    bytec_1 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxnsa ApplicationArgs 0
+    bytec 4 // "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+TickMath.getSqrtPriceAtTick__chunk_1_after_if_else@5:
+    pushint 16384
+    itob
+    dig 3
+    b&
+    intc_3 // 0
+    itob
+    dup
+    bury 7
+    b!=
+    bz TickMath.getSqrtPriceAtTick__chunk_1_after_if_else@8
     dig 1
-    pushint 128
-    extract_uint16 // on error: invalid tuple encoding
-    dup
-    pushint 134
-    ==
-    assert // invalid tail pointer at index 4 of (uint8[32],uint256,uint256,uint256,(len+uint8[]),(len+uint8[]),(len+uint8[]))
-    dig 2
-    swap
-    dig 2
-    substring3
-    intc_2 // 0
-    extract_uint16 // on error: invalid array length header
-    pushint 136
-    +
-    dig 2
-    pushint 130
-    extract_uint16 // on error: invalid tuple encoding
-    dup
-    dig 2
-    ==
-    assert // invalid tail pointer at index 5 of (uint8[32],uint256,uint256,uint256,(len+uint8[]),(len+uint8[]),(len+uint8[]))
+    pushbytes 0x70d869a156d2a1b890bb3df62baf32f7
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_3 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    bury 2
+
+TickMath.getSqrtPriceAtTick__chunk_1_after_if_else@8:
+    pushint 32768
+    itob
     dig 3
-    swap
+    b&
+    dig 5
+    b!=
+    bz TickMath.getSqrtPriceAtTick__chunk_1_after_if_else@10
+    dig 1
+    pushbytes 0x31be135f97d08fd981231505542fcfa6
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_3 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    bury 2
+
+TickMath.getSqrtPriceAtTick__chunk_1_after_if_else@10:
+    pushint 65536
+    itob
     dig 3
-    substring3
-    intc_2 // 0
-    extract_uint16 // on error: invalid array length header
-    pushint 2
-    +
-    +
-    dig 2
-    pushint 132
-    extract_uint16 // on error: invalid tuple encoding
-    dup
-    dig 2
-    ==
-    assert // invalid tail pointer at index 6 of (uint8[32],uint256,uint256,uint256,(len+uint8[]),(len+uint8[]),(len+uint8[]))
+    b&
+    dig 5
+    b!=
+    bz TickMath.getSqrtPriceAtTick__chunk_1_after_if_else@12
+    dig 1
+    pushbytes 0x09aa508b5b7a84e1c677de54f3e99bc9
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_3 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    bury 2
+
+TickMath.getSqrtPriceAtTick__chunk_1_after_if_else@12:
+    pushint 131072
+    itob
     dig 3
-    swap
+    b&
+    dig 5
+    b!=
+    bz TickMath.getSqrtPriceAtTick__chunk_1_after_if_else@14
+    dig 1
+    pushbytes 0x5d6af8dedb81196699c329225ee604
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_3 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    bury 2
+
+TickMath.getSqrtPriceAtTick__chunk_1_after_if_else@14:
+    pushint 262144
+    itob
     dig 3
-    substring3
-    intc_2 // 0
-    extract_uint16 // on error: invalid array length header
-    pushint 2
-    +
-    +
-    ==
-    assert // invalid number of bytes for State
-    txna ApplicationArgs 2
+    b&
+    dig 5
+    b!=
+    bz TickMath.getSqrtPriceAtTick__chunk_1_after_if_else@16
+    dig 1
+    pushbytes 0x2216e584f5fa1ea926041bedfe98
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_3 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    bury 2
+
+TickMath.getSqrtPriceAtTick__chunk_1_after_if_else@16:
+    pushint 524288
+    itob
+    dig 3
+    b&
+    dig 5
+    b!=
+    bz TickMath.getSqrtPriceAtTick__chunk_1_after_if_else@18
+    dig 1
+    pushbytes 0x048a170391f7dc42444e8fa2
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_3 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    bury 2
+
+TickMath.getSqrtPriceAtTick__chunk_1_after_if_else@18:
     dup
-    len
-    intc_3 // 8
-    ==
-    assert // invalid number of bytes for arc4.uint64
-    btoi
-    callsub Pool.setLPFee
-    pop
+    itob
+    dup
+    bury 5
+    pushbytes 0x
+    b>
+    bz TickMath.getSqrtPriceAtTick__chunk_1_bool_false@21
+    dig 3
+    pushbytes 0x8000000000000000
+    b<
+    bz TickMath.getSqrtPriceAtTick__chunk_1_bool_false@21
     intc_1 // 1
-    return
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.Slot0Library.setTick[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.Slot0Library.setTick[routing]:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_3 // 8
-    ==
-    assert // invalid number of bytes for arc4.uint64
-    btoi
-    callsub Slot0Library.setTick
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.LiquidityMath.addDelta[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.LiquidityMath.addDelta[routing]:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    callsub LiquidityMath.addDelta
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.BalanceDeltaLibrary.amount0[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.BalanceDeltaLibrary.amount0[routing]:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    callsub BalanceDeltaLibrary.amount0
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.BeforeSwapDeltaLibrary.getSpecifiedDelta[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.BeforeSwapDeltaLibrary.getSpecifiedDelta[routing]:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    callsub BeforeSwapDeltaLibrary.getSpecifiedDelta
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.ProtocolFeeLibrary.isValidProtocolFee[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.ProtocolFeeLibrary.isValidProtocolFee[routing]:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_3 // 8
-    ==
-    assert // invalid number of bytes for arc4.uint64
-    btoi
-    callsub ProtocolFeeLibrary.isValidProtocolFee
-    pushbytes 0x00
-    intc_2 // 0
+TickMath.getSqrtPriceAtTick__chunk_1_bool_merge@22:
+    pushbytess 0x 0x01
     uncover 2
-    setbit
-    bytec_2 // 0x151f7c75
+    select
+    pushbytes 0x
+    b!=
+    bz TickMath.getSqrtPriceAtTick__chunk_1_after_if_else@24
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    dig 2
+    b/
+    bury 2
+
+TickMath.getSqrtPriceAtTick__chunk_1_after_if_else@24:
+    dig 1
+    pushbytes 0xffffffff
+    b+
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000100000000
+    b/
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 7 // 0x151f7c75
     swap
     concat
     log
+    intc_1 // 1
+    return
+
+TickMath.getSqrtPriceAtTick__chunk_1_bool_false@21:
+    intc_3 // 0
+    b TickMath.getSqrtPriceAtTick__chunk_1_bool_merge@22
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.TickBitmap.position[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.TickBitmap.position[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bytec_0 // "o"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.TickBitmap.position[routing]_after_if_else@5
+    global GroupSize
+    pushint 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_0 // "o"
+    app_global_get
+    ==
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec_1 // "p"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.TickBitmap.position[routing]_after_if_else@5
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns ApplicationID
+    bytec_1 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxnsa ApplicationArgs 0
+    bytec 4 // "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.TickBitmap.position[routing]_after_if_else@5:
+    dup
+    callsub TickBitmap.position
+    swap
+    itob
+    swap
+    itob
+    concat
+    bytec 7 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.PoolIdLibrary.toId[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.PoolIdLibrary.toId[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 112
+    ==
+    assert // invalid number of bytes for PoolKey
+    bytec_0 // "o"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.PoolIdLibrary.toId[routing]_after_if_else@5
+    global GroupSize
+    pushint 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_0 // "o"
+    app_global_get
+    ==
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec_1 // "p"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.PoolIdLibrary.toId[routing]_after_if_else@5
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns ApplicationID
+    bytec_1 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxnsa ApplicationArgs 0
+    bytec 4 // "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.PoolIdLibrary.toId[routing]_after_if_else@5:
+    dup
+    callsub PoolIdLibrary.toId
+    pop
+    bytec 7 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper46.__init__[routing]() -> void:
+__init__:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 3
+    dup
+    intc_3 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_0 // "o"
+    app_global_get
+    !
+    assert // helper: already initialized
+    bytec_0 // "o"
+    uncover 3
+    app_global_put
+    bytec_1 // "p"
+    uncover 2
+    app_global_put
+    bytec 4 // "s"
+    swap
+    app_global_put
     intc_1 // 1
     return

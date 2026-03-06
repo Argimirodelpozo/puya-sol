@@ -3,65 +3,26 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper15.__puya_arc4_router__() -> uint64:
 main:
-    intcblock 32 0 1 2
-    bytecblock 0x151f7c75
+    intcblock 32 0 2 8
+    bytecblock "o" "p" "s"
     b __puya_arc4_router__
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.CurrencyLibrary.balanceOfSelf(currency: bytes) -> bytes:
-CurrencyLibrary.balanceOfSelf:
-    proto 1 1
-    frame_dig -1
-    callsub CurrencyLibrary.isAddressZero
-    bz CurrencyLibrary.balanceOfSelf_else_body@2
-    pushbytes 0x
-    retsub
-
-CurrencyLibrary.balanceOfSelf_else_body@2:
-    global CurrentApplicationAddress
-    intc_1 // 0
-    asset_holding_get AssetBalance
-    assert // account is opted in to asset
-    itob
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.CurrencyLibrary.isAddressZero(currency: bytes) -> uint64:
-CurrencyLibrary.isAddressZero:
-    proto 1 1
-    frame_dig -1
-    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
-    ==
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.Hooks.hasPermission(self: bytes, flag: bytes) -> uint64:
-Hooks.hasPermission:
-    proto 2 1
-    frame_dig -2
-    frame_dig -1
-    b&
-    intc_1 // 0
-    itob
-    b!=
-    retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper15.__puya_arc4_router__() -> uint64:
 __puya_arc4_router__:
     txn NumAppArgs
-    bz __puya_arc4_router_____bare_create__@9
+    bz __puya_arc4_router_____bare_create__@8
     txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
-    pushbytess 0x5afacf54 0x8cafcd2b 0xf4c8761e // method "Pool.initialize__chunk_1__chunk_5((uint8[32],uint256,uint256,uint256,byte[],byte[],byte[]),uint256,uint64,uint64,uint256,uint256,uint256,uint256,uint256,uint256)(uint256,uint256,uint256,uint256)", method "CurrencyLibrary.balanceOfSelf(address)uint256", method "Hooks.hasPermission(address,uint256)bool"
+    pushbytess 0x07483d49 0xa96ef989 // method "Pool.initialize__chunk_1__chunk_7((uint8[32],uint256,uint256,uint256,byte[],byte[],byte[]),uint256,uint64,uint256,uint256,uint256,uint256,uint64)(uint256,uint256,uint256,uint256,uint64)", method "__init__(uint64,uint64,byte[])void"
     txna ApplicationArgs 0
-    match Pool.initialize__chunk_1__chunk_5 /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper15.CurrencyLibrary.balanceOfSelf[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper15.Hooks.hasPermission[routing]
+    match Pool.initialize__chunk_1__chunk_7 __init__
     err
 
-__puya_arc4_router_____bare_create__@9:
+__puya_arc4_router_____bare_create__@8:
     txn OnCompletion
     !
     txn ApplicationID
@@ -70,8 +31,8 @@ __puya_arc4_router_____bare_create__@9:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper15.Pool.initialize__chunk_1__chunk_5[routing]() -> void:
-Pool.initialize__chunk_1__chunk_5:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper15.Pool.initialize__chunk_1__chunk_7[routing]() -> void:
+Pool.initialize__chunk_1__chunk_7:
     txna ApplicationArgs 1
     dup
     len
@@ -103,7 +64,7 @@ Pool.initialize__chunk_1__chunk_5:
     substring3
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    intc_2 // 2
     +
     +
     dig 2
@@ -119,7 +80,7 @@ Pool.initialize__chunk_1__chunk_5:
     substring3
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    intc_2 // 2
     +
     +
     ==
@@ -131,14 +92,16 @@ Pool.initialize__chunk_1__chunk_5:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     len
-    pushint 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     txna ApplicationArgs 4
+    dup
     len
-    pushint 8
+    dup
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint64
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 5
     dup
     len
@@ -161,109 +124,132 @@ Pool.initialize__chunk_1__chunk_5:
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 8
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 9
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 10
     dup
     len
-    dup
-    intc_0 // 32
+    intc_3 // 8
     ==
-    assert // invalid number of bytes for arc4.uint256
-    uncover 6
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bytec_0 // "o"
+    app_global_get
+    bz Pool.initialize__chunk_1__chunk_7_after_if_else@5
+    global GroupSize
+    intc_2 // 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_0 // "o"
+    app_global_get
+    ==
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec_1 // "p"
+    app_global_get
+    bz Pool.initialize__chunk_1__chunk_7_after_if_else@5
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns ApplicationID
+    bytec_1 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    pushint 1
+    -
+    gtxnsa ApplicationArgs 0
+    bytec_2 // "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+Pool.initialize__chunk_1__chunk_7_after_if_else@5:
+    dig 7
     intc_0 // 32
     <=
     assert // overflow
     intc_0 // 32
     bzero
-    uncover 7
+    dig 9
     dig 1
     b|
-    uncover 6
+    dig 7
     intc_0 // 32
     <=
     assert // overflow
-    uncover 6
+    dig 8
     dig 2
     b|
     concat
-    uncover 4
+    dig 5
     intc_0 // 32
     <=
     assert // overflow
-    uncover 4
+    dig 6
     dig 2
     b|
     concat
+    dig 3
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 4
     uncover 2
-    intc_0 // 32
-    <=
-    assert // overflow
-    cover 2
     b|
     concat
-    bytec_0 // 0x151f7c75
+    dig 1
+    itob
+    concat
+    pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    pushint 1
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper15.CurrencyLibrary.balanceOfSelf[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper15.CurrencyLibrary.balanceOfSelf[routing]:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper15.__init__[routing]() -> void:
+__init__:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_3 // 8
     ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub CurrencyLibrary.balanceOfSelf
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper15.Hooks.hasPermission[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper15.Hooks.hasPermission[routing]:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    assert // invalid number of bytes for arc4.uint64
+    btoi
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_3 // 8
     ==
-    assert // invalid number of bytes for arc4.uint256
-    callsub Hooks.hasPermission
-    pushbytes 0x00
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 3
+    dup
     intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_0 // "o"
+    app_global_get
+    !
+    assert // helper: already initialized
+    bytec_0 // "o"
+    uncover 3
+    app_global_put
+    bytec_1 // "p"
     uncover 2
-    setbit
-    bytec_0 // 0x151f7c75
+    app_global_put
+    bytec_2 // "s"
     swap
-    concat
-    log
-    intc_2 // 1
+    app_global_put
+    pushint 1
     return

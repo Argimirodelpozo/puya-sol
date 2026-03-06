@@ -140,21 +140,26 @@ private:
 class ARC4DynamicArray: public WType
 {
 public:
-	explicit ARC4DynamicArray(WType const* _elementType)
+	explicit ARC4DynamicArray(WType const* _elementType, std::string _arc4Alias = {})
 		: WType(
-			  "arc4.dynamic_array<" + _elementType->name() + ">",
+			  _arc4Alias.empty()
+				  ? "arc4.dynamic_array<" + _elementType->name() + ">"
+				  : _arc4Alias,
 			  WTypeKind::ARC4DynamicArray,
 			  _elementType->immutable()
 		  ),
-		  m_elementType(_elementType)
+		  m_elementType(_elementType),
+		  m_arc4Alias(std::move(_arc4Alias))
 	{
 	}
 
 	std::string jsonType() const override { return "ARC4DynamicArray"; }
 	WType const* elementType() const { return m_elementType; }
+	std::string const& arc4Alias() const { return m_arc4Alias; }
 
 private:
 	WType const* m_elementType;
+	std::string m_arc4Alias;
 };
 
 class ARC4StaticArray: public WType

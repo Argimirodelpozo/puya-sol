@@ -12,7 +12,8 @@ void OptionsWriter::write(
 	std::string const& _path,
 	std::string const& _contractName,
 	std::string const& _outputDir,
-	int _optimizationLevel
+	int _optimizationLevel,
+	bool _outputIr
 )
 {
 	njson opts;
@@ -28,6 +29,13 @@ void OptionsWriter::write(
 	opts["target_avm_version"] = 10;
 	opts["template_vars_prefix"] = "TMPL_";
 	opts["cli_template_definitions"] = njson::object();
+	if (_outputIr)
+	{
+		opts["output_ssa_ir"] = true;
+		opts["output_optimization_ir"] = true;
+		opts["output_destructured_ir"] = true;
+		opts["output_memory_ir"] = true;
+	}
 
 	std::ofstream out(_path);
 	if (!out.is_open())
@@ -42,7 +50,8 @@ void OptionsWriter::writeMultiple(
 	std::string const& _path,
 	std::vector<std::string> const& _contractNames,
 	std::string const& _outputDir,
-	int _optimizationLevel
+	int _optimizationLevel,
+	bool _outputIr
 )
 {
 	njson opts;
@@ -59,6 +68,13 @@ void OptionsWriter::writeMultiple(
 	opts["target_avm_version"] = 10;
 	opts["template_vars_prefix"] = "TMPL_";
 	opts["cli_template_definitions"] = njson::object();
+	if (_outputIr)
+	{
+		opts["output_ssa_ir"] = true;
+		opts["output_optimization_ir"] = true;
+		opts["output_destructured_ir"] = true;
+		opts["output_memory_ir"] = true;
+	}
 
 	std::ofstream out(_path);
 	if (!out.is_open())

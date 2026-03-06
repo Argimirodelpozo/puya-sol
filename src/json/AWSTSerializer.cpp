@@ -501,7 +501,7 @@ njson AWSTSerializer::serializeExpression(awst::Expression const& _expr)
 	}
 	else if (auto const* e = dynamic_cast<awst::NewStruct const*>(&_expr))
 	{
-		njson vals;
+		njson vals = njson::object();
 		for (auto const& [k, v]: e->values)
 			vals[k] = serializeExpression(*v);
 		j["values"] = vals;
@@ -710,7 +710,7 @@ njson AWSTSerializer::serializeWType(awst::WType const* _type)
 	{
 		auto const* at = static_cast<awst::ARC4DynamicArray const*>(_type);
 		j["element_type"] = serializeWType(at->elementType());
-		j["arc4_alias"] = nullptr;
+		j["arc4_alias"] = at->arc4Alias().empty() ? nlohmann::json(nullptr) : nlohmann::json(at->arc4Alias());
 		j["source_location"] = nullptr;
 		break;
 	}
@@ -726,7 +726,7 @@ njson AWSTSerializer::serializeWType(awst::WType const* _type)
 	case awst::WTypeKind::ARC4Struct:
 	{
 		auto const* at = static_cast<awst::ARC4Struct const*>(_type);
-		njson fields;
+		njson fields = njson::object();
 		for (auto const& [k, v]: at->fields())
 			fields[k] = serializeWType(v);
 		j["fields"] = fields;

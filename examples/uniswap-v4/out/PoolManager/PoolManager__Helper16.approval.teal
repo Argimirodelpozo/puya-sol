@@ -3,78 +3,26 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper16.__puya_arc4_router__() -> uint64:
 main:
-    intcblock 32 1 8 0 255 256
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x0000000000000000000000000000000080000000000000000000000000000000 0x0000000000000000000000000000000100000000000000000000000000000000 0x00
+    intcblock 32 0 2 8
+    bytecblock "o" "p" "s"
     b __puya_arc4_router__
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.CurrencyLibrary.isAddressZero(currency: bytes) -> uint64:
-CurrencyLibrary.isAddressZero:
-    proto 1 1
-    frame_dig -1
-    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
-    ==
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.CurrencyLibrary.toId(currency: bytes) -> bytes:
-CurrencyLibrary.toId:
-    proto 1 1
-    frame_dig -1
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.LPFeeLibrary.isDynamicFee(self: uint64) -> uint64:
-LPFeeLibrary.isDynamicFee:
-    proto 1 1
-    frame_dig -1
-    pushint 8388608
-    ==
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.equals(currency: bytes, other: bytes) -> uint64:
-equals:
-    proto 2 1
-    frame_dig -2
-    frame_dig -1
-    ==
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.greaterThanOrEqualTo(currency: bytes, other: bytes) -> uint64:
-greaterThanOrEqualTo:
-    proto 2 1
-    frame_dig -2
-    frame_dig -1
-    b>=
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.neq(a: bytes, b: bytes) -> uint64:
-neq:
-    proto 2 1
-    frame_dig -2
-    frame_dig -1
-    b!=
-    retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper16.__puya_arc4_router__() -> uint64:
 __puya_arc4_router__:
     txn NumAppArgs
-    bz __puya_arc4_router_____bare_create__@13
+    bz __puya_arc4_router_____bare_create__@8
     txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
-    pushbytess 0x18bd6f4d 0xcd9536e6 0x9c49fb02 0xbbca953a 0x33130df3 0x6d1ed6d1 0xfb4d1a80 // method "Pool.initialize__chunk_1__chunk_3((uint8[32],uint256,uint256,uint256,byte[],byte[],byte[]),uint256,uint64,uint64,uint256,uint256,uint256,uint256,uint256)(uint256,uint256,uint256,uint256,uint256,uint256)", method "CurrencyLibrary.isAddressZero(address)bool", method "LPFeeLibrary.isDynamicFee(uint64)bool", method "equals(address,address)bool", method "greaterThanOrEqualTo(address,address)bool", method "neq(uint256,uint256)bool", method "CurrencyLibrary.toId(address)uint256"
+    pushbytess 0x569801a3 0xa96ef989 // method "Pool.initialize__chunk_1__chunk_3((uint8[32],uint256,uint256,uint256,byte[],byte[],byte[]),uint256,uint64,uint256,uint256,uint256,uint256,uint64)(uint256,uint256,uint256,uint256,uint64)", method "__init__(uint64,uint64,byte[])void"
     txna ApplicationArgs 0
-    match Pool.initialize__chunk_1__chunk_3 /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper16.CurrencyLibrary.isAddressZero[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper16.LPFeeLibrary.isDynamicFee[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper16.equals[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper16.greaterThanOrEqualTo[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper16.neq[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper16.CurrencyLibrary.toId[routing]
+    match Pool.initialize__chunk_1__chunk_3 __init__
     err
 
-__puya_arc4_router_____bare_create__@13:
+__puya_arc4_router_____bare_create__@8:
     txn OnCompletion
     !
     txn ApplicationID
@@ -99,7 +47,7 @@ Pool.initialize__chunk_1__chunk_3:
     swap
     dig 2
     substring3
-    intc_3 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 136
     +
@@ -114,9 +62,9 @@ Pool.initialize__chunk_1__chunk_3:
     swap
     dig 3
     substring3
-    intc_3 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 2
+    intc_2 // 2
     +
     +
     dig 2
@@ -130,9 +78,9 @@ Pool.initialize__chunk_1__chunk_3:
     swap
     dig 3
     substring3
-    intc_3 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 2
+    intc_2 // 2
     +
     +
     ==
@@ -144,14 +92,14 @@ Pool.initialize__chunk_1__chunk_3:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     len
-    intc_2 // 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     txna ApplicationArgs 4
     len
-    intc_2 // 8
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint64
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 5
     dup
     len
@@ -167,263 +115,67 @@ Pool.initialize__chunk_1__chunk_3:
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 7
-    dupn 2
+    dup
     len
     dup
-    cover 2
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 8
     dup
-    cover 2
     len
-    dup
-    cover 2
-    intc_0 // 32
+    intc_3 // 8
     ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 9
-    dup
-    cover 2
-    len
-    dup
-    cover 2
-    intc_0 // 32
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bytec_0 // "o"
+    app_global_get
+    bz Pool.initialize__chunk_1__chunk_3_after_if_else@5
+    global GroupSize
+    intc_2 // 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_0 // "o"
+    app_global_get
     ==
-    assert // invalid number of bytes for arc4.uint256
-    pushint 128
-    itob
-    dup
-    cover 2
-    b>=
-    bz Pool.initialize__chunk_1__chunk_3_else_body@3
-    intc_0 // 32
-    bzero
-    intc_2 // 8
-    bzero
-    pushint 127
-    itob
-    dig 9
-    swap
-    b-
-    concat
-    dup
-    len
-    intc_2 // 8
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec_1 // "p"
+    app_global_get
+    bz Pool.initialize__chunk_1__chunk_3_after_if_else@5
+    txn GroupIndex
+    pushint 1
     -
-    extract_uint64
-    intc 4 // 255
-    swap
+    gtxns ApplicationID
+    bytec_1 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    pushint 1
     -
-    intc_1 // 1
-    setbit
-    dig 5
-    swap
-    b/
+    gtxnsa ApplicationArgs 0
+    bytec_2 // "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
 
-Pool.initialize__chunk_1__chunk_3_after_if_else@4:
+Pool.initialize__chunk_1__chunk_3_after_if_else@5:
+    intc_0 // 32
+    bzero
+    dig 6
+    intc_0 // 32
+    <=
+    assert // overflow
     dig 7
-    dup
-    dig 3
-    b-
-    intc_0 // 32
-    bzero
-    swap
-    pushbytes 0x0000000000000000000000000000000000000000000000010000000000000000
-    b*
-    uncover 3
-    dup
-    b*
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    intc_2 // 8
-    bzero
-    swap
-    bytec_2 // 0x0000000000000000000000000000000080000000000000000000000000000000
-    b/
-    dup
-    bytec_3 // 0x0000000000000000000000000000000100000000000000000000000000000000
-    b/
-    dup
-    pushbytes 0x0000000000000000000000000000000000000000000000008000000000000000
-    b*
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    uncover 4
-    b|
-    dig 3
-    uncover 2
-    concat
-    dup
-    len
-    intc_2 // 8
-    -
-    extract_uint64
-    intc 5 // 256
-    %
-    intc 4 // 255
-    swap
-    -
-    dig 4
-    swap
-    intc_1 // 1
-    setbit
-    uncover 2
-    swap
-    b/
-    dup
-    b*
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bytec_2 // 0x0000000000000000000000000000000080000000000000000000000000000000
-    b/
-    dup
-    bytec_3 // 0x0000000000000000000000000000000100000000000000000000000000000000
-    b/
-    dup
-    pushbytes 0x0000000000000000000000000000000000000000000000004000000000000000
-    b*
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    uncover 3
-    b|
-    dig 3
-    uncover 2
-    concat
-    dup
-    len
-    intc_2 // 8
-    -
-    extract_uint64
-    intc 5 // 256
-    %
-    intc 4 // 255
-    swap
-    -
-    dig 4
-    swap
-    intc_1 // 1
-    setbit
-    uncover 2
-    swap
-    b/
-    dup
-    b*
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bytec_2 // 0x0000000000000000000000000000000080000000000000000000000000000000
-    b/
-    dup
-    bytec_3 // 0x0000000000000000000000000000000100000000000000000000000000000000
-    b/
-    dup
-    pushbytes 0x0000000000000000000000000000000000000000000000002000000000000000
-    b*
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    uncover 3
-    b|
-    dig 3
-    uncover 2
-    concat
-    dup
-    len
-    intc_2 // 8
-    -
-    extract_uint64
-    intc 5 // 256
-    %
-    intc 4 // 255
-    swap
-    -
-    dig 4
-    swap
-    intc_1 // 1
-    setbit
-    uncover 2
-    swap
-    b/
-    dup
-    b*
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bytec_2 // 0x0000000000000000000000000000000080000000000000000000000000000000
-    b/
-    dup
-    bytec_3 // 0x0000000000000000000000000000000100000000000000000000000000000000
-    b/
-    dup
-    pushbytes 0x0000000000000000000000000000000000000000000000001000000000000000
-    b*
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    uncover 3
-    b|
-    uncover 3
-    uncover 2
-    concat
-    dup
-    len
-    intc_2 // 8
-    -
-    extract_uint64
-    intc 5 // 256
-    %
-    intc 4 // 255
-    swap
-    -
-    dig 3
-    swap
-    intc_1 // 1
-    setbit
-    uncover 2
-    swap
-    b/
-    dup
-    b*
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bytec_2 // 0x0000000000000000000000000000000080000000000000000000000000000000
-    b/
-    bytec_3 // 0x0000000000000000000000000000000100000000000000000000000000000000
-    b/
-    pushbytes 0x0000000000000000000000000000000000000000000000000800000000000000
-    b*
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    b|
-    dig 12
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 13
-    dig 2
-    b|
-    dig 11
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 12
-    dig 3
-    b|
-    concat
     dig 1
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
+    b|
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     swap
-    dig 2
-    b|
-    concat
-    dig 8
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 2
-    dig 2
-    b|
     concat
     dig 5
     intc_0 // 32
@@ -441,182 +193,56 @@ Pool.initialize__chunk_1__chunk_3_after_if_else@4:
     uncover 2
     b|
     concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-Pool.initialize__chunk_1__chunk_3_else_body@3:
-    intc_0 // 32
-    bzero
-    intc_2 // 8
-    bzero
-    pushint 127
+    dig 1
     itob
-    dig 9
-    b-
     concat
-    dup
-    len
-    intc_2 // 8
-    -
-    extract_uint64
-    intc 4 // 255
-    swap
-    -
-    intc_1 // 1
-    setbit
-    dig 5
-    b*
-    b Pool.initialize__chunk_1__chunk_3_after_if_else@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper16.CurrencyLibrary.isAddressZero[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper16.CurrencyLibrary.isAddressZero[routing]:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub CurrencyLibrary.isAddressZero
-    bytec 4 // 0x00
-    intc_3 // 0
-    uncover 2
-    setbit
-    bytec_1 // 0x151f7c75
+    pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    pushint 1
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper16.LPFeeLibrary.isDynamicFee[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper16.LPFeeLibrary.isDynamicFee[routing]:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper16.__init__[routing]() -> void:
+__init__:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    callsub LPFeeLibrary.isDynamicFee
-    bytec 4 // 0x00
-    intc_3 // 0
-    uncover 2
-    setbit
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper16.equals[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper16.equals[routing]:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_3 // 8
     ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub equals
-    bytec 4 // 0x00
-    intc_3 // 0
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 3
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_0 // "o"
+    app_global_get
+    !
+    assert // helper: already initialized
+    bytec_0 // "o"
+    uncover 3
+    app_global_put
+    bytec_1 // "p"
     uncover 2
-    setbit
-    bytec_1 // 0x151f7c75
+    app_global_put
+    bytec_2 // "s"
     swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper16.greaterThanOrEqualTo[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper16.greaterThanOrEqualTo[routing]:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub greaterThanOrEqualTo
-    bytec 4 // 0x00
-    intc_3 // 0
-    uncover 2
-    setbit
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper16.neq[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper16.neq[routing]:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    callsub neq
-    bytec 4 // 0x00
-    intc_3 // 0
-    uncover 2
-    setbit
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper16.CurrencyLibrary.toId[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper16.CurrencyLibrary.toId[routing]:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub CurrencyLibrary.toId
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
+    app_global_put
+    pushint 1
     return

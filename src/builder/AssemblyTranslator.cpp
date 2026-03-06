@@ -33,6 +33,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyTranslator::translateBlock
 	m_calldataMap.clear();
 	m_asmFunctions.clear();
 	m_ownedTypes.clear();
+	m_upgradedLocals.clear();
 	m_constants = _constants;
 
 	// Register function parameters as known locals (so they resolve with proper types)
@@ -81,6 +82,38 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyTranslator::translateBlock
 		if (std::holds_alternative<solidity::yul::FunctionDefinition>(stmt))
 			continue; // Already collected in first pass
 		translateStatement(stmt, result);
+	}
+
+	// Coerce upgraded variables back to their original types at block end.
+	// Within the assembly block, variables may be promoted to biguint for 256-bit
+	// Yul semantics. After the block, Solidity code expects the original types.
+	for (auto const& [name, origType]: m_upgradedLocals)
+	{
+		awst::SourceLocation loc;
+		loc.file = m_sourceFile;
+
+		// Read the biguint-typed variable
+		auto src = std::make_shared<awst::VarExpression>();
+		src->sourceLocation = loc;
+		src->name = name;
+		src->wtype = awst::WType::biguintType();
+
+		// Convert to original type (uint64)
+		auto converted = safeBtoi(std::move(src), loc);
+
+		auto target = std::make_shared<awst::VarExpression>();
+		target->sourceLocation = loc;
+		target->name = name;
+		target->wtype = origType;
+
+		auto assign = std::make_shared<awst::AssignmentStatement>();
+		assign->sourceLocation = loc;
+		assign->target = std::move(target);
+		assign->value = std::move(converted);
+		result.push_back(std::move(assign));
+
+		// Restore the type in m_locals
+		m_locals[name] = origType;
 	}
 
 	return result;
@@ -533,6 +566,43 @@ std::shared_ptr<awst::Expression> AssemblyTranslator::wrapMod256(
 	return makeBigUIntBinOp(std::move(_expr), awst::BigUIntBinaryOperator::Mod, makeTwoPow256(_loc), _loc);
 }
 
+std::shared_ptr<awst::Expression> AssemblyTranslator::safeDivMod(
+	std::shared_ptr<awst::Expression> _left,
+	awst::BigUIntBinaryOperator _op,
+	std::shared_ptr<awst::Expression> _right,
+	awst::SourceLocation const& _loc
+)
+{
+	// EVM div/mod by zero returns 0; AVM panics.
+	// Emit: right != 0 ? left op right : 0
+	auto zero = std::make_shared<awst::IntegerConstant>();
+	zero->sourceLocation = _loc;
+	zero->wtype = awst::WType::biguintType();
+	zero->value = "0";
+
+	auto zeroForCmp = std::make_shared<awst::IntegerConstant>();
+	zeroForCmp->sourceLocation = _loc;
+	zeroForCmp->wtype = awst::WType::biguintType();
+	zeroForCmp->value = "0";
+
+	auto cond = std::make_shared<awst::NumericComparisonExpression>();
+	cond->sourceLocation = _loc;
+	cond->wtype = awst::WType::boolType();
+	cond->lhs = ensureBiguint(_right, _loc);  // copies shared_ptr
+	cond->op = awst::NumericComparison::Ne;
+	cond->rhs = std::move(zeroForCmp);
+
+	auto divExpr = makeBigUIntBinOp(_left, _op, _right, _loc);
+
+	auto ternary = std::make_shared<awst::ConditionalExpression>();
+	ternary->sourceLocation = _loc;
+	ternary->wtype = awst::WType::biguintType();
+	ternary->condition = std::move(cond);
+	ternary->trueExpr = std::move(divExpr);
+	ternary->falseExpr = std::move(zero);
+	return ternary;
+}
+
 std::shared_ptr<awst::Expression> AssemblyTranslator::safeBtoi(
 	std::shared_ptr<awst::Expression> _biguintExpr,
 	awst::SourceLocation const& _loc
@@ -800,6 +870,33 @@ std::shared_ptr<awst::Expression> AssemblyTranslator::translateFunctionCall(
 		return handleSload(args, loc);
 	if (funcName == "gas")
 		return handleGas(loc);
+	if (funcName == "extcodesize")
+	{
+		// extcodesize(addr) → on AVM, return 1 (treat all addresses as having code)
+		Logger::instance().warning("extcodesize() stubbed as 1 (no AVM equivalent)", loc);
+		auto one = std::make_shared<awst::IntegerConstant>();
+		one->sourceLocation = loc;
+		one->wtype = awst::WType::biguintType();
+		one->value = "1";
+		return one;
+	}
+	if (funcName == "address")
+	{
+		// address() → global CurrentApplicationAddress, cast to biguint
+		auto addr = std::make_shared<awst::IntrinsicCall>();
+		addr->sourceLocation = loc;
+		addr->wtype = awst::WType::bytesType();
+		addr->opCode = "global";
+		addr->immediates.push_back("CurrentApplicationAddress");
+
+		auto cast = std::make_shared<awst::ReinterpretCast>();
+		cast->sourceLocation = loc;
+		cast->wtype = awst::WType::biguintType();
+		cast->expr = std::move(addr);
+		return cast;
+	}
+	if (funcName == "timestamp")
+		return handleTimestamp(loc);
 	if (funcName == "chainid")
 	{
 		// chainid() has no AVM equivalent — return 0 (Algorand has no chain ID)
@@ -873,6 +970,17 @@ std::shared_ptr<awst::Expression> AssemblyTranslator::translateFunctionCall(
 			loc
 		);
 		return std::make_shared<awst::VoidConstant>();
+	}
+
+	// delegatecall → stub: return 1 (success)
+	if (funcName == "delegatecall")
+	{
+		Logger::instance().warning("delegatecall() stubbed as success (1)", loc);
+		auto one = std::make_shared<awst::IntegerConstant>();
+		one->sourceLocation = loc;
+		one->wtype = awst::WType::biguintType();
+		one->value = "1";
+		return one;
 	}
 
 	// create2(value, offset, size, salt) → stub: return 0 (no EVM contract deployment on AVM)
@@ -979,7 +1087,9 @@ std::shared_ptr<awst::Expression> AssemblyTranslator::handleMod(
 		Logger::instance().error("mod requires 2 arguments", _loc);
 		return nullptr;
 	}
-	return makeBigUIntBinOp(
+	// EVM: mod(a, 0) = 0. AVM: b% by 0 panics.
+	// Emit: b != 0 ? a % b : 0
+	return safeDivMod(
 		_args[0], awst::BigUIntBinaryOperator::Mod, _args[1], _loc
 	);
 }
@@ -1260,6 +1370,30 @@ std::shared_ptr<awst::Expression> AssemblyTranslator::handleGas(
 	return node;
 }
 
+std::shared_ptr<awst::Expression> AssemblyTranslator::handleTimestamp(
+	awst::SourceLocation const& _loc
+)
+{
+	// timestamp() → global LatestTimestamp (uint64) → itob → reinterpret as biguint
+	auto tsCall = std::make_shared<awst::IntrinsicCall>();
+	tsCall->sourceLocation = _loc;
+	tsCall->wtype = awst::WType::uint64Type();
+	tsCall->opCode = "global";
+	tsCall->immediates.push_back("LatestTimestamp");
+
+	auto itobCall = std::make_shared<awst::IntrinsicCall>();
+	itobCall->sourceLocation = _loc;
+	itobCall->wtype = awst::WType::bytesType();
+	itobCall->opCode = "itob";
+	itobCall->stackArgs.push_back(std::move(tsCall));
+
+	auto biguintCast = std::make_shared<awst::ReinterpretCast>();
+	biguintCast->sourceLocation = _loc;
+	biguintCast->wtype = awst::WType::biguintType();
+	biguintCast->expr = std::move(itobCall);
+	return biguintCast;
+}
+
 // ─── New Yul builtins for Uniswap V4 ────────────────────────────────────────
 
 std::shared_ptr<awst::Expression> AssemblyTranslator::buildPowerOf2(
@@ -1411,7 +1545,9 @@ std::shared_ptr<awst::Expression> AssemblyTranslator::handleDiv(
 		Logger::instance().error("div requires 2 arguments", _loc);
 		return nullptr;
 	}
-	return makeBigUIntBinOp(
+	// EVM: div(a, 0) = 0. AVM: b/ by 0 panics.
+	// Emit: b != 0 ? a / b : 0
+	return safeDivMod(
 		_args[0], awst::BigUIntBinaryOperator::FloorDiv, _args[1], _loc
 	);
 }
@@ -1840,15 +1976,22 @@ void AssemblyTranslator::handleTstore(
 
 std::shared_ptr<awst::Expression> AssemblyTranslator::isNegative256(
 	std::shared_ptr<awst::Expression> _val,
-	awst::SourceLocation const& _loc
+	awst::SourceLocation const& _loc,
+	awst::WType const* _origType
 )
 {
-	// Check bit 255 (sign bit in two's complement) via shr(255, val) != 0
-	// Equivalent: val >= 2^255
+	// Check sign bit in two's complement.
+	// For biguint (256-bit): sign bit at position 255, threshold = 2^255
+	// For uint64 (64-bit): sign bit at position 63, threshold = 2^63
+	// This matters when uint64 variables hold two's complement values after
+	// coercion back from biguint (e.g., signextend result coerced to uint64).
 	auto halfMax = std::make_shared<awst::IntegerConstant>();
 	halfMax->sourceLocation = _loc;
 	halfMax->wtype = awst::WType::biguintType();
-	halfMax->value = "57896044618658097711785492504343953926634992332820282019728792003956564819968"; // 2^255
+	if (_origType && _origType == awst::WType::uint64Type())
+		halfMax->value = "9223372036854775808"; // 2^63
+	else
+		halfMax->value = "57896044618658097711785492504343953926634992332820282019728792003956564819968"; // 2^255
 
 	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 	cmp->sourceLocation = _loc;
@@ -2001,20 +2144,76 @@ std::shared_ptr<awst::Expression> AssemblyTranslator::handleSlt(
 )
 {
 	// slt(a, b) — signed less-than in two's complement
-	// If a_neg != b_neg: return a_neg (if a is neg, it's smaller)
-	// If same sign: return a < b unsigned (works for both positive and negative)
 	if (_args.size() != 2)
 	{
 		Logger::instance().error("slt requires 2 arguments", _loc);
 		return nullptr;
 	}
 
+	// Capture original types before ensureBiguint conversion, so we can use
+	// the correct sign-bit threshold (bit 63 for uint64, bit 255 for biguint).
+	auto const* origTypeA = _args[0]->wtype;
+	auto const* origTypeB = _args[1]->wtype;
 	auto a = ensureBiguint(_args[0], _loc);
 	auto b = ensureBiguint(_args[1], _loc);
 
-	auto aNeg = isNegative256(a, _loc);
-	auto bNeg = isNegative256(b, _loc);
-	auto aNeg2 = isNegative256(a, _loc);
+	// Special case: slt(x, 0) = isNegative(x)
+	// The general case uses ConditionalExpression with (a < b) unsigned, which
+	// puya's optimizer constant-folds to false when b=0 (no unsigned biguint < 0),
+	// collapsing the entire slt expression. Emit the sign-bit check directly.
+	if (auto* bConst = dynamic_cast<awst::IntegerConstant*>(b.get()))
+	{
+		if (bConst->value == "0")
+		{
+			return ensureBiguint(isNegative256(a, _loc, origTypeA), _loc);
+		}
+	}
+
+	// Special case: slt(0, x) = x > 0 && x < signBitThreshold (positive non-zero)
+	if (auto* aConst = dynamic_cast<awst::IntegerConstant*>(a.get()))
+	{
+		if (aConst->value == "0")
+		{
+			auto zero = std::make_shared<awst::IntegerConstant>();
+			zero->sourceLocation = _loc;
+			zero->wtype = awst::WType::biguintType();
+			zero->value = "0";
+			auto signThreshold = std::make_shared<awst::IntegerConstant>();
+			signThreshold->sourceLocation = _loc;
+			signThreshold->wtype = awst::WType::biguintType();
+			if (origTypeB && origTypeB == awst::WType::uint64Type())
+				signThreshold->value = "9223372036854775808"; // 2^63
+			else
+				signThreshold->value = "57896044618658097711785492504343953926634992332820282019728792003956564819968"; // 2^255
+			// x > 0
+			auto gtZero = std::make_shared<awst::NumericComparisonExpression>();
+			gtZero->sourceLocation = _loc;
+			gtZero->wtype = awst::WType::boolType();
+			gtZero->lhs = b;
+			gtZero->op = awst::NumericComparison::Gt;
+			gtZero->rhs = std::move(zero);
+			// x < signBitThreshold
+			auto ltPow = std::make_shared<awst::NumericComparisonExpression>();
+			ltPow->sourceLocation = _loc;
+			ltPow->wtype = awst::WType::boolType();
+			ltPow->lhs = b;
+			ltPow->op = awst::NumericComparison::Lt;
+			ltPow->rhs = std::move(signThreshold);
+			// AND
+			auto andExpr = std::make_shared<awst::BooleanBinaryOperation>();
+			andExpr->sourceLocation = _loc;
+			andExpr->wtype = awst::WType::boolType();
+			andExpr->left = std::move(gtZero);
+			andExpr->op = awst::BinaryBooleanOperator::And;
+			andExpr->right = std::move(ltPow);
+			return ensureBiguint(andExpr, _loc);
+		}
+	}
+
+	// General case: compare signs, then unsigned comparison
+	auto aNeg = isNegative256(a, _loc, origTypeA);
+	auto bNeg = isNegative256(b, _loc, origTypeB);
+	auto aNeg2 = isNegative256(a, _loc, origTypeA);
 
 	// signsMatch = (aNeg == bNeg) via biguint comparison
 	auto aNegInt = ensureBiguint(aNeg, _loc);
@@ -2574,6 +2773,62 @@ std::shared_ptr<awst::Expression> AssemblyTranslator::handleKeccak256(
 		return nullptr;
 	}
 
+	if (offset && !length)
+	{
+		// Offset is constant but length is dynamic.
+		// Pattern: keccak256(begin, add(paramLength, 0x20)) from deriveMapping(string/bytes).
+		// This hashes: param_bytes + last_mstored_32bytes (slot value).
+		// Check if offset = calldataParam + 0x20 (pointing to string data area).
+		for (auto const& [cdOffset, elem] : m_calldataMap)
+		{
+			if (*offset == cdOffset + 0x20 && m_lastMstoreValue)
+			{
+				// Build: keccak256(concat(param_bytes, padTo32(lastMstoreValue)))
+				auto paramVar = std::make_shared<awst::VarExpression>();
+				paramVar->sourceLocation = _loc;
+				paramVar->name = elem.paramName;
+				auto paramType = m_locals.find(elem.paramName);
+				if (paramType != m_locals.end() && paramType->second)
+					paramVar->wtype = paramType->second;
+				else
+					paramVar->wtype = awst::WType::bytesType();
+
+				std::shared_ptr<awst::Expression> paramBytes;
+				if (paramVar->wtype != awst::WType::bytesType())
+				{
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = _loc;
+					cast->wtype = awst::WType::bytesType();
+					cast->expr = std::move(paramVar);
+					paramBytes = std::move(cast);
+				}
+				else
+					paramBytes = std::move(paramVar);
+
+				auto slotPadded = padTo32Bytes(m_lastMstoreValue, _loc);
+
+				auto concat = std::make_shared<awst::IntrinsicCall>();
+				concat->sourceLocation = _loc;
+				concat->wtype = awst::WType::bytesType();
+				concat->opCode = "concat";
+				concat->stackArgs.push_back(std::move(paramBytes));
+				concat->stackArgs.push_back(std::move(slotPadded));
+
+				auto keccak = std::make_shared<awst::IntrinsicCall>();
+				keccak->sourceLocation = _loc;
+				keccak->wtype = awst::WType::bytesType();
+				keccak->opCode = "keccak256";
+				keccak->stackArgs.push_back(std::move(concat));
+
+				auto castResult = std::make_shared<awst::ReinterpretCast>();
+				castResult->sourceLocation = _loc;
+				castResult->wtype = awst::WType::biguintType();
+				castResult->expr = std::move(keccak);
+				return castResult;
+			}
+		}
+	}
+
 	if (!offset || !length)
 	{
 		Logger::instance().error("keccak256 with non-constant offset/length not supported", _loc);
@@ -2581,9 +2836,102 @@ std::shared_ptr<awst::Expression> AssemblyTranslator::handleKeccak256(
 	}
 
 	int numSlots = static_cast<int>(*length / 0x20);
+	if (*length == 0)
+	{
+		// keccak256("") = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
+		// Hash empty bytes
+		auto emptyBytes = std::make_shared<awst::BytesConstant>();
+		emptyBytes->sourceLocation = _loc;
+		emptyBytes->wtype = awst::WType::bytesType();
+		// empty value
+
+		auto keccak = std::make_shared<awst::IntrinsicCall>();
+		keccak->sourceLocation = _loc;
+		keccak->wtype = awst::WType::bytesType();
+		keccak->opCode = "keccak256";
+		keccak->stackArgs.push_back(std::move(emptyBytes));
+
+		auto cast = std::make_shared<awst::ReinterpretCast>();
+		cast->sourceLocation = _loc;
+		cast->wtype = awst::WType::biguintType();
+		cast->expr = std::move(keccak);
+		return cast;
+	}
 	if (numSlots <= 0)
 	{
-		Logger::instance().error("keccak256 with zero-length input", _loc);
+		// Non-zero length but less than 32 bytes — partial slot
+		// Handle by reading from memory slot at offset
+		Logger::instance().warning("keccak256 with sub-32-byte input, using partial slot", _loc);
+		auto slotIt = m_memoryMap.find(*offset);
+		if (slotIt != m_memoryMap.end())
+		{
+			auto slotVar = std::make_shared<awst::VarExpression>();
+			slotVar->sourceLocation = _loc;
+			slotVar->name = slotIt->second.varName;
+			slotVar->wtype = awst::WType::biguintType();
+
+			// Cast biguint to bytes for keccak256
+			auto castToBytes = std::make_shared<awst::ReinterpretCast>();
+			castToBytes->sourceLocation = _loc;
+			castToBytes->wtype = awst::WType::bytesType();
+			castToBytes->expr = std::move(slotVar);
+
+			auto keccak = std::make_shared<awst::IntrinsicCall>();
+			keccak->sourceLocation = _loc;
+			keccak->wtype = awst::WType::bytesType();
+			keccak->opCode = "keccak256";
+			keccak->stackArgs.push_back(std::move(castToBytes));
+
+			auto castResult = std::make_shared<awst::ReinterpretCast>();
+			castResult->sourceLocation = _loc;
+			castResult->wtype = awst::WType::biguintType();
+			castResult->expr = std::move(keccak);
+			return castResult;
+		}
+		// Check if offset = calldataParam + 0x20 (string/bytes data region)
+		// Pattern: keccak256(add(param, 0x20), mload(param)) hashes string data
+		for (auto const& [cdOffset, elem] : m_calldataMap)
+		{
+			if (*offset == cdOffset + 0x20)
+			{
+				// Found: offset points to the string data area of a calldata parameter.
+				// On AVM, the parameter IS the string bytes. Hash them directly.
+				auto paramVar = std::make_shared<awst::VarExpression>();
+				paramVar->sourceLocation = _loc;
+				paramVar->name = elem.paramName;
+				// The parameter might be bytes or biguint — need bytes for keccak
+				auto paramType = m_locals.find(elem.paramName);
+				if (paramType != m_locals.end() && paramType->second)
+					paramVar->wtype = paramType->second;
+				else
+					paramVar->wtype = awst::WType::bytesType();
+
+				std::shared_ptr<awst::Expression> hashInput;
+				if (paramVar->wtype != awst::WType::bytesType())
+				{
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = _loc;
+					cast->wtype = awst::WType::bytesType();
+					cast->expr = std::move(paramVar);
+					hashInput = std::move(cast);
+				}
+				else
+					hashInput = std::move(paramVar);
+
+				auto keccak = std::make_shared<awst::IntrinsicCall>();
+				keccak->sourceLocation = _loc;
+				keccak->wtype = awst::WType::bytesType();
+				keccak->opCode = "keccak256";
+				keccak->stackArgs.push_back(std::move(hashInput));
+
+				auto castResult = std::make_shared<awst::ReinterpretCast>();
+				castResult->sourceLocation = _loc;
+				castResult->wtype = awst::WType::biguintType();
+				castResult->expr = std::move(keccak);
+				return castResult;
+			}
+		}
+		Logger::instance().error("keccak256 with sub-32-byte length and unknown memory slot", _loc);
 		return nullptr;
 	}
 
@@ -4026,6 +4374,9 @@ void AssemblyTranslator::handleMstore(
 		return;
 	}
 
+	// Track last mstore value for dynamic-length keccak256 patterns
+	m_lastMstoreValue = _args[1];
+
 	auto offset = resolveConstantOffset(_args[0]);
 	if (!offset)
 	{
@@ -4579,6 +4930,13 @@ void AssemblyTranslator::translateAssignment(
 
 	std::string name = _assign.variableNames[0].name.str();
 
+	// Skip ERC-7201 storage slot assignments: $.slot := CONSTANT
+	// These set EVM storage base positions, which have no AVM equivalent
+	if (name.find(".slot") != std::string::npos)
+	{
+		return;
+	}
+
 	// Check for staticcall pattern: success := staticcall(...)
 	if (_assign.value)
 	{
@@ -4648,7 +5006,9 @@ void AssemblyTranslator::translateAssignment(
 		}
 		else if (target->wtype == awst::WType::uint64Type())
 		{
-			// Target is uint64 — coerce biguint to uint64
+			// Target is uint64 but value is biguint (e.g. from mload).
+			// Truncate to uint64 using safeBtoi to keep the variable type consistent
+			// across all control flow paths (avoids phi node type mismatches).
 			if (value->wtype == awst::WType::biguintType())
 			{
 				value = safeBtoi(std::move(value), loc);
@@ -4740,6 +5100,31 @@ void AssemblyTranslator::translateExpressionStatement(
 		if (funcName == "returndatacopy" || funcName == "pop")
 		{
 			// No-op on AVM (returndatacopy: no return data; pop: discard value)
+			return;
+		}
+		if (funcName == "delegatecall")
+		{
+			// delegatecall has no AVM equivalent — stub as no-op
+			Logger::instance().warning(
+				"delegatecall() has no AVM equivalent — stubbed as no-op",
+				loc
+			);
+			return;
+		}
+		if (funcName == "mcopy")
+		{
+			// mcopy(dst, src, length): copy memory slot src to dst
+			// In our memory-slot model, this is equivalent to mstore(dst, mload(src))
+			if (args.size() >= 2)
+			{
+				auto mloadArgs = std::vector<std::shared_ptr<awst::Expression>>{args[1]};
+				auto loadedVal = handleMload(mloadArgs, loc);
+				if (loadedVal)
+				{
+					auto storeArgs = std::vector<std::shared_ptr<awst::Expression>>{args[0], loadedVal};
+					handleMstore(storeArgs, loc, _out);
+				}
+			}
 			return;
 		}
 

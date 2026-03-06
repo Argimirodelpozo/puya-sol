@@ -16,7 +16,8 @@ public:
 		std::string const& _path,
 		std::string const& _contractName,
 		std::string const& _outputDir,
-		int _optimizationLevel = 1
+		int _optimizationLevel = 1,
+		bool _outputIr = false
 	);
 
 	/// Write options.json for multiple contracts (split contract mode).
@@ -24,7 +25,8 @@ public:
 		std::string const& _path,
 		std::vector<std::string> const& _contractNames,
 		std::string const& _outputDir,
-		int _optimizationLevel = 1
+		int _optimizationLevel = 1,
+		bool _outputIr = false
 	);
 };
 

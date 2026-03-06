@@ -32,7 +32,7 @@ public:
 	// AVM size thresholds (with 3 extra pages = 4 pages × 2048 = 8192 bytes max)
 	static constexpr size_t AVMMaxBytes = 8192;
 	static constexpr size_t WarnThresholdBytes = 6000;
-	static constexpr size_t SplitThresholdBytes = 12000;  // in estimatedBytes units (totalInstructions × 3)
+	static constexpr size_t SplitThresholdBytes = 14000;  // in estimatedBytes units (totalInstructions × 3)
 	static constexpr size_t HelperTargetBytes = 8000;     // documentation only (not used in code)
 
 	/// Estimate instruction count for a single expression.
@@ -48,6 +48,10 @@ public:
 	/// that puya will generate when a subroutine becomes an ABI method.
 	/// Returns instruction count units (~2 bytes each).
 	static size_t estimateABICodecCost(awst::Subroutine const& _sub);
+
+	/// Estimate the ABI-encoded byte size of a WType.
+	/// Returns the approximate number of raw data bytes needed for ARC4 encoding.
+	static size_t estimateABIEncodedSize(awst::WType const* _wtype);
 
 private:
 	/// Estimate instruction count for a contract method.

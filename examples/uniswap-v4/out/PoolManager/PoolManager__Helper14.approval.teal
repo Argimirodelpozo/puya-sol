@@ -3,44 +3,26 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper14.__puya_arc4_router__() -> uint64:
 main:
-    intcblock 32 8 1 255 256
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000080000000000000000000000000000000 0x0000000000000000000000000000000100000000000000000000000000000000 0x151f7c75
+    intcblock 8 32 1 256 255
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000080000000000000000000000000000000 0x0000000000000000000000000000000100000000000000000000000000000000 "o" "p"
     b __puya_arc4_router__
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.CurrencyLibrary.fromId(id: bytes) -> bytes:
-CurrencyLibrary.fromId:
-    proto 1 1
-    frame_dig -1
-    pushbytes 0xffffffffffffffffffffffffffffffffffffffff
-    b&
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.LPFeeLibrary.removeOverrideFlag(self: uint64) -> uint64:
-LPFeeLibrary.removeOverrideFlag:
-    proto 1 1
-    frame_dig -1
-    pushint 12582911
-    &
-    retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper14.__puya_arc4_router__() -> uint64:
 __puya_arc4_router__:
     txn NumAppArgs
-    bz __puya_arc4_router_____bare_create__@9
+    bz __puya_arc4_router_____bare_create__@8
     txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
-    pushbytess 0xcb29e4cd 0xb97bd706 0x11ba7a5b // method "Pool.initialize__chunk_1__chunk_4((uint8[32],uint256,uint256,uint256,byte[],byte[],byte[]),uint256,uint64,uint64,uint256,uint256,uint256,uint256,uint256,uint256)(uint256,uint256,uint256,uint256,uint256,uint256)", method "CurrencyLibrary.fromId(uint256)address", method "LPFeeLibrary.removeOverrideFlag(uint64)uint64"
+    pushbytess 0xeadfe7dd 0xa96ef989 // method "Pool.initialize__chunk_1__chunk_5((uint8[32],uint256,uint256,uint256,byte[],byte[],byte[]),uint256,uint64,uint256,uint256,uint256,uint256,uint64)(uint256,uint256,uint256,uint256,uint64)", method "__init__(uint64,uint64,byte[])void"
     txna ApplicationArgs 0
-    match Pool.initialize__chunk_1__chunk_4 /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper14.CurrencyLibrary.fromId[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper14.LPFeeLibrary.removeOverrideFlag[routing]
+    match Pool.initialize__chunk_1__chunk_5 __init__
     err
 
-__puya_arc4_router_____bare_create__@9:
+__puya_arc4_router_____bare_create__@8:
     txn OnCompletion
     !
     txn ApplicationID
@@ -49,8 +31,8 @@ __puya_arc4_router_____bare_create__@9:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper14.Pool.initialize__chunk_1__chunk_4[routing]() -> void:
-Pool.initialize__chunk_1__chunk_4:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper14.Pool.initialize__chunk_1__chunk_5[routing]() -> void:
+Pool.initialize__chunk_1__chunk_5:
     txna ApplicationArgs 1
     dup
     len
@@ -105,98 +87,94 @@ Pool.initialize__chunk_1__chunk_4:
     assert // invalid number of bytes for State
     txna ApplicationArgs 2
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     len
-    intc_1 // 8
+    intc_0 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     txna ApplicationArgs 4
+    dup
     len
-    intc_1 // 8
+    dup
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint64
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 5
     dup
     len
     dup
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 6
     dup
     len
-    dup
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 7
     dup
     len
     dup
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 8
-    dupn 2
-    len
     dup
-    cover 2
-    intc_0 // 32
+    len
+    intc_0 // 8
     ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 9
-    dup
-    cover 2
-    len
-    dup
-    cover 2
-    intc_0 // 32
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bytec_3 // "o"
+    app_global_get
+    bz Pool.initialize__chunk_1__chunk_5_after_if_else@5
+    global GroupSize
+    pushint 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_3 // "o"
+    app_global_get
     ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 10
-    len
-    intc_0 // 32
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
     ==
-    assert // invalid number of bytes for arc4.uint256
-    pushint 128
-    itob
-    b>=
-    bz Pool.initialize__chunk_1__chunk_4_else_body@3
-    intc_0 // 32
-    bzero
-    intc_1 // 8
-    bzero
-    pushint 127
-    itob
-    dig 6
-    swap
-    b-
-    concat
-    dup
-    len
-    intc_1 // 8
-    -
-    extract_uint64
-    intc_3 // 255
-    swap
-    -
+    assert // helper: sender mismatch
+    bytec 4 // "p"
+    app_global_get
+    bz Pool.initialize__chunk_1__chunk_5_after_if_else@5
+    txn GroupIndex
     intc_2 // 1
-    setbit
-    dig 2
-    swap
-    b/
+    -
+    gtxns ApplicationID
+    bytec 4 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxnsa ApplicationArgs 0
+    pushbytes "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
 
-Pool.initialize__chunk_1__chunk_4_after_if_else@4:
+Pool.initialize__chunk_1__chunk_5_after_if_else@5:
+    dig 2
     dup
+    dig 1
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    intc_0 // 32
+    intc_1 // 32
     bzero
-    intc_1 // 8
+    intc_0 // 8
     bzero
     uncover 2
     bytec_1 // 0x0000000000000000000000000000000080000000000000000000000000000000
@@ -204,222 +182,261 @@ Pool.initialize__chunk_1__chunk_4_after_if_else@4:
     dup
     bytec_2 // 0x0000000000000000000000000000000100000000000000000000000000000000
     b/
-    dig 2
-    swap
-    concat
     dup
-    len
-    intc_1 // 8
-    -
-    extract_uint64
-    intc 4 // 256
-    %
-    intc_3 // 255
-    swap
-    -
-    dig 3
-    swap
-    intc_2 // 1
-    setbit
-    b/
-    dup
+    pushbytes 0x0000000000000000000000000000000000000000000000004000000000000000
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec_1 // 0x0000000000000000000000000000000080000000000000000000000000000000
-    b/
-    dup
-    bytec_2 // 0x0000000000000000000000000000000100000000000000000000000000000000
-    b/
-    dig 2
-    swap
+    dig 9
+    b|
+    dig 3
+    uncover 2
     concat
     dup
     len
-    intc_1 // 8
+    intc_0 // 8
     -
     extract_uint64
-    intc 4 // 256
+    intc_3 // 256
     %
-    intc_3 // 255
+    intc 4 // 255
     swap
     -
-    dig 3
+    dig 4
     swap
     intc_2 // 1
     setbit
-    b/
-    dup
-    b*
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bytec_1 // 0x0000000000000000000000000000000080000000000000000000000000000000
-    b/
-    dup
-    bytec_2 // 0x0000000000000000000000000000000100000000000000000000000000000000
-    b/
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_1 // 8
-    -
-    extract_uint64
-    intc 4 // 256
-    %
-    intc_3 // 255
-    swap
-    -
-    dig 3
-    swap
-    intc_2 // 1
-    setbit
-    b/
-    dup
-    b*
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bytec_1 // 0x0000000000000000000000000000000080000000000000000000000000000000
-    b/
-    dup
-    bytec_2 // 0x0000000000000000000000000000000100000000000000000000000000000000
-    b/
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_1 // 8
-    -
-    extract_uint64
-    intc 4 // 256
-    %
-    intc_3 // 255
-    swap
-    -
-    dig 3
-    swap
-    intc_2 // 1
-    setbit
-    b/
-    dup
-    b*
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bytec_1 // 0x0000000000000000000000000000000080000000000000000000000000000000
-    b/
-    dup
-    bytec_2 // 0x0000000000000000000000000000000100000000000000000000000000000000
-    b/
     uncover 2
     swap
+    b/
+    dup
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000080000000000000000000000000000000
+    b/
+    dup
+    bytec_2 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    dup
+    pushbytes 0x0000000000000000000000000000000000000000000000002000000000000000
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 3
+    b|
+    dig 3
+    uncover 2
     concat
     dup
     len
-    intc_1 // 8
+    intc_0 // 8
     -
     extract_uint64
-    intc 4 // 256
+    intc_3 // 256
     %
-    intc_3 // 255
+    intc 4 // 255
     swap
     -
-    dig 2
+    dig 4
     swap
     intc_2 // 1
     setbit
+    uncover 2
+    swap
     b/
-    dig 10
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 11
-    dig 2
+    dup
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000080000000000000000000000000000000
+    b/
+    dup
+    bytec_2 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    dup
+    pushbytes 0x0000000000000000000000000000000000000000000000001000000000000000
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 3
+    b|
+    dig 3
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_3 // 256
+    %
+    intc 4 // 255
+    swap
+    -
+    dig 4
+    swap
+    intc_2 // 1
+    setbit
+    uncover 2
+    swap
+    b/
+    dup
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000080000000000000000000000000000000
+    b/
+    dup
+    bytec_2 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    dup
+    pushbytes 0x0000000000000000000000000000000000000000000000000800000000000000
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 3
+    b|
+    dig 3
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_3 // 256
+    %
+    intc 4 // 255
+    swap
+    -
+    dig 4
+    swap
+    intc_2 // 1
+    setbit
+    uncover 2
+    swap
+    b/
+    dup
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000080000000000000000000000000000000
+    b/
+    dup
+    bytec_2 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    dup
+    pushbytes 0x0000000000000000000000000000000000000000000000000400000000000000
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 3
+    b|
+    dig 3
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_3 // 256
+    %
+    intc 4 // 255
+    swap
+    -
+    dig 4
+    swap
+    intc_2 // 1
+    setbit
+    uncover 2
+    swap
+    b/
+    dup
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000080000000000000000000000000000000
+    b/
+    dup
+    bytec_2 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    dup
+    pushbytes 0x0000000000000000000000000000000000000000000000000200000000000000
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 3
+    b|
+    uncover 3
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_3 // 256
+    %
+    intc 4 // 255
+    swap
+    -
+    dig 3
+    swap
+    intc_2 // 1
+    setbit
+    uncover 2
+    swap
+    b/
+    dup
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000080000000000000000000000000000000
+    b/
+    bytec_2 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    pushbytes 0x0000000000000000000000000000000000000000000000000100000000000000
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     b|
     dig 9
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
     dig 10
-    dig 3
+    dig 2
     b|
-    concat
-    dig 7
-    intc_0 // 32
-    <=
-    assert // overflow
     dig 8
-    dig 3
-    b|
-    concat
-    dig 5
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    dig 6
-    dig 3
-    b|
-    concat
-    dig 3
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 4
+    dig 9
     dig 3
     b|
     concat
     dig 1
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
     swap
-    uncover 2
+    dig 2
     b|
     concat
-    bytec_3 // 0x151f7c75
-    swap
+    dig 4
+    intc_1 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
     concat
-    log
-    intc_2 // 1
-    return
-
-Pool.initialize__chunk_1__chunk_4_else_body@3:
-    intc_0 // 32
-    bzero
-    intc_1 // 8
-    bzero
-    pushint 127
+    dig 1
     itob
-    dig 6
-    b-
     concat
-    dup
-    len
-    intc_1 // 8
-    -
-    extract_uint64
-    intc_3 // 255
-    swap
-    -
-    intc_2 // 1
-    setbit
-    dig 2
-    b*
-    b Pool.initialize__chunk_1__chunk_4_after_if_else@4
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper14.CurrencyLibrary.fromId[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper14.CurrencyLibrary.fromId[routing]:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    callsub CurrencyLibrary.fromId
-    bytec_3 // 0x151f7c75
+    pushbytes 0x151f7c75
     swap
     concat
     log
@@ -427,20 +444,45 @@ Pool.initialize__chunk_1__chunk_4_else_body@3:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper14.LPFeeLibrary.removeOverrideFlag[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper14.LPFeeLibrary.removeOverrideFlag[routing]:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/examples/uniswap-v4/contracts/core/PoolManager.sol.PoolManager__Helper14.__init__[routing]() -> void:
+__init__:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_0 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    callsub LPFeeLibrary.removeOverrideFlag
-    itob
-    bytec_3 // 0x151f7c75
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 3
+    dup
+    pushint 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_3 // "o"
+    app_global_get
+    !
+    assert // helper: already initialized
+    bytec_3 // "o"
+    uncover 3
+    app_global_put
+    bytec 4 // "p"
+    uncover 2
+    app_global_put
+    pushbytes "s"
     swap
-    concat
-    log
+    app_global_put
     intc_2 // 1
     return

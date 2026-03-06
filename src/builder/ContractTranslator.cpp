@@ -9,6 +9,32 @@
 namespace puyasol::builder
 {
 
+/// Recursively checks if a statement list always terminates (return or revert).
+static bool blockAlwaysReturns(std::vector<std::shared_ptr<awst::Statement>> const& _stmts)
+{
+	if (_stmts.empty())
+		return false;
+	auto const& last = _stmts.back();
+	auto type = last->nodeType();
+	if (type == "ReturnStatement")
+		return true;
+	if (type == "IfElse")
+	{
+		auto const& ifElse = static_cast<awst::IfElse const&>(*last);
+		bool ifReturns = blockAlwaysReturns(ifElse.ifBranch->body);
+		bool elseReturns = ifElse.elseBranch && blockAlwaysReturns(ifElse.elseBranch->body);
+		return ifReturns && elseReturns;
+	}
+	// ExpressionStatement containing assert(false) is a revert
+	if (type == "ExpressionStatement")
+	{
+		auto const& exprStmt = static_cast<awst::ExpressionStatement const&>(*last);
+		if (exprStmt.expr && exprStmt.expr->nodeType() == "AssertExpression")
+			return true; // assert(false) terminates
+	}
+	return false;
+}
+
 /// Checks if a Solidity AST subtree references any state variable whose AST ID
 /// is in the given set (i.e. box-stored state variables).
 class BoxVarRefChecker: public solidity::frontend::ASTConstVisitor
@@ -545,8 +571,33 @@ awst::ContractMethod ContractTranslator::buildApprovalProgram(
 					std::string keyStr = var->name();
 					key->value = std::vector<uint8_t>(keyStr.begin(), keyStr.end());
 
-					// Build default value
+					// Build initial value: use explicit initializer if present,
+					// otherwise default to zero/empty.
 					std::shared_ptr<awst::Expression> defaultVal;
+					if (var->value())
+					{
+						// Translate the initializer expression (e.g. `= 'Wrapped Ether'`)
+						defaultVal = m_exprTranslator->translate(*var->value());
+						if (defaultVal)
+						{
+							// Cast to match the storage type if needed
+							defaultVal = ExpressionTranslator::implicitNumericCast(
+								std::move(defaultVal), wtype, method.sourceLocation
+							);
+							// String values need ReinterpretCast to bytes for global state
+							if (defaultVal->wtype == awst::WType::stringType()
+								&& wtype != awst::WType::stringType())
+							{
+								auto cast = std::make_shared<awst::ReinterpretCast>();
+								cast->sourceLocation = method.sourceLocation;
+								cast->wtype = awst::WType::bytesType();
+								cast->expr = std::move(defaultVal);
+								defaultVal = std::move(cast);
+							}
+						}
+					}
+					if (!defaultVal)
+					{
 					if (wtype == awst::WType::accountType())
 					{
 						auto addr = std::make_shared<awst::AddressConstant>();
@@ -582,6 +633,7 @@ awst::ContractMethod ContractTranslator::buildApprovalProgram(
 						val->value = {};
 						defaultVal = val;
 					}
+					} // end if (!defaultVal)
 
 					// app_global_put(key, defaultVal)
 					auto put = std::make_shared<awst::IntrinsicCall>();
@@ -759,6 +811,45 @@ awst::ContractMethod ContractTranslator::buildApprovalProgram(
 				&& explicitBaseArgs.find(baseContract) == explicitBaseArgs.end())
 			{
 				explicitBaseArgs[baseContract] = baseSpec->arguments();
+			}
+		}
+
+		// Collect transitive base constructor args from intermediate base contracts.
+		// e.g. if ConfigPositionManager → PositionManagerBase(x) → Ownable(x),
+		// we need explicitBaseArgs[Ownable] from PositionManagerBase's constructor.
+		for (auto const* base: _contract.annotation().linearizedBaseContracts)
+		{
+			if (base == &_contract)
+				continue;
+			// Check base's constructor modifiers
+			if (auto const* baseCtor = base->constructor())
+			{
+				for (auto const& mod: baseCtor->modifiers())
+				{
+					auto const* ref = mod->name().annotation().referencedDeclaration;
+					if (auto const* grandBase =
+							dynamic_cast<solidity::frontend::ContractDefinition const*>(ref))
+					{
+						if (explicitBaseArgs.find(grandBase) == explicitBaseArgs.end()
+							&& mod->arguments() && !mod->arguments()->empty())
+						{
+							explicitBaseArgs[grandBase] = mod->arguments();
+						}
+					}
+				}
+			}
+			// Check base's inheritance specifiers
+			for (auto const& baseSpec: base->baseContracts())
+			{
+				auto const* ref = baseSpec->name().annotation().referencedDeclaration;
+				auto const* grandBase =
+					dynamic_cast<solidity::frontend::ContractDefinition const*>(ref);
+				if (grandBase && baseSpec->arguments()
+					&& !baseSpec->arguments()->empty()
+					&& explicitBaseArgs.find(grandBase) == explicitBaseArgs.end())
+				{
+					explicitBaseArgs[grandBase] = baseSpec->arguments();
+				}
 			}
 		}
 
@@ -1202,6 +1293,54 @@ awst::ContractMethod ContractTranslator::translateFunction(
 
 		method.body = m_stmtTranslator->translateBlock(_func.body());
 
+		// Ensure all non-void functions end with a return statement.
+		// For named return parameters, synthesize a return referencing the variables.
+		// Otherwise append a default zero-value return.
+		if (method.returnType != awst::WType::voidType()
+			&& !blockAlwaysReturns(method.body->body))
+		{
+			auto const& retParams = _func.returnParameters();
+			bool hasNamedReturns = false;
+			for (auto const& rp: retParams)
+				if (!rp->name().empty())
+					hasNamedReturns = true;
+
+			auto retStmt = std::make_shared<awst::ReturnStatement>();
+			retStmt->sourceLocation = method.sourceLocation;
+
+			if (hasNamedReturns)
+			{
+				if (retParams.size() == 1)
+				{
+					auto var = std::make_shared<awst::VarExpression>();
+					var->sourceLocation = method.sourceLocation;
+					var->name = retParams[0]->name();
+					var->wtype = m_typeMapper.map(retParams[0]->type());
+					retStmt->value = std::move(var);
+				}
+				else
+				{
+					auto tuple = std::make_shared<awst::TupleExpression>();
+					tuple->sourceLocation = method.sourceLocation;
+					for (auto const& rp: retParams)
+					{
+						auto var = std::make_shared<awst::VarExpression>();
+						var->sourceLocation = method.sourceLocation;
+						var->name = rp->name();
+						var->wtype = m_typeMapper.map(rp->type());
+						tuple->items.push_back(std::move(var));
+					}
+					tuple->wtype = method.returnType;
+					retStmt->value = std::move(tuple);
+				}
+			}
+			else
+			{
+				retStmt->value = StorageMapper::makeDefaultValue(method.returnType, method.sourceLocation);
+			}
+			method.body->body.push_back(std::move(retStmt));
+		}
+
 		// Skip ARC4 decode for functions with inline assembly blocks.
 		// The assembly translator handles parameter data directly via
 		// calldataload mapping using ARC4-encoded types.
@@ -1295,49 +1434,6 @@ awst::ContractMethod ContractTranslator::translateFunction(
 			method.body->body.insert(method.body->body.begin(), std::move(stmt));
 		}
 
-		// Synthesize implicit return for named return parameters
-		auto const& returnParams = _func.returnParameters();
-		if (!method.body->body.empty()
-			&& !blockAlwaysTerminates(*method.body)
-			&& !returnParams.empty())
-		{
-			bool hasNames = false;
-			for (auto const& rp: returnParams)
-				if (!rp->name().empty())
-					hasNames = true;
-
-			if (hasNames)
-			{
-				auto implicitReturn = std::make_shared<awst::ReturnStatement>();
-				implicitReturn->sourceLocation = method.sourceLocation;
-
-				if (returnParams.size() == 1)
-				{
-					auto var = std::make_shared<awst::VarExpression>();
-					var->sourceLocation = method.sourceLocation;
-					var->name = returnParams[0]->name();
-					var->wtype = m_typeMapper.map(returnParams[0]->type());
-					implicitReturn->value = std::move(var);
-				}
-				else
-				{
-					auto tuple = std::make_shared<awst::TupleExpression>();
-					tuple->sourceLocation = method.sourceLocation;
-					for (auto const& rp: returnParams)
-					{
-						auto var = std::make_shared<awst::VarExpression>();
-						var->sourceLocation = method.sourceLocation;
-						var->name = rp->name();
-						var->wtype = m_typeMapper.map(rp->type());
-						tuple->items.push_back(std::move(var));
-					}
-					tuple->wtype = method.returnType;
-					implicitReturn->value = std::move(tuple);
-				}
-
-				method.body->body.push_back(std::move(implicitReturn));
-			}
-		}
 	}
 	else
 	{
