@@ -14,6 +14,16 @@ struct BasicWType: public WType
 	}
 };
 
+// ARC4 basic type — serializes with _type: "ARC4Type" for puya compat.
+struct ARC4BasicWType: public WType
+{
+	ARC4BasicWType(std::string _name)
+		: WType(std::move(_name), WTypeKind::Basic, true)
+	{
+	}
+	std::string jsonType() const override { return "ARC4Type"; }
+};
+
 // Singleton basic types — allocated once, never freed (static lifetime).
 BasicWType const g_voidType("void", WTypeKind::Basic, true);
 BasicWType const g_boolType("bool", WTypeKind::Basic, true);
@@ -26,6 +36,7 @@ BasicWType const g_assetType("asset", WTypeKind::Basic, true);
 BasicWType const g_applicationType("application", WTypeKind::Basic, true);
 BasicWType const g_stateKeyType("state_key", WTypeKind::Basic, true);
 BasicWType const g_boxKeyType("box_key", WTypeKind::Basic, true);
+ARC4BasicWType const g_arc4BoolType("arc4.bool");
 } // namespace
 
 WType const* WType::voidType() { return &g_voidType; }
@@ -39,5 +50,6 @@ WType const* WType::assetType() { return &g_assetType; }
 WType const* WType::applicationType() { return &g_applicationType; }
 WType const* WType::stateKeyType() { return &g_stateKeyType; }
 WType const* WType::boxKeyType() { return &g_boxKeyType; }
+WType const* WType::arc4BoolType() { return &g_arc4BoolType; }
 
 } // namespace puyasol::awst

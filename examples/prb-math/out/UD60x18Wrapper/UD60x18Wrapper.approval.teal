@@ -1,0 +1,1358 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock "f" 0x 0x151f7c75 0x151f7c750000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000002 0x010000000000000000000000000000000000000000000000000000000000000000 0x0de0b6b3a7640000 0x0000000000000000000000000000000000000000000000010000000000000000 0x0000000000000000000000000000000000000000000000000000000100000000 0x0000000000000000000000000000000000000000000000000000000000010000 0x0000000000000000000000000000000000000000000000000000000000000100 0x0000000000000000000000000000000000000000000000000000000000000010
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.avg_2602(x: bytes, y: bytes) -> bytes:
+avg:
+    proto 2 1
+    frame_dig -2
+    callsub unwrap
+    frame_dig -1
+    callsub unwrap
+    dup2
+    b&
+    cover 2
+    b^
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    b+
+    callsub wrap
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.ceil_2631(x: bytes) -> bytes:
+ceil:
+    proto 1 1
+    frame_dig -1
+    callsub unwrap
+    pushbytes 0xfffffffffffffffffffffffffffffffffffffffffffffffff7e52fe5afe40000
+    b>
+    !
+    assert // PRBMath_UD60x18_Ceil_Overflow
+    frame_dig -1
+    bytec 6 // 0x0de0b6b3a7640000
+    b%
+    pushbytes 0x010000000000000000000000000000000000000000000000000de0b6b3a7640000
+    dig 1
+    b-
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    swap
+    bytec_1 // 0x
+    b>
+    bytec_1 // 0x
+    pushbytes 0x01
+    uncover 2
+    select
+    b*
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    b+
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.floor_2763(x: bytes) -> bytes:
+floor:
+    proto 1 1
+    frame_dig -1
+    bytec 6 // 0x0de0b6b3a7640000
+    b%
+    frame_dig -1
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 1
+    bytec_1 // 0x
+    b>
+    bytec_1 // 0x
+    pushbytes 0x01
+    uncover 2
+    select
+    uncover 2
+    b*
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b-
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.frac_2775(x: bytes) -> bytes:
+frac:
+    proto 1 1
+    frame_dig -1
+    bytec 6 // 0x0de0b6b3a7640000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.gm_2842(x: bytes, y: bytes) -> bytes:
+gm:
+    proto 2 1
+    frame_dig -2
+    callsub unwrap
+    dup
+    frame_dig -1
+    callsub unwrap
+    swap
+    intc_2 // 0
+    itob
+    dup
+    cover 2
+    b==
+    bnz gm_if_body@2
+    frame_dig 1
+    frame_dig 2
+    b==
+    bz gm_after_if_else@3
+
+gm_if_body@2:
+    frame_dig 2
+    frame_bury 0
+    retsub
+
+gm_after_if_else@3:
+    frame_dig 0
+    dup
+    frame_dig 1
+    dup
+    cover 3
+    b*
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    uncover 2
+    b/
+    uncover 2
+    b!=
+    !
+    assert // PRBMath_UD60x18_Gm_Overflow
+    callsub sqrt
+    callsub wrap
+    frame_bury 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.inv_2864(x: bytes) -> bytes:
+inv:
+    proto 1 1
+    frame_dig -1
+    callsub unwrap
+    pushbytes 0xc097ce7bc90715b34b9f1000000000
+    swap
+    b/
+    callsub wrap
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.sqrt(x: bytes) -> bytes:
+sqrt:
+    proto 1 1
+    intc_2 // 0
+    dupn 3
+    itob
+    dup
+    frame_dig -1
+    b==
+    bz sqrt_after_if_else@2
+    frame_dig 3
+    frame_bury 0
+    retsub
+
+sqrt_after_if_else@2:
+    intc_1 // 1
+    itob
+    frame_bury 0
+    frame_dig -1
+    pushbytes 0x0100000000000000000000000000000000
+    b>=
+    bnz sqrt_if_body@3
+    frame_dig -1
+    frame_bury 2
+
+sqrt_after_if_else@4:
+    frame_dig 2
+    pushbytes 0x010000000000000000
+    b>=
+    bz sqrt_after_if_else@6
+    frame_dig 2
+    bytec 7 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b/
+    frame_bury 2
+    frame_dig 0
+    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000100000000
+    b*
+    frame_bury 0
+
+sqrt_after_if_else@6:
+    pushint 4294967296
+    itob
+    frame_dig 2
+    b<=
+    bz sqrt_after_if_else@8
+    frame_dig 2
+    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000100000000
+    b/
+    frame_bury 2
+    frame_dig 0
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000010000
+    b*
+    frame_bury 0
+
+sqrt_after_if_else@8:
+    pushint 65536
+    itob
+    frame_dig 2
+    b<=
+    bz sqrt_after_if_else@10
+    frame_dig 2
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000010000
+    b/
+    frame_bury 2
+    frame_dig 0
+    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000100
+    b*
+    frame_bury 0
+
+sqrt_after_if_else@10:
+    pushint 256
+    itob
+    frame_dig 2
+    b<=
+    bz sqrt_after_if_else@12
+    frame_dig 2
+    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000100
+    b/
+    frame_bury 2
+    frame_dig 0
+    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000000010
+    b*
+    frame_bury 0
+
+sqrt_after_if_else@12:
+    pushint 16
+    itob
+    frame_dig 2
+    b<=
+    bz sqrt_after_if_else@14
+    frame_dig 2
+    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000000010
+    b/
+    frame_bury 2
+    frame_dig 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
+    b*
+    frame_bury 0
+
+sqrt_after_if_else@14:
+    pushint 4
+    itob
+    frame_dig 2
+    b<=
+    bz sqrt_after_if_else@16
+    frame_dig 0
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b*
+    frame_bury 0
+
+sqrt_after_if_else@16:
+    frame_dig -1
+    frame_dig 0
+    dup
+    cover 2
+    b/
+    b+
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    frame_dig -1
+    dig 1
+    b/
+    b+
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    frame_dig -1
+    dig 1
+    b/
+    b+
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    frame_dig -1
+    dig 1
+    b/
+    b+
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    frame_dig -1
+    dig 1
+    b/
+    b+
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    frame_dig -1
+    dig 1
+    b/
+    b+
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    frame_dig -1
+    dig 1
+    b/
+    b+
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    dup
+    frame_bury 0
+    frame_dig -1
+    dig 1
+    b/
+    dup
+    frame_bury 1
+    b>=
+    bz sqrt_after_if_else@18
+    frame_dig 1
+    frame_bury 0
+
+sqrt_after_if_else@18:
+    retsub
+
+sqrt_if_body@3:
+    frame_dig -1
+    pushbytes 0x0000000000000000000000000000000100000000000000000000000000000000
+    b/
+    frame_bury 2
+    bytec 7 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    frame_bury 0
+    b sqrt_after_if_else@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.sqrt_3294(x: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.sqrt_3294:
+    proto 1 1
+    frame_dig -1
+    callsub unwrap
+    pushint 1000000000000000000
+    itob
+    dig 1
+    pushbytes 0x12725dd1d243aba0e75fe645cc4873f9e65afe688c928e1f21
+    b>
+    !
+    assert // PRBMath_UD60x18_Sqrt_Overflow
+    b*
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    callsub sqrt
+    callsub wrap
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.unwrap_2521(x: bytes) -> bytes:
+unwrap:
+    proto 1 1
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.wrap_2538(x: bytes) -> bytes:
+wrap:
+    proto 1 1
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn NumAppArgs
+    bz __puya_arc4_router_____bare_create__@41
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xef36dab9 0x704b94dd 0x06d93317 0x44f55f24 0x1c82b4fe 0xd3cd40e1 0x4b57d4d9 0x81523cb9 0x8a26489d 0x1026cc30 0x1bb06d86 0x88d9cdd2 0x5e755b1e 0x766208ac 0x3102179b 0x991c1a35 0x23bcb8a0 0x8d508459 0x96028fa4 0xae569e05 0xc6fa7dd3 0x2ef75913 0xe841beb7 0x488a5c6b 0x2b4d0629 0xab699379 0x7855d31e 0xdcac28f0 0xd97f4c87 0xbef06e58 0x458558be 0x5e43e8b5 0x52f1a74e 0x7f544ee8 0x0152a0fe // method "avg(uint256,uint256)uint256", method "ceil(uint256)uint256", method "div(uint256,uint256)uint256", method "__finish_div()uint256", method "exp(uint256)uint256", method "__finish_exp()uint256", method "exp2(uint256)uint256", method "__finish_exp2()uint256", method "floor(uint256)uint256", method "frac(uint256)uint256", method "gm(uint256,uint256)uint256", method "inv(uint256)uint256", method "ln(uint256)uint256", method "__finish_ln()uint256", method "log2(uint256)uint256", method "__finish_log2()uint256", method "log10(uint256)uint256", method "__finish_log10()uint256", method "mul(uint256,uint256)uint256", method "__finish_mul()uint256", method "pow(uint256,uint256)uint256", method "__finish_pow()uint256", method "powu(uint256,uint256)uint256", method "__finish_powu()uint256", method "sqrt(uint256)uint256", method "mulDiv(uint256,uint256,uint256)uint256", method "__finish_mulDiv()uint256", method "mulDiv18(uint256,uint256)uint256", method "__finish_mulDiv18()uint256", method "commonSqrt(uint256)uint256", method "commonExp2(uint256)uint256", method "__finish_commonExp2()uint256", method "msb(uint256)uint256", method "__finish_msb()uint256", method "__auth__()void"
+    txna ApplicationArgs 0
+    match /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.avg[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.ceil[routing] div __finish_div exp __finish_exp exp2 __finish_exp2 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.floor[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.frac[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.gm[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.inv[routing] ln __finish_ln log2 __finish_log2 log10 __finish_log10 mul __finish_mul pow __finish_pow powu __finish_powu /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.sqrt[routing] mulDiv __finish_mulDiv mulDiv18 __finish_mulDiv18 commonSqrt commonExp2 __finish_commonExp2 msb __finish_msb __puya_arc4_router_____auth___route@37
+    err
+
+__puya_arc4_router_____auth___route@37:
+    intc_1 // 1
+    return
+
+__puya_arc4_router_____bare_create__@41:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    assert
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.avg[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.avg[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub avg
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.ceil[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.ceil[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub ceil
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.div[routing]() -> void:
+div:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    ==
+    assert // orchestrator: reentrant call
+    bytec_0 // "f"
+    txna ApplicationArgs 0
+    app_global_put
+    store 1
+    store 0
+    bytec_3 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.__finish_div[routing]() -> void:
+__finish_div:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gloads 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.exp[routing]() -> void:
+exp:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    ==
+    assert // orchestrator: reentrant call
+    bytec_0 // "f"
+    txna ApplicationArgs 0
+    app_global_put
+    store 0
+    bytec_3 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.__finish_exp[routing]() -> void:
+__finish_exp:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gloads 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.exp2[routing]() -> void:
+exp2:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    ==
+    assert // orchestrator: reentrant call
+    bytec_0 // "f"
+    txna ApplicationArgs 0
+    app_global_put
+    store 0
+    bytec_3 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.__finish_exp2[routing]() -> void:
+__finish_exp2:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gloads 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.floor[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.floor[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub floor
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.frac[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.frac[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub frac
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.gm[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.gm[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub gm
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.inv[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.inv[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub inv
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.ln[routing]() -> void:
+ln:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    ==
+    assert // orchestrator: reentrant call
+    bytec_0 // "f"
+    txna ApplicationArgs 0
+    app_global_put
+    store 0
+    bytec_3 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.__finish_ln[routing]() -> void:
+__finish_ln:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gloads 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.log2[routing]() -> void:
+log2:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    ==
+    assert // orchestrator: reentrant call
+    bytec_0 // "f"
+    txna ApplicationArgs 0
+    app_global_put
+    store 0
+    bytec_3 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.__finish_log2[routing]() -> void:
+__finish_log2:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gloads 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.log10[routing]() -> void:
+log10:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    ==
+    assert // orchestrator: reentrant call
+    bytec_0 // "f"
+    txna ApplicationArgs 0
+    app_global_put
+    store 0
+    bytec_3 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.__finish_log10[routing]() -> void:
+__finish_log10:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gloads 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.mul[routing]() -> void:
+mul:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    ==
+    assert // orchestrator: reentrant call
+    bytec_0 // "f"
+    txna ApplicationArgs 0
+    app_global_put
+    store 1
+    store 0
+    bytec_3 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.__finish_mul[routing]() -> void:
+__finish_mul:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gloads 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.pow[routing]() -> void:
+pow:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    ==
+    assert // orchestrator: reentrant call
+    bytec_0 // "f"
+    txna ApplicationArgs 0
+    app_global_put
+    store 1
+    store 0
+    bytec_3 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.__finish_pow[routing]() -> void:
+__finish_pow:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gloads 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.powu[routing]() -> void:
+powu:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    ==
+    assert // orchestrator: reentrant call
+    bytec_0 // "f"
+    txna ApplicationArgs 0
+    app_global_put
+    store 1
+    store 0
+    bytec_3 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.__finish_powu[routing]() -> void:
+__finish_powu:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gloads 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.sqrt[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.sqrt[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.sqrt_3294
+    callsub unwrap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.mulDiv[routing]() -> void:
+mulDiv:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    ==
+    assert // orchestrator: reentrant call
+    bytec_0 // "f"
+    txna ApplicationArgs 0
+    app_global_put
+    uncover 2
+    store 0
+    store 2
+    store 1
+    bytec_3 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.__finish_mulDiv[routing]() -> void:
+__finish_mulDiv:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gloads 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.mulDiv18[routing]() -> void:
+mulDiv18:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    ==
+    assert // orchestrator: reentrant call
+    bytec_0 // "f"
+    txna ApplicationArgs 0
+    app_global_put
+    store 1
+    store 0
+    bytec_3 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.__finish_mulDiv18[routing]() -> void:
+__finish_mulDiv18:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gloads 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.commonSqrt[routing]() -> void:
+commonSqrt:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub sqrt
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.commonExp2[routing]() -> void:
+commonExp2:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    ==
+    assert // orchestrator: reentrant call
+    bytec_0 // "f"
+    txna ApplicationArgs 0
+    app_global_put
+    store 0
+    bytec_3 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.__finish_commonExp2[routing]() -> void:
+__finish_commonExp2:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gloads 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.msb[routing]() -> void:
+msb:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    ==
+    assert // orchestrator: reentrant call
+    bytec_0 // "f"
+    txna ApplicationArgs 0
+    app_global_put
+    store 0
+    bytec_3 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper.__finish_msb[routing]() -> void:
+__finish_msb:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gloads 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

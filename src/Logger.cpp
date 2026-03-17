@@ -93,6 +93,17 @@ void Logger::resetCounters()
 	m_errorCount = 0;
 }
 
+void Logger::setOutputLogFile(std::string const& _path)
+{
+	m_logFile.open(_path, std::ios::out | std::ios::trunc);
+}
+
+void Logger::closeLogFile()
+{
+	if (m_logFile.is_open())
+		m_logFile.close();
+}
+
 void Logger::log(LogLevel _level, std::string const& _msg, awst::SourceLocation const* _loc)
 {
 	if (_level < m_minLevel)
@@ -102,6 +113,13 @@ void Logger::log(LogLevel _level, std::string const& _msg, awst::SourceLocation 
 	if (_loc && !_loc->file.empty())
 		std::cerr << formatLocation(*_loc) << " ";
 	std::cerr << levelString(_level) << ": " << resetColor() << _msg << std::endl;
+
+	if (m_logFile.is_open())
+	{
+		if (_loc && !_loc->file.empty())
+			m_logFile << formatLocation(*_loc) << " ";
+		m_logFile << levelString(_level) << ": " << _msg << std::endl;
+	}
 }
 
 std::string Logger::formatLocation(awst::SourceLocation const& _loc)

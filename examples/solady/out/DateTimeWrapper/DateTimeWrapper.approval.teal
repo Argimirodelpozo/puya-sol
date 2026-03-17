@@ -1,0 +1,671 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 2000 86400
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x 0x01 0x151f7c75 0x03 0x0190 0x016d 0x023ab1 0x068101 0xf4ff 0x0301 0x0000000000000000000000000000000000000000000000000000000000000800 0x0000000000000000000000000000000000000000000000000000000000000004
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xdc1f0830 0x6a00b825 0x3a3e4243 0x126700c8 0x1e2417cd 0x2474d60f 0x7f09e4f2 // method "dateToEpochDay(uint256,uint256,uint256)uint256", method "epochDayToDate(uint256)(uint256,uint256,uint256)", method "dateToTimestamp(uint256,uint256,uint256)uint256", method "timestampToDate(uint256)(uint256,uint256,uint256)", method "isLeapYear(uint256)bool", method "daysInMonth(uint256,uint256)uint256", method "weekday(uint256)uint256"
+    txna ApplicationArgs 0
+    match dateToEpochDay epochDayToDate dateToTimestamp timestampToDate isLeapYear daysInMonth weekday
+    err
+
+
+// _puya_lib.util.ensure_budget(required_budget: uint64, fee_source: uint64) -> void:
+ensure_budget:
+    proto 2 0
+    frame_dig -2
+    pushint 10
+    +
+
+ensure_budget_while_top@1:
+    frame_dig 0
+    global OpcodeBudget
+    >
+    bz ensure_budget_after_while@6
+    itxn_begin
+    pushint 6 // appl
+    itxn_field TypeEnum
+    pushint 5 // DeleteApplication
+    itxn_field OnCompletion
+    bytec 8 // 0x068101
+    itxn_field ApprovalProgram
+    bytec 8 // 0x068101
+    itxn_field ClearStateProgram
+    frame_dig -1
+    switch ensure_budget_switch_case_0@3 ensure_budget_switch_case_1@4
+
+ensure_budget_switch_case_next@5:
+    itxn_submit
+    b ensure_budget_while_top@1
+
+ensure_budget_switch_case_1@4:
+    global MinTxnFee
+    itxn_field Fee
+    b ensure_budget_switch_case_next@5
+
+ensure_budget_switch_case_0@3:
+    intc_2 // 0
+    itxn_field Fee
+    b ensure_budget_switch_case_next@5
+
+ensure_budget_after_while@6:
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeLib.dateToEpochDay(year: bytes, month: bytes, day: bytes) -> bytes:
+DateTimeLib.dateToEpochDay:
+    proto 3 1
+    frame_dig -3
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig -2
+    bytec 4 // 0x03
+    b<
+    bytec_1 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury -3
+    frame_dig -2
+    pushbytes 0x09
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0x0c
+    b%
+    bytec 9 // 0xf4ff
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 10 // 0x0301
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000000800
+    b/
+    frame_dig -1
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -3
+    bytec 5 // 0x0190
+    b%
+    dup
+    bytec 6 // 0x016d
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 1
+    bytec 12 // 0x0000000000000000000000000000000000000000000000000000000000000004
+    b/
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 2
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    pushbytes 0x64
+    b/
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -3
+    bytec 5 // 0x0190
+    b/
+    bytec 7 // 0x023ab1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    pushbytes 0x0afa6d
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeLib.epochDayToDate(epochDay: bytes) -> bytes, bytes, bytes:
+DateTimeLib.epochDayToDate:
+    proto 1 3
+    frame_dig -1
+    pushbytes 0x0afa6c
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -1
+    bytec 7 // 0x023ab1
+    b%
+    dup
+    pushbytes 0x8eac
+    b/
+    dig 1
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 1
+    pushbytes 0x05b4
+    b/
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 1
+    pushbytes 0x023ab0
+    b==
+    bytec_1 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 6 // 0x016d
+    b/
+    swap
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec 6 // 0x016d
+    dig 2
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 8
+    bzero
+    dig 3
+    bytec 12 // 0x0000000000000000000000000000000000000000000000000000000000000004
+    b/
+    uncover 2
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 3
+    pushbytes 0x64
+    b/
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 2
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0x05
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0x02
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0x99
+    b/
+    swap
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 1
+    bytec 9 // 0xf4ff
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 10 // 0x0301
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000000800
+    b/
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_2 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    cover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    pushbytes 0x030405060708090a0b0c01020000000000000000000000000000000000000000
+    swap
+    intc_1 // 1
+    extract3
+    frame_dig -1
+    bytec 7 // 0x023ab1
+    b/
+    bytec 5 // 0x0190
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 3
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 1
+    bytec 4 // 0x03
+    b<
+    bytec_1 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    swap
+    uncover 2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeLib.dateToTimestamp(year: bytes, month: bytes, day: bytes) -> bytes:
+DateTimeLib.dateToTimestamp:
+    proto 3 1
+    frame_dig -3
+    frame_dig -2
+    frame_dig -1
+    callsub DateTimeLib.dateToEpochDay
+    intc 4 // 86400
+    itob
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeLib.timestampToDate(timestamp: bytes) -> bytes, bytes, bytes:
+DateTimeLib.timestampToDate:
+    proto 1 3
+    intc 4 // 86400
+    itob
+    frame_dig -1
+    swap
+    b/
+    dup
+    callsub DateTimeLib.epochDayToDate
+    popn 3
+    dup
+    callsub DateTimeLib.epochDayToDate
+    popn 2
+    swap
+    dup
+    callsub DateTimeLib.epochDayToDate
+    pop
+    cover 2
+    pop
+    callsub DateTimeLib.epochDayToDate
+    cover 2
+    popn 2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeLib.isLeapYear(year: bytes) -> uint64:
+DateTimeLib.isLeapYear:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0x19
+    b%
+    bytec_1 // 0x
+    b==
+    bytec_1 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    pushbytes 0x0c
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 4 // 0x03
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    b&
+    bytec_1 // 0x
+    b==
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeLib.daysInMonth(year: bytes, month: bytes) -> bytes:
+DateTimeLib.daysInMonth:
+    proto 2 1
+    frame_dig -2
+    callsub DateTimeLib.isLeapYear
+    pushint 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    pushbytes 0x001f1c1f1e1f1e1f1f1e1f1e1f00000000000000000000000000000000000000
+    swap
+    intc_1 // 1
+    extract3
+    frame_dig -1
+    pushbytes 0x02
+    b==
+    bytec_1 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    bytec_1 // 0x
+    bytec_2 // 0x01
+    uncover 4
+    select
+    b&
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeLib.weekday(timestamp: bytes) -> bytes:
+DateTimeLib.weekday:
+    proto 1 1
+    intc 4 // 86400
+    itob
+    frame_dig -1
+    swap
+    b/
+    pushint 3
+    itob
+    b+
+    pushint 7
+    itob
+    b%
+    intc_1 // 1
+    itob
+    b+
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper.dateToEpochDay[routing]() -> void:
+dateToEpochDay:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_3 // 2000
+    intc_2 // 0
+    callsub ensure_budget
+    callsub DateTimeLib.dateToEpochDay
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper.epochDayToDate[routing]() -> void:
+epochDayToDate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_3 // 2000
+    intc_2 // 0
+    callsub ensure_budget
+    callsub DateTimeLib.epochDayToDate
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 3
+    dig 1
+    b|
+    dig 3
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    dig 2
+    b|
+    concat
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper.dateToTimestamp[routing]() -> void:
+dateToTimestamp:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_3 // 2000
+    intc_2 // 0
+    callsub ensure_budget
+    callsub DateTimeLib.dateToTimestamp
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper.timestampToDate[routing]() -> void:
+timestampToDate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_3 // 2000
+    intc_2 // 0
+    callsub ensure_budget
+    callsub DateTimeLib.timestampToDate
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 3
+    dig 1
+    b|
+    dig 3
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    dig 2
+    b|
+    concat
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper.isLeapYear[routing]() -> void:
+isLeapYear:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_3 // 2000
+    intc_2 // 0
+    callsub ensure_budget
+    callsub DateTimeLib.isLeapYear
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper.daysInMonth[routing]() -> void:
+daysInMonth:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_3 // 2000
+    intc_2 // 0
+    callsub ensure_budget
+    callsub DateTimeLib.daysInMonth
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper.weekday[routing]() -> void:
+weekday:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_3 // 2000
+    intc_2 // 0
+    callsub ensure_budget
+    callsub DateTimeLib.weekday
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

@@ -32,14 +32,51 @@ set(SOURCES
 	src/Logger.cpp
 	src/awst/WType.cpp
 	src/awst/Node.cpp
+	# Builder core
 	src/builder/AWSTBuilder.cpp
-	src/builder/TypeMapper.cpp
-	src/builder/ExpressionTranslator.cpp
-	src/builder/StatementTranslator.cpp
-	src/builder/ContractTranslator.cpp
-	src/builder/StorageMapper.cpp
-	src/builder/IntrinsicMapper.cpp
-	src/builder/AssemblyTranslator.cpp
+	src/builder/ContractBuilder.cpp
+
+	# Expression builder (split by expression type)
+	src/builder/expressions/ExpressionBuilder.cpp
+	src/builder/expressions/LiteralBuilder.cpp
+	src/builder/expressions/IdentifierBuilder.cpp
+	src/builder/expressions/BinaryOperationBuilder.cpp
+	src/builder/expressions/UnaryOperationBuilder.cpp
+	src/builder/expressions/FunctionCallBuilder.cpp
+	src/builder/expressions/MemberAccessBuilder.cpp
+	src/builder/expressions/IndexAccessBuilder.cpp
+	src/builder/expressions/ConditionalBuilder.cpp
+	src/builder/expressions/AssignmentBuilder.cpp
+	src/builder/expressions/TupleBuilder.cpp
+	src/builder/expressions/HelpersBuilder.cpp
+
+	# Statement builder (split by statement type)
+	src/builder/statements/StatementBuilder.cpp
+	src/builder/statements/ExpressionStatementBuilder.cpp
+	src/builder/statements/ReturnBuilder.cpp
+	src/builder/statements/ControlFlowBuilder.cpp
+	src/builder/statements/VariableDeclarationBuilder.cpp
+	src/builder/statements/EmitBuilder.cpp
+	src/builder/statements/RevertBuilder.cpp
+	src/builder/statements/InlineAssemblyBuilder.cpp
+
+	# Assembly builder (split by operation type)
+	src/builder/assembly/AssemblyBuilder.cpp
+	src/builder/assembly/CoreTranslation.cpp
+	src/builder/assembly/ArithmeticOps.cpp
+	src/builder/assembly/BitwiseShiftOps.cpp
+	src/builder/assembly/SignedOps.cpp
+	src/builder/assembly/DataOps.cpp
+	src/builder/assembly/MemoryHelpers.cpp
+	src/builder/assembly/PrecompileDispatch.cpp
+	src/builder/assembly/PrecompileHandlers.cpp
+	src/builder/assembly/MemoryOps.cpp
+	src/builder/assembly/StatementOps.cpp
+
+	# Storage, type, and intrinsic mappers
+	src/builder/storage/StorageMapper.cpp
+	src/builder/sol-types/TypeMapper.cpp
+	src/builder/sol-intrinsics/IntrinsicMapper.cpp
 	src/json/AWSTSerializer.cpp
 	src/json/Base85.cpp
 	src/json/OptionsWriter.cpp

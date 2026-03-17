@@ -2,6 +2,7 @@
 
 #include "awst/SourceLocation.h"
 
+#include <fstream>
 #include <string>
 
 namespace puyasol
@@ -16,6 +17,8 @@ public:
 
 	void setMinLevel(LogLevel _level);
 	void setColorEnabled(bool _enabled);
+	void setOutputLogFile(std::string const& _path);
+	void closeLogFile();
 
 	void debug(std::string const& _msg);
 	void debug(std::string const& _msg, awst::SourceLocation const& _loc);
@@ -44,6 +47,7 @@ private:
 	bool m_colorEnabled = false;
 	int m_warningCount = 0;
 	int m_errorCount = 0;
+	std::ofstream m_logFile;
 };
 
 } // namespace puyasol

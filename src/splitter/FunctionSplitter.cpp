@@ -343,6 +343,7 @@ std::vector<std::shared_ptr<awst::Subroutine>> FunctionSplitter::splitFunction(
 		chunk->id = _func->id + "__chunk_" + std::to_string(c);
 		chunk->name = _func->name + "__chunk_" + std::to_string(c);
 		chunk->pure = _func->pure;
+		chunk->inlineOpt = false; // Prevent puya from inlining chunks back
 
 		// Args: original function params + live vars from previous split.
 		// When a param is redefined and appears as a live var, skip the
@@ -984,6 +985,43 @@ void FunctionSplitter::collectStmtDefs(
 			auto const& var = static_cast<awst::VarExpression const&>(*ba.target);
 			_defs.insert(var.name);
 		}
+	}
+	// Recurse into compound statements to find nested defs
+	else if (type == "Switch")
+	{
+		auto const& sw = static_cast<awst::Switch const&>(_stmt);
+		for (auto const& [caseExpr, caseBlock]: sw.cases)
+		{
+			if (caseBlock)
+				for (auto const& s: caseBlock->body)
+					if (s) collectStmtDefs(*s, _defs);
+		}
+		if (sw.defaultCase)
+			for (auto const& s: sw.defaultCase->body)
+				if (s) collectStmtDefs(*s, _defs);
+	}
+	else if (type == "IfElse")
+	{
+		auto const& ie = static_cast<awst::IfElse const&>(_stmt);
+		if (ie.ifBranch)
+			for (auto const& s: ie.ifBranch->body)
+				if (s) collectStmtDefs(*s, _defs);
+		if (ie.elseBranch)
+			for (auto const& s: ie.elseBranch->body)
+				if (s) collectStmtDefs(*s, _defs);
+	}
+	else if (type == "WhileLoop")
+	{
+		auto const& wl = static_cast<awst::WhileLoop const&>(_stmt);
+		if (wl.loopBody)
+			for (auto const& s: wl.loopBody->body)
+				if (s) collectStmtDefs(*s, _defs);
+	}
+	else if (type == "Block")
+	{
+		auto const& bl = static_cast<awst::Block const&>(_stmt);
+		for (auto const& s: bl.body)
+			if (s) collectStmtDefs(*s, _defs);
 	}
 }
 

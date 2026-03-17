@@ -52,6 +52,11 @@ public:
 	static WType const* applicationType();
 	static WType const* stateKeyType();
 	static WType const* boxKeyType();
+	static WType const* arc4BoolType();
+
+	/// Force this type to report as immutable, preventing puya's implicit
+	/// mutable arg threading. Used when we handle write-back explicitly.
+	void forceImmutable() { m_immutable = true; }
 
 protected:
 	WType(std::string _name, WTypeKind _kind, bool _immutable = true)
@@ -87,16 +92,25 @@ private:
 class ARC4UIntN: public WType
 {
 public:
-	explicit ARC4UIntN(int _n)
-		: WType("arc4.uint" + std::to_string(_n), WTypeKind::ARC4UIntN, true), m_n(_n)
+	explicit ARC4UIntN(int _n, std::string _arc4Alias = "")
+		: WType(
+			_arc4Alias.empty()
+				? "arc4.uint" + std::to_string(_n)
+				: "arc4." + _arc4Alias,
+			WTypeKind::ARC4UIntN, true
+		  ),
+		  m_n(_n),
+		  m_arc4Alias(std::move(_arc4Alias))
 	{
 	}
 
 	std::string jsonType() const override { return "ARC4UIntN"; }
 	int n() const { return m_n; }
+	std::string const& arc4Alias() const { return m_arc4Alias; }
 
 private:
 	int m_n;
+	std::string m_arc4Alias;
 };
 
 class ARC4UFixedNxM: public WType

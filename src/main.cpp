@@ -151,6 +151,7 @@ struct Options
 	bool inlineAll = false;
 	int optimizationLevel = 1;
 	bool outputIr = false;
+	bool outputLogs = true;
 };
 
 void printUsage(char const* _progName)
@@ -173,6 +174,7 @@ void printUsage(char const* _progName)
 		<< "  --inline-all               Fully inline all subroutine calls before splitting\n"
 		<< "  --optimization-level <N>   Puya optimization level: 0, 1, 2 (default: 1)\n"
 		<< "  --output-ir            Output all intermediate representations (SSA IR, MIR, TEAL)\n"
+		<< "  --no-output-logs       Disable writing compilation logs to output directory\n"
 		<< "  --help                 Show this help message\n";
 }
 
@@ -212,6 +214,8 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.optimizationLevel = std::stoi(_argv[++i]);
 		else if (arg == "--output-ir")
 			opts.outputIr = true;
+		else if (arg == "--no-output-logs")
+			opts.outputLogs = false;
 		else if (arg == "--help")
 		{
 			printUsage(_argv[0]);
@@ -242,6 +246,14 @@ int main(int _argc, char* _argv[])
 		logger.setMinLevel(puyasol::LogLevel::Error);
 	else
 		logger.setMinLevel(puyasol::LogLevel::Info);
+
+	// Set up log file output (on by default)
+	if (opts.outputLogs)
+	{
+		fs::create_directories(opts.outputDir);
+		std::string logPath = (fs::path(opts.outputDir) / "puya-sol.log").string();
+		logger.setOutputLogFile(logPath);
+	}
 
 	if (opts.sourceFile.empty())
 	{
@@ -786,22 +798,12 @@ int main(int _argc, char* _argv[])
 			}
 		}
 
-		// ─── Phase 1: Size estimation ────────────────────────────────────────
+		// ─── Phase 1: Size estimation (disabled — estimator is inaccurate) ──
+		// The size estimator currently overestimates significantly (e.g. 33KB
+		// estimated vs 6.5KB actual), so we skip the warning/recommendation
+		// unless --split-contracts is explicitly requested.
 		puyasol::splitter::SizeEstimator estimator;
 		auto estimate = estimator.estimate(*primaryContract, subroutines);
-
-		logger.info("Size estimate for '" + primaryContract->name + "': " +
-			std::to_string(estimate.totalInstructions) + " instructions, ~" +
-			std::to_string(estimate.estimatedBytes) + " bytes");
-
-		// Log per-method breakdown at debug level
-		for (auto const& [name, size]: estimate.methodSizes)
-			logger.debug("  " + name + ": " + std::to_string(size) + " instructions");
-
-		if (estimate.estimatedBytes > puyasol::splitter::SizeEstimator::WarnThresholdBytes)
-			logger.warning("Contract '" + primaryContract->name + "' estimated at ~" +
-				std::to_string(estimate.estimatedBytes) + " bytes, exceeds AVM limit of ~" +
-				std::to_string(puyasol::splitter::SizeEstimator::AVMMaxBytes) + " bytes");
 
 		// ─── Phase 2: Call graph analysis ────────────────────────────────────
 		puyasol::splitter::CallGraphAnalyzer analyzer;
@@ -892,13 +894,8 @@ int main(int _argc, char* _argv[])
 				return worstExit;
 			}
 		}
-		else if (recommendation.shouldSplit)
-		{
-			logger.info("Contract is oversized. Use --split-contracts to automatically split.");
-			if (!recommendation.partitions.empty())
-				logger.info("Recommended " + std::to_string(recommendation.partitions.size()) +
-					" partitions");
-		}
+		// Size estimator is currently broken (overestimates significantly),
+		// so we don't emit split recommendations unless explicitly requested.
 	}
 
 	// ─── Normal (non-split) serialization and output ───────────────────────

@@ -1,0 +1,637 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper__Helper4.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 1 32 0 2 1000000000000000000
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x 0x010000000000000000000000000000000000000000000000000000000000000002 "o" 0x01 "p" "s" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000000000000000000000000000000000000000000000000000000000000002 0x151f7c75
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.mulDiv(x: bytes, y: bytes, denominator: bytes) -> bytes:
+mulDiv:
+    proto 3 1
+    intc_2 // 0
+    bytec_1 // ""
+    frame_dig -3
+    frame_dig -2
+    b*
+    dupn 2
+    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b%
+    swap
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    uncover 2
+    dup
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 2
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    uncover 2
+    b<
+    bytec_1 // 0x
+    bytec 4 // 0x01
+    uncover 2
+    select
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    intc_2 // 0
+    itob
+    b==
+    bz mulDiv_after_if_else@2
+    frame_dig 3
+    frame_dig -1
+    b/
+    frame_bury 0
+    retsub
+
+mulDiv_after_if_else@2:
+    frame_dig 4
+    dup
+    frame_dig -1
+    b>=
+    !
+    assert // PRBMath_MulDiv_Overflow
+    frame_dig 2
+    frame_dig -1
+    b%
+    swap
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 1
+    frame_dig 3
+    dup
+    cover 3
+    b>
+    bytec_1 // 0x
+    bytec 4 // 0x01
+    uncover 2
+    select
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 4
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 3
+    frame_dig -1
+    b~
+    intc_0 // 1
+    itob
+    b+
+    frame_dig -1
+    b&
+    dup
+    frame_bury 0
+    bytec_1 // 0x
+    b!=
+    dup
+    frame_bury 1
+    bz mulDiv_ternary_false@6
+    frame_dig -1
+    frame_dig 0
+    b/
+    frame_bury -1
+
+mulDiv_ternary_merge@7:
+    frame_dig 1
+    bz mulDiv_ternary_false@9
+    frame_dig 3
+    frame_dig 0
+    b/
+    frame_bury 3
+
+mulDiv_ternary_merge@10:
+    frame_dig 1
+    bz mulDiv_ternary_false@12
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    frame_dig 0
+    dup
+    cover 2
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    swap
+    b/
+
+mulDiv_ternary_merge@13:
+    bytec 4 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 4
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 3
+    b|
+    pushint 3
+    itob
+    frame_dig -1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    intc_3 // 2
+    itob
+    b^
+    frame_dig -1
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    dig 1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000002
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 0
+    retsub
+
+mulDiv_ternary_false@12:
+    bytec_1 // 0x
+    b mulDiv_ternary_merge@13
+
+mulDiv_ternary_false@9:
+    bytec_1 // 0x
+    frame_bury 3
+    b mulDiv_ternary_merge@10
+
+mulDiv_ternary_false@6:
+    bytec_1 // 0x
+    frame_bury -1
+    b mulDiv_ternary_merge@7
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.powu_3252(x: bytes, y: bytes) -> bytes:
+powu:
+    proto 2 1
+    intc_2 // 0
+    frame_dig -2
+    callsub unwrap
+    intc_0 // 1
+    itob
+    dup
+    frame_dig -1
+    b&
+    intc_2 // 0
+    itob
+    dup
+    cover 2
+    b>
+    bz powu_ternary_false@2
+    frame_dig 1
+    frame_bury 0
+
+powu_ternary_merge@3:
+    frame_dig -1
+    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    frame_bury -1
+
+powu_while_top@4:
+    frame_dig -1
+    frame_dig 3
+    b>
+    bz powu_after_while@8
+    frame_dig 1
+    dup
+    callsub mulDiv18
+    frame_bury 1
+    frame_dig -1
+    frame_dig 2
+    b&
+    frame_dig 3
+    b>
+    bz powu_after_if_else@7
+    frame_dig 0
+    frame_dig 1
+    callsub mulDiv18
+    frame_bury 0
+
+powu_after_if_else@7:
+    frame_dig -1
+    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    b/
+    frame_bury -1
+    b powu_while_top@4
+
+powu_after_while@8:
+    frame_dig 0
+    callsub wrap
+    frame_bury 0
+    retsub
+
+powu_ternary_false@2:
+    intc 4 // 1000000000000000000
+    itob
+    frame_bury 0
+    b powu_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.unwrap_2521(x: bytes) -> bytes:
+unwrap:
+    proto 1 1
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.wrap_2538(x: bytes) -> bytes:
+wrap:
+    proto 1 1
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.mulDiv18(x: bytes, y: bytes) -> bytes:
+mulDiv18:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b*
+    dupn 2
+    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b%
+    swap
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    uncover 2
+    dup
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 2
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    uncover 2
+    b<
+    bytec_1 // 0x
+    bytec 4 // 0x01
+    uncover 2
+    select
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    cover 2
+    intc_2 // 0
+    itob
+    b==
+    bz mulDiv18_after_if_else@2
+    intc 4 // 1000000000000000000
+    itob
+    b/
+    frame_bury 0
+    retsub
+
+mulDiv18_after_if_else@2:
+    intc 4 // 1000000000000000000
+    itob
+    frame_dig 1
+    dup
+    uncover 2
+    b>=
+    !
+    assert // PRBMath_MulDiv18_Overflow
+    frame_dig 0
+    pushbytes 0x0de0b6b3a7640000
+    b%
+    uncover 2
+    dup
+    cover 2
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 1
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0x040000
+    b/
+    uncover 3
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    uncover 2
+    uncover 3
+    b>
+    bytec_1 // 0x
+    bytec 4 // 0x01
+    uncover 2
+    select
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0x400000000000000000000000000000000000000000000000000000000000
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b|
+    pushbytes 0xaccb18165bd6fe31ae1cf318dc5b51eee0e1ba569b88cd74c1773b91fac10669
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper__Helper4.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn NumAppArgs
+    bz __puya_arc4_router_____bare_create__@9
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xab699379 0xe841beb7 0xa96ef989 // method "mulDiv(uint256,uint256,uint256)uint256", method "powu(uint256,uint256)uint256", method "__init__(uint64,uint64,byte[])void"
+    txna ApplicationArgs 0
+    match /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper__Helper4.mulDiv[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper__Helper4.powu[routing] __init__
+    err
+
+__puya_arc4_router_____bare_create__@9:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper__Helper4.mulDiv[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper__Helper4.mulDiv[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_3 // "o"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper__Helper4.mulDiv[routing]_after_if_else@5
+    global GroupSize
+    intc_3 // 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_3 // "o"
+    app_global_get
+    ==
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec 5 // "p"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper__Helper4.mulDiv[routing]_after_if_else@5
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns ApplicationID
+    bytec 5 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxnsa ApplicationArgs 0
+    bytec 6 // "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper__Helper4.mulDiv[routing]_after_if_else@5:
+    dig 2
+    dig 2
+    dig 2
+    callsub mulDiv
+    dup
+    store 0
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec 9 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper__Helper4.powu[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper__Helper4.powu[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_3 // "o"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper__Helper4.powu[routing]_after_if_else@5
+    global GroupSize
+    intc_3 // 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_3 // "o"
+    app_global_get
+    ==
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec 5 // "p"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper__Helper4.powu[routing]_after_if_else@5
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns ApplicationID
+    bytec 5 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxnsa ApplicationArgs 0
+    bytec 6 // "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper__Helper4.powu[routing]_after_if_else@5:
+    dup2
+    callsub powu
+    dup
+    store 0
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec 9 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper__Helper4.__init__[routing]() -> void:
+__init__:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 3
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_3 // "o"
+    app_global_get
+    !
+    assert // helper: already initialized
+    bytec_3 // "o"
+    uncover 3
+    app_global_put
+    bytec 5 // "p"
+    uncover 2
+    app_global_put
+    bytec 6 // "s"
+    swap
+    app_global_put
+    intc_0 // 1
+    return

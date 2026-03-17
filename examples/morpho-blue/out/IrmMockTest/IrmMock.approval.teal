@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/IrmMock.sol.IrmMock.approval_program() -> uint64:
 main:
-    intcblock 64 1 192 384
+    intcblock 32 1 160 192
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -16,7 +16,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x8320846c 0x808d23a4 // method "borrowRateView((uint8[32],uint8[32],uint8[32],uint8[32],uint512),(uint512,uint512,uint512,uint512,uint512,uint512))uint512", method "borrowRate((uint8[32],uint8[32],uint8[32],uint8[32],uint512),(uint512,uint512,uint512,uint512,uint512,uint512))uint512"
+    pushbytess 0xf7364467 0x671160d0 // method "borrowRateView((uint8[32],uint8[32],uint8[32],uint8[32],uint256),(uint256,uint256,uint256,uint256,uint256,uint256))uint256", method "borrowRate((uint8[32],uint8[32],uint8[32],uint8[32],uint256),(uint256,uint256,uint256,uint256,uint256,uint256))uint256"
     txna ApplicationArgs 0
     match borrowRateView borrowRate
     err
@@ -50,23 +50,23 @@ borrowRateView:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 192
+    intc_2 // 160
     ==
     assert // invalid number of bytes for MarketParams
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 384
+    intc_3 // 192
     ==
     assert // invalid number of bytes for Market
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/IrmMock.sol.IrmMock.borrowRateView
     popn 2
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -82,23 +82,23 @@ borrowRate:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 192
+    intc_2 // 160
     ==
     assert // invalid number of bytes for MarketParams
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 384
+    intc_3 // 192
     ==
     assert // invalid number of bytes for Market
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/IrmMock.sol.IrmMock.borrowRateView
     popn 2
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -113,7 +113,7 @@ borrowRate:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/IrmMock.sol.IrmMock.borrowRateView:
     proto 2 3
     frame_dig -1
-    extract 0 64
+    extract 0 32
     dup
     pushint 0
     itob
@@ -130,7 +130,7 @@ borrowRate:
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/IrmMock.sol.IrmMock.borrowRateView_after_if_else@2:
     frame_dig -1
-    extract 128 64
+    extract 64 32
     frame_dig 0
     callsub MathLib.wDivDown
     pushint 31536000

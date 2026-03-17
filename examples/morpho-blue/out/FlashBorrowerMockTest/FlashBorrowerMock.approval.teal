@@ -1,0 +1,120 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/FlashBorrowerMock.sol.FlashBorrowerMock.approval_program() -> uint64:
+main:
+    intcblock 32 0 1 2
+    bytecblock "MORPHO"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "MORPHO"
+    txna ApplicationArgs 0
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xc5a2f617 0x486ea445 // method "flashLoan(address,uint256,byte[])void", method "onMorphoFlashLoan(uint256,byte[])void"
+    txna ApplicationArgs 0
+    match flashLoan onMorphoFlashLoan
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/FlashBorrowerMock.sol.FlashBorrowerMock.flashLoan[routing]() -> void:
+flashLoan:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    itxn_begin
+    intc_0 // 32
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    len
+    itob
+    extract 6 2
+    uncover 2
+    concat
+    intc_1 // 0
+    bytec_0 // "MORPHO"
+    app_global_get_ex
+    assert // check MORPHO exists
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0xa6e61a3c // method "flashLoan(uint8[32],uint256,uint8[])void"
+    itxn_field ApplicationArgs
+    uncover 2
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/morpho-blue/contracts/mocks/FlashBorrowerMock.sol.FlashBorrowerMock.onMorphoFlashLoan[routing]() -> void:
+onMorphoFlashLoan:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txn Sender
+    intc_1 // 0
+    bytec_0 // "MORPHO"
+    app_global_get_ex
+    assert // check MORPHO exists
+    ==
+    assert
+    intc_2 // 1
+    return

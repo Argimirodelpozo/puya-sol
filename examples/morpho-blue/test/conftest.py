@@ -47,6 +47,7 @@ def localnet(
     localnet_clients: au.AlgoSdkClients, account: SigningAccount
 ) -> au.AlgorandClient:
     client = au.AlgorandClient(localnet_clients)
+    client.set_suggested_params_cache_timeout(0)  # disable caching for dev mode
     client.account.set_signer_from_account(account)
     return client
 
@@ -170,6 +171,30 @@ def addr_to_bytes32(addr: str) -> bytes:
     """Convert Algorand address to 32-byte padded value for Solidity address type."""
     raw = encoding.decode_address(addr)
     return b"\x00" * (32 - len(raw)) + raw
+
+
+def app_id_to_bytes32(app_id: int) -> bytes:
+    """Convert app ID to 32-byte Solidity-style address (zero-padded uint64).
+
+    The puya-sol compiler's inner call mechanism uses extract_uint64(addr, 24)
+    to get the app ID from a 32-byte address field, so addresses must be
+    encoded as 24 zero bytes + 8-byte big-endian app ID.
+    """
+    return b"\x00" * 24 + app_id.to_bytes(8, "big")
+
+
+def app_id_to_algod_addr(app_id: int) -> str:
+    """Convert app ID to Algorand address format for ABI calls.
+
+    Returns the 58-char Algorand address encoding of the zero-padded app ID.
+    """
+    raw = b"\x00" * 24 + app_id.to_bytes(8, "big")
+    return encoding.encode_address(raw)
+
+
+def int_to_bytes32(val: int) -> bytes:
+    """Convert integer to 32-byte big-endian uint256 for mapping key normalization."""
+    return val.to_bytes(32, "big")
 
 
 def int_to_bytes64(val: int) -> bytes:

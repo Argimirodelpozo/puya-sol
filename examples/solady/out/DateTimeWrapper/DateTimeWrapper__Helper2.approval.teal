@@ -1,0 +1,518 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 32 1 2 8
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 "o" "p" 0x "s" 0x01 0x151f7c75 0x0190
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeLib.dateToEpochDay(year: bytes, month: bytes, day: bytes) -> bytes:
+DateTimeLib.dateToEpochDay:
+    proto 3 1
+    frame_dig -3
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig -2
+    pushbytes 0x03
+    b<
+    bytec_3 // 0x
+    bytec 5 // 0x01
+    uncover 2
+    select
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury -3
+    frame_dig -2
+    pushbytes 0x09
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0x0c
+    b%
+    pushbytes 0xf4ff
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0x0301
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000800
+    b/
+    frame_dig -1
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -3
+    bytec 7 // 0x0190
+    b%
+    dup
+    pushbytes 0x016d
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 1
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
+    b/
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 2
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    pushbytes 0x64
+    b/
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -3
+    bytec 7 // 0x0190
+    b/
+    pushbytes 0x023ab1
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    pushbytes 0x0afa6d
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeLib.dateToTimestamp(year: bytes, month: bytes, day: bytes) -> bytes:
+DateTimeLib.dateToTimestamp:
+    proto 3 1
+    frame_dig -3
+    frame_dig -2
+    frame_dig -1
+    callsub DateTimeLib.dateToEpochDay
+    pushint 86400
+    itob
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeLib.daysInMonth(year: bytes, month: bytes) -> bytes:
+DateTimeLib.daysInMonth:
+    proto 2 1
+    frame_dig -2
+    callsub DateTimeLib.isLeapYear
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    pushbytes 0x001f1c1f1e1f1e1f1f1e1f1e1f00000000000000000000000000000000000000
+    swap
+    intc_1 // 1
+    extract3
+    frame_dig -1
+    pushbytes 0x02
+    b==
+    bytec_3 // 0x
+    bytec 5 // 0x01
+    uncover 2
+    select
+    bytec_3 // 0x
+    bytec 5 // 0x01
+    uncover 4
+    select
+    b&
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeLib.isLeapYear(year: bytes) -> uint64:
+DateTimeLib.isLeapYear:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0x19
+    b%
+    bytec_3 // 0x
+    b==
+    bytec_3 // 0x
+    bytec 5 // 0x01
+    uncover 2
+    select
+    pushbytes 0x0c
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0x03
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -1
+    b&
+    bytec_3 // 0x
+    b==
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn NumAppArgs
+    bz __puya_arc4_router_____bare_create__@11
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xf11935f9 0xc8f62c83 0x9e81402b 0x980ee672 0xa96ef989 // method "DateTimeLib.dateToTimestamp(uint256,uint256,uint256)uint256", method "DateTimeLib.dateToEpochDay(uint256,uint256,uint256)uint256", method "DateTimeLib.daysInMonth(uint256,uint256)uint256", method "DateTimeLib.isLeapYear(uint256)bool", method "__init__(uint64,uint64,byte[])void"
+    txna ApplicationArgs 0
+    match /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.dateToTimestamp[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.dateToEpochDay[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.daysInMonth[routing] /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.isLeapYear[routing] __init__
+    err
+
+__puya_arc4_router_____bare_create__@11:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.dateToTimestamp[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.dateToTimestamp[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_1 // "o"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.dateToTimestamp[routing]_after_if_else@5
+    global GroupSize
+    intc_2 // 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_1 // "o"
+    app_global_get
+    ==
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec_2 // "p"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.dateToTimestamp[routing]_after_if_else@5
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns ApplicationID
+    bytec_2 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxnsa ApplicationArgs 0
+    bytec 4 // "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.dateToTimestamp[routing]_after_if_else@5:
+    dig 2
+    dig 2
+    dig 2
+    callsub DateTimeLib.dateToTimestamp
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.dateToEpochDay[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.dateToEpochDay[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_1 // "o"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.dateToEpochDay[routing]_after_if_else@5
+    global GroupSize
+    intc_2 // 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_1 // "o"
+    app_global_get
+    ==
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec_2 // "p"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.dateToEpochDay[routing]_after_if_else@5
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns ApplicationID
+    bytec_2 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxnsa ApplicationArgs 0
+    bytec 4 // "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.dateToEpochDay[routing]_after_if_else@5:
+    dig 2
+    dig 2
+    dig 2
+    callsub DateTimeLib.dateToEpochDay
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.daysInMonth[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.daysInMonth[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_1 // "o"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.daysInMonth[routing]_after_if_else@5
+    global GroupSize
+    intc_2 // 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_1 // "o"
+    app_global_get
+    ==
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec_2 // "p"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.daysInMonth[routing]_after_if_else@5
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns ApplicationID
+    bytec_2 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxnsa ApplicationArgs 0
+    bytec 4 // "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.daysInMonth[routing]_after_if_else@5:
+    dup2
+    callsub DateTimeLib.daysInMonth
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.isLeapYear[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.isLeapYear[routing]:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_1 // "o"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.isLeapYear[routing]_after_if_else@5
+    global GroupSize
+    intc_2 // 2
+    >=
+    assert // helper: must be called in group
+    gtxn 0 ApplicationID
+    bytec_1 // "o"
+    app_global_get
+    ==
+    assert // helper: unauthorized caller
+    gtxn 0 Sender
+    txn Sender
+    ==
+    assert // helper: sender mismatch
+    bytec_2 // "p"
+    app_global_get
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.isLeapYear[routing]_after_if_else@5
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns ApplicationID
+    bytec_2 // "p"
+    app_global_get
+    ==
+    assert // helper: wrong prev chunk
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxnsa ApplicationArgs 0
+    bytec 4 // "s"
+    app_global_get
+    ==
+    assert // helper: wrong prev method
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.DateTimeLib.isLeapYear[routing]_after_if_else@5:
+    dup
+    callsub DateTimeLib.isLeapYear
+    pushbytes 0x00
+    pushint 0
+    uncover 2
+    setbit
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2.__init__[routing]() -> void:
+__init__:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 3
+    dup
+    pushint 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_1 // "o"
+    app_global_get
+    !
+    assert // helper: already initialized
+    bytec_1 // "o"
+    uncover 3
+    app_global_put
+    bytec_2 // "p"
+    uncover 2
+    app_global_put
+    bytec 4 // "s"
+    swap
+    app_global_put
+    intc_1 // 1
+    return

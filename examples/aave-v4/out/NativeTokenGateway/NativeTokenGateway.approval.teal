@@ -1,0 +1,1805 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.approval_program() -> uint64:
+main:
+    intcblock 32 0 1 6
+    bytecblock 0x 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000 "_owner" "NATIVE_TOKEN_WRAPPER" "_pendingOwner" 0x01 "_cachedThis" "_cachedChainId" "_cachedNameHash" "_cachedVersionHash" "_cachedDomainSeparator" 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f 0x37bd3ec75b601701feacc7fe7c0f4281c803be1c5639b96dc806294b8a7d6e4f 0x5f5f745f34 0x3195d6a1 0x92e03b1c 0x010000000000000000000000000000000000000000000000000000000000000000 "_registeredSpokes" "_nonces" 0x0000000000000000000000000000000000000000000000010000000000000000 0x9b779b17422d0df92223018b32b4d1fa46e071723d6817e2486d003becc55f00
+    intc_1 // 0
+    dupn 4
+    txn ApplicationID
+    bnz main_after_if_else@14
+    bytec_3 // "_owner"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 5 // "_pendingOwner"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 7 // "_cachedThis"
+    bytec_0 // 0x
+    app_global_put
+    bytec 8 // "_cachedChainId"
+    bytec_0 // 0x
+    app_global_put
+    bytec 9 // "_cachedNameHash"
+    bytec_0 // 0x
+    app_global_put
+    bytec 10 // "_cachedVersionHash"
+    bytec_0 // 0x
+    app_global_put
+    bytec 11 // "_cachedDomainSeparator"
+    bytec_0 // 0x
+    app_global_put
+    bytec 4 // "NATIVE_TOKEN_WRAPPER"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    txna ApplicationArgs 0
+    bury 4
+    txna ApplicationArgs 1
+    dup
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    ==
+    !
+    assert // OwnableInvalidOwner
+    callsub _transferOwnership(1)
+    bytec 7 // "_cachedThis"
+    global CurrentApplicationAddress
+    app_global_put
+    global CurrentApplicationID
+    itob
+    bytec 8 // "_cachedChainId"
+    swap
+    app_global_put
+    bytec_0 // ""
+    bury 2
+    bytec_0 // ""
+    bnz main_after_if_else@5
+    pushbytes "1"
+    bury 2
+
+main_after_if_else@5:
+    bytec_0 // ""
+    bz main_ternary_false@7
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bury 5
+
+main_ternary_merge@8:
+    bytec_0 // ""
+    bz main_ternary_false@10
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bury 1
+
+main_ternary_merge@11:
+    bytec 9 // "_cachedNameHash"
+    dig 5
+    app_global_put
+    bytec 10 // "_cachedVersionHash"
+    dig 1
+    app_global_put
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bury 3
+    bytec_0 // ""
+    bnz main_after_if_else@13
+    global CurrentApplicationAddress
+    intc_0 // 32
+    bzero
+    dup
+    dig 7
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 12 // 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f
+    swap
+    concat
+    dig 1
+    dig 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    keccak256
+    bury 3
+
+main_after_if_else@13:
+    bytec 11 // "_cachedDomainSeparator"
+    dig 3
+    app_global_put
+    dig 3
+    dup
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // InvalidAddress
+    bytec 4 // "NATIVE_TOKEN_WRAPPER"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_ternary_false@10:
+    dig 1
+    keccak256
+    bury 1
+    b main_ternary_merge@11
+
+main_ternary_false@7:
+    bytec 13 // 0x37bd3ec75b601701feacc7fe7c0f4281c803be1c5639b96dc806294b8a7d6e4f
+    bury 5
+    b main_ternary_merge@8
+
+main_after_if_else@14:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x76e0504c 0xfc004309 0x25a06587 0x46b3752e 0x12866546 0xf9327e94 0xb82fa298 0x81a94433 0x77004d83 0xac32f1c9 0x3ce7a8fa 0x35d2f814 0x7ab98c5f 0x1bdb1098 0xec6a26df 0xbd0b8e46 0xac302e00 0x2f3b1eaf 0x6debbb09 0xd5ad4516 0xe17bafb4 0xd521d604 0xb1bbb0a8 0x3e2c61e5 // method "()void", method "supplyNative(address,uint256,uint256)(uint256,uint256)", method "supplyAsCollateralNative(address,uint256,uint256)(uint256,uint256)", method "withdrawNative(address,uint256,uint256)(uint256,uint256)", method "borrowNative(address,uint256,uint256)(uint256,uint256)", method "repayNative(address,uint256,uint256)(uint256,uint256)", method "registerSpoke(address,bool)void", method "setSelfAsUserPositionManagerWithSig(address,address,bool,uint256,uint256,byte[])void", method "permitReserveUnderlying(address,uint256,address,uint256,uint256,uint64,byte[32],byte[32])void", method "renouncePositionManagerRole(address,address)void", method "multicall(byte[])byte[]", method "isSpokeRegistered(address)bool", method "rescueToken(address,address,uint256)void", method "rescueNative(address,uint256)void", method "rescueGuardian()address", method "DOMAIN_SEPARATOR()byte[32]", method "eip712Domain()(byte[1],string,string,uint256,address,byte[32],uint256[])", method "useNonce(uint256)uint256", method "nonces(address,uint256)uint256", method "pendingOwner()address", method "transferOwnership(address)void", method "acceptOwnership()void", method "owner()address", method "renounceOwnership()void"
+    txna ApplicationArgs 0
+    match (0) supplyNative supplyAsCollateralNative withdrawNative borrowNative repayNative registerSpoke setSelfAsUserPositionManagerWithSig permitReserveUnderlying renouncePositionManagerRole multicall(1) isSpokeRegistered rescueToken rescueNative rescueGuardian DOMAIN_SEPARATOR eip712Domain useNonce nonces pendingOwner transferOwnership(1) acceptOwnership owner renounceOwnership
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.Address.sendValue(recipient: bytes, amount: bytes) -> void:
+Address.sendValue:
+    proto 2 0
+    intc_1 // 0
+    itob
+    dup
+    frame_dig -1
+    b<
+    !
+    assert // InsufficientBalance
+    frame_dig -2
+    frame_dig -1
+    bytec_0 // ""
+    callsub LowLevelCall.callNoReturn
+    bz Address.sendValue_else_body@4
+    retsub
+
+Address.sendValue_else_body@4:
+    callsub LowLevelCall.returnDataSize
+    frame_dig 0
+    b>
+    assert // FailedCall
+    b LowLevelCall.bubbleRevert
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.LowLevelCall.callNoReturn(3)(target: bytes, value: bytes, data: bytes) -> uint64:
+LowLevelCall.callNoReturn:
+    proto 3 1
+    intc_2 // 1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.LowLevelCall.returnDataSize() -> bytes:
+LowLevelCall.returnDataSize:
+    bytec_0 // 0x
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.LowLevelCall.bubbleRevert(0)() -> void:
+LowLevelCall.bubbleRevert:
+    err // revert
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.SafeERC20.safeTransfer(token: bytes, to: bytes, value: bytes) -> void:
+SafeERC20.safeTransfer:
+    proto 3 0
+    frame_dig -3
+    frame_dig -2
+    frame_dig -1
+    intc_2 // 1
+    callsub SafeERC20._safeTransfer
+    assert // SafeERC20FailedOperation
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.SafeERC20.forceApprove(token: bytes, spender: bytes, value: bytes) -> void:
+SafeERC20.forceApprove:
+    proto 3 0
+    frame_dig -3
+    frame_dig -2
+    frame_dig -1
+    intc_1 // 0
+    callsub SafeERC20._safeApprove
+    bnz SafeERC20.forceApprove_after_if_else@6
+    intc_1 // 0
+    itob
+    frame_dig -3
+    frame_dig -2
+    uncover 2
+    intc_2 // 1
+    callsub SafeERC20._safeApprove
+    assert // SafeERC20FailedOperation
+    frame_dig -3
+    frame_dig -2
+    frame_dig -1
+    intc_2 // 1
+    callsub SafeERC20._safeApprove
+    assert // SafeERC20FailedOperation
+
+SafeERC20.forceApprove_after_if_else@6:
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.SafeERC20._safeTransfer(token: bytes, to: bytes, value: bytes, bubble: uint64) -> uint64:
+SafeERC20._safeTransfer:
+    proto 4 1
+    bytec_0 // 0x
+    bytec 6 // 0x01
+    frame_dig -1
+    select
+    bytec_0 // 0x
+    b&
+    bytec_0 // 0x
+    b!=
+    !
+    assert // revert
+    intc_2 // 1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.SafeERC20._safeApprove(token: bytes, spender: bytes, value: bytes, bubble: uint64) -> uint64:
+SafeERC20._safeApprove:
+    proto 4 1
+    bytec_0 // 0x
+    bytec 6 // 0x01
+    frame_dig -1
+    select
+    bytec_0 // 0x
+    b&
+    bytec_0 // 0x
+    b!=
+    !
+    assert // revert
+    intc_2 // 1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.TransientSlot.asBoolean(slot: bytes) -> bytes:
+TransientSlot.asBoolean:
+    proto 1 1
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.TransientSlot.tload(1)_1(slot: bytes) -> uint64:
+TransientSlot.tload:
+    proto 1 1
+    bytec 14 // 0x5f5f745f34
+    app_global_get
+    itob
+    bytec_0 // 0x
+    b!=
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.TransientSlot.tstore(2)_1(slot: bytes, value: uint64) -> void:
+TransientSlot.tstore:
+    proto 2 0
+    bytec_0 // 0x
+    bytec 6 // 0x01
+    frame_dig -1
+    select
+    bytec 14 // 0x5f5f745f34
+    swap
+    app_global_put
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.(0)[routing]() -> void:
+(0):
+    txn Sender
+    intc_1 // 0
+    bytec 4 // "NATIVE_TOKEN_WRAPPER"
+    app_global_get_ex
+    assert // check NATIVE_TOKEN_WRAPPER exists
+    ==
+    assert // UnsupportedAction
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.supplyNative[routing]() -> void:
+supplyNative:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    dig 2
+    callsub _isSpokeRegistered
+    assert // SpokeNotRegistered
+    callsub _nonReentrantBefore
+    gtxn 0 Amount
+    itob
+    dig 1
+    b==
+    assert // NativeAmountMismatch
+    txn Sender
+    uncover 3
+    uncover 3
+    uncover 2
+    uncover 3
+    callsub _supplyNative
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 2
+    dig 1
+    b|
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.supplyAsCollateralNative[routing]() -> void:
+supplyAsCollateralNative:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    dig 2
+    callsub _isSpokeRegistered
+    assert // SpokeNotRegistered
+    callsub _nonReentrantBefore
+    gtxn 0 Amount
+    itob
+    dig 1
+    b==
+    assert // NativeAmountMismatch
+    txn Sender
+    dig 3
+    dig 3
+    uncover 2
+    dig 3
+    callsub _supplyNative
+    pop
+    cover 3
+    txn Sender
+    dig 3
+    dig 3
+    uncover 2
+    uncover 3
+    callsub _supplyNative
+    cover 4
+    pop
+    itxn_begin
+    intc_0 // 32
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    txn Sender
+    uncover 3
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0xc2abe688 // method "setUsingAsCollateral(uint256,bool,address)void"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    pushbytes 0x80
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 1
+    b|
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.withdrawNative[routing]() -> void:
+withdrawNative:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    dig 2
+    callsub _isSpokeRegistered
+    assert // SpokeNotRegistered
+    callsub _nonReentrantBefore
+    dig 2
+    dig 2
+    callsub _getReserveUnderlying
+    dig 1
+    callsub _validateParams
+    itxn_begin
+    intc_0 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    txn Sender
+    uncover 4
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x6af3c79f // method "withdraw(uint256,uint256,address)(uint256,uint256)"
+    itxn_field ApplicationArgs
+    uncover 2
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 32
+    itxn LastLog
+    extract 36 32
+    itxn_begin
+    dig 2
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 0
+    bytec 4 // "NATIVE_TOKEN_WRAPPER"
+    app_global_get_ex
+    assert // check NATIVE_TOKEN_WRAPPER exists
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 15 // method "withdraw(uint256)void"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    txn Sender
+    dig 1
+    callsub Address.sendValue
+    swap
+    dig 2
+    b|
+    swap
+    uncover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.borrowNative[routing]() -> void:
+borrowNative:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    dig 2
+    callsub _isSpokeRegistered
+    assert // SpokeNotRegistered
+    callsub _nonReentrantBefore
+    dig 2
+    dig 2
+    callsub _getReserveUnderlying
+    dig 1
+    callsub _validateParams
+    itxn_begin
+    intc_0 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    txn Sender
+    uncover 4
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x3299c6fe // method "borrow(uint256,uint256,address)(uint256,uint256)"
+    itxn_field ApplicationArgs
+    uncover 2
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 32
+    itxn LastLog
+    extract 36 32
+    itxn_begin
+    dig 2
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 0
+    bytec 4 // "NATIVE_TOKEN_WRAPPER"
+    app_global_get_ex
+    assert // check NATIVE_TOKEN_WRAPPER exists
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 15 // method "withdraw(uint256)void"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    txn Sender
+    dig 1
+    callsub Address.sendValue
+    swap
+    dig 2
+    b|
+    swap
+    uncover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.repayNative[routing]() -> void:
+repayNative:
+    intc_1 // 0
+    dup
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    cover 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    dig 2
+    callsub _isSpokeRegistered
+    assert // SpokeNotRegistered
+    callsub _nonReentrantBefore
+    gtxn 0 Amount
+    itob
+    dig 1
+    b==
+    assert // NativeAmountMismatch
+    dig 2
+    dig 2
+    callsub _getReserveUnderlying
+    dig 1
+    callsub _validateParams
+    itxn_begin
+    intc_0 // 32
+    bzero
+    dup
+    cover 5
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    cover 4
+    txn Sender
+    uncover 3
+    pushint 24
+    extract_uint64
+    dup
+    cover 5
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x04671adb // method "getUserTotalDebt(uint256,address)uint256"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    cover 3
+    bytec_0 // 0x
+    cover 3
+    b>
+    bnz repayNative_if_body@3
+
+repayNative_after_if_else@4:
+    itxn_begin
+    intc_1 // 0
+    bytec 4 // "NATIVE_TOKEN_WRAPPER"
+    app_global_get_ex
+    assert // check NATIVE_TOKEN_WRAPPER exists
+    dup
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 16 // method "deposit()void"
+    itxn_field ApplicationArgs
+    itxn_submit
+    dig 7
+    dig 2
+    callsub SafeERC20.forceApprove
+    itxn_begin
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    txn Sender
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    dig 4
+    itxn_field ApplicationID
+    pushbytes 0xa7f2c7eb // method "repay(uint256,uint256,address)(uint256,uint256)"
+    itxn_field ApplicationArgs
+    dig 5
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 32
+    bury 7
+    itxn LastLog
+    extract 36 32
+    bury 8
+    intc_1 // 0
+    itob
+    dig 1
+    b<
+    bz repayNative_after_if_else@8
+    txn Sender
+    dig 1
+    callsub Address.sendValue
+
+repayNative_after_if_else@8:
+    dig 6
+    dig 5
+    dup
+    cover 2
+    b|
+    dig 9
+    uncover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+repayNative_if_body@3:
+    bytec 17 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 2
+    dup
+    cover 2
+    b-
+    bytec 17 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 2
+    b repayNative_after_if_else@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.registerSpoke[routing]() -> void:
+registerSpoke:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    callsub _checkOwner
+    dig 1
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // InvalidAddress
+    dig 1
+    sha256
+    bytec 18 // "_registeredSpokes"
+    swap
+    concat
+    swap
+    itob
+    swap
+    dig 1
+    box_put
+    dup
+    bitlen
+    pushint 8
+    <=
+    assert // overflow
+    extract 7 1
+    concat
+    pushbytes 0xa3eb952d // method "SpokeRegistered(address,bool)"
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.setSelfAsUserPositionManagerWithSig[routing]() -> void:
+setSelfAsUserPositionManagerWithSig:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_2 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 5
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 6
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    swap
+    callsub _isSpokeRegistered
+    assert // SpokeNotRegistered
+    itob
+    dup
+    bitlen
+    pushint 8
+    <=
+    assert // overflow
+    extract 7 1
+    global CurrentApplicationAddress
+    swap
+    concat
+    pushbytes 0x00
+    swap
+    replace2 0 // on error: index access is out of bounds
+    pop
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.permitReserveUnderlying[routing]() -> void:
+permitReserveUnderlying:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 5
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 6
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    txna ApplicationArgs 7
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 8
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    dig 1
+    callsub _isSpokeRegistered
+    assert // SpokeNotRegistered
+    callsub _getReserveUnderlying
+    pop
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.renouncePositionManagerRole[routing]() -> void:
+renouncePositionManagerRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub _checkOwner
+    itxn_begin
+    swap
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0xbed378e8 // method "renouncePositionManagerRole(address)void"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.multicall(1)[routing]() -> void:
+multicall(1):
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    intc_1 // 0
+    assert // UnsupportedAction
+    bytec_0 // ""
+    swap
+    len
+    dup
+    bzero
+    bytec_0 // 0x
+
+multicall(1)_while_top@4:
+    dig 2
+    itob
+    dig 1
+    b>
+    bz multicall(1)_after_while@6
+    dig 3
+    !
+    !
+    assert // revert
+    pushint 8
+    bzero
+    dig 1
+    dup
+    cover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 3
+    swap
+    bytec_0 // 0x
+    replace3
+    bury 3
+    bytec 6 // 0x01
+    b+
+    bury 1
+    b multicall(1)_while_top@4
+
+multicall(1)_after_while@6:
+    dig 1
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.isSpokeRegistered[routing]() -> void:
+isSpokeRegistered:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub _isSpokeRegistered
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.rescueToken[routing]() -> void:
+rescueToken:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub _checkRescueGuardian
+    callsub SafeERC20.safeTransfer
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.rescueNative[routing]() -> void:
+rescueNative:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub _checkRescueGuardian
+    callsub Address.sendValue
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.rescueGuardian[routing]() -> void:
+rescueGuardian:
+    intc_1 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.DOMAIN_SEPARATOR[routing]() -> void:
+DOMAIN_SEPARATOR:
+    intc_1 // 0
+    bytec_0 // ""
+    bz DOMAIN_SEPARATOR_else_body@3
+    callsub _buildDomainSeparator
+    bury 1
+
+DOMAIN_SEPARATOR_after_if_else@6:
+    bytec_1 // 0x151f7c75
+    dig 1
+    concat
+    log
+    intc_2 // 1
+    return
+
+DOMAIN_SEPARATOR_else_body@3:
+    intc_1 // 0
+    bytec 11 // "_cachedDomainSeparator"
+    app_global_get_ex
+    swap
+    bury 2
+    assert // check _cachedDomainSeparator exists
+    intc_1 // 0
+    bytec 8 // "_cachedChainId"
+    app_global_get_ex
+    assert // check _cachedChainId exists
+    intc_1 // 0
+    bytec 7 // "_cachedThis"
+    app_global_get_ex
+    assert // check _cachedThis exists
+    intc_1 // 0
+    itob
+    uncover 2
+    b==
+    bytec_0 // 0x
+    bytec 6 // 0x01
+    uncover 2
+    select
+    global CurrentApplicationAddress
+    uncover 2
+    b==
+    bytec_0 // 0x
+    bytec 6 // 0x01
+    uncover 2
+    select
+    b&
+    bytec_0 // 0x
+    b==
+    bz DOMAIN_SEPARATOR_after_if_else@6
+    callsub _buildDomainSeparator
+    bury 1
+    b DOMAIN_SEPARATOR_after_if_else@6
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.eip712Domain[routing]() -> void:
+eip712Domain:
+    bytec_0 // ""
+    intc_1 // 0
+    global CurrentApplicationID
+    itob
+    global CurrentApplicationAddress
+    intc_0 // 32
+    bzero
+    uncover 2
+    b|
+    pushbytes 0x0f0067007b
+    swap
+    concat
+    swap
+    concat
+    swap
+    concat
+    swap
+    loads
+    dup
+    len
+    intc_0 // 32
+    /
+    itob
+    extract 6 2
+    swap
+    concat
+    swap
+    pushbytes 0x007e00124e6174697665546f6b656e47617465776179000131
+    concat
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.useNonce[routing]() -> void:
+useNonce:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn Sender
+    intc_0 // 32
+    bzero
+    dup
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
+    concat
+    sha256
+    bytec 19 // "_nonces"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    intc_2 // 1
+    +
+    itob
+    swap
+    dig 1
+    box_put
+    uncover 2
+    bytec 20 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b*
+    b|
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.nonces[routing]() -> void:
+nonces:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    swap
+    concat
+    sha256
+    bytec 19 // "_nonces"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    uncover 2
+    bytec 20 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b*
+    swap
+    itob
+    b|
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.pendingOwner[routing]() -> void:
+pendingOwner:
+    intc_1 // 0
+    bytec 5 // "_pendingOwner"
+    app_global_get_ex
+    assert // check _pendingOwner exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.transferOwnership(1)[routing]() -> void:
+transferOwnership(1):
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub _checkOwner
+    bytec 5 // "_pendingOwner"
+    dig 1
+    app_global_put
+    intc_1 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    swap
+    concat
+    pushbytes 0x2424ff2a // method "OwnershipTransferStarted(address,address)"
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.acceptOwnership[routing]() -> void:
+acceptOwnership:
+    txn Sender
+    intc_1 // 0
+    bytec 5 // "_pendingOwner"
+    app_global_get_ex
+    assert // check _pendingOwner exists
+    dig 1
+    !=
+    !
+    assert // OwnableUnauthorizedAccount
+    callsub _transferOwnership(1)
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.owner[routing]() -> void:
+owner:
+    intc_1 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway.renounceOwnership[routing]() -> void:
+renounceOwnership:
+    callsub _checkOwner
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    callsub _transferOwnership(1)
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway._supplyNative(spoke: bytes, reserveId: bytes, user: bytes, amount: bytes) -> bytes, bytes:
+_supplyNative:
+    proto 4 2
+    frame_dig -4
+    frame_dig -3
+    callsub _getReserveUnderlying
+    frame_dig -1
+    callsub _validateParams
+    itxn_begin
+    intc_1 // 0
+    bytec 4 // "NATIVE_TOKEN_WRAPPER"
+    app_global_get_ex
+    assert // check NATIVE_TOKEN_WRAPPER exists
+    dup
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 16 // method "deposit()void"
+    itxn_field ApplicationArgs
+    itxn_submit
+    frame_dig -4
+    frame_dig -1
+    callsub SafeERC20.forceApprove
+    itxn_begin
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_dig -4
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x801523c1 // method "supply(uint256,uint256,address)(uint256,uint256)"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    frame_dig -2
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 32
+    itxn LastLog
+    extract 36 32
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway._validateParams(underlying: bytes, amount: bytes) -> void:
+_validateParams:
+    proto 2 0
+    intc_1 // 0
+    bytec 4 // "NATIVE_TOKEN_WRAPPER"
+    app_global_get_ex
+    assert // check NATIVE_TOKEN_WRAPPER exists
+    frame_dig -2
+    ==
+    assert // NotNativeWrappedAsset
+    intc_1 // 0
+    itob
+    frame_dig -1
+    b<
+    assert // InvalidAmount
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway._nonReentrantBefore() -> void:
+_nonReentrantBefore:
+    bytec 21 // 0x9b779b17422d0df92223018b32b4d1fa46e071723d6817e2486d003becc55f00
+    callsub TransientSlot.asBoolean
+    callsub TransientSlot.tload
+    !
+    assert // ReentrancyGuardReentrantCall
+    bytec 21 // 0x9b779b17422d0df92223018b32b4d1fa46e071723d6817e2486d003becc55f00
+    callsub TransientSlot.asBoolean
+    intc_2 // 1
+    callsub TransientSlot.tstore
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway._isSpokeRegistered(spoke: bytes) -> uint64:
+_isSpokeRegistered:
+    proto 1 1
+    frame_dig -1
+    sha256
+    bytec 18 // "_registeredSpokes"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway._getReserveUnderlying(spoke: bytes, reserveId: bytes) -> bytes:
+_getReserveUnderlying:
+    proto 2 1
+    itxn_begin
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_dig -2
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x0c77be35 // method "getReserve(uint256)struct Reserve"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 32
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway._checkRescueGuardian() -> void:
+_checkRescueGuardian:
+    intc_1 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    txn Sender
+    ==
+    assert // OnlyRescueGuardian
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway._buildDomainSeparator() -> bytes:
+_buildDomainSeparator:
+    proto 0 1
+    intc_1 // 0
+    bytec_0 // ""
+    bz _buildDomainSeparator_else_body@2
+    bytec 13 // 0x37bd3ec75b601701feacc7fe7c0f4281c803be1c5639b96dc806294b8a7d6e4f
+    frame_bury 0
+    pushbytes 0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6
+
+_buildDomainSeparator_after_if_else@3:
+    global CurrentApplicationAddress
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig 0
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 12 // 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f
+    swap
+    concat
+    dig 1
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    keccak256
+    swap
+    retsub
+
+_buildDomainSeparator_else_body@2:
+    intc_1 // 0
+    bytec 9 // "_cachedNameHash"
+    app_global_get_ex
+    swap
+    frame_bury 0
+    assert // check _cachedNameHash exists
+    intc_1 // 0
+    bytec 10 // "_cachedVersionHash"
+    app_global_get_ex
+    assert // check _cachedVersionHash exists
+    b _buildDomainSeparator_after_if_else@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway._transferOwnership(1)(newOwner: bytes) -> void:
+_transferOwnership(1):
+    proto 1 0
+    intc_1 // 0
+    bytec 5 // "_pendingOwner"
+    app_global_get_ex
+    bury 1
+    assert // check _pendingOwner exists
+    bytec 5 // "_pendingOwner"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    intc_1 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_3 // "_owner"
+    frame_dig -1
+    app_global_put
+    frame_dig -1
+    concat
+    pushbytes 0x9a223efb // method "OwnershipTransferred(address,address)"
+    swap
+    concat
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NativeTokenGateway._checkOwner() -> void:
+_checkOwner:
+    intc_1 // 0
+    bytec_3 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    txn Sender
+    !=
+    !
+    assert // OwnableUnauthorizedAccount
+    retsub

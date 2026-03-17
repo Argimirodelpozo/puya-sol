@@ -1,0 +1,88 @@
+info: puya-sol v0.1.0 — Solidity to Algorand Compiler
+info: Source: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol
+info: EVM version set to: cancun (hasChainID=true)
+info: Parsing and type-checking...
+info: Parse and type-check successful!
+info: Building AWST...
+info: Translating contract: UD60x18Wrapper
+info: Generated 24 AWST root node(s)
+info: Phase 0: Global mid-function splitting...
+info:   Mid-function splitting 'exp2' (body=6938 + deps=0 = 6938 est. instructions, 13 statements)
+info:     Splitting into 4 chunks
+info:     Chunk 0: stmts [0, 4), 1698 instructions, 1 live vars out
+info:     Chunk 1: stmts [4, 7), 2487 instructions, 1 live vars out
+info:     Chunk 2: stmts [7, 10), 2487 instructions, 1 live vars out
+info:     Chunk 3: stmts [10, 13), 266 instructions, 0 live vars out
+info:     Rewrote 'exp2' to call 4 chunks
+info:   Mid-function splitting 'log10' (body=7809 + deps=349 = 8158 est. instructions, 7 statements)
+info:     Splitting into 3 chunks
+info:     Chunk 0: stmts [0, 4), 81 instructions, 1 live vars out
+info:     Chunk 1: stmts [4, 5), 7663 instructions, 1 live vars out
+info:     Chunk 2: stmts [5, 7), 439 instructions, 0 live vars out
+info:     Rewrote 'log10' to call 3 chunks
+info:   Expanded rewritten callees in 'exp' (11 statements after expansion)
+info:   Mid-function splitting 'log10__chunk_1' (body=7665 + deps=0 = 7665 est. instructions, 2 statements)
+info:     Splitting into 2 chunks
+info:     Chunk 0: stmts [0, 1), 7663 instructions, 1 live vars out
+info:     Chunk 1: stmts [1, 2), 2 instructions, 0 live vars out
+info:     Rewrote 'log10__chunk_1' to call 2 chunks
+info:   Split 3 function(s) into chunks (9 new subroutines)
+info: Size estimate for 'UD60x18Wrapper': 23539 instructions, ~70617 bytes
+warning: Contract 'UD60x18Wrapper' estimated at ~70617 bytes, exceeds AVM limit of ~8192 bytes
+info: Contract exceeds AVM limit (70617 estimated bytes > 8192 max)
+info: Orchestrator oversized (7232 > 2333), delegating largest ARC4 methods
+info:   Delegated 'pow' (10585 estimated) to helper
+info:   Delegated 'log10' (10146 estimated) to helper
+info:   Delegated 'exp' (7462 estimated) to helper
+info:   Delegated 'commonExp2' (7277 estimated) to helper
+info:   Delegated 'exp2' (7264 estimated) to helper
+info:   Delegated 'ln' (2182 estimated) to helper
+info:   Delegated 'div' (2119 estimated) to helper
+info:   Delegated 'log2' (2094 estimated) to helper
+info:   Delegated 'mulDiv' (2023 estimated) to helper
+info:   Delegated 'msb' (1736 estimated) to helper
+info:   Delegated 'powu' (1266 estimated) to helper
+info:   Delegated 'mul' (1150 estimated) to helper
+info:   Delegated 'mulDiv18' (1057 estimated) to helper
+info: Split recommendation: 6 partitions
+info:   Partition 0: [__approval__, __clear__, avg, ceil, commonSqrt, floor, frac, gm, inv, sqrt]
+info:   Partition 1: [exp2, exp2__chunk_1, exp2__chunk_2, exp2__chunk_0, exp2__chunk_3, pow, exp, commonExp2]
+info:   Partition 2: [log10, log10__chunk_1, log10__chunk_1__chunk_0, log10__chunk_2, log10__chunk_0, log10__chunk_1__chunk_1]
+info:   Partition 3: [ln, div, log2, msb, mul, unwrap, wrap]
+info:   Partition 4: [mulDiv, powu]
+info:   Partition 5: [mulDiv18]
+info:   Shared utilities (duplicated): [unwrap, wrap]
+info: --split-contracts enabled, performing contract split...
+info: Splitting contract 'UD60x18Wrapper' into 6 parts
+info:   Helper 1: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper__Helper1 (10 subroutines)
+info:   Helper 2: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper__Helper2 (8 subroutines)
+info:   Helper 3: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper__Helper3 (7 subroutines)
+info:   Helper 4: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper__Helper4 (4 subroutines)
+info:   Helper 5: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper__Helper5 (1 subroutines)
+info:   Orchestrator (hybrid): /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/prb-math/contracts/UD60x18Wrapper.sol.UD60x18Wrapper (8 local, 13 delegated)
+info: Split complete: 5 helpers + 1 orchestrator
+info: Wrote: examples/prb-math/out/UD60x18Wrapper/awst_UD60x18Wrapper__Helper1.json
+info: Wrote: examples/prb-math/out/UD60x18Wrapper/options_UD60x18Wrapper__Helper1.json
+info: Compiling UD60x18Wrapper__Helper1 ...
+info: puya completed successfully
+info: Wrote: examples/prb-math/out/UD60x18Wrapper/awst_UD60x18Wrapper__Helper2.json
+info: Wrote: examples/prb-math/out/UD60x18Wrapper/options_UD60x18Wrapper__Helper2.json
+info: Compiling UD60x18Wrapper__Helper2 ...
+info: puya completed successfully
+info: Wrote: examples/prb-math/out/UD60x18Wrapper/awst_UD60x18Wrapper__Helper3.json
+info: Wrote: examples/prb-math/out/UD60x18Wrapper/options_UD60x18Wrapper__Helper3.json
+info: Compiling UD60x18Wrapper__Helper3 ...
+info: puya completed successfully
+info: Wrote: examples/prb-math/out/UD60x18Wrapper/awst_UD60x18Wrapper__Helper4.json
+info: Wrote: examples/prb-math/out/UD60x18Wrapper/options_UD60x18Wrapper__Helper4.json
+info: Compiling UD60x18Wrapper__Helper4 ...
+info: puya completed successfully
+info: Wrote: examples/prb-math/out/UD60x18Wrapper/awst_UD60x18Wrapper__Helper5.json
+info: Wrote: examples/prb-math/out/UD60x18Wrapper/options_UD60x18Wrapper__Helper5.json
+info: Compiling UD60x18Wrapper__Helper5 ...
+info: puya completed successfully
+info: Wrote: examples/prb-math/out/UD60x18Wrapper/awst_UD60x18Wrapper.json
+info: Wrote: examples/prb-math/out/UD60x18Wrapper/options_UD60x18Wrapper.json
+info: Compiling UD60x18Wrapper ...
+info: puya completed successfully
+info: Completed with 1 warning(s)

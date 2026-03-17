@@ -93,6 +93,21 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					if (!func->isImplemented())
 						continue;
 
+					// Skip functions with function-type parameters (AVM can't support function pointers)
+					{
+						bool hasFunctionParam = false;
+						for (auto const& p: func->parameters())
+						{
+							if (dynamic_cast<solidity::frontend::FunctionType const*>(p->type()))
+							{
+								hasFunctionParam = true;
+								break;
+							}
+						}
+						if (hasFunctionParam)
+							continue;
+					}
+
 					std::string baseName = libraryName + "." + func->name();
 					std::string qualifiedName = baseName;
 					std::string subroutineId = _sourceFile + "." + baseName;
@@ -126,6 +141,21 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 			{
 				std::string qualifiedName = func->name();
 				std::string subroutineId = _sourceFile + "." + qualifiedName;
+				// Disambiguate free functions with the same name (e.g. UD60x18.powu vs SD59x18.powu)
+				// by appending the AST ID when the name is already registered by a different function
+				auto existingIt = m_freeFunctionById.find(func->id());
+				if (existingIt == m_freeFunctionById.end())
+				{
+					// Check if another function already uses this name
+					for (auto const& [otherId, otherSid]: m_freeFunctionById)
+					{
+						if (otherSid == subroutineId && otherId != func->id())
+						{
+							subroutineId += "_" + std::to_string(func->id());
+							break;
+						}
+					}
+				}
 				m_libraryFunctionIds[qualifiedName] = subroutineId;
 				// Also store by AST ID for operator overload resolution
 				m_freeFunctionById[func->id()] = subroutineId;
@@ -185,6 +215,25 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					}
 				}
 
+				// Skip library functions with function-type parameters (e.g., comparators)
+				// AVM does not support function pointers / first-class functions
+				{
+					bool hasFunctionParam = false;
+					for (auto const& p: func->parameters())
+					{
+						if (dynamic_cast<solidity::frontend::FunctionType const*>(p->type()))
+						{
+							hasFunctionParam = true;
+							break;
+						}
+					}
+					if (hasFunctionParam)
+					{
+						Logger::instance().debug("Skipping library function with function-type param: " + qualifiedName);
+						continue;
+					}
+				}
+
 				Logger::instance().debug("Translating library function: " + qualifiedName);
 
 				auto sub = std::make_shared<awst::Subroutine>();
@@ -219,26 +268,46 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					sub->args.push_back(std::move(arg));
 				}
 
-				// Return type
+				// Return type — include `storage` params as extra returns so callers
+				// can capture modified values for box write-back. Puya backend
+				// already threads mutable args; we match the return type to avoid
+				// the extra returns being discarded.
+				// Detect storage reference params for return type augmentation.
+				// Only augment non-private functions (internal/public) — private
+				// library functions like _add/_remove are called internally and
+				// puya handles their mutable arg threading automatically.
+				std::vector<size_t> storageParamIndices;
+				bool isMutating = func->stateMutability() != solidity::frontend::StateMutability::View
+					&& func->stateMutability() != solidity::frontend::StateMutability::Pure;
+				bool isPrivate = func->visibility() == solidity::frontend::Visibility::Private;
+				if (isMutating && !isPrivate)
+				{
+					for (size_t pi = 0; pi < func->parameters().size(); ++pi)
+					{
+						auto refLoc = func->parameters()[pi]->referenceLocation();
+						Logger::instance().debug("[STORAGE-AUG] " + qualifiedName
+							+ " param[" + std::to_string(pi) + "]=" + func->parameters()[pi]->name()
+							+ " refLoc=" + std::to_string(static_cast<int>(refLoc)));
+						if (refLoc == solidity::frontend::VariableDeclaration::Location::Storage)
+							storageParamIndices.push_back(pi);
+					}
+				}
+
+				// Freeze augmented storage params FIRST so return type and body
+				// both use the same frozen type consistently.
+				// Return type — augment with storage params.
 				auto const& returnParams = func->returnParameters();
-				if (returnParams.empty())
-					sub->returnType = awst::WType::voidType();
-				else if (returnParams.size() == 1)
-					sub->returnType = m_typeMapper.map(returnParams[0]->type());
-				else
 				{
 					std::vector<awst::WType const*> types;
-					std::vector<std::string> names;
-					bool hasNames = false;
 					for (auto const& rp: returnParams)
-					{
 						types.push_back(m_typeMapper.map(rp->type()));
-						names.push_back(rp->name());
-						if (!rp->name().empty())
-							hasNames = true;
-					}
-					if (hasNames)
-						sub->returnType = new awst::WTuple(std::move(types), std::move(names));
+					for (size_t idx: storageParamIndices)
+						types.push_back(sub->args[idx].wtype);
+
+					if (types.empty())
+						sub->returnType = awst::WType::voidType();
+					else if (types.size() == 1)
+						sub->returnType = types[0];
 					else
 						sub->returnType = new awst::WTuple(std::move(types));
 				}
@@ -246,12 +315,12 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				// Pure
 				sub->pure = func->stateMutability() == solidity::frontend::StateMutability::Pure;
 
-				// Translate body using ExpressionTranslator and StatementTranslator
-				ExpressionTranslator exprTranslator(
+				// Translate body using ExpressionBuilder and StatementBuilder
+				ExpressionBuilder exprBuilder(
 					m_typeMapper, *m_storageMapper, _sourceFile, libraryName, m_libraryFunctionIds,
 					{}, m_freeFunctionById
 				);
-				StatementTranslator stmtTranslator(exprTranslator, m_typeMapper, _sourceFile);
+				StatementBuilder stmtBuilder(exprBuilder, m_typeMapper, _sourceFile);
 
 				// Set function context for inline assembly translation
 			{
@@ -264,10 +333,10 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 						pname = "_param" + std::to_string(pi);
 					paramContext.emplace_back(pname, m_typeMapper.map(param->type()));
 				}
-				stmtTranslator.setFunctionContext(paramContext, sub->returnType);
+				stmtBuilder.setFunctionContext(paramContext, sub->returnType);
 			}
 
-			sub->body = stmtTranslator.translateBlock(func->body());
+			sub->body = stmtBuilder.buildBlock(func->body());
 
 				// Insert zero-initialization for named return variables
 				// Solidity implicitly initializes named returns to their zero values
@@ -323,9 +392,11 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 						}
 						else
 						{
-							// Skip complex types (structs, arrays, etc.) —
-							// they'll be explicitly assigned in all code paths
-							continue;
+							// Complex types (structs, arrays, etc.) — use makeDefaultValue
+							// These need initialization because Solidity may assign individual
+							// fields (e.g., vk.alfa1 = ...) which reads other fields from the
+							// uninitialized variable via copy-on-write NewStruct pattern
+							zeroVal = StorageMapper::makeDefaultValue(rpType, loc);
 						}
 
 						auto assign = std::make_shared<awst::AssignmentStatement>();
@@ -342,6 +413,42 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 							std::make_move_iterator(inits.end())
 						);
 					}
+				}
+
+				// Augment return statements: append storage param values.
+				// Only for non-private (internal/public) library functions.
+				// Puya already threads mutable args — we match the declared type.
+				if (!storageParamIndices.empty())
+				{
+					std::function<void(awst::Block&)> augmentReturns;
+					augmentReturns = [&](awst::Block& block) {
+						for (auto& stmt: block.body)
+						{
+							if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
+							{
+								auto tuple = std::make_shared<awst::TupleExpression>();
+								tuple->sourceLocation = ret->sourceLocation;
+								tuple->wtype = sub->returnType;
+								if (ret->value)
+									tuple->items.push_back(ret->value);
+								for (size_t idx: storageParamIndices)
+								{
+									auto pv = std::make_shared<awst::VarExpression>();
+									pv->sourceLocation = ret->sourceLocation;
+									pv->wtype = sub->args[idx].wtype;
+									pv->name = sub->args[idx].name;
+									tuple->items.push_back(std::move(pv));
+								}
+								ret->value = std::move(tuple);
+							}
+							if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
+							{
+								if (ifElse->ifBranch) augmentReturns(*ifElse->ifBranch);
+								if (ifElse->elseBranch) augmentReturns(*ifElse->elseBranch);
+							}
+						}
+					};
+					augmentReturns(*sub->body);
 				}
 
 				// Handle assembly-only functions with known semantics
@@ -456,10 +563,19 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				continue;
 
 			std::string qualifiedName = func->name();
-			auto it = m_libraryFunctionIds.find(qualifiedName);
-			std::string subroutineId = (it != m_libraryFunctionIds.end())
-				? it->second
-				: _sourceFile + "." + qualifiedName;
+			// Prefer AST ID lookup for precise resolution (avoids name collisions
+			// between same-named free functions, e.g. UD60x18.powu vs SD59x18.powu)
+			std::string subroutineId;
+			auto byId = m_freeFunctionById.find(func->id());
+			if (byId != m_freeFunctionById.end())
+				subroutineId = byId->second;
+			else
+			{
+				auto it = m_libraryFunctionIds.find(qualifiedName);
+				subroutineId = (it != m_libraryFunctionIds.end())
+					? it->second
+					: _sourceFile + "." + qualifiedName;
+			}
 
 			Logger::instance().debug("Translating free function: " + qualifiedName);
 
@@ -506,11 +622,11 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 
 			sub->pure = func->stateMutability() == solidity::frontend::StateMutability::Pure;
 
-			ExpressionTranslator exprTranslator(
+			ExpressionBuilder exprBuilder(
 				m_typeMapper, *m_storageMapper, _sourceFile, "", m_libraryFunctionIds,
 				{}, m_freeFunctionById
 			);
-			StatementTranslator stmtTranslator(exprTranslator, m_typeMapper, _sourceFile);
+			StatementBuilder stmtBuilder(exprBuilder, m_typeMapper, _sourceFile);
 
 			{
 				std::vector<std::pair<std::string, awst::WType const*>> paramContext;
@@ -522,10 +638,10 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 						pname = "_param" + std::to_string(pi);
 					paramContext.emplace_back(pname, m_typeMapper.map(param->type()));
 				}
-				stmtTranslator.setFunctionContext(paramContext, sub->returnType);
+				stmtBuilder.setFunctionContext(paramContext, sub->returnType);
 			}
 
-			sub->body = stmtTranslator.translateBlock(func->body());
+			sub->body = stmtBuilder.buildBlock(func->body());
 
 			// Insert zero-initialization for named return variables
 			{
@@ -560,7 +676,10 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 						zeroVal = std::move(def);
 					}
 					else
-						continue;
+					{
+						// Complex types (structs, arrays, etc.) — use makeDefaultValue
+						zeroVal = StorageMapper::makeDefaultValue(rpType, loc);
+					}
 
 					auto assign = std::make_shared<awst::AssignmentStatement>();
 					assign->sourceLocation = loc;
@@ -668,12 +787,29 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 			Logger::instance().info("Translating contract: " + contract->name());
 			Logger::instance().debug("[TRACE] AWSTBuilder m_freeFunctionById.size()=" + std::to_string(m_freeFunctionById.size()) + " addr=" + std::to_string((uintptr_t)&m_freeFunctionById));
 
-			ContractTranslator translator(
+			ContractBuilder translator(
 				m_typeMapper, *m_storageMapper, _sourceFile, m_libraryFunctionIds,
 				_opupBudget, m_freeFunctionById
 			);
-			auto awstContract = translator.translate(*contract);
-			roots.push_back(std::move(awstContract));
+			auto awstContract = translator.build(*contract);
+
+			// Only emit deployable contracts (those with public/external methods).
+			// Non-deployable contracts (e.g., ErrorReporter with only internal functions)
+			// are translated (for MRO/inheritance resolution) but not emitted to AWST,
+			// since puya would fail trying to build a router for them.
+			bool hasPublicMethod = false;
+			for (auto const& method: awstContract->methods)
+			{
+				if (method.arc4MethodConfig.has_value())
+				{
+					hasPublicMethod = true;
+					break;
+				}
+			}
+			if (hasPublicMethod)
+				roots.push_back(std::move(awstContract));
+			else
+				Logger::instance().debug("Skipping non-deployable contract: " + contract->name());
 		}
 	}
 

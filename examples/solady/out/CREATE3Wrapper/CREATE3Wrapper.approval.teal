@@ -1,0 +1,56 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/CREATE3Wrapper.sol.CREATE3Wrapper.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xa44e4164 // method "predictDeterministicAddress(byte[32])address"
+    txna ApplicationArgs 0
+    match main_predictDeterministicAddress_route@4
+    err
+
+main_predictDeterministicAddress_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b predictDeterministicAddress
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/CREATE3Wrapper.sol.CREATE3.predictDeterministicAddress(1)(salt: bytes) -> bytes:
+CREATE3.predictDeterministicAddress:
+    proto 1 1
+    frame_dig -1
+    global CurrentApplicationAddress
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/CREATE3Wrapper.sol.CREATE3.predictDeterministicAddress(2)
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/CREATE3Wrapper.sol.CREATE3.predictDeterministicAddress(2)(salt: bytes, deployer: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/CREATE3Wrapper.sol.CREATE3.predictDeterministicAddress(2):
+    proto 2 1
+    pushbytes 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/CREATE3Wrapper.sol.CREATE3Wrapper.predictDeterministicAddress[routing]() -> void:
+predictDeterministicAddress:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub CREATE3.predictDeterministicAddress
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return

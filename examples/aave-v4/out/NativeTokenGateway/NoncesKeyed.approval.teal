@@ -1,0 +1,140 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NoncesKeyed.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock "_nonces" 0x0000000000000000000000000000000000000000000000010000000000000000 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x2f3b1eaf 0x6debbb09 // method "useNonce(uint256)uint256", method "nonces(address,uint256)uint256"
+    txna ApplicationArgs 0
+    match useNonce nonces
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NoncesKeyed.useNonce[routing]() -> void:
+useNonce:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn Sender
+    intc_0 // 32
+    bzero
+    dup
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
+    concat
+    sha256
+    bytec_0 // "_nonces"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 1
+    +
+    itob
+    swap
+    dig 1
+    box_put
+    uncover 2
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b*
+    b|
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/aave-v4/contracts/NativeTokenGateway.sol.NoncesKeyed.nonces[routing]() -> void:
+nonces:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    swap
+    concat
+    sha256
+    bytec_0 // "_nonces"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    uncover 2
+    bytec_1 // 0x0000000000000000000000000000000000000000000000010000000000000000
+    b*
+    swap
+    itob
+    b|
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

@@ -1,9 +1,9 @@
 #pragma once
 
 #include "awst/Node.h"
-#include "builder/ContractTranslator.h"
-#include "builder/StorageMapper.h"
-#include "builder/TypeMapper.h"
+#include "builder/ContractBuilder.h"
+#include "builder/storage/StorageMapper.h"
+#include "builder/sol-types/TypeMapper.h"
 
 #include <libsolidity/interface/CompilerStack.h>
 

@@ -16,6 +16,10 @@ contract ERC20Mock is IERC20 {
         balanceOf[account] = amount;
     }
 
+    function setAllowance(address owner, address spender, uint256 amount) public virtual {
+        allowance[owner][spender] = amount;
+    }
+
     function approve(address spender, uint256 amount) public virtual returns (bool) {
         allowance[msg.sender][spender] = amount;
 

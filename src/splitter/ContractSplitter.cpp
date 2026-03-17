@@ -165,25 +165,114 @@ ContractSplitter::SplitResult ContractSplitter::split(
 			" (" + std::to_string(assignedFuncs.size()) + " subroutines)");
 	}
 
-	// ─── Create thin orchestrator (partition 0) ───────────────────────────
-	// The thin orchestrator exposes the original ABI interface but with stub
-	// method bodies (return default values). This keeps it small (~100-200
-	// TEAL lines) instead of duplicating all subroutines (~17K+ lines).
-	// The actual computation happens in the helper contracts.
+	// ─── Create orchestrator (partition 0) ──────────────────────────────
+	// Determine which methods are delegated to helpers vs kept locally.
+	// Delegated methods get stubs + __finish pairs.
+	// Local methods keep their original implementations.
 	{
-		auto thinOrch = buildThinOrchestrator(*_original);
+		std::set<std::string> delegatedMethods(allPartitionedFuncs);
+		// Only ARC4 methods that moved to helpers are "delegated"
+		// Pure subroutines in helpers are just dependencies, not delegated ARC4 methods
+		std::set<std::string> delegatedARC4Methods;
+		for (auto const& method: _original->methods)
+		{
+			if (delegatedMethods.count(method.memberName))
+				delegatedARC4Methods.insert(method.memberName);
+		}
 
-		ContractAWST orchAWST;
-		orchAWST.contractId = thinOrch->id;
-		orchAWST.contractName = thinOrch->name;
+		bool hasAnyDelegated = !delegatedARC4Methods.empty();
 
-		// No subroutines — the thin orchestrator only has stub methods
-		orchAWST.roots.push_back(thinOrch);
+		if (hasAnyDelegated)
+		{
+			// Hybrid orchestrator: local methods keep original bodies,
+			// delegated methods get stub + __finish pairs
+			auto hybridOrch = buildHybridOrchestrator(*_original, delegatedARC4Methods);
 
-		result.contracts.push_back(std::move(orchAWST));
+			ContractAWST orchAWST;
+			orchAWST.contractId = hybridOrch->id;
+			orchAWST.contractName = hybridOrch->name;
 
-		logger.info("  Orchestrator (thin): " + _original->id +
-			" (stub methods only, no subroutines)");
+			// Add subroutines needed by local (non-delegated) methods.
+			// Use a self-mapping (id→id) to collect raw subroutine IDs directly.
+			std::map<std::string, std::string> selfIdMap;
+			for (auto const& [id, sub]: subById)
+				selfIdMap[id] = id;
+
+			// Scan local method bodies for subroutine references
+			std::set<std::string> neededIds;
+			for (auto const& method: _original->methods)
+			{
+				if (!delegatedARC4Methods.count(method.memberName) && method.body)
+				{
+					for (auto const& stmt: method.body->body)
+						if (stmt)
+							scanStmtForSubroutineIds(*stmt, neededIds, selfIdMap);
+				}
+			}
+
+			// Transitively resolve deps
+			bool changed = true;
+			while (changed)
+			{
+				changed = false;
+				std::set<std::string> newIds;
+				for (auto const& id: neededIds)
+				{
+					auto it = subById.find(id);
+					if (it != subById.end() && it->second->body)
+					{
+						std::set<std::string> refs;
+						for (auto const& stmt: it->second->body->body)
+							if (stmt)
+								scanStmtForSubroutineIds(*stmt, refs, selfIdMap);
+						for (auto const& r: refs)
+							if (!neededIds.count(r))
+								newIds.insert(r);
+					}
+				}
+				if (!newIds.empty())
+				{
+					neededIds.insert(newIds.begin(), newIds.end());
+					changed = true;
+				}
+			}
+
+			// Add needed subroutines by ID
+			std::set<std::string> addedIds;
+			for (auto const& id: neededIds)
+			{
+				auto it = subById.find(id);
+				if (it != subById.end() && !addedIds.count(id))
+				{
+					orchAWST.roots.push_back(it->second);
+					addedIds.insert(id);
+				}
+			}
+
+			orchAWST.roots.push_back(hybridOrch);
+			result.contracts.push_back(std::move(orchAWST));
+
+			size_t localCount = _original->methods.size() - delegatedARC4Methods.size();
+			logger.info("  Orchestrator (hybrid): " + _original->id +
+				" (" + std::to_string(localCount) + " local, " +
+				std::to_string(delegatedARC4Methods.size()) + " delegated)");
+		}
+		else
+		{
+			// All methods are local — no delegation needed
+			// But the orchestrator still might need subroutines, so use original
+			auto thinOrch = buildThinOrchestrator(*_original);
+
+			ContractAWST orchAWST;
+			orchAWST.contractId = thinOrch->id;
+			orchAWST.contractName = thinOrch->name;
+			orchAWST.roots.push_back(thinOrch);
+
+			result.contracts.push_back(std::move(orchAWST));
+
+			logger.info("  Orchestrator (thin): " + _original->id +
+				" (stub methods only, no subroutines)");
+		}
 	}
 
 	result.didSplit = true;
@@ -755,7 +844,72 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 	{
 		auto it = _subMap.find(funcName);
 		if (it == _subMap.end())
+		{
+			// No matching subroutine — check if it's a contract method
+			// (e.g., thin wrappers like `commonExp2` that call library functions)
+			for (auto const& origMethod: _original.methods)
+			{
+				if (origMethod.memberName == funcName && origMethod.body)
+				{
+					awst::ContractMethod method = origMethod;
+					method.cref = helper->id;
+
+					// Add scratch slot 0 store before each return statement
+					// so the orchestrator's __finish method can read the result via gloads.
+					if (method.returnType != awst::WType::voidType() && method.body)
+					{
+						auto newBody = std::make_shared<awst::Block>();
+						newBody->sourceLocation = method.body->sourceLocation;
+						for (auto const& stmt: method.body->body)
+						{
+							if (stmt && stmt->nodeType() == "ReturnStatement")
+							{
+								auto const& rs = static_cast<awst::ReturnStatement const&>(*stmt);
+								if (rs.value)
+								{
+									auto sloc = rs.sourceLocation;
+									// Store return value to scratch slot 0 as bytes
+									std::shared_ptr<awst::Expression> storeVal = rs.value;
+									if (method.returnType == awst::WType::biguintType())
+									{
+										auto cast = std::make_shared<awst::ReinterpretCast>();
+										cast->sourceLocation = sloc;
+										cast->expr = storeVal;
+										cast->wtype = awst::WType::bytesType();
+										storeVal = cast;
+									}
+									else if (method.returnType == awst::WType::uint64Type())
+									{
+										auto itob = std::make_shared<awst::IntrinsicCall>();
+										itob->sourceLocation = sloc;
+										itob->opCode = "itob";
+										itob->wtype = awst::WType::bytesType();
+										itob->stackArgs.push_back(storeVal);
+										storeVal = itob;
+									}
+									auto storeIntr = std::make_shared<awst::IntrinsicCall>();
+									storeIntr->sourceLocation = sloc;
+									storeIntr->opCode = "store";
+									storeIntr->immediates = {0};
+									storeIntr->stackArgs.push_back(storeVal);
+									storeIntr->wtype = awst::WType::voidType();
+									auto storeStmt = std::make_shared<awst::ExpressionStatement>();
+									storeStmt->sourceLocation = sloc;
+									storeStmt->expr = storeIntr;
+									newBody->body.push_back(storeStmt);
+								}
+							}
+							newBody->body.push_back(stmt);
+						}
+						method.body = newBody;
+					}
+
+					helper->methods.push_back(std::move(method));
+					break;
+				}
+			}
 			continue;
+		}
 
 		auto const& sub = it->second;
 
@@ -935,9 +1089,77 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 
 		if (sub->returnType != awst::WType::voidType())
 		{
+			// Store result in a temp variable, then store to scratch 0 (for gloads
+			// by orchestrator __finish method), then return it (for ARC4 log).
+			std::string tmpName = "__result__";
+			auto tmpVar = [&]() {
+				auto v = std::make_shared<awst::VarExpression>();
+				v->sourceLocation = sub->sourceLocation;
+				v->wtype = sub->returnType;
+				v->name = tmpName;
+				return v;
+			};
+
+			// Assign result to temp
+			auto assign = std::make_shared<awst::AssignmentStatement>();
+			assign->sourceLocation = sub->sourceLocation;
+			assign->target = tmpVar();
+			assign->value = callExpr;
+			body->body.push_back(assign);
+
+			// Store result to scratch slot 0 as bytes (for gloads)
+			{
+				std::shared_ptr<awst::Expression> storeVal = tmpVar();
+				// Convert to bytes if not already
+				if (sub->returnType == awst::WType::biguintType())
+				{
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = sub->sourceLocation;
+					cast->expr = storeVal;
+					cast->wtype = awst::WType::bytesType();
+					storeVal = cast;
+				}
+				else if (sub->returnType == awst::WType::uint64Type())
+				{
+					auto itob = std::make_shared<awst::IntrinsicCall>();
+					itob->sourceLocation = sub->sourceLocation;
+					itob->opCode = "itob";
+					itob->wtype = awst::WType::bytesType();
+					itob->stackArgs.push_back(storeVal);
+					storeVal = itob;
+				}
+				else if (sub->returnType == awst::WType::boolType())
+				{
+					// bool → itob(btoi equivalent)
+					auto boolToInt = std::make_shared<awst::ReinterpretCast>();
+					boolToInt->sourceLocation = sub->sourceLocation;
+					boolToInt->expr = storeVal;
+					boolToInt->wtype = awst::WType::uint64Type();
+					auto itob = std::make_shared<awst::IntrinsicCall>();
+					itob->sourceLocation = sub->sourceLocation;
+					itob->opCode = "itob";
+					itob->wtype = awst::WType::bytesType();
+					itob->stackArgs.push_back(boolToInt);
+					storeVal = itob;
+				}
+				// else: bytes/ARC4 types are already bytes at runtime
+
+				auto storeIntr = std::make_shared<awst::IntrinsicCall>();
+				storeIntr->sourceLocation = sub->sourceLocation;
+				storeIntr->opCode = "store";
+				storeIntr->immediates = {0};
+				storeIntr->stackArgs.push_back(storeVal);
+				storeIntr->wtype = awst::WType::voidType();
+
+				auto storeStmt = std::make_shared<awst::ExpressionStatement>();
+				storeStmt->sourceLocation = sub->sourceLocation;
+				storeStmt->expr = storeIntr;
+				body->body.push_back(storeStmt);
+			}
+
 			auto ret = std::make_shared<awst::ReturnStatement>();
 			ret->sourceLocation = sub->sourceLocation;
-			ret->value = callExpr;
+			ret->value = tmpVar();
 			body->body.push_back(ret);
 		}
 		else
@@ -1510,6 +1732,16 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 
 		auto body = std::make_shared<awst::Block>();
 		body->sourceLocation = loc;
+
+		// Initialize "f" flag to empty bytes so app_global_get returns bytes, not uint64
+		{
+			auto initPut = makeIntrinsic("app_global_put", {}, {makeBytesKey("f"), makeBytesHex({})}, awst::WType::voidType());
+			auto stmt = std::make_shared<awst::ExpressionStatement>();
+			stmt->sourceLocation = loc;
+			stmt->expr = initPut;
+			body->body.push_back(stmt);
+		}
+
 		auto ret = std::make_shared<awst::ReturnStatement>();
 		ret->sourceLocation = loc;
 		body->body.push_back(ret);
@@ -1573,6 +1805,424 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 	}
 
 	// Clear program: always approve
+	orch->clearProgram = buildClearProgram(loc, orch->id);
+
+	return orch;
+}
+
+std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
+	awst::Contract const& _original,
+	std::set<std::string> const& _delegatedMethods
+)
+{
+	auto orch = std::make_shared<awst::Contract>();
+	awst::SourceLocation loc = _original.sourceLocation;
+
+	orch->id = _original.id;
+	orch->name = _original.name;
+	orch->description = "Hybrid orchestrator for " + _original.name +
+		" — local methods + delegated stubs";
+	orch->methodResolutionOrder = _original.methodResolutionOrder;
+	orch->avmVersion = _original.avmVersion;
+	orch->appState = _original.appState;
+
+	// Need the "f" flag only if we have delegated methods
+	bool hasDelegated = !_delegatedMethods.empty();
+	if (hasDelegated)
+	{
+		auto makeKey = [&](std::string const& k) {
+			auto key = std::make_shared<awst::BytesConstant>();
+			key->sourceLocation = loc;
+			key->wtype = awst::WType::bytesType();
+			key->encoding = awst::BytesEncoding::Utf8;
+			key->value = std::vector<unsigned char>(k.begin(), k.end());
+			return key;
+		};
+		awst::AppStorageDefinition fDef;
+		fDef.sourceLocation = loc;
+		fDef.memberName = "f";
+		fDef.storageKind = awst::AppStorageKind::AppGlobal;
+		fDef.storageWType = awst::WType::bytesType();
+		fDef.key = makeKey("f");
+		orch->appState.push_back(fDef);
+	}
+
+	// AWST helper lambdas (same as in buildThinOrchestrator)
+	auto makeIntrinsic = [&](
+		std::string op,
+		std::vector<std::variant<std::string, int>> imm,
+		std::vector<std::shared_ptr<awst::Expression>> args,
+		awst::WType const* type
+	) {
+		auto ic = std::make_shared<awst::IntrinsicCall>();
+		ic->sourceLocation = loc;
+		ic->opCode = std::move(op);
+		ic->immediates = std::move(imm);
+		ic->stackArgs = std::move(args);
+		ic->wtype = type;
+		return ic;
+	};
+	auto makeBytesKey = [&](std::string const& k) {
+		auto key = std::make_shared<awst::BytesConstant>();
+		key->sourceLocation = loc;
+		key->wtype = awst::WType::bytesType();
+		key->encoding = awst::BytesEncoding::Utf8;
+		key->value = std::vector<unsigned char>(k.begin(), k.end());
+		return key;
+	};
+	auto makeBytesHex = [&](std::vector<unsigned char> const& v) {
+		auto val = std::make_shared<awst::BytesConstant>();
+		val->sourceLocation = loc;
+		val->wtype = awst::WType::bytesType();
+		val->encoding = awst::BytesEncoding::Base16;
+		val->value = v;
+		return val;
+	};
+	auto makeUint64 = [&](std::string const& v) {
+		auto val = std::make_shared<awst::IntegerConstant>();
+		val->sourceLocation = loc;
+		val->wtype = awst::WType::uint64Type();
+		val->value = v;
+		return val;
+	};
+	auto makeAssertExpr = [&](std::shared_ptr<awst::Expression> cond, std::string msg) {
+		auto ae = std::make_shared<awst::AssertExpression>();
+		ae->sourceLocation = loc;
+		ae->wtype = awst::WType::boolType();
+		ae->condition = std::move(cond);
+		ae->errorMessage = std::move(msg);
+		return ae;
+	};
+	auto makeAssertStmt = [&](std::shared_ptr<awst::Expression> cond, std::string msg) {
+		auto es = std::make_shared<awst::ExpressionStatement>();
+		es->sourceLocation = loc;
+		es->expr = makeAssertExpr(std::move(cond), std::move(msg));
+		return es;
+	};
+	auto makeBytesCmp = [&](
+		std::shared_ptr<awst::Expression> lhs,
+		awst::EqualityComparison op,
+		std::shared_ptr<awst::Expression> rhs
+	) {
+		auto cmp = std::make_shared<awst::BytesComparisonExpression>();
+		cmp->sourceLocation = loc;
+		cmp->wtype = awst::WType::boolType();
+		cmp->lhs = std::move(lhs);
+		cmp->op = op;
+		cmp->rhs = std::move(rhs);
+		return cmp;
+	};
+	auto makeNumericCmp = [&](
+		std::shared_ptr<awst::Expression> lhs,
+		awst::NumericComparison op,
+		std::shared_ptr<awst::Expression> rhs
+	) {
+		auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+		cmp->sourceLocation = loc;
+		cmp->wtype = awst::WType::boolType();
+		cmp->lhs = std::move(lhs);
+		cmp->op = op;
+		cmp->rhs = std::move(rhs);
+		return cmp;
+	};
+	auto makeVar = [&](std::string name, awst::WType const* type) {
+		auto v = std::make_shared<awst::VarExpression>();
+		v->sourceLocation = loc;
+		v->wtype = type;
+		v->name = std::move(name);
+		return v;
+	};
+
+	for (auto const& method: _original.methods)
+	{
+		if (_delegatedMethods.count(method.memberName))
+		{
+			// ─── Delegated method: create stub + __finish pair ──────────
+			// Entrypoint stub (same as buildThinOrchestrator)
+			{
+				awst::ContractMethod entry;
+				entry.sourceLocation = method.sourceLocation;
+				entry.args = method.args;
+				entry.returnType = method.returnType;
+				entry.cref = orch->id;
+				entry.memberName = method.memberName;
+				entry.pure = method.pure;
+				entry.documentation = method.documentation;
+				entry.arc4MethodConfig = method.arc4MethodConfig;
+
+				auto body = std::make_shared<awst::Block>();
+				body->sourceLocation = loc;
+
+				// assert(app_global_get("f") == "")
+				{
+					auto flag = makeIntrinsic("app_global_get", {}, {makeBytesKey("f")}, awst::WType::bytesType());
+					body->body.push_back(makeAssertStmt(
+						makeBytesCmp(flag, awst::EqualityComparison::Eq, makeBytesHex({})),
+						"orchestrator: reentrant call"
+					));
+				}
+
+				// app_global_put("f", txna ApplicationArgs 0)
+				{
+					auto selector = makeIntrinsic("txna", {std::string("ApplicationArgs"), 0}, {}, awst::WType::bytesType());
+					auto put = makeIntrinsic("app_global_put", {}, {makeBytesKey("f"), selector}, awst::WType::voidType());
+					auto stmt = std::make_shared<awst::ExpressionStatement>();
+					stmt->sourceLocation = loc;
+					stmt->expr = put;
+					body->body.push_back(stmt);
+				}
+
+				// Store args to scratch
+				for (size_t i = 0; i < method.args.size(); ++i)
+				{
+					auto argVar = makeVar(method.args[i].name, method.args[i].wtype);
+					std::shared_ptr<awst::Expression> storeValue = argVar;
+
+					if (method.args[i].wtype != awst::WType::bytesType() &&
+						method.args[i].wtype->kind() != awst::WTypeKind::Bytes &&
+						method.args[i].wtype->kind() != awst::WTypeKind::ReferenceArray &&
+						method.args[i].wtype->kind() != awst::WTypeKind::ARC4DynamicArray &&
+						method.args[i].wtype->kind() != awst::WTypeKind::ARC4StaticArray &&
+						method.args[i].wtype->kind() != awst::WTypeKind::ARC4Struct &&
+						method.args[i].wtype->kind() != awst::WTypeKind::ARC4Tuple)
+					{
+						if (method.args[i].wtype == awst::WType::uint64Type())
+							storeValue = makeIntrinsic("itob", {}, {argVar}, awst::WType::bytesType());
+						else if (method.args[i].wtype == awst::WType::biguintType())
+						{
+							auto cast = std::make_shared<awst::ReinterpretCast>();
+							cast->sourceLocation = loc;
+							cast->expr = argVar;
+							cast->wtype = awst::WType::bytesType();
+							storeValue = cast;
+						}
+					}
+
+					auto store = makeIntrinsic("store", {static_cast<int>(i)}, {storeValue}, awst::WType::voidType());
+					auto stmt = std::make_shared<awst::ExpressionStatement>();
+					stmt->sourceLocation = loc;
+					stmt->expr = store;
+					body->body.push_back(stmt);
+				}
+
+				// Return default value
+				auto ret = std::make_shared<awst::ReturnStatement>();
+				ret->sourceLocation = loc;
+				if (method.returnType == awst::WType::boolType())
+				{
+					auto trueConst = std::make_shared<awst::BoolConstant>();
+					trueConst->value = true;
+					trueConst->wtype = awst::WType::boolType();
+					trueConst->sourceLocation = loc;
+					ret->value = trueConst;
+				}
+				else if (method.returnType != awst::WType::voidType() && method.returnType != nullptr)
+					ret->value = buildDefaultExpression(loc, method.returnType);
+				body->body.push_back(ret);
+
+				entry.body = body;
+				orch->methods.push_back(std::move(entry));
+			}
+
+			// __finish method
+			{
+				std::string finishName = "__finish_" + method.memberName;
+				awst::ContractMethod finish;
+				finish.sourceLocation = method.sourceLocation;
+				finish.returnType = method.returnType;
+				finish.cref = orch->id;
+				finish.memberName = finishName;
+
+				auto body = std::make_shared<awst::Block>();
+				body->sourceLocation = loc;
+
+				// assert(app_global_get("f") != "")
+				{
+					auto flag = makeIntrinsic("app_global_get", {}, {makeBytesKey("f")}, awst::WType::bytesType());
+					body->body.push_back(makeAssertStmt(
+						makeBytesCmp(flag, awst::EqualityComparison::Ne, makeBytesHex({})),
+						"orchestrator: no active call"
+					));
+				}
+
+				// Read result from previous txn
+				std::shared_ptr<awst::Expression> resultExpr;
+				if (method.returnType != awst::WType::voidType() && method.returnType != nullptr)
+				{
+					auto groupIdx = makeIntrinsic("txn", {std::string("GroupIndex")}, {}, awst::WType::uint64Type());
+					auto prevIdx = std::make_shared<awst::UInt64BinaryOperation>();
+					prevIdx->sourceLocation = loc;
+					prevIdx->wtype = awst::WType::uint64Type();
+					prevIdx->left = groupIdx;
+					prevIdx->op = awst::UInt64BinaryOperator::Sub;
+					prevIdx->right = makeUint64("1");
+
+					auto gloadResult = makeIntrinsic("gloads", {0}, {prevIdx}, awst::WType::bytesType());
+
+					if (method.returnType == awst::WType::boolType())
+					{
+						auto asUint = makeIntrinsic("btoi", {}, {gloadResult}, awst::WType::uint64Type());
+						resultExpr = makeNumericCmp(asUint, awst::NumericComparison::Ne, makeUint64("0"));
+					}
+					else if (method.returnType == awst::WType::uint64Type())
+						resultExpr = makeIntrinsic("btoi", {}, {gloadResult}, awst::WType::uint64Type());
+					else if (method.returnType == awst::WType::biguintType())
+					{
+						auto cast = std::make_shared<awst::ReinterpretCast>();
+						cast->sourceLocation = loc;
+						cast->expr = gloadResult;
+						cast->wtype = awst::WType::biguintType();
+						resultExpr = cast;
+					}
+					else
+					{
+						auto cast = std::make_shared<awst::ReinterpretCast>();
+						cast->sourceLocation = loc;
+						cast->expr = gloadResult;
+						cast->wtype = method.returnType;
+						resultExpr = cast;
+					}
+				}
+
+				// Clear flag
+				{
+					auto put = makeIntrinsic("app_global_put", {}, {makeBytesKey("f"), makeBytesHex({})}, awst::WType::voidType());
+					auto stmt = std::make_shared<awst::ExpressionStatement>();
+					stmt->sourceLocation = loc;
+					stmt->expr = put;
+					body->body.push_back(stmt);
+				}
+
+				auto ret = std::make_shared<awst::ReturnStatement>();
+				ret->sourceLocation = loc;
+				if (resultExpr)
+					ret->value = resultExpr;
+				body->body.push_back(ret);
+
+				finish.body = body;
+
+				awst::ARC4ABIMethodConfig abiConfig;
+				abiConfig.sourceLocation = loc;
+				abiConfig.allowedCompletionTypes = {0};
+				abiConfig.create = 3;
+				abiConfig.name = finishName;
+				abiConfig.readonly = false;
+				finish.arc4MethodConfig = abiConfig;
+
+				orch->methods.push_back(std::move(finish));
+			}
+		}
+		else
+		{
+			// ─── Local method: keep original implementation ─────────────
+			awst::ContractMethod localMethod;
+			localMethod.sourceLocation = method.sourceLocation;
+			localMethod.args = method.args;
+			localMethod.returnType = method.returnType;
+			localMethod.cref = orch->id;
+			localMethod.memberName = method.memberName;
+			localMethod.pure = method.pure;
+			localMethod.documentation = method.documentation;
+			localMethod.arc4MethodConfig = method.arc4MethodConfig;
+			localMethod.body = method.body; // Keep original body!
+			orch->methods.push_back(std::move(localMethod));
+		}
+	}
+
+	// Bare create method (initialize "f" flag if we have delegated methods)
+	{
+		awst::ContractMethod bareCreate;
+		bareCreate.sourceLocation = loc;
+		bareCreate.returnType = awst::WType::voidType();
+		bareCreate.cref = orch->id;
+		bareCreate.memberName = "__bare_create__";
+
+		auto body = std::make_shared<awst::Block>();
+		body->sourceLocation = loc;
+
+		if (hasDelegated)
+		{
+			auto initPut = makeIntrinsic("app_global_put", {}, {makeBytesKey("f"), makeBytesHex({})}, awst::WType::voidType());
+			auto stmt = std::make_shared<awst::ExpressionStatement>();
+			stmt->sourceLocation = loc;
+			stmt->expr = initPut;
+			body->body.push_back(stmt);
+		}
+
+		// Copy original bare create body statements if present
+		for (auto const& origMethod: _original.methods)
+		{
+			if (origMethod.memberName == "__bare_create__" && origMethod.body)
+			{
+				for (auto const& stmt: origMethod.body->body)
+					body->body.push_back(stmt);
+				break;
+			}
+		}
+
+		auto ret = std::make_shared<awst::ReturnStatement>();
+		ret->sourceLocation = loc;
+		body->body.push_back(ret);
+		bareCreate.body = body;
+
+		awst::ARC4BareMethodConfig bareConfig;
+		bareConfig.sourceLocation = loc;
+		bareConfig.allowedCompletionTypes = {0};
+		bareConfig.create = 2;
+		bareCreate.arc4MethodConfig = bareConfig;
+
+		orch->methods.push_back(std::move(bareCreate));
+	}
+
+	// Auth stamp method (for helper validation)
+	if (hasDelegated)
+	{
+		awst::ContractMethod authMethod;
+		authMethod.sourceLocation = loc;
+		authMethod.returnType = awst::WType::voidType();
+		authMethod.cref = orch->id;
+		authMethod.memberName = "__auth__";
+
+		auto body = std::make_shared<awst::Block>();
+		body->sourceLocation = loc;
+		auto ret = std::make_shared<awst::ReturnStatement>();
+		ret->sourceLocation = loc;
+		body->body.push_back(ret);
+		authMethod.body = body;
+
+		awst::ARC4ABIMethodConfig abiConfig;
+		abiConfig.sourceLocation = loc;
+		abiConfig.allowedCompletionTypes = {0};
+		abiConfig.create = 3;
+		abiConfig.name = "__auth__";
+		abiConfig.readonly = true;
+		authMethod.arc4MethodConfig = abiConfig;
+
+		orch->methods.push_back(std::move(authMethod));
+	}
+
+	// Approval program: ARC4 router
+	{
+		auto body = std::make_shared<awst::Block>();
+		body->sourceLocation = loc;
+
+		auto routerExpr = std::make_shared<awst::ARC4Router>();
+		routerExpr->sourceLocation = loc;
+		routerExpr->wtype = awst::WType::boolType();
+
+		auto ret = std::make_shared<awst::ReturnStatement>();
+		ret->sourceLocation = loc;
+		ret->value = routerExpr;
+		body->body.push_back(ret);
+
+		orch->approvalProgram.sourceLocation = loc;
+		orch->approvalProgram.cref = orch->id;
+		orch->approvalProgram.memberName = "__puya_arc4_router__";
+		orch->approvalProgram.returnType = awst::WType::boolType();
+		orch->approvalProgram.body = body;
+	}
+
+	// Clear program
 	orch->clearProgram = buildClearProgram(loc, orch->id);
 
 	return orch;

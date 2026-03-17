@@ -717,13 +717,7 @@ std::vector<std::vector<std::string>> CallGraphAnalyzer::binPack(
 
 	for (auto const& [name, info]: m_functions)
 	{
-		// Rewritten parent functions go to orchestrator — they call chunks via
-		// SubroutineCallExpression which must resolve within the same contract.
-		if (_rewrittenFunctions.count(name))
-		{
-			orchestratorFuncs.push_back(name);
-		}
-		else if (info.isContractMethod || info.hasStateAccess || info.isARC4Method)
+		if (info.isContractMethod || info.hasStateAccess || info.isARC4Method)
 		{
 			orchestratorFuncs.push_back(name);
 		}
@@ -746,6 +740,79 @@ std::vector<std::vector<std::string>> CallGraphAnalyzer::binPack(
 				}
 			}
 			candidates.push_back({name, totalSize});
+		}
+	}
+
+	// ─── Check orchestrator size and delegate oversized ARC4 methods ────
+	// If the orchestrator methods + their subroutine deps exceed the AVM limit,
+	// move the largest ARC4 methods (without state access) to helper partitions.
+	// The orchestrator keeps full implementations for local methods and creates
+	// stubs only for delegated methods.
+	{
+		size_t orchSize = 0;
+		for (auto const& name: orchestratorFuncs)
+		{
+			auto sIt = _sizes.methodSizes.find(name);
+			if (sIt != _sizes.methodSizes.end())
+				orchSize += sIt->second;
+		}
+
+		if (orchSize > _maxSize)
+		{
+			logger.info("Orchestrator oversized (" + std::to_string(orchSize) +
+				" > " + std::to_string(_maxSize) + "), delegating largest ARC4 methods");
+
+			// Collect delegatable ARC4 methods (no state access)
+			// sorted by size descending
+			std::vector<std::pair<std::string, size_t>> delegatable;
+			for (auto const& name: orchestratorFuncs)
+			{
+				auto fIt = m_functions.find(name);
+				if (fIt == m_functions.end())
+					continue;
+				// Only delegate ARC4 methods without state access
+				// (state-accessing methods need to stay in orchestrator)
+				if (fIt->second.isARC4Method && !fIt->second.hasStateAccess)
+				{
+					auto sIt = _sizes.methodSizes.find(name);
+					size_t sz = (sIt != _sizes.methodSizes.end()) ? sIt->second : 0;
+					// Include transitive dep sizes
+					auto deps = transitiveDeps(name);
+					for (auto const& dep: deps)
+					{
+						auto dIt = _sizes.methodSizes.find(dep);
+						if (dIt != _sizes.methodSizes.end())
+							sz += dIt->second;
+					}
+					delegatable.push_back({name, sz});
+				}
+			}
+
+			std::sort(delegatable.begin(), delegatable.end(),
+				[](auto const& a, auto const& b) { return a.second > b.second; });
+
+			// Move largest methods to candidates until orchestrator fits
+			for (auto const& [name, sz]: delegatable)
+			{
+				if (orchSize <= _maxSize)
+					break;
+
+				auto sIt = _sizes.methodSizes.find(name);
+				size_t methodSize = (sIt != _sizes.methodSizes.end()) ? sIt->second : 0;
+
+				// Remove from orchestrator
+				orchestratorFuncs.erase(
+					std::remove(orchestratorFuncs.begin(), orchestratorFuncs.end(), name),
+					orchestratorFuncs.end()
+				);
+				orchSize -= methodSize;
+
+				// Add to candidates (will be bin-packed into helpers)
+				candidates.push_back({name, sz});
+
+				logger.info("  Delegated '" + name + "' (" + std::to_string(sz) +
+					" estimated) to helper");
+			}
 		}
 	}
 
@@ -840,6 +907,95 @@ std::vector<std::vector<std::string>> CallGraphAnalyzer::binPack(
 			logger.debug("  Grouped " + std::to_string(groupNames.size()) +
 				" mutable-shared chunks of '" + parent + "' (~" +
 				std::to_string(groupSize * 2) + " bytes)");
+		}
+	}
+
+	// ─── Pre-assign rewritten function + chunk groups ─────────────────────
+	// Rewritten functions (split by FunctionSplitter) and all their chunks
+	// must be in the same partition. Otherwise puya inlines chunks into the
+	// parent function and the optimizer may corrupt the result.
+	if (!_rewrittenFunctions.empty())
+	{
+		for (auto const& parentName: _rewrittenFunctions)
+		{
+			// Skip if parent is still in orchestrator (not delegated)
+			if (assigned.count(parentName))
+				continue;
+
+			// Collect parent + all its chunks
+			std::vector<std::string> groupNames;
+			size_t groupSize = 0;
+
+			// Add the parent function itself if it's a candidate
+			for (auto const& [name, sz]: candidates)
+			{
+				if (name == parentName && !assigned.count(name))
+				{
+					groupNames.push_back(name);
+					auto sizeIt = _sizes.methodSizes.find(name);
+					groupSize += (sizeIt != _sizes.methodSizes.end()) ? sizeIt->second : sz;
+					break;
+				}
+			}
+
+			// Add all chunks (direct and nested)
+			for (auto const& [name, sz]: candidates)
+			{
+				if (assigned.count(name))
+					continue;
+				// Match parentName__chunk_ prefix (including nested chunks)
+				if (name.find(parentName + "__chunk_") == 0)
+				{
+					groupNames.push_back(name);
+					auto sizeIt = _sizes.methodSizes.find(name);
+					groupSize += (sizeIt != _sizes.methodSizes.end()) ? sizeIt->second : sz;
+				}
+			}
+
+			if (!groupNames.empty())
+			{
+				partitions.push_back(groupNames);
+				partitionSizes.push_back(groupSize);
+				for (auto const& n: groupNames)
+					assigned.insert(n);
+
+				logger.debug("  Grouped rewritten function '" + parentName + "' + " +
+					std::to_string(groupNames.size() - 1) + " chunks (~" +
+					std::to_string(groupSize * 2) + " bytes)");
+			}
+		}
+	}
+
+	// ─── Pre-assign wrapper methods to callee partitions ────────────────────
+	// Delegated ARC4 methods that are thin wrappers (e.g., `commonExp2` that
+	// just calls `Common.exp2`) must go to the same partition as their callee.
+	// Detect by checking if any callee is already in a helper partition.
+	for (auto const& [name, size]: candidates)
+	{
+		if (assigned.count(name))
+			continue;
+		auto fIt = m_functions.find(name);
+		if (fIt == m_functions.end() || !fIt->second.isARC4Method)
+			continue;
+		// Check if any callee is already assigned to a helper partition
+		for (auto const& callee: fIt->second.calls)
+		{
+			bool found = false;
+			for (size_t pi = 1; pi < partitions.size(); ++pi)
+			{
+				for (auto const& fn: partitions[pi])
+				{
+					if (fn == callee)
+					{
+						partitions[pi].push_back(name);
+						assigned.insert(name);
+						found = true;
+						break;
+					}
+				}
+				if (found) break;
+			}
+			if (found) break;
 		}
 	}
 

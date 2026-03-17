@@ -652,8 +652,8 @@ njson AWSTSerializer::serializeSourceLocation(awst::SourceLocation const& _loc)
 {
 	njson j;
 	j["file"] = _loc.file.empty() ? njson(nullptr) : njson(_loc.file);
-	j["line"] = _loc.line;
-	j["end_line"] = _loc.endLine;
+	j["line"] = std::max(_loc.line, 1);
+	j["end_line"] = std::max(_loc.endLine, 1);
 	j["comment_lines"] = _loc.commentLines;
 	j["column"] = _loc.column.has_value() ? njson(_loc.column.value()) : njson(nullptr);
 	j["end_column"] = _loc.endColumn.has_value() ? njson(_loc.endColumn.value()) : njson(nullptr);
@@ -682,7 +682,7 @@ njson AWSTSerializer::serializeWType(awst::WType const* _type)
 	{
 		auto const* at = static_cast<awst::ARC4UIntN const*>(_type);
 		j["n"] = at->n();
-		j["arc4_alias"] = nullptr;
+		j["arc4_alias"] = at->arc4Alias().empty() ? njson(nullptr) : njson(at->arc4Alias());
 		j["source_location"] = nullptr;
 		break;
 	}
@@ -776,7 +776,12 @@ njson AWSTSerializer::serializeWType(awst::WType const* _type)
 		break;
 	}
 	default:
-		// Basic types — no extra fields needed
+		// ARC4 basic types (e.g. arc4.bool) need arc4_alias + source_location
+		if (_type->jsonType() == "ARC4Type")
+		{
+			j["arc4_alias"] = nullptr;
+			j["source_location"] = nullptr;
+		}
 		break;
 	}
 

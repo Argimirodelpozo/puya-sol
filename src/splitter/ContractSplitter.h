@@ -86,6 +86,13 @@ private:
 		awst::Contract const& _original
 	);
 
+	/// Build a hybrid orchestrator: local methods keep original bodies,
+	/// delegated methods get stub + __finish pairs.
+	std::shared_ptr<awst::Contract> buildHybridOrchestrator(
+		awst::Contract const& _original,
+		std::set<std::string> const& _delegatedMethods
+	);
+
 	/// Build a stub method body that returns a default value for the given return type.
 	std::shared_ptr<awst::Block> buildStubBody(
 		awst::SourceLocation const& _loc,
