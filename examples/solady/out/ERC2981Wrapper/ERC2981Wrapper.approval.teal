@@ -1,0 +1,164 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/ERC2981Wrapper.sol.ERC2981Wrapper.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 10000
+    bytecblock 0x0000000000000000000000010000000000000000000000000000000000000000 0x 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x4e22a3ba 0xaca10ff0 0x12b18a71 0xa652f517 0xf092f17f // method "supportsInterface(byte[4])bool", method "setDefaultRoyalty(address,uint256)void", method "setTokenRoyalty(uint256,address,uint256)void", method "getRoyalty(uint256,uint256)(address,uint256)", method "royaltyInfo(uint256,uint256)(address,uint256)"
+    txna ApplicationArgs 0
+    match supportsInterface(1) setDefaultRoyalty setTokenRoyalty getRoyalty royaltyInfo
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/ERC2981Wrapper.sol.ERC2981Wrapper.supportsInterface(1)[routing]() -> void:
+supportsInterface(1):
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    pushbytes 0x0000000100000000000000000000000000000000000000000000000000000000
+    b/
+    dup
+    pushbytes 0x01ffc9a7
+    b==
+    bytec_1 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    swap
+    pushbytes 0x2a55205a
+    b==
+    bytec_1 // 0x
+    bytec_2 // 0x01
+    uncover 2
+    select
+    b|
+    bytec_1 // 0x
+    b!=
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/ERC2981Wrapper.sol.ERC2981Wrapper.setDefaultRoyalty[routing]() -> void:
+setDefaultRoyalty:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_3 // 10000
+    itob
+    swap
+    bytec_0 // 0x0000000000000000000000010000000000000000000000000000000000000000
+    b*
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x0000000000000000000000010000000000000000000000000000000000000000
+    b/
+    b<
+    !
+    assert // revert
+    intc_2 // 0
+    assert // revert
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/ERC2981Wrapper.sol.ERC2981Wrapper.setTokenRoyalty[routing]() -> void:
+setTokenRoyalty:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_3 // 10000
+    itob
+    swap
+    bytec_0 // 0x0000000000000000000000010000000000000000000000000000000000000000
+    b*
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x0000000000000000000000010000000000000000000000000000000000000000
+    b/
+    b<
+    !
+    assert // revert
+    intc_2 // 0
+    assert // revert
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/ERC2981Wrapper.sol.ERC2981Wrapper.getRoyalty[routing]() -> void:
+getRoyalty:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec 4 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/ERC2981Wrapper.sol.ERC2981Wrapper.royaltyInfo[routing]() -> void:
+royaltyInfo:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec 4 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return

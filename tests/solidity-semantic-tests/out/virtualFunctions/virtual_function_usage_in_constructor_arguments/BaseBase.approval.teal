@@ -1,0 +1,36 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/virtual_function_usage_in_constructor_arguments.sol.BaseBase.approval_program() -> uint64:
+main:
+    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytes "m_a"
+    txna ApplicationArgs 0
+    app_global_put
+    pushint 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xd3661b80 0x4b2c0376 // method "overridden()uint256", method "g()uint256"
+    txna ApplicationArgs 0
+    match main_overridden_route@5 main_g_route@6
+    err
+
+main_g_route@6:
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    pushint 1
+    return
+
+main_overridden_route@5:
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    pushint 1
+    return

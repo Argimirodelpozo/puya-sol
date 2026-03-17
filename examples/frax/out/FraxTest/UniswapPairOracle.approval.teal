@@ -1,0 +1,1100 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapPairOracle.approval_program() -> uint64:
+main:
+    intcblock 0 1 32 6
+    bytecblock 0x151f7c75 "owner" base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) 0x "timelock_address" "blockTimestampLast" "PERIOD" "nominatedOwner" "pair" "price0CumulativeLast" "price1CumulativeLast" "CONSULT_LENIENCY" "ALLOW_STALE_CONSULTS" "price0Average" "price1Average" 0x010000000000000000000000000000000000000000000000000000000000000000 "token0" "token1" 0x4be8c2a2 0x907a5681 0x14432693 0x0000000000000000000000000000000000010000000000000000000000000000 0x0100000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    intc_0 // 0
+    dup
+    txn ApplicationID
+    bnz main_after_if_else@11
+    bytec_1 // "owner"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 7 // "nominatedOwner"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 4 // "timelock_address"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    pushint 3600
+    itob
+    bytec 6 // "PERIOD"
+    swap
+    app_global_put
+    pushint 120
+    itob
+    bytec 11 // "CONSULT_LENIENCY"
+    swap
+    app_global_put
+    bytec 12 // "ALLOW_STALE_CONSULTS"
+    intc_0 // 0
+    app_global_put
+    bytec 8 // "pair"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 16 // "token0"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 17 // "token1"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 9 // "price0CumulativeLast"
+    bytec_3 // 0x
+    app_global_put
+    bytec 10 // "price1CumulativeLast"
+    bytec_3 // 0x
+    app_global_put
+    bytec 5 // "blockTimestampLast"
+    intc_0 // 0
+    app_global_put
+    bytec 13 // "price0Average"
+    bytec_3 // 0x
+    app_global_put
+    bytec 14 // "price1Average"
+    bytec_3 // 0x
+    app_global_put
+    txna ApplicationArgs 0
+    txna ApplicationArgs 1
+    txna ApplicationArgs 2
+    txna ApplicationArgs 3
+    txna ApplicationArgs 4
+    bury 6
+    dup
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // Owner address cannot be 0
+    bytec_1 // "owner"
+    dig 1
+    app_global_put
+    pushbytes base32(2LGPFEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA)
+    swap
+    concat
+    log
+    callsub UniswapV2Library.pairFor
+    bytec 8 // "pair"
+    dig 1
+    app_global_put
+    itxn_begin
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    pushbytes 0x631845e3 // method "token0()address"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    bytec 16 // "token0"
+    swap
+    app_global_put
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    pushbytes 0xa50c9499 // method "token1()address"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    bytec 17 // "token1"
+    swap
+    app_global_put
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec 18 // method "price0CumulativeLast()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    bytec 9 // "price0CumulativeLast"
+    swap
+    app_global_put
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec 19 // method "price1CumulativeLast()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    bytec 10 // "price1CumulativeLast"
+    swap
+    app_global_put
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 20 // method "getReserves()(uint256,uint256,uint64)"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 32
+    itxn LastLog
+    extract 36 32
+    bury 2
+    itxn LastLog
+    pushint 68
+    extract_uint64
+    bytec 5 // "blockTimestampLast"
+    swap
+    app_global_put
+    bytec_3 // 0x
+    b!=
+    bz main_bool_false@9
+    dup
+    bytec_3 // 0x
+    b!=
+    bz main_bool_false@9
+    intc_1 // 1
+
+main_bool_merge@10:
+    assert // UniswapPairOracle: NO_RESERVES
+    bytec 4 // "timelock_address"
+    dig 2
+    app_global_put
+    intc_1 // 1
+    return
+
+main_bool_false@9:
+    intc_0 // 0
+    b main_bool_merge@10
+
+main_after_if_else@11:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xaafbb08b 0xa1faba9e 0x148e3b4f 0x9d02fb41 0x7ed18d52 0xa0e81872 0x2d31fcb5 0x3ad3a103 0xd521d604 0x78cdba65 0x655de2d2 0xce93732f // method "setTimelock(address)void", method "setPeriod(uint256)void", method "setConsultLeniency(uint256)void", method "setAllowStaleConsults(bool)void", method "canUpdate()bool", method "update()void", method "consult(address,uint256)uint256", method "nominateNewOwner(address)void", method "acceptOwnership()void", method "PERIOD()uint256", method "CONSULT_LENIENCY()uint256", method "ALLOW_STALE_CONSULTS()bool"
+    bytec 18 // method "price0CumulativeLast()uint256"
+    bytec 19 // method "price1CumulativeLast()uint256"
+    pushbytess 0x71a73161 0xbc816d69 0x548395fe 0xb1bbb0a8 0x7d2f355c // method "blockTimestampLast()uint64", method "price0Average()(uint256)", method "price1Average()(uint256)", method "owner()address", method "nominatedOwner()address"
+    txna ApplicationArgs 0
+    match setTimelock setPeriod setConsultLeniency setAllowStaleConsults canUpdate update consult nominateNewOwner acceptOwnership PERIOD CONSULT_LENIENCY ALLOW_STALE_CONSULTS price0CumulativeLast price1CumulativeLast blockTimestampLast price0Average price1Average owner nominatedOwner
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FixedPoint.mul(self: bytes, y: bytes) -> bytes, bytes:
+FixedPoint.mul:
+    proto 2 2
+    bytec_3 // 0x
+    frame_dig -1
+    bytec_3 // 0x
+    b==
+    bnz FixedPoint.mul_bool_true@2
+    frame_dig -2
+    extract 0 32
+    dup
+    frame_dig -1
+    b*
+    dup
+    frame_bury 0
+    frame_dig -1
+    b/
+    b==
+    bz FixedPoint.mul_bool_false@3
+
+FixedPoint.mul_bool_true@2:
+    intc_1 // 1
+
+FixedPoint.mul_bool_merge@4:
+    assert // FixedPoint: MULTIPLICATION_OVERFLOW
+    frame_dig 0
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    frame_dig -2
+    uncover 2
+    retsub
+
+FixedPoint.mul_bool_false@3:
+    intc_0 // 0
+    b FixedPoint.mul_bool_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FixedPoint.fraction(numerator: bytes, denominator: bytes) -> bytes:
+FixedPoint.fraction:
+    proto 2 1
+    frame_dig -1
+    bytec_3 // 0x
+    b>
+    assert // FixedPoint: DIV_BY_ZERO
+    frame_dig -2
+    bytec 21 // 0x0000000000000000000000000000000000010000000000000000000000000000
+    b*
+    frame_dig -1
+    b/
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FixedPoint.decode144(self: bytes) -> bytes, bytes:
+FixedPoint.decode144:
+    proto 1 2
+    frame_dig -1
+    extract 0 32
+    bytec 21 // 0x0000000000000000000000000000000000010000000000000000000000000000
+    b/
+    pushbytes 0xffffffffffffffffffffffffffffffffffff
+    b&
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapV2Library.sortTokens(tokenA: bytes, tokenB: bytes) -> bytes, bytes:
+UniswapV2Library.sortTokens:
+    proto 2 2
+    intc_0 // 0
+    frame_dig -2
+    frame_dig -1
+    !=
+    assert // UniswapV2Library: IDENTICAL_ADDRESSES
+    frame_dig -2
+    frame_dig -1
+    b<
+    dup
+    bz UniswapV2Library.sortTokens_ternary_false@5
+    frame_dig -2
+    frame_bury 0
+
+UniswapV2Library.sortTokens_ternary_merge@6:
+    frame_dig 1
+    bz UniswapV2Library.sortTokens_ternary_false@8
+    frame_dig -1
+
+UniswapV2Library.sortTokens_ternary_merge@9:
+    frame_dig 0
+    dup
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // UniswapV2Library: ZERO_ADDRESS
+    swap
+    uncover 3
+    uncover 3
+    retsub
+
+UniswapV2Library.sortTokens_ternary_false@8:
+    frame_dig -2
+    b UniswapV2Library.sortTokens_ternary_merge@9
+
+UniswapV2Library.sortTokens_ternary_false@5:
+    frame_dig -1
+    frame_bury 0
+    b UniswapV2Library.sortTokens_ternary_merge@6
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapV2Library.pairFor(factory: bytes, tokenA: bytes, tokenB: bytes) -> bytes:
+UniswapV2Library.pairFor:
+    proto 3 1
+    frame_dig -2
+    frame_dig -1
+    callsub UniswapV2Library.sortTokens
+    pop
+    frame_dig -2
+    frame_dig -1
+    callsub UniswapV2Library.sortTokens
+    bury 1
+    itxn_begin
+    frame_dig -3
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x3a9c4cf9 // method "getPair(address,address)address"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapV2OracleLibrary.currentBlockTimestamp() -> uint64:
+UniswapV2OracleLibrary.currentBlockTimestamp:
+    pushint 8
+    bzero
+    global LatestTimestamp
+    itob
+    bytec 22 // 0x0100000000
+    b%
+    dig 1
+    swap
+    concat
+    global LatestTimestamp
+    itob
+    bytec 22 // 0x0100000000
+    b%
+    uncover 2
+    swap
+    concat
+    len
+    pushint 8
+    -
+    extract_uint64
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapV2OracleLibrary.currentCumulativePrices(pair: bytes) -> bytes, bytes, uint64:
+UniswapV2OracleLibrary.currentCumulativePrices:
+    proto 1 3
+    callsub UniswapV2OracleLibrary.currentBlockTimestamp
+    dup
+    itxn_begin
+    frame_dig -1
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec 18 // method "price0CumulativeLast()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    cover 2
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec 19 // method "price1CumulativeLast()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    cover 2
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 20 // method "getReserves()(uint256,uint256,uint64)"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 32
+    cover 2
+    itxn LastLog
+    extract 36 32
+    cover 2
+    itxn LastLog
+    pushint 68
+    extract_uint64
+    dup
+    cover 3
+    !=
+    bz UniswapV2OracleLibrary.currentCumulativePrices_after_if_else@5
+    frame_dig 0
+    frame_dig 4
+    -
+    frame_dig 3
+    dup
+    cover 2
+    frame_dig 2
+    dup
+    cover 3
+    callsub FixedPoint.fraction
+    extract 0 32
+    swap
+    itob
+    swap
+    dig 1
+    b*
+    frame_dig 1
+    b+
+    frame_bury 1
+    swap
+    uncover 2
+    callsub FixedPoint.fraction
+    extract 0 32
+    b*
+    b+
+
+UniswapV2OracleLibrary.currentCumulativePrices_after_if_else@5:
+    frame_dig 1
+    swap
+    frame_dig 0
+    frame_bury 2
+    frame_bury 1
+    frame_bury 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapPairOracle.setTimelock[routing]() -> void:
+setTimelock:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_0 // 0
+    bytec_1 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    bnz setTimelock_bool_true@3
+    txn Sender
+    intc_0 // 0
+    bytec 4 // "timelock_address"
+    app_global_get_ex
+    assert // check timelock_address exists
+    ==
+    bz setTimelock_bool_false@4
+
+setTimelock_bool_true@3:
+    intc_1 // 1
+
+setTimelock_bool_merge@5:
+    assert // You are not an owner or the governance timelock
+    bytec 4 // "timelock_address"
+    dig 1
+    app_global_put
+    intc_1 // 1
+    return
+
+setTimelock_bool_false@4:
+    intc_0 // 0
+    b setTimelock_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapPairOracle.setPeriod[routing]() -> void:
+setPeriod:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn Sender
+    intc_0 // 0
+    bytec_1 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    bnz setPeriod_bool_true@3
+    txn Sender
+    intc_0 // 0
+    bytec 4 // "timelock_address"
+    app_global_get_ex
+    assert // check timelock_address exists
+    ==
+    bz setPeriod_bool_false@4
+
+setPeriod_bool_true@3:
+    intc_1 // 1
+
+setPeriod_bool_merge@5:
+    assert // You are not an owner or the governance timelock
+    bytec 6 // "PERIOD"
+    dig 1
+    app_global_put
+    intc_1 // 1
+    return
+
+setPeriod_bool_false@4:
+    intc_0 // 0
+    b setPeriod_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapPairOracle.setConsultLeniency[routing]() -> void:
+setConsultLeniency:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn Sender
+    intc_0 // 0
+    bytec_1 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    bnz setConsultLeniency_bool_true@3
+    txn Sender
+    intc_0 // 0
+    bytec 4 // "timelock_address"
+    app_global_get_ex
+    assert // check timelock_address exists
+    ==
+    bz setConsultLeniency_bool_false@4
+
+setConsultLeniency_bool_true@3:
+    intc_1 // 1
+
+setConsultLeniency_bool_merge@5:
+    assert // You are not an owner or the governance timelock
+    bytec 11 // "CONSULT_LENIENCY"
+    dig 1
+    app_global_put
+    intc_1 // 1
+    return
+
+setConsultLeniency_bool_false@4:
+    intc_0 // 0
+    b setConsultLeniency_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapPairOracle.setAllowStaleConsults[routing]() -> void:
+setAllowStaleConsults:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_0 // 0
+    getbit
+    txn Sender
+    intc_0 // 0
+    bytec_1 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    bnz setAllowStaleConsults_bool_true@3
+    txn Sender
+    intc_0 // 0
+    bytec 4 // "timelock_address"
+    app_global_get_ex
+    assert // check timelock_address exists
+    ==
+    bz setAllowStaleConsults_bool_false@4
+
+setAllowStaleConsults_bool_true@3:
+    intc_1 // 1
+
+setAllowStaleConsults_bool_merge@5:
+    assert // You are not an owner or the governance timelock
+    bytec 12 // "ALLOW_STALE_CONSULTS"
+    dig 1
+    app_global_put
+    intc_1 // 1
+    return
+
+setAllowStaleConsults_bool_false@4:
+    intc_0 // 0
+    b setAllowStaleConsults_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapPairOracle.canUpdate[routing]() -> void:
+canUpdate:
+    callsub UniswapV2OracleLibrary.currentBlockTimestamp
+    intc_0 // 0
+    bytec 5 // "blockTimestampLast"
+    app_global_get_ex
+    assert // check blockTimestampLast exists
+    -
+    itob
+    intc_0 // 0
+    bytec 6 // "PERIOD"
+    app_global_get_ex
+    assert // check PERIOD exists
+    b>=
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapPairOracle.update[routing]() -> void:
+update:
+    intc_0 // 0
+    bytec 8 // "pair"
+    app_global_get_ex
+    assert // check pair exists
+    callsub UniswapV2OracleLibrary.currentCumulativePrices
+    popn 2
+    intc_0 // 0
+    bytec 8 // "pair"
+    app_global_get_ex
+    assert // check pair exists
+    callsub UniswapV2OracleLibrary.currentCumulativePrices
+    pop
+    cover 2
+    pop
+    intc_0 // 0
+    bytec 8 // "pair"
+    app_global_get_ex
+    assert // check pair exists
+    callsub UniswapV2OracleLibrary.currentCumulativePrices
+    cover 2
+    popn 2
+    intc_0 // 0
+    bytec 5 // "blockTimestampLast"
+    app_global_get_ex
+    assert // check blockTimestampLast exists
+    dig 1
+    swap
+    -
+    itob
+    intc_0 // 0
+    bytec 6 // "PERIOD"
+    app_global_get_ex
+    assert // check PERIOD exists
+    dig 1
+    b<=
+    assert // UniswapPairOracle: PERIOD_NOT_ELAPSED
+    dig 2
+    bytec 15 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    intc_0 // 0
+    bytec 9 // "price0CumulativeLast"
+    app_global_get_ex
+    assert // check price0CumulativeLast exists
+    b-
+    bytec 15 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 1
+    b/
+    bytec 23 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    bytec 13 // "price0Average"
+    swap
+    app_global_put
+    dig 4
+    bytec 15 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    intc_0 // 0
+    bytec 10 // "price1CumulativeLast"
+    app_global_get_ex
+    assert // check price1CumulativeLast exists
+    b-
+    bytec 15 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 2
+    b/
+    bytec 23 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    b|
+    bytec 14 // "price1Average"
+    swap
+    app_global_put
+    bytec 9 // "price0CumulativeLast"
+    uncover 2
+    app_global_put
+    bytec 10 // "price1CumulativeLast"
+    uncover 2
+    app_global_put
+    bytec 5 // "blockTimestampLast"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapPairOracle.consult[routing]() -> void:
+consult:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub UniswapV2OracleLibrary.currentBlockTimestamp
+    intc_0 // 0
+    bytec 5 // "blockTimestampLast"
+    app_global_get_ex
+    assert // check blockTimestampLast exists
+    -
+    itob
+    intc_0 // 0
+    bytec 6 // "PERIOD"
+    app_global_get_ex
+    assert // check PERIOD exists
+    intc_0 // 0
+    bytec 11 // "CONSULT_LENIENCY"
+    app_global_get_ex
+    assert // check CONSULT_LENIENCY exists
+    b+
+    b<
+    bnz consult_bool_true@3
+    intc_0 // 0
+    bytec 12 // "ALLOW_STALE_CONSULTS"
+    app_global_get_ex
+    assert // check ALLOW_STALE_CONSULTS exists
+    bz consult_bool_false@4
+
+consult_bool_true@3:
+    intc_1 // 1
+
+consult_bool_merge@5:
+    assert // UniswapPairOracle: PRICE_IS_STALE_NEED_TO_CALL_UPDATE
+    intc_0 // 0
+    bytec 16 // "token0"
+    app_global_get_ex
+    assert // check token0 exists
+    dig 2
+    ==
+    bz consult_else_body@7
+    intc_0 // 0
+    bytec 13 // "price0Average"
+    app_global_get_ex
+    assert // check price0Average exists
+    dig 1
+    callsub FixedPoint.mul
+    pop
+    callsub FixedPoint.decode144
+    pop
+
+consult_after_if_else@8:
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+consult_else_body@7:
+    intc_0 // 0
+    bytec 17 // "token1"
+    app_global_get_ex
+    assert // check token1 exists
+    dig 2
+    ==
+    assert // UniswapPairOracle: INVALID_TOKEN
+    intc_0 // 0
+    bytec 14 // "price1Average"
+    app_global_get_ex
+    assert // check price1Average exists
+    dig 1
+    callsub FixedPoint.mul
+    pop
+    callsub FixedPoint.decode144
+    pop
+    b consult_after_if_else@8
+
+consult_bool_false@4:
+    intc_0 // 0
+    b consult_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapPairOracle.nominateNewOwner[routing]() -> void:
+nominateNewOwner:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_0 // 0
+    bytec_1 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    assert // Only the contract owner may perform this action
+    bytec 7 // "nominatedOwner"
+    dig 1
+    app_global_put
+    pushbytes 0xb281218a // method "OwnerNominated(address)"
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapPairOracle.acceptOwnership[routing]() -> void:
+acceptOwnership:
+    txn Sender
+    intc_0 // 0
+    bytec 7 // "nominatedOwner"
+    app_global_get_ex
+    assert // check nominatedOwner exists
+    swap
+    dig 1
+    ==
+    assert // You must be nominated before you can accept ownership
+    intc_0 // 0
+    bytec_1 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    dig 1
+    concat
+    pushbytes 0xd2ccf290 // method "OwnerChanged(address,address)"
+    swap
+    concat
+    log
+    bytec_1 // "owner"
+    swap
+    app_global_put
+    bytec 7 // "nominatedOwner"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapPairOracle.PERIOD[routing]() -> void:
+PERIOD:
+    intc_0 // 0
+    bytec 6 // "PERIOD"
+    app_global_get_ex
+    assert // check PERIOD exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapPairOracle.CONSULT_LENIENCY[routing]() -> void:
+CONSULT_LENIENCY:
+    intc_0 // 0
+    bytec 11 // "CONSULT_LENIENCY"
+    app_global_get_ex
+    assert // check CONSULT_LENIENCY exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapPairOracle.ALLOW_STALE_CONSULTS[routing]() -> void:
+ALLOW_STALE_CONSULTS:
+    intc_0 // 0
+    bytec 12 // "ALLOW_STALE_CONSULTS"
+    app_global_get_ex
+    assert // check ALLOW_STALE_CONSULTS exists
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapPairOracle.price0CumulativeLast[routing]() -> void:
+price0CumulativeLast:
+    intc_0 // 0
+    bytec 9 // "price0CumulativeLast"
+    app_global_get_ex
+    assert // check price0CumulativeLast exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapPairOracle.price1CumulativeLast[routing]() -> void:
+price1CumulativeLast:
+    intc_0 // 0
+    bytec 10 // "price1CumulativeLast"
+    app_global_get_ex
+    assert // check price1CumulativeLast exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapPairOracle.blockTimestampLast[routing]() -> void:
+blockTimestampLast:
+    intc_0 // 0
+    bytec 5 // "blockTimestampLast"
+    app_global_get_ex
+    assert // check blockTimestampLast exists
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapPairOracle.price0Average[routing]() -> void:
+price0Average:
+    intc_0 // 0
+    bytec 13 // "price0Average"
+    app_global_get_ex
+    assert // check price0Average exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapPairOracle.price1Average[routing]() -> void:
+price1Average:
+    intc_0 // 0
+    bytec 14 // "price1Average"
+    app_global_get_ex
+    assert // check price1Average exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapPairOracle.owner[routing]() -> void:
+owner:
+    intc_0 // 0
+    bytec_1 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.UniswapPairOracle.nominatedOwner[routing]() -> void:
+nominatedOwner:
+    intc_0 // 0
+    bytec 7 // "nominatedOwner"
+    app_global_get_ex
+    assert // check nominatedOwner exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

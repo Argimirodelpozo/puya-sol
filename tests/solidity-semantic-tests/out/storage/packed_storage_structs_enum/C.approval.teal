@@ -1,0 +1,284 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 2 3
+    bytecblock "data"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "data"
+    pushbytes 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xc95a9d21 // method "test()uint256"
+    txna ApplicationArgs 0
+    match main_test_route@4
+    err
+
+main_test_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b test
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test[routing]() -> void:
+test:
+    intc_0 // 0
+    dup
+    intc_1 // 1
+    itob
+    dup
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    dup
+    extract 8 8
+    dig 1
+    extract 16 8
+    uncover 2
+    extract 24 8
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_0 // "data"
+    dig 1
+    app_global_put
+    intc_0 // 0
+    extract_uint64
+    intc_1 // 1
+    !=
+    bz test_after_if_else@3
+    intc_2 // 2
+    itob
+
+test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@20:
+    dup
+    len
+    pushint 32
+    <=
+    assert // overflow
+    pushint 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+test_after_if_else@3:
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    dup
+    extract 0 8
+    intc_2 // 2
+    itob
+    dup
+    cover 2
+    bury 6
+    dig 2
+    extract 16 8
+    uncover 3
+    extract 24 8
+    uncover 2
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_0 // "data"
+    dig 1
+    app_global_put
+    pushint 8
+    extract_uint64
+    intc_2 // 2
+    !=
+    bz test_after_if_else@5
+    intc_3 // 3
+    itob
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@20
+
+test_after_if_else@5:
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    dup
+    extract 0 8
+    dig 1
+    extract 8 8
+    intc_3 // 3
+    itob
+    dup
+    cover 3
+    bury 6
+    uncover 3
+    extract 24 8
+    cover 2
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_0 // "data"
+    dig 1
+    app_global_put
+    pushint 16
+    extract_uint64
+    intc_3 // 3
+    !=
+    bz test_after_if_else@7
+    pushint 4
+    itob
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@20
+
+test_after_if_else@7:
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    intc_0 // 0
+    extract_uint64
+    intc_1 // 1
+    !=
+    bz test_after_if_else@9
+    pushint 5
+    itob
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@20
+
+test_after_if_else@9:
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    dup
+    extract 8 8
+    dig 1
+    extract 16 8
+    uncover 2
+    extract 24 8
+    dig 5
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_0 // "data"
+    dig 1
+    app_global_put
+    intc_0 // 0
+    extract_uint64
+    intc_2 // 2
+    !=
+    bz test_after_if_else@11
+    pushint 6
+    itob
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@20
+
+test_after_if_else@11:
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    pushint 8
+    extract_uint64
+    intc_2 // 2
+    !=
+    bz test_after_if_else@13
+    pushint 7
+    itob
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@20
+
+test_after_if_else@13:
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    dup
+    extract 0 8
+    dig 1
+    extract 16 8
+    uncover 2
+    extract 24 8
+    uncover 2
+    dig 4
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_0 // "data"
+    dig 1
+    app_global_put
+    pushint 8
+    extract_uint64
+    intc_3 // 3
+    !=
+    bz test_after_if_else@15
+    pushint 8
+    itob
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@20
+
+test_after_if_else@15:
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    pushint 16
+    extract_uint64
+    intc_3 // 3
+    !=
+    bz test_after_if_else@17
+    pushint 9
+    itob
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@20
+
+test_after_if_else@17:
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    dup
+    extract 0 8
+    dig 1
+    extract 8 8
+    uncover 2
+    extract 24 8
+    cover 2
+    concat
+    dig 2
+    concat
+    swap
+    concat
+    bytec_0 // "data"
+    dig 1
+    app_global_put
+    pushint 16
+    extract_uint64
+    intc_1 // 1
+    !=
+    bz test_after_if_else@19
+    pushint 10
+    itob
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@20
+
+test_after_if_else@19:
+    dup
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test@20

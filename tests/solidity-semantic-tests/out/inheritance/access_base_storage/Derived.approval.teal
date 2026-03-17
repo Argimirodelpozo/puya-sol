@@ -1,0 +1,112 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/access_base_storage.sol.Derived.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock "dataBase" "dataDerived" 0x 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "dataBase"
+    bytec_2 // 0x
+    app_global_put
+    bytec_1 // "dataDerived"
+    bytec_2 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x172b4a08 0x9a387964 0xc9bcbbdf // method "setData(uint256,uint256)bool", method "getViaDerived()(uint256,uint256)", method "getViaBase()uint256"
+    txna ApplicationArgs 0
+    match setData getViaDerived getViaBase
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/access_base_storage.sol.Derived.setData[routing]() -> void:
+setData:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // "dataBase"
+    uncover 2
+    app_global_put
+    bytec_1 // "dataDerived"
+    swap
+    app_global_put
+    pushbytes 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/access_base_storage.sol.Derived.getViaDerived[routing]() -> void:
+getViaDerived:
+    intc_2 // 0
+    bytec_0 // "dataBase"
+    app_global_get_ex
+    assert // check dataBase exists
+    intc_2 // 0
+    bytec_1 // "dataDerived"
+    app_global_get_ex
+    assert // check dataDerived exists
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 2
+    dig 1
+    b|
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/access_base_storage.sol.Derived.getViaBase[routing]() -> void:
+getViaBase:
+    intc_2 // 0
+    bytec_0 // "dataBase"
+    app_global_get_ex
+    assert // check dataBase exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

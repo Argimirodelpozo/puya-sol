@@ -1,0 +1,310 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_index_access.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 0 8 1
+    bytecblock 0x 0x01 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_3 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x9c07c057 0x5dc8f718 // method "index(uint256)bool", method "accessIndex(uint256,uint256)uint256"
+    txna ApplicationArgs 0
+    match index accessIndex
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_index_access.sol.C.index[routing]() -> void:
+index:
+    intc_1 // 0
+    dupn 2
+    bytec_0 // ""
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub _puya_lib.mem.new_slot
+    dup
+    bytec_0 // 0x
+    stores
+    intc_1 // 0
+
+index_while_top@2:
+    intc_2 // 8
+    bzero
+    dup
+    bury 6
+    dig 3
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    dig 1
+    >
+    bz index_after_while@4
+    dig 1
+    dup
+    loads
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat // on error: max array length exceeded
+    stores
+    dup
+    intc_3 // 1
+    +
+    bury 1
+    b index_while_top@2
+
+index_after_while@4:
+    intc_1 // 0
+    itob
+    dup
+    bury 8
+    dig 2
+    bury 5
+    bury 6
+
+index_while_top@5:
+    dig 5
+    dig 3
+    b<
+    bz index_while_top@8
+    dig 5
+    dup
+    bytec_1 // 0x01
+    b+
+    dig 6
+    uncover 2
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    dig 2
+    b|
+    dig 6
+    dup
+    cover 2
+    loads
+    uncover 3
+    intc_0 // 32
+    *
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    stores
+    bury 6
+    b index_while_top@5
+
+index_while_top@8:
+    dig 6
+    dig 3
+    b<
+    bz index_after_while@10
+    dig 4
+    dig 7
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    dig 5
+    loads
+    swap
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    swap
+    bytec_1 // 0x01
+    b+
+    dup
+    bury 9
+    b==
+    assert // Unexpected value in array!
+    b index_while_top@8
+
+index_after_while@10:
+    dig 3
+    loads
+    len
+    intc_0 // 32
+    /
+    itob
+    dig 3
+    b==
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_index_access.sol.C.accessIndex[routing]() -> void:
+accessIndex:
+    intc_1 // 0
+    dup
+    bytec_0 // ""
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub _puya_lib.mem.new_slot
+    dup
+    bytec_0 // 0x
+    stores
+    intc_1 // 0
+
+accessIndex_while_top@2:
+    intc_2 // 8
+    bzero
+    dup
+    bury 7
+    dig 4
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    dig 1
+    >
+    bz accessIndex_after_while@4
+    dig 1
+    dup
+    loads
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat // on error: max array length exceeded
+    stores
+    dup
+    intc_3 // 1
+    +
+    bury 1
+    b accessIndex_while_top@2
+
+accessIndex_after_while@4:
+    intc_1 // 0
+    itob
+    bury 7
+    dig 1
+    bury 5
+
+accessIndex_while_top@5:
+    dig 6
+    dig 4
+    b<
+    bz accessIndex_after_while@7
+    dig 6
+    dup
+    bytec_1 // 0x01
+    b+
+    dig 7
+    uncover 2
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    dig 2
+    b|
+    dig 7
+    dup
+    cover 2
+    loads
+    uncover 3
+    intc_0 // 32
+    *
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    stores
+    bury 7
+    b accessIndex_while_top@5
+
+accessIndex_after_while@7:
+    dig 5
+    dig 3
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    dig 5
+    loads
+    swap
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// _puya_lib.mem.new_slot() -> uint64:
+_puya_lib.mem.new_slot:
+    load 0
+    bitlen
+    load 0
+    pushint 256
+    dig 2
+    -
+    intc_1 // 0
+    setbit // on error: no available slots
+    store 0
+    retsub

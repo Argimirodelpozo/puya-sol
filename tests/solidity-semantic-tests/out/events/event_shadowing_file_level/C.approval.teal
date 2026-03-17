@@ -1,0 +1,50 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_shadowing_file_level.sol.C.approval_program() -> uint64:
+main:
+    bytecblock 0x92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xce8354ad 0x42559282 // method "main()(byte[32],byte[32],byte[32])", method "k_main()(byte[32],byte[32],byte[32])"
+    txna ApplicationArgs 0
+    match main_main_route@5 k_main
+    err
+
+main_main_route@5:
+    pushbytes 0x151f7c753e9992c940c54ea252d3a34557cc3d3014281525c43d694f89d5f3dfd820b07d3e9992c940c54ea252d3a34557cc3d3014281525c43d694f89d5f3dfd820b07d92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028
+    log
+    pushint 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_shadowing_file_level.sol.K.main() -> bytes, bytes, bytes:
+K.main:
+    bytec_0 // 0x92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028
+    pushbytes 0x3e9992c940c54ea252d3a34557cc3d3014281525c43d694f89d5f3dfd820b07d
+    bytec_0 // 0x92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_shadowing_file_level.sol.C.k_main[routing]() -> void:
+k_main:
+    callsub K.main
+    cover 2
+    concat
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return

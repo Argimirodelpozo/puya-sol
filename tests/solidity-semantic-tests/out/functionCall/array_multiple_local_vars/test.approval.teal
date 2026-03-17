@@ -1,0 +1,123 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/array_multiple_local_vars.sol.test.approval_program() -> uint64:
+main:
+    intcblock 32 0 1 2
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x72a794c0 // method "f(uint256[])uint256"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/array_multiple_local_vars.sol.test.f[routing]() -> void:
+f:
+    intc_1 // 0
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    intc_3 // 2
+    intc_1 // 0
+    extract3
+    intc_1 // 0
+    itob
+    dup
+
+f_while_top@2:
+    dig 2
+    len
+    intc_0 // 32
+    /
+    itob
+    dig 2
+    b>
+    bz f_after_while@11
+    dig 1
+    pushbytes 0x0a
+    b>=
+    bnz f_after_while@11
+    pushint 8
+    bzero
+    dig 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 3
+    swap
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dup
+    bury 5
+    pushbytes 0x03e8
+    b>=
+    bz f_else_body@7
+    dig 1
+    pushbytes 0x01
+    b+
+    bury 2
+    b f_while_top@2
+
+f_else_body@7:
+    dup
+    dig 4
+    b+
+    dup
+    pushbytes 0x01f4
+    b>=
+    bz f_after_if_else@10
+
+f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/array_multiple_local_vars.sol.test.f@12:
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+f_after_if_else@10:
+    dig 2
+    pushbytes 0x01
+    b+
+    bury 3
+    bury 1
+    b f_while_top@2
+
+f_after_while@11:
+    dup
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/array_multiple_local_vars.sol.test.f@12

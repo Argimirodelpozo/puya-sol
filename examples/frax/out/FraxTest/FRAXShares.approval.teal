@@ -1,0 +1,2633 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.approval_program() -> uint64:
+main:
+    intcblock 32 0 1 2
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 0x 0x151f7c75 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000 "checkpoints" "owner" 0x010000000000000000000000000000000000000000000000000000000000000000 0x0022000000000000000000000000000000000000000000000000000000000000000000020004000600000000 "_totalSupply" "timelock_address" "trackingVotes" "_roles" "numCheckpoints" "_balances" "_allowances" "nominatedOwner" 0x151f7c7580 "oracle_address" "_indexes" 0xffffffffffffffffffffffff 0x28918861 "symbol" "name" "__ctor_pending" 0x01 "FRAXStablecoinAdd" "FRAX" "ERC20: burn amount exceeds allowance" 0x0022
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 8 // "_totalSupply"
+    bytec_1 // 0x
+    app_global_put
+    bytec 5 // "owner"
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 15 // "nominatedOwner"
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 21 // "symbol"
+    bytec_1 // 0x
+    app_global_put
+    bytec 22 // "name"
+    bytec_1 // 0x
+    app_global_put
+    bytec 25 // "FRAXStablecoinAdd"
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 17 // "oracle_address"
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 9 // "timelock_address"
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 26 // "FRAX"
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 10 // "trackingVotes"
+    intc_2 // 1
+    app_global_put
+    bytec 23 // "__ctor_pending"
+    intc_2 // 1
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xf8da6738 0x895d3147 0xaafbb08b 0xd565b441 0xb595ec13 0x13327e28 0xc7c10ffe 0x8957e827 0x198c9820 0x6df41f6d 0xb4756234 0xea732bc3 0x3ad3a103 0xd521d604 0x58a91028 0x0e1c4ba0 0x245d7f59 0x67289c7d 0x141c4f18 0x830d60b1 0x9e4982ed 0x79fab465 0x83bad7cc 0x5d854d0e 0xfafb6a08 0xe99cc979 0x7eb6db4c 0xf1505527 0xd3437554 0x005b52b8 0x19750616 0x1856a090 0xdef202a1 0x423c400d 0x4c8fc6b1 0xb1bbb0a8 0x7d2f355c // method "__postInit(string,string,address,address,address)void", method "setOracle(address)void", method "setTimelock(address)void", method "setFRAXAddress(address)void", method "mint(address,uint256)void", method "pool_mint(address,uint256)void", method "pool_burn_from(address,uint256)void", method "toggleVotes()void", method "transfer(address,uint256)bool", method "transferFrom(address,address,uint256)bool", method "getCurrentVotes(address)uint256", method "getPriorVotes(address,uint256)uint256", method "nominateNewOwner(address)void", method "acceptOwnership()void", method "hasRole(byte[32],address)bool", method "getRoleMemberCount(byte[32])uint256", method "getRoleMember(byte[32],uint256)address", method "getRoleAdmin(byte[32])byte[32]", method "grantRole(byte[32],address)void", method "revokeRole(byte[32],address)void", method "renounceRole(byte[32],address)void", method "totalSupply()uint256", method "balanceOf(address)uint256", method "allowance(address,address)uint256", method "approve(address,uint256)bool", method "increaseAllowance(address,uint256)bool", method "decreaseAllowance(address,uint256)bool", method "burn(uint256)void", method "burnFrom(address,uint256)void", method "symbol()string", method "name()string", method "FRAXStablecoinAdd()address", method "oracle_address()address", method "timelock_address()address", method "trackingVotes()bool", method "owner()address", method "nominatedOwner()address"
+    txna ApplicationArgs 0
+    match __postInit setOracle setTimelock setFRAXAddress mint pool_mint pool_burn_from toggleVotes transfer(2) transferFrom(3) getCurrentVotes getPriorVotes nominateNewOwner acceptOwnership hasRole getRoleMemberCount getRoleMember getRoleAdmin grantRole revokeRole renounceRole totalSupply balanceOf allowance approve increaseAllowance decreaseAllowance burn burnFrom symbol name FRAXStablecoinAdd oracle_address timelock_address trackingVotes owner nominatedOwner
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.EnumerableSet._add(set: bytes, value: bytes) -> uint64, bytes:
+EnumerableSet._add:
+    proto 2 2
+    frame_dig -2
+    frame_dig -1
+    callsub EnumerableSet._contains
+    frame_bury -2
+    bnz EnumerableSet._add_else_body@4
+    frame_dig -2
+    intc_1 // 0
+    extract_uint16
+    frame_dig -2
+    intc_3 // 2
+    extract_uint16
+    frame_dig -2
+    cover 2
+    substring3
+    intc_3 // 2
+    intc_1 // 0
+    extract3
+    dup
+    frame_dig -1
+    concat // on error: max array length exceeded
+    pop
+    len
+    intc_0 // 32
+    /
+    itob
+    frame_dig -1
+    sha256
+    bytec 18 // "_indexes"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_2 // 1
+    frame_dig -2
+    retsub
+
+EnumerableSet._add_else_body@4:
+    intc_1 // 0
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.EnumerableSet._remove(set: bytes, value: bytes) -> uint64, bytes:
+EnumerableSet._remove:
+    proto 2 2
+    frame_dig -1
+    sha256
+    bytec 18 // "_indexes"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    bytec_1 // 0x
+    b!=
+    bz EnumerableSet._remove_else_body@2
+    frame_dig 1
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec 24 // 0x01
+    b-
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -2
+    intc_1 // 0
+    extract_uint16
+    frame_dig -2
+    intc_3 // 2
+    extract_uint16
+    frame_dig -2
+    cover 2
+    substring3
+    intc_3 // 2
+    intc_1 // 0
+    extract3
+    dup
+    len
+    dup
+    intc_0 // 32
+    /
+    itob
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec 24 // 0x01
+    b-
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 8
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    dig 3
+    swap
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    swap
+    dig 4
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    dig 3
+    swap
+    dig 2
+    replace3 // on error: index access is out of bounds
+    pop
+    uncover 3
+    bytec 24 // 0x01
+    b+
+    swap
+    sha256
+    bytec 18 // "_indexes"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_0 // 32
+    -
+    intc_1 // 0
+    swap
+    substring3
+    pop
+    frame_dig 0
+    box_del
+    pop
+    intc_2 // 1
+    frame_dig -2
+    uncover 3
+    uncover 3
+    retsub
+
+EnumerableSet._remove_else_body@2:
+    intc_1 // 0
+    frame_dig -2
+    uncover 3
+    uncover 3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.EnumerableSet._contains(set: bytes, value: bytes) -> uint64, bytes:
+EnumerableSet._contains:
+    proto 2 2
+    frame_dig -1
+    sha256
+    bytec 18 // "_indexes"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    bytec_1 // 0x
+    b!=
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.EnumerableSet._length(set: bytes) -> bytes, bytes:
+EnumerableSet._length:
+    proto 1 2
+    frame_dig -1
+    intc_1 // 0
+    extract_uint16
+    frame_dig -1
+    intc_3 // 2
+    extract_uint16
+    frame_dig -1
+    cover 2
+    substring3
+    intc_3 // 2
+    intc_1 // 0
+    extract3
+    len
+    intc_0 // 32
+    /
+    itob
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.EnumerableSet._at(set: bytes, index: bytes) -> bytes, bytes:
+EnumerableSet._at:
+    proto 2 2
+    frame_dig -2
+    intc_1 // 0
+    extract_uint16
+    frame_dig -2
+    intc_3 // 2
+    extract_uint16
+    frame_dig -2
+    cover 2
+    substring3
+    intc_3 // 2
+    intc_1 // 0
+    extract3
+    dup
+    len
+    intc_0 // 32
+    /
+    itob
+    frame_dig -1
+    b>
+    assert // EnumerableSet: index out of bounds
+    pushint 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.EnumerableSet.add(2)_0(set: bytes, value: bytes) -> uint64, bytes, bytes:
+EnumerableSet.add:
+    proto 2 3
+    frame_dig -2
+    intc_1 // 0
+    extract_uint16
+    frame_dig -2
+    len
+    frame_dig -2
+    cover 2
+    substring3
+    frame_dig -1
+    callsub EnumerableSet._add
+    pop
+    frame_dig -2
+    dup
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.EnumerableSet.remove(2)_0(set: bytes, value: bytes) -> uint64, bytes, bytes:
+EnumerableSet.remove:
+    proto 2 3
+    frame_dig -2
+    intc_1 // 0
+    extract_uint16
+    frame_dig -2
+    len
+    frame_dig -2
+    cover 2
+    substring3
+    frame_dig -1
+    callsub EnumerableSet._remove
+    pop
+    frame_dig -2
+    dup
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.EnumerableSet.contains(2)_0(set: bytes, value: bytes) -> uint64, bytes:
+EnumerableSet.contains:
+    proto 2 2
+    frame_dig -2
+    intc_1 // 0
+    extract_uint16
+    frame_dig -2
+    len
+    frame_dig -2
+    cover 2
+    substring3
+    frame_dig -1
+    callsub EnumerableSet._contains
+    pop
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.EnumerableSet.length(1)_0(set: bytes) -> bytes, bytes:
+EnumerableSet.length:
+    proto 1 2
+    frame_dig -1
+    intc_1 // 0
+    extract_uint16
+    frame_dig -1
+    len
+    frame_dig -1
+    cover 2
+    substring3
+    callsub EnumerableSet._length
+    pop
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.EnumerableSet.at(2)_0(set: bytes, index: bytes) -> bytes, bytes:
+EnumerableSet.at:
+    proto 2 2
+    frame_dig -2
+    intc_1 // 0
+    extract_uint16
+    frame_dig -2
+    len
+    frame_dig -2
+    cover 2
+    substring3
+    frame_dig -1
+    callsub EnumerableSet._at
+    pop
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.SafeMath.add(a: bytes, b: bytes) -> bytes:
+SafeMath.add:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b+
+    dup
+    frame_dig -2
+    b>=
+    assert // SafeMath: addition overflow
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.SafeMath.sub(2)(a: bytes, b: bytes) -> bytes:
+SafeMath.sub:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    pushbytes "SafeMath: subtraction overflow"
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.SafeMath.sub(3)
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.SafeMath.sub(3)(a: bytes, b: bytes, errorMessage: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.SafeMath.sub(3):
+    proto 3 1
+    frame_dig -2
+    frame_dig -3
+    b<=
+    assert // assertion failed
+    frame_dig -3
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig -2
+    b-
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.__postInit[routing]() -> void:
+__postInit:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txna ApplicationArgs 2
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txna ApplicationArgs 3
+    dupn 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    dup
+    cover 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 5
+    dup
+    cover 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    bytec 23 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 23 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    dup
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // Owner address cannot be 0
+    bytec 5 // "owner"
+    dig 1
+    app_global_put
+    pushbytes base32(2LGPFEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA)
+    swap
+    concat
+    log
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    bz __postInit_bool_false@4
+    dup
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    bz __postInit_bool_false@4
+    intc_2 // 1
+
+__postInit_bool_merge@5:
+    assert // Zero address detected
+    bytec 22 // "name"
+    dig 5
+    app_global_put
+    bytec 21 // "symbol"
+    dig 4
+    app_global_put
+    bytec 17 // "oracle_address"
+    dig 3
+    app_global_put
+    bytec 9 // "timelock_address"
+    dig 1
+    app_global_put
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    txn Sender
+    callsub _grantRole
+    dig 1
+    dup
+    pushbytes 0x52b7d2dcc80cd2e4000000
+    callsub _mint
+    intc_1 // 0
+    itob
+    intc_1 // 0
+    swap
+    pushbytes 0x0052b7d2dcc80cd2e4000000
+    callsub _writeCheckpoint
+    intc_2 // 1
+    return
+
+__postInit_bool_false@4:
+    intc_1 // 0
+    b __postInit_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.setOracle[routing]() -> void:
+setOracle:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_1 // 0
+    bytec 5 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    bnz setOracle_bool_true@3
+    txn Sender
+    intc_1 // 0
+    bytec 9 // "timelock_address"
+    app_global_get_ex
+    assert // check timelock_address exists
+    ==
+    bz setOracle_bool_false@4
+
+setOracle_bool_true@3:
+    intc_2 // 1
+
+setOracle_bool_merge@5:
+    assert // You are not an owner or the governance timelock
+    dupn 2
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // Zero address detected
+    bytec 17 // "oracle_address"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+setOracle_bool_false@4:
+    intc_1 // 0
+    b setOracle_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.setTimelock[routing]() -> void:
+setTimelock:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_1 // 0
+    bytec 5 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    bnz setTimelock_bool_true@3
+    txn Sender
+    intc_1 // 0
+    bytec 9 // "timelock_address"
+    app_global_get_ex
+    assert // check timelock_address exists
+    ==
+    bz setTimelock_bool_false@4
+
+setTimelock_bool_true@3:
+    intc_2 // 1
+
+setTimelock_bool_merge@5:
+    assert // You are not an owner or the governance timelock
+    dupn 2
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // Timelock address cannot be 0
+    bytec 9 // "timelock_address"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+setTimelock_bool_false@4:
+    intc_1 // 0
+    b setTimelock_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.setFRAXAddress[routing]() -> void:
+setFRAXAddress:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_1 // 0
+    bytec 5 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    bnz setFRAXAddress_bool_true@3
+    txn Sender
+    intc_1 // 0
+    bytec 9 // "timelock_address"
+    app_global_get_ex
+    assert // check timelock_address exists
+    ==
+    bz setFRAXAddress_bool_false@4
+
+setFRAXAddress_bool_true@3:
+    intc_2 // 1
+
+setFRAXAddress_bool_merge@5:
+    assert // You are not an owner or the governance timelock
+    dupn 2
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // Zero address detected
+    bytec 26 // "FRAX"
+    dig 1
+    app_global_put
+    pushbytes 0x31b817a0 // method "FRAXAddressSet(address)"
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+setFRAXAddress_bool_false@4:
+    intc_1 // 0
+    b setFRAXAddress_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.mint[routing]() -> void:
+mint:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    itxn LastLog
+    extract 4 0
+    intc_1 // 0
+    getbit
+    intc_1 // 0
+    !=
+    intc_2 // 1
+    ==
+    assert // Only frax pools can mint new FRAX
+    callsub _mint
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.pool_mint[routing]() -> void:
+pool_mint:
+    bytec_1 // ""
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    itxn LastLog
+    extract 4 0
+    intc_1 // 0
+    getbit
+    intc_1 // 0
+    !=
+    intc_2 // 1
+    ==
+    assert // Only frax pools can mint new FRAX
+    intc_1 // 0
+    bytec 10 // "trackingVotes"
+    app_global_get_ex
+    assert // check trackingVotes exists
+    bz pool_mint_after_if_else@6
+    global CurrentApplicationAddress
+    sha256
+    bytec 12 // "numCheckpoints"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    dup
+    bury 5
+    bz pool_mint_ternary_false@4
+    global CurrentApplicationAddress
+    dig 4
+    intc_2 // 1
+    -
+    itob
+    concat
+    sha256
+    bytec 4 // "checkpoints"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 8 32
+
+pool_mint_ternary_merge@5:
+    dig 2
+    bytec 19 // 0xffffffffffffffffffffffff
+    b&
+    dup2
+    b+
+    dup
+    dig 3
+    b>=
+    assert // assertion failed
+    global CurrentApplicationAddress
+    dig 7
+    uncover 4
+    uncover 3
+    callsub _writeCheckpoint
+    global CurrentApplicationAddress
+    dig 4
+    uncover 2
+    callsub trackVotes
+
+pool_mint_after_if_else@6:
+    dig 2
+    dup
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // ERC20: mint to the zero address
+    intc_1 // 0
+    bytec 8 // "_totalSupply"
+    app_global_get_ex
+    assert // check _totalSupply exists
+    dig 3
+    dup
+    cover 3
+    callsub SafeMath.add
+    bytec 8 // "_totalSupply"
+    swap
+    app_global_put
+    dup
+    sha256
+    bytec 13 // "_balances"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dig 3
+    callsub SafeMath.add
+    dig 1
+    box_del
+    pop
+    box_put
+    dig 2
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 2
+    b|
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    dig 2
+    concat
+    dig 1
+    concat
+    bytec 20 // method "Transfer(address,address,uint256)"
+    swap
+    concat
+    log
+    global CurrentApplicationAddress
+    uncover 2
+    concat
+    swap
+    concat
+    pushbytes 0xc778ff29 // method "FXSMinted(address,address,uint256)"
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+pool_mint_ternary_false@4:
+    intc_1 // 0
+    itob
+    b pool_mint_ternary_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.pool_burn_from[routing]() -> void:
+pool_burn_from:
+    intc_1 // 0
+    bytec_1 // ""
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    itxn LastLog
+    extract 4 0
+    intc_1 // 0
+    getbit
+    intc_1 // 0
+    !=
+    intc_2 // 1
+    ==
+    assert // Only frax pools can mint new FRAX
+    intc_1 // 0
+    bytec 10 // "trackingVotes"
+    app_global_get_ex
+    assert // check trackingVotes exists
+    bz pool_burn_from_after_if_else@6
+    global CurrentApplicationAddress
+    dig 2
+    bytec 19 // 0xffffffffffffffffffffffff
+    b&
+    dup
+    bury 7
+    dig 4
+    cover 2
+    callsub trackVotes
+    global CurrentApplicationAddress
+    sha256
+    bytec 12 // "numCheckpoints"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    dup
+    bury 5
+    bz pool_burn_from_ternary_false@4
+    global CurrentApplicationAddress
+    dig 4
+    intc_2 // 1
+    -
+    itob
+    concat
+    sha256
+    bytec 4 // "checkpoints"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 8 32
+
+pool_burn_from_ternary_merge@5:
+    dig 5
+    dup
+    uncover 2
+    dup
+    cover 2
+    b<=
+    assert // assertion failed
+    dup
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    uncover 2
+    b-
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    global CurrentApplicationAddress
+    dig 6
+    uncover 3
+    uncover 3
+    callsub _writeCheckpoint
+
+pool_burn_from_after_if_else@6:
+    dig 2
+    dup
+    dig 3
+    dup
+    cover 3
+    callsub _burn
+    txn Sender
+    dig 1
+    txn Sender
+    concat
+    sha256
+    bytec 14 // "_allowances"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dig 3
+    bytec 27 // "ERC20: burn amount exceeds allowance"
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.SafeMath.sub(3)
+    dig 2
+    cover 2
+    callsub _approve
+    dig 2
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 2
+    b|
+    global CurrentApplicationAddress
+    uncover 2
+    swap
+    concat
+    swap
+    concat
+    pushbytes 0xb193faef // method "FXSBurned(address,address,uint256)"
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+pool_burn_from_ternary_false@4:
+    intc_1 // 0
+    itob
+    b pool_burn_from_ternary_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.toggleVotes[routing]() -> void:
+toggleVotes:
+    txn Sender
+    intc_1 // 0
+    bytec 5 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    bnz toggleVotes_bool_true@3
+    txn Sender
+    intc_1 // 0
+    bytec 9 // "timelock_address"
+    app_global_get_ex
+    assert // check timelock_address exists
+    ==
+    bz toggleVotes_bool_false@4
+
+toggleVotes_bool_true@3:
+    intc_2 // 1
+
+toggleVotes_bool_merge@5:
+    assert // You are not an owner or the governance timelock
+    intc_1 // 0
+    bytec 10 // "trackingVotes"
+    app_global_get_ex
+    assert // check trackingVotes exists
+    !
+    bytec 10 // "trackingVotes"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+toggleVotes_bool_false@4:
+    intc_1 // 0
+    b toggleVotes_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.transfer(2)[routing]() -> void:
+transfer(2):
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 0
+    bytec 10 // "trackingVotes"
+    app_global_get_ex
+    assert // check trackingVotes exists
+    bz transfer(2)_after_if_else@3
+    txn Sender
+    dig 1
+    bytec 19 // 0xffffffffffffffffffffffff
+    b&
+    dig 3
+    swap
+    callsub trackVotes
+
+transfer(2)_after_if_else@3:
+    txn Sender
+    dig 2
+    dig 2
+    callsub _transfer
+    bytec 16 // 0x151f7c7580
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.transferFrom(3)[routing]() -> void:
+transferFrom(3):
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 0
+    bytec 10 // "trackingVotes"
+    app_global_get_ex
+    assert // check trackingVotes exists
+    bz transferFrom(3)_after_if_else@3
+    dup
+    bytec 19 // 0xffffffffffffffffffffffff
+    b&
+    dig 3
+    dig 3
+    uncover 2
+    callsub trackVotes
+
+transferFrom(3)_after_if_else@3:
+    dig 2
+    dup
+    dig 3
+    dig 3
+    dup
+    cover 4
+    callsub _transfer
+    txn Sender
+    dig 1
+    txn Sender
+    concat
+    sha256
+    bytec 14 // "_allowances"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    uncover 3
+    pushbytes "ERC20: transfer amount exceeds allowance"
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.SafeMath.sub(3)
+    callsub _approve
+    bytec 16 // 0x151f7c7580
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.getCurrentVotes[routing]() -> void:
+getCurrentVotes:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 12 // "numCheckpoints"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    dup
+    bz getCurrentVotes_ternary_false@3
+    dup
+    intc_2 // 1
+    -
+    itob
+    dig 2
+    swap
+    concat
+    sha256
+    bytec 4 // "checkpoints"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 8 32
+
+getCurrentVotes_ternary_merge@4:
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+getCurrentVotes_ternary_false@3:
+    intc_1 // 0
+    itob
+    b getCurrentVotes_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.getPriorVotes[routing]() -> void:
+getPriorVotes:
+    intc_1 // 0
+    dupn 3
+    bytec_1 // ""
+    dupn 2
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    global Round
+    itob
+    b<
+    assert // FXS::getPriorVotes: not yet determined
+    sha256
+    bytec 12 // "numCheckpoints"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    dup
+    bnz getPriorVotes_after_if_else@3
+    intc_1 // 0
+    itob
+
+getPriorVotes_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.getPriorVotes@17:
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+getPriorVotes_after_if_else@3:
+    dup
+    intc_2 // 1
+    -
+    dup
+    bury 5
+    itob
+    dig 3
+    swap
+    concat
+    sha256
+    bytec 4 // "checkpoints"
+    swap
+    concat
+    dup
+    bury 10
+    box_get
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 0 8
+    dig 2
+    b<=
+    bz getPriorVotes_after_if_else@5
+    dig 8
+    box_get
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 8 32
+    b getPriorVotes_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.getPriorVotes@17
+
+getPriorVotes_after_if_else@5:
+    intc_1 // 0
+    itob
+    dup
+    bury 8
+    dig 3
+    swap
+    concat
+    sha256
+    bytec 4 // "checkpoints"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 0 8
+    dig 2
+    b>
+    bz getPriorVotes_after_if_else@7
+    dig 6
+    b getPriorVotes_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.getPriorVotes@17
+
+getPriorVotes_after_if_else@7:
+    intc_1 // 0
+    bury 5
+
+getPriorVotes_while_top@8:
+    dig 3
+    dig 5
+    >
+    bz getPriorVotes_after_while@16
+    dig 3
+    dup
+    dig 6
+    -
+    intc_3 // 2
+    /
+    -
+    dup
+    bury 7
+    itob
+    dig 3
+    swap
+    concat
+    sha256
+    bytec 4 // "checkpoints"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    bury 9
+    extract 0 8
+    dup
+    bury 11
+    dig 2
+    b==
+    bz getPriorVotes_else_body@11
+    dig 7
+    extract 8 32
+    b getPriorVotes_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.getPriorVotes@17
+
+getPriorVotes_else_body@11:
+    dig 9
+    dig 2
+    b<
+    bz getPriorVotes_else_body@13
+    dig 5
+    bury 5
+    b getPriorVotes_while_top@8
+
+getPriorVotes_else_body@13:
+    dig 5
+    intc_2 // 1
+    -
+    bury 4
+    b getPriorVotes_while_top@8
+
+getPriorVotes_after_while@16:
+    dig 4
+    itob
+    dig 3
+    swap
+    concat
+    sha256
+    bytec 4 // "checkpoints"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 8 32
+    b getPriorVotes_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.getPriorVotes@17
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.nominateNewOwner[routing]() -> void:
+nominateNewOwner:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn Sender
+    intc_1 // 0
+    bytec 5 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    assert // Only the contract owner may perform this action
+    bytec 15 // "nominatedOwner"
+    dig 1
+    app_global_put
+    pushbytes 0xb281218a // method "OwnerNominated(address)"
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.acceptOwnership[routing]() -> void:
+acceptOwnership:
+    txn Sender
+    intc_1 // 0
+    bytec 15 // "nominatedOwner"
+    app_global_get_ex
+    assert // check nominatedOwner exists
+    swap
+    dig 1
+    ==
+    assert // You must be nominated before you can accept ownership
+    intc_1 // 0
+    bytec 5 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    dig 1
+    concat
+    pushbytes 0xd2ccf290 // method "OwnerChanged(address,address)"
+    swap
+    concat
+    log
+    bytec 5 // "owner"
+    swap
+    app_global_put
+    bytec 15 // "nominatedOwner"
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.hasRole[routing]() -> void:
+hasRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.hasRole
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.getRoleMemberCount[routing]() -> void:
+getRoleMemberCount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 11 // "_roles"
+    swap
+    concat
+    box_get
+    bytec 7 // 0x0022000000000000000000000000000000000000000000000000000000000000000000020004000600000000
+    cover 2
+    select
+    dup
+    intc_1 // 0
+    extract_uint16
+    dig 1
+    len
+    substring3
+    callsub EnumerableSet.length
+    pop
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.getRoleMember[routing]() -> void:
+getRoleMember:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    swap
+    sha256
+    bytec 11 // "_roles"
+    swap
+    concat
+    box_get
+    bytec 7 // 0x0022000000000000000000000000000000000000000000000000000000000000000000020004000600000000
+    cover 2
+    select
+    dup
+    intc_1 // 0
+    extract_uint16
+    dig 1
+    len
+    substring3
+    swap
+    callsub EnumerableSet.at
+    pop
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.getRoleAdmin[routing]() -> void:
+getRoleAdmin:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 11 // "_roles"
+    swap
+    concat
+    box_get
+    bytec 7 // 0x0022000000000000000000000000000000000000000000000000000000000000000000020004000600000000
+    cover 2
+    select
+    extract 2 32
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.grantRole[routing]() -> void:
+grantRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    dig 1
+    sha256
+    bytec 11 // "_roles"
+    swap
+    concat
+    box_get
+    bytec 7 // 0x0022000000000000000000000000000000000000000000000000000000000000000000020004000600000000
+    cover 2
+    select
+    extract 2 32
+    txn Sender
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.hasRole
+    assert // AccessControl: sender must be an admin to grant
+    callsub _grantRole
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.revokeRole[routing]() -> void:
+revokeRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    dig 1
+    sha256
+    bytec 11 // "_roles"
+    swap
+    concat
+    box_get
+    bytec 7 // 0x0022000000000000000000000000000000000000000000000000000000000000000000020004000600000000
+    cover 2
+    select
+    extract 2 32
+    txn Sender
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.hasRole
+    assert // AccessControl: sender must be an admin to revoke
+    callsub _revokeRole
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.renounceRole[routing]() -> void:
+renounceRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    dup
+    txn Sender
+    ==
+    assert // AccessControl: can only renounce roles for self
+    callsub _revokeRole
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.totalSupply[routing]() -> void:
+totalSupply:
+    intc_1 // 0
+    bytec 8 // "_totalSupply"
+    app_global_get_ex
+    assert // check _totalSupply exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.balanceOf[routing]() -> void:
+balanceOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 13 // "_balances"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.allowance[routing]() -> void:
+allowance:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.allowance
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.approve[routing]() -> void:
+approve:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn Sender
+    cover 2
+    callsub _approve
+    bytec 16 // 0x151f7c7580
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.increaseAllowance[routing]() -> void:
+increaseAllowance:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn Sender
+    dup
+    dig 3
+    concat
+    sha256
+    bytec 14 // "_allowances"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    uncover 2
+    callsub SafeMath.add
+    swap
+    cover 2
+    callsub _approve
+    bytec 16 // 0x151f7c7580
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.decreaseAllowance[routing]() -> void:
+decreaseAllowance:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn Sender
+    dup
+    dig 3
+    concat
+    sha256
+    bytec 14 // "_allowances"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    uncover 2
+    pushbytes "ERC20: decreased allowance below zero"
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.SafeMath.sub(3)
+    swap
+    cover 2
+    callsub _approve
+    bytec 16 // 0x151f7c7580
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.burn[routing]() -> void:
+burn:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn Sender
+    swap
+    callsub _burn
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.burnFrom[routing]() -> void:
+burnFrom:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    dig 1
+    txn Sender
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.allowance
+    dig 1
+    bytec 27 // "ERC20: burn amount exceeds allowance"
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.SafeMath.sub(3)
+    dig 2
+    txn Sender
+    uncover 2
+    callsub _approve
+    callsub _burn
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.symbol[routing]() -> void:
+symbol:
+    intc_1 // 0
+    bytec 21 // "symbol"
+    app_global_get_ex
+    assert // check symbol exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.name[routing]() -> void:
+name:
+    intc_1 // 0
+    bytec 22 // "name"
+    app_global_get_ex
+    assert // check name exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.FRAXStablecoinAdd[routing]() -> void:
+FRAXStablecoinAdd:
+    intc_1 // 0
+    bytec 25 // "FRAXStablecoinAdd"
+    app_global_get_ex
+    assert // check FRAXStablecoinAdd exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.oracle_address[routing]() -> void:
+oracle_address:
+    intc_1 // 0
+    bytec 17 // "oracle_address"
+    app_global_get_ex
+    assert // check oracle_address exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.timelock_address[routing]() -> void:
+timelock_address:
+    intc_1 // 0
+    bytec 9 // "timelock_address"
+    app_global_get_ex
+    assert // check timelock_address exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.trackingVotes[routing]() -> void:
+trackingVotes:
+    intc_1 // 0
+    bytec 10 // "trackingVotes"
+    app_global_get_ex
+    assert // check trackingVotes exists
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.owner[routing]() -> void:
+owner:
+    intc_1 // 0
+    bytec 5 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.nominatedOwner[routing]() -> void:
+nominatedOwner:
+    intc_1 // 0
+    bytec 15 // "nominatedOwner"
+    app_global_get_ex
+    assert // check nominatedOwner exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.trackVotes(srcRep: bytes, dstRep: bytes, amount: bytes) -> void:
+trackVotes:
+    proto 3 0
+    bytec_1 // ""
+    dup
+    frame_dig -3
+    frame_dig -2
+    !=
+    bz trackVotes_after_if_else@13
+    frame_dig -1
+    bytec_1 // 0x
+    b>
+    bz trackVotes_after_if_else@13
+    frame_dig -3
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    bz trackVotes_after_if_else@7
+    frame_dig -3
+    sha256
+    bytec 12 // "numCheckpoints"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    dup
+    frame_bury 1
+    bz trackVotes_ternary_false@5
+    frame_dig 1
+    intc_2 // 1
+    -
+    itob
+    frame_dig -3
+    swap
+    concat
+    sha256
+    bytec 4 // "checkpoints"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 8 32
+
+trackVotes_ternary_merge@6:
+    frame_dig -1
+    dig 1
+    b<=
+    assert // assertion failed
+    dup
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig -1
+    b-
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig -3
+    frame_dig 1
+    uncover 3
+    uncover 3
+    callsub _writeCheckpoint
+
+trackVotes_after_if_else@7:
+    frame_dig -2
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    bz trackVotes_after_if_else@13
+    frame_dig -2
+    sha256
+    bytec 12 // "numCheckpoints"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    dup
+    frame_bury 0
+    bz trackVotes_ternary_false@10
+    frame_dig 0
+    intc_2 // 1
+    -
+    itob
+    frame_dig -2
+    swap
+    concat
+    sha256
+    bytec 4 // "checkpoints"
+    swap
+    concat
+    box_get
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 8 32
+
+trackVotes_ternary_merge@11:
+    dup
+    frame_dig -1
+    b+
+    dup
+    dig 2
+    b>=
+    assert // assertion failed
+    frame_dig -2
+    frame_dig 0
+    uncover 3
+    uncover 3
+    callsub _writeCheckpoint
+
+trackVotes_after_if_else@13:
+    retsub
+
+trackVotes_ternary_false@10:
+    intc_1 // 0
+    itob
+    b trackVotes_ternary_merge@11
+
+trackVotes_ternary_false@5:
+    intc_1 // 0
+    itob
+    b trackVotes_ternary_merge@6
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares._writeCheckpoint(voter: bytes, nCheckpoints: uint64, oldVotes: bytes, newVotes: bytes) -> void:
+_writeCheckpoint:
+    proto 4 0
+    intc_1 // 0
+    global Round
+    itob
+    dup
+    pushbytes 0x0100000000
+    b<
+    assert // assertion failed
+    pushint 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    frame_dig -3
+    bz _writeCheckpoint_else_body@3
+    frame_dig -3
+    intc_2 // 1
+    -
+    itob
+    frame_dig -4
+    swap
+    concat
+    sha256
+    bytec 4 // "checkpoints"
+    swap
+    concat
+    dup
+    frame_bury 0
+    box_get
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_1 // 0
+    extract_uint64
+    frame_dig 1
+    ==
+    bz _writeCheckpoint_else_body@3
+    frame_dig 0
+    dup
+    box_get
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 0 8
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    b|
+    concat
+    box_put
+
+_writeCheckpoint_after_if_else@4:
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    dig 1
+    b|
+    frame_dig -2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    frame_dig -2
+    uncover 2
+    b|
+    frame_dig -4
+    swap
+    concat
+    swap
+    concat
+    pushbytes 0x38c88f6d // method "VoterVotesChanged(address,uint256,uint256)"
+    swap
+    concat
+    log
+    retsub
+
+_writeCheckpoint_else_body@3:
+    frame_dig 1
+    itob
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    b|
+    concat
+    frame_dig -3
+    itob
+    frame_dig -4
+    swap
+    concat
+    sha256
+    bytec 4 // "checkpoints"
+    swap
+    concat
+    swap
+    box_put
+    frame_dig -3
+    intc_2 // 1
+    +
+    frame_dig -4
+    sha256
+    bytec 12 // "numCheckpoints"
+    swap
+    concat
+    swap
+    itob
+    box_put
+    b _writeCheckpoint_after_if_else@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.hasRole(role: bytes, account: bytes) -> uint64:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.hasRole:
+    proto 2 1
+    frame_dig -2
+    sha256
+    bytec 11 // "_roles"
+    swap
+    concat
+    box_get
+    bytec 7 // 0x0022000000000000000000000000000000000000000000000000000000000000000000020004000600000000
+    cover 2
+    select
+    dup
+    intc_1 // 0
+    extract_uint16
+    dig 1
+    len
+    substring3
+    frame_dig -1
+    callsub EnumerableSet.contains
+    pop
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares._grantRole(role: bytes, account: bytes) -> void:
+_grantRole:
+    proto 2 0
+    frame_dig -2
+    sha256
+    bytec 11 // "_roles"
+    swap
+    concat
+    dup
+    box_get
+    bytec 7 // 0x0022000000000000000000000000000000000000000000000000000000000000000000020004000600000000
+    cover 2
+    select
+    dup
+    intc_1 // 0
+    extract_uint16
+    dig 1
+    len
+    substring3
+    frame_dig -1
+    callsub EnumerableSet.add
+    pop
+    swap
+    bz _grantRole_after_if_else@2
+    txn Sender
+    frame_dig -2
+    frame_dig -1
+    concat
+    swap
+    concat
+    pushbytes 0xb7ffebf8 // method "RoleGranted(byte[32],address,address)"
+    swap
+    concat
+    log
+
+_grantRole_after_if_else@2:
+    frame_dig 0
+    dup
+    box_get
+    bytec 7 // 0x0022000000000000000000000000000000000000000000000000000000000000000000020004000600000000
+    cover 2
+    select
+    extract 2 32
+    bytec 28 // 0x0022
+    swap
+    concat
+    frame_dig 1
+    concat
+    dig 1
+    box_del
+    pop
+    box_put
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares._revokeRole(role: bytes, account: bytes) -> void:
+_revokeRole:
+    proto 2 0
+    frame_dig -2
+    sha256
+    bytec 11 // "_roles"
+    swap
+    concat
+    dup
+    box_get
+    bytec 7 // 0x0022000000000000000000000000000000000000000000000000000000000000000000020004000600000000
+    cover 2
+    select
+    dup
+    intc_1 // 0
+    extract_uint16
+    dig 1
+    len
+    substring3
+    frame_dig -1
+    callsub EnumerableSet.remove
+    pop
+    swap
+    bz _revokeRole_after_if_else@2
+    txn Sender
+    frame_dig -2
+    frame_dig -1
+    concat
+    swap
+    concat
+    pushbytes 0x06ce138b // method "RoleRevoked(byte[32],address,address)"
+    swap
+    concat
+    log
+
+_revokeRole_after_if_else@2:
+    frame_dig 0
+    dup
+    box_get
+    bytec 7 // 0x0022000000000000000000000000000000000000000000000000000000000000000000020004000600000000
+    cover 2
+    select
+    extract 2 32
+    bytec 28 // 0x0022
+    swap
+    concat
+    frame_dig 1
+    concat
+    dig 1
+    box_del
+    pop
+    box_put
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.allowance(owner: bytes, spender: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares.allowance:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    concat
+    sha256
+    bytec 14 // "_allowances"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares._transfer(sender: bytes, recipient: bytes, amount: bytes) -> void:
+_transfer:
+    proto 3 0
+    frame_dig -3
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // ERC20: transfer from the zero address
+    frame_dig -2
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // ERC20: transfer to the zero address
+    frame_dig -3
+    sha256
+    bytec 13 // "_balances"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    frame_dig -1
+    pushbytes "ERC20: transfer amount exceeds balance"
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.SafeMath.sub(3)
+    dig 1
+    box_del
+    pop
+    box_put
+    frame_dig -2
+    sha256
+    bytec 13 // "_balances"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    frame_dig -1
+    callsub SafeMath.add
+    dig 1
+    box_del
+    pop
+    box_put
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    b|
+    frame_dig -3
+    frame_dig -2
+    concat
+    swap
+    concat
+    bytec 20 // method "Transfer(address,address,uint256)"
+    swap
+    concat
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares._mint(account: bytes, amount: bytes) -> void:
+_mint:
+    proto 2 0
+    frame_dig -2
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // ERC20: mint to the zero address
+    intc_1 // 0
+    bytec 8 // "_totalSupply"
+    app_global_get_ex
+    assert // check _totalSupply exists
+    frame_dig -1
+    callsub SafeMath.add
+    bytec 8 // "_totalSupply"
+    swap
+    app_global_put
+    frame_dig -2
+    sha256
+    bytec 13 // "_balances"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    frame_dig -1
+    callsub SafeMath.add
+    dig 1
+    box_del
+    pop
+    box_put
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    b|
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    frame_dig -2
+    concat
+    swap
+    concat
+    bytec 20 // method "Transfer(address,address,uint256)"
+    swap
+    concat
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares._burn(account: bytes, amount: bytes) -> void:
+_burn:
+    proto 2 0
+    frame_dig -2
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // ERC20: burn from the zero address
+    frame_dig -2
+    sha256
+    bytec 13 // "_balances"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    frame_dig -1
+    pushbytes "ERC20: burn amount exceeds balance"
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.SafeMath.sub(3)
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_1 // 0
+    bytec 8 // "_totalSupply"
+    app_global_get_ex
+    assert // check _totalSupply exists
+    frame_dig -1
+    callsub SafeMath.sub
+    bytec 8 // "_totalSupply"
+    swap
+    app_global_put
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    b|
+    frame_dig -2
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    concat
+    swap
+    concat
+    bytec 20 // method "Transfer(address,address,uint256)"
+    swap
+    concat
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/frax/contracts/Frax.sol.FRAXShares._approve(owner: bytes, spender: bytes, amount: bytes) -> void:
+_approve:
+    proto 3 0
+    frame_dig -3
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // ERC20: approve from the zero address
+    frame_dig -2
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    assert // ERC20: approve to the zero address
+    frame_dig -3
+    frame_dig -2
+    concat
+    dup
+    sha256
+    bytec 14 // "_allowances"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    frame_dig -1
+    box_put
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    b|
+    concat
+    pushbytes 0x18e09461 // method "Approval(address,address,uint256)"
+    swap
+    concat
+    log
+    retsub

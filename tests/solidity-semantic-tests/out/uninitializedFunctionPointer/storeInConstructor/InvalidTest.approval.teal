@@ -1,0 +1,53 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/storeInConstructor.sol.InvalidTest.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock "flag" "storedFn" 0x
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "storedFn"
+    bytec_2 // 0x
+    app_global_put
+    bytec_0 // "flag"
+    intc_1 // 0
+    app_global_put
+    bytec_1 // "storedFn"
+    bytec_2 // 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xcd78b354 // method "f()uint256"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/storeInConstructor.sol.InvalidTest.f[routing]() -> void:
+f:
+    intc_1 // 0
+    bytec_0 // "flag"
+    app_global_get_ex
+    assert // check flag exists
+    bz f_after_if_else@3
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
+    log
+    intc_0 // 1
+    return
+
+f_after_if_else@3:
+    bytec_0 // "flag"
+    intc_0 // 1
+    app_global_put
+    err // uninitialized function pointer

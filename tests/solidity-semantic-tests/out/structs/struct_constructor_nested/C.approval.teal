@@ -1,0 +1,64 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_constructor_nested.sol.C.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytess "s" 0x000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000009000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000005
+    app_global_put
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xece3c955 // method "get()(uint256,uint256[3],uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_get_route@4
+    err
+
+main_get_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b get
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_constructor_nested.sol.C.get[routing]() -> void:
+get:
+    pushint 32
+    bzero
+    pushint 0
+    pushbytes "s"
+    app_global_get_ex
+    assert // check s exists
+    dup
+    extract 0 32
+    dig 1
+    extract 32 96
+    uncover 2
+    extract 128 64
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    uncover 3
+    dig 4
+    b|
+    uncover 3
+    concat
+    uncover 2
+    dig 3
+    b|
+    concat
+    swap
+    uncover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return

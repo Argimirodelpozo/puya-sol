@@ -1,0 +1,184 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/fractional_denominations.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock 0x151f7c75 "g" "e" "m"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1500000000
+    itob
+    bytec_1 // "g"
+    swap
+    app_global_put
+    pushint 1500000000000000000
+    itob
+    bytec_2 // "e"
+    swap
+    app_global_put
+    pushint 90
+    itob
+    bytec_3 // "m"
+    swap
+    app_global_put
+    pushint 5400
+    itob
+    pushbytes "h"
+    swap
+    app_global_put
+    pushint 129600
+    itob
+    pushbytes "d"
+    swap
+    app_global_put
+    pushint 907200
+    itob
+    pushbytes "w"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x4b2c0376 0xcf0aa045 0xc06184c9 0xafedb2e5 0x4075f398 0xc2059c64 // method "g()uint256", method "e()uint256", method "m()uint256", method "h()uint256", method "d()uint256", method "w()uint256"
+    txna ApplicationArgs 0
+    match g e m h d w
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/fractional_denominations.sol.C.g[routing]() -> void:
+g:
+    intc_2 // 0
+    bytec_1 // "g"
+    app_global_get_ex
+    assert // check g exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/fractional_denominations.sol.C.e[routing]() -> void:
+e:
+    intc_2 // 0
+    bytec_2 // "e"
+    app_global_get_ex
+    assert // check e exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/fractional_denominations.sol.C.m[routing]() -> void:
+m:
+    intc_2 // 0
+    bytec_3 // "m"
+    app_global_get_ex
+    assert // check m exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/fractional_denominations.sol.C.h[routing]() -> void:
+h:
+    intc_2 // 0
+    pushbytes "h"
+    app_global_get_ex
+    assert // check h exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/fractional_denominations.sol.C.d[routing]() -> void:
+d:
+    intc_2 // 0
+    pushbytes "d"
+    app_global_get_ex
+    assert // check d exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/fractional_denominations.sol.C.w[routing]() -> void:
+w:
+    intc_2 // 0
+    pushbytes "w"
+    app_global_get_ex
+    assert // check w exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

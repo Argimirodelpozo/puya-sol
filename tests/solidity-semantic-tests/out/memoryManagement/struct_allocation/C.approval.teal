@@ -1,0 +1,33 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol.C.approval_program() -> uint64:
+main:
+    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xa415bc68 0x1bc056a4 // method "withValue()uint256", method "withoutValue()uint256"
+    txna ApplicationArgs 0
+    match main_withValue_route@5 main_withoutValue_route@6
+    err
+
+main_withoutValue_route@6:
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    pushint 1
+    return
+
+main_withValue_route@5:
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    pushint 1
+    return

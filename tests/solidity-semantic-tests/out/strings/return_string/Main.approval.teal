@@ -1,0 +1,105 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/return_string.sol.Main.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock "s" 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "s"
+    pushbytes 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x1c663589 0x36013b28 0x0ba722e6 0x8a416b85 // method "set(string)void", method "get1()string", method "get2()string", method "s()string"
+    txna ApplicationArgs 0
+    match set get1 get2 s
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/return_string.sol.Main.set[routing]() -> void:
+set:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_0 // "s"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/return_string.sol.Main.get1[routing]() -> void:
+get1:
+    intc_1 // 0
+    bytec_0 // "s"
+    app_global_get_ex
+    assert // check s exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/return_string.sol.Main.get2[routing]() -> void:
+get2:
+    intc_1 // 0
+    bytec_0 // "s"
+    app_global_get_ex
+    assert // check s exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/return_string.sol.Main.s[routing]() -> void:
+s:
+    intc_1 // 0
+    bytec_0 // "s"
+    app_global_get_ex
+    assert // check s exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

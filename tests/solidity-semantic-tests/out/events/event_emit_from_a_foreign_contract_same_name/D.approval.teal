@@ -1,0 +1,33 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_emit_from_a_foreign_contract_same_name.sol.D.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xa78000de // method "test()void"
+    txna ApplicationArgs 0
+    match main_test_route@4
+    err
+
+main_test_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b test
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_emit_from_a_foreign_contract_same_name.sol.D.test[routing]() -> void:
+test:
+    pushbytes 0x51542f670000000000000001
+    log
+    pushbytes 0xd5c1f7fc0000000000000002
+    log
+    pushint 1
+    return

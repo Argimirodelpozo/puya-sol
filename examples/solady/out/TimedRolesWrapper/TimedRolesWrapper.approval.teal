@@ -1,0 +1,160 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/TimedRolesWrapper.sol.TimedRolesWrapper.approval_program() -> uint64:
+main:
+    intcblock 32 0 1 8
+    bytecblock 0x151f7c75 0x "_owner" 0x00
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "_owner"
+    txn Sender
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb1bbb0a8 0x455ab537 0xfe812cf7 0x78c05fa1 // method "owner()address", method "checkTimedRole(address,uint256)(bool,uint64,uint64)", method "setTimedRole(address,uint256,uint64,uint64)void", method "timedRoleActive(address,uint256)(bool,uint64,uint64)"
+    txna ApplicationArgs 0
+    match owner checkTimedRole setTimedRole timedRoleActive
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/TimedRolesWrapper.sol.TimedRolesWrapper.owner[routing]() -> void:
+owner:
+    intc_1 // 0
+    bytec_2 // "_owner"
+    app_global_get_ex
+    assert // check _owner exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/TimedRolesWrapper.sol.TimedRolesWrapper.checkTimedRole[routing]() -> void:
+checkTimedRole:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/TimedRolesWrapper.sol.TimedRolesWrapper.timedRoleActive
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 4
+    setbit
+    uncover 2
+    itob
+    concat
+    swap
+    itob
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/TimedRolesWrapper.sol.TimedRolesWrapper.setTimedRole[routing]() -> void:
+setTimedRole:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    txna ApplicationArgs 4
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    err // revert
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/TimedRolesWrapper.sol.TimedRolesWrapper.timedRoleActive[routing]() -> void:
+timedRoleActive:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/TimedRolesWrapper.sol.TimedRolesWrapper.timedRoleActive
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 4
+    setbit
+    uncover 2
+    itob
+    concat
+    swap
+    itob
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/TimedRolesWrapper.sol.TimedRolesWrapper.timedRoleActive(holder: bytes, timedRole: bytes) -> uint64, uint64, uint64:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/TimedRolesWrapper.sol.TimedRolesWrapper.timedRoleActive:
+    proto 2 3
+    global LatestTimestamp
+    itob
+    intc_1 // 0
+    itob
+    swap
+    dig 1
+    b<
+    bytec_1 // 0x
+    pushbytes 0x01
+    uncover 2
+    select
+    global LatestTimestamp
+    itob
+    uncover 2
+    b>
+    bytec_1 // 0x
+    pushbytes 0x01
+    uncover 2
+    select
+    b|
+    bytec_1 // 0x
+    b==
+    intc_1 // 0
+    dup
+    retsub

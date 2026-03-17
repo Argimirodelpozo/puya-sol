@@ -1,0 +1,61 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock "flag"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "flag"
+    intc_1 // 0
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x10b04df6 0x4b4fb052 0xfc32fe40 // method "f0()void", method "f()bool", method "flag()bool"
+    txna ApplicationArgs 0
+    match main_f0_route@5 f flag
+    err
+
+main_f0_route@5:
+    bytec_0 // "flag"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.f[routing]() -> void:
+f:
+    bytec_0 // "flag"
+    intc_0 // 1
+    app_global_put
+    pushbytes 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.flag[routing]() -> void:
+flag:
+    intc_1 // 0
+    bytec_0 // "flag"
+    app_global_get_ex
+    assert // check flag exists
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

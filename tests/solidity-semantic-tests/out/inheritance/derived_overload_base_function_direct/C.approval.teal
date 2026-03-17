@@ -1,0 +1,59 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_direct.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 32
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x1928cd24 0x4b2c0376 0xcd78b354 // method "f(uint256)uint256", method "g()uint256", method "f()uint256"
+    txna ApplicationArgs 0
+    match f(u256) main_g_route@6 main_f_route@7
+    err
+
+main_f_route@7:
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000a
+    log
+    intc_0 // 1
+    return
+
+main_g_route@6:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_direct.sol.C.f(u256)[routing]() -> void:
+f(u256):
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    pushbytes 0x02
+    b*
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

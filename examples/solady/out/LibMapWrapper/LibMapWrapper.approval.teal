@@ -1,0 +1,122 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LibMapWrapper.sol.LibMapWrapper.approval_program() -> uint64:
+main:
+    intcblock 32 1 8 0
+    bytecblock "map"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "map"
+    pushbytes 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x862a4cb5 0xa34aa09a // method "set(uint256,uint64)void", method "get(uint256)uint64"
+    txna ApplicationArgs 0
+    match set get
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LibMapWrapper.sol.LibMap.get(2)_0(map: bytes, index: bytes) -> uint64, bytes:
+LibMap.get:
+    proto 2 2
+    intc_2 // 8
+    bzero
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    b~
+    pushbytes 0x1f
+    b&
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    swap
+    intc_1 // 1
+    extract3
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LibMapWrapper.sol.LibMap.set(3)_0(map: bytes, index: bytes, value: uint64) -> bytes:
+LibMap.set:
+    proto 3 1
+    frame_dig -3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LibMapWrapper.sol.LibMapWrapper.set[routing]() -> void:
+set:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    intc_3 // 0
+    bytec_0 // "map"
+    app_global_get_ex
+    assert // check map exists
+    cover 2
+    callsub LibMap.set
+    pop
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LibMapWrapper.sol.LibMapWrapper.get[routing]() -> void:
+get:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_3 // 0
+    bytec_0 // "map"
+    app_global_get_ex
+    assert // check map exists
+    swap
+    callsub LibMap.get
+    pop
+    itob
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

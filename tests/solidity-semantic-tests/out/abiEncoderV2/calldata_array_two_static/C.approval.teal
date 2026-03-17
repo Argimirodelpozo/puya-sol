@@ -1,0 +1,151 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_two_static.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 96 64
+    bytecblock 0x151f7c75
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x4adabdc7 0x762437ce // method "f(uint256[3],uint256[2],bool)byte[]", method "g(uint256[3],uint256[2],bool)byte[]"
+    txna ApplicationArgs 0
+    match f g
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_two_static.sol.C.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 96
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 3>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_two_static.sol.C.f
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_two_static.sol.C.g[routing]() -> void:
+g:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 96
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 3>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 64
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    callsub _puya_lib.mem.new_slot
+    dup
+    uncover 4
+    stores
+    callsub _puya_lib.mem.new_slot
+    dup
+    uncover 4
+    stores
+    uncover 2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_two_static.sol.C.f
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_two_static.sol.C.f(__arc4_s1: bytes, __arc4_s2: bytes, which: uint64) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_two_static.sol.C.f:
+    proto 3 1
+    frame_dig -3
+    frame_dig -2
+    frame_dig -1
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_two_static.sol.C.f_else_body@2
+    frame_dig 0
+    dup
+    extract 0 32 // on error: index access is out of bounds
+    dig 1
+    extract 32 32 // on error: index access is out of bounds
+    concat
+    swap
+    extract 64 32 // on error: index access is out of bounds
+    concat
+    frame_bury 0
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_two_static.sol.C.f_else_body@2:
+    frame_dig 1
+    dup
+    extract 0 32 // on error: index access is out of bounds
+    swap
+    extract 32 32 // on error: index access is out of bounds
+    concat
+    frame_bury 0
+    retsub
+
+
+// _puya_lib.mem.new_slot() -> uint64:
+_puya_lib.mem.new_slot:
+    load 0
+    bitlen
+    load 0
+    pushint 256
+    dig 2
+    -
+    intc_1 // 0
+    setbit // on error: no available slots
+    store 0
+    retsub

@@ -1,0 +1,406 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetWrapper.approval_program() -> uint64:
+main:
+    intcblock 32 0 1
+    bytecblock 0x "set" 0xfbb67fda52d4bfb8bf 0x151f7c75 0x00
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "set"
+    bytec_0 // 0x
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x7393d181 0xc00bc131 0x0ead9533 0x54411274 0x37de9b2b // method "add(uint256)bool", method "remove(uint256)bool", method "contains(uint256)bool", method "length()uint256", method "at(uint256)uint256"
+    txna ApplicationArgs 0
+    match add remove contains length at
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetLib.length(1)_1(set: bytes) -> bytes, bytes:
+EnumerableSetLib.length:
+    proto 1 2
+    frame_dig -1
+    callsub EnumerableSetLib._rootSlot
+    frame_bury -1
+    pop
+    bytec_0 // 0x
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetLib.length(1)_2(set: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetLib.length(1)_2:
+    proto 1 2
+    frame_dig -1
+    callsub EnumerableSetLib._toBytes32Set
+    frame_bury -1
+    callsub EnumerableSetLib.length
+    pop
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetLib.contains(2)_1(set: bytes, value: bytes) -> uint64, bytes:
+EnumerableSetLib.contains:
+    proto 2 2
+    bytec_0 // ""
+    dup
+    frame_dig -2
+    callsub EnumerableSetLib._rootSlot
+    frame_bury -2
+    pop
+    frame_dig -1
+    bytec_2 // 0xfbb67fda52d4bfb8bf
+    b==
+    !
+    assert // revert
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    bz EnumerableSetLib.contains_after_if_else@4
+    bytec_2 // 0xfbb67fda52d4bfb8bf
+    frame_bury -1
+
+EnumerableSetLib.contains_after_if_else@4:
+    intc_2 // 1
+    frame_bury 0
+    bytec_0 // 0x
+    frame_dig -1
+    b==
+    dup
+    frame_bury 1
+    bnz EnumerableSetLib.contains_after_while@15
+    frame_dig 1
+    bnz EnumerableSetLib.contains_after_while@15
+    frame_dig 1
+    bnz EnumerableSetLib.contains_after_while@15
+    intc_1 // 0
+    frame_bury 0
+
+EnumerableSetLib.contains_after_while@15:
+    frame_dig 0
+    frame_dig -2
+    uncover 3
+    uncover 3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetLib.contains(2)_2(set: bytes, value: bytes) -> uint64, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetLib.contains(2)_2:
+    proto 2 2
+    frame_dig -2
+    callsub EnumerableSetLib._toBytes32Set
+    frame_bury -2
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    callsub EnumerableSetLib.contains
+    pop
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetLib.add(2)_1(set: bytes, value: bytes) -> uint64, bytes:
+EnumerableSetLib.add:
+    proto 2 2
+    frame_dig -2
+    callsub EnumerableSetLib._rootSlot
+    frame_bury -2
+    pop
+    frame_dig -1
+    bytec_2 // 0xfbb67fda52d4bfb8bf
+    b==
+    !
+    assert // revert
+    intc_2 // 1
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetLib.add(2)_2(set: bytes, value: bytes) -> uint64, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetLib.add(2)_2:
+    proto 2 2
+    frame_dig -2
+    callsub EnumerableSetLib._toBytes32Set
+    frame_bury -2
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    callsub EnumerableSetLib.add
+    pop
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetLib.remove(2)_1(set: bytes, value: bytes) -> uint64, bytes:
+EnumerableSetLib.remove:
+    proto 2 2
+    bytec_0 // ""
+    dup
+    frame_dig -2
+    callsub EnumerableSetLib._rootSlot
+    frame_bury -2
+    pop
+    frame_dig -1
+    bytec_2 // 0xfbb67fda52d4bfb8bf
+    b==
+    !
+    assert // revert
+    frame_dig -1
+    bytec_0 // 0x
+    b==
+    bz EnumerableSetLib.remove_after_if_else@4
+    bytec_2 // 0xfbb67fda52d4bfb8bf
+    frame_bury -1
+
+EnumerableSetLib.remove_after_if_else@4:
+    intc_2 // 1
+    frame_bury 0
+    bytec_0 // 0x
+    frame_dig -1
+    b==
+    dup
+    frame_bury 1
+    bnz EnumerableSetLib.remove_after_while@19
+    frame_dig 1
+    bnz EnumerableSetLib.remove_after_while@19
+    frame_dig 1
+    bnz EnumerableSetLib.remove_after_while@19
+    intc_1 // 0
+    frame_bury 0
+
+EnumerableSetLib.remove_after_while@19:
+    frame_dig 0
+    frame_dig -2
+    uncover 3
+    uncover 3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetLib.remove(2)_2(set: bytes, value: bytes) -> uint64, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetLib.remove(2)_2:
+    proto 2 2
+    frame_dig -2
+    callsub EnumerableSetLib._toBytes32Set
+    frame_bury -2
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    callsub EnumerableSetLib.remove
+    pop
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetLib.at(2)_1(set: bytes, i: bytes) -> bytes, bytes:
+EnumerableSetLib.at:
+    proto 2 2
+    frame_dig -2
+    callsub EnumerableSetLib._rootSlot
+    frame_bury -2
+    pop
+    frame_dig -2
+    callsub EnumerableSetLib.length
+    frame_bury -2
+    frame_dig -1
+    b<=
+    !
+    assert // IndexOutOfBounds
+    bytec_0 // 0x
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetLib.at(2)_2(set: bytes, i: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetLib.at(2)_2:
+    proto 2 2
+    frame_dig -2
+    callsub EnumerableSetLib._toBytes32Set
+    frame_bury -2
+    frame_dig -1
+    callsub EnumerableSetLib.at
+    pop
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetLib._rootSlot(1)_1(s: bytes) -> bytes, bytes:
+EnumerableSetLib._rootSlot:
+    proto 1 2
+    pushbytes 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetLib._toBytes32Set(1)_0(s: bytes) -> bytes, bytes:
+EnumerableSetLib._toBytes32Set:
+    proto 1 2
+    intc_1 // 0
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetWrapper.add[routing]() -> void:
+add:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 0
+    bytec_1 // "set"
+    app_global_get_ex
+    assert // check set exists
+    swap
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetLib.add(2)_2
+    pop
+    bytec 4 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetWrapper.remove[routing]() -> void:
+remove:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 0
+    bytec_1 // "set"
+    app_global_get_ex
+    assert // check set exists
+    swap
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetLib.remove(2)_2
+    pop
+    bytec 4 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetWrapper.contains[routing]() -> void:
+contains:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 0
+    bytec_1 // "set"
+    app_global_get_ex
+    assert // check set exists
+    swap
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetLib.contains(2)_2
+    pop
+    bytec 4 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetWrapper.length[routing]() -> void:
+length:
+    intc_1 // 0
+    bytec_1 // "set"
+    app_global_get_ex
+    assert // check set exists
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetLib.length(1)_2
+    pop
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetWrapper.at[routing]() -> void:
+at:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 0
+    bytec_1 // "set"
+    app_global_get_ex
+    assert // check set exists
+    swap
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EnumerableSetWrapper.sol.EnumerableSetLib.at(2)_2
+    pop
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

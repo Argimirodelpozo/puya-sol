@@ -1,0 +1,62 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_inheritance_init_order_3_legacy.sol.A.approval_program() -> uint64:
+main:
+    intcblock 1 32
+    bytecblock "x"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 2
+    itob
+    bytec_0 // "x"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xcd78b354 0x7c1072af // method "f()uint256", method "x()uint256"
+    txna ApplicationArgs 0
+    match f x
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_inheritance_init_order_3_legacy.sol.A.f[routing]() -> void:
+f:
+    pushint 4
+    itob
+    bytec_0 // "x"
+    swap
+    app_global_put
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_inheritance_init_order_3_legacy.sol.A.x[routing]() -> void:
+x:
+    pushint 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

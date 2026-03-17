@@ -1,0 +1,294 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EIP712Wrapper.sol.EIP712Wrapper.approval_program() -> uint64:
+main:
+    intcblock 32 0 1
+    bytecblock 0x 0x0000000000000000000000000000000000000000000000000000000000000000 "_cachedThis" "_cachedChainId" "_cachedNameHash" "_cachedVersionHash" "_cachedDomainSeparator" 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f 0x90e68b6729ac3280506127ad19dedfe8faa79c55c770d2a4400cde47a3c5338f 0x151f7c75
+    intc_1 // 0
+    dupn 3
+    txn ApplicationID
+    bnz main_after_if_else@12
+    bytec_2 // "_cachedThis"
+    bytec_0 // 0x
+    app_global_put
+    bytec_3 // "_cachedChainId"
+    bytec_0 // 0x
+    app_global_put
+    bytec 4 // "_cachedNameHash"
+    bytec_0 // 0x
+    app_global_put
+    bytec 5 // "_cachedVersionHash"
+    bytec_0 // 0x
+    app_global_put
+    bytec 6 // "_cachedDomainSeparator"
+    bytec_0 // 0x
+    app_global_put
+    bytec_2 // "_cachedThis"
+    global CurrentApplicationAddress
+    app_global_put
+    global CurrentApplicationID
+    itob
+    bytec_3 // "_cachedChainId"
+    swap
+    app_global_put
+    bytec_0 // ""
+    bury 2
+    bytec_0 // ""
+    bnz main_after_if_else@3
+    pushbytes "1"
+    bury 2
+
+main_after_if_else@3:
+    bytec_0 // ""
+    bz main_ternary_false@5
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bury 4
+
+main_ternary_merge@6:
+    bytec_0 // ""
+    bz main_ternary_false@8
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bury 1
+
+main_ternary_merge@9:
+    bytec 4 // "_cachedNameHash"
+    dig 4
+    app_global_put
+    bytec 5 // "_cachedVersionHash"
+    dig 1
+    app_global_put
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bury 3
+    bytec_0 // ""
+    bnz main_after_if_else@11
+    global CurrentApplicationAddress
+    intc_0 // 32
+    bzero
+    dup
+    dig 6
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 7 // 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f
+    swap
+    concat
+    dig 1
+    dig 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    keccak256
+    bury 3
+
+main_after_if_else@11:
+    bytec 6 // "_cachedDomainSeparator"
+    dig 3
+    app_global_put
+    intc_2 // 1
+    return
+
+main_ternary_false@8:
+    dig 1
+    keccak256
+    bury 1
+    b main_ternary_merge@9
+
+main_ternary_false@5:
+    bytec 8 // 0x90e68b6729ac3280506127ad19dedfe8faa79c55c770d2a4400cde47a3c5338f
+    bury 4
+    b main_ternary_merge@6
+
+main_after_if_else@12:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb19f2119 0xac302e00 // method "getDomainSeparator()byte[32]", method "eip712Domain()(byte[1],string,string,uint256,address,byte[32],uint256[])"
+    txna ApplicationArgs 0
+    match getDomainSeparator eip712Domain
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EIP712Wrapper.sol.EIP712Wrapper.getDomainSeparator[routing]() -> void:
+getDomainSeparator:
+    intc_1 // 0
+    bytec_0 // ""
+    bz getDomainSeparator_else_body@3
+    callsub _buildDomainSeparator
+    bury 1
+
+getDomainSeparator_after_if_else@6:
+    bytec 9 // 0x151f7c75
+    dig 1
+    concat
+    log
+    intc_2 // 1
+    return
+
+getDomainSeparator_else_body@3:
+    intc_1 // 0
+    bytec 6 // "_cachedDomainSeparator"
+    app_global_get_ex
+    swap
+    bury 2
+    assert // check _cachedDomainSeparator exists
+    intc_1 // 0
+    bytec_3 // "_cachedChainId"
+    app_global_get_ex
+    assert // check _cachedChainId exists
+    intc_1 // 0
+    bytec_2 // "_cachedThis"
+    app_global_get_ex
+    assert // check _cachedThis exists
+    intc_1 // 0
+    itob
+    uncover 2
+    b==
+    bytec_0 // 0x
+    pushbytes 0x01
+    uncover 2
+    select
+    global CurrentApplicationAddress
+    uncover 2
+    b==
+    bytec_0 // 0x
+    pushbytes 0x01
+    uncover 2
+    select
+    b&
+    bytec_0 // 0x
+    b==
+    bz getDomainSeparator_after_if_else@6
+    callsub _buildDomainSeparator
+    bury 1
+    b getDomainSeparator_after_if_else@6
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EIP712Wrapper.sol.EIP712Wrapper.eip712Domain[routing]() -> void:
+eip712Domain:
+    bytec_0 // ""
+    intc_1 // 0
+    global CurrentApplicationID
+    itob
+    global CurrentApplicationAddress
+    intc_0 // 32
+    bzero
+    uncover 2
+    b|
+    pushbytes 0x0f00670073
+    swap
+    concat
+    swap
+    concat
+    swap
+    concat
+    swap
+    loads
+    dup
+    len
+    intc_0 // 32
+    /
+    itob
+    extract 6 2
+    swap
+    concat
+    swap
+    pushbytes 0x0076000a54657374446f6d61696e000131
+    concat
+    swap
+    concat
+    bytec 9 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/EIP712Wrapper.sol.EIP712Wrapper._buildDomainSeparator() -> bytes:
+_buildDomainSeparator:
+    proto 0 1
+    intc_1 // 0
+    bytec_0 // ""
+    bz _buildDomainSeparator_else_body@2
+    bytec 8 // 0x90e68b6729ac3280506127ad19dedfe8faa79c55c770d2a4400cde47a3c5338f
+    frame_bury 0
+    pushbytes 0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6
+
+_buildDomainSeparator_after_if_else@3:
+    global CurrentApplicationAddress
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig 0
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 7 // 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f
+    swap
+    concat
+    dig 1
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    keccak256
+    swap
+    retsub
+
+_buildDomainSeparator_else_body@2:
+    intc_1 // 0
+    bytec 4 // "_cachedNameHash"
+    app_global_get_ex
+    swap
+    frame_bury 0
+    assert // check _cachedNameHash exists
+    intc_1 // 0
+    bytec 5 // "_cachedVersionHash"
+    app_global_get_ex
+    assert // check _cachedVersionHash exists
+    b _buildDomainSeparator_after_if_else@3

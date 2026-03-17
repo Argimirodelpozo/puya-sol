@@ -1,0 +1,100 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/for_loop_nested.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    bytecblock 0x 0x02 0x01
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x1928cd24 // method "f(uint256)uint256"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/for_loop_nested.sol.C.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // 0x
+
+f_while_top@2:
+    dup
+    pushbytes 0x0a
+    b<
+    bz f_after_while@15
+    dig 1
+    bytec_0 // 0x
+    b==
+    bz f_while_top@6
+    bytec_1 // 0x02
+    bury 1
+
+f_after_while@15:
+    dupn 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+f_while_top@6:
+    dig 1
+    pushbytes 0x03
+    b<
+    bz f_after_while@12
+    dig 1
+    bytec_2 // 0x01
+    b==
+    bnz f_while_top@6
+    dig 1
+    bytec_1 // 0x02
+    b==
+    bnz f_after_while@12
+    pushbytes 0x11
+    bury 1
+    pushbytes 0x09
+    bury 2
+    b f_while_top@6
+
+f_after_while@12:
+    dig 1
+    pushbytes 0x04
+    b==
+    bz f_after_if_else@14
+    pushbytes 0x5a
+    bury 1
+
+f_after_if_else@14:
+    dup
+    bytec_2 // 0x01
+    b+
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 1
+    b f_while_top@2

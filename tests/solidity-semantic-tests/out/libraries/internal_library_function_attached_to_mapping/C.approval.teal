@@ -1,0 +1,96 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_mapping.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    bytecblock 0x 0x6d6170a6bb133cb1e3638ad7b8a3ff0539668e9e56f9b850ef1b2a810f5422eaa6c323 0x6d617021a36da5aaa0c63bdc8604397cb4aaafbf1916a3aae9b882b8971672281d6908
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x61df8e5d // method "mapValue(uint256)uint256"
+    txna ApplicationArgs 0
+    match main_mapValue_route@4
+    err
+
+main_mapValue_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b mapValue
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_mapping.sol.L.at(a: bytes, i: bytes) -> bytes:
+L.at:
+    proto 2 1
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    pushbytes "a"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_mapping.sol.C.mapValue[routing]() -> void:
+mapValue:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    pushint 36
+    itob
+    bytec_1 // 0x6d6170a6bb133cb1e3638ad7b8a3ff0539668e9e56f9b850ef1b2a810f5422eaa6c323
+    box_del
+    pop
+    bytec_1 // 0x6d6170a6bb133cb1e3638ad7b8a3ff0539668e9e56f9b850ef1b2a810f5422eaa6c323
+    swap
+    box_put
+    pushint 102
+    itob
+    bytec_2 // 0x6d617021a36da5aaa0c63bdc8604397cb4aaafbf1916a3aae9b882b8971672281d6908
+    box_del
+    pop
+    bytec_2 // 0x6d617021a36da5aaa0c63bdc8604397cb4aaafbf1916a3aae9b882b8971672281d6908
+    swap
+    box_put
+    pushbytes "map"
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    swap
+    callsub L.at
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

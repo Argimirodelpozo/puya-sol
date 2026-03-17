@@ -1,0 +1,47 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping.sol.C.approval_program() -> uint64:
+main:
+    bytecblock "__ctor_pending" 0x788c7654ecfd7b0b623b803e2f4e02ad1cc84278efdfcd7c4c9208edd81f17e115
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    pushint 1
+    app_global_put
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xbacc49e3 // method "__postInit()void"
+    txna ApplicationArgs 0
+    match main___postInit_route@4
+    err
+
+main___postInit_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b __postInit
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    pushint 0
+    app_global_put
+    pushint 3
+    itob
+    bytec_1 // 0x788c7654ecfd7b0b623b803e2f4e02ad1cc84278efdfcd7c4c9208edd81f17e115
+    box_del
+    pop
+    bytec_1 // 0x788c7654ecfd7b0b623b803e2f4e02ad1cc84278efdfcd7c4c9208edd81f17e115
+    swap
+    box_put
+    pushint 1
+    return

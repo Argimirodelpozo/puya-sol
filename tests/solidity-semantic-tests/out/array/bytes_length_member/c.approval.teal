@@ -1,0 +1,54 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/bytes_length_member.sol.c.approval_program() -> uint64:
+main:
+    bytecblock "data"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "data"
+    pushbytes 0x
+    app_global_put
+    pushint 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x22656f1d 0xbc6a2ad6 // method "set()bool", method "getLength()uint256"
+    txna ApplicationArgs 0
+    match set getLength
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/bytes_length_member.sol.c.set[routing]() -> void:
+set:
+    bytec_0 // "data"
+    txna ApplicationArgs 0
+    app_global_put
+    pushbytes 0x151f7c7580
+    log
+    pushint 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/bytes_length_member.sol.c.getLength[routing]() -> void:
+getLength:
+    pushint 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    len
+    itob
+    pushint 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return

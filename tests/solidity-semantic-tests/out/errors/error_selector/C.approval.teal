@@ -1,0 +1,83 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/error_selector.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1
+    bytecblock 0x 0x151f7c75 "s1" "s2" "s3" "s4"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "s1"
+    bytec_0 // 0x
+    app_global_put
+    bytec_3 // "s2"
+    bytec_0 // 0x
+    app_global_put
+    bytec 4 // "s3"
+    bytec_0 // 0x
+    app_global_put
+    bytec 5 // "s4"
+    bytec_0 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x9a053be4 0x6abab84a 0xd1b8e38f // method "test1()(byte[4],byte[4],byte[4],byte[4])", method "test2()(byte[4],byte[4],byte[4],byte[4])", method "test3()byte[4]"
+    txna ApplicationArgs 0
+    match test1 test2 main_test3_route@7
+    err
+
+main_test3_route@7:
+    bytec_1 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/error_selector.sol.C.test1[routing]() -> void:
+test1:
+    intc_0 // 0
+    assert
+    bytec_1 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/error_selector.sol.C.test2[routing]() -> void:
+test2:
+    intc_0 // 0
+    bytec_2 // "s1"
+    app_global_get_ex
+    assert // check s1 exists
+    intc_0 // 0
+    bytec_3 // "s2"
+    app_global_get_ex
+    assert // check s2 exists
+    intc_0 // 0
+    bytec 4 // "s3"
+    app_global_get_ex
+    assert // check s3 exists
+    intc_0 // 0
+    bytec 5 // "s4"
+    app_global_get_ex
+    assert // check s4 exists
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

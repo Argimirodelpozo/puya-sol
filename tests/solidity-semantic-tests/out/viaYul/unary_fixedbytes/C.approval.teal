@@ -1,0 +1,146 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_fixedbytes.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 25
+    bytecblock 0x151f7c75 0x151f7c75aa 0x151f7c7500ff00ff 0x151f7c7500ff00ff00ff00ff 0x151f7c7500ff00ff00ff00ff00ff00ff00ff00ff 0x151f7c7500ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00 0x151f7c7500ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x799af982 0x936f4ad8 0xb7258c2c 0x20d2d67d 0x648961ea 0x9053542c 0xcf0ba49d 0x9bb92dca 0x68984879 0x39b5063e 0x1dbdb901 0x7bfecb37 0x7dec205d 0x36753191 0x5bc49b31 // method "conv(byte[25])byte[32]", method "upcast(byte[25])byte[32]", method "downcast(byte[25])byte[12]", method "r_b32()byte[32]", method "r_b25()byte[25]", method "r_b16()byte[16]", method "r_b8()byte[8]", method "r_b4()byte[4]", method "r_b1()byte[1]", method "a_b32()byte[32]", method "a_b25()byte[25]", method "a_b16()byte[16]", method "a_b8()byte[8]", method "a_b4()byte[4]", method "a_b1()byte[1]"
+    txna ApplicationArgs 0
+    match conv upcast downcast main_r_b32_route@8 main_r_b25_route@9 main_r_b16_route@10 main_r_b8_route@11 main_r_b4_route@12 main_r_b1_route@13 main_a_b32_route@14 main_a_b25_route@15 main_a_b16_route@16 main_a_b8_route@17 main_a_b4_route@18 main_a_b1_route@19
+    err
+
+main_a_b1_route@19:
+    bytec_1 // 0x151f7c75aa
+    log
+    intc_0 // 1
+    return
+
+main_a_b4_route@18:
+    bytec_2 // 0x151f7c7500ff00ff
+    log
+    intc_0 // 1
+    return
+
+main_a_b8_route@17:
+    bytec_3 // 0x151f7c7500ff00ff00ff00ff
+    log
+    intc_0 // 1
+    return
+
+main_a_b16_route@16:
+    bytec 4 // 0x151f7c7500ff00ff00ff00ff00ff00ff00ff00ff
+    log
+    intc_0 // 1
+    return
+
+main_a_b25_route@15:
+    bytec 5 // 0x151f7c7500ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00
+    log
+    intc_0 // 1
+    return
+
+main_a_b32_route@14:
+    bytec 6 // 0x151f7c7500ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff
+    log
+    intc_0 // 1
+    return
+
+main_r_b1_route@13:
+    bytec_1 // 0x151f7c75aa
+    log
+    intc_0 // 1
+    return
+
+main_r_b4_route@12:
+    bytec_2 // 0x151f7c7500ff00ff
+    log
+    intc_0 // 1
+    return
+
+main_r_b8_route@11:
+    bytec_3 // 0x151f7c7500ff00ff00ff00ff
+    log
+    intc_0 // 1
+    return
+
+main_r_b16_route@10:
+    bytec 4 // 0x151f7c7500ff00ff00ff00ff00ff00ff00ff00ff
+    log
+    intc_0 // 1
+    return
+
+main_r_b25_route@9:
+    bytec 5 // 0x151f7c7500ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00
+    log
+    intc_0 // 1
+    return
+
+main_r_b32_route@8:
+    bytec 6 // 0x151f7c7500ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_fixedbytes.sol.C.conv[routing]() -> void:
+conv:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 25
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 25>
+    b~
+    b~
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_fixedbytes.sol.C.upcast[routing]() -> void:
+upcast:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 25
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 25>
+    b~
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_fixedbytes.sol.C.downcast[routing]() -> void:
+downcast:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 25
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 25>
+    b~
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

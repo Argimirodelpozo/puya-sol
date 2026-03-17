@@ -1,0 +1,90 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/ReentrancyGuardWrapper.sol.ReentrancyGuardWrapper.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    bytecblock "counter" 0x 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "counter"
+    bytec_1 // 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x2fa47328 0x61cb7650 0x5f026f4f // method "increment()void", method "getCounter()uint256", method "counter()uint256"
+    txna ApplicationArgs 0
+    match increment getCounter counter
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/ReentrancyGuardWrapper.sol.ReentrancyGuardWrapper.increment[routing]() -> void:
+increment:
+    bytec_1 // 0x
+    global CurrentApplicationAddress
+    b==
+    !
+    assert // revert
+    intc_2 // 0
+    bytec_0 // "counter"
+    app_global_get_ex
+    assert // check counter exists
+    intc_0 // 1
+    itob
+    b+
+    bytec_0 // "counter"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/ReentrancyGuardWrapper.sol.ReentrancyGuardWrapper.getCounter[routing]() -> void:
+getCounter:
+    intc_2 // 0
+    bytec_0 // "counter"
+    app_global_get_ex
+    assert // check counter exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/ReentrancyGuardWrapper.sol.ReentrancyGuardWrapper.counter[routing]() -> void:
+counter:
+    intc_2 // 0
+    bytec_0 // "counter"
+    app_global_get_ex
+    assert // check counter exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

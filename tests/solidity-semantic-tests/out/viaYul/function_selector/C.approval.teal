@@ -1,0 +1,45 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_selector.sol.C.approval_program() -> uint64:
+main:
+    bytecblock 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x4bb8a92a 0x4e4a69f7 // method "f()byte[4]", method "h(byte[])byte[4]"
+    txna ApplicationArgs 0
+    match main_f_route@5 h
+    err
+
+main_f_route@5:
+    bytec_0 // 0x151f7c75
+    log
+    pushint 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_selector.sol.C.h[routing]() -> void:
+h:
+    txna ApplicationArgs 1
+    dup
+    pushint 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    bytec_0 // 0x151f7c75
+    log
+    pushint 1
+    return

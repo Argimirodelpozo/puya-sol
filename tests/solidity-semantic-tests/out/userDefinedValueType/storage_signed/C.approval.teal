@@ -1,0 +1,136 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_signed.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock "a" 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytess "first" "ab"
+    app_global_put
+    bytec_0 // "a"
+    pushint 18446744073709551614
+    app_global_put
+    pushbytess "third" "ef"
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x12eba127 0x1f86dcde 0xbadc1488 0xb85bee07 0x5a6028b4 0x1ad81721 0xf9522e2f // method "direct()uint64", method "indirect()uint64", method "toMemDirect()uint64[1]", method "toMemIndirect()uint64[1]", method "div()uint64", method "viaasm()byte[32]", method "a()uint64"
+    txna ApplicationArgs 0
+    match direct indirect toMemDirect toMemIndirect div viaasm a
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_signed.sol.C.direct[routing]() -> void:
+direct:
+    intc_1 // 0
+    bytec_0 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_signed.sol.C.indirect[routing]() -> void:
+indirect:
+    intc_1 // 0
+    bytec_0 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_signed.sol.C.toMemDirect[routing]() -> void:
+toMemDirect:
+    intc_1 // 0
+    bytec_0 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_signed.sol.C.toMemIndirect[routing]() -> void:
+toMemIndirect:
+    intc_1 // 0
+    bytec_0 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_signed.sol.C.div[routing]() -> void:
+div:
+    intc_1 // 0
+    bytec_0 // "a"
+    app_global_get_ex
+    assert // check a exists
+    pushint 2
+    /
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_signed.sol.C.viaasm[routing]() -> void:
+viaasm:
+    intc_1 // 0
+    bytec_0 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_signed.sol.C.a[routing]() -> void:
+a:
+    intc_1 // 0
+    bytec_0 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

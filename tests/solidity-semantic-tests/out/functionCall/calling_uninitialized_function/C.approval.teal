@@ -1,0 +1,26 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_uninitialized_function.sol.C.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xc3438aa8 0x7421c8a4 // method "intern()uint256", method "extern()uint256"
+    txna ApplicationArgs 0
+    match main_intern_route@5 main_extern_route@6
+    err
+
+main_extern_route@6:
+    err // uninitialized function pointer
+
+main_intern_route@5:
+    err // uninitialized function pointer

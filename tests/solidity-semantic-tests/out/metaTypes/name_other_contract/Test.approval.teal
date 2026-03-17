@@ -1,0 +1,44 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/metaTypes/name_other_contract.sol.Test.approval_program() -> uint64:
+main:
+    intcblock 1
+    bytecblock 0x151f7c750000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x8c6ce091 0x87a1fe97 0x792b0320 0x2d4970c7 // method "c()string", method "a()string", method "i()string", method "f()void"
+    txna ApplicationArgs 0
+    match main_c_route@5 main_a_route@6 main_i_route@7 main_f_route@8
+    err
+
+main_f_route@8:
+    intc_0 // 1
+    return
+
+main_i_route@7:
+    bytec_0 // 0x151f7c750000
+    log
+    intc_0 // 1
+    return
+
+main_a_route@6:
+    bytec_0 // 0x151f7c750000
+    log
+    intc_0 // 1
+    return
+
+main_c_route@5:
+    bytec_0 // 0x151f7c750000
+    log
+    intc_0 // 1
+    return

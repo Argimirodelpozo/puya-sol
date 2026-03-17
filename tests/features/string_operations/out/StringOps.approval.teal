@@ -1,0 +1,197 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/string_operations/contracts/StringOps.sol.StringOps.approval_program() -> uint64:
+main:
+    intcblock 0 1 2
+    bytecblock 0x151f7c75 "storedString"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "storedString"
+    pushbytes 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x0c267663 0xc1a13295 0x85df0af9 0xe39e70bb 0xa8012118 0x64073dfe 0x8843a75f // method "setString(string)void", method "getString()string", method "returnLiteral()string", method "stringLength(string)uint256", method "compareStrings(string,string)bool", method "concatStrings(string,string)string", method "storedString()string"
+    txna ApplicationArgs 0
+    match setString getString main_returnLiteral_route@7 stringLength compareStrings concatStrings storedString
+    err
+
+main_returnLiteral_route@7:
+    pushbytes 0x151f7c75000b68656c6c6f20776f726c64
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/string_operations/contracts/StringOps.sol.StringOps.setString[routing]() -> void:
+setString:
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_1 // "storedString"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/string_operations/contracts/StringOps.sol.StringOps.getString[routing]() -> void:
+getString:
+    intc_0 // 0
+    bytec_1 // "storedString"
+    app_global_get_ex
+    assert // check storedString exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/string_operations/contracts/StringOps.sol.StringOps.stringLength[routing]() -> void:
+stringLength:
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    len
+    itob
+    pushint 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/string_operations/contracts/StringOps.sol.StringOps.compareStrings[routing]() -> void:
+compareStrings:
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txna ApplicationArgs 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    swap
+    keccak256
+    swap
+    keccak256
+    ==
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/string_operations/contracts/StringOps.sol.StringOps.concatStrings[routing]() -> void:
+concatStrings:
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txna ApplicationArgs 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    concat
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/string_operations/contracts/StringOps.sol.StringOps.storedString[routing]() -> void:
+storedString:
+    intc_0 // 0
+    bytec_1 // "storedString"
+    app_global_get_ex
+    assert // check storedString exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

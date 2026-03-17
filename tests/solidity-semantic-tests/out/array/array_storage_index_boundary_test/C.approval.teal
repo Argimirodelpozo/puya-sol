@@ -1,0 +1,143 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_boundary_test.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 32 1 2
+    bytecblock "storageArray_length" "storageArray"
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "storageArray_length"
+    intc_0 // 0
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x1dba4875 // method "test_boundary_check(uint256,uint256)uint256"
+    txna ApplicationArgs 0
+    match main_test_boundary_check_route@4
+    err
+
+main_test_boundary_check_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b test_boundary_check
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_boundary_test.sol.C.test_boundary_check[routing]() -> void:
+test_boundary_check:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+
+test_boundary_check_while_top@2:
+    intc_0 // 0
+    bytec_0 // "storageArray_length"
+    app_global_get_ex
+    assert // check storageArray_length exists
+    itob
+    dig 2
+    b<
+    bnz test_boundary_check_while_top@2
+
+test_boundary_check_while_top@5:
+    intc_0 // 0
+    bytec_0 // "storageArray_length"
+    app_global_get_ex
+    assert // check storageArray_length exists
+    itob
+    dig 2
+    b>
+    bz test_boundary_check_after_while@7
+    bytec_1 // "storageArray"
+    box_get
+    assert // box exists
+    intc_3 // 2
+    intc_0 // 0
+    extract3
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_0 // 0
+    swap
+    substring3
+    pop
+    b test_boundary_check_while_top@5
+
+test_boundary_check_after_while@7:
+    callsub _puya_lib.mem.new_slot
+    dup
+    pushbytes 0x
+    stores
+    bytec_1 // "storageArray"
+    box_get
+    swap
+    intc_3 // 2
+    intc_0 // 0
+    extract3
+    callsub _puya_lib.mem.new_slot
+    dup
+    uncover 2
+    stores
+    swap
+    select
+    pushint 8
+    bzero
+    dig 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    swap
+    loads
+    swap
+    intc_1 // 32
+    *
+    intc_1 // 32
+    extract3 // on error: index access is out of bounds
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// _puya_lib.mem.new_slot() -> uint64:
+_puya_lib.mem.new_slot:
+    load 0
+    bitlen
+    load 0
+    pushint 256
+    dig 2
+    -
+    intc_0 // 0
+    setbit // on error: no available slots
+    store 0
+    retsub

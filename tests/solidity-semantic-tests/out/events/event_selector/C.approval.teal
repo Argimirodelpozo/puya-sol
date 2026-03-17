@@ -1,0 +1,88 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_selector.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1
+    bytecblock 0x92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028 "s1" "s2" "s3" "s4" "s5"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "s1"
+    bytec_0 // 0x92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028
+    app_global_put
+    bytec_2 // "s2"
+    pushbytes 0x002ff0672f372fbe844b353429d4510ea5e43683af134c54f75f789ff57bc0c0
+    app_global_put
+    bytec_3 // "s3"
+    bytec_0 // 0x92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028
+    app_global_put
+    bytec 4 // "s4"
+    bytec_0 // 0x92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028
+    app_global_put
+    bytec 5 // "s5"
+    bytec_0 // 0x92bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x943dd5e3 0xcbf61323 0x4d813080 // method "test1()(byte[32],byte[32],byte[32],byte[32])", method "test2()(byte[32],byte[32],byte[32],byte[32],byte[32])", method "test3()byte[32]"
+    txna ApplicationArgs 0
+    match main_test1_route@5 test2 main_test3_route@7
+    err
+
+main_test3_route@7:
+    pushbytes 0x151f7c7528811f5935c16a099486acb976b3a6b4942950a1425a74e9eb3e9b7f7135e12a
+    log
+    intc_1 // 1
+    return
+
+main_test1_route@5:
+    pushbytes 0x151f7c7592bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028002ff0672f372fbe844b353429d4510ea5e43683af134c54f75f789ff57bc0c092bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a02892bbf6e823a631f3c8e09b1c8df90f378fb56f7fbc9701827e1ff8aad7f6a028
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_selector.sol.C.test2[routing]() -> void:
+test2:
+    intc_0 // 0
+    bytec_1 // "s1"
+    app_global_get_ex
+    assert // check s1 exists
+    intc_0 // 0
+    bytec_2 // "s2"
+    app_global_get_ex
+    assert // check s2 exists
+    intc_0 // 0
+    bytec_3 // "s3"
+    app_global_get_ex
+    assert // check s3 exists
+    intc_0 // 0
+    bytec 4 // "s4"
+    app_global_get_ex
+    assert // check s4 exists
+    intc_0 // 0
+    bytec 5 // "s5"
+    app_global_get_ex
+    assert // check s5 exists
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

@@ -1,0 +1,790 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.approval_program() -> uint64:
+main:
+    intcblock 32 0 1 2
+    bytecblock 0x151f7c75 0x00 "failMint" "failRedeem" "failBorrow" "failRepayBorrow" "failLiquidateBorrow" "failSeize" "failTransfer"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "failMint"
+    intc_1 // 0
+    app_global_put
+    bytec_3 // "failRedeem"
+    intc_1 // 0
+    app_global_put
+    bytec 4 // "failBorrow"
+    intc_1 // 0
+    app_global_put
+    bytec 5 // "failRepayBorrow"
+    intc_1 // 0
+    app_global_put
+    bytec 6 // "failLiquidateBorrow"
+    intc_1 // 0
+    app_global_put
+    bytec 7 // "failSeize"
+    intc_1 // 0
+    app_global_put
+    bytec 8 // "failTransfer"
+    intc_1 // 0
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x89046aac 0x760bb14f 0x36a0536d 0xc0af3761 0x22c9c845 0x3bdb05da 0xb3c15234 0xb824c43e 0x47c47cd4 0xab3649e3 0x92285809 0x39740b90 0xefbd21d8 0x91931d18 0x1daf19ad 0x181c9ad3 0x34fd9c1f 0xac7f4dc8 0xf3d55ab5 0x2fddce9f 0x9234eb66 0x98f915bf 0xfd99e462 0x682fb855 0x5114a65b 0x6fcb2999 0x0311839f 0x86c26423 0x65c332e2 0xd7b834f6 // method "isComptroller()bool", method "setFailMint(bool)void", method "setFailRedeem(bool)void", method "setFailBorrow(bool)void", method "setFailRepayBorrow(bool)void", method "setFailLiquidateBorrow(bool)void", method "setFailSeize(bool)void", method "setFailTransfer(bool)void", method "enterMarkets(uint8[32][])uint256[]", method "mintAllowed(address,address,uint256)uint256", method "mintVerify(address,address,uint256,uint256)void", method "redeemAllowed(address,address,uint256)uint256", method "redeemVerify(address,address,uint256,uint256)void", method "borrowAllowed(address,address,uint256)uint256", method "borrowVerify(address,address,uint256)void", method "repayBorrowAllowed(address,address,address,uint256)uint256", method "repayBorrowVerify(address,address,address,uint256,uint256)void", method "liquidateBorrowAllowed(address,address,address,address,uint256)uint256", method "liquidateBorrowVerify(address,address,address,address,uint256,uint256)void", method "seizeAllowed(address,address,address,address,uint256)uint256", method "seizeVerify(address,address,address,address,uint256)void", method "transferAllowed(address,address,address,uint256)uint256", method "transferVerify(address,address,address,uint256)void", method "failMint()bool", method "failRedeem()bool", method "failBorrow()bool", method "failRepayBorrow()bool", method "failLiquidateBorrow()bool", method "failSeize()bool", method "failTransfer()bool"
+    txna ApplicationArgs 0
+    match main_isComptroller_route@5 setFailMint setFailRedeem setFailBorrow setFailRepayBorrow setFailLiquidateBorrow setFailSeize setFailTransfer enterMarkets mintAllowed mintVerify redeemAllowed redeemVerify borrowAllowed borrowVerify repayBorrowAllowed repayBorrowVerify liquidateBorrowAllowed liquidateBorrowVerify seizeAllowed seizeVerify transferAllowed transferVerify failMint failRedeem failBorrow failRepayBorrow failLiquidateBorrow failSeize failTransfer
+    err
+
+main_isComptroller_route@5:
+    pushbytes 0x151f7c7580
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.setFailMint[routing]() -> void:
+setFailMint:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    bytec_2 // "failMint"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.setFailRedeem[routing]() -> void:
+setFailRedeem:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    bytec_3 // "failRedeem"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.setFailBorrow[routing]() -> void:
+setFailBorrow:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    bytec 4 // "failBorrow"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.setFailRepayBorrow[routing]() -> void:
+setFailRepayBorrow:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    bytec 5 // "failRepayBorrow"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.setFailLiquidateBorrow[routing]() -> void:
+setFailLiquidateBorrow:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    bytec 6 // "failLiquidateBorrow"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.setFailSeize[routing]() -> void:
+setFailSeize:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    bytec 7 // "failSeize"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.setFailTransfer[routing]() -> void:
+setFailTransfer:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    bytec 8 // "failTransfer"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.enterMarkets[routing]() -> void:
+enterMarkets:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 32>>
+    intc_3 // 2
+    intc_1 // 0
+    extract3
+    pop
+    pushbytes 0x151f7c750000
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.mintAllowed[routing]() -> void:
+mintAllowed:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 0
+    bytec_2 // "failMint"
+    app_global_get_ex
+    assert // check failMint exists
+    intc_1 // 0
+    !=
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.mintVerify[routing]() -> void:
+mintVerify:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.redeemAllowed[routing]() -> void:
+redeemAllowed:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 0
+    bytec_3 // "failRedeem"
+    app_global_get_ex
+    assert // check failRedeem exists
+    intc_1 // 0
+    !=
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.redeemVerify[routing]() -> void:
+redeemVerify:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.borrowAllowed[routing]() -> void:
+borrowAllowed:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 0
+    bytec 4 // "failBorrow"
+    app_global_get_ex
+    assert // check failBorrow exists
+    intc_1 // 0
+    !=
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.borrowVerify[routing]() -> void:
+borrowVerify:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.repayBorrowAllowed[routing]() -> void:
+repayBorrowAllowed:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 0
+    bytec 5 // "failRepayBorrow"
+    app_global_get_ex
+    assert // check failRepayBorrow exists
+    intc_1 // 0
+    !=
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.repayBorrowVerify[routing]() -> void:
+repayBorrowVerify:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 5
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.liquidateBorrowAllowed[routing]() -> void:
+liquidateBorrowAllowed:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 5
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 0
+    bytec 6 // "failLiquidateBorrow"
+    app_global_get_ex
+    assert // check failLiquidateBorrow exists
+    intc_1 // 0
+    !=
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.liquidateBorrowVerify[routing]() -> void:
+liquidateBorrowVerify:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 5
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 6
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.seizeAllowed[routing]() -> void:
+seizeAllowed:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 5
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 0
+    bytec 7 // "failSeize"
+    app_global_get_ex
+    assert // check failSeize exists
+    intc_1 // 0
+    !=
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.seizeVerify[routing]() -> void:
+seizeVerify:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 5
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.transferAllowed[routing]() -> void:
+transferAllowed:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 0
+    bytec 8 // "failTransfer"
+    app_global_get_ex
+    assert // check failTransfer exists
+    intc_1 // 0
+    !=
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.transferVerify[routing]() -> void:
+transferVerify:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.failMint[routing]() -> void:
+failMint:
+    intc_1 // 0
+    bytec_2 // "failMint"
+    app_global_get_ex
+    assert // check failMint exists
+    bytec_1 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.failRedeem[routing]() -> void:
+failRedeem:
+    intc_1 // 0
+    bytec_3 // "failRedeem"
+    app_global_get_ex
+    assert // check failRedeem exists
+    bytec_1 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.failBorrow[routing]() -> void:
+failBorrow:
+    intc_1 // 0
+    bytec 4 // "failBorrow"
+    app_global_get_ex
+    assert // check failBorrow exists
+    bytec_1 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.failRepayBorrow[routing]() -> void:
+failRepayBorrow:
+    intc_1 // 0
+    bytec 5 // "failRepayBorrow"
+    app_global_get_ex
+    assert // check failRepayBorrow exists
+    bytec_1 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.failLiquidateBorrow[routing]() -> void:
+failLiquidateBorrow:
+    intc_1 // 0
+    bytec 6 // "failLiquidateBorrow"
+    app_global_get_ex
+    assert // check failLiquidateBorrow exists
+    bytec_1 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.failSeize[routing]() -> void:
+failSeize:
+    intc_1 // 0
+    bytec 7 // "failSeize"
+    app_global_get_ex
+    assert // check failSeize exists
+    bytec_1 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/ComptrollerMock.sol.ComptrollerMock.failTransfer[routing]() -> void:
+failTransfer:
+    intc_1 // 0
+    bytec 8 // "failTransfer"
+    app_global_get_ex
+    assert // check failTransfer exists
+    bytec_1 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

@@ -1,0 +1,26 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/shanghai/push0.sol.C.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xae3d536b // method "zero()uint256"
+    txna ApplicationArgs 0
+    match main_zero_route@4
+    err
+
+main_zero_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    pushint 1
+    return

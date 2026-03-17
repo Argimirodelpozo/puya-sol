@@ -1,0 +1,82 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_dynamic_array_memory.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x7bc493c6 // method "createEvent(uint256)void"
+    txna ApplicationArgs 0
+    match main_createEvent_route@4
+    err
+
+main_createEvent_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b createEvent
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_dynamic_array_memory.sol.C.createEvent[routing]() -> void:
+createEvent:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    swap
+    intc_0 // 32
+    <=
+    assert // overflow
+    dup2
+    b|
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    replace2 0 // on error: index access is out of bounds
+    dig 2
+    pushbytes 0x01
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    replace2 32 // on error: index access is out of bounds
+    uncover 2
+    pushbytes 0x02
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    replace2 64 // on error: index access is out of bounds
+    dup
+    len
+    intc_0 // 32
+    /
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0xa41861880002
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

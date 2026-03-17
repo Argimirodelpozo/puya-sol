@@ -1,0 +1,31 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/inline_array_storage_to_memory_conversion_ints.sol.C.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x219b312e // method "f()(uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/inline_array_storage_to_memory_conversion_ints.sol.C.f[routing]() -> void:
+f:
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000006
+    log
+    pushint 1
+    return

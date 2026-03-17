@@ -1,0 +1,54 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_call_in_homestead.sol.Test.approval_program() -> uint64:
+main:
+    bytecblock "sender"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "sender"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    pushint 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x2d4970c7 0xd602e12b // method "f()void", method "sender()address"
+    txna ApplicationArgs 0
+    match f sender
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_call_in_homestead.sol.Lib.m() -> bytes:
+Lib.m:
+    txn Sender
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_call_in_homestead.sol.Test.f[routing]() -> void:
+f:
+    callsub Lib.m
+    bytec_0 // "sender"
+    swap
+    app_global_put
+    pushint 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_call_in_homestead.sol.Test.sender[routing]() -> void:
+sender:
+    pushint 0
+    bytec_0 // "sender"
+    app_global_get_ex
+    assert // check sender exists
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return

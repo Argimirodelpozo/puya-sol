@@ -1,0 +1,110 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/inner_calls/contracts/InnerCalls.sol.Counter.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    bytecblock "value" 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "value"
+    pushbytes 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x7f221a12 0x2fa47328 0x8e1be510 0xe8564428 0x75d12918 // method "getValue()uint256", method "increment()void", method "add(uint256)void", method "isOracle()bool", method "value()uint256"
+    txna ApplicationArgs 0
+    match getValue increment add main_isOracle_route@8 value
+    err
+
+main_isOracle_route@8:
+    pushbytes 0x151f7c7500
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/inner_calls/contracts/InnerCalls.sol.Counter.getValue[routing]() -> void:
+getValue:
+    intc_2 // 0
+    bytec_0 // "value"
+    app_global_get_ex
+    assert // check value exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/inner_calls/contracts/InnerCalls.sol.Counter.increment[routing]() -> void:
+increment:
+    intc_2 // 0
+    bytec_0 // "value"
+    app_global_get_ex
+    assert // check value exists
+    pushbytes 0x01
+    b+
+    bytec_0 // "value"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/inner_calls/contracts/InnerCalls.sol.Counter.add[routing]() -> void:
+add:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_2 // 0
+    bytec_0 // "value"
+    app_global_get_ex
+    assert // check value exists
+    b+
+    bytec_0 // "value"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/inner_calls/contracts/InnerCalls.sol.Counter.value[routing]() -> void:
+value:
+    intc_2 // 0
+    bytec_0 // "value"
+    app_global_get_ex
+    assert // check value exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

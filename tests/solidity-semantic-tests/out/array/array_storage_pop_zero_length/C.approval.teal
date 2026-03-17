@@ -1,0 +1,47 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_pop_zero_length.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytes "storageArray_length"
+    intc_0 // 0
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xb42028fc // method "popEmpty()void"
+    txna ApplicationArgs 0
+    match main_popEmpty_route@4
+    err
+
+main_popEmpty_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b popEmpty
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_pop_zero_length.sol.C.popEmpty[routing]() -> void:
+popEmpty:
+    pushbytes "storageArray"
+    box_get
+    assert // box exists
+    pushint 2
+    intc_0 // 0
+    extract3
+    dup
+    len
+    pushint 32
+    -
+    intc_0 // 0
+    swap
+    substring3
+    pop
+    intc_1 // 1
+    return

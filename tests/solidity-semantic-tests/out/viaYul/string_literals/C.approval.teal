@@ -1,0 +1,58 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/string_literals.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1
+    bytecblock 0x151f7c75616263 0x151f7c7500503132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930 0x151f7c750003616263
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb9a09f4a 0x18edbda1 0x976864ce 0x4e95a3c9 0xe6b8aa13 0x5c029922 // method "short_dyn()string", method "long_dyn()string", method "short_bytes_dyn()byte[]", method "long_bytes_dyn()byte[]", method "bytesNN()byte[3]", method "bytesNN_padded()byte[4]"
+    txna ApplicationArgs 0
+    match main_short_dyn_route@5 main_long_dyn_route@6 main_short_bytes_dyn_route@7 main_long_bytes_dyn_route@8 main_bytesNN_route@9 main_bytesNN_padded_route@10
+    err
+
+main_bytesNN_padded_route@10:
+    bytec_0 // 0x151f7c75616263
+    log
+    intc_0 // 1
+    return
+
+main_bytesNN_route@9:
+    bytec_0 // 0x151f7c75616263
+    log
+    intc_0 // 1
+    return
+
+main_long_bytes_dyn_route@8:
+    bytec_1 // 0x151f7c7500503132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930
+    log
+    intc_0 // 1
+    return
+
+main_short_bytes_dyn_route@7:
+    bytec_2 // 0x151f7c750003616263
+    log
+    intc_0 // 1
+    return
+
+main_long_dyn_route@6:
+    bytec_1 // 0x151f7c7500503132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930
+    log
+    intc_0 // 1
+    return
+
+main_short_dyn_route@5:
+    bytec_2 // 0x151f7c750003616263
+    log
+    intc_0 // 1
+    return

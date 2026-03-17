@@ -1,0 +1,40 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_really_lots_of_data.sol.ClientReceipt.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x92e03b1c // method "deposit()void"
+    txna ApplicationArgs 0
+    match main_deposit_route@4
+    err
+
+main_deposit_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b deposit
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_really_lots_of_data.sol.ClientReceipt.deposit[routing]() -> void:
+deposit:
+    txna ApplicationArgs 0
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x1bc7c001000000000000000a0012000000000000000f
+    swap
+    concat
+    log
+    pushint 1
+    return

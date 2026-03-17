@@ -1,0 +1,40 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/storage_string_as_mapping_key_without_variable.sol.Test.approval_program() -> uint64:
+main:
+    bytecblock 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xcd78b354 // method "f()uint256"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/storage_string_as_mapping_key_without_variable.sol.Test.f[routing]() -> void:
+f:
+    pushint 2
+    itob
+    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    box_del
+    pop
+    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    swap
+    box_put
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
+    log
+    pushint 1
+    return

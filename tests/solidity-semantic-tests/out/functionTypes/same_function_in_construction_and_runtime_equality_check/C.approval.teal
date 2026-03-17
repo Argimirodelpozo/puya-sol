@@ -1,0 +1,72 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/same_function_in_construction_and_runtime_equality_check.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 32
+    bytecblock "x" 0x151f7c75
+    intc_0 // 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "x"
+    dig 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xf59e3cc4 0x82fadf35 // method "test()bool", method "double(uint256)uint256"
+    txna ApplicationArgs 0
+    match test double
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/same_function_in_construction_and_runtime_equality_check.sol.C.test[routing]() -> void:
+test:
+    intc_0 // 0
+    dup
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    ==
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/same_function_in_construction_and_runtime_equality_check.sol.C.double[routing]() -> void:
+double:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    pushbytes 0x02
+    b*
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

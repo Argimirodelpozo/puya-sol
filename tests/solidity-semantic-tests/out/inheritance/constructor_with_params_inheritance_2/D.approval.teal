@@ -1,0 +1,82 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_with_params_inheritance_2.sol.D.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    bytecblock "i" "k" 0x 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "i"
+    bytec_2 // 0x
+    app_global_put
+    bytec_1 // "k"
+    bytec_2 // 0x
+    app_global_put
+    pushint 2
+    itob
+    intc_0 // 1
+    itob
+    bytec_0 // "i"
+    uncover 2
+    app_global_put
+    bytec_1 // "k"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x3f72e9ed 0x08ee23b1 // method "i()uint256", method "k()uint256"
+    txna ApplicationArgs 0
+    match i k
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_with_params_inheritance_2.sol.D.i[routing]() -> void:
+i:
+    intc_2 // 0
+    bytec_0 // "i"
+    app_global_get_ex
+    assert // check i exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_with_params_inheritance_2.sol.D.k[routing]() -> void:
+k:
+    intc_2 // 0
+    bytec_1 // "k"
+    app_global_get_ex
+    assert // check k exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

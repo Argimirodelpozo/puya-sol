@@ -1,0 +1,289 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.approval_program() -> uint64:
+main:
+    intcblock 32 8 1 0
+    bytecblock "ids" "data" 0x 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "data"
+    bytec_2 // 0x
+    app_global_put
+    bytec_0 // "ids"
+    bytec_2 // 0x
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x177a5eab 0xe7facc8c 0xd787b9d8 0x3b588cc7 0x6e02a7e2 0xfd7d3be9 // method "setIDStatic(uint256)void", method "setID(uint256,uint256)void", method "setData(uint256,uint256,uint256)void", method "getID(uint256)uint256", method "getData(uint256)(uint256,uint256)", method "getLengths()(uint256,uint256)"
+    txna ApplicationArgs 0
+    match setIDStatic setID setData getID getData getLengths
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.setIDStatic[routing]() -> void:
+setIDStatic:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_3 // 0
+    bytec_0 // "ids"
+    app_global_get_ex
+    assert // check ids exists
+    swap
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 2
+    b|
+    replace2 64 // on error: index access is out of bounds
+    bytec_0 // "ids"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.setID[routing]() -> void:
+setID:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_3 // 0
+    bytec_0 // "ids"
+    app_global_get_ex
+    assert // check ids exists
+    intc_1 // 8
+    bzero
+    uncover 4
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 2
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 3
+    b|
+    swap
+    intc_0 // 32
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    bytec_0 // "ids"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.setData[routing]() -> void:
+setData:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    uncover 2
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 3
+    dig 1
+    b|
+    intc_3 // 0
+    bytec_1 // "data"
+    app_global_get_ex
+    assert // check data exists
+    intc_1 // 8
+    bzero
+    uncover 6
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushint 64
+    *
+    dup2
+    pushint 64
+    extract3 // on error: index access is out of bounds
+    extract 32 32
+    uncover 3
+    swap
+    concat
+    uncover 2
+    dig 2
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    dup
+    dig 2
+    pushint 64
+    extract3 // on error: index access is out of bounds
+    extract 0 32
+    uncover 4
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    uncover 4
+    b|
+    concat
+    swap
+    cover 2
+    replace3 // on error: index access is out of bounds
+    bytec_1 // "data"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.getID[routing]() -> void:
+getID:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_3 // 0
+    bytec_0 // "ids"
+    app_global_get_ex
+    assert // check ids exists
+    intc_1 // 8
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.getData[routing]() -> void:
+getData:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_3 // 0
+    bytec_1 // "data"
+    app_global_get_ex
+    assert // check data exists
+    intc_1 // 8
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushint 64
+    *
+    pushint 64
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    intc_0 // 32
+    bzero
+    uncover 2
+    dig 1
+    b|
+    cover 2
+    b|
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_storage.sol.c.getLengths[routing]() -> void:
+getLengths:
+    intc_3 // 0
+    bytec_1 // "data"
+    app_global_get_ex
+    bury 1
+    assert // check data exists
+    intc_3 // 0
+    bytec_0 // "ids"
+    app_global_get_ex
+    bury 1
+    assert // check ids exists
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000403
+    log
+    intc_2 // 1
+    return

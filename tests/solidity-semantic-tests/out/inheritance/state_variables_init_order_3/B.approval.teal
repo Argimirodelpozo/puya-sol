@@ -1,0 +1,287 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_3.sol.B.approval_program() -> uint64:
+main:
+    intcblock 32 0 1
+    bytecblock 0x151f7c75 "a" "b" 0x "c" "b_a" "b_b" "b_c"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 42
+    itob
+    bytec_1 // "a"
+    swap
+    app_global_put
+    bytec_2 // "b"
+    bytec_3 // 0x
+    app_global_put
+    bytec 4 // "c"
+    bytec_3 // 0x
+    app_global_put
+    intc_1 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    pushbytes 0x03
+    b*
+    bytec 4 // "c"
+    swap
+    app_global_put
+    pushint 23
+    itob
+    pushbytes "d"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec_2 // "b"
+    app_global_get_ex
+    assert // check b exists
+    pushbytes "e"
+    swap
+    app_global_put
+    bytec 5 // "b_a"
+    bytec_3 // 0x
+    app_global_put
+    bytec 6 // "b_b"
+    bytec_3 // 0x
+    app_global_put
+    bytec 7 // "b_c"
+    bytec_3 // 0x
+    app_global_put
+    pushint 17
+    itob
+    intc_1 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    bytec_2 // "b"
+    swap
+    app_global_put
+    bytec_1 // "a"
+    dig 1
+    app_global_put
+    bytec 5 // "b_a"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec_2 // "b"
+    app_global_get_ex
+    assert // check b exists
+    bytec 6 // "b_b"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec 4 // "c"
+    app_global_get_ex
+    assert // check c exists
+    bytec 7 // "b_c"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x1928cd24 0x4075f398 0xcf0aa045 0x6960bdf6 0xa4043651 0x0eeafdf6 0xb5251388 0xddb04781 0x311e3db1 // method "f(uint256)uint256", method "d()uint256", method "e()uint256", method "b_a()uint256", method "b_b()uint256", method "b_c()uint256", method "a()uint256", method "b()uint256", method "c()uint256"
+    txna ApplicationArgs 0
+    match f d e b_a b_b b_c a b c
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_3.sol.B.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    pushbytes 0x03
+    b*
+    bytec 4 // "c"
+    swap
+    app_global_put
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000017
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_3.sol.B.d[routing]() -> void:
+d:
+    intc_1 // 0
+    pushbytes "d"
+    app_global_get_ex
+    assert // check d exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_3.sol.B.e[routing]() -> void:
+e:
+    intc_1 // 0
+    pushbytes "e"
+    app_global_get_ex
+    assert // check e exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_3.sol.B.b_a[routing]() -> void:
+b_a:
+    intc_1 // 0
+    bytec 5 // "b_a"
+    app_global_get_ex
+    assert // check b_a exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_3.sol.B.b_b[routing]() -> void:
+b_b:
+    intc_1 // 0
+    bytec 6 // "b_b"
+    app_global_get_ex
+    assert // check b_b exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_3.sol.B.b_c[routing]() -> void:
+b_c:
+    intc_1 // 0
+    bytec 7 // "b_c"
+    app_global_get_ex
+    assert // check b_c exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_3.sol.B.a[routing]() -> void:
+a:
+    intc_1 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_3.sol.B.b[routing]() -> void:
+b:
+    intc_1 // 0
+    bytec_2 // "b"
+    app_global_get_ex
+    assert // check b exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_3.sol.B.c[routing]() -> void:
+c:
+    intc_1 // 0
+    bytec 4 // "c"
+    app_global_get_ex
+    assert // check c exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

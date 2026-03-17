@@ -1,0 +1,51 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/pass_dynamic_arguments_to_the_base_base_with_gap.sol.Final.approval_program() -> uint64:
+main:
+    intcblock 0 1 32
+    bytecblock "m_i"
+    intc_0 // 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "m_i"
+    dig 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x158d96ad // method "m_i()uint256"
+    txna ApplicationArgs 0
+    match main_m_i_route@4
+    err
+
+main_m_i_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b m_i
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/pass_dynamic_arguments_to_the_base_base_with_gap.sol.Final.m_i[routing]() -> void:
+m_i:
+    intc_0 // 0
+    bytec_0 // "m_i"
+    app_global_get_ex
+    assert // check m_i exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

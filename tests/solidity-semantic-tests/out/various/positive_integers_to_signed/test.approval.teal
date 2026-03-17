@@ -1,0 +1,76 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/positive_integers_to_signed.sol.test.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock 0x151f7c75 "x" "y" "q"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "x"
+    pushint 2
+    app_global_put
+    bytec_2 // "y"
+    pushint 127
+    app_global_put
+    bytec_3 // "q"
+    pushint 250
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xdf01cac5 0x62d38f3e 0x2f370211 // method "x()uint64", method "y()uint64", method "q()uint64"
+    txna ApplicationArgs 0
+    match x y q
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/positive_integers_to_signed.sol.test.x[routing]() -> void:
+x:
+    intc_1 // 0
+    bytec_1 // "x"
+    app_global_get_ex
+    assert // check x exists
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/positive_integers_to_signed.sol.test.y[routing]() -> void:
+y:
+    intc_1 // 0
+    bytec_2 // "y"
+    app_global_get_ex
+    assert // check y exists
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/positive_integers_to_signed.sol.test.q[routing]() -> void:
+q:
+    intc_1 // 0
+    bytec_3 // "q"
+    app_global_get_ex
+    assert // check q exists
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

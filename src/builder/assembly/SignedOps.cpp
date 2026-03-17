@@ -1,0 +1,591 @@
+/// @file SignedOps.cpp
+/// Signed arithmetic: sdiv, smod, slt, sgt, sar, tload, tstore, isNegative256, negate256.
+
+#include "builder/assembly/AssemblyBuilder.h"
+#include "Logger.h"
+
+#include <sstream>
+
+namespace puyasol::builder
+{
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleTload(
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	awst::SourceLocation const& _loc
+)
+{
+	// tload(slot) — load from transient storage
+	// Map to global state read with slot-derived key
+	if (_args.size() != 1)
+	{
+		Logger::instance().error("tload requires 1 argument", _loc);
+		return nullptr;
+	}
+
+	// Try to resolve constant slot for named transient vars
+	auto slotConst = resolveConstantOffset(_args[0]);
+
+	// Create the box key: sha256("__t_" + padTo32Bytes(slot))
+	// For constant slots, we can use a readable name
+	std::shared_ptr<awst::Expression> keyExpr;
+	if (slotConst.has_value())
+	{
+		// Use a readable key like "__t_<slot_number>"
+		auto keyBytes = std::make_shared<awst::BytesConstant>();
+		keyBytes->sourceLocation = _loc;
+		keyBytes->wtype = awst::WType::bytesType();
+		std::string keyStr = "__t_" + std::to_string(*slotConst);
+		keyBytes->value.assign(keyStr.begin(), keyStr.end());
+		keyExpr = std::move(keyBytes);
+	}
+	else
+	{
+		// Dynamic slot: key = sha256("__t_" || padTo32Bytes(slot))
+		auto prefix = std::make_shared<awst::BytesConstant>();
+		prefix->sourceLocation = _loc;
+		prefix->wtype = awst::WType::bytesType();
+		std::string pfx = "__t_";
+		prefix->value.assign(pfx.begin(), pfx.end());
+
+		auto slotPadded = padTo32Bytes(_args[0], _loc);
+
+		auto concat = std::make_shared<awst::IntrinsicCall>();
+		concat->sourceLocation = _loc;
+		concat->wtype = awst::WType::bytesType();
+		concat->opCode = "concat";
+		concat->stackArgs.push_back(std::move(prefix));
+		concat->stackArgs.push_back(std::move(slotPadded));
+
+		auto sha = std::make_shared<awst::IntrinsicCall>();
+		sha->sourceLocation = _loc;
+		sha->wtype = awst::WType::bytesType();
+		sha->opCode = "sha256";
+		sha->stackArgs.push_back(std::move(concat));
+
+		keyExpr = std::move(sha);
+	}
+
+	// Emit: app_global_get_ex(0, key) → get value or default 0
+	// Since we want to return 0 for unset slots (matching EVM tload behavior),
+	// use app_global_get which returns 0 for missing keys.
+	auto appId = std::make_shared<awst::IntegerConstant>();
+	appId->sourceLocation = _loc;
+	appId->wtype = awst::WType::uint64Type();
+	appId->value = "0";
+
+	auto globalGet = std::make_shared<awst::IntrinsicCall>();
+	globalGet->sourceLocation = _loc;
+	globalGet->wtype = awst::WType::uint64Type();
+	globalGet->opCode = "app_global_get";
+	globalGet->stackArgs.push_back(std::move(keyExpr));
+
+	// app_global_get returns uint64 at runtime for integer values.
+	// Convert uint64 → bytes via itob so downstream b+/b- see bytes operands.
+	auto itob = std::make_shared<awst::IntrinsicCall>();
+	itob->sourceLocation = _loc;
+	itob->wtype = awst::WType::bytesType();
+	itob->opCode = "itob";
+	itob->stackArgs.push_back(std::move(globalGet));
+
+	// Cast bytes → biguint
+	auto castResult = std::make_shared<awst::ReinterpretCast>();
+	castResult->sourceLocation = _loc;
+	castResult->wtype = awst::WType::biguintType();
+	castResult->expr = std::move(itob);
+	return castResult;
+}
+
+void AssemblyBuilder::handleTstore(
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	// tstore(slot, value) — store to transient storage
+	// Map to global state write with slot-derived key
+	if (_args.size() != 2)
+	{
+		Logger::instance().error("tstore requires 2 arguments", _loc);
+		return;
+	}
+
+	auto slotConst = resolveConstantOffset(_args[0]);
+
+	// Create the key (same as tload)
+	std::shared_ptr<awst::Expression> keyExpr;
+	if (slotConst.has_value())
+	{
+		auto keyBytes = std::make_shared<awst::BytesConstant>();
+		keyBytes->sourceLocation = _loc;
+		keyBytes->wtype = awst::WType::bytesType();
+		std::string keyStr = "__t_" + std::to_string(*slotConst);
+		keyBytes->value.assign(keyStr.begin(), keyStr.end());
+		keyExpr = std::move(keyBytes);
+	}
+	else
+	{
+		auto prefix = std::make_shared<awst::BytesConstant>();
+		prefix->sourceLocation = _loc;
+		prefix->wtype = awst::WType::bytesType();
+		std::string pfx = "__t_";
+		prefix->value.assign(pfx.begin(), pfx.end());
+
+		auto slotPadded = padTo32Bytes(_args[0], _loc);
+
+		auto concat = std::make_shared<awst::IntrinsicCall>();
+		concat->sourceLocation = _loc;
+		concat->wtype = awst::WType::bytesType();
+		concat->opCode = "concat";
+		concat->stackArgs.push_back(std::move(prefix));
+		concat->stackArgs.push_back(std::move(slotPadded));
+
+		auto sha = std::make_shared<awst::IntrinsicCall>();
+		sha->sourceLocation = _loc;
+		sha->wtype = awst::WType::bytesType();
+		sha->opCode = "sha256";
+		sha->stackArgs.push_back(std::move(concat));
+
+		keyExpr = std::move(sha);
+	}
+
+	// Cast value to bytes for storage
+	auto valueCast = std::make_shared<awst::ReinterpretCast>();
+	valueCast->sourceLocation = _loc;
+	valueCast->wtype = awst::WType::bytesType();
+	valueCast->expr = ensureBiguint(_args[1], _loc);
+
+	// app_global_put(key, value)
+	auto globalPut = std::make_shared<awst::IntrinsicCall>();
+	globalPut->sourceLocation = _loc;
+	globalPut->wtype = awst::WType::voidType();
+	globalPut->opCode = "app_global_put";
+	globalPut->stackArgs.push_back(std::move(keyExpr));
+	globalPut->stackArgs.push_back(std::move(valueCast));
+
+	auto exprStmt = std::make_shared<awst::ExpressionStatement>();
+	exprStmt->sourceLocation = _loc;
+	exprStmt->expr = std::move(globalPut);
+	_out.push_back(std::move(exprStmt));
+}
+
+// ─── Signed integer helpers ──────────────────────────────────────────────────
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::isNegative256(
+	std::shared_ptr<awst::Expression> _val,
+	awst::SourceLocation const& _loc,
+	awst::WType const* _origType
+)
+{
+	// Check sign bit in two's complement.
+	// For biguint (256-bit): sign bit at position 255, threshold = 2^255
+	// For uint64 (64-bit): sign bit at position 63, threshold = 2^63
+	// This matters when uint64 variables hold two's complement values after
+	// coercion back from biguint (e.g., signextend result coerced to uint64).
+	auto halfMax = std::make_shared<awst::IntegerConstant>();
+	halfMax->sourceLocation = _loc;
+	halfMax->wtype = awst::WType::biguintType();
+	if (_origType && _origType == awst::WType::uint64Type())
+		halfMax->value = "9223372036854775808"; // 2^63
+	else
+		halfMax->value = "57896044618658097711785492504343953926634992332820282019728792003956564819968"; // 2^255
+
+	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+	cmp->sourceLocation = _loc;
+	cmp->wtype = awst::WType::boolType();
+	cmp->lhs = _val;
+	cmp->op = awst::NumericComparison::Gte;
+	cmp->rhs = std::move(halfMax);
+	return cmp;
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::negate256(
+	std::shared_ptr<awst::Expression> _val,
+	awst::SourceLocation const& _loc
+)
+{
+	// Two's complement negate: (~val + 1) mod 2^256
+	// Equivalent: (2^256 - val) mod 2^256
+
+	// For biguint, we do: MAX_UINT256 - val + 1
+	auto maxU256 = std::make_shared<awst::IntegerConstant>();
+	maxU256->sourceLocation = _loc;
+	maxU256->wtype = awst::WType::biguintType();
+	maxU256->value = "115792089237316195423570985008687907853269984665640564039457584007913129639935"; // 2^256 - 1
+
+	auto sub = makeBigUIntBinOp(maxU256, awst::BigUIntBinaryOperator::Sub, _val, _loc);
+
+	auto one = std::make_shared<awst::IntegerConstant>();
+	one->sourceLocation = _loc;
+	one->wtype = awst::WType::biguintType();
+	one->value = "1";
+
+	return makeBigUIntBinOp(sub, awst::BigUIntBinaryOperator::Add, one, _loc);
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleSdiv(
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	awst::SourceLocation const& _loc
+)
+{
+	// sdiv(a, b) — signed division in two's complement
+	// Sign of result = sign of a XOR sign of b
+	// |result| = |a| / |b|
+	// If b == 0, result = 0 (EVM convention)
+	if (_args.size() != 2)
+	{
+		Logger::instance().error("sdiv requires 2 arguments", _loc);
+		return nullptr;
+	}
+
+	// Ensure args are biguint (may be uint64 or bytes from other ops)
+	auto a = ensureBiguint(_args[0], _loc);
+	auto b = ensureBiguint(_args[1], _loc);
+
+	auto aNeg = isNegative256(a, _loc);
+	auto bNeg = isNegative256(b, _loc);
+
+	// |a| = aNeg ? negate(a) : a
+	auto absA = std::make_shared<awst::ConditionalExpression>();
+	absA->sourceLocation = _loc;
+	absA->wtype = awst::WType::biguintType();
+	absA->condition = aNeg;
+	absA->trueExpr = negate256(a, _loc);
+	absA->falseExpr = a;
+
+	// |b| = bNeg ? negate(b) : b
+	auto absB = std::make_shared<awst::ConditionalExpression>();
+	absB->sourceLocation = _loc;
+	absB->wtype = awst::WType::biguintType();
+	absB->condition = bNeg;
+	absB->trueExpr = negate256(b, _loc);
+	absB->falseExpr = b;
+
+	// |a| / |b|
+	auto quotient = makeBigUIntBinOp(absA, awst::BigUIntBinaryOperator::FloorDiv, absB, _loc);
+
+	// resultNeg = aNeg XOR bNeg
+	auto aNeg2 = isNegative256(a, _loc);
+	auto bNeg2 = isNegative256(b, _loc);
+	auto aNegInt = ensureBiguint(aNeg2, _loc);
+	auto bNegInt = ensureBiguint(bNeg2, _loc);
+	auto xorResult = std::make_shared<awst::NumericComparisonExpression>();
+	xorResult->sourceLocation = _loc;
+	xorResult->wtype = awst::WType::boolType();
+	xorResult->lhs = aNegInt;
+	xorResult->op = awst::NumericComparison::Ne;
+	xorResult->rhs = bNegInt;
+
+	// result = resultNeg ? negate(quotient) : quotient
+	auto result = std::make_shared<awst::ConditionalExpression>();
+	result->sourceLocation = _loc;
+	result->wtype = awst::WType::biguintType();
+	result->condition = std::move(xorResult);
+	result->trueExpr = negate256(quotient, _loc);
+	result->falseExpr = quotient;
+	return result;
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleSmod(
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	awst::SourceLocation const& _loc
+)
+{
+	// smod(a, b) — signed modulo: sign of result = sign of a
+	// |result| = |a| % |b|
+	if (_args.size() != 2)
+	{
+		Logger::instance().error("smod requires 2 arguments", _loc);
+		return nullptr;
+	}
+
+	auto a = ensureBiguint(_args[0], _loc);
+	auto b = ensureBiguint(_args[1], _loc);
+
+	auto aNeg = isNegative256(a, _loc);
+
+	// |a|
+	auto absA = std::make_shared<awst::ConditionalExpression>();
+	absA->sourceLocation = _loc;
+	absA->wtype = awst::WType::biguintType();
+	absA->condition = aNeg;
+	absA->trueExpr = negate256(a, _loc);
+	absA->falseExpr = a;
+
+	// |b|
+	auto bNeg = isNegative256(b, _loc);
+	auto absB = std::make_shared<awst::ConditionalExpression>();
+	absB->sourceLocation = _loc;
+	absB->wtype = awst::WType::biguintType();
+	absB->condition = bNeg;
+	absB->trueExpr = negate256(b, _loc);
+	absB->falseExpr = b;
+
+	// |a| % |b|
+	auto remainder = makeBigUIntBinOp(absA, awst::BigUIntBinaryOperator::Mod, absB, _loc);
+
+	// result = aNeg ? negate(remainder) : remainder
+	auto aNeg2 = isNegative256(a, _loc);
+	auto result = std::make_shared<awst::ConditionalExpression>();
+	result->sourceLocation = _loc;
+	result->wtype = awst::WType::biguintType();
+	result->condition = std::move(aNeg2);
+	result->trueExpr = negate256(remainder, _loc);
+	result->falseExpr = remainder;
+	return result;
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleSlt(
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	awst::SourceLocation const& _loc
+)
+{
+	// slt(a, b) — signed less-than in two's complement
+	if (_args.size() != 2)
+	{
+		Logger::instance().error("slt requires 2 arguments", _loc);
+		return nullptr;
+	}
+
+	// Capture original types before ensureBiguint conversion, so we can use
+	// the correct sign-bit threshold (bit 63 for uint64, bit 255 for biguint).
+	auto const* origTypeA = _args[0]->wtype;
+	auto const* origTypeB = _args[1]->wtype;
+	auto a = ensureBiguint(_args[0], _loc);
+	auto b = ensureBiguint(_args[1], _loc);
+
+	// Special case: slt(x, 0) = isNegative(x)
+	// The general case uses ConditionalExpression with (a < b) unsigned, which
+	// puya's optimizer constant-folds to false when b=0 (no unsigned biguint < 0),
+	// collapsing the entire slt expression. Emit the sign-bit check directly.
+	if (auto* bConst = dynamic_cast<awst::IntegerConstant*>(b.get()))
+	{
+		if (bConst->value == "0")
+		{
+			return ensureBiguint(isNegative256(a, _loc, origTypeA), _loc);
+		}
+	}
+
+	// Special case: slt(0, x) = x > 0 && x < signBitThreshold (positive non-zero)
+	if (auto* aConst = dynamic_cast<awst::IntegerConstant*>(a.get()))
+	{
+		if (aConst->value == "0")
+		{
+			auto zero = std::make_shared<awst::IntegerConstant>();
+			zero->sourceLocation = _loc;
+			zero->wtype = awst::WType::biguintType();
+			zero->value = "0";
+			auto signThreshold = std::make_shared<awst::IntegerConstant>();
+			signThreshold->sourceLocation = _loc;
+			signThreshold->wtype = awst::WType::biguintType();
+			if (origTypeB && origTypeB == awst::WType::uint64Type())
+				signThreshold->value = "9223372036854775808"; // 2^63
+			else
+				signThreshold->value = "57896044618658097711785492504343953926634992332820282019728792003956564819968"; // 2^255
+			// x > 0
+			auto gtZero = std::make_shared<awst::NumericComparisonExpression>();
+			gtZero->sourceLocation = _loc;
+			gtZero->wtype = awst::WType::boolType();
+			gtZero->lhs = b;
+			gtZero->op = awst::NumericComparison::Gt;
+			gtZero->rhs = std::move(zero);
+			// x < signBitThreshold
+			auto ltPow = std::make_shared<awst::NumericComparisonExpression>();
+			ltPow->sourceLocation = _loc;
+			ltPow->wtype = awst::WType::boolType();
+			ltPow->lhs = b;
+			ltPow->op = awst::NumericComparison::Lt;
+			ltPow->rhs = std::move(signThreshold);
+			// AND
+			auto andExpr = std::make_shared<awst::BooleanBinaryOperation>();
+			andExpr->sourceLocation = _loc;
+			andExpr->wtype = awst::WType::boolType();
+			andExpr->left = std::move(gtZero);
+			andExpr->op = awst::BinaryBooleanOperator::And;
+			andExpr->right = std::move(ltPow);
+			return ensureBiguint(andExpr, _loc);
+		}
+	}
+
+	// General case: compare signs, then unsigned comparison
+	auto aNeg = isNegative256(a, _loc, origTypeA);
+	auto bNeg = isNegative256(b, _loc, origTypeB);
+	auto aNeg2 = isNegative256(a, _loc, origTypeA);
+
+	// signsMatch = (aNeg == bNeg) via biguint comparison
+	auto aNegInt = ensureBiguint(aNeg, _loc);
+	auto bNegInt = ensureBiguint(bNeg, _loc);
+	auto signsMatch = std::make_shared<awst::NumericComparisonExpression>();
+	signsMatch->sourceLocation = _loc;
+	signsMatch->wtype = awst::WType::boolType();
+	signsMatch->lhs = aNegInt;
+	signsMatch->op = awst::NumericComparison::Eq;
+	signsMatch->rhs = bNegInt;
+
+	// unsignedLt = a < b
+	auto unsignedLt = std::make_shared<awst::NumericComparisonExpression>();
+	unsignedLt->sourceLocation = _loc;
+	unsignedLt->wtype = awst::WType::boolType();
+	unsignedLt->lhs = a;
+	unsignedLt->op = awst::NumericComparison::Lt;
+	unsignedLt->rhs = b;
+
+	// signsMatch ? (a < b) : aNeg
+	auto result = std::make_shared<awst::ConditionalExpression>();
+	result->sourceLocation = _loc;
+	result->wtype = awst::WType::boolType();
+	result->condition = signsMatch;
+	result->trueExpr = unsignedLt;
+	result->falseExpr = aNeg2;
+
+	// Convert bool to biguint (Yul semantics: slt returns 0 or 1 as uint256)
+	return ensureBiguint(result, _loc);
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleSgt(
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	awst::SourceLocation const& _loc
+)
+{
+	// sgt(a, b) = slt(b, a) — just swap arguments
+	if (_args.size() != 2)
+	{
+		Logger::instance().error("sgt requires 2 arguments", _loc);
+		return nullptr;
+	}
+	std::vector<std::shared_ptr<awst::Expression>> swapped = {_args[1], _args[0]};
+	return handleSlt(swapped, _loc);
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleSar(
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	awst::SourceLocation const& _loc
+)
+{
+	// sar(shift, value) — arithmetic right shift (preserves sign)
+	// If value is positive: same as shr(shift, value)
+	// If value is negative: shr(shift, value) | ~(shr(shift, MAX_UINT256))
+	//   i.e., fill shifted-in bits with 1s instead of 0s
+	//
+	// Simpler: for positive, shr works. For negative, negate → shr → negate.
+	// Actually: sar(n, x) for negative x = ~(~x >> n) = negate(shr(n, negate(x) - 1)) - 1
+	// That's complex. Let's use the conditional approach:
+	//
+	// If not negative: result = shr(shift, value) = value / 2^shift
+	// If negative: result = (value / 2^shift) | ((2^256 - 1) - (2^(256-shift) - 1))
+	//            = (value / 2^shift) | (mask with top `shift` bits set)
+	//
+	// Easiest correct implementation:
+	// isNeg = value >= 2^255
+	// shr_result = value / 2^shift
+	// If isNeg: fill = (2^256 - 1) << (256 - shift) [all ones in top shift bits]
+	//         = (2^256 - 1) - (2^(256-shift) - 1) = 2^256 - 2^(256-shift)
+	//   result = shr_result | fill
+	// Else: result = shr_result
+
+	if (_args.size() != 2)
+	{
+		Logger::instance().error("sar requires 2 arguments", _loc);
+		return nullptr;
+	}
+
+	// Ensure value is biguint for sign checking
+	auto val = ensureBiguint(_args[1], _loc);
+	std::vector<std::shared_ptr<awst::Expression>> coercedArgs = {_args[0], val};
+
+	// shr_result = value / 2^shift
+	auto shrResult = handleShr(coercedArgs, _loc);
+
+	auto valNeg = isNegative256(val, _loc);
+
+	// For negative case: fill top bits with 1s
+	// fillMask = MAX_UINT256 * 2^(256 - shift) mod 2^256
+	// Simpler: fillMask = MAX_UINT256 - (2^(256 - shift) - 1) = MAX_UINT256 - 2^(256-shift) + 1
+	// Or: ~(2^(256-shift) - 1) in 256 bits
+
+	// We need (256 - shift) as uint64
+	auto shiftAmt = _args[0];
+	std::shared_ptr<awst::Expression> shiftU64;
+	if (shiftAmt->wtype != awst::WType::uint64Type())
+		shiftU64 = safeBtoi(shiftAmt, _loc);
+	else
+		shiftU64 = shiftAmt;
+
+	auto twoFiftySix = std::make_shared<awst::IntegerConstant>();
+	twoFiftySix->sourceLocation = _loc;
+	twoFiftySix->wtype = awst::WType::uint64Type();
+	twoFiftySix->value = "256";
+
+	auto complementShift = std::make_shared<awst::UInt64BinaryOperation>();
+	complementShift->sourceLocation = _loc;
+	complementShift->wtype = awst::WType::uint64Type();
+	complementShift->left = std::move(twoFiftySix);
+	complementShift->right = std::move(shiftU64);
+	complementShift->op = awst::UInt64BinaryOperator::Sub;
+
+	auto pow2Complement = buildPowerOf2(complementShift, _loc);
+
+	// fillMask = MAX_UINT256 - pow2Complement + 1
+	auto maxU256 = std::make_shared<awst::IntegerConstant>();
+	maxU256->sourceLocation = _loc;
+	maxU256->wtype = awst::WType::biguintType();
+	maxU256->value = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
+
+	auto sub1 = makeBigUIntBinOp(maxU256, awst::BigUIntBinaryOperator::Sub, pow2Complement, _loc);
+
+	auto one = std::make_shared<awst::IntegerConstant>();
+	one->sourceLocation = _loc;
+	one->wtype = awst::WType::biguintType();
+	one->value = "1";
+
+	auto fillMask = makeBigUIntBinOp(sub1, awst::BigUIntBinaryOperator::Add, one, _loc);
+
+	// negResult = shr_result | fillMask (using b|)
+	auto shrBytes = std::make_shared<awst::ReinterpretCast>();
+	shrBytes->sourceLocation = _loc;
+	shrBytes->wtype = awst::WType::bytesType();
+	shrBytes->expr = shrResult;
+
+	auto fillBytes = std::make_shared<awst::ReinterpretCast>();
+	fillBytes->sourceLocation = _loc;
+	fillBytes->wtype = awst::WType::bytesType();
+	fillBytes->expr = fillMask;
+
+	auto orCall = std::make_shared<awst::IntrinsicCall>();
+	orCall->sourceLocation = _loc;
+	orCall->wtype = awst::WType::bytesType();
+	orCall->opCode = "b|";
+	orCall->stackArgs.push_back(std::move(shrBytes));
+	orCall->stackArgs.push_back(std::move(fillBytes));
+
+	auto negResult = std::make_shared<awst::ReinterpretCast>();
+	negResult->sourceLocation = _loc;
+	negResult->wtype = awst::WType::biguintType();
+	negResult->expr = std::move(orCall);
+
+	// posResult = shr (re-compute to avoid sharing)
+	auto posResult = handleShr(coercedArgs, _loc);
+
+	auto result = std::make_shared<awst::ConditionalExpression>();
+	result->sourceLocation = _loc;
+	result->wtype = awst::WType::biguintType();
+	result->condition = valNeg;
+	result->trueExpr = negResult;
+	result->falseExpr = posResult;
+	return result;
+}
+
+void AssemblyBuilder::handleSstore(
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	// sstore(slot, value) — raw EVM persistent storage write.
+	// No direct AVM equivalent. Stub as no-op with warning.
+	Logger::instance().warning("sstore() has no AVM equivalent (EVM raw storage), ignoring", _loc);
+	(void)_args;
+	(void)_out;
+}
+
+
+} // namespace puyasol::builder

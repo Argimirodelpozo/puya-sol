@@ -1,0 +1,68 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/comparison_functions.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 2
+    bytecblock 0x 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x313cfcec 0x4aa30e12 // method "equal()(bool,bool,bool)", method "unequal()(bool,bool,bool)"
+    txna ApplicationArgs 0
+    match equal unequal
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/comparison_functions.sol.C.equal[routing]() -> void:
+equal:
+    intc_1 // 0
+    dupn 2
+    ==
+    swap
+    bytec_0 // 0x
+    ==
+    pushbytes 0x80
+    intc_0 // 1
+    uncover 3
+    setbit
+    intc_2 // 2
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/comparison_functions.sol.C.unequal[routing]() -> void:
+unequal:
+    intc_1 // 0
+    dupn 2
+    !=
+    swap
+    bytec_0 // 0x
+    !=
+    pushbytes 0x00
+    intc_0 // 1
+    uncover 3
+    setbit
+    intc_2 // 2
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

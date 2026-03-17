@@ -1,0 +1,52 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/inline_member_init_inheritence_without_constructor.sol.Base.approval_program() -> uint64:
+main:
+    intcblock 1 32
+    bytecblock "m_base"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 5
+    itob
+    bytec_0 // "m_base"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x438b2773 // method "getBMember()uint256"
+    txna ApplicationArgs 0
+    match main_getBMember_route@4
+    err
+
+main_getBMember_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b getBMember
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/inline_member_init_inheritence_without_constructor.sol.Base.getBMember[routing]() -> void:
+getBMember:
+    pushint 0
+    bytec_0 // "m_base"
+    app_global_get_ex
+    assert // check m_base exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

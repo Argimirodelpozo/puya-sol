@@ -1,0 +1,486 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_literals_success.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    bytecblock 0x01 0x 0x02 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x68bc2874 0xf62d50f8 0xfa3fd661 0x47ce4b81 0x064299d1 0xd9229d64 0x935cfb8d 0x3c03b40a // method "exp_2(uint256)uint256", method "exp_minus_2(uint256)uint256", method "exp_uint_max(uint256)uint256", method "exp_int_max(uint256)uint256", method "exp_5(uint256)uint256", method "exp_minus_5(uint256)uint256", method "exp_256(uint256)uint256", method "exp_minus_256(uint256)uint256"
+    txna ApplicationArgs 0
+    match exp_2 exp_minus_2 exp_uint_max exp_int_max exp_5 exp_minus_5 exp_256 exp_minus_256
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_literals_success.sol.C.exp_2[routing]() -> void:
+exp_2:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // 0x01
+    swap
+    bytec_2 // 0x02
+    swap
+
+exp_2_while_top@2:
+    dup
+    bytec_1 // 0x
+    b>
+    bz exp_2_after_while@6
+    dup
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz exp_2_after_if_else@5
+    dig 2
+    dig 2
+    b*
+    bury 3
+
+exp_2_after_if_else@5:
+    dup
+    bytec_2 // 0x02
+    b/
+    bury 1
+    dig 1
+    dup
+    b*
+    bury 2
+    b exp_2_while_top@2
+
+exp_2_after_while@6:
+    dig 2
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_literals_success.sol.C.exp_minus_2[routing]() -> void:
+exp_minus_2:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // 0x01
+    swap
+    pushbytes 0xfffffffffffffffe
+    swap
+
+exp_minus_2_while_top@2:
+    dup
+    bytec_1 // 0x
+    b>
+    bz exp_minus_2_after_while@6
+    dup
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz exp_minus_2_after_if_else@5
+    dig 2
+    dig 2
+    b*
+    bury 3
+
+exp_minus_2_after_if_else@5:
+    dup
+    bytec_2 // 0x02
+    b/
+    bury 1
+    dig 1
+    dup
+    b*
+    bury 2
+    b exp_minus_2_while_top@2
+
+exp_minus_2_after_while@6:
+    dig 2
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_literals_success.sol.C.exp_uint_max[routing]() -> void:
+exp_uint_max:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // 0x01
+    swap
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    swap
+
+exp_uint_max_while_top@2:
+    dup
+    bytec_1 // 0x
+    b>
+    bz exp_uint_max_after_while@6
+    dup
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz exp_uint_max_after_if_else@5
+    dig 2
+    dig 2
+    b*
+    bury 3
+
+exp_uint_max_after_if_else@5:
+    dup
+    bytec_2 // 0x02
+    b/
+    bury 1
+    dig 1
+    dup
+    b*
+    bury 2
+    b exp_uint_max_while_top@2
+
+exp_uint_max_after_while@6:
+    dig 2
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_literals_success.sol.C.exp_int_max[routing]() -> void:
+exp_int_max:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // 0x01
+    swap
+    pushbytes 0x8000000000000000000000000000000000000000000000000000000000000000
+    swap
+
+exp_int_max_while_top@2:
+    dup
+    bytec_1 // 0x
+    b>
+    bz exp_int_max_after_while@6
+    dup
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz exp_int_max_after_if_else@5
+    dig 2
+    dig 2
+    b*
+    bury 3
+
+exp_int_max_after_if_else@5:
+    dup
+    bytec_2 // 0x02
+    b/
+    bury 1
+    dig 1
+    dup
+    b*
+    bury 2
+    b exp_int_max_while_top@2
+
+exp_int_max_after_while@6:
+    dig 2
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_literals_success.sol.C.exp_5[routing]() -> void:
+exp_5:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // 0x01
+    swap
+    pushbytes 0x05
+    swap
+
+exp_5_while_top@2:
+    dup
+    bytec_1 // 0x
+    b>
+    bz exp_5_after_while@6
+    dup
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz exp_5_after_if_else@5
+    dig 2
+    dig 2
+    b*
+    bury 3
+
+exp_5_after_if_else@5:
+    dup
+    bytec_2 // 0x02
+    b/
+    bury 1
+    dig 1
+    dup
+    b*
+    bury 2
+    b exp_5_while_top@2
+
+exp_5_after_while@6:
+    dig 2
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_literals_success.sol.C.exp_minus_5[routing]() -> void:
+exp_minus_5:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // 0x01
+    swap
+    pushbytes 0xfffffffffffffffb
+    swap
+
+exp_minus_5_while_top@2:
+    dup
+    bytec_1 // 0x
+    b>
+    bz exp_minus_5_after_while@6
+    dup
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz exp_minus_5_after_if_else@5
+    dig 2
+    dig 2
+    b*
+    bury 3
+
+exp_minus_5_after_if_else@5:
+    dup
+    bytec_2 // 0x02
+    b/
+    bury 1
+    dig 1
+    dup
+    b*
+    bury 2
+    b exp_minus_5_while_top@2
+
+exp_minus_5_after_while@6:
+    dig 2
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_literals_success.sol.C.exp_256[routing]() -> void:
+exp_256:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // 0x01
+    swap
+    pushbytes 0x0100
+    swap
+
+exp_256_while_top@2:
+    dup
+    bytec_1 // 0x
+    b>
+    bz exp_256_after_while@6
+    dup
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz exp_256_after_if_else@5
+    dig 2
+    dig 2
+    b*
+    bury 3
+
+exp_256_after_if_else@5:
+    dup
+    bytec_2 // 0x02
+    b/
+    bury 1
+    dig 1
+    dup
+    b*
+    bury 2
+    b exp_256_while_top@2
+
+exp_256_after_while@6:
+    dig 2
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_literals_success.sol.C.exp_minus_256[routing]() -> void:
+exp_minus_256:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // 0x01
+    swap
+    pushbytes 0xffffffffffffff00
+    swap
+
+exp_minus_256_while_top@2:
+    dup
+    bytec_1 // 0x
+    b>
+    bz exp_minus_256_after_while@6
+    dup
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz exp_minus_256_after_if_else@5
+    dig 2
+    dig 2
+    b*
+    bury 3
+
+exp_minus_256_after_if_else@5:
+    dup
+    bytec_2 // 0x02
+    b/
+    bury 1
+    dig 1
+    dup
+    b*
+    bury 2
+    b exp_minus_256_while_top@2
+
+exp_minus_256_after_while@6:
+    dig 2
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

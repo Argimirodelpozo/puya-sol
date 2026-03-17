@@ -1,0 +1,98 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_overflow.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1
+    bytecblock "a" "b" "x"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "x"
+    pushint 4660
+    app_global_put
+    bytec_0 // "a"
+    pushint 65535
+    app_global_put
+    bytec_1 // "b"
+    intc_0 // 0
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xa46062d6 // method "f()(uint256,uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_overflow.sol.C.f[routing]() -> void:
+f:
+    intc_0 // 0
+    bytec_0 // "a"
+    app_global_get_ex
+    assert // check a exists
+    intc_1 // 1
+    +
+    bytec_0 // "a"
+    swap
+    app_global_put
+    intc_0 // 0
+    bytec_1 // "b"
+    app_global_get_ex
+    assert // check b exists
+    itob
+    bytec_1 // "b"
+    intc_0 // 0
+    app_global_put
+    intc_0 // 0
+    bytec_0 // "a"
+    app_global_get_ex
+    assert // check a exists
+    pushint 2
+    -
+    bytec_0 // "a"
+    dig 1
+    app_global_put
+    intc_0 // 0
+    bytec_2 // "x"
+    app_global_get_ex
+    assert // check x exists
+    itob
+    intc_0 // 0
+    bytec_1 // "b"
+    app_global_get_ex
+    assert // check b exists
+    itob
+    uncover 2
+    itob
+    pushint 32
+    bzero
+    uncover 3
+    dig 1
+    b|
+    uncover 4
+    dig 2
+    b|
+    concat
+    uncover 3
+    dig 2
+    b|
+    concat
+    cover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

@@ -1,0 +1,56 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_selector.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 32
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x89aac53b 0xe5997c29 0x878d7e85 // method "testFunction()void", method "testYul()uint64", method "testSol()uint64"
+    txna ApplicationArgs 0
+    match main_testFunction_route@5 testYul main_testSol_route@7
+    err
+
+main_testSol_route@7:
+    pushbytes 0x151f7c750000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_testFunction_route@5:
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_selector.sol.C.testYul[routing]() -> void:
+testYul:
+    pushint 0
+    intc_1 // 32
+    bzero
+    swap
+    pushbytes 0x0000000100000000000000000000000000000000000000000000000000000000
+    b*
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    btoi
+    itob
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

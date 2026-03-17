@@ -1,0 +1,97 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LibRLPWrapper.sol.LibRLPWrapper.approval_program() -> uint64:
+main:
+    intcblock 1 32 8
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x48090758 // method "computeAddress(address,uint256)address"
+    txna ApplicationArgs 0
+    match main_computeAddress_route@4
+    err
+
+main_computeAddress_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b computeAddress
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LibRLPWrapper.sol.LibRLP.computeAddress(deployer: bytes, nonce: bytes) -> bytes:
+LibRLP.computeAddress:
+    proto 2 1
+    pushint 0
+    frame_dig -1
+    pushbytes 0x7f
+    b>
+    bz LibRLP.computeAddress_after_while@8
+    pushbytes 0x08
+    frame_bury 0
+
+LibRLP.computeAddress_while_top@5:
+    intc_1 // 32
+    bzero
+    intc_2 // 8
+    bzero
+    frame_dig 0
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    pushint 256
+    %
+    pushint 255
+    swap
+    -
+    intc_0 // 1
+    setbit
+    frame_dig -1
+    swap
+    b/
+    pushbytes 0x
+    b!=
+    bz LibRLP.computeAddress_after_while@8
+    frame_dig 0
+    pushbytes 0x08
+    b+
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 0
+    b LibRLP.computeAddress_while_top@5
+
+LibRLP.computeAddress_after_while@8:
+    pushbytes 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    swap
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LibRLPWrapper.sol.LibRLPWrapper.computeAddress[routing]() -> void:
+computeAddress:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub LibRLP.computeAddress
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

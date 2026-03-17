@@ -1,0 +1,58 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/constant_string_literal.sol.Test.approval_program() -> uint64:
+main:
+    intcblock 1
+    bytecblock 0x151f7c750035616265666768696a6b6c6d6e6f70716162636465666768696a6b6c6d6e6f70716162636465666768696a6b6c6d6e6f707161626361 0x151f7c756162636465666768696a6b6c6d6e6f7071
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x311050b5 0x866fcdfa 0xf9e776c0 0x9082692c 0xddb9f02a 0x220b224d // method "getB()byte[32]", method "getX()string", method "getX2()string", method "unused()uint256", method "b()byte[32]", method "x()string"
+    txna ApplicationArgs 0
+    match main_getB_route@5 main_getX_route@6 main_getX2_route@7 main_unused_route@8 main_b_route@9 main_x_route@10
+    err
+
+main_x_route@10:
+    bytec_0 // 0x151f7c750035616265666768696a6b6c6d6e6f70716162636465666768696a6b6c6d6e6f70716162636465666768696a6b6c6d6e6f707161626361
+    log
+    intc_0 // 1
+    return
+
+main_b_route@9:
+    bytec_1 // 0x151f7c756162636465666768696a6b6c6d6e6f7071
+    log
+    intc_0 // 1
+    return
+
+main_unused_route@8:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
+    log
+    intc_0 // 1
+    return
+
+main_getX2_route@7:
+    bytec_0 // 0x151f7c750035616265666768696a6b6c6d6e6f70716162636465666768696a6b6c6d6e6f70716162636465666768696a6b6c6d6e6f707161626361
+    log
+    intc_0 // 1
+    return
+
+main_getX_route@6:
+    bytec_0 // 0x151f7c750035616265666768696a6b6c6d6e6f70716162636465666768696a6b6c6d6e6f70716162636465666768696a6b6c6d6e6f707161626361
+    log
+    intc_0 // 1
+    return
+
+main_getB_route@5:
+    bytec_1 // 0x151f7c756162636465666768696a6b6c6d6e6f7071
+    log
+    intc_0 // 1
+    return

@@ -1,0 +1,88 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/recursion.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x6a732b8a // method "g(uint256,uint256)uint256"
+    txna ApplicationArgs 0
+    match main_g_route@4
+    err
+
+main_g_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b g
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/recursion.sol.exp(base: bytes, exponent: bytes) -> bytes:
+exp:
+    proto 2 1
+    frame_dig -1
+    pushbytes 0x
+    b==
+    bz exp_after_if_else@2
+    intc_1 // 1
+    itob
+    retsub
+
+exp_after_if_else@2:
+    frame_dig -1
+    pushbytes 0x02
+    b/
+    frame_dig -2
+    swap
+    callsub exp
+    dup
+    b*
+    frame_dig -1
+    pushbytes 0x01
+    b&
+    pushbytes 0x01
+    b==
+    bz exp_after_if_else@4
+    frame_dig -2
+    b*
+
+exp_after_if_else@4:
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/recursion.sol.C.g[routing]() -> void:
+g:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub exp
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

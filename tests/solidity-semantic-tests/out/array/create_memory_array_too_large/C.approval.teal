@@ -1,0 +1,89 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/create_memory_array_too_large.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 32
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xcd78b354 0x4b2c0376 // method "f()uint256", method "g()uint256"
+    txna ApplicationArgs 0
+    match f g
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/create_memory_array_too_large.sol.C.f[routing]() -> void:
+f:
+    pushbytes 0x
+    intc_1 // 0
+
+f_while_top@2:
+    dup
+    intc_1 // 0
+    <
+    bz f_after_while@4
+    dig 1
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat // on error: max array length exceeded
+    bury 2
+    dup
+    intc_0 // 1
+    +
+    bury 1
+    b f_while_top@2
+
+f_after_while@4:
+    intc_2 // 32
+    bzero
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    dig 3
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000002a
+    replace2 32 // on error: index access is out of bounds
+    swap
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000017
+    replace2 0 // on error: index access is out of bounds
+    pop
+    extract 32 32 // on error: index access is out of bounds
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/create_memory_array_too_large.sol.C.g[routing]() -> void:
+g:
+    intc_1 // 0
+    itob
+    dup
+    pushint 42
+    itob
+    replace2 16 // on error: index access is out of bounds
+    pushint 23
+    itob
+    uncover 2
+    swap
+    replace2 0 // on error: index access is out of bounds
+    pop
+    extract 16 8 // on error: index access is out of bounds
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

@@ -1,0 +1,39 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_indexed_function2.sol.C.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xe1ff2398 0x4e6a772f // method "f1()void", method "f2(uint256)void"
+    txna ApplicationArgs 0
+    match main_f1_route@5 f2
+    err
+
+main_f1_route@5:
+    pushbytes 0x9cf4610e000200026631
+    log
+    pushint 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_indexed_function2.sol.C.f2[routing]() -> void:
+f2:
+    txna ApplicationArgs 1
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    pushbytes 0x4a7839b7000200026632
+    log
+    pushint 1
+    return

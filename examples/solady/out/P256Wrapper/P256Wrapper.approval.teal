@@ -1,0 +1,83 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/P256Wrapper.sol.P256Wrapper.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xa826d5f2 // method "verifySignature(byte[32],byte[32],byte[32],byte[32],byte[32])bool"
+    txna ApplicationArgs 0
+    match main_verifySignature_route@4
+    err
+
+main_verifySignature_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b verifySignature
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/P256Wrapper.sol.P256.verifySignature(hash: bytes, r: bytes, s: bytes, x: bytes, y: bytes) -> uint64:
+P256.verifySignature:
+    proto 5 1
+    frame_dig -3
+    pushbytes 0x7fffffff800000007fffffffffffffffde737d56d38bcf4279dce5617e3192a8
+    b>
+    pushbytess 0x 0x01
+    uncover 2
+    select
+    pushbytes 0x
+    b<
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/P256Wrapper.sol.P256Wrapper.verifySignature[routing]() -> void:
+verifySignature:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 5
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub P256.verifySignature
+    pushbytes 0x00
+    pushint 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

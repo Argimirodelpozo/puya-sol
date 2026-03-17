@@ -1,0 +1,1460 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/exp_associativity.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 0 1
+    bytecblock 0x01 0x 0x02 0x151f7c75 0x00
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x9cb98744 0xd85b32d0 0xf2e21b05 0xf457c316 0x22f3e79b // method "test_hardcode1(uint256,uint256,uint256)uint256", method "test_hardcode2(uint256,uint256,uint256,uint256)uint256", method "test_invariant(uint256,uint256,uint256)bool", method "test_literal_mix(uint256,uint256)bool", method "test_other_operators(uint256,uint256)bool"
+    txna ApplicationArgs 0
+    match test_hardcode1 test_hardcode2 test_invariant test_literal_mix test_other_operators
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/exp_associativity.sol.C.test_hardcode1[routing]() -> void:
+test_hardcode1:
+    intc_1 // 0
+    dupn 2
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // 0x01
+    cover 2
+
+test_hardcode1_while_top@2:
+    dup
+    bytec_1 // 0x
+    b>
+    bz test_hardcode1_after_while@6
+    dup
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_hardcode1_after_if_else@5
+    dig 2
+    dig 2
+    b*
+    bury 3
+
+test_hardcode1_after_if_else@5:
+    dup
+    bytec_2 // 0x02
+    b/
+    bury 1
+    dig 1
+    dup
+    b*
+    bury 2
+    b test_hardcode1_while_top@2
+
+test_hardcode1_after_while@6:
+    bytec_0 // 0x01
+    bury 5
+    dig 3
+    bury 7
+    dig 2
+    bury 6
+
+test_hardcode1_while_top@7:
+    dig 5
+    bytec_1 // 0x
+    b>
+    bz test_hardcode1_after_while@11
+    dig 5
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_hardcode1_after_if_else@10
+    dig 4
+    dig 7
+    b*
+    bury 5
+
+test_hardcode1_after_if_else@10:
+    dig 5
+    bytec_2 // 0x02
+    b/
+    bury 6
+    dig 6
+    dup
+    b*
+    bury 7
+    b test_hardcode1_while_top@7
+
+test_hardcode1_after_while@11:
+    dig 4
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/exp_associativity.sol.C.test_hardcode2[routing]() -> void:
+test_hardcode2:
+    intc_1 // 0
+    dupn 5
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // 0x01
+    cover 2
+
+test_hardcode2_while_top@2:
+    dup
+    bytec_1 // 0x
+    b>
+    bz test_hardcode2_after_while@6
+    dup
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_hardcode2_after_if_else@5
+    dig 2
+    dig 2
+    b*
+    bury 3
+
+test_hardcode2_after_if_else@5:
+    dup
+    bytec_2 // 0x02
+    b/
+    bury 1
+    dig 1
+    dup
+    b*
+    bury 2
+    b test_hardcode2_while_top@2
+
+test_hardcode2_after_while@6:
+    bytec_0 // 0x01
+    bury 7
+    dig 3
+    bury 11
+    dig 2
+    bury 9
+
+test_hardcode2_while_top@7:
+    dig 8
+    bytec_1 // 0x
+    b>
+    bz test_hardcode2_after_while@11
+    dig 8
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_hardcode2_after_if_else@10
+    dig 6
+    dig 11
+    b*
+    bury 7
+
+test_hardcode2_after_if_else@10:
+    dig 8
+    bytec_2 // 0x02
+    b/
+    bury 9
+    dig 10
+    dup
+    b*
+    bury 11
+    b test_hardcode2_while_top@7
+
+test_hardcode2_after_while@11:
+    bytec_0 // 0x01
+    bury 6
+    dig 4
+    bury 10
+    dig 6
+    bury 8
+
+test_hardcode2_while_top@12:
+    dig 7
+    bytec_1 // 0x
+    b>
+    bz test_hardcode2_after_while@16
+    dig 7
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_hardcode2_after_if_else@15
+    dig 5
+    dig 10
+    b*
+    bury 6
+
+test_hardcode2_after_if_else@15:
+    dig 7
+    bytec_2 // 0x02
+    b/
+    bury 8
+    dig 9
+    dup
+    b*
+    bury 10
+    b test_hardcode2_while_top@12
+
+test_hardcode2_after_while@16:
+    dig 5
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/exp_associativity.sol.C.test_invariant[routing]() -> void:
+test_invariant:
+    intc_1 // 0
+    dupn 8
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dupn 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    cover 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // 0x01
+    cover 2
+
+test_invariant_while_top@2:
+    dup
+    bytec_1 // 0x
+    b>
+    bz test_invariant_after_while@6
+    dup
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_invariant_after_if_else@5
+    dig 2
+    dig 2
+    b*
+    bury 3
+
+test_invariant_after_if_else@5:
+    dup
+    bytec_2 // 0x02
+    b/
+    bury 1
+    dig 1
+    dup
+    b*
+    bury 2
+    b test_invariant_while_top@2
+
+test_invariant_after_while@6:
+    bytec_0 // 0x01
+    bury 9
+    dig 5
+    bury 15
+    dig 2
+    bury 12
+
+test_invariant_while_top@7:
+    dig 11
+    bytec_1 // 0x
+    b>
+    bz test_invariant_after_while@11
+    dig 11
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_invariant_after_if_else@10
+    dig 8
+    dig 15
+    b*
+    bury 9
+
+test_invariant_after_if_else@10:
+    dig 11
+    bytec_2 // 0x02
+    b/
+    bury 12
+    dig 14
+    dup
+    b*
+    bury 15
+    b test_invariant_while_top@7
+
+test_invariant_after_while@11:
+    bytec_0 // 0x01
+    bury 8
+    dig 4
+    bury 14
+    dig 3
+    bury 11
+
+test_invariant_while_top@12:
+    dig 10
+    bytec_1 // 0x
+    b>
+    bz test_invariant_after_while@16
+    dig 10
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_invariant_after_if_else@15
+    dig 7
+    dig 14
+    b*
+    bury 8
+
+test_invariant_after_if_else@15:
+    dig 10
+    bytec_2 // 0x02
+    b/
+    bury 11
+    dig 13
+    dup
+    b*
+    bury 14
+    b test_invariant_while_top@12
+
+test_invariant_after_while@16:
+    bytec_0 // 0x01
+    bury 7
+    dig 5
+    bury 13
+    dig 7
+    bury 10
+
+test_invariant_while_top@17:
+    dig 9
+    bytec_1 // 0x
+    b>
+    bz test_invariant_after_while@21
+    dig 9
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_invariant_after_if_else@20
+    dig 6
+    dig 13
+    b*
+    bury 7
+
+test_invariant_after_if_else@20:
+    dig 9
+    bytec_2 // 0x02
+    b/
+    bury 10
+    dig 12
+    dup
+    b*
+    bury 13
+    b test_invariant_while_top@17
+
+test_invariant_after_while@21:
+    dig 8
+    dig 7
+    b==
+    bytec 4 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/exp_associativity.sol.C.test_literal_mix[routing]() -> void:
+test_literal_mix:
+    intc_1 // 0
+    dupn 32
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dupn 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // 0x01
+    swap
+    bytec_2 // 0x02
+    swap
+
+test_literal_mix_while_top@2:
+    dup
+    bytec_1 // 0x
+    b>
+    bz test_literal_mix_after_while@6
+    dup
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_literal_mix_after_if_else@5
+    dig 2
+    dig 2
+    b*
+    bury 3
+
+test_literal_mix_after_if_else@5:
+    dup
+    bytec_2 // 0x02
+    b/
+    bury 1
+    dig 1
+    dup
+    b*
+    bury 2
+    b test_literal_mix_while_top@2
+
+test_literal_mix_after_while@6:
+    bytec_0 // 0x01
+    bury 16
+    dig 4
+    bury 38
+    dig 2
+    bury 27
+
+test_literal_mix_while_top@7:
+    dig 26
+    bytec_1 // 0x
+    b>
+    bz test_literal_mix_after_while@11
+    dig 26
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_literal_mix_after_if_else@10
+    dig 15
+    dig 38
+    b*
+    bury 16
+
+test_literal_mix_after_if_else@10:
+    dig 26
+    bytec_2 // 0x02
+    b/
+    bury 27
+    dig 37
+    dup
+    b*
+    bury 38
+    b test_literal_mix_while_top@7
+
+test_literal_mix_after_while@11:
+    bytec_0 // 0x01
+    bury 15
+    bytec_2 // 0x02
+    bury 37
+    dig 3
+    bury 26
+
+test_literal_mix_while_top@12:
+    dig 25
+    bytec_1 // 0x
+    b>
+    bz test_literal_mix_after_while@16
+    dig 25
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_literal_mix_after_if_else@15
+    dig 14
+    dig 37
+    b*
+    bury 15
+
+test_literal_mix_after_if_else@15:
+    dig 25
+    bytec_2 // 0x02
+    b/
+    bury 26
+    dig 36
+    dup
+    b*
+    bury 37
+    b test_literal_mix_while_top@12
+
+test_literal_mix_after_while@16:
+    bytec_0 // 0x01
+    bury 14
+    dig 4
+    bury 36
+    dig 14
+    bury 25
+
+test_literal_mix_while_top@17:
+    dig 24
+    bytec_1 // 0x
+    b>
+    bz test_literal_mix_after_while@21
+    dig 24
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_literal_mix_after_if_else@20
+    dig 13
+    dig 36
+    b*
+    bury 14
+
+test_literal_mix_after_if_else@20:
+    dig 24
+    bytec_2 // 0x02
+    b/
+    bury 25
+    dig 35
+    dup
+    b*
+    bury 36
+    b test_literal_mix_while_top@17
+
+test_literal_mix_after_while@21:
+    bytec_0 // 0x01
+    bury 13
+    dig 4
+    bury 35
+    dig 3
+    bury 24
+
+test_literal_mix_while_top@22:
+    dig 23
+    bytec_1 // 0x
+    b>
+    bz test_literal_mix_after_while@26
+    dig 23
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_literal_mix_after_if_else@25
+    dig 12
+    dig 35
+    b*
+    bury 13
+
+test_literal_mix_after_if_else@25:
+    dig 23
+    bytec_2 // 0x02
+    b/
+    bury 24
+    dig 34
+    dup
+    b*
+    bury 35
+    b test_literal_mix_while_top@22
+
+test_literal_mix_after_while@26:
+    bytec_0 // 0x01
+    bury 12
+    bytec_2 // 0x02
+    bury 34
+    dig 12
+    bury 23
+
+test_literal_mix_while_top@27:
+    dig 22
+    bytec_1 // 0x
+    b>
+    bz test_literal_mix_after_while@31
+    dig 22
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_literal_mix_after_if_else@30
+    dig 11
+    dig 34
+    b*
+    bury 12
+
+test_literal_mix_after_if_else@30:
+    dig 22
+    bytec_2 // 0x02
+    b/
+    bury 23
+    dig 33
+    dup
+    b*
+    bury 34
+    b test_literal_mix_while_top@27
+
+test_literal_mix_after_while@31:
+    bytec_0 // 0x01
+    bury 11
+    dig 4
+    bury 33
+    dig 3
+    bury 22
+
+test_literal_mix_while_top@32:
+    dig 21
+    bytec_1 // 0x
+    b>
+    bz test_literal_mix_after_while@36
+    dig 21
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_literal_mix_after_if_else@35
+    dig 10
+    dig 33
+    b*
+    bury 11
+
+test_literal_mix_after_if_else@35:
+    dig 21
+    bytec_2 // 0x02
+    b/
+    bury 22
+    dig 32
+    dup
+    b*
+    bury 33
+    b test_literal_mix_while_top@32
+
+test_literal_mix_after_while@36:
+    bytec_0 // 0x01
+    bury 10
+    bytec_2 // 0x02
+    bury 32
+    dig 10
+    bury 21
+
+test_literal_mix_while_top@37:
+    dig 20
+    bytec_1 // 0x
+    b>
+    bz test_literal_mix_after_while@41
+    dig 20
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_literal_mix_after_if_else@40
+    dig 9
+    dig 32
+    b*
+    bury 10
+
+test_literal_mix_after_if_else@40:
+    dig 20
+    bytec_2 // 0x02
+    b/
+    bury 21
+    dig 31
+    dup
+    b*
+    bury 32
+    b test_literal_mix_while_top@37
+
+test_literal_mix_after_while@41:
+    bytec_0 // 0x01
+    bury 9
+    bytec_2 // 0x02
+    bury 20
+    dig 3
+    bury 31
+
+test_literal_mix_while_top@42:
+    dig 19
+    bytec_1 // 0x
+    b>
+    bz test_literal_mix_after_while@46
+    dig 19
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_literal_mix_after_if_else@45
+    dig 8
+    dig 31
+    b*
+    bury 9
+
+test_literal_mix_after_if_else@45:
+    dig 19
+    bytec_2 // 0x02
+    b/
+    bury 20
+    dig 30
+    dup
+    b*
+    bury 31
+    b test_literal_mix_while_top@42
+
+test_literal_mix_after_while@46:
+    bytec_0 // 0x01
+    bury 8
+    dig 4
+    bury 30
+    dig 8
+    bury 19
+
+test_literal_mix_while_top@47:
+    dig 18
+    bytec_1 // 0x
+    b>
+    bz test_literal_mix_after_while@51
+    dig 18
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_literal_mix_after_if_else@50
+    dig 7
+    dig 30
+    b*
+    bury 8
+
+test_literal_mix_after_if_else@50:
+    dig 18
+    bytec_2 // 0x02
+    b/
+    bury 19
+    dig 29
+    dup
+    b*
+    bury 30
+    b test_literal_mix_while_top@47
+
+test_literal_mix_after_while@51:
+    bytec_0 // 0x01
+    bury 7
+    bytec_2 // 0x02
+    bury 18
+    dig 3
+    bury 29
+
+test_literal_mix_while_top@52:
+    dig 17
+    bytec_1 // 0x
+    b>
+    bz test_literal_mix_after_while@56
+    dig 17
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_literal_mix_after_if_else@55
+    dig 6
+    dig 29
+    b*
+    bury 7
+
+test_literal_mix_after_if_else@55:
+    dig 17
+    bytec_2 // 0x02
+    b/
+    bury 18
+    dig 28
+    dup
+    b*
+    bury 29
+    b test_literal_mix_while_top@52
+
+test_literal_mix_after_while@56:
+    bytec_0 // 0x01
+    bury 6
+    dig 4
+    bury 28
+    dig 6
+    bury 17
+
+test_literal_mix_while_top@57:
+    dig 16
+    bytec_1 // 0x
+    b>
+    bz test_literal_mix_after_while@61
+    dig 16
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_literal_mix_after_if_else@60
+    dig 5
+    dig 28
+    b*
+    bury 6
+
+test_literal_mix_after_if_else@60:
+    dig 16
+    bytec_2 // 0x02
+    b/
+    bury 17
+    dig 27
+    dup
+    b*
+    bury 28
+    b test_literal_mix_while_top@57
+
+test_literal_mix_after_while@61:
+    dig 15
+    dig 14
+    b==
+    bz test_literal_mix_bool_false@65
+    dig 11
+    dig 10
+    b==
+    bz test_literal_mix_bool_false@65
+    dig 7
+    dig 6
+    b==
+    bz test_literal_mix_bool_false@65
+    intc_2 // 1
+
+test_literal_mix_bool_merge@66:
+    bytec 4 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+test_literal_mix_bool_false@65:
+    intc_1 // 0
+    b test_literal_mix_bool_merge@66
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/exp_associativity.sol.C.test_other_operators[routing]() -> void:
+test_other_operators:
+    intc_1 // 0
+    dupn 38
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // 0x01
+    cover 2
+
+test_other_operators_while_top@2:
+    dup
+    bytec_1 // 0x
+    b>
+    bz test_other_operators_after_while@6
+    dup
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_other_operators_after_if_else@5
+    dig 2
+    dig 2
+    b*
+    bury 3
+
+test_other_operators_after_if_else@5:
+    dup
+    bytec_2 // 0x02
+    b/
+    bury 1
+    dig 1
+    dup
+    b*
+    bury 2
+    b test_other_operators_while_top@2
+
+test_other_operators_after_while@6:
+    bytec_0 // 0x01
+    bury 18
+    dig 4
+    bury 44
+    dig 3
+    bury 31
+
+test_other_operators_while_top@7:
+    dig 30
+    bytec_1 // 0x
+    b>
+    bz test_other_operators_after_while@11
+    dig 30
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_other_operators_after_if_else@10
+    dig 17
+    dig 44
+    b*
+    bury 18
+
+test_other_operators_after_if_else@10:
+    dig 30
+    bytec_2 // 0x02
+    b/
+    bury 31
+    dig 43
+    dup
+    b*
+    bury 44
+    b test_other_operators_while_top@7
+
+test_other_operators_after_while@11:
+    bytec_0 // 0x01
+    bury 17
+    dig 4
+    bury 43
+    dig 3
+    bury 30
+
+test_other_operators_while_top@12:
+    dig 29
+    bytec_1 // 0x
+    b>
+    bz test_other_operators_after_while@16
+    dig 29
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_other_operators_after_if_else@15
+    dig 16
+    dig 43
+    b*
+    bury 17
+
+test_other_operators_after_if_else@15:
+    dig 29
+    bytec_2 // 0x02
+    b/
+    bury 30
+    dig 42
+    dup
+    b*
+    bury 43
+    b test_other_operators_while_top@12
+
+test_other_operators_after_while@16:
+    bytec_0 // 0x01
+    bury 16
+    pushbytes 0x03
+    bury 42
+    dig 3
+    bury 29
+
+test_other_operators_while_top@17:
+    dig 28
+    bytec_1 // 0x
+    b>
+    bz test_other_operators_after_while@21
+    dig 28
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_other_operators_after_if_else@20
+    dig 15
+    dig 42
+    b*
+    bury 16
+
+test_other_operators_after_if_else@20:
+    dig 28
+    bytec_2 // 0x02
+    b/
+    bury 29
+    dig 41
+    dup
+    b*
+    bury 42
+    b test_other_operators_while_top@17
+
+test_other_operators_after_while@21:
+    bytec_0 // 0x01
+    bury 15
+    dig 4
+    bury 41
+    dig 3
+    bury 28
+
+test_other_operators_while_top@22:
+    dig 27
+    bytec_1 // 0x
+    b>
+    bz test_other_operators_after_while@26
+    dig 27
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_other_operators_after_if_else@25
+    dig 14
+    dig 41
+    b*
+    bury 15
+
+test_other_operators_after_if_else@25:
+    dig 27
+    bytec_2 // 0x02
+    b/
+    bury 28
+    dig 40
+    dup
+    b*
+    bury 41
+    b test_other_operators_while_top@22
+
+test_other_operators_after_while@26:
+    bytec_0 // 0x01
+    bury 14
+    pushbytes 0x03
+    bury 40
+    dig 3
+    bury 27
+
+test_other_operators_while_top@27:
+    dig 26
+    bytec_1 // 0x
+    b>
+    bz test_other_operators_after_while@31
+    dig 26
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_other_operators_after_if_else@30
+    dig 13
+    dig 40
+    b*
+    bury 14
+
+test_other_operators_after_if_else@30:
+    dig 26
+    bytec_2 // 0x02
+    b/
+    bury 27
+    dig 39
+    dup
+    b*
+    bury 40
+    b test_other_operators_while_top@27
+
+test_other_operators_after_while@31:
+    bytec_0 // 0x01
+    bury 13
+    dig 4
+    dup
+    bury 40
+    bury 26
+
+test_other_operators_while_top@32:
+    dig 25
+    bytec_1 // 0x
+    b>
+    bz test_other_operators_after_while@36
+    dig 25
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_other_operators_after_if_else@35
+    dig 12
+    dig 39
+    b*
+    bury 13
+
+test_other_operators_after_if_else@35:
+    dig 25
+    bytec_2 // 0x02
+    b/
+    bury 26
+    dig 38
+    dup
+    b*
+    bury 39
+    b test_other_operators_while_top@32
+
+test_other_operators_after_while@36:
+    bytec_0 // 0x01
+    bury 12
+    dig 3
+    bury 38
+    dig 12
+    bury 25
+
+test_other_operators_while_top@37:
+    dig 24
+    bytec_1 // 0x
+    b>
+    bz test_other_operators_after_while@41
+    dig 24
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_other_operators_after_if_else@40
+    dig 11
+    dig 38
+    b*
+    bury 12
+
+test_other_operators_after_if_else@40:
+    dig 24
+    bytec_2 // 0x02
+    b/
+    bury 25
+    dig 37
+    dup
+    b*
+    bury 38
+    b test_other_operators_while_top@37
+
+test_other_operators_after_while@41:
+    bytec_0 // 0x01
+    bury 11
+    dig 4
+    bury 37
+    dig 3
+    bury 24
+
+test_other_operators_while_top@42:
+    dig 23
+    bytec_1 // 0x
+    b>
+    bz test_other_operators_after_while@46
+    dig 23
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_other_operators_after_if_else@45
+    dig 10
+    dig 37
+    b*
+    bury 11
+
+test_other_operators_after_if_else@45:
+    dig 23
+    bytec_2 // 0x02
+    b/
+    bury 24
+    dig 36
+    dup
+    b*
+    bury 37
+    b test_other_operators_while_top@42
+
+test_other_operators_after_while@46:
+    bytec_0 // 0x01
+    bury 10
+    dig 3
+    bury 36
+    dig 10
+    bury 23
+
+test_other_operators_while_top@47:
+    dig 22
+    bytec_1 // 0x
+    b>
+    bz test_other_operators_after_while@51
+    dig 22
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_other_operators_after_if_else@50
+    dig 9
+    dig 36
+    b*
+    bury 10
+
+test_other_operators_after_if_else@50:
+    dig 22
+    bytec_2 // 0x02
+    b/
+    bury 23
+    dig 35
+    dup
+    b*
+    bury 36
+    b test_other_operators_while_top@47
+
+test_other_operators_after_while@51:
+    bytec_0 // 0x01
+    bury 9
+    dig 4
+    dup
+    bury 36
+    bury 22
+
+test_other_operators_while_top@52:
+    dig 21
+    bytec_1 // 0x
+    b>
+    bz test_other_operators_after_while@56
+    dig 21
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_other_operators_after_if_else@55
+    dig 8
+    dig 35
+    b*
+    bury 9
+
+test_other_operators_after_if_else@55:
+    dig 21
+    bytec_2 // 0x02
+    b/
+    bury 22
+    dig 34
+    dup
+    b*
+    bury 35
+    b test_other_operators_while_top@52
+
+test_other_operators_after_while@56:
+    bytec_0 // 0x01
+    bury 8
+    dig 3
+    bury 34
+    dig 8
+    bury 21
+
+test_other_operators_while_top@57:
+    dig 20
+    bytec_1 // 0x
+    b>
+    bz test_other_operators_after_while@61
+    dig 20
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_other_operators_after_if_else@60
+    dig 7
+    dig 34
+    b*
+    bury 8
+
+test_other_operators_after_if_else@60:
+    dig 20
+    bytec_2 // 0x02
+    b/
+    bury 21
+    dig 33
+    dup
+    b*
+    bury 34
+    b test_other_operators_while_top@57
+
+test_other_operators_after_while@61:
+    bytec_0 // 0x01
+    bury 7
+    dig 4
+    bury 33
+    dig 3
+    bury 20
+
+test_other_operators_while_top@62:
+    dig 19
+    bytec_1 // 0x
+    b>
+    bz test_other_operators_after_while@66
+    dig 19
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_other_operators_after_if_else@65
+    dig 6
+    dig 33
+    b*
+    bury 7
+
+test_other_operators_after_if_else@65:
+    dig 19
+    bytec_2 // 0x02
+    b/
+    bury 20
+    dig 32
+    dup
+    b*
+    bury 33
+    b test_other_operators_while_top@62
+
+test_other_operators_after_while@66:
+    bytec_0 // 0x01
+    bury 6
+    dig 3
+    bury 32
+    dig 6
+    bury 19
+
+test_other_operators_while_top@67:
+    dig 18
+    bytec_1 // 0x
+    b>
+    bz test_other_operators_after_while@71
+    dig 18
+    bytec_0 // 0x01
+    b&
+    bytec_1 // 0x
+    b!=
+    bz test_other_operators_after_if_else@70
+    dig 5
+    dig 32
+    b*
+    bury 6
+
+test_other_operators_after_if_else@70:
+    dig 18
+    bytec_2 // 0x02
+    b/
+    bury 19
+    dig 31
+    dup
+    b*
+    bury 32
+    b test_other_operators_while_top@67
+
+test_other_operators_after_while@71:
+    dig 2
+    pushbytes 0x19
+    b/
+    dig 18
+    pushbytes 0x19
+    b/
+    b==
+    bz test_other_operators_bool_false@75
+    dig 16
+    dig 16
+    b*
+    dig 15
+    dig 15
+    b*
+    b==
+    bz test_other_operators_bool_false@75
+    dig 11
+    dig 10
+    b/
+    dig 8
+    dig 7
+    b/
+    b==
+    bz test_other_operators_bool_false@75
+    intc_2 // 1
+
+test_other_operators_bool_merge@76:
+    bytec 4 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+test_other_operators_bool_false@75:
+    intc_1 // 0
+    b test_other_operators_bool_merge@76

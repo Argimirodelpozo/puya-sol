@@ -1,0 +1,108 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_with_params_diamond_inheritance.sol.D.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock "i" 0x "k" "j" 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "i"
+    bytec_1 // 0x
+    app_global_put
+    bytec_2 // "k"
+    bytec_1 // 0x
+    app_global_put
+    bytec_3 // "j"
+    bytec_1 // 0x
+    app_global_put
+    txna ApplicationArgs 0
+    txna ApplicationArgs 1
+    bytec_0 // "i"
+    dig 2
+    app_global_put
+    bytec_2 // "k"
+    swap
+    app_global_put
+    bytec_3 // "j"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x6f8b6b7a 0x3f72e9ed 0x08ee23b1 // method "j()uint256", method "i()uint256", method "k()uint256"
+    txna ApplicationArgs 0
+    match j i k
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_with_params_diamond_inheritance.sol.D.j[routing]() -> void:
+j:
+    intc_2 // 0
+    bytec_3 // "j"
+    app_global_get_ex
+    assert // check j exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_with_params_diamond_inheritance.sol.D.i[routing]() -> void:
+i:
+    intc_2 // 0
+    bytec_0 // "i"
+    app_global_get_ex
+    assert // check i exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_with_params_diamond_inheritance.sol.D.k[routing]() -> void:
+k:
+    intc_2 // 0
+    bytec_2 // "k"
+    app_global_get_ex
+    assert // check k exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

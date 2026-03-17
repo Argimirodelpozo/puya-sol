@@ -1,0 +1,46 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_assignment_expression.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytes "z"
+    intc_0 // 0
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x2d4970c7 0x3ec2e975 // method "f()void", method "z()bool"
+    txna ApplicationArgs 0
+    match main_f_route@5 z
+    err
+
+main_f_route@5:
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_assignment_expression.sol.C.z[routing]() -> void:
+z:
+    intc_0 // 0
+    pushbytes "z"
+    app_global_get_ex
+    assert // check z exists
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

@@ -1,0 +1,41 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/CErc20Immutable.sol.CDelegationStorage.approval_program() -> uint64:
+main:
+    bytecblock "implementation"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "implementation"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x866a03ee // method "implementation()address"
+    txna ApplicationArgs 0
+    match main_implementation_route@4
+    err
+
+main_implementation_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b implementation
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/CErc20Immutable.sol.CDelegationStorage.implementation[routing]() -> void:
+implementation:
+    pushint 0
+    bytec_0 // "implementation"
+    app_global_get_ex
+    assert // check implementation exists
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return

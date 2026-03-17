@@ -1,0 +1,72 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 2
+    bytecblock "t" 0x "arr"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "t"
+    bytec_1 // 0x
+    app_global_put
+    pushbytes "arr_length"
+    intc_0 // 0
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x99fe9257 0x9939b21d 0xba37d4c3 // method "pushArr()void", method "setAndClear()void", method "getArr()uint256"
+    txna ApplicationArgs 0
+    match pushArr setAndClear main_getArr_route@7
+    err
+
+main_getArr_route@7:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.pushArr[routing]() -> void:
+pushArr:
+    bytec_2 // "arr"
+    box_get
+    assert // box exists
+    intc_2 // 2
+    intc_0 // 0
+    extract3
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
+    concat // on error: max array length exceeded
+    pop
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.setAndClear[routing]() -> void:
+setAndClear:
+    bytec_0 // "t"
+    bytec_1 // 0x
+    app_global_put
+    bytec_2 // "arr"
+    box_get
+    assert // box exists
+    intc_2 // 2
+    intc_0 // 0
+    extract3
+    dup
+    len
+    pushint 32
+    -
+    intc_0 // 0
+    swap
+    substring3
+    pop
+    intc_1 // 1
+    return

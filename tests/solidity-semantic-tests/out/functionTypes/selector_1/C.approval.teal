@@ -1,0 +1,35 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_1.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x5b82652c 0x0c88cb4e 0x11105f41 // method "test()(byte[4],byte[4],byte[4],byte[4])", method "ext()void", method "pub()void"
+    txna ApplicationArgs 0
+    match main_test_route@5 main_ext_route@6 main_pub_route@7
+    err
+
+main_pub_route@7:
+    intc_0 // 1
+    return
+
+main_ext_route@6:
+    intc_0 // 1
+    return
+
+main_test_route@5:
+    pushbytes 0x151f7c75
+    log
+    intc_0 // 1
+    return

@@ -1,0 +1,416 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastWrapper.approval_program() -> uint64:
+main:
+    intcblock 32 0 8 1 2000
+    bytecblock 0x151f7c75 0x8000000000000000000000000000000000000000000000000000000000000000 0x068101
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_3 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x22642d71 0x8cce50bb 0x3bc99ff0 0x9e7dd1bc 0xce428f60 0x41c01247 0xa95a4ac6 0xa63e7ffd // method "toUint8(uint256)uint64", method "toUint16(uint256)uint64", method "toUint32(uint256)uint64", method "toUint64(uint256)uint64", method "toUint128(uint256)uint256", method "toInt8(uint256)uint64", method "toInt256(uint256)uint256", method "toUint256(uint256)uint256"
+    txna ApplicationArgs 0
+    match toUint8 toUint16 toUint32 toUint64 toUint128 toInt8 toInt256 toUint256
+    err
+
+
+// _puya_lib.util.ensure_budget(required_budget: uint64, fee_source: uint64) -> void:
+ensure_budget:
+    proto 2 0
+    frame_dig -2
+    pushint 10
+    +
+
+ensure_budget_while_top@1:
+    frame_dig 0
+    global OpcodeBudget
+    >
+    bz ensure_budget_after_while@6
+    itxn_begin
+    pushint 6 // appl
+    itxn_field TypeEnum
+    pushint 5 // DeleteApplication
+    itxn_field OnCompletion
+    bytec_2 // 0x068101
+    itxn_field ApprovalProgram
+    bytec_2 // 0x068101
+    itxn_field ClearStateProgram
+    frame_dig -1
+    switch ensure_budget_switch_case_0@3 ensure_budget_switch_case_1@4
+
+ensure_budget_switch_case_next@5:
+    itxn_submit
+    b ensure_budget_while_top@1
+
+ensure_budget_switch_case_1@4:
+    global MinTxnFee
+    itxn_field Fee
+    b ensure_budget_switch_case_next@5
+
+ensure_budget_switch_case_0@3:
+    intc_1 // 0
+    itxn_field Fee
+    b ensure_budget_switch_case_next@5
+
+ensure_budget_after_while@6:
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastLib.toUint8(x: bytes) -> uint64:
+SafeCastLib.toUint8:
+    proto 1 1
+    pushint 256
+    itob
+    frame_dig -1
+    b<=
+    bz SafeCastLib.toUint8_after_if_else@2
+    b SafeCastLib._revertOverflow
+
+SafeCastLib.toUint8_after_if_else@2:
+    intc_2 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastLib.toUint16(x: bytes) -> uint64:
+SafeCastLib.toUint16:
+    proto 1 1
+    pushint 65536
+    itob
+    frame_dig -1
+    b<=
+    bz SafeCastLib.toUint16_after_if_else@2
+    b SafeCastLib._revertOverflow
+
+SafeCastLib.toUint16_after_if_else@2:
+    intc_2 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastLib.toUint32(x: bytes) -> uint64:
+SafeCastLib.toUint32:
+    proto 1 1
+    pushint 4294967296
+    itob
+    frame_dig -1
+    b<=
+    bz SafeCastLib.toUint32_after_if_else@2
+    b SafeCastLib._revertOverflow
+
+SafeCastLib.toUint32_after_if_else@2:
+    intc_2 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastLib.toUint64(x: bytes) -> uint64:
+SafeCastLib.toUint64:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0x010000000000000000
+    b>=
+    bz SafeCastLib.toUint64_after_if_else@2
+    b SafeCastLib._revertOverflow
+
+SafeCastLib.toUint64_after_if_else@2:
+    intc_2 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastLib.toUint128(x: bytes) -> bytes:
+SafeCastLib.toUint128:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0x0100000000000000000000000000000000
+    b>=
+    bz SafeCastLib.toUint128_after_if_else@2
+    b SafeCastLib._revertOverflow
+
+SafeCastLib.toUint128_after_if_else@2:
+    frame_dig -1
+    pushbytes 0xffffffffffffffffffffffffffffffff
+    b&
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastLib.toInt8(1)_0(x: bytes) -> uint64:
+SafeCastLib.toInt8:
+    proto 1 1
+    pushint 128
+    itob
+    frame_dig -1
+    b+
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000100
+    b/
+    intc_1 // 0
+    itob
+    b==
+    bz SafeCastLib._revertOverflow
+    intc_2 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastLib.toInt256(x: bytes) -> bytes:
+SafeCastLib.toInt256:
+    proto 1 1
+    frame_dig -1
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b^
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz SafeCastLib._revertOverflow
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastLib.toUint256(x: bytes) -> bytes:
+SafeCastLib.toUint256:
+    proto 1 1
+    frame_dig -1
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b^
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz SafeCastLib._revertOverflow
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastLib._revertOverflow() -> void:
+SafeCastLib._revertOverflow:
+    err // revert
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastWrapper.toUint8[routing]() -> void:
+toUint8:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc 4 // 2000
+    intc_1 // 0
+    callsub ensure_budget
+    callsub SafeCastLib.toUint8
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastWrapper.toUint16[routing]() -> void:
+toUint16:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc 4 // 2000
+    intc_1 // 0
+    callsub ensure_budget
+    callsub SafeCastLib.toUint16
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastWrapper.toUint32[routing]() -> void:
+toUint32:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc 4 // 2000
+    intc_1 // 0
+    callsub ensure_budget
+    callsub SafeCastLib.toUint32
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastWrapper.toUint64[routing]() -> void:
+toUint64:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc 4 // 2000
+    intc_1 // 0
+    callsub ensure_budget
+    callsub SafeCastLib.toUint64
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastWrapper.toUint128[routing]() -> void:
+toUint128:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc 4 // 2000
+    intc_1 // 0
+    callsub ensure_budget
+    callsub SafeCastLib.toUint128
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastWrapper.toInt8[routing]() -> void:
+toInt8:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc 4 // 2000
+    intc_1 // 0
+    callsub ensure_budget
+    callsub SafeCastLib.toInt8
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastWrapper.toInt256[routing]() -> void:
+toInt256:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc 4 // 2000
+    intc_1 // 0
+    callsub ensure_budget
+    callsub SafeCastLib.toInt256
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/SafeCastWrapper.sol.SafeCastWrapper.toUint256[routing]() -> void:
+toUint256:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc 4 // 2000
+    intc_1 // 0
+    callsub ensure_budget
+    callsub SafeCastLib.toUint256
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return

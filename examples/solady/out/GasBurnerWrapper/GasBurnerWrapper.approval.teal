@@ -1,0 +1,106 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/GasBurnerWrapper.sol.GasBurnerWrapper.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    bytecblock 0x 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x59f041ca // method "burn(uint256)uint256"
+    txna ApplicationArgs 0
+    match main_burn_route@4
+    err
+
+main_burn_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b burn
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/GasBurnerWrapper.sol.GasBurnerLib.burn(x: bytes) -> void:
+GasBurnerLib.burn:
+    proto 1 0
+    pushint 0
+    frame_dig -1
+    pushbytes 0x4650
+    b>
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    frame_dig -1
+    pushbytes 0x4524
+    b/
+    b*
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    global CurrentApplicationAddress
+    global LatestTimestamp
+    itob
+    bytec_0 // 0x
+    b^
+    b^
+    bytec_0 // 0x
+    swap
+
+GasBurnerLib.burn_while_top@4:
+    intc_0 // 32
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    keccak256
+    frame_bury 0
+    frame_dig 2
+    frame_dig 1
+    b==
+    bz GasBurnerLib.burn_after_if_else@10
+    retsub
+
+GasBurnerLib.burn_after_if_else@10:
+    frame_dig 2
+    bytec_1 // 0x01
+    b+
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 2
+    frame_dig 0
+    b GasBurnerLib.burn_while_top@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/GasBurnerWrapper.sol.GasBurnerWrapper.burn[routing]() -> void:
+burn:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    dig 1
+    callsub GasBurnerLib.burn
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

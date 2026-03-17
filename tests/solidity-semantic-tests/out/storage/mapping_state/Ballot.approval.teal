@@ -1,0 +1,157 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_state.sol.Ballot.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    bytecblock "voteCount" 0x 0x151f7c75 "canVote"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xaf08416b 0x81890f0b 0x39830387 // method "getVoteCount(address)uint256", method "grantVoteRight(address)void", method "vote(address,address)bool"
+    txna ApplicationArgs 0
+    match getVoteCount grantVoteRight vote
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_state.sol.Ballot.getVoteCount[routing]() -> void:
+getVoteCount:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_0 // "voteCount"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_state.sol.Ballot.grantVoteRight[routing]() -> void:
+grantVoteRight:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_3 // "canVote"
+    swap
+    concat
+    intc_0 // 1
+    itob
+    box_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_state.sol.Ballot.vote[routing]() -> void:
+vote:
+    intc_2 // 0
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    dup
+    bytec_3 // "canVote"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    bz vote_if_body@3
+    pushbytes "voted"
+    dig 1
+    concat
+    dup
+    bury 4
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    bz vote_after_if_else@4
+
+vote_if_body@3:
+    intc_2 // 0
+
+vote_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_state.sol.Ballot.vote@5:
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+vote_after_if_else@4:
+    intc_0 // 1
+    itob
+    dig 3
+    swap
+    box_put
+    dig 1
+    sha256
+    bytec_0 // "voteCount"
+    swap
+    concat
+    dup
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    pushbytes 0x01
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_0 // 1
+    b vote_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_state.sol.Ballot.vote@5

@@ -1,0 +1,59 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/bytes_and_strings.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x3f6e79ee 0x12c392a7 0xd24b7272 0x42d0ae76 // method "e(byte[])byte[]", method "f()(string,string)", method "g()(string,uint256,string)", method "h()string"
+    txna ApplicationArgs 0
+    match e main_f_route@6 main_g_route@7 main_h_route@8
+    err
+
+main_h_route@8:
+    pushbytes 0x151f7c750003616e79
+    log
+    intc_0 // 1
+    return
+
+main_g_route@7:
+    pushbytes 0x151f7c750024000000000000000000000000000000000000000000000000000000000000002a00290003616e790003616e79
+    log
+    intc_0 // 1
+    return
+
+main_f_route@6:
+    pushbytes 0x151f7c75000400090003616e790003616e79
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/bytes_and_strings.sol.C.e[routing]() -> void:
+e:
+    txna ApplicationArgs 1
+    dup
+    pushint 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

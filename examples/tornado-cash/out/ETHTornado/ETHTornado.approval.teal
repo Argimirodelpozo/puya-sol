@@ -1,0 +1,1245 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.approval_program() -> uint64:
+main:
+    intcblock 0 32 1 2
+    bytecblock 0x151f7c75 "_status" 0x0000000000000000000000000000000000000000000000000000000000000000 "currentRootIndex" "denomination" "levels" "nextIndex" "hasher" "verifier" "__ctor_pending" "filledSubtrees" "roots" 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001 "nullifierHashes" 0x010000000000000000000000000000000000000000000000000000000000000000 0x562f120e
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 7 // "hasher"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 5 // "levels"
+    intc_0 // 0
+    app_global_put
+    bytec_3 // "currentRootIndex"
+    intc_0 // 0
+    app_global_put
+    bytec 6 // "nextIndex"
+    intc_0 // 0
+    app_global_put
+    bytec_1 // "_status"
+    pushbytes 0x
+    app_global_put
+    bytec 8 // "verifier"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec 4 // "denomination"
+    pushbytes 0x
+    app_global_put
+    bytec 9 // "__ctor_pending"
+    intc_2 // 1
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x8eeec8f1 0xc7d12872 0xa8b3396f 0xf98ebd6c 0xb39d7303 0xbb9daab4 0x1304dee4 0xb8aa4ffd 0x54dc8c0f 0xb9aabd70 0x62840709 0xe9f6b646 // method "__postInit(address,address,uint256,uint64)void", method "deposit(byte[32])void", method "withdraw(byte[],byte[32],byte[32],address,address,uint256,uint256)void", method "isSpent(byte[32])bool", method "hashLeftRight(address,byte[32],byte[32])byte[32]", method "isKnownRoot(byte[32])bool", method "getLastRoot()byte[32]", method "zeros(uint256)byte[32]", method "denomination()uint256", method "levels()uint64", method "currentRootIndex()uint64", method "nextIndex()uint64"
+    txna ApplicationArgs 0
+    match __postInit deposit withdraw isSpent hashLeftRight isKnownRoot getLastRoot zeros denomination levels currentRootIndex nextIndex
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.__postInit[routing]() -> void:
+__postInit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    cover 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    dup
+    cover 2
+    bytec 9 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 9 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    dup
+    assert // _levels should be greater than zero
+    dup
+    intc_1 // 32
+    <
+    assert // _levels should be less than 32
+    bytec 5 // "levels"
+    swap
+    app_global_put
+    bytec 7 // "hasher"
+    swap
+    app_global_put
+    intc_0 // 0
+
+__postInit_while_top@2:
+    dup
+    dig 2
+    <
+    bz __postInit_after_while@4
+    dupn 2
+    itob
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros
+    swap
+    sha256
+    bytec 10 // "filledSubtrees"
+    swap
+    concat
+    swap
+    box_put
+    intc_2 // 1
+    +
+    bury 1
+    b __postInit_while_top@2
+
+__postInit_after_while@4:
+    dig 1
+    intc_2 // 1
+    -
+    itob
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros
+    intc_0 // 0
+    itob
+    pushbytes 0x726f6f7473af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
+    uncover 2
+    box_put
+    intc_2 // 1
+    itob
+    bytec_1 // "_status"
+    swap
+    app_global_put
+    dig 3
+    dup
+    uncover 2
+    b>
+    assert // denomination should be greater than 0
+    bytec 8 // "verifier"
+    dig 5
+    app_global_put
+    bytec 4 // "denomination"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.deposit[routing]() -> void:
+deposit:
+    intc_0 // 0
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_0 // 0
+    bytec_1 // "_status"
+    app_global_get_ex
+    assert // check _status exists
+    intc_3 // 2
+    itob
+    swap
+    dig 1
+    b!=
+    assert // ReentrancyGuard: reentrant call
+    bytec_1 // "_status"
+    swap
+    app_global_put
+    dup
+    sha256
+    pushbytes "commitments"
+    swap
+    concat
+    dup
+    cover 2
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // The commitment has been submitted
+    intc_0 // 0
+    bytec 6 // "nextIndex"
+    app_global_get_ex
+    swap
+    dup
+    cover 2
+    cover 3
+    assert // check nextIndex exists
+    intc_0 // 0
+    bytec 5 // "levels"
+    app_global_get_ex
+    assert // check levels exists
+    intc_3 // 2
+    swap
+    exp
+    dig 1
+    !=
+    assert // Merkle tree is full. No more leaves can be added
+    intc_0 // 0
+    cover 2
+
+deposit_while_top@2:
+    intc_0 // 0
+    bytec 5 // "levels"
+    app_global_get_ex
+    assert // check levels exists
+    dig 3
+    >
+    bz deposit_after_while@7
+    dup
+    intc_3 // 2
+    %
+    bnz deposit_else_body@5
+    dig 2
+    itob
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros
+    swap
+    sha256
+    bytec 10 // "filledSubtrees"
+    swap
+    concat
+    dig 3
+    dup
+    cover 2
+    box_put
+    bury 8
+
+deposit_after_if_else@6:
+    intc_0 // 0
+    bytec 7 // "hasher"
+    app_global_get_ex
+    assert // check hasher exists
+    dig 8
+    uncover 2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.hashLeftRight
+    bury 2
+    dup
+    intc_3 // 2
+    /
+    bury 1
+    dig 2
+    intc_2 // 1
+    +
+    bury 3
+    b deposit_while_top@2
+
+deposit_else_body@5:
+    dig 2
+    itob
+    sha256
+    bytec 10 // "filledSubtrees"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bury 7
+    dig 1
+    b deposit_after_if_else@6
+
+deposit_after_while@7:
+    intc_0 // 0
+    bytec_3 // "currentRootIndex"
+    app_global_get_ex
+    assert // check currentRootIndex exists
+    intc_2 // 1
+    +
+    pushint 30
+    %
+    bytec_3 // "currentRootIndex"
+    dig 1
+    app_global_put
+    itob
+    sha256
+    bytec 11 // "roots"
+    swap
+    concat
+    dig 2
+    box_put
+    dig 3
+    dup
+    intc_2 // 1
+    +
+    bytec 6 // "nextIndex"
+    swap
+    app_global_put
+    intc_2 // 1
+    itob
+    dig 6
+    swap
+    box_put
+    gtxn 0 Amount
+    itob
+    intc_0 // 0
+    bytec 4 // "denomination"
+    app_global_get_ex
+    assert // check denomination exists
+    b==
+    assert // Please send `mixDenomination` ETH along with transaction
+    itob
+    global LatestTimestamp
+    itob
+    dig 7
+    uncover 2
+    concat
+    swap
+    concat
+    pushbytes 0xcc2d7087 // method "Deposit(byte[32],uint64,uint256)"
+    swap
+    concat
+    log
+    intc_2 // 1
+    itob
+    bytec_1 // "_status"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.withdraw[routing]() -> void:
+withdraw:
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    cover 3
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    dup
+    cover 4
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 5
+    dup
+    cover 5
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 6
+    dup
+    cover 6
+    dup
+    len
+    dup
+    cover 7
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 7
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 0
+    bytec_1 // "_status"
+    app_global_get_ex
+    assert // check _status exists
+    intc_3 // 2
+    itob
+    swap
+    dig 1
+    b!=
+    assert // ReentrancyGuard: reentrant call
+    bytec_1 // "_status"
+    swap
+    app_global_put
+    intc_0 // 0
+    bytec 4 // "denomination"
+    app_global_get_ex
+    assert // check denomination exists
+    dig 2
+    b>=
+    assert // Fee exceeds transfer value
+    dig 4
+    sha256
+    bytec 13 // "nullifierHashes"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert // The note has been already spent
+    dig 6
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.isKnownRoot
+    assert // Cannot find your merkle root
+    itxn_begin
+    dig 7
+    len
+    itob
+    extract 6 2
+    uncover 8
+    concat
+    intc_1 // 32
+    bzero
+    dup
+    cover 9
+    dup
+    uncover 9
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 1
+    uncover 9
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    dig 8
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    uncover 7
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 1
+    dig 6
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    swap
+    dig 4
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    intc_0 // 0
+    bytec 8 // "verifier"
+    app_global_get_ex
+    assert // check verifier exists
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x78f443f7 // method "verifyProof(byte[],uint256[6])bool"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    intc_0 // 0
+    getbit
+    assert // Invalid withdraw proof
+    intc_2 // 1
+    itob
+    box_put
+    gtxn 0 Amount
+    !
+    assert // Message value is supposed to be zero for ETH instance
+    intc_0 // 0
+    itob
+    swap
+    dig 1
+    b==
+    assert // Refund value is supposed to be zero for ETH instance
+    itxn_begin
+    pushint 8
+    bzero
+    dup
+    cover 4
+    intc_0 // 0
+    bytec 4 // "denomination"
+    app_global_get_ex
+    assert // check denomination exists
+    bytec 14 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 3
+    b-
+    bytec 14 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_2 // 1
+    itxn_field TypeEnum
+    uncover 3
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field Amount
+    itxn_submit
+    b>
+    bz withdraw_after_if_else@3
+    itxn_begin
+    dup
+    dig 4
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_2 // 1
+    itxn_field TypeEnum
+    dig 5
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field Amount
+    itxn_submit
+
+withdraw_after_if_else@3:
+    dig 2
+    intc_1 // 32
+    <=
+    assert // overflow
+    dig 3
+    dig 2
+    b|
+    dig 6
+    dig 8
+    concat
+    dig 6
+    concat
+    swap
+    concat
+    pushbytes 0xb83bcb7a // method "Withdrawal(address,byte[32],address,uint256)"
+    swap
+    concat
+    log
+    intc_2 // 1
+    itob
+    bytec_1 // "_status"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.isSpent[routing]() -> void:
+isSpent:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec 13 // "nullifierHashes"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.hashLeftRight[routing]() -> void:
+hashLeftRight:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.hashLeftRight
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.isKnownRoot[routing]() -> void:
+isKnownRoot:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.isKnownRoot
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.getLastRoot[routing]() -> void:
+getLastRoot:
+    intc_0 // 0
+    bytec_3 // "currentRootIndex"
+    app_global_get_ex
+    assert // check currentRootIndex exists
+    itob
+    sha256
+    bytec 11 // "roots"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros[routing]() -> void:
+zeros:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.denomination[routing]() -> void:
+denomination:
+    intc_0 // 0
+    bytec 4 // "denomination"
+    app_global_get_ex
+    assert // check denomination exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.levels[routing]() -> void:
+levels:
+    intc_0 // 0
+    bytec 5 // "levels"
+    app_global_get_ex
+    assert // check levels exists
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.currentRootIndex[routing]() -> void:
+currentRootIndex:
+    intc_0 // 0
+    bytec_3 // "currentRootIndex"
+    app_global_get_ex
+    assert // check currentRootIndex exists
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.nextIndex[routing]() -> void:
+nextIndex:
+    intc_0 // 0
+    bytec 6 // "nextIndex"
+    app_global_get_ex
+    assert // check nextIndex exists
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.hashLeftRight(_hasher: bytes, _left: bytes, _right: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.hashLeftRight:
+    proto 3 1
+    frame_dig -2
+    bytec 12 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b<
+    assert // _left should be inside the field
+    frame_dig -1
+    bytec 12 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b<
+    assert // _right should be inside the field
+    itxn_begin
+    intc_1 // 32
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    frame_dig -3
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec 15 // method "MiMCSponge(uint256,uint256)(uint256,uint256)"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 32
+    itxn LastLog
+    extract 36 32
+    swap
+    frame_dig -1
+    b+
+    bytec 12 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b%
+    itxn_begin
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 3
+    uncover 2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    uncover 2
+    itxn_field ApplicationID
+    bytec 15 // method "MiMCSponge(uint256,uint256)(uint256,uint256)"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 32
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.isKnownRoot(_root: bytes) -> uint64:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.isKnownRoot:
+    proto 1 1
+    pushbytes ""
+    dup
+    intc_0 // 0
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.isKnownRoot_after_if_else@2
+    intc_0 // 0
+    frame_bury 0
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.isKnownRoot_after_if_else@2:
+    intc_0 // 0
+    bytec_3 // "currentRootIndex"
+    app_global_get_ex
+    swap
+    dup
+    cover 2
+    frame_bury 0
+    assert // check currentRootIndex exists
+    frame_bury 1
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.isKnownRoot_while_top@3:
+    frame_dig 1
+    itob
+    sha256
+    bytec 11 // "roots"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    frame_dig -1
+    ==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.isKnownRoot_after_if_else@6
+    intc_2 // 1
+    frame_bury 0
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.isKnownRoot_after_if_else@6:
+    frame_dig 1
+    bnz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.isKnownRoot_after_if_else@8
+    pushint 30
+    frame_bury 1
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.isKnownRoot_after_if_else@8:
+    frame_dig 1
+    intc_2 // 1
+    -
+    dup
+    frame_bury 1
+    frame_dig 0
+    !=
+    bnz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.isKnownRoot_while_top@3
+    intc_0 // 0
+    frame_bury 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros(i: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros:
+    proto 1 1
+    intc_0 // 0
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@2
+    pushbytes 0x2fe54c60d3acabf3343a35b6eba15db4821b340f76e741e2249685ed4899af6c
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@2:
+    intc_2 // 1
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@4
+    pushbytes 0x256a6135777eee2fd26f54b8b7037a25439d5235caee224154186d2b8a52e31d
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@4:
+    intc_3 // 2
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@6
+    pushbytes 0x1151949895e82ab19924de92c40a3d6f7bcb60d92b00504b8199613683f0c200
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@6:
+    pushint 3
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@8
+    pushbytes 0x20121ee811489ff8d61f09fb89e313f14959a0f28bb428a20dba6b0b068b3bdb
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@8:
+    pushint 4
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@10
+    pushbytes 0x0a89ca6ffa14cc462cfedb842c30ed221a50a3d6bf022a6a57dc82ab24c157c9
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@10:
+    pushint 5
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@12
+    pushbytes 0x24ca05c2b5cd42e890d6be94c68d0689f4f21c9cec9c0f13fe41d566dfb54959
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@12:
+    pushint 6
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@14
+    pushbytes 0x1ccb97c932565a92c60156bdba2d08f3bf1377464e025cee765679e604a7315c
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@14:
+    pushint 7
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@16
+    pushbytes 0x19156fbd7d1a8bf5cba8909367de1b624534ebab4f0f79e003bccdd1b182bdb4
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@16:
+    pushint 8
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@18
+    pushbytes 0x261af8c1f0912e465744641409f622d466c3920ac6e5ff37e36604cb11dfff80
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@18:
+    pushint 9
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@20
+    pushbytes 0x0058459724ff6ca5a1652fcbc3e82b93895cf08e975b19beab3f54c217d1c007
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@20:
+    pushint 10
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@22
+    pushbytes 0x1f04ef20dee48d39984d8eabe768a70eafa6310ad20849d4573c3c40c2ad1e30
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@22:
+    pushint 11
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@24
+    pushbytes 0x1bea3dec5dab51567ce7e200a30f7ba6d4276aeaa53e2686f962a46c66d511e5
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@24:
+    pushint 12
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@26
+    pushbytes 0x0ee0f941e2da4b9e31c3ca97a40d8fa9ce68d97c084177071b3cb46cd3372f0f
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@26:
+    pushint 13
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@28
+    pushbytes 0x1ca9503e8935884501bbaf20be14eb4c46b89772c97b96e3b2ebf3a36a948bbd
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@28:
+    pushint 14
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@30
+    pushbytes 0x133a80e30697cd55d8f7d4b0965b7be24057ba5dc3da898ee2187232446cb108
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@30:
+    pushint 15
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@32
+    pushbytes 0x13e6d8fc88839ed76e182c2a779af5b2c0da9dd18c90427a644f7e148a6253b6
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@32:
+    pushint 16
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@34
+    pushbytes 0x1eb16b057a477f4bc8f572ea6bee39561098f78f15bfb3699dcbb7bd8db61854
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@34:
+    pushint 17
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@36
+    pushbytes 0x0da2cb16a1ceaabf1c16b838f7a9e3f2a3a3088d9e0a6debaa748114620696ea
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@36:
+    pushint 18
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@38
+    pushbytes 0x24a3b3d822420b14b5d8cb6c28a574f01e98ea9e940551d2ebd75cee12649f9d
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@38:
+    pushint 19
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@40
+    pushbytes 0x198622acbd783d1b0d9064105b1fc8e4d8889de95c4c519b3f635809fe6afc05
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@40:
+    pushint 20
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@42
+    pushbytes 0x29d7ed391256ccc3ea596c86e933b89ff339d25ea8ddced975ae2fe30b5296d4
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@42:
+    pushint 21
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@44
+    pushbytes 0x19be59f2f0413ce78c0c3703a3a5451b1d7f39629fa33abd11548a76065b2967
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@44:
+    pushint 22
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@46
+    pushbytes 0x1ff3f61797e538b70e619310d33f2a063e7eb59104e112e95738da1254dc3453
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@46:
+    pushint 23
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@48
+    pushbytes 0x10c16ae9959cf8358980d9dd9616e48228737310a10e2b6b731c1a548f036c48
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@48:
+    pushint 24
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@50
+    pushbytes 0x0ba433a63174a90ac20992e75e3095496812b652685b5e1a2eae0b1bf4e8fcd1
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@50:
+    pushint 25
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@52
+    pushbytes 0x019ddb9df2bc98d987d0dfeca9d2b643deafab8f7036562e627c3667266a044c
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@52:
+    pushint 26
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@54
+    pushbytes 0x2d3c88b23175c5a5565db928414c66d1912b11acf974b2e644caaac04739ce99
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@54:
+    pushint 27
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@56
+    pushbytes 0x2eab55f6ae4e66e32c5189eed5c470840863445760f5ed7e7b69b2a62600f354
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@56:
+    pushint 28
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@58
+    pushbytes 0x002df37a2642621802383cf952bf4dd1f32e05433beeb1fd41031fb7eace979d
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@58:
+    pushint 29
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@60
+    pushbytes 0x104aeb41435db66c3e62feccc1d6f5d98d0a0ed75d1374db457cf462e3a1f427
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@60:
+    pushint 30
+    itob
+    frame_dig -1
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@62
+    pushbytes 0x1f3c6fd858e9a7d4b0d1f38e256a09d81d5a5e3c963987e2d4b814cfab7c6ebb
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/ETHTornado.sol.ETHTornado.zeros_else_body@62:
+    pushint 31
+    itob
+    frame_dig -1
+    b==
+    assert // Index out of bounds
+    pushbytes 0x2c7a07d20dff79d01fecedc1134284a8d08436606c93693b67e333f671bf69cc
+    retsub

@@ -1,0 +1,144 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_push_with_arg.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 0 1 2
+    bytecblock "storageArray_length" "storageArray" 0x151f7c75
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "storageArray_length"
+    intc_1 // 0
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x7d1b740d 0xbc6a2ad6 0x639bfc88 // method "test(uint256)void", method "getLength()uint256", method "fetch(uint256)uint256"
+    txna ApplicationArgs 0
+    match test getLength fetch
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_push_with_arg.sol.C.test[routing]() -> void:
+test:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_1 // "storageArray"
+    box_get
+    assert // box exists
+    intc_3 // 2
+    intc_1 // 0
+    extract3
+    swap
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 2
+    b|
+    concat // on error: max array length exceeded
+    pop
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_push_with_arg.sol.C.getLength[routing]() -> void:
+getLength:
+    intc_1 // 0
+    bytec_0 // "storageArray_length"
+    app_global_get_ex
+    assert // check storageArray_length exists
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_push_with_arg.sol.C.fetch[routing]() -> void:
+fetch:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub _puya_lib.mem.new_slot
+    dup
+    pushbytes 0x
+    stores
+    bytec_1 // "storageArray"
+    box_get
+    swap
+    intc_3 // 2
+    intc_1 // 0
+    extract3
+    callsub _puya_lib.mem.new_slot
+    dup
+    uncover 2
+    stores
+    swap
+    select
+    pushint 8
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    swap
+    loads
+    swap
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// _puya_lib.mem.new_slot() -> uint64:
+_puya_lib.mem.new_slot:
+    load 0
+    bitlen
+    load 0
+    pushint 256
+    dig 2
+    -
+    intc_1 // 0
+    setbit // on error: no available slots
+    store 0
+    retsub

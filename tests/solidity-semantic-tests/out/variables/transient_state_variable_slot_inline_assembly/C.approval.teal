@@ -1,0 +1,94 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_slot_inline_assembly.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    bytecblock 0x 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytes "y"
+    bytec_0 // 0x
+    app_global_put
+    pushbytes "x"
+    bytec_0 // 0x
+    app_global_put
+    pushbytes "w"
+    intc_2 // 0
+    app_global_put
+    pushbytes "z"
+    bytec_0 // 0x
+    app_global_put
+    pushbytess "a" base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // "a", addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x219b312e 0x595e23e2 0x185e9ff4 // method "f()(uint256,uint256)", method "g()(uint256,uint256)", method "h()(uint256,uint256)"
+    txna ApplicationArgs 0
+    match f g main_h_route@7
+    err
+
+main_h_route@7:
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_slot_inline_assembly.sol.C.f[routing]() -> void:
+f:
+    intc_2 // 0
+    dupn 2
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    dig 2
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_slot_inline_assembly.sol.C.g[routing]() -> void:
+g:
+    bytec_0 // ""
+    dup
+    itob
+    swap
+    itob
+    intc_1 // 32
+    bzero
+    uncover 2
+    dig 1
+    b|
+    cover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

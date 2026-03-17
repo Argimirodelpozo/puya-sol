@@ -1,0 +1,55 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_uninitialized_function_in_detail.sol.C.approval_program() -> uint64:
+main:
+    bytecblock "mutex" 0x 0x8000000000000000000000000000000000000000000000000000000000000000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytes "x"
+    bytec_1 // 0x
+    app_global_put
+    bytec_0 // "mutex"
+    bytec_1 // 0x
+    app_global_put
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x3e9a707a // method "t()uint256"
+    txna ApplicationArgs 0
+    match main_t_route@4
+    err
+
+main_t_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b t
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_uninitialized_function_in_detail.sol.C.t[routing]() -> void:
+t:
+    pushint 0
+    bytec_0 // "mutex"
+    app_global_get_ex
+    assert // check mutex exists
+    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b^
+    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>
+    bz t_after_if_else@3
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000007
+    log
+    pushint 1
+    return
+
+t_after_if_else@3:
+    pushint 1
+    itob
+    bytec_0 // "mutex"
+    swap
+    app_global_put
+    err // uninitialized function pointer

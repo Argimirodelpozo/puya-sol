@@ -1,0 +1,31 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/state_variable_under_contract_name.sol.Scope.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 42
+    itob
+    pushbytes "stateVar"
+    swap
+    app_global_put
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x0ac2ff25 // method "getStateVar()uint256"
+    txna ApplicationArgs 0
+    match main_getStateVar_route@4
+    err
+
+main_getStateVar_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    pushint 1
+    return

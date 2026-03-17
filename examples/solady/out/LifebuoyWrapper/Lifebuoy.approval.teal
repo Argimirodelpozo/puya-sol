@@ -1,0 +1,260 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LifebuoyWrapper.sol.Lifebuoy.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock 0x 0x01 "_lifebuoyDeployerHash" 0x010000000000000000000000000000000000000000000000000000000000000000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    txn Sender
+    global CurrentApplicationAddress
+    intc_0 // 32
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    keccak256
+    bytec_2 // "_lifebuoyDeployerHash"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x8668ffd8 0xce1977af 0x1091d65e 0x6f974064 0x99b5d569 0xb2b721f8 0x6138ed2c // method "rescueETH(address,uint256)void", method "rescueERC20(address,address,uint256)void", method "rescueERC721(address,address,uint256)void", method "rescueERC1155(address,address,uint256,uint256,byte[])void", method "rescueERC6909(address,address,uint256,uint256)void", method "rescueLocked()uint256", method "lockRescue(uint256)void"
+    txna ApplicationArgs 0
+    match rescueETH rescueERC20 rescueERC721 rescueERC1155 rescueERC6909 main_rescueLocked_route@10 lockRescue
+    err
+
+main_rescueLocked_route@10:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LifebuoyWrapper.sol.Lifebuoy.rescueETH[routing]() -> void:
+rescueETH:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    pushint 8
+    itob
+    callsub _checkRescuer
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LifebuoyWrapper.sol.Lifebuoy.rescueERC20[routing]() -> void:
+rescueERC20:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    pushint 16
+    itob
+    callsub _checkRescuer
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LifebuoyWrapper.sol.Lifebuoy.rescueERC721[routing]() -> void:
+rescueERC721:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    itob
+    callsub _checkRescuer
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LifebuoyWrapper.sol.Lifebuoy.rescueERC1155[routing]() -> void:
+rescueERC1155:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 5
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    pushint 64
+    itob
+    callsub _checkRescuer
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LifebuoyWrapper.sol.Lifebuoy.rescueERC6909[routing]() -> void:
+rescueERC6909:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    pushint 128
+    itob
+    callsub _checkRescuer
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LifebuoyWrapper.sol.Lifebuoy.lockRescue[routing]() -> void:
+lockRescue:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    pushint 4
+    itob
+    callsub _checkRescuer
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LifebuoyWrapper.sol.Lifebuoy._checkRescuer(modeLock: bytes) -> void:
+_checkRescuer:
+    proto 1 0
+    intc_2 // 0
+    dup
+    bytec_2 // "_lifebuoyDeployerHash"
+    app_global_get_ex
+    assert // check _lifebuoyDeployerHash exists
+    frame_dig -1
+    bytec_0 // 0x
+    b&
+    bytec_0 // 0x
+    b==
+    !
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x
+    b|
+    swap
+    pushbytes 0xad3228b676f7d3cd4284a5443f17f1962b36e491b30a40b2405849e597ba5fb5
+    b==
+    bnz _checkRescuer_after_while@7
+    frame_dig 1
+    pushbytes 0x02
+    b&
+    frame_dig 0
+    bytec_0 // 0x
+    b==
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    bytec_0 // 0x
+    b&
+    b<
+    bytec_0 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    bytec_1 // 0x01
+    b&
+    bytec_0 // 0x
+    b!=
+    assert // revert
+
+_checkRescuer_after_while@7:
+    retsub

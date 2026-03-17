@@ -1,0 +1,153 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/constructor_args/contracts/ConstructorArgs.sol.ConstructorArgs.approval_program() -> uint64:
+main:
+    intcblock 1 0 32
+    bytecblock 0x151f7c75 "name" "initialValue" "owner"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "name"
+    pushbytes 0x
+    app_global_put
+    bytec_2 // "initialValue"
+    pushbytes 0x
+    app_global_put
+    bytec_3 // "owner"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    txna ApplicationArgs 1
+    bytec_1 // "name"
+    txna ApplicationArgs 0
+    app_global_put
+    bytec_2 // "initialValue"
+    swap
+    app_global_put
+    bytec_3 // "owner"
+    txn Sender
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x8c6f7ee3 0xa8146947 0x0c262987 0x19750616 0x022f1d36 0xb1bbb0a8 // method "getName()string", method "getInitialValue()uint256", method "getOwner()address", method "name()string", method "initialValue()uint256", method "owner()address"
+    txna ApplicationArgs 0
+    match getName getInitialValue getOwner name initialValue owner
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/constructor_args/contracts/ConstructorArgs.sol.ConstructorArgs.getName[routing]() -> void:
+getName:
+    intc_1 // 0
+    bytec_1 // "name"
+    app_global_get_ex
+    assert // check name exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/constructor_args/contracts/ConstructorArgs.sol.ConstructorArgs.getInitialValue[routing]() -> void:
+getInitialValue:
+    intc_1 // 0
+    bytec_2 // "initialValue"
+    app_global_get_ex
+    assert // check initialValue exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/constructor_args/contracts/ConstructorArgs.sol.ConstructorArgs.getOwner[routing]() -> void:
+getOwner:
+    intc_1 // 0
+    bytec_3 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/constructor_args/contracts/ConstructorArgs.sol.ConstructorArgs.name[routing]() -> void:
+name:
+    intc_1 // 0
+    bytec_1 // "name"
+    app_global_get_ex
+    assert // check name exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/constructor_args/contracts/ConstructorArgs.sol.ConstructorArgs.initialValue[routing]() -> void:
+initialValue:
+    intc_1 // 0
+    bytec_2 // "initialValue"
+    app_global_get_ex
+    assert // check initialValue exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/constructor_args/contracts/ConstructorArgs.sol.ConstructorArgs.owner[routing]() -> void:
+owner:
+    intc_1 // 0
+    bytec_3 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

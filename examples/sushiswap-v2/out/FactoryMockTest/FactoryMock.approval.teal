@@ -1,0 +1,86 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/FactoryMock.sol.FactoryMock.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    bytecblock "feeTo" "migrator" base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "feeTo"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_1 // "migrator"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xd01b94b6 0x7be8e0ac 0x93321cf3 0x830eff84 // method "setFeeTo(address)void", method "setMigrator(address)void", method "feeTo()address", method "migrator()address"
+    txna ApplicationArgs 0
+    match setFeeTo setMigrator feeTo migrator
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/FactoryMock.sol.FactoryMock.setFeeTo[routing]() -> void:
+setFeeTo:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    bytec_0 // "feeTo"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/FactoryMock.sol.FactoryMock.setMigrator[routing]() -> void:
+setMigrator:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    bytec_1 // "migrator"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/FactoryMock.sol.FactoryMock.feeTo[routing]() -> void:
+feeTo:
+    intc_2 // 0
+    bytec_0 // "feeTo"
+    app_global_get_ex
+    assert // check feeTo exists
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/FactoryMock.sol.FactoryMock.migrator[routing]() -> void:
+migrator:
+    intc_2 // 0
+    bytec_1 // "migrator"
+    app_global_get_ex
+    assert // check migrator exists
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

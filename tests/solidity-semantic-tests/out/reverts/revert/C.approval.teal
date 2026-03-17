@@ -1,0 +1,69 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/revert.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 32
+    bytecblock "a"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 42
+    itob
+    bytec_0 // "a"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x2d4970c7 0xf2b65f27 0xb5251388 // method "f()void", method "g()void", method "a()uint256"
+    txna ApplicationArgs 0
+    match f g a
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/revert.sol.C.f[routing]() -> void:
+f:
+    intc_0 // 1
+    itob
+    bytec_0 // "a"
+    swap
+    app_global_put
+    err // revert
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/revert.sol.C.g[routing]() -> void:
+g:
+    intc_0 // 1
+    itob
+    bytec_0 // "a"
+    swap
+    app_global_put
+    err // revert
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/revert.sol.C.a[routing]() -> void:
+a:
+    pushint 0
+    bytec_0 // "a"
+    app_global_get_ex
+    assert // check a exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

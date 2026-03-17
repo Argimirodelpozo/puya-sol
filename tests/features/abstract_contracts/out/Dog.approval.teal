@@ -1,0 +1,126 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/abstract_contracts/contracts/AbstractContracts.sol.Dog.approval_program() -> uint64:
+main:
+    intcblock 1 0 32
+    bytecblock "species" "legs" 0x151f7c75 0x
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "species"
+    bytec_3 // 0x
+    app_global_put
+    bytec_1 // "legs"
+    bytec_3 // 0x
+    app_global_put
+    pushint 4
+    itob
+    bytec_0 // "species"
+    pushbytes "Canine"
+    app_global_put
+    bytec_1 // "legs"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x65f55b0f 0x2cb25118 0xacc370d1 0x6038e606 0xebc2e953 // method "sound()string", method "describe()string", method "legCount()uint256", method "species()string", method "legs()uint256"
+    txna ApplicationArgs 0
+    match main_sound_route@5 describe legCount species legs
+    err
+
+main_sound_route@5:
+    pushbytes 0x151f7c750004576f6f66
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/abstract_contracts/contracts/AbstractContracts.sol.Dog.describe[routing]() -> void:
+describe:
+    intc_1 // 0
+    bytec_0 // "species"
+    app_global_get_ex
+    assert // check species exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/abstract_contracts/contracts/AbstractContracts.sol.Dog.legCount[routing]() -> void:
+legCount:
+    intc_1 // 0
+    bytec_1 // "legs"
+    app_global_get_ex
+    assert // check legs exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/abstract_contracts/contracts/AbstractContracts.sol.Dog.species[routing]() -> void:
+species:
+    intc_1 // 0
+    bytec_0 // "species"
+    app_global_get_ex
+    assert // check species exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/abstract_contracts/contracts/AbstractContracts.sol.Dog.legs[routing]() -> void:
+legs:
+    intc_1 // 0
+    bytec_1 // "legs"
+    app_global_get_ex
+    assert // check legs exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

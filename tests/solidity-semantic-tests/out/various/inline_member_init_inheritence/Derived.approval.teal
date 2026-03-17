@@ -1,0 +1,76 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_member_init_inheritence.sol.Derived.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock "m_base" "m_derived" 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 5
+    itob
+    bytec_0 // "m_base"
+    swap
+    app_global_put
+    pushint 6
+    itob
+    bytec_1 // "m_derived"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xd4a8cc14 0x438b2773 // method "getDMember()uint256", method "getBMember()uint256"
+    txna ApplicationArgs 0
+    match getDMember getBMember
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_member_init_inheritence.sol.Derived.getDMember[routing]() -> void:
+getDMember:
+    intc_2 // 0
+    bytec_1 // "m_derived"
+    app_global_get_ex
+    assert // check m_derived exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_member_init_inheritence.sol.Derived.getBMember[routing]() -> void:
+getBMember:
+    intc_2 // 0
+    bytec_0 // "m_base"
+    app_global_get_ex
+    assert // check m_base exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

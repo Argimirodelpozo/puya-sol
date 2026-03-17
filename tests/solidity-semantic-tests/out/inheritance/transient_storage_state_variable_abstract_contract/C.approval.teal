@@ -1,0 +1,145 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable_abstract_contract.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 32 1
+    bytecblock "x" 0x "y" "w" "z"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "x"
+    bytec_1 // 0x
+    app_global_put
+    bytec_2 // "y"
+    bytec_1 // 0x
+    app_global_put
+    bytec_3 // "w"
+    bytec_1 // 0x
+    app_global_put
+    bytec 4 // "z"
+    bytec_1 // 0x
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xf2b65f27 0xa46062d6 // method "g()void", method "f()(uint256,uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match g f
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable_abstract_contract.sol.C.g[routing]() -> void:
+g:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable_abstract_contract.sol.C.g
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable_abstract_contract.sol.C.f[routing]() -> void:
+f:
+    intc_0 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    pushbytes 0x01
+    b+
+    bytec_0 // "x"
+    swap
+    app_global_put
+    intc_0 // 0
+    bytec_2 // "y"
+    app_global_get_ex
+    assert // check y exists
+    pushbytes 0x01
+    b+
+    bytec_2 // "y"
+    swap
+    app_global_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable_abstract_contract.sol.C.g
+    intc_0 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    intc_0 // 0
+    bytec_2 // "y"
+    app_global_get_ex
+    assert // check y exists
+    intc_0 // 0
+    bytec_3 // "w"
+    app_global_get_ex
+    assert // check w exists
+    intc_0 // 0
+    bytec 4 // "z"
+    app_global_get_ex
+    assert // check z exists
+    dig 3
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    uncover 4
+    dig 1
+    b|
+    dig 4
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 4
+    dig 2
+    b|
+    concat
+    dig 3
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 3
+    dig 2
+    b|
+    concat
+    dig 2
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable_abstract_contract.sol.C.g() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable_abstract_contract.sol.C.g:
+    intc_0 // 0
+    bytec_3 // "w"
+    app_global_get_ex
+    assert // check w exists
+    pushbytes 0x02
+    b+
+    bytec_3 // "w"
+    swap
+    app_global_put
+    intc_0 // 0
+    bytec 4 // "z"
+    app_global_get_ex
+    assert // check z exists
+    pushbytes 0x02
+    b+
+    bytec 4 // "z"
+    swap
+    app_global_put
+    retsub

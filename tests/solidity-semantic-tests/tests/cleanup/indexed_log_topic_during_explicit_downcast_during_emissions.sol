@@ -1,0 +1,18 @@
+contract C {
+    event ev0(bytes1 indexed);
+    constructor() {
+        emit ev0(bytes1(bytes16(0x31313131313131313131313131313131)));
+    }
+    function j() external {
+        bytes1 x;
+        assembly { x := 0x3131313131313131313131313131313131313131313131313131313131313131 }
+        emit ev0(x);
+    }
+}
+// ----
+// constructor() ->
+// ~ emit ev0(bytes1): #"1"
+// gas legacy: 58919
+// gas legacy code: 33600
+// j() ->
+// ~ emit ev0(bytes1): #"1"

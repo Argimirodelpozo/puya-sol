@@ -1,0 +1,137 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_read_write.sol.Test.approval_program() -> uint64:
+main:
+    intcblock 1
+    bytecblock "data"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "data"
+    pushbytes 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x327cf618 0x9804a8ae 0x74dc582b // method "testInit()(uint64,uint64,uint256,uint64,bool)", method "testCopyRead()(uint64,uint64,uint256,uint64)", method "testAssign()(uint64,uint64,uint256,uint64)"
+    txna ApplicationArgs 0
+    match testInit testCopyRead testAssign
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_read_write.sol.Test.testInit[routing]() -> void:
+testInit:
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_read_write.sol.Test.testCopyRead[routing]() -> void:
+testCopyRead:
+    pushint 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    dup
+    extract 128 64 // on error: index access is out of bounds
+    dup
+    extract 48 16
+    intc_0 // 1
+    itob
+    dig 2
+    extract 8 8
+    uncover 3
+    extract 16 32
+    cover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    replace2 128 // on error: index access is out of bounds
+    dup
+    extract 128 64 // on error: index access is out of bounds
+    dup
+    extract 48 16
+    dig 1
+    extract 0 8
+    pushint 2
+    itob
+    uncover 3
+    extract 16 32
+    cover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    replace2 128 // on error: index access is out of bounds
+    dup
+    extract 128 64 // on error: index access is out of bounds
+    dup
+    extract 48 16
+    dig 1
+    extract 0 8
+    uncover 2
+    extract 8 8
+    pushint 32
+    bzero
+    cover 2
+    concat
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
+    concat
+    uncover 2
+    concat
+    uncover 2
+    swap
+    replace2 128 // on error: index access is out of bounds
+    bytec_0 // "data"
+    dig 1
+    app_global_put
+    extract 128 64 // on error: index access is out of bounds
+    dup
+    extract 48 16
+    pushint 4
+    itob
+    dig 1
+    swap
+    replace2 8 // on error: index access is out of bounds
+    pop
+    dig 1
+    extract 0 8
+    dig 2
+    extract 8 8
+    uncover 3
+    extract 16 32
+    uncover 3
+    extract 8 8 // on error: index access is out of bounds
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    uncover 3
+    b|
+    concat
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_read_write.sol.Test.testAssign[routing]() -> void:
+testAssign:
+    pushbytes 0x151f7c750000000000000001000000000000000200000000000000000000000000000000000000000000000000000000000000030000000000000000
+    log
+    intc_0 // 1
+    return

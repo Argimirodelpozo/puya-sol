@@ -1,0 +1,98 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/state_variable_initialization.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 32
+    bytecblock "i" "k" 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    itob
+    bytec_0 // "i"
+    swap
+    app_global_put
+    pushint 2
+    itob
+    bytec_1 // "k"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec_0 // "i"
+    app_global_get_ex
+    assert // check i exists
+    dup
+    b+
+    bytec_0 // "i"
+    dig 1
+    app_global_put
+    intc_1 // 0
+    bytec_1 // "k"
+    app_global_get_ex
+    assert // check k exists
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // "k"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x3f72e9ed 0x08ee23b1 // method "i()uint256", method "k()uint256"
+    txna ApplicationArgs 0
+    match i k
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/state_variable_initialization.sol.C.i[routing]() -> void:
+i:
+    intc_1 // 0
+    bytec_0 // "i"
+    app_global_get_ex
+    assert // check i exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/state_variable_initialization.sol.C.k[routing]() -> void:
+k:
+    intc_1 // 0
+    bytec_1 // "k"
+    app_global_get_ex
+    assert // check k exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

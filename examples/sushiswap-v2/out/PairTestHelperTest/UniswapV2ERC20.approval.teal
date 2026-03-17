@@ -1,0 +1,458 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/PairTestHelper.sol.UniswapV2ERC20.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock 0x "allowance" "DOMAIN_SEPARATOR" 0x151f7c7580 "totalSupply" 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 "balanceOf"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 4 // "totalSupply"
+    bytec_0 // 0x
+    app_global_put
+    pushbytes 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400fefbffe65652a145845c9bc8d0532945be6b9830fe1e9966c887bd298e551ac83c89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc60000000000000000
+    global CurrentApplicationAddress
+    concat
+    keccak256
+    bytec_2 // "DOMAIN_SEPARATOR"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xfafb6a08 0x198c9820 0x6df41f6d 0x4a8dd08f 0x79fab465 0xbd0b8e46 // method "approve(address,uint256)bool", method "transfer(address,uint256)bool", method "transferFrom(address,address,uint256)bool", method "permit(address,address,uint256,uint256,uint64,byte[32],byte[32])void", method "totalSupply()uint256", method "DOMAIN_SEPARATOR()byte[32]"
+    txna ApplicationArgs 0
+    match approve transfer transferFrom permit totalSupply DOMAIN_SEPARATOR
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/PairTestHelper.sol.SafeMathUniswap.add(x: bytes, y: bytes) -> bytes:
+SafeMathUniswap.add:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    b+
+    dup
+    frame_dig -2
+    b>=
+    assert // ds-math-add-overflow
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/PairTestHelper.sol.SafeMathUniswap.sub(x: bytes, y: bytes) -> bytes:
+SafeMathUniswap.sub:
+    proto 2 1
+    frame_dig -2
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig -1
+    b-
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_dig -2
+    b<=
+    assert // ds-math-sub-underflow
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/PairTestHelper.sol.UniswapV2ERC20.approve[routing]() -> void:
+approve:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn Sender
+    cover 2
+    callsub _approve
+    bytec_3 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/PairTestHelper.sol.UniswapV2ERC20.transfer[routing]() -> void:
+transfer:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn Sender
+    cover 2
+    callsub _transfer
+    bytec_3 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/PairTestHelper.sol.UniswapV2ERC20.transferFrom[routing]() -> void:
+transferFrom:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    cover 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn Sender
+    concat
+    sha256
+    bytec_1 // "allowance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b!=
+    bz transferFrom_after_if_else@3
+    txn Sender
+    dig 3
+    dup
+    uncover 2
+    concat
+    sha256
+    bytec_1 // "allowance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    callsub SafeMathUniswap.sub
+    txn Sender
+    uncover 2
+    swap
+    concat
+    sha256
+    bytec_1 // "allowance"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+transferFrom_after_if_else@3:
+    dig 2
+    dig 2
+    dig 2
+    callsub _transfer
+    bytec_3 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/PairTestHelper.sol.UniswapV2ERC20.permit[routing]() -> void:
+permit:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    cover 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 5
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 6
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 7
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    global LatestTimestamp
+    itob
+    dig 4
+    b<=
+    assert // UniswapV2: EXPIRED
+    dig 6
+    sha256
+    pushbytes "nonces"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    pushbytes 0x01
+    b+
+    dig 1
+    box_del
+    pop
+    swap
+    dig 1
+    box_put
+    intc_0 // 32
+    bzero
+    intc_2 // 0
+    bytec_2 // "DOMAIN_SEPARATOR"
+    app_global_get_ex
+    assert // check DOMAIN_SEPARATOR exists
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes "\x19\x01"
+    swap
+    concat
+    pushbytes 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9
+    uncover 10
+    concat
+    uncover 9
+    concat
+    uncover 8
+    concat
+    uncover 3
+    concat
+    uncover 6
+    concat
+    keccak256
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    keccak256
+    uncover 3
+    pushint 27
+    -
+    uncover 3
+    uncover 3
+    ecdsa_pk_recover Secp256k1
+    pushint 12
+    bzero
+    cover 2
+    concat
+    keccak256
+    extract 12 20
+    concat
+    dup
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    !=
+    bz permit_bool_false@4
+    dup
+    dig 4
+    ==
+    bz permit_bool_false@4
+    intc_1 // 1
+
+permit_bool_merge@5:
+    assert // UniswapV2: INVALID_SIGNATURE
+    dig 3
+    dig 3
+    dig 3
+    callsub _approve
+    intc_1 // 1
+    return
+
+permit_bool_false@4:
+    intc_2 // 0
+    b permit_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/PairTestHelper.sol.UniswapV2ERC20.totalSupply[routing]() -> void:
+totalSupply:
+    intc_2 // 0
+    bytec 4 // "totalSupply"
+    app_global_get_ex
+    assert // check totalSupply exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/PairTestHelper.sol.UniswapV2ERC20.DOMAIN_SEPARATOR[routing]() -> void:
+DOMAIN_SEPARATOR:
+    intc_2 // 0
+    bytec_2 // "DOMAIN_SEPARATOR"
+    app_global_get_ex
+    assert // check DOMAIN_SEPARATOR exists
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/PairTestHelper.sol.UniswapV2ERC20._approve(owner: bytes, spender: bytes, value: bytes) -> void:
+_approve:
+    proto 3 0
+    frame_dig -3
+    frame_dig -2
+    concat
+    dup
+    sha256
+    bytec_1 // "allowance"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    frame_dig -1
+    box_put
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    b|
+    concat
+    pushbytes 0x18e09461 // method "Approval(address,address,uint256)"
+    swap
+    concat
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/PairTestHelper.sol.UniswapV2ERC20._transfer(from: bytes, to: bytes, value: bytes) -> void:
+_transfer:
+    proto 3 0
+    frame_dig -3
+    sha256
+    bytec 7 // "balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    frame_dig -1
+    callsub SafeMathUniswap.sub
+    dig 1
+    box_del
+    pop
+    box_put
+    frame_dig -2
+    sha256
+    bytec 7 // "balanceOf"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    frame_dig -1
+    callsub SafeMathUniswap.add
+    dig 1
+    box_del
+    pop
+    box_put
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    b|
+    frame_dig -3
+    frame_dig -2
+    concat
+    swap
+    concat
+    pushbytes 0x28918861 // method "Transfer(address,address,uint256)"
+    swap
+    concat
+    log
+    retsub

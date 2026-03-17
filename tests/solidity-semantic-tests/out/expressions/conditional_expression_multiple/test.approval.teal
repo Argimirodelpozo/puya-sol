@@ -1,0 +1,62 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/conditional_expression_multiple.sol.test.approval_program() -> uint64:
+main:
+    intcblock 1 32
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x1928cd24 // method "f(uint256)uint256"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/conditional_expression_multiple.sol.test.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    pushbytes 0x64
+    b>
+    bz f_ternary_false@3
+    pushbytes 0x03e8
+    b>
+    pushints 100 1000
+    uncover 2
+    select
+
+f_ternary_merge@4:
+    itob
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+f_ternary_false@3:
+    pushbytes 0x32
+    b>
+    pushints 10 50
+    uncover 2
+    select
+    b f_ternary_merge@4

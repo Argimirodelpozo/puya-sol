@@ -1,0 +1,35 @@
+info: puya-sol v0.1.0 — Solidity to Algorand Compiler
+info: Source: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol
+info: EVM version set to: cancun (hasChainID=true)
+info: Parsing and type-checking...
+info: Parse and type-check successful!
+info: Building AWST...
+info: Translating library: DateTimeLib
+info: Translating contract: DateTimeWrapper
+info: Generated 8 AWST root node(s)
+info: Size estimate for 'DateTimeWrapper': 4738 instructions, ~14214 bytes
+warning: Contract 'DateTimeWrapper' estimated at ~14214 bytes, exceeds AVM limit of ~8192 bytes
+info: Contract exceeds AVM limit (14214 estimated bytes > 8192 max)
+info: Split recommendation: 3 partitions
+info:   Partition 0: [__approval__, __clear__, dateToEpochDay, dateToTimestamp, daysInMonth, epochDayToDate, isLeapYear, timestampToDate, weekday]
+info:   Partition 1: [DateTimeLib.timestampToDate, DateTimeLib.epochDayToDate, DateTimeLib.weekday]
+info:   Partition 2: [DateTimeLib.dateToTimestamp, DateTimeLib.dateToEpochDay, DateTimeLib.daysInMonth, DateTimeLib.isLeapYear]
+info: --split-contracts enabled, performing contract split...
+info: Splitting contract 'DateTimeWrapper' into 3 parts
+info:   Helper 1: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper1 (3 subroutines)
+info:   Helper 2: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper__Helper2 (4 subroutines)
+info:   Orchestrator (thin): /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/DateTimeWrapper.sol.DateTimeWrapper (stub methods only, no subroutines)
+info: Split complete: 2 helpers + 1 orchestrator
+info: Wrote: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/out/DateTimeWrapper/awst_DateTimeWrapper__Helper1.json
+info: Wrote: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/out/DateTimeWrapper/options_DateTimeWrapper__Helper1.json
+info: Compiling DateTimeWrapper__Helper1 ...
+info: puya completed successfully
+info: Wrote: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/out/DateTimeWrapper/awst_DateTimeWrapper__Helper2.json
+info: Wrote: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/out/DateTimeWrapper/options_DateTimeWrapper__Helper2.json
+info: Compiling DateTimeWrapper__Helper2 ...
+info: puya completed successfully
+info: Wrote: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/out/DateTimeWrapper/awst_DateTimeWrapper.json
+info: Wrote: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/out/DateTimeWrapper/options_DateTimeWrapper.json
+info: Compiling DateTimeWrapper ...
+error: puya exited with code: 256
+info: Completed with 1 warning(s)

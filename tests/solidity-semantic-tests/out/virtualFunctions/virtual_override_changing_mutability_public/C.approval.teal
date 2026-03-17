@@ -1,0 +1,37 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/virtual_override_changing_mutability_public.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xa6ff944a 0xf9402ac3 0xcc9daa45 0x3c8c3450 // method "run()void", method "mutableWithViewOverride()void", method "mutableWithPureOverride()void", method "viewWithPureOverride()void"
+    txna ApplicationArgs 0
+    match main_run_route@5 main_mutableWithViewOverride_route@6 main_mutableWithPureOverride_route@7 main_viewWithPureOverride_route@8
+    err
+
+main_viewWithPureOverride_route@8:
+    intc_0 // 1
+    return
+
+main_mutableWithPureOverride_route@7:
+    intc_0 // 1
+    return
+
+main_mutableWithViewOverride_route@6:
+    intc_0 // 1
+    return
+
+main_run_route@5:
+    intc_0 // 1
+    return

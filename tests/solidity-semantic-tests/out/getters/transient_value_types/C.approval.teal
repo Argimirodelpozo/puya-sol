@@ -1,0 +1,51 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock "x"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "x"
+    intc_1 // 0
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x6ca2f943 0xdf01cac5 // method "f()uint64", method "x()uint64"
+    txna ApplicationArgs 0
+    match f x
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types.sol.C.f[routing]() -> void:
+f:
+    bytec_0 // "x"
+    pushint 18446744073709551615
+    app_global_put
+    pushbytes 0x151f7c75ffffffffffffffff
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types.sol.C.x[routing]() -> void:
+x:
+    intc_1 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    itob
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

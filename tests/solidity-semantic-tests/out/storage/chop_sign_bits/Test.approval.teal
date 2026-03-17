@@ -1,0 +1,140 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/chop_sign_bits.sol.Test.approval_program() -> uint64:
+main:
+    intcblock 1 0 8
+    bytecblock "y" 0x151f7c75 "z"
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    callsub _puya_lib.mem.new_slot
+    dup
+    pushbytes 0xfffffffffffffffbfffffffffffffffa
+    stores
+    bytec_0 // "y"
+    swap
+    app_global_put
+    bytec_2 // "z"
+    intc_1 // 0
+    app_global_put
+    pushbytes "x_length"
+    intc_1 // 0
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x04244689 0x49769d80 0x8abb0e72 0x4c7bf4e4 0xf841ea5e // method "f()uint64[]", method "g()uint64[2]", method "h(uint64)uint64", method "x()uint64[]", method "y()uint64[2]"
+    txna ApplicationArgs 0
+    match f g h x y
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/chop_sign_bits.sol.Test.f[routing]() -> void:
+f:
+    pushbytes 0x151f7c750002fffffffffffffffdfffffffffffffffc
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/chop_sign_bits.sol.Test.g[routing]() -> void:
+g:
+    bytec_0 // "y"
+    pushbytes 0xfffffffffffffffdfffffffffffffffc
+    app_global_put
+    pushbytes 0x151f7c75fffffffffffffffdfffffffffffffffc
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/chop_sign_bits.sol.Test.h[routing]() -> void:
+h:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bytec_2 // "z"
+    dig 1
+    app_global_put
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/chop_sign_bits.sol.Test.x[routing]() -> void:
+x:
+    callsub _puya_lib.mem.new_slot
+    dup
+    pushbytes 0x
+    stores
+    pushbytes "x"
+    box_get
+    swap
+    pushint 2
+    intc_1 // 0
+    extract3
+    callsub _puya_lib.mem.new_slot
+    dup
+    uncover 2
+    stores
+    swap
+    select
+    loads
+    dup
+    len
+    intc_2 // 8
+    /
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/chop_sign_bits.sol.Test.y[routing]() -> void:
+y:
+    intc_1 // 0
+    bytec_0 // "y"
+    app_global_get_ex
+    assert // check y exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// _puya_lib.mem.new_slot() -> uint64:
+_puya_lib.mem.new_slot:
+    load 0
+    bitlen
+    load 0
+    pushint 256
+    dig 2
+    -
+    intc_1 // 0
+    setbit // on error: no available slots
+    store 0
+    retsub

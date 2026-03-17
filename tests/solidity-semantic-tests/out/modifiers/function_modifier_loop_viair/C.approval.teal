@@ -1,0 +1,48 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_loop_viair.sol.C.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xcd78b354 // method "f()uint256"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_loop_viair.sol.C.f[routing]() -> void:
+f:
+    pushint 10
+    itob
+    pushint 0
+    itob
+
+f_while_top@2:
+    dup
+    dig 2
+    b<
+    bz f_after_while@4
+    dup
+    pushbytes 0x01
+    b+
+    bury 1
+    b f_while_top@2
+
+f_after_while@4:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    pushint 1
+    return

@@ -1,0 +1,45 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/using_enums.sol.test.approval_program() -> uint64:
+main:
+    bytecblock "choices"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "choices"
+    pushint 2
+    app_global_put
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x478e1df3 // method "getChoice()uint256"
+    txna ApplicationArgs 0
+    match main_getChoice_route@4
+    err
+
+main_getChoice_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b getChoice
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/using_enums.sol.test.getChoice[routing]() -> void:
+getChoice:
+    pushint 0
+    bytec_0 // "choices"
+    app_global_get_ex
+    assert // check choices exists
+    itob
+    pushint 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return

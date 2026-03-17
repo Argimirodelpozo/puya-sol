@@ -1,0 +1,61 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/precompiles_ignoring_trailing_input.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 128
+    bytecblock 0x151f7c750000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xd2d56d08 0x25852b35 0x93d3a521 // method "ecRecover(uint256[4])byte[]", method "ecAdd(uint256[4])byte[]", method "ecMul(uint256[3])byte[]"
+    txna ApplicationArgs 0
+    match ecRecover ecAdd ecMul
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/precompiles_ignoring_trailing_input.sol.C.ecRecover[routing]() -> void:
+ecRecover:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 128
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 4>
+    bytec_0 // 0x151f7c750000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/precompiles_ignoring_trailing_input.sol.C.ecAdd[routing]() -> void:
+ecAdd:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 128
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 4>
+    bytec_0 // 0x151f7c750000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/precompiles_ignoring_trailing_input.sol.C.ecMul[routing]() -> void:
+ecMul:
+    txna ApplicationArgs 1
+    len
+    pushint 96
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 3>
+    bytec_0 // 0x151f7c750000
+    log
+    intc_0 // 1
+    return

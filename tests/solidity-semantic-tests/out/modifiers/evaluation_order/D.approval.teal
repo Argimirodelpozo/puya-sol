@@ -1,0 +1,69 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/evaluation_order.sol.D.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock "__ctor_pending"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytes "x_length"
+    intc_1 // 0
+    app_global_put
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x2bdecfab // method "__postInit()void", method "query()uint256[]"
+    txna ApplicationArgs 0
+    match __postInit query
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/evaluation_order.sol.D.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    pushbytes "x"
+    box_get
+    assert // box exists
+    pushint 2
+    intc_1 // 0
+    extract3
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
+    concat // on error: max array length exceeded
+    pop
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/evaluation_order.sol.D.query[routing]() -> void:
+query:
+    pushbytes ""
+    loads
+    dup
+    len
+    pushint 32
+    /
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

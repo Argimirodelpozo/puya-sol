@@ -1,0 +1,33 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_simple.sol.C.approval_program() -> uint64:
+main:
+    bytecblock 0x151f7c75002831323334353637383930313233343536373839303132333435363738393031323334353637383930
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x6b2c0e15 0x38b8b62f // method "dyn()byte[]", method "f()byte[]"
+    txna ApplicationArgs 0
+    match main_dyn_route@5 main_f_route@6
+    err
+
+main_f_route@6:
+    bytec_0 // 0x151f7c75002831323334353637383930313233343536373839303132333435363738393031323334353637383930
+    log
+    pushint 1
+    return
+
+main_dyn_route@5:
+    bytec_0 // 0x151f7c75002831323334353637383930313233343536373839303132333435363738393031323334353637383930
+    log
+    pushint 1
+    return

@@ -1,0 +1,33 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/keccak.sol.C.approval_program() -> uint64:
+main:
+    bytecblock 0x151f7c7564e604787cbf194841e7b68d7cd28786f6c9a0a3ab9f8b0a0e87cb4387ab0107
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xa5f32117 0x9a43a435 // method "keccak1()byte[32]", method "keccak2()byte[32]"
+    txna ApplicationArgs 0
+    match main_keccak1_route@5 main_keccak2_route@6
+    err
+
+main_keccak2_route@6:
+    bytec_0 // 0x151f7c7564e604787cbf194841e7b68d7cd28786f6c9a0a3ab9f8b0a0e87cb4387ab0107
+    log
+    pushint 1
+    return
+
+main_keccak1_route@5:
+    bytec_0 // 0x151f7c7564e604787cbf194841e7b68d7cd28786f6c9a0a3ab9f8b0a0e87cb4387ab0107
+    log
+    pushint 1
+    return

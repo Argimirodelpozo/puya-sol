@@ -1,0 +1,84 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/inheritance/contracts/Inheritance.sol.Base.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock "baseValue" 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "baseValue"
+    pushbytes 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xec54beb2 0x8bc8d1ab 0x95e3922e // method "setBase(uint256)void", method "getBase()uint256", method "baseValue()uint256"
+    txna ApplicationArgs 0
+    match setBase getBase baseValue
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/inheritance/contracts/Inheritance.sol.Base.setBase[routing]() -> void:
+setBase:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // "baseValue"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/inheritance/contracts/Inheritance.sol.Base.getBase[routing]() -> void:
+getBase:
+    intc_2 // 0
+    bytec_0 // "baseValue"
+    app_global_get_ex
+    assert // check baseValue exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/inheritance/contracts/Inheritance.sol.Base.baseValue[routing]() -> void:
+baseValue:
+    intc_2 // 0
+    bytec_0 // "baseValue"
+    app_global_get_ex
+    assert // check baseValue exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

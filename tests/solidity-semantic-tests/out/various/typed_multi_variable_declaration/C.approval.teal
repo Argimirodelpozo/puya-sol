@@ -1,0 +1,35 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/typed_multi_variable_declaration.sol.C.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytess "s" 0x
+    app_global_put
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x4b4fb052 // method "f()bool"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/typed_multi_variable_declaration.sol.C.f[routing]() -> void:
+f:
+    pushbytess "s" 0x0000000000000000000000000000000000000000000000000000000000000007
+    app_global_put
+    pushbytes 0x151f7c7580
+    log
+    pushint 1
+    return

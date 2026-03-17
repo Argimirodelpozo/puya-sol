@@ -1,0 +1,46 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/Mocks/VerifierMock.sol.VerifierMock.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x78f443f7 // method "verifyProof(byte[],uint256[6])bool"
+    txna ApplicationArgs 0
+    match main_verifyProof_route@4
+    err
+
+main_verifyProof_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b verifyProof
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/Mocks/VerifierMock.sol.VerifierMock.verifyProof[routing]() -> void:
+verifyProof:
+    txna ApplicationArgs 1
+    dup
+    pushint 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 2
+    len
+    pushint 192
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 6>
+    pushbytes 0x151f7c7580
+    log
+    pushint 1
+    return

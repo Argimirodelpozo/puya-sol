@@ -1,0 +1,125 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/enums/contracts/Enums.sol.Enums.approval_program() -> uint64:
+main:
+    intcblock 0 1
+    bytecblock "currentStatus" 0x151f7c75 0x00
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "currentStatus"
+    intc_0 // 0
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x2e815514 0x992ac3be 0x848947a0 0x4281bf5c 0xff354acb 0x16e179f9 // method "setStatus(uint64)void", method "getStatus()uint64", method "isPending()bool", method "isActive()bool", method "statusToUint()uint64", method "currentStatus()uint64"
+    txna ApplicationArgs 0
+    match setStatus getStatus isPending isActive statusToUint currentStatus
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/enums/contracts/Enums.sol.Enums.setStatus[routing]() -> void:
+setStatus:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bytec_0 // "currentStatus"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/enums/contracts/Enums.sol.Enums.getStatus[routing]() -> void:
+getStatus:
+    intc_0 // 0
+    bytec_0 // "currentStatus"
+    app_global_get_ex
+    assert // check currentStatus exists
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/enums/contracts/Enums.sol.Enums.isPending[routing]() -> void:
+isPending:
+    intc_0 // 0
+    bytec_0 // "currentStatus"
+    app_global_get_ex
+    assert // check currentStatus exists
+    !
+    bytec_2 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/enums/contracts/Enums.sol.Enums.isActive[routing]() -> void:
+isActive:
+    intc_0 // 0
+    bytec_0 // "currentStatus"
+    app_global_get_ex
+    assert // check currentStatus exists
+    intc_1 // 1
+    ==
+    bytec_2 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/enums/contracts/Enums.sol.Enums.statusToUint[routing]() -> void:
+statusToUint:
+    intc_0 // 0
+    bytec_0 // "currentStatus"
+    app_global_get_ex
+    assert // check currentStatus exists
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/enums/contracts/Enums.sol.Enums.currentStatus[routing]() -> void:
+currentStatus:
+    intc_0 // 0
+    bytec_0 // "currentStatus"
+    app_global_get_ex
+    assert // check currentStatus exists
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

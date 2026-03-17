@@ -1,0 +1,58 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding.sol.X.approval_program() -> uint64:
+main:
+    intcblock 1 32
+    bytecblock "test"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "test"
+    pushbytes 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x0f76205a 0xc95a9d21 // method "set()void", method "test()uint256"
+    txna ApplicationArgs 0
+    match set test
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding.sol.X.set[routing]() -> void:
+set:
+    pushint 2
+    itob
+    bytec_0 // "test"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding.sol.X.test[routing]() -> void:
+test:
+    pushint 0
+    bytec_0 // "test"
+    app_global_get_ex
+    assert // check test exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

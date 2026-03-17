@@ -1,0 +1,128 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_other_functions.sol.collatz.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    bytecblock 0x01 0x02 0x151f7c75 0x03
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xc87eb40b 0xf26572ae 0x12977eed // method "run(uint256)uint256", method "evenStep(uint256)uint256", method "oddStep(uint256)uint256"
+    txna ApplicationArgs 0
+    match run evenStep oddStep
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_other_functions.sol.collatz.run[routing]() -> void:
+run:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+
+run_while_top@2:
+    dup
+    bytec_0 // 0x01
+    b>
+    bz run_after_while@7
+    dup
+    bytec_1 // 0x02
+    b%
+    pushbytes 0x
+    b==
+    bz run_else_body@5
+    dup
+    bytec_1 // 0x02
+    b/
+    bury 1
+    b run_while_top@2
+
+run_else_body@5:
+    bytec_3 // 0x03
+    dig 1
+    b*
+    bytec_0 // 0x01
+    b+
+    bury 1
+    b run_while_top@2
+
+run_after_while@7:
+    dupn 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_other_functions.sol.collatz.evenStep[routing]() -> void:
+evenStep:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_1 // 0x02
+    b/
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_other_functions.sol.collatz.oddStep[routing]() -> void:
+oddStep:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_3 // 0x03
+    b*
+    bytec_0 // 0x01
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

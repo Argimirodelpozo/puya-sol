@@ -1,0 +1,187 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/InterestRateModelMock.sol.InterestRateModelMock.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock "borrowRatePerBlock" "supplyRatePerBlock" 0x151f7c75 0x
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "borrowRatePerBlock"
+    bytec_3 // 0x
+    app_global_put
+    bytec_1 // "supplyRatePerBlock"
+    bytec_3 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x1796ae41 0xd0e4b301 0x198a5b0f 0xd0e9292d 0xdb3d7f4a 0x539fe1a1 0xea93d91d // method "isInterestRateModel()bool", method "setBorrowRate(uint256)void", method "setSupplyRate(uint256)void", method "getBorrowRate(uint256,uint256,uint256)uint256", method "getSupplyRate(uint256,uint256,uint256,uint256)uint256", method "borrowRatePerBlock()uint256", method "supplyRatePerBlock()uint256"
+    txna ApplicationArgs 0
+    match main_isInterestRateModel_route@5 setBorrowRate setSupplyRate getBorrowRate getSupplyRate borrowRatePerBlock supplyRatePerBlock
+    err
+
+main_isInterestRateModel_route@5:
+    pushbytes 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/InterestRateModelMock.sol.InterestRateModelMock.setBorrowRate[routing]() -> void:
+setBorrowRate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // "borrowRatePerBlock"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/InterestRateModelMock.sol.InterestRateModelMock.setSupplyRate[routing]() -> void:
+setSupplyRate:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_1 // "supplyRatePerBlock"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/InterestRateModelMock.sol.InterestRateModelMock.getBorrowRate[routing]() -> void:
+getBorrowRate:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_2 // 0
+    bytec_0 // "borrowRatePerBlock"
+    app_global_get_ex
+    assert // check borrowRatePerBlock exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/InterestRateModelMock.sol.InterestRateModelMock.getSupplyRate[routing]() -> void:
+getSupplyRate:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_2 // 0
+    bytec_1 // "supplyRatePerBlock"
+    app_global_get_ex
+    assert // check supplyRatePerBlock exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/InterestRateModelMock.sol.InterestRateModelMock.borrowRatePerBlock[routing]() -> void:
+borrowRatePerBlock:
+    intc_2 // 0
+    bytec_0 // "borrowRatePerBlock"
+    app_global_get_ex
+    assert // check borrowRatePerBlock exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/mocks/InterestRateModelMock.sol.InterestRateModelMock.supplyRatePerBlock[routing]() -> void:
+supplyRatePerBlock:
+    intc_2 // 0
+    bytec_1 // "supplyRatePerBlock"
+    app_global_get_ex
+    assert // check supplyRatePerBlock exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

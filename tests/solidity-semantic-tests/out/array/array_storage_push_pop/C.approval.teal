@@ -1,0 +1,86 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_push_pop.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 32 1
+    bytecblock "storageArray_length"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "storageArray_length"
+    intc_0 // 0
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xd46ebdf4 // method "set_get_length(uint256)uint256"
+    txna ApplicationArgs 0
+    match main_set_get_length_route@4
+    err
+
+main_set_get_length_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b set_get_length
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_push_pop.sol.C.set_get_length[routing]() -> void:
+set_get_length:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+
+set_get_length_while_top@2:
+    intc_0 // 0
+    bytec_0 // "storageArray_length"
+    app_global_get_ex
+    assert // check storageArray_length exists
+    itob
+    dig 1
+    b<
+    bnz set_get_length_while_top@2
+
+set_get_length_while_top@5:
+    intc_0 // 0
+    bytec_0 // "storageArray_length"
+    app_global_get_ex
+    assert // check storageArray_length exists
+    bz set_get_length_after_while@7
+    pushbytes "storageArray"
+    box_get
+    assert // box exists
+    pushint 2
+    intc_0 // 0
+    extract3
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_0 // 0
+    swap
+    substring3
+    pop
+    b set_get_length_while_top@5
+
+set_get_length_after_while@7:
+    intc_0 // 0
+    bytec_0 // "storageArray_length"
+    app_global_get_ex
+    assert // check storageArray_length exists
+    itob
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

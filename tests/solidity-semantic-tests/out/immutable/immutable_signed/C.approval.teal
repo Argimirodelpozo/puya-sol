@@ -1,0 +1,35 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/immutable_signed.sol.C.approval_program() -> uint64:
+main:
+    pushint 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytes "a"
+    pushint 18446744073709551614
+    app_global_put
+    pushbytess "b" "ab"
+    app_global_put
+    pushbytes "f"
+    dig 1
+    app_global_put
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xd9d12b48 // method "viaasm()(byte[32],byte[32])"
+    txna ApplicationArgs 0
+    match main_viaasm_route@4
+    err
+
+main_viaasm_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    pushbytes 0x151f7c75fffffffffffffffe6162
+    log
+    pushint 1
+    return

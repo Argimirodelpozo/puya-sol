@@ -1,0 +1,69 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/homer.sol.Homer.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x4e22a3ba 0x027c6bc8 0xf76e680b // method "supportsInterface(byte[4])bool", method "is2D()bool", method "skinColor()string"
+    txna ApplicationArgs 0
+    match supportsInterface main_is2D_route@6 main_skinColor_route@7
+    err
+
+main_skinColor_route@7:
+    pushbytes 0x151f7c75000679656c6c6f77
+    log
+    intc_0 // 1
+    return
+
+main_is2D_route@6:
+    pushbytes 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/homer.sol.Homer.supportsInterface[routing]() -> void:
+supportsInterface:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    pushint 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    pushbytes 0x
+    ==
+    bnz supportsInterface_bool_true@3
+    dup
+    pushbytes 0x
+    ==
+    bz supportsInterface_bool_false@4
+
+supportsInterface_bool_true@3:
+    intc_0 // 1
+
+supportsInterface_bool_merge@5:
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+supportsInterface_bool_false@4:
+    intc_1 // 0
+    b supportsInterface_bool_merge@5

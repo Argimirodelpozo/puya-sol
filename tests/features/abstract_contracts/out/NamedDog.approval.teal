@@ -1,0 +1,175 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/abstract_contracts/contracts/AbstractContracts.sol.NamedDog.approval_program() -> uint64:
+main:
+    intcblock 1 0 32
+    bytecblock 0x151f7c75 "species" "legs" 0x "name"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "species"
+    bytec_3 // 0x
+    app_global_put
+    bytec_2 // "legs"
+    bytec_3 // 0x
+    app_global_put
+    bytec 4 // "name"
+    bytec_3 // 0x
+    app_global_put
+    pushint 4
+    itob
+    bytec_1 // "species"
+    pushbytes "Dog"
+    app_global_put
+    bytec_2 // "legs"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x65f55b0f 0x3c2ffb7e 0x66f7ded7 0x2cb25118 0xacc370d1 0x19750616 0x6038e606 0xebc2e953 // method "sound()string", method "greet()string", method "setName(string)void", method "describe()string", method "legCount()uint256", method "name()string", method "species()string", method "legs()uint256"
+    txna ApplicationArgs 0
+    match main_sound_route@5 main_greet_route@6 setName describe legCount name species legs
+    err
+
+main_greet_route@6:
+    pushbytes 0x151f7c75001148656c6c6f2c204920616d206120646f67
+    log
+    intc_0 // 1
+    return
+
+main_sound_route@5:
+    pushbytes 0x151f7c7500044261726b
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/abstract_contracts/contracts/AbstractContracts.sol.NamedDog.setName[routing]() -> void:
+setName:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec 4 // "name"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/abstract_contracts/contracts/AbstractContracts.sol.NamedDog.describe[routing]() -> void:
+describe:
+    intc_1 // 0
+    bytec_1 // "species"
+    app_global_get_ex
+    assert // check species exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/abstract_contracts/contracts/AbstractContracts.sol.NamedDog.legCount[routing]() -> void:
+legCount:
+    intc_1 // 0
+    bytec_2 // "legs"
+    app_global_get_ex
+    assert // check legs exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/abstract_contracts/contracts/AbstractContracts.sol.NamedDog.name[routing]() -> void:
+name:
+    intc_1 // 0
+    bytec 4 // "name"
+    app_global_get_ex
+    assert // check name exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/abstract_contracts/contracts/AbstractContracts.sol.NamedDog.species[routing]() -> void:
+species:
+    intc_1 // 0
+    bytec_1 // "species"
+    app_global_get_ex
+    assert // check species exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/abstract_contracts/contracts/AbstractContracts.sol.NamedDog.legs[routing]() -> void:
+legs:
+    intc_1 // 0
+    bytec_2 // "legs"
+    app_global_get_ex
+    assert // check legs exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

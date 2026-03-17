@@ -1,0 +1,131 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    bytecblock 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xcdcb8654 0xda1823d3 // method "f()address", method "recover(byte[32],uint64,byte[32],byte[32],uint256,byte[32])address"
+    txna ApplicationArgs 0
+    match f recover
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.f[routing]() -> void:
+f:
+    pushbytes 0x77e5189111eb6557e8a637b27ef8fbb15bc61d61c2f00cc48878f3a296e5e0ca
+    pushint 0
+    pushbytess 0x6944c77849b18048f6abe0db8084b0d0d0689cdddb53d2671c36967b58691ad4 0xef4f06ba4f78319baafd0424365777241af4dfd3da840471b4b4b087b7750d0d 0xca35b7d915458ef540ade6068dfe2f44e8fa733c
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover[routing]() -> void:
+recover:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 5
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 6
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover(hash: bytes, v: uint64, r: bytes, s: bytes, blockExpired: bytes, salt: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/failing_ecrecover_invalid_input_proper.sol.C.recover:
+    proto 6 1
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    keccak256
+    frame_dig -6
+    ==
+    assert
+    frame_dig -5
+    pushint 27
+    -
+    frame_dig -6
+    swap
+    frame_dig -4
+    frame_dig -3
+    ecdsa_pk_recover Secp256k1
+    pushint 12
+    bzero
+    cover 2
+    concat
+    keccak256
+    extract 12 20
+    concat
+    retsub

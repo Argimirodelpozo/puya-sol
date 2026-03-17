@@ -1,0 +1,143 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol.test.approval_program() -> uint64:
+main:
+    intcblock 8 1 0
+    bytecblock "a" 0x "b" 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xc71ca477 0x56f10dbd // method "set(uint64,uint64,uint64)(uint64,uint64)", method "get(uint64)(uint64,uint64)"
+    txna ApplicationArgs 0
+    match set get
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol.test.set[routing]() -> void:
+set:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bytec_0 // "a"
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dig 3
+    uncover 3
+    callsub set_internal
+    bytec_2 // "b"
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    uncover 3
+    uncover 3
+    callsub set_internal
+    swap
+    itob
+    swap
+    itob
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol.test.get[routing]() -> void:
+get:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    itob
+    sha256
+    bytec_0 // "a"
+    dig 1
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    bytec_2 // "b"
+    uncover 2
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    swap
+    itob
+    swap
+    itob
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol.test.set_internal(m: bytes, key: uint64, value: uint64) -> uint64:
+set_internal:
+    proto 3 1
+    frame_dig -2
+    itob
+    sha256
+    pushbytes "m"
+    swap
+    concat
+    dup
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    frame_dig -1
+    itob
+    uncover 2
+    swap
+    box_put
+    retsub

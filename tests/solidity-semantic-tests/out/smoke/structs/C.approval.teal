@@ -1,0 +1,32 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/structs.sol.C.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xad66b760 0x383338a4 // method "s()(uint256,uint256)", method "t()(uint256,uint256,string)"
+    txna ApplicationArgs 0
+    match main_s_route@5 main_t_route@6
+    err
+
+main_t_route@6:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000017000000000000000000000000000000000000000000000000000000000000002a00420003616e79
+    log
+    pushint 1
+    return
+
+main_s_route@5:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000017000000000000000000000000000000000000000000000000000000000000002a
+    log
+    pushint 1
+    return

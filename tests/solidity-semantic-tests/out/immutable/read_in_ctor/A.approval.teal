@@ -1,0 +1,52 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/read_in_ctor.sol.A.approval_program() -> uint64:
+main:
+    intcblock 0 3 1
+    bytecblock "x" "a"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "a"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "x"
+    intc_0 // 0
+    app_global_put
+    bytec_1 // "a"
+    intc_1 // 3
+    app_global_put
+    bytec_0 // "x"
+    intc_1 // 3
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x262726a2 // method "readX()uint64"
+    txna ApplicationArgs 0
+    match main_readX_route@4
+    err
+
+main_readX_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b readX
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/read_in_ctor.sol.A.readX[routing]() -> void:
+readX:
+    intc_0 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    itob
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

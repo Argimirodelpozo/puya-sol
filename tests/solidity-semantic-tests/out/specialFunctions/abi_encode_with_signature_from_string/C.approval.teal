@@ -1,0 +1,47 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/specialFunctions/abi_encode_with_signature_from_string.sol.C.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x0e34de54 // method "f()(byte[],byte[])"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/specialFunctions/abi_encode_with_signature_from_string.sol.C.f[routing]() -> void:
+f:
+    pushint 0
+    itob
+
+f_while_top@2:
+    pushint 12
+    itob
+    dig 1
+    b>
+    bz f_after_while@4
+    dup
+    pushbytes 0x01
+    b+
+    bury 1
+    b f_while_top@2
+
+f_after_while@4:
+    pushbytes 0x151f7c7500040012000cbdc623a30000000000000001000cbdc623a30000000000000001
+    log
+    pushint 1
+    return

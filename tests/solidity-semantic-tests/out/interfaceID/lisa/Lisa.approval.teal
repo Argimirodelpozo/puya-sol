@@ -1,0 +1,85 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/lisa.sol.Lisa.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock "__ctor_pending"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x027c6bc8 0xf76e680b 0x4e22a3ba // method "__postInit()void", method "is2D()bool", method "skinColor()string", method "supportsInterface(byte[4])bool"
+    txna ApplicationArgs 0
+    match __postInit main_is2D_route@6 main_skinColor_route@7 supportsInterface
+    err
+
+main_skinColor_route@7:
+    pushbytes 0x151f7c75000679656c6c6f77
+    log
+    intc_0 // 1
+    return
+
+main_is2D_route@6:
+    pushbytes 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/lisa.sol.Lisa.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    intc_0 // 1
+    itob
+    pushbytes 0x737570706f72746564496e7465726661636573e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    swap
+    box_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/lisa.sol.Lisa.supportsInterface[routing]() -> void:
+supportsInterface:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    sha256
+    pushbytes "supportedInterfaces"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

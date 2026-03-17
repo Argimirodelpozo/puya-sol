@@ -1,0 +1,33 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/unicode_string.sol.C.approval_program() -> uint64:
+main:
+    bytecblock 0x151f7c750014f09f98832c20f09f98ad2c20616e6420f09f9888
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x36b8a41c 0x201c81af // method "f()string", method "g()string"
+    txna ApplicationArgs 0
+    match main_f_route@5 main_g_route@6
+    err
+
+main_g_route@6:
+    bytec_0 // 0x151f7c750014f09f98832c20f09f98ad2c20616e6420f09f9888
+    log
+    pushint 1
+    return
+
+main_f_route@5:
+    bytec_0 // 0x151f7c750014f09f98832c20f09f98ad2c20616e6420f09f9888
+    log
+    pushint 1
+    return

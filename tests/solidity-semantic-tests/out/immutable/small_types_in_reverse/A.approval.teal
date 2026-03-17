@@ -1,0 +1,121 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol.A.approval_program() -> uint64:
+main:
+    intcblock 0 1 4660
+    bytecblock "b" "c" 0x151f7c75 "a" "x"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "a"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "b"
+    intc_0 // 0
+    app_global_put
+    bytec_1 // "c"
+    intc_0 // 0
+    app_global_put
+    bytec 4 // "x"
+    pushbytes 0x
+    app_global_put
+    bytec_1 // "c"
+    pushint 65535
+    app_global_put
+    bytec_0 // "b"
+    pushint 3855
+    app_global_put
+    bytec_3 // "a"
+    intc_2 // 4660
+    app_global_put
+    intc_0 // 0
+    bytec_0 // "b"
+    app_global_get_ex
+    assert // check b exists
+    intc_0 // 0
+    bytec_1 // "c"
+    app_global_get_ex
+    assert // check c exists
+    intc_2 // 4660
+    itob
+    uncover 2
+    itob
+    concat
+    swap
+    itob
+    concat
+    bytec 4 // "x"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xf9522e2f 0x8c9379e6 0xd12b3273 0xdb1e41f0 // method "a()uint64", method "b()uint64", method "c()uint64", method "x()uint64[3]"
+    txna ApplicationArgs 0
+    match a b c x
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol.A.a[routing]() -> void:
+a:
+    intc_0 // 0
+    bytec_3 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol.A.b[routing]() -> void:
+b:
+    intc_0 // 0
+    bytec_0 // "b"
+    app_global_get_ex
+    assert // check b exists
+    itob
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol.A.c[routing]() -> void:
+c:
+    intc_0 // 0
+    bytec_1 // "c"
+    app_global_get_ex
+    assert // check c exists
+    itob
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol.A.x[routing]() -> void:
+x:
+    intc_0 // 0
+    bytec 4 // "x"
+    app_global_get_ex
+    assert // check x exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

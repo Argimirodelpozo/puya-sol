@@ -1,0 +1,259 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LibZipWrapper.sol.LibZipWrapper.__puya_arc4_router__() -> uint64:
+main:
+    intcblock 1 0 2
+    bytecblock "f" 0x 0x151f7c750000 0x151f7c75
+    b __puya_arc4_router__
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LibZipWrapper.sol.LibZipWrapper.__puya_arc4_router__() -> uint64:
+__puya_arc4_router__:
+    txn NumAppArgs
+    bz __puya_arc4_router_____bare_create__@15
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbf749742 0xe44a64aa 0xfaa83262 0x947d4b1c 0x528e65af 0xaf9dfb9b 0x2508f875 0x0b94234f 0x0152a0fe // method "flzCompress(byte[])byte[]", method "__finish_flzCompress()byte[]", method "flzDecompress(byte[])byte[]", method "__finish_flzDecompress()byte[]", method "cdCompress(byte[])byte[]", method "__finish_cdCompress()byte[]", method "cdDecompress(byte[])byte[]", method "__finish_cdDecompress()byte[]", method "__auth__()void"
+    txna ApplicationArgs 0
+    match flzCompress __finish_flzCompress flzDecompress __finish_flzDecompress cdCompress __finish_cdCompress cdDecompress __finish_cdDecompress __puya_arc4_router_____auth___route@11
+    err
+
+__puya_arc4_router_____auth___route@11:
+    intc_0 // 1
+    return
+
+__puya_arc4_router_____bare_create__@15:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LibZipWrapper.sol.LibZipWrapper.flzCompress[routing]() -> void:
+flzCompress:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    ==
+    assert // orchestrator: reentrant call
+    bytec_0 // "f"
+    txna ApplicationArgs 0
+    app_global_put
+    store 0
+    bytec_2 // 0x151f7c750000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LibZipWrapper.sol.LibZipWrapper.__finish_flzCompress[routing]() -> void:
+__finish_flzCompress:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gloads 0
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LibZipWrapper.sol.LibZipWrapper.flzDecompress[routing]() -> void:
+flzDecompress:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    ==
+    assert // orchestrator: reentrant call
+    bytec_0 // "f"
+    txna ApplicationArgs 0
+    app_global_put
+    store 0
+    bytec_2 // 0x151f7c750000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LibZipWrapper.sol.LibZipWrapper.__finish_flzDecompress[routing]() -> void:
+__finish_flzDecompress:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gloads 0
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LibZipWrapper.sol.LibZipWrapper.cdCompress[routing]() -> void:
+cdCompress:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    ==
+    assert // orchestrator: reentrant call
+    bytec_0 // "f"
+    txna ApplicationArgs 0
+    app_global_put
+    store 0
+    bytec_2 // 0x151f7c750000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LibZipWrapper.sol.LibZipWrapper.__finish_cdCompress[routing]() -> void:
+__finish_cdCompress:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gloads 0
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LibZipWrapper.sol.LibZipWrapper.cdDecompress[routing]() -> void:
+cdDecompress:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    ==
+    assert // orchestrator: reentrant call
+    bytec_0 // "f"
+    txna ApplicationArgs 0
+    app_global_put
+    store 0
+    bytec_2 // 0x151f7c750000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/LibZipWrapper.sol.LibZipWrapper.__finish_cdDecompress[routing]() -> void:
+__finish_cdDecompress:
+    bytec_0 // "f"
+    app_global_get
+    bytec_1 // 0x
+    !=
+    assert // orchestrator: no active call
+    bytec_0 // "f"
+    bytec_1 // 0x
+    app_global_put
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gloads 0
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

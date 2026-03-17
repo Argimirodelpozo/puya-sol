@@ -1,0 +1,38 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/inc_dec_operators.sol.test.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytes "x"
+    pushint 0
+    app_global_put
+    pushbytess "v" 0x
+    app_global_put
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xcd78b354 // method "f()uint256"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/inc_dec_operators.sol.test.f[routing]() -> void:
+f:
+    pushbytess "v" 0x05
+    app_global_put
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000053866
+    log
+    pushint 1
+    return

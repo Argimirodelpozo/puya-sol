@@ -1,0 +1,71 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/function_types_sig.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 32
+    bytecblock 0x151f7c75 "x"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "x"
+    pushbytes 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x4bb8a92a 0x886e1470 0xd63ef4f0 0x4e620b13 0x7c1072af // method "f()byte[4]", method "g()byte[4]", method "h()byte[4]", method "i()byte[4]", method "x()uint256"
+    txna ApplicationArgs 0
+    match main_f_route@5 main_g_route@6 main_h_route@7 main_i_route@8 x
+    err
+
+main_i_route@8:
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_h_route@7:
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_g_route@6:
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_f_route@5:
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/function_types_sig.sol.C.x[routing]() -> void:
+x:
+    pushint 0
+    bytec_1 // "x"
+    app_global_get_ex
+    assert // check x exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

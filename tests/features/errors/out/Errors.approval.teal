@@ -1,0 +1,81 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/errors/contracts/Errors.sol.Errors.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x6e85b98b 0xba60f463 0xe976360e 0xcda526e9 0xa1ff2aec // method "requirePass(uint256)uint256", method "requireFail()void", method "assertPass()bool", method "revertAlways()void", method "revertCustomError(uint256,uint256)void"
+    txna ApplicationArgs 0
+    match requirePass main_requireFail_route@6 main_assertPass_route@7 main_revertAlways_route@8 revertCustomError
+    err
+
+main_revertAlways_route@8:
+    err // explicit revert
+
+main_assertPass_route@7:
+    pushbytes 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+main_requireFail_route@6:
+    err // always fails
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/errors/contracts/Errors.sol.Errors.requirePass[routing]() -> void:
+requirePass:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    dig 1
+    pushbytes 0x
+    b>
+    assert // must be positive
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/errors/contracts/Errors.sol.Errors.revertCustomError[routing]() -> void:
+revertCustomError:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    b<
+    !
+    assert // InsufficientBalance
+    intc_1 // 1
+    return

@@ -1,0 +1,32 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/specialFunctions/keccak256_optimized.sol.C.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xe75dc517 0x99a77ea5 // method "short()bool", method "long()(bool,bool)"
+    txna ApplicationArgs 0
+    match main_short_route@5 main_long_route@6
+    err
+
+main_long_route@6:
+    pushbytes 0x151f7c75c0
+    log
+    pushint 1
+    return
+
+main_short_route@5:
+    pushbytes 0x151f7c7580
+    log
+    pushint 1
+    return

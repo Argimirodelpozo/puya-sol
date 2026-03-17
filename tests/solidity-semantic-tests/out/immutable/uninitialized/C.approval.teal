@@ -1,0 +1,72 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/uninitialized.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 32
+    bytecblock "u" "b" "a"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "u"
+    pushbytes 0x
+    app_global_put
+    bytec_1 // "b"
+    intc_0 // 0
+    app_global_put
+    bytec_2 // "a"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x2c6c2b37 // method "get()(uint256,bool,address)"
+    txna ApplicationArgs 0
+    match main_get_route@4
+    err
+
+main_get_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b get
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/uninitialized.sol.C.get[routing]() -> void:
+get:
+    intc_0 // 0
+    bytec_0 // "u"
+    app_global_get_ex
+    assert // check u exists
+    intc_0 // 0
+    bytec_1 // "b"
+    app_global_get_ex
+    assert // check b exists
+    intc_0 // 0
+    bytec_2 // "a"
+    app_global_get_ex
+    assert // check a exists
+    dig 2
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    uncover 3
+    b|
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 4
+    setbit
+    concat
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

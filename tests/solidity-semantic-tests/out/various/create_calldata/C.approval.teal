@@ -1,0 +1,50 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/create_calldata.sol.C.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytes "s"
+    txna ApplicationArgs 0
+    app_global_put
+    txna ApplicationArgs 0
+    len
+    !
+    assert
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x74ee17b8 // method "s()byte[]"
+    txna ApplicationArgs 0
+    match main_s_route@4
+    err
+
+main_s_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b s
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/create_calldata.sol.C.s[routing]() -> void:
+s:
+    pushint 0
+    pushbytes "s"
+    app_global_get_ex
+    assert // check s exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return

@@ -1,0 +1,118 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_push_empty.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 32 1 8
+    bytecblock "storageArray_length" 0x
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "storageArray_length"
+    intc_0 // 0
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x1e3ddb1a // method "pushEmpty(uint256)void"
+    txna ApplicationArgs 0
+    match main_pushEmpty_route@4
+    err
+
+main_pushEmpty_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b pushEmpty
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_push_empty.sol.C.pushEmpty[routing]() -> void:
+pushEmpty:
+    intc_0 // 0
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+
+pushEmpty_while_top@2:
+    intc_0 // 0
+    bytec_0 // "storageArray_length"
+    app_global_get_ex
+    assert // check storageArray_length exists
+    itob
+    dig 1
+    b<
+    bnz pushEmpty_while_top@2
+    intc_0 // 0
+    itob
+    bury 2
+
+pushEmpty_while_top@5:
+    dup2
+    b<
+    bz pushEmpty_after_while@7
+    callsub _puya_lib.mem.new_slot
+    dup
+    bytec_1 // 0x
+    stores
+    pushbytes "storageArray"
+    box_get
+    swap
+    pushint 2
+    intc_0 // 0
+    extract3
+    callsub _puya_lib.mem.new_slot
+    dup
+    uncover 2
+    stores
+    swap
+    select
+    intc_3 // 8
+    bzero
+    dig 3
+    dup
+    cover 3
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    swap
+    loads
+    swap
+    intc_1 // 32
+    *
+    intc_1 // 32
+    extract3 // on error: index access is out of bounds
+    bytec_1 // 0x
+    b==
+    assert
+    pushbytes 0x01
+    b+
+    bury 2
+    b pushEmpty_while_top@5
+
+pushEmpty_after_while@7:
+    intc_2 // 1
+    return
+
+
+// _puya_lib.mem.new_slot() -> uint64:
+_puya_lib.mem.new_slot:
+    load 0
+    bitlen
+    load 0
+    pushint 256
+    dig 2
+    -
+    intc_0 // 0
+    setbit // on error: no available slots
+    store 0
+    retsub

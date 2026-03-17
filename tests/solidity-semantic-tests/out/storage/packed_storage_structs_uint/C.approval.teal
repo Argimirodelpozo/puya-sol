@@ -1,0 +1,247 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 8 1 2 43981 56491
+    bytecblock "data" 0x1234567890
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "data"
+    pushbytes 0x
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xc95a9d21 // method "test()uint256"
+    txna ApplicationArgs 0
+    match main_test_route@4
+    err
+
+main_test_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b test
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.test[routing]() -> void:
+test:
+    intc_0 // 0
+    intc_3 // 2
+    itob
+    dup
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    dup
+    extract 8 8
+    swap
+    extract 16 32
+    cover 2
+    concat
+    swap
+    concat
+    bytec_0 // "data"
+    dig 1
+    app_global_put
+    intc_0 // 0
+    extract_uint64
+    intc_3 // 2
+    !=
+    bz test_after_if_else@3
+    dup
+
+test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.test@20:
+    dup
+    len
+    pushint 32
+    <=
+    assert // overflow
+    pushint 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+test_after_if_else@3:
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    dup
+    extract 0 8
+    intc 4 // 43981
+    itob
+    uncover 2
+    extract 16 32
+    cover 2
+    concat
+    swap
+    concat
+    bytec_0 // "data"
+    dig 1
+    app_global_put
+    intc_1 // 8
+    extract_uint64
+    intc 4 // 43981
+    !=
+    bz test_after_if_else@5
+    pushint 3
+    itob
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.test@20
+
+test_after_if_else@5:
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    dup
+    extract 0 8
+    swap
+    extract 8 8
+    concat
+    pushbytes 0x0000000000000000000000000000000000000000000000000000001234567890
+    concat
+    bytec_0 // "data"
+    dig 1
+    app_global_put
+    extract 16 32
+    bytec_1 // 0x1234567890
+    b!=
+    bz test_after_if_else@7
+    pushint 4
+    itob
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.test@20
+
+test_after_if_else@7:
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    intc_0 // 0
+    extract_uint64
+    intc_3 // 2
+    !=
+    bz test_after_if_else@9
+    pushint 5
+    itob
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.test@20
+
+test_after_if_else@9:
+    intc_1 // 8
+    itob
+    dup
+    bury 3
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    dup
+    extract 8 8
+    swap
+    extract 16 32
+    cover 2
+    concat
+    swap
+    concat
+    bytec_0 // "data"
+    dig 1
+    app_global_put
+    intc_0 // 0
+    extract_uint64
+    intc_1 // 8
+    !=
+    bz test_after_if_else@11
+    pushint 6
+    itob
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.test@20
+
+test_after_if_else@11:
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    intc_1 // 8
+    extract_uint64
+    intc 4 // 43981
+    !=
+    bz test_after_if_else@13
+    pushint 7
+    itob
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.test@20
+
+test_after_if_else@13:
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    dup
+    extract 0 8
+    intc 5 // 56491
+    itob
+    uncover 2
+    extract 16 32
+    cover 2
+    concat
+    swap
+    concat
+    bytec_0 // "data"
+    dig 1
+    app_global_put
+    intc_1 // 8
+    extract_uint64
+    intc 5 // 56491
+    !=
+    bz test_after_if_else@15
+    dig 1
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.test@20
+
+test_after_if_else@15:
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    extract 16 32
+    bytec_1 // 0x1234567890
+    b!=
+    bz test_after_if_else@17
+    pushint 9
+    itob
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.test@20
+
+test_after_if_else@17:
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    dup
+    extract 0 8
+    swap
+    extract 8 8
+    concat
+    pushbytes 0x0000000000000000000000000000000000000000000000000000009876543210
+    concat
+    bytec_0 // "data"
+    dig 1
+    app_global_put
+    extract 16 32
+    pushbytes 0x9876543210
+    b!=
+    bz test_after_if_else@19
+    pushint 10
+    itob
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.test@20
+
+test_after_if_else@19:
+    intc_2 // 1
+    itob
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.test@20

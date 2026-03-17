@@ -1,0 +1,41 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/invalid_enum_logged.sol.C.approval_program() -> uint64:
+main:
+    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x2b01fe2a 0x68bafeb3 // method "test_log()uint256", method "test_log_ok()uint256"
+    txna ApplicationArgs 0
+    match test_log test_log_ok
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/invalid_enum_logged.sol.C.test_log[routing]() -> void:
+test_log:
+    pushbytes 0xe1d77aac0000000000000005
+    log
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    pushint 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/invalid_enum_logged.sol.C.test_log_ok[routing]() -> void:
+test_log_ok:
+    pushbytes 0xe1d77aac0000000000000000
+    log
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    pushint 1
+    return

@@ -1,0 +1,45 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/unicode_escapes.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xdb3fae8e 0x8163d802 0x769866b7 0x9c377eb8 // method "oneByteUTF8()string", method "twoBytesUTF8()string", method "threeBytesUTF8()string", method "combined()string"
+    txna ApplicationArgs 0
+    match main_oneByteUTF8_route@5 main_twoBytesUTF8_route@6 main_threeBytesUTF8_route@7 main_combined_route@8
+    err
+
+main_combined_route@8:
+    pushbytes 0x151f7c75000624c2a2e282ac
+    log
+    intc_0 // 1
+    return
+
+main_threeBytesUTF8_route@7:
+    pushbytes 0x151f7c750009616161e282ac616161
+    log
+    intc_0 // 1
+    return
+
+main_twoBytesUTF8_route@6:
+    pushbytes 0x151f7c750008616161c2a2616161
+    log
+    intc_0 // 1
+    return
+
+main_oneByteUTF8_route@5:
+    pushbytes 0x151f7c75000761616124616161
+    log
+    intc_0 // 1
+    return

@@ -1,0 +1,84 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/multi_contract/contracts/MultiContract.sol.Counter.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    bytecblock "count" 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "count"
+    pushbytes 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x2fa47328 0x20872c18 0x93833528 // method "increment()void", method "getCount()uint256", method "count()uint256"
+    txna ApplicationArgs 0
+    match increment getCount count
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/multi_contract/contracts/MultiContract.sol.Counter.increment[routing]() -> void:
+increment:
+    intc_2 // 0
+    bytec_0 // "count"
+    app_global_get_ex
+    assert // check count exists
+    pushbytes 0x01
+    b+
+    bytec_0 // "count"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/multi_contract/contracts/MultiContract.sol.Counter.getCount[routing]() -> void:
+getCount:
+    intc_2 // 0
+    bytec_0 // "count"
+    app_global_get_ex
+    assert // check count exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/features/multi_contract/contracts/MultiContract.sol.Counter.count[routing]() -> void:
+count:
+    intc_2 // 0
+    bytec_0 // "count"
+    app_global_get_ex
+    assert // check count exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

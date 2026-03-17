@@ -1,0 +1,97 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_member_init.sol.test.approval_program() -> uint64:
+main:
+    intcblock 32 0 1
+    bytecblock "m_b" "m_c" "m_a"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 5
+    itob
+    bytec_2 // "m_a"
+    swap
+    app_global_put
+    bytec_0 // "m_b"
+    pushbytes 0x
+    app_global_put
+    pushint 7
+    itob
+    bytec_1 // "m_c"
+    swap
+    app_global_put
+    pushint 6
+    itob
+    bytec_0 // "m_b"
+    swap
+    app_global_put
+    pushint 8
+    itob
+    bytec_1 // "m_c"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x90a2d552 // method "get()(uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_get_route@4
+    err
+
+main_get_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b get
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_member_init.sol.test.get[routing]() -> void:
+get:
+    intc_1 // 0
+    bytec_2 // "m_a"
+    app_global_get_ex
+    assert // check m_a exists
+    intc_1 // 0
+    bytec_0 // "m_b"
+    app_global_get_ex
+    assert // check m_b exists
+    intc_1 // 0
+    bytec_1 // "m_c"
+    app_global_get_ex
+    assert // check m_c exists
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 3
+    dig 1
+    b|
+    dig 3
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    dig 2
+    b|
+    concat
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

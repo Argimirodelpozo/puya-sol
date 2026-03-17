@@ -1,0 +1,33 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/basic.sol.C.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x0d04c402 // method "basic()bool"
+    txna ApplicationArgs 0
+    match main_basic_route@4
+    err
+
+main_basic_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b basic
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/basic.sol.C.basic[routing]() -> void:
+basic:
+    pushint 0
+    assert
+    pushbytes 0x151f7c7580
+    log
+    pushint 1
+    return

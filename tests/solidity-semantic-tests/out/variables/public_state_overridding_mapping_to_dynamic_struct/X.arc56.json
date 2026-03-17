@@ -1,0 +1,143 @@
+{
+    "name": "X",
+    "structs": {
+        "S": [
+            {
+                "name": "v",
+                "type": "uint256"
+            },
+            {
+                "name": "s",
+                "type": "string"
+            }
+        ],
+        "testReturn": [
+            {
+                "name": "v",
+                "type": "uint256"
+            },
+            {
+                "name": "s",
+                "type": "string"
+            }
+        ]
+    },
+    "methods": [
+        {
+            "name": "set",
+            "args": [],
+            "returns": {
+                "type": "void"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "test",
+            "args": [
+                {
+                    "type": "uint256",
+                    "name": "x"
+                }
+            ],
+            "returns": {
+                "type": "(uint256,string)",
+                "struct": "testReturn"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "events": [],
+            "recommendations": {}
+        }
+    ],
+    "arcs": [
+        22,
+        28
+    ],
+    "networks": {},
+    "state": {
+        "schema": {
+            "global": {
+                "ints": 0,
+                "bytes": 0
+            },
+            "local": {
+                "ints": 0,
+                "bytes": 0
+            }
+        },
+        "keys": {
+            "global": {},
+            "local": {},
+            "box": {}
+        },
+        "maps": {
+            "global": {},
+            "local": {},
+            "box": {
+                "test": {
+                    "keyType": "AVMBytes",
+                    "valueType": "S",
+                    "prefix": "dGVzdA=="
+                }
+            }
+        }
+    },
+    "bareActions": {
+        "create": [],
+        "call": []
+    },
+    "sourceInfo": {
+        "approval": {
+            "sourceInfo": [
+                {
+                    "pc": [
+                        209
+                    ],
+                    "errorMessage": "invalid number of bytes for arc4.uint256"
+                },
+                {
+                    "pc": [
+                        212
+                    ],
+                    "errorMessage": "overflow"
+                }
+            ],
+            "pcOffsetMethod": "none"
+        },
+        "clear": {
+            "sourceInfo": [],
+            "pcOffsetMethod": "none"
+        }
+    },
+    "source": {
+        "approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyAvaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvdGVzdHMvc29saWRpdHktc2VtYW50aWMtdGVzdHMvdGVzdHMvdmFyaWFibGVzL3B1YmxpY19zdGF0ZV9vdmVycmlkZGluZ19tYXBwaW5nX3RvX2R5bmFtaWNfc3RydWN0LnNvbC5YLmFwcHJvdmFsX3Byb2dyYW0oKSAtPiB1aW50NjQ6Cm1haW46CiAgICBpbnRjYmxvY2sgMzIgMQogICAgYnl0ZWNibG9jayAweDc0NjU3Mzc0YTZiYjEzM2NiMWUzNjM4YWQ3YjhhM2ZmMDUzOTY2OGU5ZTU2ZjliODUwZWYxYjJhODEwZjU0MjJlYWE2YzMyMwogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGJueiBtYWluX2FmdGVyX2lmX2Vsc2VAMgogICAgaW50Y18xIC8vIDEKICAgIHJldHVybgoKbWFpbl9hZnRlcl9pZl9lbHNlQDI6CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQKICAgIHB1c2hieXRlc3MgMHgwZjc2MjA1YSAweGQ0MTkwNjFiIC8vIG1ldGhvZCAic2V0KCl2b2lkIiwgbWV0aG9kICJ0ZXN0KHVpbnQyNTYpKHVpbnQyNTYsc3RyaW5nKSIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIHNldCB0ZXN0CiAgICBlcnIKCgovLyAvaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvdGVzdHMvc29saWRpdHktc2VtYW50aWMtdGVzdHMvdGVzdHMvdmFyaWFibGVzL3B1YmxpY19zdGF0ZV9vdmVycmlkZGluZ19tYXBwaW5nX3RvX2R5bmFtaWNfc3RydWN0LnNvbC5YLnNldFtyb3V0aW5nXSgpIC0+IHZvaWQ6CnNldDoKICAgIGJ5dGVjXzAgLy8gMHg3NDY1NzM3NGE2YmIxMzNjYjFlMzYzOGFkN2I4YTNmZjA1Mzk2NjhlOWU1NmY5Yjg1MGVmMWIyYTgxMGY1NDIyZWFhNmMzMjMKICAgIGJveF9nZXQKICAgIHB1c2hieXRlcyAweDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDIyMDAwMAogICAgY292ZXIgMgogICAgc2VsZWN0CiAgICBkdXAKICAgIGludGNfMCAvLyAzMgogICAgZXh0cmFjdF91aW50MTYKICAgIGRpZyAxCiAgICBsZW4KICAgIHN1YnN0cmluZzMKICAgIHB1c2hieXRlcyAweDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDIwMDIyCiAgICBzd2FwCiAgICBjb25jYXQKICAgIGJ5dGVjXzAgLy8gMHg3NDY1NzM3NGE2YmIxMzNjYjFlMzYzOGFkN2I4YTNmZjA1Mzk2NjhlOWU1NmY5Yjg1MGVmMWIyYTgxMGY1NDIyZWFhNmMzMjMKICAgIGJveF9kZWwKICAgIHBvcAogICAgYnl0ZWNfMCAvLyAweDc0NjU3Mzc0YTZiYjEzM2NiMWUzNjM4YWQ3YjhhM2ZmMDUzOTY2OGU5ZTU2ZjliODUwZWYxYjJhODEwZjU0MjJlYWE2YzMyMwogICAgZGlnIDEKICAgIGJveF9wdXQKICAgIGV4dHJhY3QgMCAzMgogICAgcHVzaGJ5dGVzIDB4MDAyMjAwMDg3Mzc0NjE3NDY1NzY2MTcyCiAgICBjb25jYXQKICAgIGJ5dGVjXzAgLy8gMHg3NDY1NzM3NGE2YmIxMzNjYjFlMzYzOGFkN2I4YTNmZjA1Mzk2NjhlOWU1NmY5Yjg1MGVmMWIyYTgxMGY1NDIyZWFhNmMzMjMKICAgIGJveF9kZWwKICAgIHBvcAogICAgYnl0ZWNfMCAvLyAweDc0NjU3Mzc0YTZiYjEzM2NiMWUzNjM4YWQ3YjhhM2ZmMDUzOTY2OGU5ZTU2ZjliODUwZWYxYjJhODEwZjU0MjJlYWE2YzMyMwogICAgc3dhcAogICAgYm94X3B1dAogICAgaW50Y18xIC8vIDEKICAgIHJldHVybgoKCi8vIC9ob21lL2FyZ2kvQWxnb3JhbmRGb3VuZGF0aW9uL1NpZGVQcm9qZWN0cy9wdXlhLXNvbC9wdXlhLXNvbC90ZXN0cy9zb2xpZGl0eS1zZW1hbnRpYy10ZXN0cy90ZXN0cy92YXJpYWJsZXMvcHVibGljX3N0YXRlX292ZXJyaWRkaW5nX21hcHBpbmdfdG9fZHluYW1pY19zdHJ1Y3Quc29sLlgudGVzdFtyb3V0aW5nXSgpIC0+IHZvaWQ6CnRlc3Q6CiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCiAgICBkdXAKICAgIGxlbgogICAgZHVwCiAgICBpbnRjXzAgLy8gMzIKICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIGFyYzQudWludDI1NgogICAgaW50Y18wIC8vIDMyCiAgICA8PQogICAgYXNzZXJ0IC8vIG92ZXJmbG93CiAgICBpbnRjXzAgLy8gMzIKICAgIGJ6ZXJvCiAgICBifAogICAgcHVzaGJ5dGVzIDB4MDAyMjAwMDQ3NDY1NzM3NAogICAgY29uY2F0CiAgICBwdXNoYnl0ZXMgMHgxNTFmN2M3NQogICAgc3dhcAogICAgY29uY2F0CiAgICBsb2cKICAgIGludGNfMSAvLyAxCiAgICByZXR1cm4K",
+        "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyAvaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvdGVzdHMvc29saWRpdHktc2VtYW50aWMtdGVzdHMvdGVzdHMvdmFyaWFibGVzL3B1YmxpY19zdGF0ZV9vdmVycmlkZGluZ19tYXBwaW5nX3RvX2R5bmFtaWNfc3RydWN0LnNvbC5YLmNsZWFyX3N0YXRlX3Byb2dyYW0oKSAtPiB1aW50NjQ6Cm1haW46CiAgICBwdXNoaW50IDEKICAgIHJldHVybgo="
+    },
+    "byteCode": {
+        "approval": "CiACIAEmASR0ZXN0prsTPLHjY4rXuKP/BTlmjp5W+bhQ7xsqgQ9UIuqmwyMxGEAAAiNDMRkURDEYRIICBA92IFoE1BkGGzYaAI4CAAEAegAovoAkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIgAATgJNSSJZSwEVUoAiAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAIkxQKLxIKEsBv1cAIIAMACIACHN0YXRldmFyUCi8SChMvyNDNhoBSRVJIhJEIg5EIq+rgAgAIgAEdGVzdFCABBUffHVMULAjQw==",
+        "clear": "CoEBQw=="
+    },
+    "compilerInfo": {
+        "compiler": "puya",
+        "compilerVersion": {
+            "major": 5,
+            "minor": 7,
+            "patch": 1
+        }
+    },
+    "events": [],
+    "templateVariables": {}
+}

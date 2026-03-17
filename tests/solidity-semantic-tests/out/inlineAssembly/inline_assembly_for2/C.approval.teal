@@ -1,0 +1,105 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_for2.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock 0x "st"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "st"
+    bytec_0 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xc14fe2fb // method "f(uint256)(uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_for2.sol.C.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // 0x
+    swap
+    bytec_0 // 0x
+    swap
+    intc_2 // 0
+    itob
+    bytec_1 // "st"
+    swap
+    app_global_put
+
+f_while_top@2:
+    dup
+    bytec_0 // 0x
+    b==
+    bz f_after_while@4
+    bytec_0 // 0x
+    dig 2
+    pushbytes 0x03
+    b+
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 3
+    dig 1
+    bury 4
+    bury 1
+    b f_while_top@2
+
+f_after_while@4:
+    intc_2 // 0
+    bytec_1 // "st"
+    app_global_get_ex
+    assert // check st exists
+    dig 3
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    dig 2
+    b|
+    concat
+    dig 3
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

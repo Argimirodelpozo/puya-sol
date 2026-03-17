@@ -1,0 +1,63 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/complex_accessors.sol.test.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock "__ctor_pending" 0x746f5f75696e745f6d6170a6bb133cb1e3638ad7b8a3ff0539668e9e56f9b850ef1b2a810f5422eaa6c323 0x746f5f6d756c7469706c655f6d617056295d08ad255bc1dcdee7db6829d5612a7a47b11652d3d16e9080ee6cc72af7
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xbacc49e3 // method "__postInit()void"
+    txna ApplicationArgs 0
+    match main___postInit_route@4
+    err
+
+main___postInit_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b __postInit
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/complex_accessors.sol.test.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    pushbytess 0x746f5f737472696e675f6d6170a6bb133cb1e3638ad7b8a3ff0539668e9e56f9b850ef1b2a810f5422eaa6c323 "24"
+    box_put
+    intc_1 // 0
+    itob
+    pushbytes 0x746f5f626f6f6c5f6d6170a6bb133cb1e3638ad7b8a3ff0539668e9e56f9b850ef1b2a810f5422eaa6c323
+    swap
+    box_put
+    pushint 12
+    itob
+    bytec_1 // 0x746f5f75696e745f6d6170a6bb133cb1e3638ad7b8a3ff0539668e9e56f9b850ef1b2a810f5422eaa6c323
+    box_del
+    pop
+    bytec_1 // 0x746f5f75696e745f6d6170a6bb133cb1e3638ad7b8a3ff0539668e9e56f9b850ef1b2a810f5422eaa6c323
+    swap
+    box_put
+    pushint 31
+    itob
+    bytec_2 // 0x746f5f6d756c7469706c655f6d617056295d08ad255bc1dcdee7db6829d5612a7a47b11652d3d16e9080ee6cc72af7
+    box_del
+    pop
+    bytec_2 // 0x746f5f6d756c7469706c655f6d617056295d08ad255bc1dcdee7db6829d5612a7a47b11652d3d16e9080ee6cc72af7
+    swap
+    box_put
+    intc_0 // 1
+    return

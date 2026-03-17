@@ -1,0 +1,70 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/storing_invalid_boolean.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock "perm" 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "perm"
+    intc_1 // 0
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x90f88440 0xb257502d 0x2d0127c5 0xef4cbd06 // method "set()uint256", method "ret()bool", method "ev()uint256", method "perm()bool"
+    txna ApplicationArgs 0
+    match set main_ret_route@6 ev perm
+    err
+
+main_ret_route@6:
+    pushbytes 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/storing_invalid_boolean.sol.C.set[routing]() -> void:
+set:
+    bytec_0 // "perm"
+    intc_0 // 1
+    app_global_put
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/storing_invalid_boolean.sol.C.ev[routing]() -> void:
+ev:
+    pushbytes 0x803bd84c80
+    log
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/storing_invalid_boolean.sol.C.perm[routing]() -> void:
+perm:
+    intc_1 // 0
+    bytec_0 // "perm"
+    app_global_get_ex
+    assert // check perm exists
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

@@ -1,0 +1,30 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/ReceiverWrapper.sol.ReceiverWrapper.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbea484fd 0x76e0504c // method "ping()uint256", method "()void"
+    txna ApplicationArgs 0
+    match main_ping_route@5 main__route@6
+    err
+
+main__route@6:
+    pushint 1
+    return
+
+main_ping_route@5:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    pushint 1
+    return

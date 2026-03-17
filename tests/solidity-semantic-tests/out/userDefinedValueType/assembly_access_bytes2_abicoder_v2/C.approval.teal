@@ -1,0 +1,70 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/assembly_access_bytes2_abicoder_v2.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 2
+    bytecblock 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xa06d2b6d 0x4678de35 0x7c2e2d08 // method "f(byte[2])byte[2]", method "g(byte[2])byte[2]", method "h(uint256)byte[2]"
+    txna ApplicationArgs 0
+    match f g h
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/assembly_access_bytes2_abicoder_v2.sol.C.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 2
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 2>
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/assembly_access_bytes2_abicoder_v2.sol.C.g[routing]() -> void:
+g:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 2
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 2>
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/assembly_access_bytes2_abicoder_v2.sol.C.h[routing]() -> void:
+h:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

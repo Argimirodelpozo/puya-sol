@@ -1,0 +1,45 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_member.sol.test.approval_program() -> uint64:
+main:
+    bytecblock "data1"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "data1"
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    app_global_put
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x2e16eec5 // method "deleteMember()uint256"
+    txna ApplicationArgs 0
+    match main_deleteMember_route@4
+    err
+
+main_deleteMember_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b deleteMember
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_member.sol.test.deleteMember[routing]() -> void:
+deleteMember:
+    pushint 0
+    bytec_0 // "data1"
+    app_global_get_ex
+    assert // check data1 exists
+    extract 0 32
+    pushint 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return

@@ -1,0 +1,60 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_fixed_bytes.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 2
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x35184c44 // method "sum(byte[2],byte[2])byte[2]"
+    txna ApplicationArgs 0
+    match main_sum_route@4
+    err
+
+main_sum_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b sum
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_fixed_bytes.sol.L.add(a: bytes, b: bytes) -> bytes:
+L.add:
+    proto 2 1
+    frame_dig -2
+    btoi
+    frame_dig -1
+    btoi
+    +
+    itob
+    extract 6 2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_fixed_bytes.sol.C.sum[routing]() -> void:
+sum:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 2
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 2>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 2
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 2>
+    callsub L.add
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

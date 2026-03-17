@@ -1,0 +1,92 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/interfaces.sol.Test.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock 0x151f7c75 "ghello_world_interfaceId" "ERC165_interfaceId" 0x151f7c75c6be8b58
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "ghello_world_interfaceId"
+    pushbytes 0xc6be8b58
+    app_global_put
+    bytec_2 // "ERC165_interfaceId"
+    pushbytes 0x01ffc9a7
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xc079a281 0xff0eed01 0xde7e7430 0xb701ebe6 0xe2a72f14 0xf7b333b0 0x438c683d 0x8bf5e24b // method "hello()byte[4]", method "world()byte[4]", method "hello_world()byte[4]", method "hello_world_interfaceId()byte[4]", method "other()byte[4]", method "hello_world_derived_interfaceId()byte[4]", method "ghello_world_interfaceId()byte[4]", method "ERC165_interfaceId()byte[4]"
+    txna ApplicationArgs 0
+    match main_hello_route@5 main_world_route@6 main_hello_world_route@7 main_hello_world_interfaceId_route@8 main_other_route@9 main_hello_world_derived_interfaceId_route@10 ghello_world_interfaceId ERC165_interfaceId
+    err
+
+main_hello_world_derived_interfaceId_route@10:
+    pushbytes 0x151f7c7585295877
+    log
+    intc_0 // 1
+    return
+
+main_other_route@9:
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_hello_world_interfaceId_route@8:
+    bytec_3 // 0x151f7c75c6be8b58
+    log
+    intc_0 // 1
+    return
+
+main_hello_world_route@7:
+    bytec_3 // 0x151f7c75c6be8b58
+    log
+    intc_0 // 1
+    return
+
+main_world_route@6:
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_hello_route@5:
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/interfaces.sol.Test.ghello_world_interfaceId[routing]() -> void:
+ghello_world_interfaceId:
+    intc_1 // 0
+    bytec_1 // "ghello_world_interfaceId"
+    app_global_get_ex
+    assert // check ghello_world_interfaceId exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/interfaces.sol.Test.ERC165_interfaceId[routing]() -> void:
+ERC165_interfaceId:
+    intc_1 // 0
+    bytec_2 // "ERC165_interfaceId"
+    app_global_get_ex
+    assert // check ERC165_interfaceId exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

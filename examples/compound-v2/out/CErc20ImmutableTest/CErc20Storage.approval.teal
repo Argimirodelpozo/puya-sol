@@ -1,0 +1,41 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/CErc20Immutable.sol.CErc20Storage.approval_program() -> uint64:
+main:
+    bytecblock "underlying"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "underlying"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x61c3c1ef // method "underlying()address"
+    txna ApplicationArgs 0
+    match main_underlying_route@4
+    err
+
+main_underlying_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b underlying
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/compound-v2/contracts/CErc20Immutable.sol.CErc20Storage.underlying[routing]() -> void:
+underlying:
+    pushint 0
+    bytec_0 // "underlying"
+    app_global_get_ex
+    assert // check underlying exists
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return

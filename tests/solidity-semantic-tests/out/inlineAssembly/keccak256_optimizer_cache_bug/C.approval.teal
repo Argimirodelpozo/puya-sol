@@ -1,0 +1,89 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak256_optimizer_cache_bug.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytes "data_length"
+    intc_0 // 0
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x2ea443e5 // method "val()bool"
+    txna ApplicationArgs 0
+    match main_val_route@4
+    err
+
+main_val_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b val
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak256_optimizer_cache_bug.sol.C.val[routing]() -> void:
+val:
+    callsub _puya_lib.mem.new_slot
+    dup
+    pushbytes 0x
+    stores
+    pushbytes "data"
+    box_get
+    swap
+    pushint 2
+    intc_0 // 0
+    extract3
+    callsub _puya_lib.mem.new_slot
+    dup
+    dig 2
+    stores
+    uncover 3
+    swap
+    dig 3
+    select
+    loads
+    extract 32 32 // on error: index access is out of bounds
+    pushbytes 0x7b
+    b!=
+    assert
+    callsub _puya_lib.mem.new_slot
+    dup
+    pushbytes 0x
+    stores
+    callsub _puya_lib.mem.new_slot
+    dup
+    uncover 3
+    stores
+    uncover 2
+    select
+    loads
+    extract 32 32 // on error: index access is out of bounds
+    pushbytes 0x
+    b==
+    assert
+    pushbytes 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// _puya_lib.mem.new_slot() -> uint64:
+_puya_lib.mem.new_slot:
+    load 0
+    bitlen
+    load 0
+    pushint 256
+    dig 2
+    -
+    intc_0 // 0
+    setbit // on error: no available slots
+    store 0
+    retsub

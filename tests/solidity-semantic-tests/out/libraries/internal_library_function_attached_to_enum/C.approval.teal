@@ -1,0 +1,65 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_enum.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 8 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x22fb13ac // method "equalsA(uint256)bool"
+    txna ApplicationArgs 0
+    match main_equalsA_route@4
+    err
+
+main_equalsA_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b equalsA
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_enum.sol.L.equals(a: uint64, b: uint64) -> uint64:
+L.equals:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    ==
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_enum.sol.C.equalsA[routing]() -> void:
+equalsA:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_2 // 0
+    swap
+    callsub L.equals
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

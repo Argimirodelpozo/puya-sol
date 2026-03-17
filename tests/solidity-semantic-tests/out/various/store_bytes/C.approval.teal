@@ -1,0 +1,38 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/store_bytes.sol.C.approval_program() -> uint64:
+main:
+    bytecblock "savedData"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "savedData"
+    pushbytes 0x
+    app_global_put
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x66cd5f06 // method "save()uint256"
+    txna ApplicationArgs 0
+    match main_save_route@4
+    err
+
+main_save_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b save
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/store_bytes.sol.C.save[routing]() -> void:
+save:
+    bytec_0 // "savedData"
+    txna ApplicationArgs 0
+    app_global_put
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000018
+    log
+    pushint 1
+    return

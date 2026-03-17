@@ -1,0 +1,187 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/OwnableWrapper.sol.OwnableWrapper.approval_program() -> uint64:
+main:
+    intcblock 0 2000 1 32
+    bytecblock 0x068101 0x151f7c75 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x0c262987 0xb24e6d51 0xe17bafb4 0x3e2c61e5 0xf616af00 0xfa002bbf 0xfed99f6b 0xb1bbb0a8 0xc184b1a4 // method "getOwner()address", method "getHandoverExpiry(address)uint256", method "transferOwnership(address)void", method "renounceOwnership()void", method "requestOwnershipHandover()void", method "cancelOwnershipHandover()void", method "completeOwnershipHandover(address)void", method "owner()address", method "ownershipHandoverExpiresAt(address)uint256"
+    txna ApplicationArgs 0
+    match getOwner getHandoverExpiry transferOwnership renounceOwnership requestOwnershipHandover cancelOwnershipHandover completeOwnershipHandover owner ownershipHandoverExpiresAt
+    err
+
+
+// _puya_lib.util.ensure_budget(required_budget: uint64, fee_source: uint64) -> void:
+ensure_budget:
+    proto 2 0
+    frame_dig -2
+    pushint 10
+    +
+
+ensure_budget_while_top@1:
+    frame_dig 0
+    global OpcodeBudget
+    >
+    bz ensure_budget_after_while@6
+    itxn_begin
+    pushint 6 // appl
+    itxn_field TypeEnum
+    pushint 5 // DeleteApplication
+    itxn_field OnCompletion
+    bytec_0 // 0x068101
+    itxn_field ApprovalProgram
+    bytec_0 // 0x068101
+    itxn_field ClearStateProgram
+    frame_dig -1
+    switch ensure_budget_switch_case_0@3 ensure_budget_switch_case_1@4
+
+ensure_budget_switch_case_next@5:
+    itxn_submit
+    b ensure_budget_while_top@1
+
+ensure_budget_switch_case_1@4:
+    global MinTxnFee
+    itxn_field Fee
+    b ensure_budget_switch_case_next@5
+
+ensure_budget_switch_case_0@3:
+    intc_0 // 0
+    itxn_field Fee
+    b ensure_budget_switch_case_next@5
+
+ensure_budget_after_while@6:
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/OwnableWrapper.sol.OwnableWrapper.getOwner[routing]() -> void:
+getOwner:
+    intc_1 // 2000
+    intc_0 // 0
+    callsub ensure_budget
+    intc_1 // 2000
+    intc_0 // 0
+    callsub ensure_budget
+    bytec_1 // 0x151f7c75
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/OwnableWrapper.sol.OwnableWrapper.getHandoverExpiry[routing]() -> void:
+getHandoverExpiry:
+    txna ApplicationArgs 1
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_1 // 2000
+    intc_0 // 0
+    callsub ensure_budget
+    intc_1 // 2000
+    intc_0 // 0
+    callsub ensure_budget
+    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/OwnableWrapper.sol.OwnableWrapper.transferOwnership[routing]() -> void:
+transferOwnership:
+    txna ApplicationArgs 1
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_1 // 2000
+    intc_0 // 0
+    callsub ensure_budget
+    intc_0 // 0
+    assert // revert
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/OwnableWrapper.sol.OwnableWrapper.renounceOwnership[routing]() -> void:
+renounceOwnership:
+    intc_1 // 2000
+    intc_0 // 0
+    callsub ensure_budget
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/OwnableWrapper.sol.OwnableWrapper.requestOwnershipHandover[routing]() -> void:
+requestOwnershipHandover:
+    intc_1 // 2000
+    intc_0 // 0
+    callsub ensure_budget
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/OwnableWrapper.sol.OwnableWrapper.cancelOwnershipHandover[routing]() -> void:
+cancelOwnershipHandover:
+    intc_1 // 2000
+    intc_0 // 0
+    callsub ensure_budget
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/OwnableWrapper.sol.OwnableWrapper.completeOwnershipHandover[routing]() -> void:
+completeOwnershipHandover:
+    txna ApplicationArgs 1
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_1 // 2000
+    intc_0 // 0
+    callsub ensure_budget
+    global LatestTimestamp
+    itob
+    pushbytes 0x
+    b>
+    !
+    assert // revert
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/OwnableWrapper.sol.OwnableWrapper.owner[routing]() -> void:
+owner:
+    intc_1 // 2000
+    intc_0 // 0
+    callsub ensure_budget
+    bytec_1 // 0x151f7c75
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/solady/aux-wrappers-to-deploy/OwnableWrapper.sol.OwnableWrapper.ownershipHandoverExpiresAt[routing]() -> void:
+ownershipHandoverExpiresAt:
+    txna ApplicationArgs 1
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_1 // 2000
+    intc_0 // 0
+    callsub ensure_budget
+    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_2 // 1
+    return

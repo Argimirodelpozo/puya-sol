@@ -1,0 +1,136 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/assign_from_immutables.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock 0x 0x151f7c75 "a" "b" "c" "d"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "a"
+    bytec_0 // 0x
+    app_global_put
+    bytec_3 // "b"
+    bytec_0 // 0x
+    app_global_put
+    bytec 4 // "c"
+    bytec_0 // 0x
+    app_global_put
+    bytec 5 // "d"
+    bytec_0 // 0x
+    app_global_put
+    intc_1 // 1
+    itob
+    bytec_2 // "a"
+    dig 1
+    app_global_put
+    bytec_3 // "b"
+    dig 1
+    app_global_put
+    bytec 4 // "c"
+    dig 1
+    app_global_put
+    bytec 5 // "d"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb5251388 0xddb04781 0x311e3db1 0x4075f398 // method "a()uint256", method "b()uint256", method "c()uint256", method "d()uint256"
+    txna ApplicationArgs 0
+    match a b c d
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/assign_from_immutables.sol.C.a[routing]() -> void:
+a:
+    intc_2 // 0
+    bytec_2 // "a"
+    app_global_get_ex
+    assert // check a exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/assign_from_immutables.sol.C.b[routing]() -> void:
+b:
+    intc_2 // 0
+    bytec_3 // "b"
+    app_global_get_ex
+    assert // check b exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/assign_from_immutables.sol.C.c[routing]() -> void:
+c:
+    intc_2 // 0
+    bytec 4 // "c"
+    app_global_get_ex
+    assert // check c exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/assign_from_immutables.sol.C.d[routing]() -> void:
+d:
+    intc_2 // 0
+    bytec 5 // "d"
+    app_global_get_ex
+    assert // check d exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

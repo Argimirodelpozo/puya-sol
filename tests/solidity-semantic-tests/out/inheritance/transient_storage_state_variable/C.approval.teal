@@ -1,0 +1,106 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1
+    bytecblock "x" "y" "w" "z"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "x"
+    intc_0 // 0
+    app_global_put
+    bytec_1 // "y"
+    intc_0 // 0
+    app_global_put
+    bytec_2 // "w"
+    intc_0 // 0
+    app_global_put
+    bytec_3 // "z"
+    intc_0 // 0
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x87798b92 // method "f()(uint64,uint64,uint64,uint64)"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable.sol.C.f[routing]() -> void:
+f:
+    intc_0 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    intc_1 // 1
+    +
+    bytec_0 // "x"
+    swap
+    app_global_put
+    intc_0 // 0
+    bytec_1 // "y"
+    app_global_get_ex
+    assert // check y exists
+    pushint 2
+    +
+    bytec_1 // "y"
+    swap
+    app_global_put
+    intc_0 // 0
+    bytec_2 // "w"
+    app_global_get_ex
+    assert // check w exists
+    pushint 3
+    +
+    bytec_2 // "w"
+    swap
+    app_global_put
+    intc_0 // 0
+    bytec_3 // "z"
+    app_global_get_ex
+    assert // check z exists
+    pushint 4
+    +
+    bytec_3 // "z"
+    dig 1
+    app_global_put
+    intc_0 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    intc_0 // 0
+    bytec_1 // "y"
+    app_global_get_ex
+    assert // check y exists
+    intc_0 // 0
+    bytec_2 // "w"
+    app_global_get_ex
+    assert // check w exists
+    uncover 2
+    itob
+    uncover 2
+    itob
+    concat
+    swap
+    itob
+    concat
+    swap
+    itob
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

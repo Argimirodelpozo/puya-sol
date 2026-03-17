@@ -1,0 +1,482 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/ERC20Mock.sol.ERC20Mock.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock 0x "_balances" 0x010000000000000000000000000000000000000000000000000000000000000000 "allowance" "totalSupply" 0x151f7c75 "name" "symbol" 0x151f7c7580 0x28918861
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 6 // "name"
+    bytec_0 // 0x
+    app_global_put
+    bytec 7 // "symbol"
+    bytec_0 // 0x
+    app_global_put
+    bytec 4 // "totalSupply"
+    bytec_0 // 0x
+    app_global_put
+    txna ApplicationArgs 1
+    bytec 6 // "name"
+    txna ApplicationArgs 0
+    app_global_put
+    bytec 7 // "symbol"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x83bad7cc 0xd829bf87 0xfafb6a08 0x198c9820 0x6df41f6d 0x19750616 0x005b52b8 0x79fab465 // method "balanceOf(address)uint256", method "setBalance(address,uint256)void", method "approve(address,uint256)bool", method "transfer(address,uint256)bool", method "transferFrom(address,address,uint256)bool", method "name()string", method "symbol()string", method "totalSupply()uint256"
+    txna ApplicationArgs 0
+    match balanceOf setBalance approve transfer transferFrom name symbol totalSupply
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/ERC20Mock.sol.ERC20Mock.balanceOf[routing]() -> void:
+balanceOf:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_1 // "_balances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/ERC20Mock.sol.ERC20Mock.setBalance[routing]() -> void:
+setBalance:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_2 // 0
+    bytec 4 // "totalSupply"
+    app_global_get_ex
+    assert // check totalSupply exists
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    uncover 2
+    sha256
+    bytec_1 // "_balances"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    uncover 2
+    swap
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 2
+    b+
+    bytec 4 // "totalSupply"
+    swap
+    app_global_put
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/ERC20Mock.sol.ERC20Mock.approve[routing]() -> void:
+approve:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn Sender
+    dig 3
+    concat
+    sha256
+    bytec_3 // "allowance"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    dig 2
+    box_put
+    txn Sender
+    swap
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 2
+    b|
+    swap
+    uncover 2
+    concat
+    swap
+    concat
+    pushbytes 0x18e09461 // method "Approval(address,address,uint256)"
+    swap
+    concat
+    log
+    bytec 8 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/ERC20Mock.sol.ERC20Mock.transfer[routing]() -> void:
+transfer:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn Sender
+    sha256
+    bytec_1 // "_balances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b>=
+    assert // ERC20: insufficient balance
+    txn Sender
+    sha256
+    bytec_1 // "_balances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 2
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    txn Sender
+    sha256
+    bytec_1 // "_balances"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    dig 2
+    sha256
+    bytec_1 // "_balances"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 3
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    txn Sender
+    swap
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 2
+    b|
+    swap
+    uncover 2
+    concat
+    swap
+    concat
+    bytec 9 // method "Transfer(address,address,uint256)"
+    swap
+    concat
+    log
+    bytec 8 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/ERC20Mock.sol.ERC20Mock.transferFrom[routing]() -> void:
+transferFrom:
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    cover 2
+    dup
+    len
+    dup
+    cover 3
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    dig 1
+    sha256
+    bytec_1 // "_balances"
+    swap
+    concat
+    dup
+    cover 3
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    b<=
+    assert // ERC20: insufficient balance
+    txn Sender
+    concat
+    sha256
+    bytec_3 // "allowance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b!=
+    bz transferFrom_after_if_else@3
+    txn Sender
+    dig 5
+    dup
+    uncover 2
+    concat
+    sha256
+    bytec_3 // "allowance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 4
+    dup
+    cover 3
+    b>=
+    assert // ERC20: insufficient allowance
+    dup
+    txn Sender
+    concat
+    sha256
+    bytec_3 // "allowance"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    uncover 2
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    txn Sender
+    uncover 2
+    swap
+    concat
+    sha256
+    bytec_3 // "allowance"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+
+transferFrom_after_if_else@3:
+    dupn 2
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 4
+    dup
+    cover 3
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 1
+    box_del
+    pop
+    box_put
+    dig 4
+    dup
+    cover 2
+    sha256
+    bytec_1 // "_balances"
+    swap
+    concat
+    dup
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 2
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    dig 3
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    dig 6
+    uncover 2
+    concat
+    swap
+    concat
+    bytec 9 // method "Transfer(address,address,uint256)"
+    swap
+    concat
+    log
+    bytec 8 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/ERC20Mock.sol.ERC20Mock.name[routing]() -> void:
+name:
+    intc_2 // 0
+    bytec 6 // "name"
+    app_global_get_ex
+    assert // check name exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/ERC20Mock.sol.ERC20Mock.symbol[routing]() -> void:
+symbol:
+    intc_2 // 0
+    bytec 7 // "symbol"
+    app_global_get_ex
+    assert // check symbol exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/sushiswap-v2/contracts/mocks/ERC20Mock.sol.ERC20Mock.totalSupply[routing]() -> void:
+totalSupply:
+    intc_2 // 0
+    bytec 4 // "totalSupply"
+    app_global_get_ex
+    assert // check totalSupply exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

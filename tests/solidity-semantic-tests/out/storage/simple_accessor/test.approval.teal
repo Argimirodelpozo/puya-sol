@@ -1,0 +1,52 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/simple_accessor.sol.test.approval_program() -> uint64:
+main:
+    intcblock 1 32
+    bytecblock "data"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 8
+    itob
+    bytec_0 // "data"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xd93a53a3 // method "data()uint256"
+    txna ApplicationArgs 0
+    match main_data_route@4
+    err
+
+main_data_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b data
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/simple_accessor.sol.test.data[routing]() -> void:
+data:
+    pushint 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

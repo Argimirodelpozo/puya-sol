@@ -1,0 +1,43 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/convert_fixed_bytes_to_uint_same_min_size.sol.Test.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xac05c3b8 // method "bytesToUint(byte[1])uint64"
+    txna ApplicationArgs 0
+    match main_bytesToUint_route@4
+    err
+
+main_bytesToUint_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b bytesToUint
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/convert_fixed_bytes_to_uint_same_min_size.sol.Test.bytesToUint[routing]() -> void:
+bytesToUint:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 1
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 1>
+    btoi
+    pushint 255
+    &
+    itob
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return

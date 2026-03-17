@@ -1,0 +1,52 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/accessor/accessor_for_state_variable.sol.Lotto.approval_program() -> uint64:
+main:
+    intcblock 1 32
+    bytecblock "ticketPrice"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 500
+    itob
+    bytec_0 // "ticketPrice"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x7070c6f5 // method "ticketPrice()uint256"
+    txna ApplicationArgs 0
+    match main_ticketPrice_route@4
+    err
+
+main_ticketPrice_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b ticketPrice
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/accessor/accessor_for_state_variable.sol.Lotto.ticketPrice[routing]() -> void:
+ticketPrice:
+    pushint 0
+    bytec_0 // "ticketPrice"
+    app_global_get_ex
+    assert // check ticketPrice exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

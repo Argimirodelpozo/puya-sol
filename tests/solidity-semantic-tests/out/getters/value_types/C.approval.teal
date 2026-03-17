@@ -1,0 +1,228 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/value_types.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 32
+    bytecblock 0x151f7c75 0x "a" "b" "c" "d" "e" "f" "g" "h" "i"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "a"
+    intc_0 // 0
+    app_global_put
+    bytec_3 // "b"
+    intc_0 // 0
+    app_global_put
+    bytec 4 // "c"
+    bytec_1 // 0x
+    app_global_put
+    bytec 5 // "d"
+    bytec_1 // 0x
+    app_global_put
+    bytec 6 // "e"
+    bytec_1 // 0x
+    app_global_put
+    bytec 7 // "f"
+    bytec_1 // 0x
+    app_global_put
+    bytec 8 // "g"
+    bytec_1 // 0x
+    app_global_put
+    bytec 9 // "h"
+    intc_0 // 0
+    app_global_put
+    bytec 10 // "i"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_2 // "a"
+    pushint 3
+    app_global_put
+    bytec_3 // "b"
+    pushint 4
+    app_global_put
+    pushint 5
+    itob
+    bytec 4 // "c"
+    swap
+    app_global_put
+    pushint 6
+    itob
+    bytec 5 // "d"
+    swap
+    app_global_put
+    bytec 6 // "e"
+    pushbytes 0x7f
+    app_global_put
+    bytec 7 // "f"
+    pushbytes 0x0000000000000000000000000000000000000000
+    app_global_put
+    bytec 8 // "g"
+    pushbytes 0x6465616462656566313564656164000000000000000000000000000000000010
+    app_global_put
+    bytec 9 // "h"
+    intc_1 // 1
+    app_global_put
+    bytec 10 // "i"
+    pushbytes 0x5555555555555555555555555555555555555555
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xf9522e2f 0x8c9379e6 0x311e3db1 0x4075f398 0x1a85185d 0x88f30a97 0x3fc82556 0xcddc3345 0xc2b6aca2 // method "a()uint64", method "b()uint64", method "c()uint256", method "d()uint256", method "e()byte[1]", method "f()byte[20]", method "g()byte[32]", method "h()bool", method "i()address"
+    txna ApplicationArgs 0
+    match a b c d e f g h i
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/value_types.sol.C.a[routing]() -> void:
+a:
+    intc_0 // 0
+    bytec_2 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/value_types.sol.C.b[routing]() -> void:
+b:
+    intc_0 // 0
+    bytec_3 // "b"
+    app_global_get_ex
+    assert // check b exists
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/value_types.sol.C.c[routing]() -> void:
+c:
+    intc_0 // 0
+    bytec 4 // "c"
+    app_global_get_ex
+    assert // check c exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/value_types.sol.C.d[routing]() -> void:
+d:
+    intc_0 // 0
+    bytec 5 // "d"
+    app_global_get_ex
+    assert // check d exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/value_types.sol.C.e[routing]() -> void:
+e:
+    intc_0 // 0
+    bytec 6 // "e"
+    app_global_get_ex
+    assert // check e exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/value_types.sol.C.f[routing]() -> void:
+f:
+    intc_0 // 0
+    bytec 7 // "f"
+    app_global_get_ex
+    assert // check f exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/value_types.sol.C.g[routing]() -> void:
+g:
+    intc_0 // 0
+    bytec 8 // "g"
+    app_global_get_ex
+    assert // check g exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/value_types.sol.C.h[routing]() -> void:
+h:
+    intc_0 // 0
+    bytec 9 // "h"
+    app_global_get_ex
+    assert // check h exists
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/value_types.sol.C.i[routing]() -> void:
+i:
+    intc_0 // 0
+    bytec 10 // "i"
+    app_global_get_ex
+    assert // check i exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

@@ -1,0 +1,694 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/Verifier.sol.Verifier.approval_program() -> uint64:
+main:
+    intcblock 32 8 0 1 128
+    bytecblock 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47 0x01
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_3 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x78f443f7 // method "verifyProof(byte[],uint256[6])bool"
+    txna ApplicationArgs 0
+    match main_verifyProof_route@4
+    err
+
+main_verifyProof_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b verifyProof
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/Verifier.sol.Pairing.negate(p: bytes) -> bytes, bytes:
+Pairing.negate:
+    proto 1 2
+    frame_dig -1
+    extract 0 32
+    dup
+    intc_2 // 0
+    itob
+    dup
+    cover 2
+    b==
+    bz Pairing.negate_else_body@3
+    frame_dig -1
+    extract 32 32
+    frame_dig 1
+    b==
+    bz Pairing.negate_else_body@3
+    bytec_0 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    frame_dig -1
+    uncover 3
+    uncover 3
+    retsub
+
+Pairing.negate_else_body@3:
+    intc_0 // 32
+    bzero
+    frame_dig 0
+    dig 1
+    b|
+    frame_dig -1
+    extract 32 32
+    bytec_1 // 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
+    b%
+    pushbytes 0x0130644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
+    swap
+    b-
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    frame_dig -1
+    uncover 3
+    uncover 3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/Verifier.sol.Pairing.plus(p1: bytes, p2: bytes) -> bytes, bytes, bytes:
+Pairing.plus:
+    proto 2 3
+    intc_0 // 32
+    bzero
+    frame_dig -2
+    extract 0 32
+    dig 1
+    b|
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    replace2 0 // on error: index access is out of bounds
+    frame_dig -2
+    extract 32 32
+    dig 2
+    b|
+    replace2 32 // on error: index access is out of bounds
+    frame_dig -1
+    extract 0 32
+    dig 2
+    b|
+    replace2 64 // on error: index access is out of bounds
+    frame_dig -1
+    extract 32 32
+    uncover 2
+    b|
+    replace2 96 // on error: index access is out of bounds
+    pop
+    bytec_0 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    frame_dig -2
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/Verifier.sol.Pairing.scalar_mul(p: bytes, s: bytes) -> bytes, bytes:
+Pairing.scalar_mul:
+    proto 2 2
+    intc_0 // 32
+    bzero
+    frame_dig -2
+    extract 0 32
+    dig 1
+    b|
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    replace2 0 // on error: index access is out of bounds
+    frame_dig -2
+    extract 32 32
+    dig 2
+    b|
+    replace2 32 // on error: index access is out of bounds
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    frame_dig -1
+    uncover 2
+    b|
+    replace2 64 // on error: index access is out of bounds
+    pop
+    bytec_0 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/Verifier.sol.Pairing.pairing(a1: bytes, a2: bytes, b1: bytes, b2: bytes, c1: bytes, c2: bytes, d1: bytes, d2: bytes) -> uint64, bytes, bytes, bytes, bytes, bytes, bytes, bytes, bytes:
+Pairing.pairing:
+    proto 8 9
+    intc_2 // 0
+    frame_dig -8
+    frame_dig -6
+    concat
+    frame_dig -4
+    concat
+    frame_dig -2
+    concat
+    frame_dig -7
+    frame_dig -5
+    concat
+    frame_dig -3
+    concat
+    frame_dig -1
+    concat
+    intc_0 // 32
+    bzero
+    callsub _puya_lib.mem.new_slot
+    dup
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    stores
+    intc_2 // 0
+    itob
+    swap
+
+Pairing.pairing_while_top@1:
+    pushint 4
+    itob
+    dup
+    frame_bury 0
+    frame_dig 4
+    b>
+    bz Pairing.pairing_after_while@3
+    pushint 6
+    itob
+    frame_dig 4
+    dup
+    uncover 2
+    b*
+    intc_1 // 8
+    bzero
+    dup
+    dig 3
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    frame_dig 1
+    dup
+    cover 4
+    swap
+    dup
+    pushint 64
+    *
+    uncover 2
+    dig 1
+    pushint 64
+    extract3 // on error: index access is out of bounds
+    extract 0 32
+    dig 3
+    dig 5
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    swap
+    frame_dig 3
+    dup
+    cover 7
+    b|
+    frame_dig 5
+    dup
+    cover 3
+    loads
+    uncover 2
+    intc_0 // 32
+    *
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    dup2
+    stores
+    uncover 7
+    uncover 3
+    pushint 64
+    extract3 // on error: index access is out of bounds
+    extract 32 32
+    intc_3 // 1
+    itob
+    dig 6
+    b+
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    swap
+    dig 7
+    b|
+    swap
+    intc_0 // 32
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    dig 1
+    swap
+    stores
+    frame_dig 2
+    dup
+    cover 5
+    uncover 2
+    intc 4 // 128
+    *
+    swap
+    dig 1
+    intc 4 // 128
+    extract3 // on error: index access is out of bounds
+    extract 0 64
+    extract 0 32 // on error: index access is out of bounds
+    pushint 2
+    itob
+    dig 5
+    b+
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    swap
+    dig 7
+    b|
+    dig 3
+    loads
+    uncover 2
+    intc_0 // 32
+    *
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    dig 2
+    swap
+    stores
+    dig 4
+    dig 1
+    intc 4 // 128
+    extract3 // on error: index access is out of bounds
+    extract 0 64
+    extract 32 32 // on error: index access is out of bounds
+    pushint 3
+    itob
+    dig 5
+    b+
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    swap
+    dig 7
+    b|
+    dig 3
+    loads
+    uncover 2
+    intc_0 // 32
+    *
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    dig 2
+    swap
+    stores
+    dig 4
+    dig 1
+    intc 4 // 128
+    extract3 // on error: index access is out of bounds
+    extract 64 64
+    extract 0 32 // on error: index access is out of bounds
+    dig 4
+    frame_dig 0
+    b+
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    swap
+    dig 7
+    b|
+    dig 3
+    loads
+    uncover 2
+    intc_0 // 32
+    *
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    dig 2
+    swap
+    stores
+    uncover 4
+    swap
+    intc 4 // 128
+    extract3 // on error: index access is out of bounds
+    extract 64 64
+    extract 32 32 // on error: index access is out of bounds
+    pushint 5
+    itob
+    uncover 4
+    b+
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    swap
+    uncover 3
+    b|
+    dig 2
+    loads
+    uncover 2
+    intc_0 // 32
+    *
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    stores
+    bytec_2 // 0x01
+    b+
+    frame_bury 4
+    b Pairing.pairing_while_top@1
+
+Pairing.pairing_after_while@3:
+    intc_2 // 0
+    frame_dig -8
+    frame_dig -7
+    frame_dig -6
+    frame_dig -5
+    frame_dig -4
+    frame_dig -3
+    frame_dig -2
+    frame_dig -1
+    uncover 14
+    uncover 14
+    uncover 14
+    uncover 14
+    uncover 14
+    uncover 14
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/tornado-cash/contracts/Verifier.sol.Verifier.verifyProof[routing]() -> void:
+verifyProof:
+    intc_2 // 0
+    dupn 2
+    txna ApplicationArgs 1
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 2
+    dup
+    len
+    pushint 192
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 6>
+    swap
+    dup
+    extract 2 32
+    dig 1
+    extract 34 32
+    dig 2
+    extract 66 32
+    dig 3
+    extract 98 32
+    dig 4
+    extract 130 32
+    dig 5
+    extract 162 32
+    dig 6
+    extract 194 32
+    uncover 7
+    extract 226 32
+    intc_0 // 32
+    bzero
+    dup
+    cover 9
+    uncover 8
+    dig 1
+    b|
+    uncover 8
+    dig 2
+    b|
+    concat
+    uncover 7
+    dig 2
+    b|
+    concat
+    uncover 6
+    dig 2
+    b|
+    concat
+    uncover 5
+    dig 2
+    b|
+    concat
+    uncover 4
+    dig 2
+    b|
+    concat
+    uncover 3
+    dig 2
+    b|
+    concat
+    cover 2
+    b|
+    concat
+    intc_2 // 0
+
+verifyProof_while_top@2:
+    dig 1
+    pop
+    dup
+    intc_1 // 8
+    <
+    bz verifyProof_after_while@4
+    dup2
+    dup
+    cover 2
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    bytec_1 // 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
+    b<
+    assert // verifier-proof-element-gte-prime-q
+    intc_3 // 1
+    +
+    bury 1
+    b verifyProof_while_top@2
+
+verifyProof_after_while@4:
+    dig 1
+    dupn 2
+    extract 0 32 // on error: index access is out of bounds
+    dig 5
+    dup
+    cover 3
+    b|
+    dig 1
+    extract 32 32 // on error: index access is out of bounds
+    dig 3
+    b|
+    concat
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    concat
+    dup
+    extract 0 64
+    dig 2
+    extract 64 32 // on error: index access is out of bounds
+    uncover 3
+    extract 96 32 // on error: index access is out of bounds
+    swap
+    dig 4
+    b|
+    swap
+    dig 4
+    b|
+    concat
+    dig 4
+    dup
+    extract 128 32 // on error: index access is out of bounds
+    swap
+    extract 160 32 // on error: index access is out of bounds
+    swap
+    dig 5
+    b|
+    swap
+    dig 5
+    b|
+    concat
+    concat
+    uncover 2
+    extract 192 64
+    cover 2
+    concat
+    swap
+    concat
+    dup
+    extract 0 64
+    swap
+    extract 64 128
+    uncover 3
+    dup
+    extract 192 32 // on error: index access is out of bounds
+    dig 4
+    b|
+    swap
+    extract 224 32 // on error: index access is out of bounds
+    uncover 4
+    b|
+    concat
+    cover 2
+    concat
+    swap
+    concat
+    bury 7
+    intc_2 // 0
+    itob
+    bury 6
+    bytec_0 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    dup
+    callsub Pairing.plus
+    popn 2
+    bury 5
+
+verifyProof_while_top@5:
+    dig 3
+    pop
+    pushint 6
+    itob
+    dig 6
+    b>
+    bz verifyProof_after_while@7
+    intc_1 // 8
+    bzero
+    dup
+    dig 7
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dig 6
+    dup
+    cover 4
+    swap
+    intc_0 // 32
+    *
+    swap
+    dig 1
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    pushbytes 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
+    b<
+    assert // verifier-gte-snark-scalar-field
+    intc_3 // 1
+    itob
+    dig 2
+    b+
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushint 64
+    *
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    pushint 64
+    extract3 // on error: index access is out of bounds
+    uncover 3
+    uncover 2
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    callsub Pairing.scalar_mul
+    pop
+    dig 6
+    swap
+    callsub Pairing.plus
+    popn 2
+    bury 6
+    bytec_2 // 0x01
+    b+
+    bury 6
+    b verifyProof_while_top@5
+
+verifyProof_after_while@7:
+    dig 6
+    dup
+    extract 0 64
+    callsub Pairing.negate
+    pop
+    swap
+    dup
+    extract 64 128
+    swap
+    extract 192 64
+    cover 2
+    pushbytess 0x2dbfc3ec62a3eee5a3b4b464bcf1f8527bbca12adea0f1f12033cd4f61b0e09119e55bd0b72c126da18665039556776642ff82e2f347f24fcea2475f4db087df 0x1ae724ab134e5a7c6bd8a116fa5505b259522c0f164a5e8126e3ec7d34465f6e009f1bcdc853f8e3531756bb625b0d1dc014f4ab57c3f79f4f4e2e7ef7e0ead623a8ca5760457e726365b92fd0ceb486665797cd68c35dcffd8e4ae8066691e913ec7182c9fd68331a10f8be0fe885d730de5c7f89aa7d0b7bafaa009bbc9e3e
+    dig 9
+    pushbytes 0x198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c21800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed090689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b12c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa
+    uncover 6
+    pushbytes 0x2f0c63d0c53b3dfbca27b6b43ae7fbf55a38d78a21470996485b03128accc20800556502356e37ed150db2e36531b0f275fd6835c0fc1945922e270b48c48a8602644c27b5dbd793592a70b735e22c798a5e309fa17a992a7dc2a050e01b298f194776b6a53439d7336f389d2a8f6651e40885f5ca2538b0dc9cb534fb23f7fa
+    callsub Pairing.pairing
+    popn 8
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// _puya_lib.mem.new_slot() -> uint64:
+_puya_lib.mem.new_slot:
+    load 0
+    bitlen
+    load 0
+    pushint 256
+    dig 2
+    -
+    intc_2 // 0
+    setbit // on error: no available slots
+    store 0
+    retsub
