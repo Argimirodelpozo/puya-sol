@@ -89,7 +89,18 @@ bool StatementBuilder::visit(solidity::frontend::InlineAssembly const& _node)
 			}
 			else
 			{
-				constants[name] = value;
+				// String literal (e.g., bytes3 constant c = "abc"):
+				// Convert to left-aligned 256-bit integer, matching EVM semantics.
+				// "abc" → 0x6162630000...00 (left-padded to 32 bytes)
+				solidity::u256 numVal = 0;
+				for (char ch: value)
+					numVal = (numVal << 8) | static_cast<unsigned char>(ch);
+				// Left-align to 256 bits
+				size_t shiftBits = (32 - value.size()) * 8;
+				numVal <<= shiftBits;
+				std::ostringstream oss;
+				oss << numVal;
+				constants[name] = oss.str();
 			}
 		}
 	}
@@ -97,6 +108,7 @@ bool StatementBuilder::visit(solidity::frontend::InlineAssembly const& _node)
 	// Build augmented params list: input params + non-constant external variables
 	// (e.g., named return variables like `bool z` in exactlyOneZero)
 	auto augmentedParams = m_functionParams;
+	std::map<std::string, unsigned> paramBitWidths;
 	for (auto const& [yulId, extInfo]: annotation.externalReferences)
 	{
 		if (!extInfo.declaration)
@@ -118,6 +130,13 @@ bool StatementBuilder::visit(solidity::frontend::InlineAssembly const& _node)
 			auto* type = m_typeMapper.map(varDecl->type());
 			augmentedParams.emplace_back(name, type);
 		}
+
+		// Track Solidity bit width for sub-64-bit integer types (uint8, uint16, uint32)
+		if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(varDecl->type()))
+		{
+			if (intType->numBits() < 64)
+				paramBitWidths[name] = intType->numBits();
+		}
 	}
 
 	AssemblyBuilder asmTranslator(m_typeMapper, m_sourceFile, contextName);
@@ -126,7 +145,8 @@ bool StatementBuilder::visit(solidity::frontend::InlineAssembly const& _node)
 		_node.operations().root(),
 		augmentedParams,
 		m_returnType,
-		constants
+		constants,
+		paramBitWidths
 	);
 
 	for (auto& stmt: stmts)

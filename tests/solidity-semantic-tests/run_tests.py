@@ -431,6 +431,35 @@ def execute_call(app, call, app_spec=None, verbose=False):
                 # Void return
                 return True, "void ok"
 
+            # If ABI return is None but we expect values, check transaction logs
+            # for structured return data (emitted by assembly return() in void functions)
+            if actual is None and len(call.expected) > 0:
+                try:
+                    # Get transaction logs
+                    tx_id = result.tx_ids[0] if hasattr(result, 'tx_ids') and result.tx_ids else None
+                    logs = None
+                    if hasattr(result, 'confirmations') and result.confirmations:
+                        logs = result.confirmations[0].get('logs', [])
+                    elif tx_id:
+                        tx_info = app.algorand.client.algod.pending_transaction_info(tx_id)
+                        logs = tx_info.get('logs', [])
+
+                    if logs:
+                        import base64
+                        # Use the last log entry (structured return data)
+                        raw = base64.b64decode(logs[-1])
+                        # Skip ARC4 return prefix if present
+                        if raw[:4] == b'\x15\x1f\x7c\x75':
+                            raw = raw[4:]
+                        # Decode as N × 32-byte uint256 values
+                        n_values = len(raw) // 32
+                        if n_values > 0:
+                            actual = [int.from_bytes(raw[i*32:(i+1)*32], 'big') for i in range(n_values)]
+                            if len(actual) == 1:
+                                actual = actual[0]
+                except Exception:
+                    pass  # Fall through to normal comparison
+
             if len(call.expected) == 1:
                 expected = parse_value(call.expected[0])
                 if _compare_values(actual, expected):

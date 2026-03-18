@@ -59,6 +59,60 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildLiteral(
 		node->value = (_lit.value.value() != 0);
 		return node;
 	}
+	else if (_lit.kind == solidity::yul::LiteralKind::String)
+	{
+		if (!_lit.value.unlimited())
+		{
+			// String literal that fits in 32 bytes — stored as u256 (left-aligned bytes).
+			// In Yul, "abc" becomes 0x6162630...0 (left-padded in a 256-bit word).
+			// We emit it as a BytesConstant with the raw bytes from the hint.
+			auto const& hint = _lit.value.hint();
+			if (hint && !hint->empty())
+			{
+				auto node = std::make_shared<awst::BytesConstant>();
+				node->sourceLocation = loc;
+				node->wtype = awst::WType::bytesType();
+				// Pad to 32 bytes (right-padded with zeros, matching EVM left-aligned semantics)
+				std::vector<unsigned char> padded(hint->begin(), hint->end());
+				padded.resize(32, 0);
+				node->value = std::move(padded);
+
+				// Cast to biguint for use in assembly context
+				auto cast = std::make_shared<awst::ReinterpretCast>();
+				cast->sourceLocation = loc;
+				cast->wtype = awst::WType::biguintType();
+				cast->expr = std::move(node);
+				return cast;
+			}
+			else
+			{
+				// Empty string or no hint — use the numeric value
+				auto node = std::make_shared<awst::IntegerConstant>();
+				node->sourceLocation = loc;
+				node->wtype = awst::WType::biguintType();
+				auto const& val = _lit.value.value();
+				std::ostringstream oss;
+				oss << val;
+				node->value = oss.str();
+				return node;
+			}
+		}
+		else
+		{
+			// Unlimited string literal (e.g., verbatim arguments) — emit as raw bytes
+			auto const& strVal = _lit.value.builtinStringLiteralValue();
+			auto node = std::make_shared<awst::BytesConstant>();
+			node->sourceLocation = loc;
+			node->wtype = awst::WType::bytesType();
+			node->value = std::vector<unsigned char>(strVal.begin(), strVal.end());
+
+			auto cast = std::make_shared<awst::ReinterpretCast>();
+			cast->sourceLocation = loc;
+			cast->wtype = awst::WType::biguintType();
+			cast->expr = std::move(node);
+			return cast;
+		}
+	}
 
 	Logger::instance().error("unsupported Yul literal kind", loc);
 	return nullptr;
@@ -303,18 +357,31 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		return one;
 	}
 
-	// Check for user-defined assembly function
+	// Check for user-defined assembly function — inline in expression context
 	auto asmIt = m_asmFunctions.find(funcName);
 	if (asmIt != m_asmFunctions.end())
 	{
-		// For now, inline assembly function calls are not supported as pure
-		// expressions (they need side-effect handling). This path should be
-		// reached only via ExpressionStatement, which uses handleUserFunctionCall.
-		Logger::instance().warning(
-			"assembly function '" + funcName + "' called in expression context; "
-			"this may not produce correct results",
-			loc
-		);
+		auto const& funcDef = *asmIt->second;
+
+		// Inline the function body into a local vector, then append to
+		// m_pendingStatements. Using a local avoids aliasing issues when
+		// nested inlining drains m_pendingStatements inside handleUserFunctionCall.
+		std::vector<std::shared_ptr<awst::Statement>> inlinedStmts;
+		handleUserFunctionCall(funcName, args, loc, inlinedStmts);
+		for (auto& s: inlinedStmts)
+			m_pendingStatements.push_back(std::move(s));
+
+		// Return a reference to the first return variable
+		if (!funcDef.returnVariables.empty())
+		{
+			std::string retName = funcDef.returnVariables[0].name.str();
+			auto retVar = std::make_shared<awst::VarExpression>();
+			retVar->sourceLocation = loc;
+			retVar->name = retName;
+			retVar->wtype = awst::WType::biguintType();
+			return retVar;
+		}
+
 		return std::make_shared<awst::VoidConstant>();
 	}
 

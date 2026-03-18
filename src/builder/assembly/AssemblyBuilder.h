@@ -16,10 +16,15 @@ namespace puyasol::builder
 /// Builds AWST nodes from Yul inline assembly blocks.
 ///
 /// Translates EVM Yul opcodes to equivalent AVM operations using biguint arithmetic
-/// (EVM uint256 ↔ AVM biguint), a memory slot model, and calldata mapping.
+/// (EVM uint256 ↔ AVM biguint), a scratch-slot-backed memory blob, and calldata mapping.
+///
+/// Memory model: EVM linear memory is simulated using AVM scratch slots 0-4.
+/// Each slot holds a bytes blob of up to 4096 bytes, giving 20KB total addressable space.
+/// mload/mstore translate to extract3/replace3 on the blob, supporting dynamic offsets.
+/// The blob is loaded into a local variable at assembly block start and flushed at block end.
 ///
 /// Implementation is split across multiple files by operation category:
-///   - AssemblyBuilder.cpp      — Core: constructor, memory/calldata init, type coercion
+///   - AssemblyBuilder.cpp      — Core: constructor, memory init, type coercion
 ///   - CoreTranslation.cpp      — Expression dispatch, literals, identifiers, function calls
 ///   - ArithmeticOps.cpp        — add, mul, mod, sub, mulmod, addmod, eq, lt, gt, and, or, not, xor
 ///   - BitwiseShiftOps.cpp      — shl, shr, div, byte, signextend, sload, gas, timestamp
@@ -48,8 +53,21 @@ public:
 		solidity::yul::Block const& _block,
 		std::vector<std::pair<std::string, awst::WType const*>> const& _params,
 		awst::WType const* _returnType,
-		std::map<std::string, std::string> const& _constants = {}
+		std::map<std::string, std::string> const& _constants = {},
+		std::map<std::string, unsigned> const& _paramBitWidths = {}
 	);
+
+	// ── Memory blob constants ──────────────────────────────────────────
+
+	/// Scratch slots reserved for EVM memory simulation.
+	/// Slots 0-4, each holding up to 4096 bytes = 20KB total.
+	static constexpr int MEMORY_SLOT_FIRST = 0;
+	static constexpr int MEMORY_SLOT_LAST = 4;
+	static constexpr int MEMORY_SLOT_COUNT = MEMORY_SLOT_LAST - MEMORY_SLOT_FIRST + 1;
+	static constexpr int SLOT_SIZE = 4096;
+
+	/// Get the set of scratch slots to reserve on the Contract node.
+	static std::vector<int> reservedScratchSlots();
 
 private:
 	// ── Expression translation ──────────────────────────────────────────
@@ -282,7 +300,7 @@ private:
 	);
 
 	/// Handle keccak256(offset, length): hash memory region.
-	/// Reads memory slots and applies keccak256.
+	/// Reads memory blob and applies keccak256.
 	std::shared_ptr<awst::Expression> handleKeccak256(
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
 		awst::SourceLocation const& _loc
@@ -368,9 +386,33 @@ private:
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
 
-	// ── Precompile helper methods ──────────────────────────────────────
+	// ── Memory blob helpers ──────────────────────────────────────────
 
-	/// Read a biguint value from a memory slot, or return zero if not found.
+	/// Build an expression that loads the memory blob from scratch slot for
+	/// a given byte offset. Returns: load(slot) where slot = offset / 4096.
+	/// For constant offsets, uses immediate-arg `load`; otherwise `loads`.
+	std::shared_ptr<awst::Expression> loadMemoryBlob(
+		awst::SourceLocation const& _loc,
+		int _slot = 0
+	);
+
+	/// Emit a store of the blob back to the scratch slot.
+	void storeMemoryBlob(
+		std::shared_ptr<awst::Expression> _blob,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out,
+		int _slot = 0
+	);
+
+	/// Flush the local __evm_memory variable to scratch slot(s).
+	/// Called at assembly block end and before return statements.
+	void flushMemoryToScratch(
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+
+	/// Read 32 bytes from the memory blob at a constant byte offset.
+	/// Returns a biguint expression.
 	std::shared_ptr<awst::Expression> readMemSlot(
 		uint64_t _offset,
 		awst::SourceLocation const& _loc
@@ -382,19 +424,14 @@ private:
 		awst::SourceLocation const& _loc
 	);
 
-	/// Concatenate N consecutive 32-byte-padded memory slots into one bytes value.
+	/// Read a contiguous region from the memory blob.
+	/// Replaces the old concatSlots — now a single extract3 on the blob.
 	std::shared_ptr<awst::Expression> concatSlots(
 		uint64_t _baseOffset, int _startSlot, int _count,
 		awst::SourceLocation const& _loc
 	);
 
-	/// Look up or create a memory variable name for an offset.
-	std::string getOrCreateMemoryVar(
-		uint64_t _offset,
-		awst::SourceLocation const& _loc
-	);
-
-	/// Store a bytes/biguint/bool result into output memory slots.
+	/// Store a bytes/biguint/bool result into the memory blob at a given offset.
 	void storeResultToMemory(
 		std::shared_ptr<awst::Expression> _result,
 		uint64_t _outputOffset, int _outputSlots,
@@ -410,33 +447,41 @@ private:
 
 	/// Try to match mload(add(add(bytes_param, 32), offset)) pattern.
 	/// Detects reads from bytes memory parameters with variable offset
-	/// and translates to extract3(param, offset, 32) instead of returning 0.
+	/// and translates to extract3(param, offset, 32) instead of blob access.
 	std::shared_ptr<awst::Expression> tryHandleBytesMemoryRead(
 		solidity::yul::Expression const& _addrExpr,
 		awst::SourceLocation const& _loc
 	);
 
-	// ── Memory model ────────────────────────────────────────────────────
+	/// Try to match mstore(add(bytes_var, 32), value) pattern.
+	/// Detects writes to the data region of a bytes/string memory variable
+	/// and translates to a variable assignment instead of blob access.
+	bool tryHandleBytesMemoryWrite(
+		solidity::yul::FunctionCall const& _call,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
 
-	struct MemorySlot
-	{
-		std::string varName;
-		bool isParam = false;
-		int paramIndex = -1;
-	};
+	// ── Memory blob model ──────────────────────────────────────────────
 
-	/// Maps memory offsets (0x00, 0x20, 0x80, 0xa0, ...) to variables.
-	std::map<uint64_t, MemorySlot> m_memoryMap;
+	/// Name of the local bytes variable used as memory staging area within
+	/// an assembly block. Loaded from scratch at block start, flushed at end.
+	static constexpr char const* MEMORY_VAR = "__evm_memory";
 
-	/// Maps variable-base memory stores: varName → {relativeOffset → MemorySlot}.
-	/// Used when mstore offset is not a compile-time constant but is decomposable
-	/// as VarExpression + constant (e.g. add(memPtr, 0x20)).
-	std::map<std::string, std::map<uint64_t, MemorySlot>> m_varMemoryMap;
+	/// Initialize the memory blob: load from scratch, write params into it.
+	void initializeMemoryBlob(
+		std::vector<std::pair<std::string, awst::WType const*>> const& _params,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
 
-	/// Initialize memory map from function parameters.
-	/// Array parameter elements are mapped at 0x80 + i*0x20.
-	void initializeMemoryMap(
-		std::vector<std::pair<std::string, awst::WType const*>> const& _params
+	/// Build an expression reading the __evm_memory local variable.
+	std::shared_ptr<awst::Expression> memoryVar(awst::SourceLocation const& _loc);
+
+	/// Assign a new value to the __evm_memory local variable.
+	void assignMemoryVar(
+		std::shared_ptr<awst::Expression> _value,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
 
 	/// Try to resolve a constant memory offset from an expression.
@@ -445,10 +490,10 @@ private:
 		std::shared_ptr<awst::Expression> const& _expr
 	);
 
-	/// Try to decompose an expression into (VarExpression name, constant offset).
-	/// Handles VarExpr, Add(VarExpr, Const), and Mod-wrapped variants.
-	std::optional<std::pair<std::string, uint64_t>> decomposeVarOffset(
-		std::shared_ptr<awst::Expression> const& _expr
+	/// Convert a biguint offset expression to uint64 for extract3/replace3.
+	std::shared_ptr<awst::Expression> offsetToUint64(
+		std::shared_ptr<awst::Expression> _offset,
+		awst::SourceLocation const& _loc
 	);
 
 	// ── Calldata model ──────────────────────────────────────────────────
@@ -489,6 +534,10 @@ private:
 	/// Variables that were upgraded from uint64 to biguint within the assembly block.
 	/// Maps variable name to original type so we can emit coercion back at block end.
 	std::map<std::string, awst::WType const*> m_upgradedLocals;
+
+	/// Solidity bit widths for parameters (e.g., uint16 → 16, uint32 → 32).
+	/// Used to truncate assembly values back to the correct Solidity type width.
+	std::map<std::string, unsigned> m_paramBitWidths;
 
 	/// Tracks local variables with known compile-time constant uint64 values.
 	/// Used to resolve dynamic memory offsets and calldata accesses.
@@ -573,10 +622,15 @@ private:
 	std::string m_contextName;
 	awst::WType const* m_returnType = nullptr;
 
-	/// The array parameter expression (for mload-based access).
+	/// The array parameter name/type/size (for param initialization into blob).
 	std::string m_arrayParamName;
 	awst::WType const* m_arrayParamType = nullptr;
 	int m_arrayParamSize = 0;
+
+	/// Pending statements emitted by expression-level code (e.g., inlined
+	/// assembly function calls). Statement-level handlers drain these after
+	/// evaluating expressions.
+	std::vector<std::shared_ptr<awst::Statement>> m_pendingStatements;
 
 };
 

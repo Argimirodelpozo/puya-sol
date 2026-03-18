@@ -23,64 +23,83 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	solidity::yul::Block const& _block,
 	std::vector<std::pair<std::string, awst::WType const*>> const& _params,
 	awst::WType const* _returnType,
-	std::map<std::string, std::string> const& _constants
+	std::map<std::string, std::string> const& _constants,
+	std::map<std::string, unsigned> const& _paramBitWidths
 )
 {
 	m_returnType = _returnType;
 	m_locals.clear();
 	m_localConstants.clear();
-	m_memoryMap.clear();
 	m_calldataMap.clear();
 	m_asmFunctions.clear();
 	m_upgradedLocals.clear();
+	m_paramBitWidths = _paramBitWidths;
 	m_constants = _constants;
+	m_arrayParamName.clear();
+	m_arrayParamType = nullptr;
+	m_arrayParamSize = 0;
 
 	// Register function parameters as known locals (so they resolve with proper types)
 	for (auto const& [name, type]: _params)
 		m_locals[name] = type ? type : awst::WType::biguintType();
 
-	initializeMemoryMap(_params);
 	initializeCalldataMap(_params);
 
-	// First pass: collect assembly function definitions
-	for (auto const& stmt: _block.statements)
+	// Detect array parameter for blob initialization
+	for (auto const& [name, type]: _params)
 	{
-		if (auto const* funcDef = std::get_if<solidity::yul::FunctionDefinition>(&stmt))
-			m_asmFunctions[funcDef->name.str()] = funcDef;
+		if (type && type->kind() == awst::WTypeKind::ReferenceArray)
+		{
+			auto const* refArray = dynamic_cast<awst::ReferenceArray const*>(type);
+			if (!refArray)
+				continue;
+			m_arrayParamName = name;
+			m_arrayParamType = type;
+			m_arrayParamSize = refArray->arraySize().value_or(0);
+			break;
+		}
 	}
+
+	// First pass: collect assembly function definitions (recursively,
+	// since Yul allows nested function definitions inside other functions)
+	std::function<void(std::vector<solidity::yul::Statement> const&)> collectFunctions =
+		[&](std::vector<solidity::yul::Statement> const& stmts)
+	{
+		for (auto const& stmt: stmts)
+		{
+			if (auto const* funcDef = std::get_if<solidity::yul::FunctionDefinition>(&stmt))
+			{
+				m_asmFunctions[funcDef->name.str()] = funcDef;
+				collectFunctions(funcDef->body.statements);
+			}
+			else if (auto const* block = std::get_if<solidity::yul::Block>(&stmt))
+			{
+				collectFunctions(block->statements);
+			}
+		}
+	};
+	collectFunctions(_block.statements);
 
 	// Second pass: translate statements (skipping function definitions)
 	std::vector<std::shared_ptr<awst::Statement>> result;
 
-	// Emit __free_memory_ptr declaration so puya knows it's assigned before use
-	{
-		awst::SourceLocation loc;
-		loc.file = m_sourceFile;
-
-		auto target = std::make_shared<awst::VarExpression>();
-		target->sourceLocation = loc;
-		target->name = "__free_memory_ptr";
-		target->wtype = awst::WType::biguintType();
-
-		auto val = std::make_shared<awst::IntegerConstant>();
-		val->sourceLocation = loc;
-		val->wtype = awst::WType::biguintType();
-		val->value = "128"; // 0x80
-
-		auto assign = std::make_shared<awst::AssignmentStatement>();
-		assign->sourceLocation = loc;
-		assign->target = std::move(target);
-		assign->value = std::move(val);
-		result.push_back(std::move(assign));
-
-		m_locals["__free_memory_ptr"] = awst::WType::biguintType();
-	}
+	// Initialize memory blob: load from scratch slot 0, write params into it.
+	// The blob is pre-allocated with bzero(SLOT_SIZE) in the approval program preamble.
+	// Each assembly block loads it, works on it, and flushes it back.
+	initializeMemoryBlob(_params, result);
 
 	for (auto const& stmt: _block.statements)
 	{
 		if (std::holds_alternative<solidity::yul::FunctionDefinition>(stmt))
 			continue; // Already collected in first pass
 		buildStatement(stmt, result);
+	}
+
+	// Flush memory blob back to scratch at block end
+	{
+		awst::SourceLocation loc;
+		loc.file = m_sourceFile;
+		flushMemoryToScratch(loc, result);
 	}
 
 	// Coerce upgraded variables back to their original types at block end.
@@ -97,8 +116,33 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 		src->name = name;
 		src->wtype = awst::WType::biguintType();
 
+		// If the Solidity type is narrower than 64 bits, mask to the correct width
+		// before converting to uint64. E.g., uint16 a := 0x0f0f0f0f0f → mask to 0x0f0f.
+		std::shared_ptr<awst::Expression> valueToCast = src;
+		auto bwIt = m_paramBitWidths.find(name);
+		if (bwIt != m_paramBitWidths.end() && bwIt->second < 64)
+		{
+			// mask = (1 << bitWidth) - 1
+			solidity::u256 mask = (solidity::u256(1) << bwIt->second) - 1;
+			std::ostringstream maskStr;
+			maskStr << mask;
+
+			auto maskConst = std::make_shared<awst::IntegerConstant>();
+			maskConst->sourceLocation = loc;
+			maskConst->wtype = awst::WType::biguintType();
+			maskConst->value = maskStr.str();
+
+			auto andOp = std::make_shared<awst::BigUIntBinaryOperation>();
+			andOp->sourceLocation = loc;
+			andOp->wtype = awst::WType::biguintType();
+			andOp->left = std::move(valueToCast);
+			andOp->op = awst::BigUIntBinaryOperator::BitAnd;
+			andOp->right = std::move(maskConst);
+			valueToCast = std::move(andOp);
+		}
+
 		// Convert to original type (uint64)
-		auto converted = safeBtoi(std::move(src), loc);
+		auto converted = safeBtoi(std::move(valueToCast), loc);
 
 		auto target = std::make_shared<awst::VarExpression>();
 		target->sourceLocation = loc;
@@ -118,48 +162,164 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	return result;
 }
 
-// ─── Memory model ───────────────────────────────────────────────────────────
+// ─── Memory blob model ──────────────────────────────────────────────────────
 
-void AssemblyBuilder::initializeMemoryMap(
-	std::vector<std::pair<std::string, awst::WType const*>> const& _params
+std::vector<int> AssemblyBuilder::reservedScratchSlots()
+{
+	std::vector<int> slots;
+	for (int i = MEMORY_SLOT_FIRST; i <= MEMORY_SLOT_LAST; ++i)
+		slots.push_back(i);
+	return slots;
+}
+
+void AssemblyBuilder::initializeMemoryBlob(
+	std::vector<std::pair<std::string, awst::WType const*>> const& _params,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	// Pre-initialize the free memory pointer slot (EVM convention: 0x40 = 0x80)
+	awst::SourceLocation loc;
+	loc.file = m_sourceFile;
+
+	// Load the memory blob from scratch slot 0 into local variable __evm_memory.
+	// The blob is pre-allocated in the approval program preamble with bzero(SLOT_SIZE).
+	m_locals[MEMORY_VAR] = awst::WType::bytesType();
 	{
-		MemorySlot fmpSlot;
-		fmpSlot.varName = "__free_memory_ptr";
-		m_memoryMap[0x40] = fmpSlot;
-		m_localConstants["__free_memory_ptr"] = 0x80;
+		auto blob = loadMemoryBlob(loc, MEMORY_SLOT_FIRST);
+		assignMemoryVar(std::move(blob), loc, _out);
 	}
 
-	// In Solidity's ABI calling convention for memory arrays:
-	//   mload(0x80 + i*0x20) = array element i
-	// We look for the first array parameter and map its elements.
-	// Note: for calldata parameters, the calldataMap is used instead.
-	for (auto const& [name, type]: _params)
+	// NOTE: We do NOT write the free memory pointer (FMP) here.
+	// The FMP at offset 0x40 is initialized to 0x80 in the approval program preamble
+	// (via the blob init in ContractBuilder). Subsequent assembly blocks must NOT
+	// re-initialize it, because previous blocks may have advanced it.
+
+	// Set __free_memory_ptr as a local constant for resolveConstantOffset.
+	// This is the initial value; actual runtime value may differ after mstore(0x40,...).
+	m_localConstants["__free_memory_ptr"] = 0x80;
+
+	// Write array parameter elements into the blob at 0x80 + i*0x20
+	if (!m_arrayParamName.empty() && m_arrayParamSize > 0)
 	{
-		if (type && type->kind() == awst::WTypeKind::ReferenceArray)
+		for (int i = 0; i < m_arrayParamSize; ++i)
 		{
-			auto const* refArray = dynamic_cast<awst::ReferenceArray const*>(type);
-			if (!refArray)
-				continue;
+			uint64_t offset = 0x80 + static_cast<uint64_t>(i) * 0x20;
 
-			m_arrayParamName = name;
-			m_arrayParamType = type;
-			m_arrayParamSize = refArray->arraySize().value_or(0);
+			// Access param[i]
+			auto base = std::make_shared<awst::VarExpression>();
+			base->sourceLocation = loc;
+			base->name = m_arrayParamName;
+			base->wtype = m_arrayParamType;
 
-			for (int i = 0; i < m_arrayParamSize; ++i)
-			{
-				uint64_t offset = 0x80 + static_cast<uint64_t>(i) * 0x20;
-				MemorySlot slot;
-				slot.varName = name;
-				slot.isParam = true;
-				slot.paramIndex = i;
-				m_memoryMap[offset] = slot;
-			}
-			break; // Only handle the first array param
+			auto index = std::make_shared<awst::IntegerConstant>();
+			index->sourceLocation = loc;
+			index->wtype = awst::WType::uint64Type();
+			index->value = std::to_string(i);
+
+			auto indexExpr = std::make_shared<awst::IndexExpression>();
+			indexExpr->sourceLocation = loc;
+			indexExpr->wtype = awst::WType::biguintType();
+			indexExpr->base = std::move(base);
+			indexExpr->index = std::move(index);
+
+			// Pad to 32 bytes and write into blob
+			auto padded = padTo32Bytes(std::move(indexExpr), loc);
+
+			auto offsetConst = std::make_shared<awst::IntegerConstant>();
+			offsetConst->sourceLocation = loc;
+			offsetConst->wtype = awst::WType::uint64Type();
+			offsetConst->value = std::to_string(offset);
+
+			auto replace = std::make_shared<awst::IntrinsicCall>();
+			replace->sourceLocation = loc;
+			replace->wtype = awst::WType::bytesType();
+			replace->opCode = "replace3";
+			replace->stackArgs.push_back(memoryVar(loc));
+			replace->stackArgs.push_back(std::move(offsetConst));
+			replace->stackArgs.push_back(std::move(padded));
+			assignMemoryVar(std::move(replace), loc, _out);
 		}
 	}
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::memoryVar(awst::SourceLocation const& _loc)
+{
+	auto var = std::make_shared<awst::VarExpression>();
+	var->sourceLocation = _loc;
+	var->name = MEMORY_VAR;
+	var->wtype = awst::WType::bytesType();
+	return var;
+}
+
+void AssemblyBuilder::assignMemoryVar(
+	std::shared_ptr<awst::Expression> _value,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	auto target = std::make_shared<awst::VarExpression>();
+	target->sourceLocation = _loc;
+	target->name = MEMORY_VAR;
+	target->wtype = awst::WType::bytesType();
+
+	auto assign = std::make_shared<awst::AssignmentStatement>();
+	assign->sourceLocation = _loc;
+	assign->target = std::move(target);
+	assign->value = std::move(_value);
+	_out.push_back(std::move(assign));
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::loadMemoryBlob(
+	awst::SourceLocation const& _loc,
+	int _slot
+)
+{
+	auto loadOp = std::make_shared<awst::IntrinsicCall>();
+	loadOp->sourceLocation = _loc;
+	loadOp->wtype = awst::WType::bytesType();
+	loadOp->opCode = "load";
+	loadOp->immediates = {MEMORY_SLOT_FIRST + _slot};
+	return loadOp;
+}
+
+void AssemblyBuilder::storeMemoryBlob(
+	std::shared_ptr<awst::Expression> _blob,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out,
+	int _slot
+)
+{
+	auto storeOp = std::make_shared<awst::IntrinsicCall>();
+	storeOp->sourceLocation = _loc;
+	storeOp->wtype = awst::WType::voidType();
+	storeOp->opCode = "store";
+	storeOp->immediates = {MEMORY_SLOT_FIRST + _slot};
+	storeOp->stackArgs.push_back(std::move(_blob));
+
+	auto exprStmt = std::make_shared<awst::ExpressionStatement>();
+	exprStmt->sourceLocation = _loc;
+	exprStmt->expr = std::move(storeOp);
+	_out.push_back(std::move(exprStmt));
+}
+
+void AssemblyBuilder::flushMemoryToScratch(
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	// Store the local __evm_memory blob back to scratch slot 0
+	storeMemoryBlob(memoryVar(_loc), _loc, _out, 0);
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::offsetToUint64(
+	std::shared_ptr<awst::Expression> _offset,
+	awst::SourceLocation const& _loc
+)
+{
+	if (_offset->wtype == awst::WType::uint64Type())
+		return _offset;
+
+	// biguint → bytes → btoi (safe for offsets that fit in uint64)
+	return safeBtoi(ensureBiguint(std::move(_offset), _loc), _loc);
 }
 
 int AssemblyBuilder::computeFlatElementCount(awst::WType const* _type)
@@ -353,46 +513,6 @@ std::optional<uint64_t> AssemblyBuilder::resolveConstantOffset(
 			auto const* rc = dynamic_cast<awst::IntegerConstant const*>(binOp->right.get());
 			if (rc && rc->value.length() > 18)
 				return *left;
-		}
-	}
-
-	return std::nullopt;
-}
-
-std::optional<std::pair<std::string, uint64_t>> AssemblyBuilder::decomposeVarOffset(
-	std::shared_ptr<awst::Expression> const& _expr
-)
-{
-	// Direct VarExpression → (name, 0)
-	if (auto const* var = dynamic_cast<awst::VarExpression const*>(_expr.get()))
-		return std::make_pair(var->name, uint64_t(0));
-
-	if (auto const* binOp = dynamic_cast<awst::BigUIntBinaryOperation const*>(_expr.get()))
-	{
-		// Unwrap Mod(expr, TWO_POW_256) from wrapping arithmetic
-		if (binOp->op == awst::BigUIntBinaryOperator::Mod)
-		{
-			auto const* rc = dynamic_cast<awst::IntegerConstant const*>(binOp->right.get());
-			if (rc && rc->value.length() > 18)
-				return decomposeVarOffset(binOp->left);
-		}
-		// Add(VarExpr, IntConst) or Add(IntConst, VarExpr) → (name, offset)
-		if (binOp->op == awst::BigUIntBinaryOperator::Add)
-		{
-			auto const* leftVar = dynamic_cast<awst::VarExpression const*>(binOp->left.get());
-			if (leftVar)
-			{
-				auto rightConst = resolveConstantOffset(binOp->right);
-				if (rightConst)
-					return std::make_pair(leftVar->name, *rightConst);
-			}
-			auto const* rightVar = dynamic_cast<awst::VarExpression const*>(binOp->right.get());
-			if (rightVar)
-			{
-				auto leftConst = resolveConstantOffset(binOp->left);
-				if (leftConst)
-					return std::make_pair(rightVar->name, *leftConst);
-			}
 		}
 	}
 

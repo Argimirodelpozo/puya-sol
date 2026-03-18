@@ -227,12 +227,13 @@ void AssemblyBuilder::buildVariableDeclaration(
 	auto loc = makeLoc(_decl.debugData);
 
 	// Check for special function call patterns: staticcall, user-defined functions
-	if (_decl.value && _decl.variables.size() == 1)
+	if (_decl.value)
 	{
 		if (auto const* call = std::get_if<solidity::yul::FunctionCall>(_decl.value.get()))
 		{
 			std::string callName = call->functionName.name.str();
-			if (callName == "staticcall" || callName == "call")
+
+			if (_decl.variables.size() == 1 && (callName == "staticcall" || callName == "call"))
 			{
 				std::string varName = _decl.variables[0].name.str();
 				handlePrecompileCall(*call, varName, loc, _out, /*_isCall=*/callName == "call");
@@ -240,26 +241,32 @@ void AssemblyBuilder::buildVariableDeclaration(
 			}
 
 			// User-defined assembly function called in variable declaration context
-			// (e.g., let isValid := checkPairing(...))
+			// Handles both single (let x := f()) and multi (let a, b, c := f()) returns
 			if (m_asmFunctions.count(callName))
 			{
-				std::string varName = _decl.variables[0].name.str();
-				m_locals[varName] = awst::WType::biguintType();
+				auto const& funcDef = *m_asmFunctions[callName];
+
+				// Register all declared variables
+				for (auto const& var: _decl.variables)
+					m_locals[var.name.str()] = awst::WType::biguintType();
 
 				// Translate arguments
 				std::vector<std::shared_ptr<awst::Expression>> args;
 				for (auto const& arg: call->arguments)
 					args.push_back(buildExpression(arg));
 
-				// Inline the function (writes to return variable)
+				// Inline the function body (populates return variables)
 				handleUserFunctionCall(callName, args, loc, _out);
 
-				// The return variable of the inlined function is the result.
-				// Find its name from the function definition's return variables.
-				auto const& funcDef = *m_asmFunctions[callName];
-				if (!funcDef.returnVariables.empty())
+				// Map the function's return variables to the declared variables
+				size_t numReturns = std::min(
+					_decl.variables.size(), funcDef.returnVariables.size()
+				);
+				for (size_t i = 0; i < numReturns; ++i)
 				{
-					std::string retName = funcDef.returnVariables[0].name.str();
+					std::string retName = funcDef.returnVariables[i].name.str();
+					std::string varName = _decl.variables[i].name.str();
+
 					auto retVar = std::make_shared<awst::VarExpression>();
 					retVar->sourceLocation = loc;
 					retVar->name = retName;
@@ -307,6 +314,11 @@ void AssemblyBuilder::buildVariableDeclaration(
 		if (_decl.value)
 		{
 			value = buildExpression(*_decl.value);
+			// Drain any pending statements from inlined assembly functions
+			for (auto& ps: m_pendingStatements)
+				_out.push_back(std::move(ps));
+			m_pendingStatements.clear();
+
 			if (!value)
 			{
 				// Expression failed to translate (error already logged), use zero fallback
@@ -345,8 +357,56 @@ void AssemblyBuilder::buildAssignment(
 {
 	auto loc = makeLoc(_assign.debugData);
 
-	if (_assign.variableNames.size() != 1)
+	// Multi-variable assignment from assembly function: a, b, c := f(...)
+	if (_assign.variableNames.size() > 1)
 	{
+		if (_assign.value)
+		{
+			if (auto const* call = std::get_if<solidity::yul::FunctionCall>(_assign.value.get()))
+			{
+				std::string callName = call->functionName.name.str();
+				if (m_asmFunctions.count(callName))
+				{
+					auto const& funcDef = *m_asmFunctions[callName];
+
+					// Translate arguments
+					std::vector<std::shared_ptr<awst::Expression>> args;
+					for (auto const& arg: call->arguments)
+						args.push_back(buildExpression(arg));
+
+					// Inline the function body
+					handleUserFunctionCall(callName, args, loc, _out);
+
+					// Map return variables to assignment targets
+					size_t numReturns = std::min(
+						_assign.variableNames.size(), funcDef.returnVariables.size()
+					);
+					for (size_t i = 0; i < numReturns; ++i)
+					{
+						std::string retName = funcDef.returnVariables[i].name.str();
+						std::string varName = _assign.variableNames[i].name.str();
+
+						auto retVar = std::make_shared<awst::VarExpression>();
+						retVar->sourceLocation = loc;
+						retVar->name = retName;
+						retVar->wtype = awst::WType::biguintType();
+
+						auto target = std::make_shared<awst::VarExpression>();
+						target->sourceLocation = loc;
+						target->name = varName;
+						target->wtype = awst::WType::biguintType();
+
+						auto assign = std::make_shared<awst::AssignmentStatement>();
+						assign->sourceLocation = loc;
+						assign->target = std::move(target);
+						assign->value = std::move(retVar);
+						_out.push_back(std::move(assign));
+					}
+					return;
+				}
+			}
+		}
+
 		Logger::instance().error(
 			"multi-variable assignment not yet supported in assembly translation", loc
 		);
@@ -384,6 +444,11 @@ void AssemblyBuilder::buildAssignment(
 	target->wtype = (it != m_locals.end()) ? it->second : awst::WType::biguintType();
 
 	auto value = buildExpression(*_assign.value);
+	// Drain any pending statements from inlined assembly functions
+	for (auto& ps: m_pendingStatements)
+		_out.push_back(std::move(ps));
+	m_pendingStatements.clear();
+
 	if (!value)
 	{
 		// Expression failed to translate (error already logged), use zero fallback
@@ -436,6 +501,27 @@ void AssemblyBuilder::buildAssignment(
 			// across all control flow paths (avoids phi node type mismatches).
 			if (value->wtype == awst::WType::biguintType())
 			{
+				// If the Solidity type is sub-64-bit (uint8/uint16/uint32), mask first
+				auto bwIt = m_paramBitWidths.find(name);
+				if (bwIt != m_paramBitWidths.end() && bwIt->second < 64)
+				{
+					solidity::u256 mask = (solidity::u256(1) << bwIt->second) - 1;
+					std::ostringstream maskStr;
+					maskStr << mask;
+
+					auto maskConst = std::make_shared<awst::IntegerConstant>();
+					maskConst->sourceLocation = loc;
+					maskConst->wtype = awst::WType::biguintType();
+					maskConst->value = maskStr.str();
+
+					auto andOp = std::make_shared<awst::BigUIntBinaryOperation>();
+					andOp->sourceLocation = loc;
+					andOp->wtype = awst::WType::biguintType();
+					andOp->left = std::move(value);
+					andOp->op = awst::BigUIntBinaryOperator::BitAnd;
+					andOp->right = std::move(maskConst);
+					value = std::move(andOp);
+				}
 				value = safeBtoi(std::move(value), loc);
 			}
 		}
@@ -511,10 +597,22 @@ void AssemblyBuilder::buildExpressionStatement(
 	{
 		std::string funcName = call->functionName.name.str();
 
+		// Before translating args, check for patterns that need raw Yul AST access.
+		if (funcName == "mstore")
+		{
+			// Try to detect mstore(add(bytes_var, 32), value) pattern
+			if (tryHandleBytesMemoryWrite(*call, loc, _out))
+				return;
+		}
+
 		// Translate arguments (stored in source order)
 		std::vector<std::shared_ptr<awst::Expression>> args;
 		for (auto const& arg: call->arguments)
 			args.push_back(buildExpression(arg));
+		// Drain any pending statements from inlined assembly functions
+		for (auto& ps: m_pendingStatements)
+			_out.push_back(std::move(ps));
+		m_pendingStatements.clear();
 
 		if (funcName == "mstore")
 		{

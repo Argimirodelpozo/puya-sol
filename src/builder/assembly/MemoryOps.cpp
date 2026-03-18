@@ -1,5 +1,6 @@
 /// @file MemoryOps.cpp
 /// Memory operations: mload, mstore, handleReturn, tryHandleBytesMemoryRead.
+/// Uses scratch-slot-backed bytes blob for EVM memory simulation.
 
 #include "builder/assembly/AssemblyBuilder.h"
 #include "Logger.h"
@@ -20,87 +21,48 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleMload(
 		return nullptr;
 	}
 
-	auto offset = resolveConstantOffset(_args[0]);
-	if (!offset)
+	// First check calldata map for constant offsets (function parameters)
+	auto constOffset = resolveConstantOffset(_args[0]);
+	if (constOffset)
 	{
-		Logger::instance().warning(
-			"mload with non-constant offset not supported — returning 0 (EVM memory model)", _loc
-		);
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = _loc;
-		zero->wtype = awst::WType::biguintType();
-		zero->value = "0";
-		return zero;
-	}
-
-	auto it = m_memoryMap.find(*offset);
-	if (it != m_memoryMap.end())
-	{
-		auto const& slot = it->second;
-		if (slot.isParam)
+		auto cdIt = m_calldataMap.find(*constOffset);
+		if (cdIt != m_calldataMap.end())
 		{
-			// Access array parameter element: param[index]
+			auto const& elem = cdIt->second;
 			auto base = std::make_shared<awst::VarExpression>();
 			base->sourceLocation = _loc;
-			base->name = slot.varName;
-			base->wtype = m_arrayParamType;
+			base->name = elem.paramName;
+			base->wtype = m_locals.count(elem.paramName)
+				? m_locals[elem.paramName]
+				: awst::WType::biguintType();
 
-			auto index = std::make_shared<awst::IntegerConstant>();
-			index->sourceLocation = _loc;
-			index->wtype = awst::WType::uint64Type();
-			index->value = std::to_string(slot.paramIndex);
-
-			auto indexExpr = std::make_shared<awst::IndexExpression>();
-			indexExpr->sourceLocation = _loc;
-			indexExpr->wtype = awst::WType::biguintType();
-			indexExpr->base = std::move(base);
-			indexExpr->index = std::move(index);
-			return indexExpr;
-		}
-		else
-		{
-			// Read from scratch variable
-			auto var = std::make_shared<awst::VarExpression>();
-			var->sourceLocation = _loc;
-			var->name = slot.varName;
-			var->wtype = awst::WType::biguintType();
-			return var;
+			return accessFlatElement(std::move(base), elem.paramType, elem.flatIndex, _loc);
 		}
 	}
 
-	// Check if the offset falls within m_calldataMap (function parameters).
-	// This handles mload from calldata struct field offsets, e.g., mload(key + 32)
-	// where key is a struct parameter at calldata offset 4.
-	auto cdIt = m_calldataMap.find(*offset);
-	if (cdIt != m_calldataMap.end())
-	{
-		auto const& elem = cdIt->second;
-		auto base = std::make_shared<awst::VarExpression>();
-		base->sourceLocation = _loc;
-		base->name = elem.paramName;
-		base->wtype = m_locals.count(elem.paramName)
-			? m_locals[elem.paramName]
-			: awst::WType::biguintType();
+	// Read 32 bytes from the memory blob at the given offset.
+	// extract3(__evm_memory, offset, 32) → cast to biguint
+	auto offsetU64 = offsetToUint64(_args[0], _loc);
 
-		return accessFlatElement(std::move(base), elem.paramType, elem.flatIndex, _loc);
-	}
+	auto len32 = std::make_shared<awst::IntegerConstant>();
+	len32->sourceLocation = _loc;
+	len32->wtype = awst::WType::uint64Type();
+	len32->value = "32";
 
-	// Unknown memory offset — create a scratch variable on the fly
-	std::string varName = "mem_0x" + ([&] {
-		std::ostringstream oss;
-		oss << std::hex << *offset;
-		return oss.str();
-	})();
+	auto extract = std::make_shared<awst::IntrinsicCall>();
+	extract->sourceLocation = _loc;
+	extract->wtype = awst::WType::bytesType();
+	extract->opCode = "extract3";
+	extract->stackArgs.push_back(memoryVar(_loc));
+	extract->stackArgs.push_back(std::move(offsetU64));
+	extract->stackArgs.push_back(std::move(len32));
 
-	MemorySlot slot;
-	slot.varName = varName;
-	m_memoryMap[*offset] = slot;
-
-	auto var = std::make_shared<awst::VarExpression>();
-	var->sourceLocation = _loc;
-	var->name = varName;
-	var->wtype = awst::WType::biguintType();
-	return var;
+	// Cast bytes → biguint (mload returns uint256)
+	auto result = std::make_shared<awst::ReinterpretCast>();
+	result->sourceLocation = _loc;
+	result->wtype = awst::WType::biguintType();
+	result->expr = std::move(extract);
+	return result;
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleBytesMemoryRead(
@@ -224,6 +186,124 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleBytesMemoryRead(
 	return result;
 }
 
+bool AssemblyBuilder::tryHandleBytesMemoryWrite(
+	solidity::yul::FunctionCall const& _call,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	// Match: mstore(add(bytes_var, 32), value)
+	// or:    mstore(add(32, bytes_var), value)
+	//
+	// In EVM: bytes memory x has layout [length(32)][data...] at address x.
+	// add(x, 32) points to the data region. mstore writes 32 bytes there.
+	// The variable's length is unchanged, so on return only len(x) bytes matter.
+	//
+	// In AVM: x is raw bytes (no length header). We overwrite x's content
+	// with the first len(x) bytes of the 32-byte value.
+
+	if (_call.arguments.size() != 2)
+		return false;
+
+	// First arg must be add(bytes_var, 32) or add(32, bytes_var)
+	auto* addCall = std::get_if<solidity::yul::FunctionCall>(&_call.arguments[0]);
+	if (!addCall || addCall->functionName.name.str() != "add"
+		|| addCall->arguments.size() != 2)
+		return false;
+
+	// Find which arg is 32 and which is the bytes variable
+	solidity::yul::Expression const* varExpr = nullptr;
+
+	auto val0 = resolveConstantYulValue(addCall->arguments[0]);
+	auto val1 = resolveConstantYulValue(addCall->arguments[1]);
+
+	if (val1 && *val1 == 32)
+		varExpr = &addCall->arguments[0];
+	else if (val0 && *val0 == 32)
+		varExpr = &addCall->arguments[1];
+	else
+		return false;
+
+	// The variable must be an Identifier referencing a bytes/string local
+	auto* varId = std::get_if<solidity::yul::Identifier>(varExpr);
+	if (!varId)
+		return false;
+
+	std::string varName = varId->name.str();
+	auto localIt = m_locals.find(varName);
+	if (localIt == m_locals.end())
+		return false;
+
+	auto* varType = localIt->second;
+	if (varType != awst::WType::bytesType() && varType != awst::WType::stringType())
+		return false;
+
+	// Pattern matched! Translate the value expression.
+	auto valueExpr = buildExpression(_call.arguments[1]);
+
+	Logger::instance().debug(
+		"mstore bytes memory write: replacing content of '" + varName + "'", _loc
+	);
+
+	// Build: x = extract3(pad32(value), 0, len(x))
+	// This overwrites x with the first len(x) bytes of the 32-byte value.
+
+	// Reference to the variable
+	auto varRef = std::make_shared<awst::VarExpression>();
+	varRef->sourceLocation = _loc;
+	varRef->name = varName;
+	varRef->wtype = varType;
+
+	// len(x)
+	auto lenCall = std::make_shared<awst::IntrinsicCall>();
+	lenCall->sourceLocation = _loc;
+	lenCall->wtype = awst::WType::uint64Type();
+	lenCall->opCode = "len";
+	lenCall->stackArgs.push_back(varRef);
+
+	// pad32(value) — get the 32 bytes representation
+	auto padded = padTo32Bytes(ensureBiguint(valueExpr, _loc), _loc);
+
+	// extract3(padded, 0, len(x))
+	auto zero = std::make_shared<awst::IntegerConstant>();
+	zero->sourceLocation = _loc;
+	zero->wtype = awst::WType::uint64Type();
+	zero->value = "0";
+
+	auto extract = std::make_shared<awst::IntrinsicCall>();
+	extract->sourceLocation = _loc;
+	extract->wtype = awst::WType::bytesType();
+	extract->opCode = "extract3";
+	extract->stackArgs.push_back(std::move(padded));
+	extract->stackArgs.push_back(std::move(zero));
+	extract->stackArgs.push_back(std::move(lenCall));
+
+	// Cast if needed for string type
+	std::shared_ptr<awst::Expression> newValue = std::move(extract);
+	if (varType == awst::WType::stringType())
+	{
+		auto cast = std::make_shared<awst::ReinterpretCast>();
+		cast->sourceLocation = _loc;
+		cast->wtype = awst::WType::stringType();
+		cast->expr = std::move(newValue);
+		newValue = std::move(cast);
+	}
+
+	// x = newValue
+	auto target = std::make_shared<awst::VarExpression>();
+	target->sourceLocation = _loc;
+	target->name = varName;
+	target->wtype = varType;
+
+	auto assign = std::make_shared<awst::AssignmentStatement>();
+	assign->sourceLocation = _loc;
+	assign->target = std::move(target);
+	assign->value = std::move(newValue);
+	_out.push_back(std::move(assign));
+
+	return true;
+}
+
 void AssemblyBuilder::handleMstore(
 	std::vector<std::shared_ptr<awst::Expression>> const& _args,
 	awst::SourceLocation const& _loc,
@@ -239,106 +319,37 @@ void AssemblyBuilder::handleMstore(
 	// Track last mstore value for dynamic-length keccak256 patterns
 	m_lastMstoreValue = _args[1];
 
-	auto offset = resolveConstantOffset(_args[0]);
-	if (!offset)
+	// Track constant values stored to memory (especially free memory pointer)
+	auto constOffset = resolveConstantOffset(_args[0]);
+	if (constOffset)
 	{
-		// Try to decompose as VarExpression + constant offset
-		auto decomposed = decomposeVarOffset(_args[0]);
-		if (!decomposed)
+		auto storedVal = resolveConstantOffset(_args[1]);
+		if (storedVal)
 		{
-			Logger::instance().warning(
-				"mstore with non-constant offset not supported in assembly translation (skipping)", _loc
-			);
-			return;
-		}
-		// Track in variable-offset memory map
-		auto const& [baseName, relOffset] = *decomposed;
-		std::string varName = "vmem_" + baseName + "_0x" + ([&] {
-			std::ostringstream oss;
-			oss << std::hex << relOffset;
-			return oss.str();
-		})();
-		MemorySlot slot;
-		slot.varName = varName;
-		m_varMemoryMap[baseName][relOffset] = slot;
-
-		if (m_locals.find(varName) == m_locals.end())
-			m_locals[varName] = awst::WType::biguintType();
-
-		auto target = std::make_shared<awst::VarExpression>();
-		target->sourceLocation = _loc;
-		target->name = varName;
-		target->wtype = awst::WType::biguintType();
-
-		auto storeValue = ensureBiguint(_args[1], _loc);
-
-		auto assign = std::make_shared<awst::AssignmentStatement>();
-		assign->sourceLocation = _loc;
-		assign->target = std::move(target);
-		assign->value = std::move(storeValue);
-		_out.push_back(std::move(assign));
-		return;
-	}
-
-	// Find or create the scratch variable for this offset
-	std::string varName;
-	auto it = m_memoryMap.find(*offset);
-	if (it != m_memoryMap.end())
-	{
-		if (it->second.isParam)
-		{
-			// Param slot is being overwritten — shadow it with a scratch variable.
-			// After this, mload at this offset will read the scratch var, not the param.
-			varName = "mem_0x" + ([&] {
+			// Track by offset for resolveConstantOffset to find later
+			std::string varName = "mem_0x" + ([&] {
 				std::ostringstream oss;
-				oss << std::hex << *offset;
+				oss << std::hex << *constOffset;
 				return oss.str();
 			})();
-			MemorySlot slot;
-			slot.varName = varName;
-			slot.isParam = false;
-			slot.paramIndex = -1;
-			it->second = slot;
-		}
-		else
-		{
-			varName = it->second.varName;
+			m_localConstants[varName] = *storedVal;
 		}
 	}
-	else
-	{
-		varName = "mem_0x" + ([&] {
-			std::ostringstream oss;
-			oss << std::hex << *offset;
-			return oss.str();
-		})();
-		MemorySlot slot;
-		slot.varName = varName;
-		m_memoryMap[*offset] = slot;
-	}
 
-	// Register as local if not already
-	if (m_locals.find(varName) == m_locals.end())
-		m_locals[varName] = awst::WType::biguintType();
+	// Write 32 bytes into the memory blob at the given offset.
+	// __evm_memory = replace3(__evm_memory, offset, pad32(value))
+	auto offsetU64 = offsetToUint64(_args[0], _loc);
+	auto padded = padTo32Bytes(ensureBiguint(_args[1], _loc), _loc);
 
-	// Track constant values stored to memory (especially free memory pointer)
-	auto storedVal = resolveConstantOffset(_args[1]);
-	if (storedVal)
-		m_localConstants[varName] = *storedVal;
+	auto replace = std::make_shared<awst::IntrinsicCall>();
+	replace->sourceLocation = _loc;
+	replace->wtype = awst::WType::bytesType();
+	replace->opCode = "replace3";
+	replace->stackArgs.push_back(memoryVar(_loc));
+	replace->stackArgs.push_back(std::move(offsetU64));
+	replace->stackArgs.push_back(std::move(padded));
 
-	auto target = std::make_shared<awst::VarExpression>();
-	target->sourceLocation = _loc;
-	target->name = varName;
-	target->wtype = awst::WType::biguintType();
-
-	// Coerce value to biguint to match memory slot type (EVM mstore = 256-bit write)
-	auto storeValue = ensureBiguint(_args[1], _loc);
-
-	auto assign = std::make_shared<awst::AssignmentStatement>();
-	assign->sourceLocation = _loc;
-	assign->target = std::move(target);
-	assign->value = std::move(storeValue);
-	_out.push_back(std::move(assign));
+	assignMemoryVar(std::move(replace), _loc, _out);
 }
 
 void AssemblyBuilder::handleReturn(
@@ -354,6 +365,73 @@ void AssemblyBuilder::handleReturn(
 	}
 
 	// return(offset, size): Return the value stored at memory[offset]
+
+	// Void Solidity function with assembly return(offset, size) — EVM pattern
+	// that bypasses ABI encoding. On AVM, emit the data as a structured log
+	// so callers can read it from transaction logs.
+	if (!m_returnType || m_returnType == awst::WType::voidType())
+	{
+		auto returnOffset = resolveConstantOffset(_args[0]);
+		auto returnSize = resolveConstantOffset(_args[1]);
+
+		if (!returnOffset || !returnSize || *returnSize == 0)
+		{
+			Logger::instance().warning(
+				"assembly return() in void function with dynamic/zero size — skipping", _loc
+			);
+			flushMemoryToScratch(_loc, _out);
+			auto ret = std::make_shared<awst::ReturnStatement>();
+			ret->sourceLocation = _loc;
+			ret->value = nullptr;
+			_out.push_back(std::move(ret));
+			return;
+		}
+
+		Logger::instance().warning(
+			"assembly return() in void function — emitting " +
+			std::to_string(*returnSize) + " bytes as structured log", _loc
+		);
+
+		// Read the return region from the memory blob: extract3(blob, offset, size)
+		auto offsetU64 = std::make_shared<awst::IntegerConstant>();
+		offsetU64->sourceLocation = _loc;
+		offsetU64->wtype = awst::WType::uint64Type();
+		offsetU64->value = std::to_string(*returnOffset);
+
+		auto sizeU64 = std::make_shared<awst::IntegerConstant>();
+		sizeU64->sourceLocation = _loc;
+		sizeU64->wtype = awst::WType::uint64Type();
+		sizeU64->value = std::to_string(*returnSize);
+
+		auto extract = std::make_shared<awst::IntrinsicCall>();
+		extract->sourceLocation = _loc;
+		extract->wtype = awst::WType::bytesType();
+		extract->opCode = "extract3";
+		extract->stackArgs.push_back(memoryVar(_loc));
+		extract->stackArgs.push_back(std::move(offsetU64));
+		extract->stackArgs.push_back(std::move(sizeU64));
+
+		// log(data) — emit the raw bytes as a transaction log
+		auto logCall = std::make_shared<awst::IntrinsicCall>();
+		logCall->sourceLocation = _loc;
+		logCall->wtype = awst::WType::voidType();
+		logCall->opCode = "log";
+		logCall->stackArgs.push_back(std::move(extract));
+
+		auto logStmt = std::make_shared<awst::ExpressionStatement>();
+		logStmt->sourceLocation = _loc;
+		logStmt->expr = std::move(logCall);
+		_out.push_back(std::move(logStmt));
+
+		// Flush and return void
+		flushMemoryToScratch(_loc, _out);
+		auto ret = std::make_shared<awst::ReturnStatement>();
+		ret->sourceLocation = _loc;
+		ret->value = nullptr;
+		_out.push_back(std::move(ret));
+		return;
+	}
+
 	auto offset = resolveConstantOffset(_args[0]);
 	if (!offset)
 	{
@@ -363,29 +441,8 @@ void AssemblyBuilder::handleReturn(
 		return;
 	}
 
-	// Look up what was stored at this offset
-	std::shared_ptr<awst::Expression> returnValue;
-	auto it = m_memoryMap.find(*offset);
-	if (it != m_memoryMap.end())
-	{
-		auto var = std::make_shared<awst::VarExpression>();
-		var->sourceLocation = _loc;
-		var->name = it->second.varName;
-		var->wtype = awst::WType::biguintType();
-		returnValue = std::move(var);
-	}
-	else
-	{
-		// Offset not in memory map — return zero
-		Logger::instance().warning(
-			"return from unknown memory offset; defaulting to zero", _loc
-		);
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = _loc;
-		zero->wtype = m_returnType ? m_returnType : awst::WType::biguintType();
-		zero->value = "0";
-		returnValue = std::move(zero);
-	}
+	// Read from the memory blob at this offset
+	std::shared_ptr<awst::Expression> returnValue = readMemSlot(*offset, _loc);
 
 	// Convert to bool if the function's return type is bool
 	if (m_returnType == awst::WType::boolType()
@@ -420,6 +477,9 @@ void AssemblyBuilder::handleReturn(
 		emptyArr->wtype = m_returnType;
 		returnValue = std::move(emptyArr);
 	}
+
+	// Flush memory blob to scratch before returning
+	flushMemoryToScratch(_loc, _out);
 
 	auto ret = std::make_shared<awst::ReturnStatement>();
 	ret->sourceLocation = _loc;

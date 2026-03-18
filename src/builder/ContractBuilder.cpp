@@ -1,4 +1,5 @@
 #include "builder/ContractBuilder.h"
+#include "builder/assembly/AssemblyBuilder.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
@@ -25,12 +26,17 @@ static bool blockAlwaysReturns(std::vector<std::shared_ptr<awst::Statement>> con
 		bool elseReturns = ifElse.elseBranch && blockAlwaysReturns(ifElse.elseBranch->body);
 		return ifReturns && elseReturns;
 	}
-	// ExpressionStatement containing assert(false) is a revert
+	// ExpressionStatement containing assert(false) is a guaranteed revert
 	if (type == "ExpressionStatement")
 	{
 		auto const& exprStmt = static_cast<awst::ExpressionStatement const&>(*last);
-		if (exprStmt.expr && exprStmt.expr->nodeType() == "AssertExpression")
-			return true; // assert(false) terminates
+		if (auto const* assertExpr = dynamic_cast<awst::AssertExpression const*>(exprStmt.expr.get()))
+		{
+			// Only assert(false) is guaranteed to terminate — assert(variable) may pass
+			if (auto const* boolConst = dynamic_cast<awst::BoolConstant const*>(assertExpr->condition.get()))
+				if (!boolConst->value)
+					return true;
+		}
 	}
 	return false;
 }
@@ -227,6 +233,9 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 
 	// State variables → AppStorageDefinitions
 	contract->appState = m_storageMapper.mapStateVariables(_contract, m_sourceFile);
+
+	// Reserve scratch slots 0-4 for EVM memory simulation
+	contract->reservedScratchSpace = AssemblyBuilder::reservedScratchSlots();
 
 	// Approval and clear programs
 	m_postInitMethod.reset();
@@ -1170,6 +1179,76 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		ifCreate->ifBranch = createBlock;
 
 		body->body.push_back(ifCreate);
+	}
+
+	// Initialize EVM memory blob in scratch slots.
+	// Each app call gets fresh scratch space, so we must initialize on every call.
+	// store 0, bzero(4096) — pre-allocate a 4KB memory blob
+	{
+		auto blobSize = std::make_shared<awst::IntegerConstant>();
+		blobSize->sourceLocation = method.sourceLocation;
+		blobSize->wtype = awst::WType::uint64Type();
+		blobSize->value = std::to_string(AssemblyBuilder::SLOT_SIZE);
+
+		auto bzeroCall = std::make_shared<awst::IntrinsicCall>();
+		bzeroCall->sourceLocation = method.sourceLocation;
+		bzeroCall->wtype = awst::WType::bytesType();
+		bzeroCall->opCode = "bzero";
+		bzeroCall->stackArgs.push_back(std::move(blobSize));
+
+		auto storeOp = std::make_shared<awst::IntrinsicCall>();
+		storeOp->sourceLocation = method.sourceLocation;
+		storeOp->wtype = awst::WType::voidType();
+		storeOp->opCode = "store";
+		storeOp->immediates = {AssemblyBuilder::MEMORY_SLOT_FIRST};
+		storeOp->stackArgs.push_back(std::move(bzeroCall));
+
+		auto exprStmt = std::make_shared<awst::ExpressionStatement>();
+		exprStmt->sourceLocation = method.sourceLocation;
+		exprStmt->expr = std::move(storeOp);
+		body->body.push_back(std::move(exprStmt));
+
+		// Write the free memory pointer (FMP) at offset 0x40 = 0x80.
+		// This must be done once in the preamble, not in each assembly block,
+		// so that subsequent assembly blocks see any FMP updates from earlier blocks.
+		// Pattern: store 0, replace3(load(0), 64, pad32_0x80)
+		auto loadBlob = std::make_shared<awst::IntrinsicCall>();
+		loadBlob->sourceLocation = method.sourceLocation;
+		loadBlob->wtype = awst::WType::bytesType();
+		loadBlob->opCode = "load";
+		loadBlob->immediates = {AssemblyBuilder::MEMORY_SLOT_FIRST};
+
+		auto fmpOffset = std::make_shared<awst::IntegerConstant>();
+		fmpOffset->sourceLocation = method.sourceLocation;
+		fmpOffset->wtype = awst::WType::uint64Type();
+		fmpOffset->value = "64"; // 0x40
+
+		// 32-byte big-endian 0x80 = 0x00...0080
+		auto fmpBytes = std::make_shared<awst::BytesConstant>();
+		fmpBytes->sourceLocation = method.sourceLocation;
+		fmpBytes->wtype = awst::WType::bytesType();
+		fmpBytes->value = std::vector<uint8_t>(31, 0);
+		fmpBytes->value.push_back(0x80);
+
+		auto replaceOp = std::make_shared<awst::IntrinsicCall>();
+		replaceOp->sourceLocation = method.sourceLocation;
+		replaceOp->wtype = awst::WType::bytesType();
+		replaceOp->opCode = "replace3";
+		replaceOp->stackArgs.push_back(std::move(loadBlob));
+		replaceOp->stackArgs.push_back(std::move(fmpOffset));
+		replaceOp->stackArgs.push_back(std::move(fmpBytes));
+
+		auto storeFmpOp = std::make_shared<awst::IntrinsicCall>();
+		storeFmpOp->sourceLocation = method.sourceLocation;
+		storeFmpOp->wtype = awst::WType::voidType();
+		storeFmpOp->opCode = "store";
+		storeFmpOp->immediates = {AssemblyBuilder::MEMORY_SLOT_FIRST};
+		storeFmpOp->stackArgs.push_back(std::move(replaceOp));
+
+		auto fmpStmt = std::make_shared<awst::ExpressionStatement>();
+		fmpStmt->sourceLocation = method.sourceLocation;
+		fmpStmt->expr = std::move(storeFmpOp);
+		body->body.push_back(std::move(fmpStmt));
 	}
 
 	// ARC4 router

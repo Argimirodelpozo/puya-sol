@@ -14,85 +14,16 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTload(
 	awst::SourceLocation const& _loc
 )
 {
-	// tload(slot) — load from transient storage
-	// Map to global state read with slot-derived key
-	if (_args.size() != 1)
-	{
-		Logger::instance().error("tload requires 1 argument", _loc);
-		return nullptr;
-	}
-
-	// Try to resolve constant slot for named transient vars
-	auto slotConst = resolveConstantOffset(_args[0]);
-
-	// Create the box key: sha256("__t_" + padTo32Bytes(slot))
-	// For constant slots, we can use a readable name
-	std::shared_ptr<awst::Expression> keyExpr;
-	if (slotConst.has_value())
-	{
-		// Use a readable key like "__t_<slot_number>"
-		auto keyBytes = std::make_shared<awst::BytesConstant>();
-		keyBytes->sourceLocation = _loc;
-		keyBytes->wtype = awst::WType::bytesType();
-		std::string keyStr = "__t_" + std::to_string(*slotConst);
-		keyBytes->value.assign(keyStr.begin(), keyStr.end());
-		keyExpr = std::move(keyBytes);
-	}
-	else
-	{
-		// Dynamic slot: key = sha256("__t_" || padTo32Bytes(slot))
-		auto prefix = std::make_shared<awst::BytesConstant>();
-		prefix->sourceLocation = _loc;
-		prefix->wtype = awst::WType::bytesType();
-		std::string pfx = "__t_";
-		prefix->value.assign(pfx.begin(), pfx.end());
-
-		auto slotPadded = padTo32Bytes(_args[0], _loc);
-
-		auto concat = std::make_shared<awst::IntrinsicCall>();
-		concat->sourceLocation = _loc;
-		concat->wtype = awst::WType::bytesType();
-		concat->opCode = "concat";
-		concat->stackArgs.push_back(std::move(prefix));
-		concat->stackArgs.push_back(std::move(slotPadded));
-
-		auto sha = std::make_shared<awst::IntrinsicCall>();
-		sha->sourceLocation = _loc;
-		sha->wtype = awst::WType::bytesType();
-		sha->opCode = "sha256";
-		sha->stackArgs.push_back(std::move(concat));
-
-		keyExpr = std::move(sha);
-	}
-
-	// Emit: app_global_get_ex(0, key) → get value or default 0
-	// Since we want to return 0 for unset slots (matching EVM tload behavior),
-	// use app_global_get which returns 0 for missing keys.
-	auto appId = std::make_shared<awst::IntegerConstant>();
-	appId->sourceLocation = _loc;
-	appId->wtype = awst::WType::uint64Type();
-	appId->value = "0";
-
-	auto globalGet = std::make_shared<awst::IntrinsicCall>();
-	globalGet->sourceLocation = _loc;
-	globalGet->wtype = awst::WType::uint64Type();
-	globalGet->opCode = "app_global_get";
-	globalGet->stackArgs.push_back(std::move(keyExpr));
-
-	// app_global_get returns uint64 at runtime for integer values.
-	// Convert uint64 → bytes via itob so downstream b+/b- see bytes operands.
-	auto itob = std::make_shared<awst::IntrinsicCall>();
-	itob->sourceLocation = _loc;
-	itob->wtype = awst::WType::bytesType();
-	itob->opCode = "itob";
-	itob->stackArgs.push_back(std::move(globalGet));
-
-	// Cast bytes → biguint
-	auto castResult = std::make_shared<awst::ReinterpretCast>();
-	castResult->sourceLocation = _loc;
-	castResult->wtype = awst::WType::biguintType();
-	castResult->expr = std::move(itob);
-	return castResult;
+	// tload(slot) — EVM transient storage (per-transaction, shared across calls).
+	// Stubbed: returns 0. Needs scratch-based implementation for correct semantics.
+	Logger::instance().warning(
+		"tload() stubbed as 0 (EVM transient storage not yet implemented on AVM)", _loc
+	);
+	auto zero = std::make_shared<awst::IntegerConstant>();
+	zero->sourceLocation = _loc;
+	zero->wtype = awst::WType::biguintType();
+	zero->value = "0";
+	return zero;
 }
 
 void AssemblyBuilder::handleTstore(
@@ -101,71 +32,11 @@ void AssemblyBuilder::handleTstore(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	// tstore(slot, value) — store to transient storage
-	// Map to global state write with slot-derived key
-	if (_args.size() != 2)
-	{
-		Logger::instance().error("tstore requires 2 arguments", _loc);
-		return;
-	}
-
-	auto slotConst = resolveConstantOffset(_args[0]);
-
-	// Create the key (same as tload)
-	std::shared_ptr<awst::Expression> keyExpr;
-	if (slotConst.has_value())
-	{
-		auto keyBytes = std::make_shared<awst::BytesConstant>();
-		keyBytes->sourceLocation = _loc;
-		keyBytes->wtype = awst::WType::bytesType();
-		std::string keyStr = "__t_" + std::to_string(*slotConst);
-		keyBytes->value.assign(keyStr.begin(), keyStr.end());
-		keyExpr = std::move(keyBytes);
-	}
-	else
-	{
-		auto prefix = std::make_shared<awst::BytesConstant>();
-		prefix->sourceLocation = _loc;
-		prefix->wtype = awst::WType::bytesType();
-		std::string pfx = "__t_";
-		prefix->value.assign(pfx.begin(), pfx.end());
-
-		auto slotPadded = padTo32Bytes(_args[0], _loc);
-
-		auto concat = std::make_shared<awst::IntrinsicCall>();
-		concat->sourceLocation = _loc;
-		concat->wtype = awst::WType::bytesType();
-		concat->opCode = "concat";
-		concat->stackArgs.push_back(std::move(prefix));
-		concat->stackArgs.push_back(std::move(slotPadded));
-
-		auto sha = std::make_shared<awst::IntrinsicCall>();
-		sha->sourceLocation = _loc;
-		sha->wtype = awst::WType::bytesType();
-		sha->opCode = "sha256";
-		sha->stackArgs.push_back(std::move(concat));
-
-		keyExpr = std::move(sha);
-	}
-
-	// Cast value to bytes for storage
-	auto valueCast = std::make_shared<awst::ReinterpretCast>();
-	valueCast->sourceLocation = _loc;
-	valueCast->wtype = awst::WType::bytesType();
-	valueCast->expr = ensureBiguint(_args[1], _loc);
-
-	// app_global_put(key, value)
-	auto globalPut = std::make_shared<awst::IntrinsicCall>();
-	globalPut->sourceLocation = _loc;
-	globalPut->wtype = awst::WType::voidType();
-	globalPut->opCode = "app_global_put";
-	globalPut->stackArgs.push_back(std::move(keyExpr));
-	globalPut->stackArgs.push_back(std::move(valueCast));
-
-	auto exprStmt = std::make_shared<awst::ExpressionStatement>();
-	exprStmt->sourceLocation = _loc;
-	exprStmt->expr = std::move(globalPut);
-	_out.push_back(std::move(exprStmt));
+	// tstore(slot, value) — EVM transient storage (per-transaction, shared across calls).
+	// Stubbed: no-op. Needs scratch-based implementation for correct semantics.
+	Logger::instance().warning(
+		"tstore() stubbed as no-op (EVM transient storage not yet implemented on AVM)", _loc
+	);
 }
 
 // ─── Signed integer helpers ──────────────────────────────────────────────────
