@@ -6,16 +6,35 @@
 #include "builder/storage/StorageMapper.h"
 #include "Logger.h"
 
+#include <libsolidity/ast/Types.h>
+
+namespace
+{
+/// Unwrap UserDefinedValueType to get the underlying IntegerType, if any.
+solidity::frontend::IntegerType const* resolveIntegerType(solidity::frontend::Type const* _type)
+{
+	if (!_type)
+		return nullptr;
+	if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(_type))
+		return intType;
+	if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(_type))
+		return dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
+	return nullptr;
+}
+} // anonymous namespace
+
 namespace puyasol::builder
 {
 
 void StatementBuilder::setFunctionContext(
 	std::vector<std::pair<std::string, awst::WType const*>> const& _params,
-	awst::WType const* _returnType
+	awst::WType const* _returnType,
+	std::map<std::string, unsigned> const& _paramBitWidths
 )
 {
 	m_functionParams = _params;
 	m_returnType = _returnType;
+	m_functionParamBitWidths = _paramBitWidths;
 }
 
 bool StatementBuilder::visit(solidity::frontend::InlineAssembly const& _node)
@@ -133,15 +152,19 @@ bool StatementBuilder::visit(solidity::frontend::InlineAssembly const& _node)
 
 		// Track Solidity bit width for sub-64-bit integer types (uint8, uint16, uint32)
 		// Track Solidity bit width for sub-64-bit integer types (uint8, uint16, uint32)
-		if (auto const* solType = varDecl->annotation().type)
+		// Also unwraps UserDefinedValueTypes (e.g., type MyUInt8 is uint8)
+		if (auto const* intType = resolveIntegerType(varDecl->annotation().type))
 		{
-			if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(solType))
-			{
-				if (intType->numBits() < 64)
-					paramBitWidths[name] = intType->numBits();
-			}
+			if (intType->numBits() < 64)
+				paramBitWidths[name] = intType->numBits();
 		}
 	}
+
+	// Merge function-level bit widths (from setFunctionContext) with
+	// external reference bit widths — covers both function params/returns
+	// and local variables referenced in assembly.
+	for (auto const& [n, bw]: m_functionParamBitWidths)
+		paramBitWidths.emplace(n, bw);
 
 	AssemblyBuilder asmTranslator(m_typeMapper, m_sourceFile, contextName);
 

@@ -1439,9 +1439,31 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// Use the (possibly ARC4-remapped) types from the method args
 		{
 			std::vector<std::pair<std::string, awst::WType const*>> paramContext;
+			std::map<std::string, unsigned> bitWidths;
 			for (auto const& arg: method.args)
 				paramContext.emplace_back(arg.name, arg.wtype);
-			m_stmtBuilder->setFunctionContext(paramContext, method.returnType);
+			// Collect sub-64-bit widths from function params and return params
+			for (auto const& p: _func.parameters())
+			{
+				auto const* solType = p->annotation().type;
+				auto const* intType = solType ? dynamic_cast<solidity::frontend::IntegerType const*>(solType) : nullptr;
+				if (!intType && solType)
+					if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
+						intType = dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
+				if (intType && intType->numBits() < 64)
+					bitWidths[p->name()] = intType->numBits();
+			}
+			for (auto const& rp: _func.returnParameters())
+			{
+				auto const* solType = rp->annotation().type;
+				auto const* intType = solType ? dynamic_cast<solidity::frontend::IntegerType const*>(solType) : nullptr;
+				if (!intType && solType)
+					if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
+						intType = dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
+				if (intType && intType->numBits() < 64)
+					bitWidths[rp->name()] = intType->numBits();
+			}
+			m_stmtBuilder->setFunctionContext(paramContext, method.returnType, bitWidths);
 		}
 
 		method.body = m_stmtBuilder->buildBlock(_func.body());

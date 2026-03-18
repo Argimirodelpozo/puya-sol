@@ -48,7 +48,8 @@ public:
 	/// Must be called before buildBlock if the function body may contain assembly.
 	void setFunctionContext(
 		std::vector<std::pair<std::string, awst::WType const*>> const& _params,
-		awst::WType const* _returnType
+		awst::WType const* _returnType,
+		std::map<std::string, unsigned> const& _paramBitWidths = {}
 	);
 
 	// ASTConstVisitor overrides
@@ -73,6 +74,7 @@ private:
 	/// Function context for inline assembly translation.
 	std::vector<std::pair<std::string, awst::WType const*>> m_functionParams;
 	awst::WType const* m_returnType = nullptr;
+	std::map<std::string, unsigned> m_functionParamBitWidths;
 
 	/// Statement result stack.
 	std::vector<std::shared_ptr<awst::Statement>> m_stack;

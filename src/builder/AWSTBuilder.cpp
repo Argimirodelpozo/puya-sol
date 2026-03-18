@@ -325,6 +325,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				// Set function context for inline assembly translation
 			{
 				std::vector<std::pair<std::string, awst::WType const*>> paramContext;
+				std::map<std::string, unsigned> bitWidths;
 				for (size_t pi = 0; pi < func->parameters().size(); ++pi)
 				{
 					auto const& param = func->parameters()[pi];
@@ -332,8 +333,27 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					if (pname.empty())
 						pname = "_param" + std::to_string(pi);
 					paramContext.emplace_back(pname, m_typeMapper.map(param->type()));
+					if (auto const* solType = param->annotation().type)
+					{
+						auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(solType);
+						if (!intType)
+							if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
+								intType = dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
+						if (intType && intType->numBits() < 64)
+							bitWidths[pname] = intType->numBits();
+					}
 				}
-				stmtBuilder.setFunctionContext(paramContext, sub->returnType);
+				for (auto const& rp: func->returnParameters())
+				{
+					auto const* solType = rp->annotation().type;
+					auto const* intType = solType ? dynamic_cast<solidity::frontend::IntegerType const*>(solType) : nullptr;
+					if (!intType && solType)
+						if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
+							intType = dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
+					if (intType && intType->numBits() < 64)
+						bitWidths[rp->name()] = intType->numBits();
+				}
+				stmtBuilder.setFunctionContext(paramContext, sub->returnType, bitWidths);
 			}
 
 			sub->body = stmtBuilder.buildBlock(func->body());
@@ -630,6 +650,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 
 			{
 				std::vector<std::pair<std::string, awst::WType const*>> paramContext;
+				std::map<std::string, unsigned> bitWidths;
 				for (size_t pi = 0; pi < func->parameters().size(); ++pi)
 				{
 					auto const& param = func->parameters()[pi];
@@ -637,8 +658,27 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					if (pname.empty())
 						pname = "_param" + std::to_string(pi);
 					paramContext.emplace_back(pname, m_typeMapper.map(param->type()));
+					if (auto const* solType = param->annotation().type)
+					{
+						auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(solType);
+						if (!intType)
+							if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
+								intType = dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
+						if (intType && intType->numBits() < 64)
+							bitWidths[pname] = intType->numBits();
+					}
 				}
-				stmtBuilder.setFunctionContext(paramContext, sub->returnType);
+				for (auto const& rp: func->returnParameters())
+				{
+					auto const* solType = rp->annotation().type;
+					auto const* intType = solType ? dynamic_cast<solidity::frontend::IntegerType const*>(solType) : nullptr;
+					if (!intType && solType)
+						if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
+							intType = dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
+					if (intType && intType->numBits() < 64)
+						bitWidths[rp->name()] = intType->numBits();
+				}
+				stmtBuilder.setFunctionContext(paramContext, sub->returnType, bitWidths);
 			}
 
 			sub->body = stmtBuilder.buildBlock(func->body());
