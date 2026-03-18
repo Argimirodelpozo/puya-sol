@@ -132,10 +132,14 @@ bool StatementBuilder::visit(solidity::frontend::InlineAssembly const& _node)
 		}
 
 		// Track Solidity bit width for sub-64-bit integer types (uint8, uint16, uint32)
-		if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(varDecl->type()))
+		// Track Solidity bit width for sub-64-bit integer types (uint8, uint16, uint32)
+		if (auto const* solType = varDecl->annotation().type)
 		{
-			if (intType->numBits() < 64)
-				paramBitWidths[name] = intType->numBits();
+			if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(solType))
+			{
+				if (intType->numBits() < 64)
+					paramBitWidths[name] = intType->numBits();
+			}
 		}
 	}
 
