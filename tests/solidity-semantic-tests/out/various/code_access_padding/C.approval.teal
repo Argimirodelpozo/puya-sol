@@ -9,6 +9,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     pushbytes 0x1dcaec53 // method "diff()uint256"
     txna ApplicationArgs 0
     match main_diff_route@4
@@ -20,6 +27,13 @@ main_diff_route@4:
     txn ApplicationID
     &&
     assert
+    b diff
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/code_access_padding.sol.C.diff[routing]() -> void:
+diff:
+    load 0
+    store 0
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     pushint 1

@@ -11,6 +11,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
@@ -30,9 +37,10 @@ f:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    load 0
     intc_2 // 8
     bzero
-    swap
+    uncover 2
     concat
     dup
     len
@@ -43,6 +51,8 @@ f:
     swap
     intc_1 // 1
     extract3
+    swap
+    store 0
     dup
     len
     intc_0 // 32
@@ -67,10 +77,11 @@ g:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    load 0
     intc_0 // 32
     bzero
     dup
-    uncover 2
+    uncover 3
     concat
     dup
     len
@@ -79,6 +90,8 @@ g:
     intc_0 // 32
     extract3
     extract 31 1
+    uncover 2
+    store 0
     b|
     bytec_0 // 0x151f7c75
     swap

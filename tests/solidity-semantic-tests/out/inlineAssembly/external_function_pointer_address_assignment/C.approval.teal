@@ -9,6 +9,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
@@ -31,6 +38,8 @@ testYul:
     pushint 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    load 0
+    store 0
     pushbytes 0x151f7c75
     log
     pushint 1

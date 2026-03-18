@@ -9,6 +9,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     pushbytes 0xc72163f9 // method "f(uint64)uint256"
     txna ApplicationArgs 0
     match main_f_route@4
@@ -32,7 +39,11 @@ f:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    load 0
+    swap
     itob
+    swap
+    store 0
     pushint 32
     bzero
     b|

@@ -9,6 +9,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     pushbytes 0x6ca2f943 // method "f()uint64"
     txna ApplicationArgs 0
     match main_f_route@4
@@ -20,6 +27,13 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/simple_inline_asm.sol.C.f[routing]() -> void:
+f:
+    load 0
+    store 0
     pushbytes 0x151f7c750000000000000006
     log
     pushint 1

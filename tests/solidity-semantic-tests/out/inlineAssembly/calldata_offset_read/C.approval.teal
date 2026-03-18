@@ -10,6 +10,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
@@ -33,6 +40,8 @@ f(2):
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    load 0
+    store 0
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000004
     log
     intc_0 // 1
@@ -62,8 +71,12 @@ f(u256,13,u256):
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    load 0
+    swap
     len
     itob
+    swap
+    store 0
     intc_1 // 32
     bzero
     b|

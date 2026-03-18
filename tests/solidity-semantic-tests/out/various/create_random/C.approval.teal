@@ -1,0 +1,108 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/create_random.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1 20
+    bytecblock 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffff
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x0dd16624 0x7258ce6b 0xc91046aa // method "addr()address", method "testRunner()(address,address)", method "testCalc()(address,address)"
+    txna ApplicationArgs 0
+    match addr testRunner testCalc
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/create_random.sol.C.addr[routing]() -> void:
+addr:
+    bytec_0 // 0x151f7c75
+    global CurrentApplicationAddress
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/create_random.sol.C.testRunner[routing]() -> void:
+testRunner:
+    load 0
+    pushbytes 0x60016000f3000000000000000000000000000000000000000000000000000000
+    replace2 0
+    store 0
+    bytec_0 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/create_random.sol.C.testCalc[routing]() -> void:
+testCalc:
+    global CurrentApplicationAddress
+    intc_2 // 20
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_2 // 20
+    -
+    intc_2 // 20
+    extract3
+    pushbytes 0xd694
+    swap
+    concat
+    pushbytes 0x01
+    concat
+    keccak256
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
+    global CurrentApplicationAddress
+    intc_0 // 32
+    bzero
+    dup
+    global CurrentApplicationAddress
+    concat
+    dig 1
+    global CurrentApplicationAddress
+    concat
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    pushbytes 0x5e59e02549ba8e07ea50ebd4ed8e46ed3ef88ddfb158dda6108a036181bc9bad
+    concat
+    keccak256
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

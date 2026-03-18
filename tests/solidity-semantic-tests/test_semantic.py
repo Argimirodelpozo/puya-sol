@@ -107,7 +107,7 @@ def test_semantic(test, localnet_session):
                     val = 0
                 args.append(val)
 
-            method = call.method_signature
+            method = call.method_name
             params = au.AppClientMethodCallParams(
                 method=method, args=args if args else None)
 

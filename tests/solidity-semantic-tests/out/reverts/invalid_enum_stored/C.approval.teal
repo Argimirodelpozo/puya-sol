@@ -1,0 +1,71 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_stored.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock "x" 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "x"
+    intc_1 // 0
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x19e67a06 0x7337ace6 0xdf01cac5 // method "test_store()uint256", method "test_store_ok()uint256", method "x()uint64"
+    txna ApplicationArgs 0
+    match test_store test_store_ok x
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_stored.sol.C.test_store[routing]() -> void:
+test_store:
+    load 0
+    store 0
+    bytec_0 // "x"
+    pushint 5
+    app_global_put
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_stored.sol.C.test_store_ok[routing]() -> void:
+test_store_ok:
+    bytec_0 // "x"
+    intc_1 // 0
+    app_global_put
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_stored.sol.C.x[routing]() -> void:
+x:
+    intc_1 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    itob
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

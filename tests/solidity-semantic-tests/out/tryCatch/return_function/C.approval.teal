@@ -1,0 +1,79 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/return_function.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 32
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x148465e2 0x401d733b 0x5c1ae154 // method "g()(uint256,byte[],uint256)", method "f()(uint256,byte[],uint256)", method "fun()void"
+    txna ApplicationArgs 0
+    match main_g_route@5 f main_fun_route@7
+    err
+
+main_fun_route@7:
+    intc_0 // 1
+    return
+
+main_g_route@5:
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000100420000000000000000000000000000000000000000000000000000000000000009000366756e
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/return_function.sol.C.f[routing]() -> void:
+f:
+    pushint 0
+    dupn 3
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    dig 2
+    len
+    itob
+    extract 6 2
+    uncover 3
+    concat
+    swap
+    pushbytes 0x0042
+    concat
+    dig 3
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 3
+    uncover 3
+    b|
+    concat
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

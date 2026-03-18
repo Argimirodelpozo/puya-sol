@@ -23,6 +23,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     pushbytes 0x87798b92 // method "f()(uint64,uint64,uint64,uint64)"
     txna ApplicationArgs 0
     match main_f_route@4

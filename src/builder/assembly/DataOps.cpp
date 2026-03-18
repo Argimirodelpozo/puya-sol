@@ -178,13 +178,12 @@ std::optional<uint64_t> AssemblyBuilder::resolveConstantYulValue(
 			auto offset = resolveConstantYulValue(call->arguments[0]);
 			if (offset)
 			{
-				auto it = m_memoryMap.find(*offset);
-				if (it != m_memoryMap.end() && !it->second.isParam)
-				{
-					auto cit = m_localConstants.find(it->second.varName);
-					if (cit != m_localConstants.end())
-						return cit->second;
-				}
+				// Check if we tracked a constant stored at this offset
+				std::ostringstream oss;
+				oss << "mem_0x" << std::hex << *offset;
+				auto cit = m_localConstants.find(oss.str());
+				if (cit != m_localConstants.end())
+					return cit->second;
 			}
 		}
 	}
@@ -327,68 +326,36 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 			}
 		}
 
-		// Try variable-offset memory map: offset decomposes as VarExpr + constant
-		auto decomposed = decomposeVarOffset(_args[0]);
-		if (decomposed && length)
+		// With blob model, read directly from the memory blob for dynamic offsets
+		if (length)
 		{
-			auto const& [baseName, baseOffset] = *decomposed;
-			auto vit = m_varMemoryMap.find(baseName);
-			if (vit != m_varMemoryMap.end())
-			{
-				int numSlots = static_cast<int>(*length / 0x20);
-				if (numSlots > 0)
-				{
-					// Concatenate stored runtime variables from variable-offset map
-					std::shared_ptr<awst::Expression> data;
-					for (int i = 0; i < numSlots; ++i)
-					{
-						uint64_t slotOff = baseOffset + static_cast<uint64_t>(i) * 0x20;
-						auto sit = vit->second.find(slotOff);
-						std::shared_ptr<awst::Expression> slotVal;
-						if (sit != vit->second.end())
-						{
-							auto var = std::make_shared<awst::VarExpression>();
-							var->sourceLocation = _loc;
-							var->name = sit->second.varName;
-							var->wtype = awst::WType::biguintType();
-							slotVal = padTo32Bytes(std::move(var), _loc);
-						}
-						else
-						{
-							// Slot not found — use zero
-							auto zero = std::make_shared<awst::IntegerConstant>();
-							zero->sourceLocation = _loc;
-							zero->wtype = awst::WType::biguintType();
-							zero->value = "0";
-							slotVal = padTo32Bytes(std::move(zero), _loc);
-						}
-						if (!data)
-							data = std::move(slotVal);
-						else
-						{
-							auto concat = std::make_shared<awst::IntrinsicCall>();
-							concat->sourceLocation = _loc;
-							concat->wtype = awst::WType::bytesType();
-							concat->opCode = "concat";
-							concat->stackArgs.push_back(std::move(data));
-							concat->stackArgs.push_back(std::move(slotVal));
-							data = std::move(concat);
-						}
-					}
+			// extract3(__evm_memory, offset, length) → keccak256
+			auto offsetU64 = offsetToUint64(_args[0], _loc);
 
-					auto keccak = std::make_shared<awst::IntrinsicCall>();
-					keccak->sourceLocation = _loc;
-					keccak->wtype = awst::WType::bytesType();
-					keccak->opCode = "keccak256";
-					keccak->stackArgs.push_back(std::move(data));
+			auto lenConst = std::make_shared<awst::IntegerConstant>();
+			lenConst->sourceLocation = _loc;
+			lenConst->wtype = awst::WType::uint64Type();
+			lenConst->value = std::to_string(*length);
 
-					auto castResult = std::make_shared<awst::ReinterpretCast>();
-					castResult->sourceLocation = _loc;
-					castResult->wtype = awst::WType::biguintType();
-					castResult->expr = std::move(keccak);
-					return castResult;
-				}
-			}
+			auto data = std::make_shared<awst::IntrinsicCall>();
+			data->sourceLocation = _loc;
+			data->wtype = awst::WType::bytesType();
+			data->opCode = "extract3";
+			data->stackArgs.push_back(memoryVar(_loc));
+			data->stackArgs.push_back(std::move(offsetU64));
+			data->stackArgs.push_back(std::move(lenConst));
+
+			auto keccak = std::make_shared<awst::IntrinsicCall>();
+			keccak->sourceLocation = _loc;
+			keccak->wtype = awst::WType::bytesType();
+			keccak->opCode = "keccak256";
+			keccak->stackArgs.push_back(std::move(data));
+
+			auto castResult = std::make_shared<awst::ReinterpretCast>();
+			castResult->sourceLocation = _loc;
+			castResult->wtype = awst::WType::biguintType();
+			castResult->expr = std::move(keccak);
+			return castResult;
 		}
 
 		Logger::instance().error("keccak256 with non-constant offset/length not supported", _loc);
@@ -482,27 +449,32 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 	if (numSlots <= 0)
 	{
 		// Non-zero length but less than 32 bytes — partial slot
-		// Handle by reading from memory slot at offset
+		// Read from the memory blob and truncate to exact length
 		Logger::instance().warning("keccak256 with sub-32-byte input, using partial slot", _loc);
-		auto slotIt = m_memoryMap.find(*offset);
-		if (slotIt != m_memoryMap.end())
 		{
-			auto slotVar = std::make_shared<awst::VarExpression>();
-			slotVar->sourceLocation = _loc;
-			slotVar->name = slotIt->second.varName;
-			slotVar->wtype = awst::WType::biguintType();
+			auto offsetConst = std::make_shared<awst::IntegerConstant>();
+			offsetConst->sourceLocation = _loc;
+			offsetConst->wtype = awst::WType::uint64Type();
+			offsetConst->value = std::to_string(*offset);
 
-			// Cast biguint to bytes for keccak256
-			auto castToBytes = std::make_shared<awst::ReinterpretCast>();
-			castToBytes->sourceLocation = _loc;
-			castToBytes->wtype = awst::WType::bytesType();
-			castToBytes->expr = std::move(slotVar);
+			auto lenConst = std::make_shared<awst::IntegerConstant>();
+			lenConst->sourceLocation = _loc;
+			lenConst->wtype = awst::WType::uint64Type();
+			lenConst->value = std::to_string(*length);
+
+			auto data = std::make_shared<awst::IntrinsicCall>();
+			data->sourceLocation = _loc;
+			data->wtype = awst::WType::bytesType();
+			data->opCode = "extract3";
+			data->stackArgs.push_back(memoryVar(_loc));
+			data->stackArgs.push_back(std::move(offsetConst));
+			data->stackArgs.push_back(std::move(lenConst));
 
 			auto keccak = std::make_shared<awst::IntrinsicCall>();
 			keccak->sourceLocation = _loc;
 			keccak->wtype = awst::WType::bytesType();
 			keccak->opCode = "keccak256";
-			keccak->stackArgs.push_back(std::move(castToBytes));
+			keccak->stackArgs.push_back(std::move(data));
 
 			auto castResult = std::make_shared<awst::ReinterpretCast>();
 			castResult->sourceLocation = _loc;

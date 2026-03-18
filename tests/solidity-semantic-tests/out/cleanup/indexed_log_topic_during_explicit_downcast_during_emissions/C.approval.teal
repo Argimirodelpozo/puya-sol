@@ -5,12 +5,19 @@
 main:
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytes 0xd1b80b4031313131313131313131313131313131
+    pushbytes 0xd1b80b4031
     log
     pushint 1
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     pushbytes 0xd717e600 // method "j()void"
     txna ApplicationArgs 0
     match main_j_route@4
@@ -22,6 +29,13 @@ main_j_route@4:
     txn ApplicationID
     &&
     assert
+    b j
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/indexed_log_topic_during_explicit_downcast_during_emissions.sol.C.j[routing]() -> void:
+j:
+    load 0
+    store 0
     pushbytes 0xd1b80b403131313131313131313131313131313131313131313131313131313131313131
     log
     pushint 1

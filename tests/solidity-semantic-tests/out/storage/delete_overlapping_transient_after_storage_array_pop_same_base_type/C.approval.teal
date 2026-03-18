@@ -17,6 +17,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
@@ -24,14 +31,8 @@ main_after_if_else@2:
     assert
     pushbytess 0x99fe9257 0x9939b21d 0xba37d4c3 // method "pushArr()void", method "setAndClear()void", method "getArr()uint256"
     txna ApplicationArgs 0
-    match pushArr setAndClear main_getArr_route@7
+    match pushArr setAndClear getArr
     err
-
-main_getArr_route@7:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_1 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.pushArr[routing]() -> void:
@@ -68,5 +69,17 @@ setAndClear:
     swap
     substring3
     pop
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.getArr[routing]() -> void:
+getArr:
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
     intc_1 // 1
     return

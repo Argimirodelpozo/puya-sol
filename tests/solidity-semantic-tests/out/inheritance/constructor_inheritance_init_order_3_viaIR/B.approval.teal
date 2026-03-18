@@ -16,28 +16,22 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
-    pushbytess 0xcd78b354 0x7c1072af // method "f()uint256", method "x()uint256"
+    pushbytess 0x7c1072af 0xcd78b354 // method "x()uint256", method "f()uint256"
     txna ApplicationArgs 0
-    match f x
+    match x f
     err
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_inheritance_init_order_3_viaIR.sol.B.f[routing]() -> void:
-f:
-    pushint 4
-    itob
-    bytec_0 // "x"
-    swap
-    app_global_put
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_inheritance_init_order_3_viaIR.sol.B.x[routing]() -> void:
@@ -57,6 +51,19 @@ x:
     pushbytes 0x151f7c75
     swap
     concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_inheritance_init_order_3_viaIR.sol.B.f[routing]() -> void:
+f:
+    pushint 4
+    itob
+    bytec_0 // "x"
+    swap
+    app_global_put
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return

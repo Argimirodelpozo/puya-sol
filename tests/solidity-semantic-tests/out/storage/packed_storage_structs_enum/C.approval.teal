@@ -14,6 +14,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     pushbytes 0xc95a9d21 // method "test()uint256"
     txna ApplicationArgs 0
     match main_test_route@4

@@ -35,6 +35,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
@@ -42,52 +49,84 @@ main_after_if_else@2:
     assert
     pushbytess 0x1b7e7c40 0x33fe5706 0x5fb55aa6 0xcf17cb7e 0x2905c9dd 0x30516f86 0x6369193c 0xf7f72106 0x553aaaf5 0x9a3f9185 0x7a66f091 0x0b4bc485 0x5af2a918 0xcd328dae 0xe53b59b3 0x0eb0769d 0xdce9cebd 0xdad7beec 0x8a350bda 0xe492266c 0x44e23cd9 0xc6c11df2 0x60b24ec0 0xe5e8a40d 0x737e11ff 0x59224954 // method "storage_a()(uint256,uint256)", method "storage_ra()(uint256,uint256)", method "storage_b()(uint256,uint256)", method "storage_rb()(uint256,uint256)", method "storage_c()(uint256,uint256)", method "storage_rc()(uint256,uint256)", method "storage_d()(uint256,uint256)", method "storage_rd()(uint256,uint256)", method "set_a(uint64,uint64)void", method "set_ra(uint64,uint64)void", method "set_b(uint64,uint64)void", method "set_rb(uint64,uint64)void", method "set_c(uint64,uint64)void", method "set_rc(uint64,uint64)void", method "set_d(uint256,address)void", method "set_rd(uint256,address)void", method "read_slot(uint256)uint256", method "read_contents_asm()(byte[32],byte[32],byte[32],byte[32])", method "a()(uint64,uint64)", method "ra()(uint64,uint64)", method "b()(uint64,uint64)", method "rb()(uint64,uint64)", method "c()(uint64,uint64)", method "rc()(uint64,uint64)", method "d()(uint256,uint8[32])", method "rd()(uint256,uint8[32])"
     txna ApplicationArgs 0
-    match main_storage_a_route@5 main_storage_ra_route@6 main_storage_b_route@7 main_storage_rb_route@8 main_storage_c_route@9 main_storage_rc_route@10 main_storage_d_route@11 main_storage_rd_route@12 set_a set_ra set_b set_rb set_c set_rc set_d set_rd read_slot read_contents_asm a ra b rb c rc d rd
+    match storage_a storage_ra storage_b storage_rb storage_c storage_rc storage_d storage_rd set_a set_ra set_b set_rb set_c set_rc set_d set_rd read_slot read_contents_asm a ra b rb c rc d rd
     err
 
-main_storage_rd_route@12:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.storage_a[routing]() -> void:
+storage_a:
+    load 0
+    store 0
     bytec_2 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
 
-main_storage_d_route@11:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.storage_ra[routing]() -> void:
+storage_ra:
+    load 0
+    store 0
     bytec_2 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
 
-main_storage_rc_route@10:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.storage_b[routing]() -> void:
+storage_b:
+    load 0
+    store 0
     bytec_2 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
 
-main_storage_c_route@9:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.storage_rb[routing]() -> void:
+storage_rb:
+    load 0
+    store 0
     bytec_2 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
 
-main_storage_rb_route@8:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.storage_c[routing]() -> void:
+storage_c:
+    load 0
+    store 0
     bytec_2 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
 
-main_storage_b_route@7:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.storage_rc[routing]() -> void:
+storage_rc:
+    load 0
+    store 0
     bytec_2 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
 
-main_storage_ra_route@6:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.storage_d[routing]() -> void:
+storage_d:
+    load 0
+    store 0
     bytec_2 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
 
-main_storage_a_route@5:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.storage_rd[routing]() -> void:
+storage_rd:
+    load 0
+    store 0
     bytec_2 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
@@ -371,6 +410,8 @@ read_slot:
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    load 0
+    store 0
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
@@ -379,7 +420,6 @@ read_slot:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.read_contents_asm[routing]() -> void:
 read_contents_asm:
-    intc_1 // 0
     pushint 18446744073709551614
     itob
     intc_1 // 0
@@ -399,8 +439,13 @@ read_contents_asm:
     extract 0 8
     swap
     extract 8 8
+    load 0
+    dup
+    extract 32 32
     swap
+    store 0
     uncover 2
+    swap
     concat
     swap
     concat

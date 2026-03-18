@@ -3,40 +3,30 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/function_usage_in_constructor_arguments.sol.Base.approval_program() -> uint64:
 main:
-    intcblock 0 1
-    bytecblock 0x4b2c0376
-    intc_0 // 0
     txn ApplicationID
-    bnz main_after_if_else@3
-    itxn LastLog
-    extract 4 0
-    itxn_begin
-    dig 1
-    pushint 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_0 // method "g()uint256"
-    itxn_field ApplicationArgs
-    itxn_submit
+    bnz main_after_if_else@2
+    pushint 2
+    itob
     pushbytes "m_a"
     swap
     app_global_put
-    intc_1 // 1
+    pushint 1
     return
 
-main_after_if_else@3:
-    bytec_0 // method "g()uint256"
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0x4b2c0376 // method "g()uint256"
     txna ApplicationArgs 0
-    match main_g_route@5
+    match main_g_route@4
     err
 
-main_g_route@5:
+main_g_route@4:
     txn OnCompletion
     !
     txn ApplicationID
@@ -44,5 +34,5 @@ main_g_route@5:
     assert
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
     log
-    intc_1 // 1
+    pushint 1
     return

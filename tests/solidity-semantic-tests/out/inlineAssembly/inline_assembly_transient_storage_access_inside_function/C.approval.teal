@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_transient_storage_access_inside_function.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32
-    bytecblock "z" 0x151f7c75 "y"
+    bytecblock "z" 0x151f7c75 "y" 0x
     txn ApplicationID
     bnz main_after_if_else@2
     pushbytes "x"
@@ -14,12 +14,19 @@ main:
     intc_0 // 0
     app_global_put
     bytec_0 // "z"
-    pushbytes 0x
+    bytec_3 // 0x
     app_global_put
     intc_1 // 1
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
@@ -33,7 +40,13 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_transient_storage_access_inside_function.sol.C.f[routing]() -> void:
 f:
-    intc_0 // 0
+    load 0
+    bytec_3 // ""
+    itob
+    swap
+    store 0
+    pushbytes 0x02
+    b==
     assert
     intc_0 // 0
     bytec_0 // "z"

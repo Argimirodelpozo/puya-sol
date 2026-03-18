@@ -11,6 +11,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     pushbytes 0x1928cd24 // method "f(uint256)uint256"
     txna ApplicationArgs 0
     match main_f_route@4
@@ -34,21 +41,25 @@ f:
     ==
     assert // invalid number of bytes for arc4.uint256
     bytec_0 // 0x
+    load 0
 
 f_while_top@2:
-    dup
+    dig 1
     pushbytes 0x0a
     b<
     bz f_after_while@15
-    dig 1
+    dig 2
     bytec_0 // 0x
     b==
     bz f_while_top@6
     bytec_1 // 0x02
-    bury 1
+    bury 2
 
 f_after_while@15:
-    dupn 2
+    dup
+    store 0
+    dig 1
+    dup
     len
     intc_0 // 32
     <=
@@ -64,37 +75,37 @@ f_after_while@15:
     return
 
 f_while_top@6:
-    dig 1
+    dig 2
     pushbytes 0x03
     b<
     bz f_after_while@12
-    dig 1
+    dig 2
     bytec_2 // 0x01
     b==
     bnz f_while_top@6
-    dig 1
+    dig 2
     bytec_1 // 0x02
     b==
     bnz f_after_while@12
     pushbytes 0x11
-    bury 1
-    pushbytes 0x09
     bury 2
+    pushbytes 0x09
+    bury 3
     b f_while_top@6
 
 f_after_while@12:
-    dig 1
+    dig 2
     pushbytes 0x04
     b==
     bz f_after_if_else@14
     pushbytes 0x5a
-    bury 1
+    bury 2
 
 f_after_if_else@14:
-    dup
+    dig 1
     bytec_2 // 0x01
     b+
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 1
+    bury 2
     b f_while_top@2

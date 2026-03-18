@@ -3,13 +3,20 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_selector.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 32 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
@@ -33,7 +40,9 @@ main_testFunction_route@5:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_selector.sol.C.testYul[routing]() -> void:
 testYul:
-    pushint 0
+    intc_2 // 0
+    load 0
+    store 0
     intc_1 // 32
     bzero
     swap
@@ -46,7 +55,10 @@ testYul:
     -
     intc_1 // 32
     extract3
-    btoi
+    intc_2 // 0
+    extract_uint32
+    pushint 4294967295
+    &
     itob
     pushbytes 0x151f7c75
     swap

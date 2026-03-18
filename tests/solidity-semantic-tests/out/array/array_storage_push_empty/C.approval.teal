@@ -5,8 +5,8 @@
 main:
     intcblock 0 32 1 8
     bytecblock "storageArray_length" 0x
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    store 0
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "storageArray_length"
@@ -16,6 +16,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     pushbytes 0x1e3ddb1a // method "pushEmpty(uint256)void"
     txna ApplicationArgs 0
     match main_pushEmpty_route@4
@@ -106,13 +113,13 @@ pushEmpty_after_while@7:
 
 // _puya_lib.mem.new_slot() -> uint64:
 _puya_lib.mem.new_slot:
-    load 0
+    load 5
     bitlen
-    load 0
+    load 5
     pushint 256
     dig 2
     -
     intc_0 // 0
     setbit // on error: no available slots
-    store 0
+    store 5
     retsub

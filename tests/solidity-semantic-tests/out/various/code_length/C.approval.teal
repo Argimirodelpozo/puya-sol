@@ -13,6 +13,11 @@ main:
     bytec_2 // "len2"
     bytec_1 // 0x
     app_global_put
+    load 0
+    dup
+    extract 64 32
+    swap
+    store 0
     intc_0 // 0
     app_params_get AppApprovalProgram
     pop
@@ -21,6 +26,14 @@ main:
     bytec_0 // "len1"
     swap
     app_global_put
+    load 0
+    dup
+    extract 64 32
+    swap
+    store 0
+    dig 1
+    b==
+    assert
     global CurrentApplicationAddress
     intc_2 // 24
     extract_uint64
@@ -31,10 +44,24 @@ main:
     bytec_2 // "len2"
     swap
     app_global_put
+    load 0
+    dup
+    extract 64 32
+    swap
+    store 0
+    b==
+    assert
     intc_1 // 1
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     pushbytes 0xef8e268c // method "f()(bool,bool)"
     txna ApplicationArgs 0
     match main_f_route@4
@@ -51,6 +78,11 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/code_length.sol.C.f[routing]() -> void:
 f:
+    load 0
+    dup
+    extract 64 32
+    swap
+    store 0
     global CurrentApplicationAddress
     intc_2 // 24
     extract_uint64
@@ -59,11 +91,21 @@ f:
     len
     pushint 50
     >
+    load 0
+    dup
+    extract 64 32
+    swap
+    store 0
+    uncover 2
+    b==
+    assert
     intc_0 // 0
     app_params_get AppApprovalProgram
     pop
     len
     !
+    load 0
+    store 0
     pushbytes 0x00
     intc_0 // 0
     uncover 3

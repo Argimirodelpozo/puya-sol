@@ -5,8 +5,8 @@
 main:
     intcblock 32 0 1 8
     bytecblock "data_length" "data" 0x151f7c75
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    store 0
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "data_length"
@@ -16,6 +16,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
@@ -197,13 +204,13 @@ length:
 
 // _puya_lib.mem.new_slot() -> uint64:
 _puya_lib.mem.new_slot:
-    load 0
+    load 5
     bitlen
-    load 0
+    load 5
     pushint 256
     dig 2
     -
     intc_1 // 0
     setbit // on error: no available slots
-    store 0
+    store 5
     retsub

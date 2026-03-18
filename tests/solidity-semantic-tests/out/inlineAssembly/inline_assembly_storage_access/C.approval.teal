@@ -20,6 +20,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
@@ -34,8 +41,11 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_storage_access.sol.C.f[routing]() -> void:
 f:
     intc_0 // 0
+    load 0
     bytec_0 // ""
     itob
+    swap
+    store 0
     swap
     bytec_0 // 0x
     b==

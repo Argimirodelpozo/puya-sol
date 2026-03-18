@@ -3,13 +3,20 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_read_and_write_stack.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 0 32
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     pushbytes 0xcd78b354 // method "f()uint256"
     txna ApplicationArgs 0
     match main_f_route@4
@@ -26,8 +33,11 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_read_and_write_stack.sol.C.f[routing]() -> void:
 f:
-    pushbytes 0x
-    pushint 0
+    load 0
+    intc_1 // 0
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    intc_1 // 0
     itob
 
 f_while_top@2:
@@ -35,13 +45,9 @@ f_while_top@2:
     pushbytes 0x0a
     b<
     bz f_after_while@4
-    dup2
+    dig 2
+    store 0
     dup
-    cover 2
-    b+
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bury 3
     pushbytes 0x01
     b+
     bury 1
@@ -51,10 +57,10 @@ f_after_while@4:
     dig 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     pushbytes 0x151f7c75

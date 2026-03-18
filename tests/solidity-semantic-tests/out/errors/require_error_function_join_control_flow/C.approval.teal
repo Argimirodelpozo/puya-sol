@@ -1,0 +1,124 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/require_error_function_join_control_flow.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 32 1
+    bytecblock "x" "y"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 0
+    itob
+    bytec_0 // "x"
+    swap
+    app_global_put
+    pushint 42
+    itob
+    bytec_1 // "y"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0x6b8380f7 // method "f(bool)(uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/require_error_function_join_control_flow.sol.C.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_0 // 0
+    getbit
+    intc_0 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    intc_0 // 0
+    bytec_1 // "y"
+    app_global_get_ex
+    assert // check y exists
+    pushbytes 0x2a
+    b==
+    bz f_else_body@3
+    pushint 21
+    itob
+    bytec_0 // "x"
+    swap
+    app_global_put
+
+f_after_if_else@4:
+    intc_0 // 0
+    bytec_1 // "y"
+    app_global_get_ex
+    assert // check y exists
+    pushbytes 0x02
+    b/
+    bytec_1 // "y"
+    dig 1
+    app_global_put
+    intc_0 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    dig 2
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 2
+    dig 2
+    b|
+    concat
+    dig 2
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+f_else_body@3:
+    dig 1
+    assert // E
+    b f_after_if_else@4

@@ -3,75 +3,66 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/virtual_function_usage_in_constructor_arguments.sol.Derived.approval_program() -> uint64:
 main:
-    intcblock 0 1 32
-    bytecblock 0x4b2c0376 "m_a" 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
-    intc_0 // 0
+    intcblock 1 32
+    bytecblock "m_a" 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
     txn ApplicationID
-    bnz main_after_if_else@3
-    itxn LastLog
-    extract 4 0
-    itxn_begin
-    dig 1
-    pushint 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_0 // method "g()uint256"
-    itxn_field ApplicationArgs
-    itxn_submit
-    bytec_1 // "m_a"
+    bnz main_after_if_else@2
+    pushint 2
+    itob
+    bytec_0 // "m_a"
     swap
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
-main_after_if_else@3:
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
-    pushbytess 0x39e69bec 0xd3661b80 // method "getA()uint256", method "overridden()uint256"
-    bytec_0 // method "g()uint256"
+    pushbytess 0x39e69bec 0xd3661b80 0x4b2c0376 // method "getA()uint256", method "overridden()uint256", method "g()uint256"
     txna ApplicationArgs 0
-    match getA main_overridden_route@7 main_g_route@8
+    match getA main_overridden_route@6 main_g_route@7
     err
 
-main_g_route@8:
-    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
+main_g_route@7:
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
-main_overridden_route@7:
-    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
+main_overridden_route@6:
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/virtual_function_usage_in_constructor_arguments.sol.Derived.getA[routing]() -> void:
 getA:
-    intc_0 // 0
-    bytec_1 // "m_a"
+    pushint 0
+    bytec_0 // "m_a"
     app_global_get_ex
     assert // check m_a exists
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return

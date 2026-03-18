@@ -5,14 +5,21 @@
 main:
     intcblock 0 8 2 32
     bytecblock 0x 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    store 0
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     pushint 1
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     pushbytes 0x219b312e // method "f()(uint256,uint256)"
     txna ApplicationArgs 0
     match main_f_route@4
@@ -205,13 +212,13 @@ f_while_top@2:
 
 // _puya_lib.mem.new_slot() -> uint64:
 _puya_lib.mem.new_slot:
-    load 0
+    load 5
     bitlen
-    load 0
+    load 5
     pushint 256
     dig 2
     -
     intc_0 // 0
     setbit // on error: no available slots
-    store 0
+    store 5
     retsub

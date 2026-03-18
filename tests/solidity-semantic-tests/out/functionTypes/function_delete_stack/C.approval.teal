@@ -1,0 +1,39 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_delete_stack.sol.C.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb5251388 0xc95a9d21 // method "a()uint256", method "test()uint256"
+    txna ApplicationArgs 0
+    match main_a_route@5 main_test_route@6
+    err
+
+main_test_route@6:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    pushint 1
+    return
+
+main_a_route@5:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000007
+    log
+    pushint 1
+    return

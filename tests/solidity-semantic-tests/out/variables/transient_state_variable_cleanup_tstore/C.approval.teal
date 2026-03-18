@@ -13,6 +13,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     pushbytes 0xcd78b354 // method "f()uint256"
     txna ApplicationArgs 0
     match main_f_route@4
@@ -29,8 +36,8 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_cleanup_tstore.sol.C.f[routing]() -> void:
 f:
-    pushbytess 0x5f5f745f34 0xffff
-    app_global_put
+    load 0
+    store 0
     intc_0 // 0
     pushbytes "x"
     app_global_get_ex

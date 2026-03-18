@@ -1,0 +1,55 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_compared.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1
+    bytecblock 0x151f7c7580
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x667acee9 0x1949f779 0x601c6aa7 // method "test_eq()bool", method "test_eq_ok()bool", method "test_neq()bool"
+    txna ApplicationArgs 0
+    match test_eq main_test_eq_ok_route@6 test_neq
+    err
+
+main_test_eq_ok_route@6:
+    bytec_0 // 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_compared.sol.C.test_eq[routing]() -> void:
+test_eq:
+    load 0
+    store 0
+    bytec_0 // 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_compared.sol.C.test_neq[routing]() -> void:
+test_neq:
+    load 0
+    store 0
+    pushbytes 0x151f7c7500
+    log
+    intc_0 // 1
+    return

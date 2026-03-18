@@ -1,0 +1,128 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 8
+    bytecblock 0x151f7c75 "b" "a" "x"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "a"
+    pushint 13
+    app_global_put
+    bytec_1 // "b"
+    pushbytes 0x0401
+    app_global_put
+    bytec_3 // "x"
+    pushbytes 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x6d91e1e1 0x2119ef26 0x7244714e 0xf9522e2f 0xa91d6dec 0xa57f4fbe // method "write_a()void", method "write_b()void", method "get_b(uint256)byte[1]", method "a()uint64", method "b()byte[2]", method "x()byte[2]"
+    txna ApplicationArgs 0
+    match write_a write_b get_b a b x
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol.C.write_a[routing]() -> void:
+write_a:
+    load 0
+    store 0
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol.C.write_b[routing]() -> void:
+write_b:
+    load 0
+    store 0
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol.C.get_b[routing]() -> void:
+get_b:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 0
+    bytec_1 // "b"
+    app_global_get_ex
+    assert // check b exists
+    intc_2 // 8
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    intc_0 // 1
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol.C.a[routing]() -> void:
+a:
+    intc_1 // 0
+    bytec_2 // "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol.C.b[routing]() -> void:
+b:
+    intc_1 // 0
+    bytec_1 // "b"
+    app_global_get_ex
+    assert // check b exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol.C.x[routing]() -> void:
+x:
+    intc_1 // 0
+    bytec_3 // "x"
+    app_global_get_ex
+    assert // check x exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

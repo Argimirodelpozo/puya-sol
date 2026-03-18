@@ -10,6 +10,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     pushbytes 0xb76f5bcf // method "f(uint64[])bool"
     txna ApplicationArgs 0
     match main_f_route@4
@@ -39,6 +46,8 @@ f:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint64>
     extract 8 8 // on error: index access is out of bounds
+    load 0
+    store 0
     pushbytes 0x7fff
     b==
     pushbytes 0x00

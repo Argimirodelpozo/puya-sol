@@ -3,13 +3,20 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_fixed_bytes.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 2
+    intcblock 1 65535 2
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     pushbytes 0x35184c44 // method "sum(byte[2],byte[2])byte[2]"
     txna ApplicationArgs 0
     match main_sum_route@4
@@ -29,8 +36,12 @@ L.add:
     proto 2 1
     frame_dig -2
     btoi
+    intc_1 // 65535
+    &
     frame_dig -1
     btoi
+    intc_1 // 65535
+    &
     +
     itob
     extract 6 2
@@ -42,13 +53,13 @@ sum:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 2
+    intc_2 // 2
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 2>
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 2
+    intc_2 // 2
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 2>
     callsub L.add

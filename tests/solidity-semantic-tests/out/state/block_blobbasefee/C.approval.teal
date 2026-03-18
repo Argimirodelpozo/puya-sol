@@ -10,6 +10,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
@@ -17,16 +24,20 @@ main_after_if_else@2:
     assert
     pushbytess 0xcd78b354 0x4b2c0376 // method "f()uint256", method "g()uint256"
     txna ApplicationArgs 0
-    match main_f_route@5 main_g_route@6
+    match main_f_route@5 g
     err
 
-main_g_route@6:
+main_f_route@5:
     bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     pushint 1
     return
 
-main_f_route@5:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/block_blobbasefee.sol.C.g[routing]() -> void:
+g:
+    load 0
+    store 0
     bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     pushint 1

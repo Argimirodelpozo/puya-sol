@@ -81,34 +81,22 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
-    pushbytess 0x1928cd24 0x4075f398 0xcf0aa045 0x6960bdf6 0xa4043651 0x0eeafdf6 0xb5251388 0xddb04781 0x311e3db1 // method "f(uint256)uint256", method "d()uint256", method "e()uint256", method "b_a()uint256", method "b_b()uint256", method "b_c()uint256", method "a()uint256", method "b()uint256", method "c()uint256"
+    pushbytess 0x4075f398 0xcf0aa045 0x6960bdf6 0xa4043651 0x0eeafdf6 0xb5251388 0xddb04781 0x311e3db1 0x1928cd24 // method "d()uint256", method "e()uint256", method "b_a()uint256", method "b_b()uint256", method "b_c()uint256", method "a()uint256", method "b()uint256", method "c()uint256", method "f(uint256)uint256"
     txna ApplicationArgs 0
-    match f d e b_a b_b b_c a b c
+    match d e b_a b_b b_c a b c f
     err
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_3.sol.B.f[routing]() -> void:
-f:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    pushbytes 0x03
-    b*
-    bytec 4 // "c"
-    swap
-    app_global_put
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000017
-    log
-    intc_2 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_3.sol.B.d[routing]() -> void:
@@ -282,6 +270,25 @@ c:
     bytec_0 // 0x151f7c75
     swap
     concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_3.sol.B.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    pushbytes 0x03
+    b*
+    bytec 4 // "c"
+    swap
+    app_global_put
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000017
     log
     intc_2 // 1
     return

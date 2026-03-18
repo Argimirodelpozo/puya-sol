@@ -11,6 +11,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
@@ -35,8 +42,12 @@ lenBytesRead:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    load 0
+    swap
     len
     itob
+    swap
+    store 0
     intc_3 // 32
     bzero
     b|
@@ -61,8 +72,12 @@ lenStringRead:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
+    load 0
+    swap
     len
     itob
+    swap
+    store 0
     intc_3 // 32
     bzero
     b|

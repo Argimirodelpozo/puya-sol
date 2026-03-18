@@ -11,6 +11,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
@@ -35,8 +42,9 @@ f:
     dig 1
     pushbytes 0x0100000000000000000000000000000000000000000000000000000000000000
     b*
-    dig 1
-    swap
+    load 0
+    dig 2
+    uncover 2
     concat
     dup
     len
@@ -45,11 +53,14 @@ f:
     intc_0 // 32
     extract3
     extract 0 1
+    swap
+    store 0
     dig 2
     bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000100
     b*
-    dig 2
-    swap
+    load 0
+    dig 3
+    uncover 2
     concat
     dup
     len
@@ -58,11 +69,14 @@ f:
     intc_0 // 32
     extract3
     extract 30 1
+    swap
+    store 0
     uncover 3
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000010000
     b*
-    dig 3
-    swap
+    load 0
+    dig 4
+    uncover 2
     concat
     dup
     len
@@ -71,6 +85,8 @@ f:
     intc_0 // 32
     extract3
     extract 1 1
+    swap
+    store 0
     uncover 2
     dig 3
     b|
@@ -103,8 +119,9 @@ g:
     dig 1
     pushbytes 0x0001000000000000000000000000000000000000000000000000000000000000
     b/
-    dig 1
-    swap
+    load 0
+    dig 2
+    uncover 2
     concat
     dup
     len
@@ -113,11 +130,14 @@ g:
     intc_0 // 32
     extract3
     extract 31 1
+    swap
+    store 0
     dig 2
     bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000100
     b/
-    dig 2
-    swap
+    load 0
+    dig 3
+    uncover 2
     concat
     dup
     len
@@ -126,11 +146,14 @@ g:
     intc_0 // 32
     extract3
     extract 4 1
+    swap
+    store 0
     uncover 3
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000010000
     b/
-    dig 3
-    swap
+    load 0
+    dig 4
+    uncover 2
     concat
     dup
     len
@@ -139,6 +162,8 @@ g:
     intc_0 // 32
     extract3
     extract 7 1
+    swap
+    store 0
     uncover 2
     dig 3
     b|

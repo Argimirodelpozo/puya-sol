@@ -63,7 +63,6 @@ def parse_test_file(path: Path) -> SemanticTest:
         ("pragma abicoder v1", "ABIEncoderV1 not supported"),
         ("delegatecall", "delegatecall not supported"),
         ("selfdestruct", "selfdestruct not supported"),
-        ("assembly { mstore", "complex assembly"),
         ("payable", "payable not supported on AVM"),
         ("msg.value", "msg.value not supported on AVM"),
         ("receive()", "receive not supported"),

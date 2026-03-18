@@ -10,6 +10,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     pushbytes 0xc231ed4a // method "f(byte[])bool"
     txna ApplicationArgs 0
     match main_f_route@4
@@ -37,6 +44,8 @@ f:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 5 1
+    load 0
+    store 0
     pushbytes 0x6400000000000000000000000000000000000000000000000000000000000000
     b==
     pushbytes 0x00

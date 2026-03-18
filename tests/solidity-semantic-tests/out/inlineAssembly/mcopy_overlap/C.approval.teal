@@ -3,14 +3,21 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/mcopy_overlap.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 16 32 48
-    bytecblock 0x151f7c75
+    intcblock 32 1 16 48
+    bytecblock 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x22222222222222223333333333333333444444444444444455555555555555556666666666666666777777777777777788888888888888889999999999999999aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccdddddddddddddddd
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
@@ -25,15 +32,64 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/mcopy_overlap.sol.copy(dstOffset: bytes, srcOffset: bytes, length: bytes) -> bytes:
 copy:
     proto 3 1
-    pushbytes 0x22222222222222223333333333333333444444444444444455555555555555556666666666666666777777777777777788888888888888889999999999999999aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccdddddddddddddddd
+    load 0
+    pushint 8
+    bzero
+    bytec_2 // 0x22222222222222223333333333333333444444444444444455555555555555556666666666666666777777777777777788888888888888889999999999999999aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccdddddddddddddddd
+    pushbytes 0x20
+    b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_dig -3
+    b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 2
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_0 // 32
+    bzero
+    uncover 2
+    frame_dig -2
+    b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 3
+    swap
+    intc_0 // 32
+    extract3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace3
+    store 0
+    bytec_2 // 0x22222222222222223333333333333333444444444444444455555555555555556666666666666666777777777777777788888888888888889999999999999999aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccdddddddddddddddd
     retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/mcopy_overlap.sol.C.mcopy_to_right_overlap[routing]() -> void:
 mcopy_to_right_overlap:
-    intc_2 // 32
+    intc_0 // 32
     itob
-    intc_1 // 16
+    intc_2 // 16
     itob
     intc_3 // 48
     itob
@@ -48,15 +104,15 @@ mcopy_to_right_overlap:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/mcopy_overlap.sol.C.mcopy_to_left_overlap[routing]() -> void:
 mcopy_to_left_overlap:
-    intc_1 // 16
+    intc_2 // 16
     itob
-    intc_2 // 32
+    intc_0 // 32
     itob
     intc_3 // 48
     itob
@@ -71,13 +127,13 @@ mcopy_to_left_overlap:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/mcopy_overlap.sol.C.mcopy_in_place[routing]() -> void:
 mcopy_in_place:
-    intc_1 // 16
+    intc_2 // 16
     itob
     pushint 64
     itob
@@ -94,7 +150,7 @@ mcopy_in_place:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
@@ -102,9 +158,9 @@ mcopy_in_place:
 mcopy_to_right_no_overlap:
     intc_3 // 48
     itob
-    intc_1 // 16
+    intc_2 // 16
     itob
-    intc_2 // 32
+    intc_0 // 32
     itob
     callsub copy
     dup
@@ -117,17 +173,17 @@ mcopy_to_right_no_overlap:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/mcopy_overlap.sol.C.mcopy_to_left_no_overlap[routing]() -> void:
 mcopy_to_left_no_overlap:
-    intc_1 // 16
+    intc_2 // 16
     itob
     intc_3 // 48
     itob
-    intc_2 // 32
+    intc_0 // 32
     itob
     callsub copy
     dup
@@ -140,5 +196,5 @@ mcopy_to_left_no_overlap:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return

@@ -16,6 +16,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     pushbytes 0xf59e3cc4 // method "test()bool"
     txna ApplicationArgs 0
     match main_test_route@4
@@ -39,6 +46,8 @@ longdata:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/deployedCodeExclusion/bound_function.sol.C.test[routing]() -> void:
 test:
+    load 0
+    store 0
     intc_1 // 0
     bytec_0 // "data"
     app_global_get_ex

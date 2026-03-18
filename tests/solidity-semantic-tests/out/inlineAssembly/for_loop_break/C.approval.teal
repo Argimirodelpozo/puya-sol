@@ -11,6 +11,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     pushbytes 0xcd78b354 // method "f()uint256"
     txna ApplicationArgs 0
     match main_f_route@4
@@ -28,17 +35,18 @@ main_f_route@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/for_loop_break.sol.C.f[routing]() -> void:
 f:
     pushbytes 0x
+    load 0
 
 f_while_top@2:
-    dup
+    dig 1
     pushbytes 0x0a
     b<
     bz f_after_while@6
-    dup
+    dig 1
     pushbytes 0x06
     b==
     bnz f_after_while@6
-    dup
+    dig 1
     bytec_0 // 0x01
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -47,11 +55,14 @@ f_while_top@2:
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 1
+    bury 2
     b f_while_top@2
 
 f_after_while@6:
-    dupn 2
+    dup
+    store 0
+    dig 1
+    dup
     len
     intc_1 // 32
     <=

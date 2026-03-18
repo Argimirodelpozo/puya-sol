@@ -1,5 +1,6 @@
 /// @file MemoryHelpers.cpp
 /// Memory helper functions: readMemSlot, padTo32Bytes, concatSlots, storeResultToMemory.
+/// All operations work on the __evm_memory bytes blob backed by scratch slots.
 
 #include "builder/assembly/AssemblyBuilder.h"
 #include "Logger.h"
@@ -14,46 +15,31 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemSlot(
 	awst::SourceLocation const& _loc
 )
 {
-	auto it = m_memoryMap.find(_offset);
-	if (it != m_memoryMap.end())
-	{
-		auto const& slot = it->second;
-		if (slot.isParam)
-		{
-			auto base = std::make_shared<awst::VarExpression>();
-			base->sourceLocation = _loc;
-			base->name = slot.varName;
-			base->wtype = m_arrayParamType;
-			auto index = std::make_shared<awst::IntegerConstant>();
-			index->sourceLocation = _loc;
-			index->wtype = awst::WType::uint64Type();
-			index->value = std::to_string(slot.paramIndex);
-			auto indexExpr = std::make_shared<awst::IndexExpression>();
-			indexExpr->sourceLocation = _loc;
-			indexExpr->wtype = awst::WType::biguintType();
-			indexExpr->base = std::move(base);
-			indexExpr->index = std::move(index);
-			return indexExpr;
-		}
-		else
-		{
-			auto var = std::make_shared<awst::VarExpression>();
-			var->sourceLocation = _loc;
-			var->name = slot.varName;
-			var->wtype = awst::WType::biguintType();
-			return var;
-		}
-	}
-	Logger::instance().warning(
-		"precompile input at offset 0x" +
-		([&] { std::ostringstream oss; oss << std::hex << _offset; return oss.str(); })() +
-		" not found, using zero", _loc
-	);
-	auto zero = std::make_shared<awst::IntegerConstant>();
-	zero->sourceLocation = _loc;
-	zero->wtype = awst::WType::biguintType();
-	zero->value = "0";
-	return zero;
+	// Read 32 bytes from the memory blob at a constant offset.
+	// extract3(__evm_memory, offset, 32) → cast to biguint
+	auto offsetConst = std::make_shared<awst::IntegerConstant>();
+	offsetConst->sourceLocation = _loc;
+	offsetConst->wtype = awst::WType::uint64Type();
+	offsetConst->value = std::to_string(_offset);
+
+	auto len32 = std::make_shared<awst::IntegerConstant>();
+	len32->sourceLocation = _loc;
+	len32->wtype = awst::WType::uint64Type();
+	len32->value = "32";
+
+	auto extract = std::make_shared<awst::IntrinsicCall>();
+	extract->sourceLocation = _loc;
+	extract->wtype = awst::WType::bytesType();
+	extract->opCode = "extract3";
+	extract->stackArgs.push_back(memoryVar(_loc));
+	extract->stackArgs.push_back(std::move(offsetConst));
+	extract->stackArgs.push_back(std::move(len32));
+
+	auto cast = std::make_shared<awst::ReinterpretCast>();
+	cast->sourceLocation = _loc;
+	cast->wtype = awst::WType::biguintType();
+	cast->expr = std::move(extract);
+	return cast;
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::padTo32Bytes(
@@ -121,46 +107,30 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::concatSlots(
 	awst::SourceLocation const& _loc
 )
 {
-	std::shared_ptr<awst::Expression> result;
-	for (int i = 0; i < _count; ++i)
-	{
-		uint64_t off = _baseOffset + static_cast<uint64_t>(_startSlot + i) * 0x20;
-		auto slotBytes = padTo32Bytes(readMemSlot(off, _loc), _loc);
-		if (!result)
-			result = std::move(slotBytes);
-		else
-		{
-			auto concat = std::make_shared<awst::IntrinsicCall>();
-			concat->sourceLocation = _loc;
-			concat->wtype = awst::WType::bytesType();
-			concat->opCode = "concat";
-			concat->stackArgs.push_back(std::move(result));
-			concat->stackArgs.push_back(std::move(slotBytes));
-			result = std::move(concat);
-		}
-	}
-	return result;
-}
+	// With the blob model, this is a single extract3 instead of N reads + pads + concats.
+	// extract3(__evm_memory, baseOffset + startSlot*32, count*32)
+	uint64_t byteOffset = _baseOffset + static_cast<uint64_t>(_startSlot) * 0x20;
+	uint64_t byteLen = static_cast<uint64_t>(_count) * 0x20;
 
-std::string AssemblyBuilder::getOrCreateMemoryVar(
-	uint64_t _offset,
-	awst::SourceLocation const& _loc
-)
-{
-	(void)_loc;
-	auto it = m_memoryMap.find(_offset);
-	if (it != m_memoryMap.end() && !it->second.isParam)
-		return it->second.varName;
+	auto offsetConst = std::make_shared<awst::IntegerConstant>();
+	offsetConst->sourceLocation = _loc;
+	offsetConst->wtype = awst::WType::uint64Type();
+	offsetConst->value = std::to_string(byteOffset);
 
-	std::string varName = "mem_0x" + ([&] {
-		std::ostringstream oss;
-		oss << std::hex << _offset;
-		return oss.str();
-	})();
-	MemorySlot slot;
-	slot.varName = varName;
-	m_memoryMap[_offset] = slot;
-	return varName;
+	auto lenConst = std::make_shared<awst::IntegerConstant>();
+	lenConst->sourceLocation = _loc;
+	lenConst->wtype = awst::WType::uint64Type();
+	lenConst->value = std::to_string(byteLen);
+
+	auto extract = std::make_shared<awst::IntrinsicCall>();
+	extract->sourceLocation = _loc;
+	extract->wtype = awst::WType::bytesType();
+	extract->opCode = "extract3";
+	extract->stackArgs.push_back(memoryVar(_loc));
+	extract->stackArgs.push_back(std::move(offsetConst));
+	extract->stackArgs.push_back(std::move(lenConst));
+
+	return extract;
 }
 
 void AssemblyBuilder::storeResultToMemory(
@@ -173,10 +143,7 @@ void AssemblyBuilder::storeResultToMemory(
 {
 	if (_isBoolResult)
 	{
-		// Bool result → store as biguint (1 or 0) at outputOffset
-		std::string varName = getOrCreateMemoryVar(_outputOffset, _loc);
-		m_locals[varName] = awst::WType::biguintType();
-
+		// Bool result → convert to 32-byte biguint (1 or 0), store at offset
 		auto one = std::make_shared<awst::IntegerConstant>();
 		one->sourceLocation = _loc;
 		one->wtype = awst::WType::biguintType();
@@ -193,26 +160,28 @@ void AssemblyBuilder::storeResultToMemory(
 		cond->trueExpr = std::move(one);
 		cond->falseExpr = std::move(zero);
 
-		auto target = std::make_shared<awst::VarExpression>();
-		target->sourceLocation = _loc;
-		target->name = varName;
-		target->wtype = awst::WType::biguintType();
+		auto padded = padTo32Bytes(std::move(cond), _loc);
 
-		auto assign = std::make_shared<awst::AssignmentStatement>();
-		assign->sourceLocation = _loc;
-		assign->target = std::move(target);
-		assign->value = std::move(cond);
-		_out.push_back(std::move(assign));
+		auto offsetConst = std::make_shared<awst::IntegerConstant>();
+		offsetConst->sourceLocation = _loc;
+		offsetConst->wtype = awst::WType::uint64Type();
+		offsetConst->value = std::to_string(_outputOffset);
+
+		auto replace = std::make_shared<awst::IntrinsicCall>();
+		replace->sourceLocation = _loc;
+		replace->wtype = awst::WType::bytesType();
+		replace->opCode = "replace3";
+		replace->stackArgs.push_back(memoryVar(_loc));
+		replace->stackArgs.push_back(std::move(offsetConst));
+		replace->stackArgs.push_back(std::move(padded));
+
+		assignMemoryVar(std::move(replace), _loc, _out);
 		return;
 	}
 
 	if (_outputSlots == 1)
 	{
-		// Single slot: result is already biguint or bytes — store directly
-		std::string varName = getOrCreateMemoryVar(_outputOffset, _loc);
-		m_locals[varName] = awst::WType::biguintType();
-
-		// If result is bytes, cast to biguint
+		// Single 32-byte slot: pad result and write to blob
 		std::shared_ptr<awst::Expression> storeVal = std::move(_result);
 		if (storeVal->wtype == awst::WType::bytesType())
 		{
@@ -223,20 +192,28 @@ void AssemblyBuilder::storeResultToMemory(
 			storeVal = std::move(cast);
 		}
 
-		auto target = std::make_shared<awst::VarExpression>();
-		target->sourceLocation = _loc;
-		target->name = varName;
-		target->wtype = awst::WType::biguintType();
+		auto padded = padTo32Bytes(std::move(storeVal), _loc);
 
-		auto assign = std::make_shared<awst::AssignmentStatement>();
-		assign->sourceLocation = _loc;
-		assign->target = std::move(target);
-		assign->value = std::move(storeVal);
-		_out.push_back(std::move(assign));
+		auto offsetConst = std::make_shared<awst::IntegerConstant>();
+		offsetConst->sourceLocation = _loc;
+		offsetConst->wtype = awst::WType::uint64Type();
+		offsetConst->value = std::to_string(_outputOffset);
+
+		auto replace = std::make_shared<awst::IntrinsicCall>();
+		replace->sourceLocation = _loc;
+		replace->wtype = awst::WType::bytesType();
+		replace->opCode = "replace3";
+		replace->stackArgs.push_back(memoryVar(_loc));
+		replace->stackArgs.push_back(std::move(offsetConst));
+		replace->stackArgs.push_back(std::move(padded));
+
+		assignMemoryVar(std::move(replace), _loc, _out);
 		return;
 	}
 
-	// Multi-slot: store result bytes in a temporary, then extract 32-byte chunks
+	// Multi-slot: store result bytes to a temp var, then replace the whole region.
+	// If result is already bytes of the right length, write directly.
+	// Otherwise store to temp, then extract chunks.
 	std::string resultVar = "__precompile_result";
 	m_locals[resultVar] = awst::WType::bytesType();
 
@@ -251,50 +228,50 @@ void AssemblyBuilder::storeResultToMemory(
 	assignResult->value = std::move(_result);
 	_out.push_back(std::move(assignResult));
 
+	// Write each 32-byte chunk from the result into the blob
 	for (int i = 0; i < _outputSlots; ++i)
 	{
 		uint64_t outOff = _outputOffset + static_cast<uint64_t>(i) * 0x20;
-		std::string varName = getOrCreateMemoryVar(outOff, _loc);
-		m_locals[varName] = awst::WType::biguintType();
 
 		auto resultRead = std::make_shared<awst::VarExpression>();
 		resultRead->sourceLocation = _loc;
 		resultRead->name = resultVar;
 		resultRead->wtype = awst::WType::bytesType();
 
-		auto extractSlot = std::make_shared<awst::IntrinsicCall>();
-		extractSlot->sourceLocation = _loc;
-		extractSlot->wtype = awst::WType::bytesType();
-		extractSlot->opCode = "extract3";
-		extractSlot->stackArgs.push_back(resultRead);
-
+		// extract3(result, i*32, 32)
 		auto slotStart = std::make_shared<awst::IntegerConstant>();
 		slotStart->sourceLocation = _loc;
 		slotStart->wtype = awst::WType::uint64Type();
 		slotStart->value = std::to_string(i * 32);
-		extractSlot->stackArgs.push_back(slotStart);
 
 		auto slotLen = std::make_shared<awst::IntegerConstant>();
 		slotLen->sourceLocation = _loc;
 		slotLen->wtype = awst::WType::uint64Type();
 		slotLen->value = "32";
+
+		auto extractSlot = std::make_shared<awst::IntrinsicCall>();
+		extractSlot->sourceLocation = _loc;
+		extractSlot->wtype = awst::WType::bytesType();
+		extractSlot->opCode = "extract3";
+		extractSlot->stackArgs.push_back(resultRead);
+		extractSlot->stackArgs.push_back(slotStart);
 		extractSlot->stackArgs.push_back(slotLen);
 
-		auto castSlot = std::make_shared<awst::ReinterpretCast>();
-		castSlot->sourceLocation = _loc;
-		castSlot->wtype = awst::WType::biguintType();
-		castSlot->expr = std::move(extractSlot);
+		// replace3(__evm_memory, outOff, chunk)
+		auto offsetConst = std::make_shared<awst::IntegerConstant>();
+		offsetConst->sourceLocation = _loc;
+		offsetConst->wtype = awst::WType::uint64Type();
+		offsetConst->value = std::to_string(outOff);
 
-		auto target = std::make_shared<awst::VarExpression>();
-		target->sourceLocation = _loc;
-		target->name = varName;
-		target->wtype = awst::WType::biguintType();
+		auto replace = std::make_shared<awst::IntrinsicCall>();
+		replace->sourceLocation = _loc;
+		replace->wtype = awst::WType::bytesType();
+		replace->opCode = "replace3";
+		replace->stackArgs.push_back(memoryVar(_loc));
+		replace->stackArgs.push_back(std::move(offsetConst));
+		replace->stackArgs.push_back(std::move(extractSlot));
 
-		auto assign = std::make_shared<awst::AssignmentStatement>();
-		assign->sourceLocation = _loc;
-		assign->target = std::move(target);
-		assign->value = std::move(castSlot);
-		_out.push_back(std::move(assign));
+		assignMemoryVar(std::move(replace), _loc, _out);
 	}
 }
 

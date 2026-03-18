@@ -1,0 +1,76 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/try_catch_library_call.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytess "t" 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x640f8442 0xb2cc5b8b // method "f(bool)(uint256,string)", method "g(bool)(uint256,string)"
+    txna ApplicationArgs 0
+    match f g
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/try_catch_library_call.sol.C.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000120022
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/try_catch_library_call.sol.C.g[routing]() -> void:
+g:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    pushbytess "t" 0x0000000000000000000000000000000000000000000000000000000000000009
+    app_global_put
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000130022
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

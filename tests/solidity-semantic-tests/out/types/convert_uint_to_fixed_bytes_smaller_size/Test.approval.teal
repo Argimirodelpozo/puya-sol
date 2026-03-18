@@ -9,6 +9,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     pushbytes 0x3769558f // method "uintToBytes(uint64)byte[2]"
     txna ApplicationArgs 0
     match main_uintToBytes_route@4

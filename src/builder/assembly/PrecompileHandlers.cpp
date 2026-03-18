@@ -566,28 +566,40 @@ void AssemblyBuilder::handleIdentityPrecompile(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	// Identity precompile: copy input memory slots to output slots
-	int numSlots = static_cast<int>(_inputSize / 0x20);
-	for (int i = 0; i < numSlots; ++i)
-	{
-		uint64_t inOff = _inputOffset + static_cast<uint64_t>(i) * 0x20;
-		uint64_t outOff = _outputOffset + static_cast<uint64_t>(i) * 0x20;
+	// Identity precompile: copy input region to output region in the memory blob.
+	// extract3(__evm_memory, inputOffset, inputSize) → replace3(__evm_memory, outputOffset, data)
+	auto inOffConst = std::make_shared<awst::IntegerConstant>();
+	inOffConst->sourceLocation = _loc;
+	inOffConst->wtype = awst::WType::uint64Type();
+	inOffConst->value = std::to_string(_inputOffset);
 
-		auto value = readMemSlot(inOff, _loc);
-		std::string varName = getOrCreateMemoryVar(outOff, _loc);
-		m_locals[varName] = awst::WType::biguintType();
+	auto inSizeConst = std::make_shared<awst::IntegerConstant>();
+	inSizeConst->sourceLocation = _loc;
+	inSizeConst->wtype = awst::WType::uint64Type();
+	inSizeConst->value = std::to_string(_inputSize);
 
-		auto target = std::make_shared<awst::VarExpression>();
-		target->sourceLocation = _loc;
-		target->name = varName;
-		target->wtype = awst::WType::biguintType();
+	auto extractData = std::make_shared<awst::IntrinsicCall>();
+	extractData->sourceLocation = _loc;
+	extractData->wtype = awst::WType::bytesType();
+	extractData->opCode = "extract3";
+	extractData->stackArgs.push_back(memoryVar(_loc));
+	extractData->stackArgs.push_back(std::move(inOffConst));
+	extractData->stackArgs.push_back(std::move(inSizeConst));
 
-		auto assign = std::make_shared<awst::AssignmentStatement>();
-		assign->sourceLocation = _loc;
-		assign->target = std::move(target);
-		assign->value = std::move(value);
-		_out.push_back(std::move(assign));
-	}
+	auto outOffConst = std::make_shared<awst::IntegerConstant>();
+	outOffConst->sourceLocation = _loc;
+	outOffConst->wtype = awst::WType::uint64Type();
+	outOffConst->value = std::to_string(_outputOffset);
+
+	auto replace = std::make_shared<awst::IntrinsicCall>();
+	replace->sourceLocation = _loc;
+	replace->wtype = awst::WType::bytesType();
+	replace->opCode = "replace3";
+	replace->stackArgs.push_back(memoryVar(_loc));
+	replace->stackArgs.push_back(std::move(outOffConst));
+	replace->stackArgs.push_back(std::move(extractData));
+
+	assignMemoryVar(std::move(replace), _loc, _out);
 }
 
 

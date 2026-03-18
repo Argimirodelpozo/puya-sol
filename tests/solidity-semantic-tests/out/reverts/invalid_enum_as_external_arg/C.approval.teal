@@ -1,0 +1,51 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_arg.sol.C.approval_program() -> uint64:
+main:
+    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x87be92fe 0xc95a9d21 // method "tested(uint64)uint256", method "test()uint256"
+    txna ApplicationArgs 0
+    match tested test
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_arg.sol.C.tested[routing]() -> void:
+tested:
+    txna ApplicationArgs 1
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    pushint 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_arg.sol.C.test[routing]() -> void:
+test:
+    load 0
+    store 0
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    pushint 1
+    return

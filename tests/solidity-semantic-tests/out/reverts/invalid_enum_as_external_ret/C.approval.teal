@@ -1,0 +1,59 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_ret.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1
+    bytecblock 0x151f7c750000000000000005
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x4170667f 0xa35d1243 0xfdbe5b73 // method "test_return()uint64", method "test_inline_assignment()uint64", method "test_assignment()uint64"
+    txna ApplicationArgs 0
+    match test_return test_inline_assignment test_assignment
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_ret.sol.C.test_return[routing]() -> void:
+test_return:
+    load 0
+    store 0
+    bytec_0 // 0x151f7c750000000000000005
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_ret.sol.C.test_inline_assignment[routing]() -> void:
+test_inline_assignment:
+    load 0
+    store 0
+    bytec_0 // 0x151f7c750000000000000005
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_ret.sol.C.test_assignment[routing]() -> void:
+test_assignment:
+    load 0
+    store 0
+    bytec_0 // 0x151f7c750000000000000005
+    log
+    intc_0 // 1
+    return

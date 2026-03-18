@@ -18,6 +18,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     pushbytes 0xd9d12b48 // method "viaasm()(byte[32],byte[32])"
     txna ApplicationArgs 0
     match main_viaasm_route@4
@@ -29,6 +36,13 @@ main_viaasm_route@4:
     txn ApplicationID
     &&
     assert
+    b viaasm
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/immutable_signed.sol.C.viaasm[routing]() -> void:
+viaasm:
+    load 0
+    store 0
     pushbytes 0x151f7c75fffffffffffffffe6162
     log
     pushint 1

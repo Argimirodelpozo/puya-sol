@@ -1,0 +1,40 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/ternary_operator_with_literal_types_overflow.sol.TestTernary.approval_program() -> uint64:
+main:
+    bytecblock 0x151f7c75000000000000013e
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x35009996 0x7466167f // method "h()uint64", method "g()uint64"
+    txna ApplicationArgs 0
+    match main_h_route@5 main_g_route@6
+    err
+
+main_g_route@6:
+    bytec_0 // 0x151f7c75000000000000013e
+    log
+    pushint 1
+    return
+
+main_h_route@5:
+    bytec_0 // 0x151f7c75000000000000013e
+    log
+    pushint 1
+    return

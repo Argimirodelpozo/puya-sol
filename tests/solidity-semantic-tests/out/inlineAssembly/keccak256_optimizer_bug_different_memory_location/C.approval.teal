@@ -3,12 +3,20 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak256_optimizer_bug_different_memory_location.sol.C.approval_program() -> uint64:
 main:
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
     pushint 1
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     pushbytes 0x4b4fb052 // method "f()bool"
     txna ApplicationArgs 0
     match main_f_route@4
@@ -20,7 +28,32 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    pushbytes 0x151f7c7580
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak256_optimizer_bug_different_memory_location.sol.C.f[routing]() -> void:
+f:
+    load 0
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 0
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 32
+    dup
+    extract 0 4
+    keccak256
+    dig 1
+    extract 32 8
+    keccak256
+    b==
+    swap
+    store 0
+    pushbytes 0x00
+    pushint 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
     pushint 1
     return

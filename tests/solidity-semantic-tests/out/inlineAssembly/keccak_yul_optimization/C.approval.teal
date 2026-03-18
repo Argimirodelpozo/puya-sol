@@ -4,12 +4,20 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak_yul_optimization.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32
+    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75 0x
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
@@ -17,11 +25,26 @@ main_after_if_else@2:
     assert
     pushbytess 0x4b2c0376 0xcd78b354 // method "g()uint256", method "f()uint256"
     txna ApplicationArgs 0
-    match main_g_route@5 f
+    match g f
     err
 
-main_g_route@5:
-    pushbytes 0x151f7c75a9c584056064687e149968cbab758a3376d22aedc6a55823d1b3ecbee81b8fb9
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak_yul_optimization.sol.C.g[routing]() -> void:
+g:
+    load 0
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    replace2 32
+    dup
+    extract 32 16
+    keccak256
+    swap
+    store 0
+    intc_1 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
@@ -29,16 +52,21 @@ main_g_route@5:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak_yul_optimization.sol.C.f[routing]() -> void:
 f:
-    pushbytes 0x
-    dup
+    bytec_2 // 0x
+    load 0
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    replace2 32
+    bytec_2 // 0x
 
 f_while_top@2:
     dup
     pushbytes 0x14
     b<
     bz f_after_while@4
-    pushbytes 0xa9c584056064687e149968cbab758a3376d22aedc6a55823d1b3ecbee81b8fb9
-    bury 2
+    dig 1
+    extract 32 16
+    keccak256
+    bury 3
     dup
     pushbytes 0x01
     b+
@@ -49,6 +77,8 @@ f_while_top@2:
 
 f_after_while@4:
     dig 1
+    store 0
+    dig 2
     dup
     len
     intc_1 // 32
@@ -57,7 +87,7 @@ f_after_while@4:
     intc_1 // 32
     bzero
     b|
-    pushbytes 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log

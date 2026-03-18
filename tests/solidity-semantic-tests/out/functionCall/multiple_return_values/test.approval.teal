@@ -10,6 +10,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     pushbytes 0x5eac5f8b // method "run(bool,uint256)(uint256,bool,uint256)"
     txna ApplicationArgs 0
     match main_run_route@4

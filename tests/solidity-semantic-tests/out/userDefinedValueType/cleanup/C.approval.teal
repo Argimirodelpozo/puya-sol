@@ -20,6 +20,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
@@ -34,6 +41,7 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup.sol.wrap(x: bytes) -> uint64:
 wrap:
     proto 1 1
+    load 0
     intc_2 // 8
     bzero
     frame_dig -1
@@ -43,12 +51,16 @@ wrap:
     intc_2 // 8
     -
     extract_uint64
+    swap
+    store 0
     retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup.sol.unwrap(x: uint64) -> uint64:
 unwrap:
     proto 1 1
+    load 0
+    store 0
     frame_dig -1
     retsub
 
@@ -110,6 +122,10 @@ mem:
     uncover 2
     ==
     assert
+    load 0
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000001ff
+    replace2 32
+    store 0
     swap
     callsub unwrap
     swap

@@ -10,6 +10,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
@@ -24,11 +31,21 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_out_of_range_2.sol.C.dyn[routing]() -> void:
 dyn:
     txna ApplicationArgs 1
+    dup
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    pushbytes 0x151f7c75000120
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_out_of_range_2.sol.C.dyn
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
@@ -37,11 +54,28 @@ dyn:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_out_of_range_2.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
+    dup
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_out_of_range_2.sol.C.dyn
+    pop
     pushbytes 0x151f7c7580
     log
     intc_0 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_out_of_range_2.sol.C.dyn(x: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_out_of_range_2.sol.C.dyn:
+    proto 1 1
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000020
+    replace2 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000021
+    replace2 32
+    dup
+    store 0
+    extract 0 32
+    retsub

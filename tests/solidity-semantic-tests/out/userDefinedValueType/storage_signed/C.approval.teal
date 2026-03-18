@@ -18,6 +18,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
@@ -112,7 +119,11 @@ viaasm:
     bytec_0 // "a"
     app_global_get_ex
     assert // check a exists
+    load 0
+    swap
     itob
+    swap
+    store 0
     bytec_1 // 0x151f7c75
     swap
     concat

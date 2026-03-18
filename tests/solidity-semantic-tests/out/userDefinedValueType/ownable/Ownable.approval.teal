@@ -1,0 +1,93 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol.Ownable.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock "owner"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "owner"
+    txn Sender
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x64e61812 0x3e2c61e5 0xb1bbb0a8 // method "setOwner(address)void", method "renounceOwnership()void", method "owner()address"
+    txna ApplicationArgs 0
+    match setOwner renounceOwnership owner
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol.Ownable.setOwner[routing]() -> void:
+setOwner:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_1 // 0
+    bytec_0 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    dup
+    txn Sender
+    !=
+    !
+    assert // OnlyOwner
+    dig 1
+    concat
+    pushbytes 0x9a223efb // method "OwnershipTransferred(address,address)"
+    swap
+    concat
+    log
+    bytec_0 // "owner"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol.Ownable.renounceOwnership[routing]() -> void:
+renounceOwnership:
+    intc_1 // 0
+    bytec_0 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    txn Sender
+    !=
+    !
+    assert // OnlyOwner
+    bytec_0 // "owner"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol.Ownable.owner[routing]() -> void:
+owner:
+    intc_1 // 0
+    bytec_0 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

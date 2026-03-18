@@ -1,0 +1,80 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/require_error_condition_evaluated_only_once.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 32
+    bytecblock "counter"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 0
+    itob
+    bytec_0 // "counter"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x61cb7650 0x74c48465 // method "getCounter()uint256", method "f(bool)void"
+    txna ApplicationArgs 0
+    match getCounter f
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/require_error_condition_evaluated_only_once.sol.C.getCounter[routing]() -> void:
+getCounter:
+    intc_0 // 0
+    bytec_0 // "counter"
+    app_global_get_ex
+    assert // check counter exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/require_error_condition_evaluated_only_once.sol.C.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_0 // 0
+    getbit
+    intc_0 // 0
+    bytec_0 // "counter"
+    app_global_get_ex
+    assert // check counter exists
+    pushbytes 0x01
+    b+
+    bytec_0 // "counter"
+    swap
+    app_global_put
+    assert // CustomError
+    intc_1 // 1
+    return

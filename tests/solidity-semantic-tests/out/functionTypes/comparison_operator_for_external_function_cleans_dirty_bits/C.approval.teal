@@ -9,6 +9,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
@@ -16,15 +23,19 @@ main_after_if_else@2:
     assert
     pushbytess 0xf2b65f27 0xb1965aa8 // method "g()void", method "comparison_operators_for_external_function_pointers_with_dirty_bits()bool"
     txna ApplicationArgs 0
-    match main_g_route@5 main_comparison_operators_for_external_function_pointers_with_dirty_bits_route@6
+    match main_g_route@5 comparison_operators_for_external_function_pointers_with_dirty_bits
     err
 
-main_comparison_operators_for_external_function_pointers_with_dirty_bits_route@6:
-    pushbytes 0x151f7c7580
-    log
+main_g_route@5:
     pushint 1
     return
 
-main_g_route@5:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/comparison_operator_for_external_function_cleans_dirty_bits.sol.C.comparison_operators_for_external_function_pointers_with_dirty_bits[routing]() -> void:
+comparison_operators_for_external_function_pointers_with_dirty_bits:
+    load 0
+    store 0
+    pushbytes 0x151f7c7580
+    log
     pushint 1
     return

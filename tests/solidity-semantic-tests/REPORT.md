@@ -1,0 +1,1450 @@
+# Solidity Semantic Test Suite — Full Report
+
+## Overall Summary
+
+| Status | Count | % |
+|--------|-------|---|
+| PASS | 286 | 21.6% |
+| RUNTIME_FAIL | 359 | 27.2% |
+| COMPILE_ERROR | 490 | 37.1% |
+| DEPLOY_ERROR | 13 | 1.0% |
+| SKIP | 174 | 13.2% |
+| **Total** | **1322** | |
+
+Assertions: 925 passed, 984 failed
+
+## Per-Category Summary
+
+| Category | Total | Pass | Fail | Compile Err | Deploy Err | Skip |
+|----------|-------|------|------|-------------|------------|------|
+| abiEncodeDecode | 19 | 0 | 2 | 5 | 0 | 12 |
+| abiEncoderV1 | 28 | 1 | 10 | 2 | 0 | 15 |
+| abiEncoderV2 | 44 | 1 | 17 | 19 | 0 | 7 |
+| accessor | 2 | 2 | 0 | 0 | 0 | 0 |
+| arithmetics | 13 | 5 | 6 | 0 | 0 | 2 |
+| array | 73 | 10 | 21 | 40 | 0 | 2 |
+| builtinFunctions | 38 | 12 | 3 | 23 | 0 | 0 |
+| calldata | 24 | 3 | 4 | 12 | 0 | 5 |
+| cleanup | 19 | 1 | 9 | 4 | 0 | 5 |
+| constantEvaluator | 2 | 0 | 2 | 0 | 0 | 0 |
+| constants | 11 | 1 | 6 | 4 | 0 | 0 |
+| constructor | 24 | 6 | 1 | 13 | 1 | 3 |
+| conversions | 2 | 1 | 0 | 1 | 0 | 0 |
+| deployedCodeExclusion | 12 | 0 | 0 | 7 | 5 | 0 |
+| ecrecover | 5 | 0 | 3 | 0 | 0 | 2 |
+| enums | 11 | 7 | 3 | 0 | 0 | 1 |
+| errors | 28 | 22 | 1 | 4 | 0 | 1 |
+| events | 44 | 14 | 3 | 17 | 0 | 10 |
+| experimental | 2 | 0 | 0 | 0 | 0 | 2 |
+| exponentiation | 3 | 0 | 1 | 2 | 0 | 0 |
+| expressions | 19 | 11 | 3 | 4 | 0 | 1 |
+| externalContracts | 8 | 0 | 0 | 5 | 0 | 3 |
+| externalSource | 10 | 0 | 0 | 0 | 0 | 10 |
+| fallback | 11 | 0 | 8 | 0 | 0 | 3 |
+| freeFunctions | 9 | 5 | 2 | 2 | 0 | 0 |
+| functionCall | 48 | 14 | 3 | 20 | 0 | 11 |
+| functionSelector | 1 | 0 | 1 | 0 | 0 | 0 |
+| functionTypes | 31 | 6 | 6 | 16 | 0 | 3 |
+| getters | 14 | 0 | 8 | 6 | 0 | 0 |
+| immutable | 18 | 8 | 4 | 5 | 0 | 1 |
+| inheritance | 38 | 16 | 10 | 8 | 3 | 1 |
+| inlineAssembly | 78 | 12 | 39 | 22 | 0 | 5 |
+| integer | 5 | 2 | 2 | 1 | 0 | 0 |
+| interfaceID | 6 | 0 | 6 | 0 | 0 | 0 |
+| isoltestTesting | 11 | 1 | 3 | 1 | 0 | 6 |
+| libraries | 62 | 15 | 18 | 19 | 0 | 10 |
+| literals | 11 | 5 | 5 | 1 | 0 | 0 |
+| memoryManagement | 5 | 0 | 5 | 0 | 0 | 0 |
+| metaTypes | 1 | 0 | 1 | 0 | 0 | 0 |
+| modifiers | 31 | 6 | 16 | 8 | 0 | 1 |
+| multiSource | 15 | 0 | 0 | 15 | 0 | 0 |
+| operators | 3 | 2 | 1 | 0 | 0 | 0 |
+| optimizer | 2 | 1 | 0 | 1 | 0 | 0 |
+| payable | 1 | 0 | 0 | 0 | 0 | 1 |
+| receive | 3 | 0 | 0 | 0 | 0 | 3 |
+| revertStrings | 24 | 2 | 5 | 8 | 0 | 9 |
+| reverts | 10 | 4 | 5 | 0 | 0 | 1 |
+| saltedCreate | 3 | 0 | 0 | 2 | 0 | 1 |
+| scoping | 1 | 0 | 1 | 0 | 0 | 0 |
+| shanghai | 2 | 1 | 0 | 1 | 0 | 0 |
+| smoke | 10 | 1 | 2 | 2 | 0 | 5 |
+| specialFunctions | 3 | 1 | 1 | 0 | 0 | 1 |
+| state | 22 | 0 | 16 | 4 | 0 | 2 |
+| statements | 2 | 1 | 0 | 1 | 0 | 0 |
+| storage | 44 | 9 | 11 | 23 | 0 | 1 |
+| storageLayoutSpecifier | 34 | 0 | 0 | 34 | 0 | 0 |
+| strings | 8 | 0 | 8 | 0 | 0 | 0 |
+| structs | 51 | 11 | 7 | 27 | 1 | 5 |
+| tryCatch | 20 | 0 | 18 | 2 | 0 | 0 |
+| types | 32 | 15 | 2 | 10 | 1 | 4 |
+| underscore | 1 | 1 | 0 | 0 | 0 | 0 |
+| uninitializedFunctionPointer | 6 | 3 | 1 | 2 | 0 | 0 |
+| userDefinedValueType | 30 | 1 | 5 | 20 | 0 | 4 |
+| using | 15 | 0 | 0 | 15 | 0 | 0 |
+| variables | 21 | 8 | 11 | 2 | 0 | 0 |
+| various | 68 | 20 | 15 | 18 | 2 | 13 |
+| viaYul | 64 | 12 | 18 | 32 | 0 | 2 |
+| virtualFunctions | 6 | 6 | 0 | 0 | 0 | 0 |
+
+## Tests That PASS
+
+- `abiEncoderV1/return_dynamic_types_cross_call_out_of_range_1`: 3 assertions
+- `abiEncoderV2/calldata_struct_member_offset`: 1 assertions
+- `accessor/accessor_for_const_state_variable`: 1 assertions
+- `accessor/accessor_for_state_variable`: 1 assertions
+- `arithmetics/addmod_mulmod`: 1 assertions
+- `arithmetics/block_inside_unchecked`: 1 assertions
+- `arithmetics/divisiod_by_zero`: 4 assertions
+- `arithmetics/exp_associativity`: 6 assertions
+- `arithmetics/unchecked_div_by_zero`: 4 assertions
+- `array/array_memory_create`: 3 assertions
+- `array/array_storage_pop_zero_length`: 1 assertions
+- `array/array_storage_push_empty`: 1 assertions
+- `array/bytes_to_fixed_bytes_simple`: 5 assertions
+- `array/calldata_array`: 1 assertions
+- `array/create_memory_array_too_large`: 2 assertions
+- `array/create_memory_byte_array`: 1 assertions
+- `array/evm_exceptions_out_of_band_access`: 3 assertions
+- `array/inline_array_singleton`: 1 assertions
+- `array/inline_array_storage_to_memory_conversion_ints`: 1 assertions
+- `builtinFunctions/assignment_to_const_var_involving_keccak`: 1 assertions
+- `builtinFunctions/blobhash_shadow_resolution`: 1 assertions
+- `builtinFunctions/blockhash_shadow_resolution`: 1 assertions
+- `builtinFunctions/keccak256`: 3 assertions
+- `builtinFunctions/keccak256_empty`: 1 assertions
+- `builtinFunctions/keccak256_multiple_arguments`: 1 assertions
+- `builtinFunctions/keccak256_multiple_arguments_with_numeric_literals`: 1 assertions
+- `builtinFunctions/keccak256_multiple_arguments_with_string_literals`: 2 assertions
+- `builtinFunctions/keccak256_packed`: 3 assertions
+- `builtinFunctions/sha256`: 3 assertions
+- `builtinFunctions/sha256_empty`: 1 assertions
+- `builtinFunctions/sha256_packed`: 3 assertions
+- `calldata/calldata_attached_to_static_array`: 1 assertions
+- `calldata/calldata_bytes_external`: 1 assertions
+- `calldata/calldata_bytes_to_memory`: 1 assertions
+- `cleanup/cleanup_in_compound_assign`: 1 assertions
+- `constants/simple_constant_variables_test`: 1 assertions
+- `constructor/base_constructor_arguments`: 1 assertions
+- `constructor/function_usage_in_constructor_arguments`: 1 assertions
+- `constructor/functions_called_by_constructor`: 1 assertions
+- `constructor/inline_member_init_inheritence_without_constructor`: 2 assertions
+- `constructor/state_variable_initialization`: 2 assertions
+- `constructor/transient_state_variable_initialization`: 1 assertions
+- `conversions/string_to_bytes`: 1 assertions
+- `enums/constructing_enums_from_ints`: 1 assertions
+- `enums/enum_referencing`: 7 assertions
+- `enums/minmax`: 2 assertions
+- `enums/using_contract_enums_with_explicit_contract_name`: 1 assertions
+- `enums/using_enums`: 1 assertions
+- `enums/using_inherited_enum`: 1 assertions
+- `enums/using_inherited_enum_excplicitly`: 1 assertions
+- `errors/error_in_library_and_interface`: 3 assertions
+- `errors/error_static_calldata_uint_array_and_dynamic_array`: 1 assertions
+- `errors/errors_by_parameter_type`: 6 assertions
+- `errors/named_error_args`: 1 assertions
+- `errors/named_parameters_shadowing_types`: 2 assertions
+- `errors/require_different_errors_same_parameters`: 2 assertions
+- `errors/require_error_condition_evaluated_only_once`: 4 assertions
+- `errors/require_error_evaluation_order_2`: 2 assertions
+- `errors/require_error_evaluation_order_3`: 2 assertions
+- `errors/require_error_function_join_control_flow`: 2 assertions
+- `errors/require_error_function_pointer_parameter`: 1 assertions
+- `errors/require_error_multiple_arguments`: 2 assertions
+- `errors/require_error_stack_check`: 2 assertions
+- `errors/require_error_string_literal`: 2 assertions
+- `errors/require_error_string_memory`: 2 assertions
+- `errors/require_error_uint256`: 2 assertions
+- `errors/require_inherited_error`: 1 assertions
+- `errors/revert_conversion`: 1 assertions
+- `errors/simple`: 1 assertions
+- `errors/using_structs`: 2 assertions
+- `errors/via_contract_type`: 3 assertions
+- `errors/weird_name`: 1 assertions
+- `events/event_dynamic_array_memory`: 1 assertions
+- `events/event_dynamic_array_memory_v2`: 1 assertions
+- `events/event_emit_from_a_foreign_contract_same_name`: 1 assertions
+- `events/event_emit_via_interface`: 1 assertions
+- `events/event_indexed_function`: 1 assertions
+- `events/event_indexed_function2`: 2 assertions
+- `events/event_indexed_mixed`: 1 assertions
+- `events/event_really_lots_of_data`: 1 assertions
+- `events/event_selector`: 3 assertions
+- `events/event_selector_file_level`: 1 assertions
+- `events/event_shadowing_file_level`: 2 assertions
+- `events/event_string`: 1 assertions
+- `events/event_struct_memory_v2`: 1 assertions
+- `events/event_struct_storage_v2`: 1 assertions
+- `expressions/conditional_expression_different_types`: 2 assertions
+- `expressions/conditional_expression_false_literal`: 1 assertions
+- `expressions/conditional_expression_multiple`: 4 assertions
+- `expressions/conditional_expression_storage_memory_1`: 2 assertions
+- `expressions/conditional_expression_true_literal`: 1 assertions
+- `expressions/conditional_expression_with_return_values`: 2 assertions
+- `expressions/exp_operator_const`: 1 assertions
+- `expressions/exp_zero_literal`: 1 assertions
+- `expressions/inc_dec_operators`: 1 assertions
+- `expressions/tuple_from_ternary_expression`: 1 assertions
+- `expressions/unary_too_long_literal`: 1 assertions
+- `freeFunctions/easy`: 1 assertions
+- `freeFunctions/free_namesake_contract_function`: 1 assertions
+- `freeFunctions/libraries_from_free`: 1 assertions
+- `freeFunctions/overloads`: 1 assertions
+- `freeFunctions/recursion`: 6 assertions
+- `functionCall/bare_call_no_returndatacopy`: 1 assertions
+- `functionCall/call_function_returning_nothing_via_pointer`: 2 assertions
+- `functionCall/calling_other_functions`: 5 assertions
+- `functionCall/calling_uninitialized_function`: 2 assertions
+- `functionCall/calling_uninitialized_function_in_detail`: 1 assertions
+- `functionCall/disordered_named_args`: 1 assertions
+- `functionCall/external_call`: 2 assertions
+- `functionCall/external_function`: 1 assertions
+- `functionCall/external_public_override`: 2 assertions
+- `functionCall/multiple_functions`: 5 assertions
+- `functionCall/multiple_return_values`: 1 assertions
+- `functionCall/named_args`: 2 assertions
+- `functionCall/named_args_overload`: 6 assertions
+- `functionCall/transaction_status`: 3 assertions
+- `functionTypes/comparison_operator_for_external_function_cleans_dirty_bits`: 1 assertions
+- `functionTypes/comparison_operators_for_external_functions`: 2 assertions
+- `functionTypes/function_external_delete_storage`: 11 assertions
+- `functionTypes/same_function_in_construction_and_runtime`: 2 assertions
+- `functionTypes/same_function_in_construction_and_runtime_equality_check`: 1 assertions
+- `functionTypes/uninitialized_internal_storage_function_call`: 1 assertions
+- `immutable/assign_at_declaration`: 1 assertions
+- `immutable/assign_from_immutables`: 4 assertions
+- `immutable/fun_read_in_ctor`: 2 assertions
+- `immutable/getter`: 1 assertions
+- `immutable/getter_call_in_constructor`: 1 assertions
+- `immutable/inheritance`: 1 assertions
+- `immutable/read_in_ctor`: 1 assertions
+- `immutable/stub`: 1 assertions
+- `inheritance/access_base_storage`: 3 assertions
+- `inheritance/constructor_inheritance_init_order_3_viaIR`: 1 assertions
+- `inheritance/constructor_with_params_inheritance_2`: 2 assertions
+- `inheritance/derived_overload_base_function_direct`: 1 assertions
+- `inheritance/derived_overload_base_function_indirect`: 2 assertions
+- `inheritance/inherited_constant_state_var`: 1 assertions
+- `inheritance/inherited_function_from_a_library`: 1 assertions
+- `inheritance/interface_inheritance_conversions`: 3 assertions
+- `inheritance/overloaded_function_call_resolve_to_first`: 1 assertions
+- `inheritance/overloaded_function_call_resolve_to_second`: 1 assertions
+- `inheritance/overloaded_function_call_with_if_else`: 2 assertions
+- `inheritance/state_variables_init_order`: 1 assertions
+- `inheritance/state_variables_init_order_2`: 1 assertions
+- `inheritance/super_overload`: 2 assertions
+- `inheritance/transient_storage_state_variable`: 1 assertions
+- `inheritance/transient_storage_state_variable_abstract_contract`: 1 assertions
+- `inlineAssembly/for_loop_break`: 1 assertions
+- `inlineAssembly/inline_assembly_if`: 4 assertions
+- `inlineAssembly/inline_assembly_in_modifiers`: 2 assertions
+- `inlineAssembly/inline_assembly_read_and_write_stack`: 1 assertions
+- `inlineAssembly/inline_assembly_switch`: 4 assertions
+- `inlineAssembly/inlineasm_empty_let`: 1 assertions
+- `inlineAssembly/keccak256_assembly`: 1 assertions
+- `inlineAssembly/keccak256_optimization`: 1 assertions
+- `inlineAssembly/optimize_memory_store_multi_block_bugreport`: 1 assertions
+- `inlineAssembly/shadowing_local_function_opcode`: 1 assertions
+- `inlineAssembly/truefalse`: 1 assertions
+- `inlineAssembly/tstore_hidden_staticcall`: 1 assertions
+- `integer/many_local_variables`: 1 assertions
+- `integer/uint`: 8 assertions
+- `isoltestTesting/isoltestFormatting`: 2 assertions
+- `libraries/internal_library_function_attached_to_bool`: 4 assertions
+- `libraries/internal_library_function_attached_to_dynamic_array`: 1 assertions
+- `libraries/internal_library_function_attached_to_enum`: 2 assertions
+- `libraries/internal_library_function_attached_to_fixed_array`: 1 assertions
+- `libraries/internal_library_function_attached_to_integer`: 1 assertions
+- `libraries/internal_library_function_attached_to_literal`: 2 assertions
+- `libraries/internal_library_function_attached_to_string_accepting_memory`: 1 assertions
+- `libraries/library_enum_as_an_expression`: 1 assertions
+- `libraries/library_staticcall_delegatecall`: 1 assertions
+- `libraries/library_stray_values`: 1 assertions
+- `libraries/library_struct_as_an_expression`: 1 assertions
+- `libraries/stub`: 3 assertions
+- `libraries/stub_internal`: 3 assertions
+- `libraries/using_for_function_on_int`: 1 assertions
+- `libraries/using_for_storage_structs`: 1 assertions
+- `literals/denominations`: 1 assertions
+- `literals/ether`: 1 assertions
+- `literals/fractional_denominations`: 6 assertions
+- `literals/gwei`: 1 assertions
+- `literals/wei`: 1 assertions
+- `modifiers/access_through_contract_name`: 7 assertions
+- `modifiers/function_modifier_loop_viair`: 1 assertions
+- `modifiers/function_modifier_multi_invocation_viair`: 2 assertions
+- `modifiers/function_modifier_multiple_times`: 2 assertions
+- `modifiers/return_does_not_skip_modifier`: 3 assertions
+- `modifiers/transient_state_variable_value_type`: 1 assertions
+- `operators/compound_assign`: 8 assertions
+- `operators/transient_storage_variable_increment_decrement`: 1 assertions
+- `optimizer/shift_bytes`: 2 assertions
+- `revertStrings/empty_v2`: 4 assertions
+- `revertStrings/function_entry_checks_v2`: 1 assertions
+- `reverts/assert_require`: 5 assertions
+- `reverts/error_struct`: 2 assertions
+- `reverts/revert`: 4 assertions
+- `reverts/simple_throw`: 2 assertions
+- `shanghai/push0`: 1 assertions
+- `smoke/failure`: 5 assertions
+- `specialFunctions/keccak256_optimized`: 2 assertions
+- `statements/empty_for_loop`: 1 assertions
+- `storage/delete_overlapping_transient_after_inherited_storage_same_value_type`: 2 assertions
+- `storage/delete_overlapping_transient_after_storage_delete_same_value_type`: 3 assertions
+- `storage/delete_overlapping_transient_after_storage_mapping_delete_same_value_type`: 2 assertions
+- `storage/delete_overlapping_transient_before_inherited_storage_same_value_type`: 2 assertions
+- `storage/delete_overlapping_transient_before_storage_delete_same_value_type`: 3 assertions
+- `storage/delete_overlapping_transient_before_storage_mapping_delete_same_value_type`: 2 assertions
+- `storage/packed_storage_overflow`: 1 assertions
+- `storage/simple_accessor`: 1 assertions
+- `storage/state_smoke_test`: 8 assertions
+- `structs/copy_from_storage`: 1 assertions
+- `structs/event`: 1 assertions
+- `structs/memory_struct_named_constructor`: 1 assertions
+- `structs/memory_structs_as_function_args`: 1 assertions
+- `structs/nested_struct_allocation`: 1 assertions
+- `structs/simple_struct_allocation`: 1 assertions
+- `structs/struct_delete_struct_in_mapping`: 1 assertions
+- `structs/struct_memory_to_storage`: 1 assertions
+- `structs/struct_named_constructor`: 1 assertions
+- `structs/struct_storage_to_mapping`: 1 assertions
+- `structs/struct_storage_to_memory`: 1 assertions
+- `types/assign_calldata_value_type`: 1 assertions
+- `types/convert_fixed_bytes_to_fixed_bytes_greater_size`: 1 assertions
+- `types/convert_fixed_bytes_to_fixed_bytes_same_size`: 1 assertions
+- `types/convert_fixed_bytes_to_fixed_bytes_smaller_size`: 1 assertions
+- `types/convert_fixed_bytes_to_uint_greater_size`: 1 assertions
+- `types/convert_fixed_bytes_to_uint_same_min_size`: 1 assertions
+- `types/convert_fixed_bytes_to_uint_same_type`: 1 assertions
+- `types/convert_fixed_bytes_to_uint_smaller_size`: 1 assertions
+- `types/convert_uint_to_fixed_bytes_greater_size`: 1 assertions
+- `types/convert_uint_to_fixed_bytes_same_min_size`: 1 assertions
+- `types/convert_uint_to_fixed_bytes_same_size`: 1 assertions
+- `types/convert_uint_to_fixed_bytes_smaller_size`: 1 assertions
+- `types/mapping_enum_key_v2`: 17 assertions
+- `types/mapping_simple`: 15 assertions
+- `types/type_conversion_cleanup`: 1 assertions
+- `underscore/as_function`: 3 assertions
+- `uninitializedFunctionPointer/store2`: 1 assertions
+- `uninitializedFunctionPointer/storeInConstructor`: 2 assertions
+- `uninitializedFunctionPointer/uninitialized_internal_storage_function_via_yul`: 1 assertions
+- `userDefinedValueType/constant`: 3 assertions
+- `variables/delete_locals`: 1 assertions
+- `variables/delete_transient_state_variable`: 1 assertions
+- `variables/public_state_overridding`: 3 assertions
+- `variables/storing_invalid_boolean`: 4 assertions
+- `variables/transient_function_type_state_variable`: 1 assertions
+- `variables/transient_state_enum_variable`: 1 assertions
+- `variables/transient_state_variable_slots_and_offsets`: 1 assertions
+- `variables/transient_state_variable_tuple_assignment`: 1 assertions
+- `various/assignment_to_const_var_involving_expression`: 1 assertions
+- `various/byte_optimization_bug`: 2 assertions
+- `various/code_access_padding`: 1 assertions
+- `various/cross_contract_types`: 1 assertions
+- `various/decayed_tuple`: 1 assertions
+- `various/empty_name_return_parameter`: 1 assertions
+- `various/flipping_sign_tests`: 1 assertions
+- `various/gasleft_shadow_resolution`: 1 assertions
+- `various/inline_member_init`: 1 assertions
+- `various/inline_member_init_inheritence`: 2 assertions
+- `various/inline_tuple_with_rational_numbers`: 1 assertions
+- `various/multi_modifiers`: 4 assertions
+- `various/multi_variable_declaration`: 1 assertions
+- `various/positive_integers_to_signed`: 3 assertions
+- `various/single_copy_with_multiple_inheritance`: 3 assertions
+- `various/skip_dynamic_types`: 1 assertions
+- `various/storage_string_as_mapping_key_without_variable`: 1 assertions
+- `various/super_alone`: 1 assertions
+- `various/test_underscore_in_hex`: 2 assertions
+- `various/typed_multi_variable_declaration`: 1 assertions
+- `viaYul/keccak`: 2 assertions
+- `viaYul/local_assignment`: 1 assertions
+- `viaYul/local_bool_assignment`: 1 assertions
+- `viaYul/local_variable_without_init`: 1 assertions
+- `viaYul/mapping_string_key`: 1 assertions
+- `viaYul/memory_struct_allow`: 1 assertions
+- `viaYul/negation_bug`: 1 assertions
+- `viaYul/return`: 1 assertions
+- `viaYul/short_circuit`: 4 assertions
+- `viaYul/simple_assignment`: 1 assertions
+- `viaYul/simple_inline_asm`: 1 assertions
+- `viaYul/virtual_functions`: 4 assertions
+- `virtualFunctions/internal_virtual_function_calls`: 1 assertions
+- `virtualFunctions/internal_virtual_function_calls_through_dispatch`: 1 assertions
+- `virtualFunctions/virtual_function_calls`: 2 assertions
+- `virtualFunctions/virtual_function_usage_in_constructor_arguments`: 1 assertions
+- `virtualFunctions/virtual_override_changing_mutability_internal`: 1 assertions
+- `virtualFunctions/virtual_override_changing_mutability_public`: 1 assertions
+
+## Tests That COMPILE but FAIL at Runtime
+
+- `abiEncodeDecode/abi_encode_call`: 0p/1f — callExternal() -> true: LogicError: Txn ZUT5CRQDOMJIFAJDXNNQPCJY5DEYRXKL24R4A3F34E4V5UA4R2BQ had error 'fee too small []transactions.Sig
+- `abiEncodeDecode/abi_encode_call_is_consistent`: 0p/9f — assertConsistentSelectors() ->: LogicError: Txn T6PE7TL5KIZFPRNHGURX5DMZX5GAPQYOWNPEYSZJEKHYU7VMK2LQ had error 'assert failed pc=324' at PC 324:; fSig
+- `abiEncoderV1/abi_decode_fixed_arrays`: 0p/1f — f(uint16[3],uint16[2][3],uint256,uint256,uint256): 1, 2, 3, 11, 12, 21, 22, 31, 32, 1, 2, 1 -> 2, 32: TypeError: object of type 'int' has no len()
+- `abiEncoderV1/abi_encode_call`: 0p/1f — f() -> true: expected True, got False
+- `abiEncoderV1/abi_encode_rational`: 0p/1f — f() -> 0x20, 0x40, 0x1, -2: expected 2 values, got 16
+- `abiEncoderV1/byte_arrays`: 0p/2f — f(uint256,bytes,uint256): 6, 0x60, 9, 7, "abcdefg" -> 6, 7, "d", 9: TypeError: 'bytes' object cannot be interpreted as an integer; f_external(uint256,
+- `abiEncoderV1/calldata_arrays_too_large`: 0p/1f — expected FAILURE but succeeded: f(uint256,uint256[],uint256): 6, 0x60, 9, 0x8000000000000000000000000000000000000000000000000000000000000002, 1, 2 -> 
+- `abiEncoderV1/dynamic_arrays`: 0p/1f — f(uint256,uint16[],uint256): 6, 0x60, 9, 7, 11, 12, 13, 14, 15, 16, 17 -> 7, 17, 9: LogicError: Txn 5PXDCGS4FUF2QJHEEDPYYFDHDLAXNOEV72CJHPPV22UCYKNSXV
+- `abiEncoderV1/memory_params_in_external_function`: 0p/1f — g() -> 3, 0x6200000000000000000000000000000000000000000000000000000000000000, 3, 0x6600000000000000000000000000000000000000000000000000000000000000, 4
+- `abiEncoderV1/return_dynamic_types_cross_call_advanced`: 0p/1f — f() -> 0x80, -1, 0xe0, 0x1234, 40, "12345678901234567890123456789012", "34567890", 4, 97767552542602192590433234714624, 0, 0, 537879995309340587922569
+- `abiEncoderV1/return_dynamic_types_cross_call_out_of_range_2`: 2p/1f — expected FAILURE but succeeded: f(uint256): 0x60 -> FAILURE
+- `abiEncoderV1/return_dynamic_types_cross_call_simple`: 0p/1f — f() -> 0x20, 40, "12345678901234567890123456789012", "34567890": expected 2 values, got 40
+- `abiEncoderV2/abi_encode_empty_string_v2`: 0p/1f — f() -> 0x40, 0xa0, 0x40, 0x20, 0x0, 0x0: expected 6 values, got 2
+- `abiEncoderV2/abi_encode_rational_v2`: 0p/1f — f() -> 0x20, 0x40, 0x1, -2: expected 2 values, got 16
+- `abiEncoderV2/bool_out_of_bounds`: 3p/1f — f(bool): 0x000000 -> false: AssertionError: 
+- `abiEncoderV2/byte_arrays`: 0p/2f — f(uint256,bytes,uint256): 6, 0x60, 9, 7, "abcdefg" -> 6, 7, "d", 9: TypeError: 'bytes' object cannot be interpreted as an integer; f_external(uint256,
+- `abiEncoderV2/calldata_array_dynamic_static_in_library`: 0p/1f — f(uint256[],uint256[1]): 0x40, 0xff, 1, 0xffff -> 0x40, 0xff, 0x01, 0xffff: TypeError: object of type 'int' has no len()
+- `abiEncoderV2/calldata_array_short`: 1p/2f — expected FAILURE but succeeded: f(uint256[]): 0x20, 1 -> FAILURE, hex"08c379a0", 0x20, 0x2b, "ABI decoding: invalid calldata a", "rray stride"; expect
+- `abiEncoderV2/calldata_array_short_no_revert_string`: 1p/2f — expected FAILURE but succeeded: f(uint256[]): 0x20, 1 -> FAILURE; expected FAILURE but succeeded: f(uint256[]): 0x20, 2 -> FAILURE
+- `abiEncoderV2/calldata_array_static`: 1p/5f — f(uint256[3]): 23, 42, 87 -> 32, 96, 23, 42, 87: expected 3 values, got 96; g(uint256[3]): 23, 42, 87 -> 32, 96, 23, 42, 87: LogicError: Txn 5ST5KWQUA
+- `abiEncoderV2/calldata_array_static_index_access`: 0p/6f — f(uint256[3]): 23, 42, 87 -> 32, 96, 23, 42, 87: expected 3 values, got 96; g(uint256[3][2],uint256): 23, 42, 87, 123, 142, 187, 0 -> 32, 96, 23, 42, 
+- `abiEncoderV2/calldata_array_two_dynamic`: 0p/4f — f(uint256[],uint256[],bool): 0x60, 0xE0, true, 3, 23, 42, 87, 2, 51, 72 -> 32, 160, 0x20, 3, 23, 42, 87: TypeError: object of type 'int' has no len();
+- `abiEncoderV2/calldata_array_two_static`: 0p/4f — f(uint256[3],uint256[2],bool): 23, 42, 87, 51, 72, true -> 32, 96, 23, 42, 87: expected 3 values, got 96; f(uint256[3],uint256[2],bool): 23, 42, 87, 5
+- `abiEncoderV2/calldata_overlapped_dynamic_arrays`: 4p/8f — f_memory(uint256[],uint256[2]): 0x20, 1, 2 -> 0x60, 0x01, 0x02, 1, 2: TypeError: object of type 'int' has no len(); f_memory(uint256[],uint256[2]): 0x
+- `abiEncoderV2/calldata_with_garbage`: 2p/22f — f_memory(uint256[]): 0x80, 9, 9, 9, 0 -> 0x20, 0: expected 2 values, got 0; f_memory(uint256[]): 0x80, 9, 9, 9, 1, 7 -> 0x20, 1, 7: expected 1 values,
+- `abiEncoderV2/dynamic_arrays`: 0p/1f — f(uint256,uint16[],uint256): 6, 0x60, 9, 7, 11, 12, 13, 14, 15, 16, 17 -> 7, 17, 9: LogicError: Txn INYFTARNJ6ZBH7MPDGRCHWF36S23NFWWLYHZDB7TP3OUOGLS7M
+- `abiEncoderV2/enums`: 3p/1f — expected FAILURE but succeeded: f(uint8): 2 -> FAILURE
+- `abiEncoderV2/memory_dynamic_array_and_calldata_static_array`: 0p/3f — f(uint256[],uint256[1]): 0x40, 0xff, 1, 0xffff -> 0x20, 0x80, 0x40, 0xff, 1, 0xffff: TypeError: object of type 'int' has no len(); g(uint256[],uint256
+- `abiEncoderV2/memory_params_in_external_function`: 0p/1f — g() -> 3, 0x6200000000000000000000000000000000000000000000000000000000000000, 3, 0x6600000000000000000000000000000000000000000000000000000000000000, 4
+- `arithmetics/addmod_mulmod_zero`: 1p/2f — expected FAILURE but succeeded: f(uint256): 0 -> FAILURE, hex"4e487b71", 0x12; expected FAILURE but succeeded: g(uint256): 0 -> FAILURE, hex"4e487b71"
+- `arithmetics/checked_add_v2`: 2p/2f — expected FAILURE but succeeded: f(uint16,uint16): 65536, 0 -> FAILURE; expected FAILURE but succeeded: f(uint16,uint16): 65535, 1 -> FAILURE, hex"4e48
+- `arithmetics/checked_called_by_unchecked`: 0p/2f — expected FAILURE but succeeded: f(uint16,uint16,uint16): 0xe000, 0xe500, 2 -> FAILURE, hex"4e487b71", 0x11; f(uint16,uint16,uint16): 0xe000, 0x1000, 0
+- `arithmetics/checked_modifier_called_by_unchecked`: 1p/1f — expected FAILURE but succeeded: f(uint16,uint16,uint16): 0x1000, 0xe500, 0xe000 -> FAILURE, hex"4e487b71", 0x11
+- `arithmetics/signed_mod`: 2p/5f — f(int256,int256): 7, -5 -> 2: expected 2, got 7; f(int256,int256): -7, 5 -> -2: expected 1157920892373161954235709850086879078532699846656405640394575
+- `arithmetics/unchecked_called_by_checked`: 1p/2f — f(uint16): 0xffff -> 511: expected 511, got 66047; expected FAILURE but succeeded: f(uint16): 0xfeff -> FAILURE, hex"4e487b71", 0x11
+- `array/array_memory_as_parameter`: 2p/2f — test(uint256,uint256): 1, 0 -> 1: LogicError: Txn EGO2HRG3AZIPNF6OJP3OWIXEPOLNWXQVEXS25CKP3EGZ2DJ5UESA had error 'extract3 arg 0 wanted []byte but; te
+- `array/array_memory_index_access`: 8p/1f — index(uint256): 0xFF -> true: LogicError: Txn INGJOHY3A64FVCI7KNZ2HMUK2UMIDGWEOWOLWYENEZENCKQHFBVQ had error 'pc=156 dynamic cost budget excee
+- `array/array_push_with_arg`: 3p/7f — test(uint256): 42 ->: LogicError: Txn XHV7YMC4Y7AF7WS6M4A26T6NC7CT3EXQMJ7CJNC4WPNFTSG6Z7XQ had error 'Runtime error when executing C (; getLength() ->
+- `array/array_storage_index_access`: 0p/10f — test_indices(uint256): 1 ->: LogicError: Txn W4DOJHITZSPL2ZZEVOGYHNPI5HDAC5SAN3PWEE236TUFT63EGVMA had error 'pc=130 dynamic cost budget excee; test_in
+- `array/array_storage_index_boundary_test`: 6p/3f — test_boundary_check(uint256,uint256): 10, 9 -> 0: LogicError: Txn JBPY6J5VVUHOHKVVJKRCKKVW42LWBQAK3XB7BVWTKB6Q5KWXRIRQ had error 'pc=129 dynamic cost 
+- `array/array_storage_index_zeroed_test`: 0p/5f — test_zeroed_indices(uint256): 1 ->: LogicError: Txn UXZDA4MISMP5Q2KNAOKDRQGMEVOZFNGS2Z2UJMSOAOGRFCGGAK3Q had error 'pc=131 dynamic cost budget excee; 
+- `array/array_storage_length_access`: 2p/5f — set_get_length(uint256): 1 -> 1: LogicError: Txn 65VAA2R7AZBTOPY3NY5WST5CUCMLBJYIATJEOP7WU2E5YT4DYYHQ had error 'pc= 71 dynamic cost budget excee; set
+- `array/array_storage_push_empty_length_address`: 3p/5f — set_get_length(uint256): 1 -> 1: LogicError: Txn G7AOMYKHUT6GFKKSJCJE3WD3JKXJNBQVHSBC7IH43SY7XPHHWAWQ had error 'pc= 71 dynamic cost budget excee; set
+- `array/array_storage_push_pop`: 2p/5f — set_get_length(uint256): 1 -> 0: LogicError: Txn I3IHL2D343B5KVZXL7RUDEY7OBOCWLCY5L5LQE72J6KKORH7P2BA had error 'pc= 71 dynamic cost budget excee; set
+- `array/arrays_complex_from_and_to_storage`: 1p/4f — set(uint24[3][]): 0x20, 0x06, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12 -> 0x06: Type
+- `array/bytes_length_member`: 1p/2f — set(): 1, 2 -> true: ValueError: Unexpected arg at position 0. set only expects 0 args; getLength() -> 68: expected 68, got 0
+- `array/bytes_to_fixed_bytes_too_long`: 2p/2f — fromStorage() -> "abcdefghabcdefghabcdefghabcdefgh": expected b'abcdefghabcdefghabcdefghabcdefgh', got None; fromSlice(bytes): 0x20, 33, "abcdefghabcd
+- `array/calldata_bytes_array_bounds`: 1p/2f — f(bytes[],uint256): 0x40, 0, 1, 0x20, 2, 0x6162000000000000000000000000000000000000000000000000000000000000 -> 0x61: LogicError: Txn GODVOFZMKLUGH3W6M
+- `array/dynamic_out_of_bounds_array_access`: 3p/6f — enlarge(uint256): 4 -> 4: LogicError: Txn PFMCAOLE2DHCGMJTOGNV64BO6CQWXP2FGJ4QI72NKY6FZMLFE3UQ had error 'pc=128 dynamic cost budget excee; length() -
+- `array/external_array_args`: 0p/1f — test(uint256[8],uint256[],uint256[5],uint256,uint256,uint256): 1, 2, 3, 4, 5, 6, 7, 8, 0x220, 21, 22, 23, 24, 25, 0, 1, 2, 3, 11, 12, 13 -> 1, 12, 23:
+- `array/fixed_arrays_in_storage`: 1p/8f — setIDStatic(uint256): 0xb ->: LogicError: Txn OFUQUPB4HLQN4CO5NZEICVX6IO3YCWY7MSTKWS7SZA5ZJZTQ4CUA had error 'Runtime error when executing c (; getID(
+- `array/fixed_out_of_bounds_array_access`: 6p/2f — set(uint256,uint256): 3, 4 -> true: LogicError: Txn 2DGPT2LDDPXL2CN2DRZPQICNZLVBQF3T3F464CLVQZPIEZQGKRJA had error 'Runtime error when executing c (; 
+- `array/memory`: 1p/1f — i(uint256[4]): 1, 2, 3, 4 -> 20: LogicError: Txn DXQX3P4XPZNNYIUR3RH6A5SJ3BNJ7R4RYBAYDGOGJDX4EYKXCG3Q had error 'Runtime error when executing C (
+- `array/storage_array_ref`: 0p/16f — find(uint256): 7 -> -1: LogicError: Txn PJQO54FAGH3ZUSL7MOPLDJVSEM27BDMVWIAA3U5FB2BU2QUTCVQA had error 'loads arg 0 wanted uint64 but go; add(uint256)
+- `array/string_bytes_conversion`: 0p/2f — f(string,uint256): 0x40, 0x02, 0x06, "abcdef" -> "c": TypeError: 'bytes' object cannot be interpreted as an integer; l() -> 0x06: expected 6, got 0
+- `array/strings_in_struct`: 3p/1f — getLast() -> 0x20, 0x09, "asdfghjkl": expected b'asdfghjkl', got asdfghjkl
+- `builtinFunctions/function_types_sig`: 0p/4f — f() -> 0x26121ff000000000000000000000000000000000000000000000000000000000: expected 172199119178540842997497786397558353277550457162425810575737795409
+- `builtinFunctions/msg_sig`: 0p/1f — foo(uint256): 0x0 -> 0x2fbebd3800000000000000000000000000000000000000000000000000000000: expected 2159571076553797005315871572429076533135333917088964
+- `builtinFunctions/msg_sig_after_internal_call_is_same`: 0p/1f — foo(uint256): 0x0 -> 0x2fbebd3800000000000000000000000000000000000000000000000000000000: expected 2159571076553797005315871572429076533135333917088964
+- `calldata/calldata_attached_to_bytes`: 0p/1f — test(uint256,bytes,uint256): 7, 0x60, 4, 2, "ab" -> "b", "a": TypeError: 'bytes' object cannot be interpreted as an integer
+- `calldata/calldata_bytes_array_bounds`: 1p/2f — f(bytes[],uint256): 0x40, 0, 1, 0x20, 2, hex"6162" -> 0x61: LogicError: Txn EBZ5YWUO6PODNTQ2N4NPN57WDVICBVWL5EZHHALCX3C7H7DUKPPQ had error 'extraction
+- `calldata/calldata_bytes_internal`: 0p/1f — f(uint256,bytes,uint256): 7, 0x60, 7, 4, "abcd" -> "c": TypeError: 'bytes' object cannot be interpreted as an integer
+- `calldata/calldata_bytes_to_memory_encode`: 0p/1f — f(bytes): 0x20, 0x08, "abcdefgh" -> 0x20, 0x60, 0x20, 8, 44048183304486788309563647967830685498285570828042699209880294173606615711744: expected 3 val
+- `cleanup/bool_conversion_v2`: 6p/4f — f(bool): 0x0 -> 0x0: AssertionError: ; f(bool): 0x1 -> 0x1: AssertionError: ; g(bool): 0x0 -> 0x0: AssertionError: 
+- `cleanup/byte_array_to_storage_cleanup`: 0p/4f — constructor() ->: ValueError: Unable to find method constructor() in C app.; h() -> 0x20, 0x40, 0x00, 0: expected 2 values, got 63; g() -> 0x20, 0x40,
+- `cleanup/cleanup_bytes_types_v2`: 0p/1f — expected FAILURE but succeeded: f(bytes2,uint16): "abc", 0x40102 -> FAILURE # We input longer data on purpose. #
+- `cleanup/dirty_calldata_bytes`: 0p/1f — f(bytes): 0x20, 0x04, "dead" -> true: expected True, got False
+- `cleanup/dirty_calldata_dynamic_array`: 0p/1f — f(int16[]): 0x20, 0x02, 0x7fff, 0x7fff -> true: expected True, got False
+- `cleanup/exp_cleanup`: 0p/1f — f() -> 0x1: expected 1, got 0
+- `cleanup/exp_cleanup_direct`: 0p/1f — f() -> 0x1: expected 1, got 0
+- `cleanup/indexed_log_topic_during_explicit_downcast`: 1p/2f — g() -> 0x3100000000000000000000000000000000000000000000000000000000000000: expected 221633295805800530302928838493191698625399580024077642106774281890
+- `cleanup/indexed_log_topic_during_explicit_downcast_during_emissions`: 1p/1f — constructor() ->: ValueError: Unable to find method constructor() in C app.
+- `constantEvaluator/negative_fractional_mod`: 0p/1f — f() -> 11, 10: val[1] expected 10, got 1270
+- `constantEvaluator/rounding`: 0p/1f — f() -> 2, 2, 2, 2: val[3] expected 2, got 12297829382473034413
+- `constants/asm_address_constant_regression`: 0p/1f — f() -> 0x00: expected 0, got None
+- `constants/asm_constant_file_level`: 0p/1f — f() -> 0x1212121212121212121212121000002134593163: expected 103164821458651970696730694073941364629493592419, got None
+- `constants/assign_type_info`: 0p/1f — nonEmptyCode() -> true: expected True, got False
+- `constants/constant_string`: 1p/2f — f() -> 0x20, 3, "\x03\x01\x02": val[0] expected 32, got 3; f() -> 0x20, 3, "\x03\x01\x02": val[1] expected 3, got 1; f() -> 0x20, 3, "\x03\x01\x02": v
+- `constants/consteval_array_length`: 1p/1f — constructor() ->: ValueError: Unable to find method constructor() in C app.
+- `constants/function_unreferenced`: 0p/1f — f() -> 0xe2179b8e00000000000000000000000000000000000000000000000000000000: expected 102264414861304285884729579275374176073311626045629144087797787832
+- `constructor/order_of_evaluation`: 0p/1f — g() -> 0x20, 4, 1, 3, 2, 4: LogicError: Txn NWWNPIVVJHGFPA7ENVGRIHOE2KPDRLYOYGM3I3HCOFT5BO63S5RA had error 'loads arg 0 wanted uint64 but go
+- `ecrecover/failing_ecrecover_invalid_input`: 0p/1f — f() -> 0: LogicError: Txn 6OIFYQ7RRBAY5F3UTA2ZVIVYNVOIYLKFPQ2V5HC74N4RCC4KQCBA had error '- would result negative' at PC 3
+- `ecrecover/failing_ecrecover_invalid_input_asm`: 0p/1f — f() -> 0: LogicError: Txn O7SM7NOBRTGAZ7RSDDPW42INFIMQF7FJ53ZQZ7VIT6FLRIP55TTQ had error '- would result negative' at PC 3
+- `ecrecover/failing_ecrecover_invalid_input_proper`: 0p/1f — f() -> 0: LogicError: Txn C2YGSK3IKV7WTHSMYEXQBN633VCKHPPCNCVUFXNHJ2JLAQPPONHA had error '- would result negative' at PC 2
+- `enums/enum_explicit_overflow`: 3p/3f — expected FAILURE but succeeded: getChoiceExp(uint256): 3 -> FAILURE, hex"4e487b71", 0x21 # These should throw #; expected FAILURE but succeeded: getCh
+- `enums/enum_explicit_overflow_homestead`: 2p/3f — expected FAILURE but succeeded: getChoiceExp(uint256): 3 -> FAILURE # These should throw #; expected FAILURE but succeeded: getChoiceFromSigned(int256
+- `enums/invalid_enum_logged`: 1p/1f — expected FAILURE but succeeded: test_log() -> FAILURE, hex"4e487b71", 0x21
+- `errors/error_selector`: 0p/3f — test1() -> 0x92bbf6e800000000000000000000000000000000000000000000000000000000, 0x2ff06700000000000000000000000000000000000000000000000000000000, 0x92b
+- `events/event_dynamic_array_storage`: 0p/1f — createEvent(uint256): 42 ->: LogicError: Txn ZEAUMHW3XDTMRBESLP3EJ2ZHXWG3KGAIHQPVUKE3XQI5MOERVWAQ had error 'pc= 69 dynamic cost budget excee
+- `events/event_dynamic_array_storage_v2`: 0p/1f — createEvent(uint256): 42 ->: LogicError: Txn IW3LZZMQGIQM4CWFYFNLMYG3J6HEF5IZPCPATCYZPUFI7D3HWIXQ had error 'pc= 69 dynamic cost budget excee
+- `events/event_static_calldata_uint_array_and_dynamic_array`: 0p/1f — f(uint256[],uint256[1]): 0x40, 0xff, 1, 0xffff ->: TypeError: object of type 'int' has no len()
+- `exponentiation/literal_base`: 1p/7f — f(uint256): 1 -> 2, -2: val[1] expected 115792089237316195423570985008687907853269984665640564039457584007913129639934, got 18446744073709551614; f(ui
+- `expressions/bit_operators`: 0p/1f — f() -> 3855, 268374015, 268370160: val[0] expected 3855, got 64677154575; f() -> 3855, 268374015, 268370160: val[1] expected 268374015, got 1095485034
+- `expressions/bytes_comparison`: 0p/1f — f() -> true: expected True, got False
+- `expressions/conditional_expression_storage_memory_2`: 0p/2f — f(bool): true -> 1: LogicError: Txn HMWDYY4PQPX6OWZRL22KMHYMI7JW32TVP4KFFGK4OPT6F43G2ESQ had error 'Runtime error when executing tes; f(bool): false -
+- `fallback/falback_return`: 0p/4f — x() -> 1: expected 1, got 0; x() -> 2: expected 2, got 0; x() -> 2: expected 2, got 0
+- `fallback/fallback_argument`: 0p/2f — f() -> 0x01, 0x40, 0x00: expected 3 values, got 2; x() -> 3: expected 3, got 0
+- `fallback/fallback_argument_to_storage`: 0p/2f — f() -> 0x01, 0x40, 0x00: expected 3 values, got 2; x() -> 0x20, 3, "abc": expected b'abc', got b''
+- `fallback/fallback_override`: 0p/1f — f() -> 0x01, 0x40, 0x03, 0x78797a0000000000000000000000000000000000000000000000000000000000: expected 4 values, got 2
+- `fallback/fallback_override2`: 0p/1f — f() -> 1, 0x40, 0x00: expected 3 values, got 2
+- `fallback/fallback_override_multi`: 0p/1f — f() -> 0x01, 0x40, 0x00: expected 3 values, got 2
+- `fallback/fallback_return_data`: 0p/1f — f() -> 0x01, 0x40, 0x03, 0x6162630000000000000000000000000000000000000000000000000000000000: expected 4 values, got 2
+- `fallback/short_data_calls_fallback`: 0p/5f — x() -> 2: expected 2, got 0; x() -> 3: expected 3, got 0; x() -> 2: expected 2, got 0
+- `freeFunctions/free_runtimecode`: 0p/1f — f() -> true: expected True, got False
+- `freeFunctions/storage_calldata_refs`: 0p/1f — f(uint256,uint256[]): 7, 0x40, 3, 8, 9, 10 -> 7, 9: LogicError: Txn ZKF7IDNNDDXVNNDOU2FYMMQ26BXADA5G526AU66TDNAPOGM6JNHQ had error 'Runtime error when
+- `functionCall/array_multiple_local_vars`: 0p/3f — f(uint256[]): 32, 3, 1000, 1, 2 -> 3: expected 3, got 0; f(uint256[]): 32, 3, 100, 500, 300 -> 600: expected 600, got 0; f(uint256[]): 32, 11, 1, 2, 3
+- `functionCall/mapping_internal_argument`: 0p/4f — set(uint8,uint8,uint8): 1, 21, 42 -> 0, 0: val[1] expected 0, got 21; get(uint8): 1 -> 21, 42: val[0] expected 21, got 0; get(uint8): 1 -> 21, 42: val
+- `functionCall/mapping_internal_return`: 0p/2f — g() -> 0, 42, 0, 0, 84, 21: val[1] expected 42, got 0; g() -> 0, 42, 0, 0, 84, 21: val[4] expected 84, got 0; g() -> 0, 42, 0, 0, 84, 21: val[5] expec
+- `functionSelector/function_selector_via_contract_name`: 0p/2f — test1() -> left(0x26121ff0), left(0xe420264a), left(0x26121ff0), left(0xe420264a): expected 4 values, got 1; test2() -> left(0x26121ff0), left(0xe4202
+- `functionTypes/function_delete_stack`: 0p/1f — expected FAILURE but succeeded: test() -> FAILURE, hex"4e487b71", 0x51
+- `functionTypes/selector_1`: 0p/1f — test() -> 0xcf9f23b500000000000000000000000000000000000000000000000000000000, 0x7defb41000000000000000000000000000000000000000000000000000000000, 0xcf
+- `functionTypes/selector_2`: 0p/1f — test() -> 0xcf9f23b500000000000000000000000000000000000000000000000000000000, 0x7defb41000000000000000000000000000000000000000000000000000000000: expe
+- `functionTypes/selector_assignment_expression`: 0p/1f — z() -> true: expected True, got False
+- `functionTypes/selector_expression_side_effect`: 0p/1f — f() -> 42: expected 42, got 0
+- `functionTypes/selector_ternary`: 0p/2f — h(bool): true -> 0x26121ff000000000000000000000000000000000000000000000000000000000: expected 17219911917854084299749778639755835327755045716242581057
+- `getters/bytes`: 0p/1f — b() -> 0x20, 0x03, 0x6162630000000000000000000000000000000000000000000000000000000000: val[0] expected 32, got 97; b() -> 0x20, 0x03, 0x61626300000000
+- `getters/mapping`: 0p/2f — x(uint256,uint256): 1, 2 -> 3: ValueError: Unable to find method x(uint256,uint256) in C app.; x(uint256,uint256): 0, 0 -> 0: ValueError: Unable to fi
+- `getters/mapping_of_string`: 0p/6f — x(string,uint256): 0x40, 0, 3, "abc" -> 1: ValueError: Unable to find method x(string,uint256) in C app.; x(string,uint256): 0x40, 1, 3, "abc" -> 2: V
+- `getters/mapping_to_struct`: 0p/2f — x(uint256,uint256): 1, 2 -> 3, 4, 5, 6: ValueError: Unable to find method x(uint256,uint256) in C app.; x(uint256,uint256): 0, 0 -> 0x00, 0x00, 0x00, 
+- `getters/mapping_with_names`: 0p/2f — x(uint256,uint256): 1, 2 -> 3: ValueError: Unable to find method x(uint256,uint256) in C app.; x(uint256,uint256): 0, 0 -> 0: ValueError: Unable to fi
+- `getters/transient_value_types`: 1p/2f — f() -> -1: expected 115792089237316195423570985008687907853269984665640564039457584007913129639935, got 18446744073709551615; x() -> 0: expected 0, go
+- `getters/transient_value_types_multi_frame_call`: 1p/3f — f() -> -2: expected 115792089237316195423570985008687907853269984665640564039457584007913129639934, got 18446744073709551614; h() -> -1: expected 1157
+- `getters/value_types`: 6p/3f — e() -> 0x7f00000000000000000000000000000000000000000000000000000000000000: expected 574437317700748313234121683441537667865831564552201235664496608164
+- `immutable/immutable_signed`: 0p/1f — viaasm() -> 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe, 0x6162000000000000000000000000000000000000000000000000000000000000: ex
+- `immutable/small_types_in_reverse`: 3p/3f — x(uint256): 0 -> 4660: ValueError: Unexpected arg at position 0. x only expects 0 args; x(uint256): 1 -> 0x0f0f: ValueError: Unexpected arg at positio
+- `immutable/uninitialized`: 0p/1f — get() -> 0, false, 0x0: val[2] expected 0, got AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+- `immutable/use_scratch`: 0p/3f — constructor(): 3 ->: ValueError: Unable to find method constructor() in C app.; f() -> 84, 23: val[0] expected 84, got 0; f() -> 84, 23: val[1] expect
+- `inheritance/constructor_inheritance_init_order`: 0p/2f — constructor() ->: ValueError: Unable to find method constructor() in B app.; y() -> 42: expected 42, got 0
+- `inheritance/constructor_inheritance_init_order_2`: 1p/1f — constructor() ->: ValueError: Unable to find method constructor() in B app.
+- `inheritance/constructor_inheritance_init_order_3_legacy`: 0p/1f — x() -> 4: expected 4, got 2
+- `inheritance/explicit_base_class`: 1p/1f — f() -> 1: expected 1, got 3
+- `inheritance/inherited_function`: 0p/1f — g() -> 1: expected 1, got 2
+- `inheritance/pass_dynamic_arguments_to_the_base`: 0p/1f — m_i() -> 4: LogicError: Txn KPURGCBVM5K3C5VJWOBXFSAAWX5SEZFFC7VGKZAVKYZOWALWFEMQ had error 'len arg 0 wanted []byte but got 
+- `inheritance/pass_dynamic_arguments_to_the_base_base`: 0p/1f — m_i() -> 4: LogicError: Txn W3YN5VA6T4IAUCEMUX37CHUZE36JU4BXVBEN2W7UIJK6VZDLIIXA had error 'len arg 0 wanted []byte but got 
+- `inheritance/pass_dynamic_arguments_to_the_base_base_with_gap`: 0p/1f — m_i() -> 4: LogicError: Txn CDAO5F3Y6LUYUN2EOIJO5V6BPONSFAF5LDNVH7ROR5POR6GOHI2Q had error 'len arg 0 wanted []byte but got 
+- `inheritance/state_variables_init_order_3`: 5p/3f — c() -> 51: expected 51, got 126; b_c() -> 51: expected 51, got 126; e() -> 42: expected 42, got 0
+- `inheritance/super_in_constructor`: 0p/1f — f() -> 15: expected 15, got 8
+- `inlineAssembly/blobhash`: 0p/1f — f() -> 0x0100000000000000000000000000000000000000000000000000000000000001: expected 452312848583266388373324160190187140051835877600158453279131187530
+- `inlineAssembly/blobhash_index_exceeding_blob_count`: 0p/1f — f() -> 0x00: expected 0, got None
+- `inlineAssembly/calldata_array_read`: 0p/1f — f(uint256[2][]): 0x20, 2, 1, 2, 3, 4 -> 0x44, 2, 0x84: TypeError: object of type 'int' has no len()
+- `inlineAssembly/calldata_assign`: 0p/1f — f(bytes): 0x20, 0, 0 -> 0x20, 3, 0x5754f80000000000000000000000000000000000000000000000000000000000: expected 1 values, got 0
+- `inlineAssembly/calldata_assign_from_nowhere`: 0p/1f — f() -> 0x20, 4, 0x26121ff000000000000000000000000000000000000000000000000000000000: expected 1 values, got 0
+- `inlineAssembly/calldata_length_read`: 2p/4f — lenBytesRead(bytes): 0x20, 0, "abcd" -> 0x00: expected 0, got 4; lenBytesRead(bytes): 0x20, 0x21, "abcd", "ef" -> 33: expected 33, got 4; lenStringRea
+- `inlineAssembly/calldata_offset_read`: 0p/4f — f(bytes): 0x20, 0, 0 -> 0x44: expected 68, got 4; f(bytes): 0x22, 0, 0, 0 -> 0x46: expected 70, got 4; f(uint256,bytes,uint256): 7, 0x60, 8, 2, 0 -> 0
+- `inlineAssembly/calldata_offset_read_write`: 0p/2f — f(uint256,bytes,uint256): 7, 0x60, 8, 2, 0 -> 8, 0x14: val[0] expected 8, got 36; f(uint256,bytes,uint256): 7, 0x60, 8, 2, 0 -> 8, 0x14: val[1] expect
+- `inlineAssembly/chainid`: 0p/1f — f() -> 1: expected 1, got 0
+- `inlineAssembly/clz_pre_osaka`: 1p/1f — g() -> 1000: expected 1000, got 0
+- `inlineAssembly/constant_access_referencing`: 0p/1f — f() -> 2, left(0xabcd), left(0x616263), true, 0x1212121212121212121212121212121212121212: LogicError: Txn O2DH4GQO4YX5XKSHBH74PMQWIZDAJM6T32QN7RG3XNNB
+- `inlineAssembly/external_function_pointer_address`: 0p/2f — testYul() -> 0x1234: LogicError: Txn OQ6HIEPSQS3MJDIG4SOBIGGXAHHM4ZTTCFOSAMKQDAVLUAURA67Q had error 'concat arg 1 wanted []byte but g; testSol() -> 0x
+- `inlineAssembly/external_function_pointer_address_assignment`: 0p/2f — testYul(address): 0x1234567890 -> 0x1234567890: ABIEncodingError: cannot encode the following public key: 78187493520; testYul(address): 0xC0FFEE3EA7 
+- `inlineAssembly/external_function_pointer_selector`: 0p/2f — testYul() -> 0xe16b4a9b: LogicError: Txn 3TMYPWD6QPS4JAHNOKQ7HVHKF237AMEUOJXAWFT4NILMNL5JOTBQ had error 'b* arg 0 wanted bigint but got u; testSol() -
+- `inlineAssembly/external_function_pointer_selector_assignment`: 0p/2f — testYul(uint32): 0x12345678 -> 0x12345678: expected 305419896, got 0; testYul(uint32): 0xABCDEF00 -> 0xABCDEF00: expected 2882400000, got 0
+- `inlineAssembly/external_identifier_access_shadowing`: 0p/1f — f() -> 2: expected 2, got 0
+- `inlineAssembly/for_loop_continue`: 0p/1f — f() -> 5: LogicError: Txn ZQ6O5UGQS3NJXWDF3JFZUZKRBJ6RTLIX3R6SMKMJIPKPWLYCNATQ had error 'pc= 89 dynamic cost budget excee
+- `inlineAssembly/for_loop_nested`: 3p/1f — f(uint256): 1 -> 18: LogicError: Txn U56H7UN3BBXOIA5WWKU3YLE3EFVCZOZMUUQFKP5ESHSPNKYPW63A had error 'pc= 90 dynamic cost budget excee
+- `inlineAssembly/function_name_clash`: 0p/2f — f() -> 1: expected 1, got 0; g() -> 2: expected 2, got 0
+- `inlineAssembly/inline_assembly_for`: 0p/5f — f(uint256): 0 -> 1: expected 1, got 0; f(uint256): 1 -> 1: expected 1, got 0; f(uint256): 2 -> 2: expected 2, got 0
+- `inlineAssembly/inline_assembly_for2`: 0p/3f — f(uint256): 0 -> 0, 2, 0: LogicError: Txn 2UDS7RTPKI65UHZYU7MCNXLDA6W5C537MPQGZUOEMFEIVC2PKXXA had error 'pc=111 dynamic cost budget excee; f(uint256)
+- `inlineAssembly/inline_assembly_recursion`: 0p/5f — f(uint256): 0 -> 1: expected 1, got 0; f(uint256): 1 -> 1: expected 1, got 0; f(uint256): 2 -> 2: expected 2, got 0
+- `inlineAssembly/inline_assembly_storage_access`: 0p/2f — f() -> true: LogicError: Txn PG4JKR4U57DARRAKPAV5ZGANF54FAJWTUZ5CY6Z7WCNYALRHHLZQ had error 'itob arg 0 wanted uint64 but got; z() -> 7: expected 7, g
+- `inlineAssembly/inline_assembly_storage_access_inside_function`: 0p/2f — f() -> true: LogicError: Txn O6ZSU3TT2H2PQY54GSF2EFUKPJFAGYAV4OCSEVDX64S2NCGFPH7Q had error 'assert failed pc=73' at PC 73:
+
+; z() -> 7: expected 7, g
+- `inlineAssembly/inline_assembly_storage_access_local_var`: 0p/1f — f() -> 7: expected 7, got 0
+- `inlineAssembly/inline_assembly_storage_access_via_pointer`: 3p/1f — a() -> 7: expected 7, got None
+- `inlineAssembly/inline_assembly_transient_storage_access_inside_function`: 0p/1f — f() -> 7: LogicError: Txn ZV5IA5H5ND3C6QTVT2IVWJUDPJ56IWPA23TUF7NC32KEUACNPSMA had error 'assert failed pc=73' at PC 73:
+
+
+- `inlineAssembly/keccak256_optimizer_bug_different_memory_location`: 0p/1f — f() -> false: expected False, got True
+- `inlineAssembly/keccak256_optimizer_cache_bug`: 0p/1f — val() -> true: LogicError: Txn AN4MMAMYOGP4RDCELF3WOMS5RJYXPBBV4HZW5QZ7EZ7KY3Y7U4IQ had error 'extraction start 2 is beyond len
+- `inlineAssembly/keccak_optimization_bug_string`: 0p/3f — f(string): "" -> false: expected False, got True; f(string): 0x20, 5, "hello" -> false: expected False, got True; f(string): 0x20, 0x2e, 2945766369044
+- `inlineAssembly/keccak_yul_optimization`: 0p/2f — f() -> 0xcdb56c384a9682c600315e3470157a4cf7638d0d33e9dae5c40ffd2644fc5a80: expected 930446801845119900707003039729414334338892515001966478754494425096
+- `inlineAssembly/leave`: 0p/1f — f() -> 2: expected 2, got 0
+- `inlineAssembly/mcopy`: 0p/1f — f(bytes): 0x20, 0x20, 0xffeeddccbbaa9988776655443322110000112233445566778899aabbccddeeff -> 0x20, 0x20, 0x00000000000000007766554433221100001122334455
+- `inlineAssembly/mcopy_empty`: 0p/1f — mcopy_zero(bytes): 0x20, 0x20, 0xffeeddccbbaa9988776655443322110000112233445566778899aabbccddeeff -> 0x20, 0x20, 0xffeeddccbbaa99887766554433221100001
+- `inlineAssembly/mcopy_overlap`: 0p/5f — mcopy_to_right_overlap()    -> 0x20, 0x60, 0x2222222222222222333333333333333344444444444444445555555555555555, 0x4444444444444444555555555555555566666
+- `inlineAssembly/optimize_memory_store_multi_block`: 1p/1f — g() -> true: LogicError: Txn QUNAAHAOMUSYPJTGEUXIQIMLH5IFDLVM7ZPM2ZVB77YFMECLY6WQ had error 'assert failed pc=82' at PC 82:
+
+
+- `inlineAssembly/prevrandao`: 0p/1f — f() -> 0xa86c2e601b6c44eb4848f7d23d9df3113fbcac42041c49cbed5000cb4f118777: expected 761796981163596224134861551739755219356998881055995107282461826636
+- `inlineAssembly/slot_access_via_mapping_pointer`: 0p/3f — f(uint256): 0 -> 0, 0: LogicError: Txn FYMVEOQJIUGWYWOTHCNEII4KR5GDA3JX2PY5TVA6PTGA4DZVZPXA had error 'len arg 0 wanted []byte but got ; f(uint256): 1
+- `inlineAssembly/transient_storage_simple_reentrancy_lock`: 1p/1f — expected FAILURE but succeeded: f(bool): true -> FAILURE
+- `integer/basic`: 0p/1f — basic() -> true: LogicError: Txn 6WWHWKEWY7LYTWPG55B3YQHP4NS4X7JHRV5KV6CZ5GMOWJMNDLBQ had error 'assert failed pc=35' at PC 35:
+
+
+- `integer/small_signed_types`: 0p/1f — run() -> 200: LogicError: Txn CSKUJNSHXG54XCVPWBU3ML6LQ57B5NMN44FBXGG7NSUB4H5OOI7A had error '- would result negative' at PC 3
+- `interfaceID/homer`: 0p/4f — supportsInterface(bytes4): left(0x01ffc9a0) -> false: TypeError: object of type 'int' has no len(); supportsInterface(bytes4): left(0x01ffc9a7) -> tru
+- `interfaceID/homer_interfaceId`: 0p/4f — supportsInterface(bytes4): left(0x01ffc9a0) -> false: TypeError: object of type 'int' has no len(); supportsInterface(bytes4): left(0x01ffc9a7) -> tru
+- `interfaceID/interfaceId_events`: 0p/2f — hello_world() -> left(0xc6be8b58): expected 89894606677012148518161765604560392412536115689453582218612626237350718996480, got [198, 190, 139, 88]; he
+- `interfaceID/interfaces`: 0p/8f — hello() -> left(0x19ff1d21): expected 11758568256422444655697793699375626628217838645893203051348280859224013012992, got None; world() -> left(0xdf419
+- `interfaceID/lisa`: 0p/4f — supportsInterface(bytes4): left(0x01ffc9a0) -> false: TypeError: object of type 'int' has no len(); supportsInterface(bytes4): left(0x01ffc9a7) -> tru
+- `interfaceID/lisa_interfaceId`: 0p/4f — supportsInterface(bytes4): left(0x01ffc9a0) -> false: TypeError: object of type 'int' has no len(); supportsInterface(bytes4): left(0x01ffc9a7) -> tru
+- `isoltestTesting/account`: 0p/13f — who_am_i() -> 0x1212121212121212121212121212120000000012: expected 103164821458651970696730694074090566015747358738, got OSHYZVQIAHCD5I5N3ZRAT35XBJYQW
+- `isoltestTesting/format_raw_string_with_control_chars`: 0p/1f — f(string): 0x20, 16, "\xf0\x9f\x98\x83\xf0\x9f\x98\x83\xf0\x9f\x98\x83\xf0\x9f\x98\x83" -> 0x20, 16, "\xf0\x9f\x98\x83\xf0\x9f\x98\x83\xf0\x9f\x98\x83
+- `isoltestTesting/precompiles_ignoring_trailing_input`: 0p/10f — ecRecover(uint256[4]): 0x18c547e4f7b0f325ad1e56f57e26c745b09a3e503d86e00e5255ff7f715d3d1c, 0x000000000000000000000000000000000000000000000000000000000
+- `libraries/attached_internal_library_function_accepting_calldata`: 0p/1f — f(bytes): 0x20, 4, "abcd" -> 0x6100000000000000000000000000000000000000000000000000000000000000, 0x610000000000000000000000000000000000000000000000000
+- `libraries/attached_internal_library_function_returning_calldata`: 0p/1f — f(bytes): 0x20, 4, "abcd" -> 0x6100000000000000000000000000000000000000000000000000000000000000, 0x610000000000000000000000000000000000000000000000000
+- `libraries/attached_public_library_function_accepting_calldata.sol`: 0p/1f — f(bytes): 0x20, 4, "abcd" -> 0x6100000000000000000000000000000000000000000000000000000000000000, 0x610000000000000000000000000000000000000000000000000
+- `libraries/attached_public_library_function_returning_calldata`: 0p/1f — f(bytes): 0x20, 4, "abcd" -> 0x6100000000000000000000000000000000000000000000000000000000000000, 0x610000000000000000000000000000000000000000000000000
+- `libraries/internal_library_function`: 0p/1f — f() -> 2: expected 2, got 8
+- `libraries/internal_library_function_attached_to_address`: 0p/2f — foo(address,address): 0x111122223333444455556666777788889999aAaa, 0x111122223333444455556666777788889999aAaa -> true: ABIEncodingError: cannot encode 
+- `libraries/internal_library_function_attached_to_address_named_send_transfer`: 0p/2f — useTransfer(address): 0x111122223333444455556666777788889999aAaa ->: ABIEncodingError: cannot encode the following public key: 97434929227759267208256
+- `libraries/internal_library_function_attached_to_fixed_bytes`: 0p/1f — sum(bytes2,bytes2): left(0x1100), left(0x0022) -> left(0x1122): TypeError: object of type 'int' has no len()
+- `libraries/internal_library_function_attached_to_mapping`: 0p/1f — mapValue(uint256): 42 -> 0x24: expected 36, got 0
+- `libraries/internal_library_function_attached_to_string_accepting_storage`: 0p/1f — test(string): 0x20, 3, "def" -> 0x40, 0x80, 3, "def", 3, "def": expected 6 values, got 2
+- `libraries/internal_library_function_attached_to_struct`: 0p/1f — f() -> 2: LogicError: Txn W7WMNP43SVCSN4NQHSQW2Y3JPNGPGJ7CY2VUAGQBOQHGJSDT4BHA had error 'Runtime error when executing C (
+- `libraries/internal_library_function_calling_private`: 0p/1f — f() -> 2: expected 2, got 8
+- `libraries/internal_library_function_return_var_size`: 0p/1f — f() -> 2: LogicError: Txn N7SWQVSEUA2HNMJTM3MX4HX6DMYQRDVT7MGV2EWNN56EKNDG6HPA had error 'Runtime error when executing C (
+- `libraries/internal_types_in_library`: 0p/1f — f() -> 4, 0x11: LogicError: Txn PL34ZMMHDMJ4JAY6MR4H5WYMQXUGQ7VVDBK2LSV5LGQ6QRYQ2NJA had error 'extraction start 2 is beyond len
+- `libraries/library_call_in_homestead`: 1p/1f — sender() -> 0x1212121212121212121212121212120000000012: expected 103164821458651970696730694074090566015747358738, got OSHYZVQIAHCD5I5N3ZRAT35XBJYQW5Q
+- `libraries/library_return_struct_with_mapping`: 0p/1f — f() -> 123: expected 123, got 0
+- `libraries/mapping_returns_in_library`: 11p/33f — set(bool,uint256,uint256): false, 1, 10 -> 0: expected 0, got 42; set(bool,uint256,uint256): false, 2, 11 -> 0: expected 0, got 84; set(bool,uint256,u
+- `libraries/using_library_mappings_return`: 0p/1f — f() -> 1, 0, 0x2a, 0x17, 0, 0x63: val[0] expected 1, got 0; f() -> 1, 0, 0x2a, 0x17, 0, 0x63: val[2] expected 42, got 0; f() -> 1, 0, 0x2a, 0x17, 0, 0
+- `literals/denominations_in_array_sizes`: 0p/1f — lengths() -> 2, 2000000000, 2000000000000000000, 2, 120, 7200, 172800, 1209600: val[2] expected 2000000000000000000, got 2147483647
+- `literals/escape`: 0p/1f — f() -> 2, 0x5c00000000000000000000000000000000000000000000000000000000000000, 0x5c00000000000000000000000000000000000000000000000000000000000000: val[
+- `literals/hex_string_with_underscore`: 0p/1f — f() -> 32, 5, left(0x123456789A): expected 1 values, got 5
+- `literals/scientific_notation`: 3p/3f — i() -> -20000000000: expected 115792089237316195423570985008687907853269984665640564039457584007893129639936, got 18446744053709551616; j() -> -2: exp
+- `literals/ternary_operator_with_literal_types_overflow`: 0p/2f — expected FAILURE but succeeded: g() -> FAILURE, hex"4e487b71", 0x11; expected FAILURE but succeeded: h() -> FAILURE, hex"4e487b71", 0x11
+- `memoryManagement/assembly_access`: 0p/1f — f() ->: LogicError: Txn GVS4LSCEVTOULYESPDXRCCMSZT4JG2UDR6NMPZSKQHFA57RSD5XQ had error 'assert failed pc=35' at PC 35:
+
+
+- `memoryManagement/memory_types_initialisation`: 1p/3f — dyn() -> 0x20, 0: expected 2 values, got 0; nested() -> 0x20, 0: expected 2 values, got 0; nestedStat() -> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+- `memoryManagement/return_variable`: 0p/1f — f() -> 0x0500, 0x0500, 0x0a00: val[0] expected 1280, got 0; f() -> 0x0500, 0x0500, 0x0a00: val[1] expected 1280, got 0; f() -> 0x0500, 0x0500, 0x0a00:
+- `memoryManagement/static_memory_array_allocation`: 1p/1f — withoutValue() -> 0x0280: expected 640, got 0
+- `memoryManagement/struct_allocation`: 1p/1f — withoutValue() -> 0x60: expected 96, got 0
+- `metaTypes/name_other_contract`: 0p/3f — c() -> 0x20, 1, "C": expected b'C', got ; a() -> 0x20, 1, "A": expected b'A', got ; i() -> 0x20, 1, "I": expected b'I', got 
+- `modifiers/break_in_modifier`: 2p/1f — x() -> 2: expected 2, got 1
+- `modifiers/continue_in_modifier`: 2p/1f — x() -> 5: expected 5, got 1
+- `modifiers/evaluation_order`: 0p/1f — query() -> 0x20, 7, 4, 2, 6, 1, 3, 5, 7: LogicError: Txn GAYJTKMSYGJIH25ZAW4VY2MTL4GDDPQP7CRMYUTDDZ7VDOAIA6NA had error 'loads arg 0 wanted uint64 but
+- `modifiers/function_modifier_calling_functions_in_creation_context`: 0p/1f — getData() -> 0x4300: expected 17152, got 769
+- `modifiers/function_modifier_for_constructor`: 0p/1f — getData() -> 6: expected 6, got 2
+- `modifiers/function_modifier_loop`: 0p/1f — f() -> 10: expected 10, got 1
+- `modifiers/function_modifier_multi_invocation`: 1p/1f — f(bool): true -> 2: expected 2, got 1
+- `modifiers/function_modifier_multi_with_return`: 1p/1f — f(bool): true -> 2: expected 2, got 1
+- `modifiers/function_modifier_multiple_times_local_vars`: 1p/1f — f(uint256): 3 -> 10: LogicError: Txn MABUSZZPRN33M4I4LMJOMC6TXOIURJLU6GW5RLTHNNWXZBU4JDDQ had error 'assert failed pc=157' at PC 157:
+- `modifiers/function_modifier_overriding`: 0p/1f — f() -> false: expected False, got True
+- `modifiers/function_modifier_return_reference`: 0p/1f — f() -> 2, 3: val[0] expected 2, got 0; f() -> 2, 3: val[1] expected 3, got 0
+- `modifiers/function_return_parameter`: 0p/1f — f(uint8): 5 -> 0x00: LogicError: Txn DKBSZBPTB7QCEZID6YNKT6RIB6N7TLVV3ELPOXP7M7DEHQZNSNAQ had error 'cannot compare (uint64 to []byte
+- `modifiers/function_return_parameter_complex`: 2p/5f — f() -> 0x10, 0x20, 0x40: LogicError: Txn AEASEH6IT2EZPPBZNUTEYQPMHTSWQEOUEAHLVXZ2GCWSG23HTIWQ had error 'b== arg 0 wanted bigint but got ; x() -> 1: e
+- `modifiers/modifer_recursive`: 1p/2f — f(uint256): 5 -> 0x0100000000: LogicError: Txn OD5MV7FMW3NYWXVLQ24JK7KMZETLRAJYLGESTQCZICKC3EBEJQKQ had error 'pc=156 dynamic cost budget excee; calle
+- `modifiers/modifier_init_return`: 1p/1f — f(uint256): 9 -> 0x00, 0x00, 0x00, 0x00, 0x00: val[2] expected 0, got 3
+- `modifiers/return_in_modifier`: 2p/1f — x() -> 4: expected 4, got 0
+- `operators/compound_assign_transient_storage`: 1p/7f — f(uint256,uint256): 1, 3 -> 11: expected 11, got 18; f(uint256,uint256): 2, 25 -> 0x3c: expected 60, got 78; f(uint256,uint256): 3, 69 -> 0xdc: expect
+- `revertStrings/calldata_arrays_too_large`: 0p/1f — expected FAILURE but succeeded: f(uint256,uint256[],uint256): 6, 0x60, 9, 0x1000000000000000000000000000000000000000000000000000000000000002, 1, 2 -> 
+- `revertStrings/enum_v2`: 0p/1f — expected FAILURE but succeeded: f(uint8[]): 0x20, 2, 3, 3 -> FAILURE
+- `revertStrings/library_non_view_call`: 0p/1f — f() -> 32, 132, 3963877391197344453575983046348115674221700746820753546331534351508065746944, 86271829334882047342934448278462818155638862152129831939
+- `revertStrings/short_input_array`: 0p/1f — expected FAILURE but succeeded: f(uint256[]): 0x20, 1 -> FAILURE, hex"08c379a0", 0x20, 43, "ABI decoding: invalid calldata a", "rray stride"
+- `revertStrings/short_input_bytes`: 0p/1f — expected FAILURE but succeeded: e(bytes): 0x20, 7 -> FAILURE, hex"08c379a0", 0x20, 39, "ABI decoding: invalid byte array", " length"
+- `reverts/invalid_enum_as_external_arg`: 0p/1f — expected FAILURE but succeeded: test() -> FAILURE, hex"4e487b71", 0x21 # should throw #
+- `reverts/invalid_enum_as_external_ret`: 0p/3f — expected FAILURE but succeeded: test_return() -> FAILURE, hex"4e487b71", 33 # both should throw #; expected FAILURE but succeeded: test_inline_assignm
+- `reverts/invalid_enum_compared`: 1p/2f — expected FAILURE but succeeded: test_eq() -> FAILURE, hex"4e487b71", 33 # both should throw #; expected FAILURE but succeeded: test_neq() -> FAILURE, 
+- `reverts/invalid_enum_stored`: 2p/1f — expected FAILURE but succeeded: test_store() -> FAILURE, hex"4e487b71", 33 # should throw #
+- `reverts/invalid_instruction`: 0p/1f — expected FAILURE but succeeded: f() -> FAILURE
+- `scoping/c99_scoping_activation`: 2p/2f — f() -> 3: expected 3, got 4; h() -> 3, 3, 4: val[0] expected 3, got 4
+- `smoke/bytes_and_strings`: 0p/6f — e(bytes): 32, 3, hex"AB33BB" -> 32, 3, left(0xAB33BB): val[0] expected 32, got 171; e(bytes): 32, 3, hex"AB33BB" -> 32, 3, left(0xAB33BB): val[1] expe
+- `smoke/structs`: 1p/1f — t() -> 0x20, 23, 42, 0x60, 3, "any": expected 4 values, got 3
+- `specialFunctions/abi_encode_with_signature_from_string`: 0p/1f — f() -> 0x40, 0xa0, 0x24, -813742827273327954027712588510533233455028711326166692885570228492575965184, 26959946667150639794667015087019630673637144422
+- `state/block_basefee`: 0p/4f — f() -> 7: expected 7, got 0; g() -> 7: expected 7, got 0; f() -> 7: expected 7, got 0
+- `state/block_blobbasefee`: 0p/4f — f() -> 1: expected 1, got 0; g() -> 1: expected 1, got 0; f() -> 1: expected 1, got 0
+- `state/block_chainid`: 0p/3f — f() -> 1: expected 1, got 19700; f() -> 1: expected 1, got 19700; f() -> 1: expected 1, got 19700
+- `state/block_difficulty`: 0p/3f — f() -> 200000000: expected 200000000, got 0; f() -> 200000000: expected 200000000, got 0; f() -> 200000000: expected 200000000, got 0
+- `state/block_difficulty_post_paris`: 0p/3f — f() -> 0xa86c2e601b6c44eb4848f7d23d9df3113fbcac42041c49cbed5000cb4f118777: expected 761796981163596224134861551739755219356998881055995107282461826636
+- `state/block_gaslimit`: 0p/3f — f() -> 20000000: expected 20000000, got 0; f() -> 20000000: expected 20000000, got 0; f() -> 20000000: expected 20000000, got 0
+- `state/block_number`: 0p/2f — f() -> 2: expected 2, got 15415; f() -> 3: expected 3, got 15416
+- `state/block_prevrandao`: 0p/1f — f() -> 0xa86c2e601b6c44eb4848f7d23d9df3113fbcac42041c49cbed5000cb4f118777: expected 761796981163596224134861551739755219356998881055995107282461826636
+- `state/block_prevrandao_pre_paris`: 0p/1f — f() -> 200000000: expected 200000000, got 0
+- `state/block_timestamp`: 0p/2f — f() -> 0x1e # This is the 2nd block (each block is "15 seconds") #: expected 30, got 1773721115; f() -> 0x2d # This is the 3rd block #: expected 45, g
+- `state/gasleft`: 0p/3f — f() -> true: expected True, got False; f() -> true: expected True, got False; f() -> true: expected True, got False
+- `state/msg_data`: 0p/2f — f() -> 0x20, 4, 17219911917854084299749778639755835327755045716242581057573779540915269926912: expected 1 values, got 4; g(uint256,bool): 1234, true -
+- `state/msg_sender`: 0p/1f — f() -> 0x1212121212121212121212121212120000000012: expected 103164821458651970696730694074090566015747358738, got OSHYZVQIAHCD5I5N3ZRAT35XBJYQW5QKA4UP
+- `state/msg_sig`: 0p/2f — f() -> 0x26121ff000000000000000000000000000000000000000000000000000000000: expected 172199119178540842997497786397558353277550457162425810575737795409
+- `state/tx_gasprice`: 0p/3f — f() -> 3000000000: expected 3000000000, got 0; f() -> 3000000000: expected 3000000000, got 0; f() -> 3000000000: expected 3000000000, got 0
+- `state/tx_origin`: 0p/3f — f() -> 0x9292929292929292929292929292929292929292: expected 836781329609065984540148963045401258312808436370, got OSHYZVQIAHCD5I5N3ZRAT35XBJYQW5QKA4UP
+- `storage/accessors_mapping_for_array`: 2p/2f — data(uint256,uint256): 2, 2 -> 8: ValueError: Unable to find method data(uint256,uint256) in test app.; dynamicData(uint256,uint256): 2, 2 -> 8: Value
+- `storage/chop_sign_bits`: 0p/7f — x(uint256): 0 -> -1: ValueError: Unexpected arg at position 0. x only expects 0 args; x(uint256): 1 -> -2: ValueError: Unexpected arg at position 0. x
+- `storage/complex_accessors`: 0p/4f — to_string_map(uint256): 42 -> "24": ValueError: Unable to find method to_string_map(uint256) in test app.; to_bool_map(uint256): 42 -> false: ValueErr
+- `storage/delete_overlapping_transient_after_storage_array_pop_same_base_type`: 1p/3f — pushArr() ->: LogicError: Txn 5Y3Q3BXLUQOUGXKZCYTOLPAOLZXQNNTQDCNGLTTECGU6B27BJHTQ had error 'Runtime error when executing C (; getArr() -> 1: expecte
+- `storage/mapping_state`: 0p/26f — getVoteCount(address): 0 -> 0: ABIEncodingError: cannot encode the following public key: 0; getVoteCount(address): 1 -> 0: ABIEncodingError: cannot en
+- `storage/mapping_string_key`: 4p/2f — set(string,uint256): 0x40, 8, 3, "abc" ->: TypeError: 'bytes' object cannot be interpreted as an integer; get(string): 0x20, 3, "abc" -> 8: expected 8
+- `storage/packed_storage_signed`: 0p/1f — test() -> -2, 4, -112, 0: LogicError: Txn ALVRHZAAIXG53CA3SEJDAVSJFFXHZAXIDKY2AN5VONQHRTH7MKEA had error '- would result negative' at PC 7
+- `storage/packed_storage_structs_enum`: 0p/1f — test() -> 1: LogicError: Txn BOHFYHEZX3PVR2QQWTRG6I5BMWRLTF2GGL3ISUPVB5L24SOELKCA had error 'extraction start 8 is beyond len
+- `storage/packed_storage_structs_uint`: 0p/1f — test() -> 1: LogicError: Txn Q7PDF4BL26WID5R7I3PYWZRC7GLCVXLBCSDITBDGG7PVU6EQBBJQ had error 'extraction start 8 is beyond len
+- `storage/storage_boundary_array_assignment`: 3p/2f — x() -> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10: val[0] expected 1, got 0; x() -> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10: val[1] expected 2, got 0; x() -> 1, 2, 3, 4, 5, 
+- `storage/struct_accessor`: 0p/1f — data(uint256): 7 -> 1, 2, true: ValueError: Unable to find method data(uint256) in test app.
+- `strings/constant_string_literal`: 1p/5f — b() -> 0x6162636465666768696a6b6c6d6e6f7071000000000000000000000000000000: expected 440481833044867883121484334513633846775616716447861519229631927942
+- `strings/empty_storage_string`: 4p/12f — f() -> 0x20, 0: expected 2 values, got 1; g() -> 0x40, 0x60, 0, 0: expected 4 values, got 2; h() -> 0x40, 0x60, 0, 0x1a, 38178759162904981154304545770
+- `strings/empty_string`: 0p/1f — f() -> 0x20, 0: expected 2 values, got 1
+- `strings/empty_string_input`: 0p/9f — f() -> 0x20, 0: expected 2 values, got 1; g(string): 0x20, 0, "" -> 0x20, 0: expected 2 values, got 1; g(string): 0x20, 0 -> 0x20, 0: expected 2 value
+- `strings/return_string`: 1p/3f — get1() -> 0x20, 5, "Julia": expected b'Julia', got Julia; get2() -> 0x20, 5, "Julia": expected b'Julia', got Julia; s() -> 0x20, 5, "Julia": expected 
+- `strings/string_escapes`: 0p/1f — f() -> 0x090a0d27225c0000000000000000000000000000000000000000000000000000: expected 408857488565607415640927114725768867316488963409248913172918274515
+- `strings/unicode_escapes`: 0p/4f — oneByteUTF8() -> 0x20, 7, "aaa$aaa": expected b'aaa$aaa', got aaa$aaa; twoBytesUTF8() -> 0x20, 8, "aaa\xc2\xa2aaa": expected b'aaa\xc2\xa2aaa', got aa
+- `strings/unicode_string`: 0p/2f — f() -> 0x20, 0x14, "\xf0\x9f\x98\x83, \xf0\x9f\x98\xad, and \xf0\x9f\x98\x88": expected b'\xf0\x9f\x98\x83, \xf0\x9f\x98\xad, and \xf0\x9f\x98\x88', g
+- `structs/memory_structs_read_write`: 1p/2f — testCopyRead() -> 1, 2, 3, 4: LogicError: Txn I7FT5KG52UQ5OJJGK6MRPK3ASZZAGVJOAJVRTGTL272J6UNA4ENA had error 'Runtime error when executing Tes; testAs
+- `structs/msg_data_to_struct_member_copy`: 0p/5f — f() -> 0x20, 0x20, 4, 0x26121ff000000000000000000000000000000000000000000000000000000000: expected 2 values, got 1; g() -> 0x20, 0x20, 4, 0xe2179b8e00
+- `structs/struct_assign_reference_to_struct`: 0p/1f — assign() -> 2, 2, 3, 3: val[3] expected 3, got 2
+- `structs/struct_copy_via_local`: 0p/1f — test() -> true: LogicError: Txn FDVKXIE7LPOODXMC4VQ6EKKL5RHRQMQMNMYHY7RRDZIIYVJ76SOA had error 'extraction start 32 is beyond le
+- `structs/struct_delete_member`: 0p/1f — deleteMember() -> 0: expected 0, got 2
+- `structs/struct_reference`: 0p/3f — check() -> false: LogicError: Txn RDTX2UUYPYEVGPY72WEOQYHWJPKTM2YS6D5MVP273T4BUN3REDXQ had error 'extraction end 8 is beyond lengt; set() ->: LogicErr
+- `structs/struct_referencing`: 2p/7f — f() -> 1: expected 1, got {'a': 1}; g() -> 2: expected 2, got {'a': 2}; f() -> 1: expected 1, got {'a': 1}
+- `tryCatch/assert`: 1p/1f — f(bool): true -> 1: expected 1, got 2
+- `tryCatch/assert_pre_byzantium`: 1p/1f — f(bool): true -> 1: expected 1, got 2
+- `tryCatch/create`: 0p/2f — f() -> false, 0x40, 13, "test message.": LogicError: Txn EVEPTZ6ZEI25GTNCWUVQ6QKVYEWLFK4N74OCIH6FKMZKFGEXBW6Q had error 'len arg 0 wanted []byte but g
+- `tryCatch/invalid_error_encoding`: 11p/5f — expected FAILURE but succeeded: f1b() -> FAILURE, hex"12345678", 0x0, 0, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"; expected 
+- `tryCatch/lowLevel`: 0p/2f — f(bool): true -> 1, 2, 96, 0: LogicError: Txn JTDE27STZKFMI4LG2KHZFJPUU4ZU3HRO46JIGJ2BR6LLKLIW3FWQ had error 'len arg 0 wanted []byte but got ; f(bool
+- `tryCatch/malformed_panic`: 2p/2f — c() -> 0x43: LogicError: Txn O4VA2E73BLDTLR3ZV52FTOKG73GCFUQY4HOD3COMAZ5WHVVOOZMA had error 'err opcode executed' at PC 99:
+
+; d() -> 0x43: LogicError
+- `tryCatch/malformed_panic_2`: 2p/2f — c() -> 0x43: LogicError: Txn W5VLB77J6F64WOEUHBZ5UIYKHMNUG5RE3RQSOLVT4EJ6F5VGZ4FQ had error 'len arg 0 wanted []byte but got ; d() -> 0x43: LogicError
+- `tryCatch/malformed_panic_3`: 2p/2f — c() -> 0x43: LogicError: Txn DLZWL5GWGP2Y62N4AMHMLPK67MBX5HH3IQIBXV5OFM2RITCZKPKQ had error 'err opcode executed' at PC 60:
+
+; d() -> 0x43: LogicError
+- `tryCatch/malformed_panic_4`: 2p/1f — c() -> 0x43: LogicError: Txn WBLV3CRAIFBVJSQGENPEVXPKPLPLPHMPWXMBKKKZMNIS56C32TBQ had error 'err opcode executed' at PC 99:
+
+
+- `tryCatch/nested`: 0p/4f — f(bool,bool): true, true -> 1, 2, 96, 7, "success": LogicError: Txn P6JTZCBRIS7IMUTZM4GMQXSWQ4MBLAYGCD4WHUHKKQH7P3UCOWRQ had error 'len arg 0 wanted [
+- `tryCatch/panic`: 2p/6f — onlyPanic(bool,uint256,uint256): true, 7, 6 -> 1, 0x00: LogicError: Txn UKBVVK2NCLAMQAIMW2EFW2BAJBGFNUBG7LWVAXHHR2CGGEBUVMYA had error 'len arg 0 want
+- `tryCatch/require`: 1p/1f — f(bool): true -> 1: expected 1, got 2
+- `tryCatch/require_pre_byzantium`: 1p/1f — f(bool): true -> 1: expected 1, got 2
+- `tryCatch/return_function`: 0p/1f — f() -> 0x1, 0x1234946644cd0000000000000000, 9: LogicError: Txn PYLHLGJBW2XPGE55JJ4YYBPXESNATFL42Y6OIPAWXCZXCNXKP4TQ had error 'len arg 0 wanted []byte
+- `tryCatch/simple_notuple`: 1p/1f — f(bool): true -> 13: expected 13, got 9
+- `tryCatch/structured`: 0p/2f — f(bool): true -> 1, 2, 0x60, 7, "success": LogicError: Txn T7O7ZTEVKVLDSW7T7U3RP5NV64RZF7AEWKRVNFK5QUHB52SZ4VMQ had error 'len arg 0 wanted []byte but
+- `tryCatch/structuredAndLowLevel`: 0p/2f — f(bool): true -> 1, 2, 96, 7, "success": LogicError: Txn 2COOEUUYBT5LLFB2JZMKONM7UNV5CZH6U6RW3NGCBXM5LBSP5E6A had error 'len arg 0 wanted []byte but g
+- `tryCatch/try_catch_library_call`: 0p/4f — f(bool): true -> 8, 0x40, 0: LogicError: Txn RM5TLIWAM5IJYF4L4HDJIFNGLWMNG4TJAMDCCWX5HO7SZ5HNIZLQ had error 'len arg 0 wanted []byte but got ; f(bool)
+- `types/mapping_contract_key`: 0p/15f — get(address): 0 -> 0: ABIEncodingError: cannot encode the following public key: 0; get(address): 0x01 -> 0: ABIEncodingError: cannot encode the follow
+- `types/packing_signed_types`: 0p/1f — run() -> 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa: expected 1157920892373161954235709850086879078532699846656405640394575840
+- `uninitializedFunctionPointer/uninitialized_internal_storage_function_legacy`: 0p/1f — f() -> true: LogicError: Txn X465YZ7UAUBMBL6RQH74TDWMEIDJCM3FNDMJYHGP2ORUUXHEZTZQ had error 'assert failed pc=48' at PC 48:
+
+
+- `userDefinedValueType/assembly_access_bytes2_abicoder_v2`: 0p/6f — f(bytes2): "ab" -> 0x6162000000000000000000000000000000000000000000000000000000000000: expected 440474973249251213365116066935209585995791735491091806
+- `userDefinedValueType/calldata_to_storage`: 0p/8f — s() -> 0, 0, 0x00, 0: expected 4 values, got 1; s() -> 1, 0xff, 0x6162000000000000000000000000000000000000000000000000000000000000, 15: expected 4 val
+- `userDefinedValueType/cleanup`: 1p/4f — ret() -> 0xff: expected 255, got 511; expected FAILURE but succeeded: f(uint8): 0x1ff -> FAILURE; mem() -> 0x20, 2, 0xff, 0xff: LogicError: Txn 5XSEJM
+- `userDefinedValueType/conversion`: 19p/5f — g(uint256): 255 -> -1: expected 115792089237316195423570985008687907853269984665640564039457584007913129639935, got 255; h(uint8): 255 -> -1: expected
+- `userDefinedValueType/dirty_uint8_read`: 1p/2f — x() -> -5: expected 115792089237316195423570985008687907853269984665640564039457584007913129639931, got 18446744073709551611; read_unclean_value() -> 
+- `variables/mapping_local_assignment`: 0p/1f — f() -> 42, 0, 0, 21: val[0] expected 42, got 0; f() -> 42, 0, 0, 21: val[3] expected 21, got 0
+- `variables/mapping_local_compound_assignment`: 0p/1f — f() -> 42, 0, 0, 21: val[0] expected 42, got 0; f() -> 42, 0, 0, 21: val[3] expected 21, got 0
+- `variables/mapping_local_tuple_assignment`: 0p/1f — f() -> 42, 0, 0, 21: val[0] expected 42, got 0; f() -> 42, 0, 0, 21: val[3] expected 21, got 0
+- `variables/public_state_overridding_dynamic_struct`: 0p/3f — test() -> 0, 64, 0: expected 3 values, got 1; set() ->: LogicError: Txn CNYQT4PHHNEKTMUPZS2N2BBYXLRQQ4J2KBRGM2GJVJWTDLGK6VHQ had error 'extraction sta
+- `variables/public_state_overridding_mapping_to_dynamic_struct`: 1p/4f — test(uint256): 0 -> 0, 64, 0: expected 3 values, got 2; test(uint256): 42 -> 0, 64, 0: expected 3 values, got 2; test(uint256): 0 -> 0, 64, 0: expecte
+- `variables/transient_state_address_variable_members`: 1p/2f — constructor() ->: ValueError: Unable to find method constructor() in C app.; f() -> 1267650600228229401496703205376: expected 126765060022822940149670
+- `variables/transient_state_variable`: 2p/1f — h() -> 0: expected 0, got 8
+- `variables/transient_state_variable_cleanup_assignment`: 0p/1f — f() -> 0xff: expected 255, got 0
+- `variables/transient_state_variable_cleanup_tstore`: 0p/1f — f() -> 0xff: expected 255, got 0
+- `variables/transient_state_variable_slot_inline_assembly`: 0p/3f — f() -> 0, 0: LogicError: Txn BAOZCJE22BXOEYKMWSZBIEJNF37XWRTTMS6J7DSSZMAQLDEJIAIA had error 'len arg 0 wanted []byte but got ; g() -> 1, 0: LogicError
+- `variables/transient_state_variable_udvt`: 2p/1f — h() -> 0: expected 0, got 2
+- `various/code_access_create`: 0p/1f — test() -> 7: LogicError: Txn HHQUQTWXZJ4TG5BDYUTM2ZVVUMLLOJFL6TNFCGCX5DTWOSWCRMCA had error 'unavailable App 0' at PC 49:
+
+Co
+- `various/codehash`: 0p/3f — f() -> 0x0: expected 0, got None; g() -> 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470: expected 89477152217924674838424037953991
+- `various/codehash_assembly`: 0p/3f — f() -> 0: expected 0, got None; g() -> 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470: expected 8947715221792467483842403795399196
+- `various/crazy_elementary_typenames_on_stack`: 0p/1f — f() -> -7: expected 115792089237316195423570985008687907853269984665640564039457584007913129639929, got 18446744073709551609
+- `various/erc20`: 2p/4f — totalSupply() -> 20: expected 20, got 0; transfer(address,uint256): 2, 5 -> true: ABIEncodingError: cannot encode the following public key: 2; decreas
+- `various/gasleft_decrease`: 0p/2f — f() -> true: LogicError: Txn JKSCMXTCJLFMK6AYEWCUVVO37ZVFBHY3EQFLYF65D33UCKL6RMTA had error 'assert failed pc=67' at PC 67:
+
+; g() -> true: LogicError
+- `various/iszero_bnot_correct`: 0p/1f — f() -> true: expected True, got False
+- `various/literal_empty_string`: 3p/2f — x() -> 0: expected 0, got None; x() -> 0: expected 0, got None
+- `various/state_variable_local_variable_mixture`: 0p/1f — a() -> 2: expected 2, got 0
+- `various/state_variable_under_contract_name`: 0p/1f — getStateVar() -> 42: expected 42, got 0
+- `various/store_bytes`: 1p/1f — save(): "abcdefg" -> 24: ValueError: Unexpected arg at position 0. save only expects 0 args
+- `various/string_tuples`: 0p/2f — f() -> 0x40, 0x8, 0x3, "abc": expected 4 values, got 2; g() -> 0x40, 0x80, 0x3, "abc", 0x3, "def": expected 6 values, got 2
+- `various/super`: 0p/1f — f() -> 15: expected 15, got 13
+- `various/swap_in_storage_overwrite`: 1p/7f — x() -> 0, 0: expected 2 values, got 1; y() -> 0, 0: expected 2 values, got 1; set() ->: LogicError: Txn FJABDDUMYWOGMMVM4HHIYALF26L3KPFKJBKJE2K2F36OJN
+- `various/transient_storage_reentrancy_lock`: 1p/1f — test(address,bool): 0x1234abcd, false ->: ABIEncodingError: cannot encode the following public key: 305441741
+- `viaYul/exp_literals`: 13p/3f — exp_minus_2(uint256): 255 -> -57896044618658097711785492504343953926634992332820282019728792003956564819968: LogicError: Txn AAS5JDBNOIYLAXFYWTJGT2UQF
+- `viaYul/exp_literals_success`: 5p/3f — exp_minus_2(uint256): 255 -> -57896044618658097711785492504343953926634992332820282019728792003956564819968: LogicError: Txn KH5BWW2FHMIRYZI3SHOPOB73J
+- `viaYul/exp_neg`: 16p/9f — f(int256,uint256): -1, 2 -> 1: LogicError: Txn CZ2W5NAZX2QXXL4BPPHCHWKMC2JHUZSRSNE77433S5FIY4KUDMGQ had error 'Runtime error when executing C (; f(int
+- `viaYul/exp_neg_overflow`: 12p/15f — expected FAILURE but succeeded: f(int8,uint256): 2, 7 -> FAILURE, hex"4e487b71", 0x11; expected FAILURE but succeeded: f(int8,uint256): 2, 8 -> FAILUR
+- `viaYul/exp_overflow`: 17p/3f — expected FAILURE but succeeded: f(uint8,uint8): 2, 8 -> FAILURE, hex"4e487b71", 0x11; expected FAILURE but succeeded: f(uint8,uint8): 7, 3 -> FAILURE,
+- `viaYul/exp_various`: 38p/1f — f(uint8,uint8): 0, 0 -> 1: LogicError: Txn NYVACW22273BZGQEK55OA2KGOEZIHTTR7FVYPSD5Z46CGQKVK7VQ had error '0^0 is undefined' at PC 70:
+
+Cou
+- `viaYul/function_selector`: 0p/2f — f() -> left(0x26121ff0): expected 17219911917854084299749778639755835327755045716242581057573779540915269926912, got None; h(function): left(0x1122334
+- `viaYul/if`: 10p/8f — f(bool): 0 -> 23: AssertionError: ; f(bool): 1 -> 42: AssertionError: ; g(bool): 0 -> 23: AssertionError: 
+- `viaYul/local_address_assignment`: 0p/1f — f(address): 0x1234 -> 0x1234: ABIEncodingError: cannot encode the following public key: 4660
+- `viaYul/mapping_enum_key_getter`: 7p/8f — table(uint8): 0 -> 0: ValueError: Unable to find method table(uint8) in test app.; table(uint8): 0x01 -> 0: ValueError: Unable to find method table(ui
+- `viaYul/mapping_getters`: 3p/22f — m1(uint256): 0 -> 0: ValueError: Unable to find method m1(uint256) in test app.; m1(uint256): 0x01 -> 0: ValueError: Unable to find method m1(uint256)
+- `viaYul/msg_sender`: 0p/1f — test() -> true: expected True, got False
+- `viaYul/return_and_convert`: 0p/1f — f() -> 255: expected 255, got 65535
+- `viaYul/string_format`: 0p/4f — f1() -> 0x20, 6, left(0x616263616263): val[0] expected 44048183223289611137250926962991089666271138343950476542604378359713715191808, got abcabc; f2()
+- `viaYul/string_literals`: 0p/6f — short_dyn() -> 0x20, 3, "abc": expected b'abc', got abc; long_dyn() -> 0x20, 80, "12345678901234567890123456789012", "34567890123456789012345678901234
+- `viaYul/tuple_evaluation_order`: 0p/1f — f() -> 3, 1: LogicError: Txn QRVDC7CZKAX23HNJ6UIX4FNNOAT774DNRWSETSDHZKAFHHY73SCA had error 'assert failed pc=96' at PC 96:
+
+
+- `viaYul/unary_fixedbytes`: 2p/13f — conv(bytes25): left(0xff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff) -> 0xff00ff00ff00ff00ff00ff00ff00ff00ffffffffffffffffffffffffffffffff: TypeE
+- `viaYul/unary_operations`: 23p/26f — expected FAILURE but succeeded: preincr_s8(int8): 128 -> FAILURE; expected FAILURE but succeeded: postincr_s8(int8): 128 -> FAILURE; expected FAILURE 
+
+## Tests That COMPILE but FAIL to Deploy
+
+- `constructor/bytes_in_constructors_unpacker`
+- `deployedCodeExclusion/bound_function`
+- `deployedCodeExclusion/library_function`
+- `deployedCodeExclusion/static_base_function`
+- `deployedCodeExclusion/super_function`
+- `deployedCodeExclusion/virtual_function`
+- `inheritance/constructor_with_params`
+- `inheritance/constructor_with_params_diamond_inheritance`
+- `inheritance/constructor_with_params_inheritance`
+- `structs/struct_constructor_nested`
+- `types/struct_mapping_abstract_constructor_param`
+- `various/code_length`
+- `various/create_calldata`
+
+## Tests That FAIL to Compile
+
+- `abiEncodeDecode/abi_encode_call_memory`: no deployable contracts
+- `abiEncodeDecode/abi_encode_call_special_args`: no deployable contracts
+- `abiEncodeDecode/abi_encode_call_uint_bytes`: no deployable contracts
+- `abiEncodeDecode/abi_encode_with_selectorv2`: no deployable contracts
+- `abiEncodeDecode/abi_encode_with_signaturev2`: no deployable contracts
+- `abiEncoderV1/abi_encode`: no deployable contracts
+- `abiEncoderV1/abi_encode_calldata_slice`: no deployable contracts
+- `abiEncoderV2/abi_encode_calldata_slice`: no deployable contracts
+- `abiEncoderV2/abi_encode_v2`: no deployable contracts
+- `abiEncoderV2/calldata_array`: no deployable contracts
+- `abiEncoderV2/calldata_array_dynamic`: no deployable contracts
+- `abiEncoderV2/calldata_array_dynamic_index_access`: no deployable contracts
+- `abiEncoderV2/calldata_array_dynamic_static_dynamic`: no deployable contracts
+- `abiEncoderV2/calldata_array_dynamic_static_short_decode`: no deployable contracts
+- `abiEncoderV2/calldata_array_dynamic_static_short_reencode`: no deployable contracts
+- `abiEncoderV2/calldata_array_function_types`: no deployable contracts
+- `abiEncoderV2/calldata_array_multi_dynamic`: no deployable contracts
+- `abiEncoderV2/calldata_array_static_dynamic_static`: no deployable contracts
+- `abiEncoderV2/calldata_dynamic_array_to_memory`: no deployable contracts
+- `abiEncoderV2/calldata_nested_array_reencode`: no deployable contracts
+- `abiEncoderV2/calldata_nested_array_static_reencode`: no deployable contracts
+- `abiEncoderV2/calldata_overlapped_nested_dynamic_arrays`: no deployable contracts
+- `abiEncoderV2/calldata_three_dimensional_dynamic_array_index_access`: no deployable contracts
+- `abiEncoderV2/dynamic_nested_arrays`: no deployable contracts
+- `abiEncoderV2/memory_dynamic_array_and_calldata_bytes`: no deployable contracts
+- `abiEncoderV2/storage_array_encoding`: no deployable contracts
+- `array/array_2d_assignment`: no deployable contracts
+- `array/array_2d_new`: no deployable contracts
+- `array/array_3d_assignment`: no deployable contracts
+- `array/array_3d_new`: no deployable contracts
+- `array/array_function_pointers`: no deployable contracts
+- `array/array_push_return_reference`: no deployable contracts
+- `array/byte_array_storage_layout`: no deployable contracts
+- `array/byte_array_transitional_2`: no deployable contracts
+- `array/calldata_array_as_argument_internal_function`: no deployable contracts
+- `array/calldata_array_dynamic_invalid`: no deployable contracts
+- `array/calldata_array_dynamic_invalid_static_middle`: no deployable contracts
+- `array/calldata_array_two_dimensional`: no deployable contracts
+- `array/calldata_array_two_dimensional_1`: no deployable contracts
+- `array/calldata_slice_access`: no deployable contracts
+- `array/constant_var_as_array_length`: no deployable contracts
+- `array/create_dynamic_array_with_zero_length`: no deployable contracts
+- `array/create_memory_array`: no deployable contracts
+- `array/create_multiple_dynamic_arrays`: no deployable contracts
+- `array/dynamic_array_cleanup`: no deployable contracts
+- `array/dynamic_arrays_in_storage`: no deployable contracts
+- `array/dynamic_multi_array_cleanup`: no deployable contracts
+- `array/fixed_array_cleanup`: no deployable contracts
+- `array/fixed_arrays_as_return_type`: no deployable contracts
+- `array/fixed_arrays_in_constructors`: no deployable contracts
+- `array/fixed_bytes_length_access`: no deployable contracts
+- `array/function_array_cross_calls`: no deployable contracts
+- `array/function_memory_array`: no deployable contracts
+- `array/inline_array_return`: no deployable contracts
+- `array/inline_array_storage_to_memory_conversion_strings`: no deployable contracts
+- `array/inline_array_strings_from_document`: no deployable contracts
+- `array/invalid_encoding_for_storage_byte_array`: no deployable contracts
+- `array/long_byte_array_cleanup_after_delete`: no deployable contracts
+- `array/long_byte_array_cleanup_after_overwrite_with_long`: no deployable contracts
+- `array/memory_arrays_of_various_sizes`: no deployable contracts
+- `array/nested_calldata_storage`: no deployable contracts
+- `array/nested_calldata_storage2`: no deployable contracts
+- `array/reusing_memory`: no deployable contracts
+- `array/short_fixed_array_cleanup`: no deployable contracts
+- `array/string_allocation_bug`: no deployable contracts
+- `array/string_literal_assign_to_storage_bytes`: no deployable contracts
+- `builtinFunctions/blobhash`: no deployable contracts
+- `builtinFunctions/blockhash`: no deployable contracts
+- `builtinFunctions/erc7201_equivalent_solidity_spec`: no deployable contracts
+- `builtinFunctions/erc7201_equivalent_solidity_spec_comptime`: no deployable contracts
+- `builtinFunctions/erc7201_layout_specifier_slot_match_comptime`: no deployable contracts
+- `builtinFunctions/erc7201_overflow_expression`: no deployable contracts
+- `builtinFunctions/erc7201_param_abi_encode`: no deployable contracts
+- `builtinFunctions/erc7201_param_array_string_literal`: no deployable contracts
+- `builtinFunctions/erc7201_param_locations`: no deployable contracts
+- `builtinFunctions/erc7201_param_pure_function`: no deployable contracts
+- `builtinFunctions/erc7201_param_string_concat`: no deployable contracts
+- `builtinFunctions/erc7201_param_string_literal_with_escaped_chars`: no deployable contracts
+- `builtinFunctions/erc7201_param_ternary_operator`: no deployable contracts
+- `builtinFunctions/erc7201_param_unicode_string_literal`: no deployable contracts
+- `builtinFunctions/erc7201_param_unicode_string_variable`: no deployable contracts
+- `builtinFunctions/erc7201_param_with_zero_last_byte_of_inner_hash`: no deployable contracts
+- `builtinFunctions/erc7201_param_with_zero_last_byte_of_inner_hash_comptime`: no deployable contracts
+- `builtinFunctions/iterated_keccak256_with_bytes`: no deployable contracts
+- `builtinFunctions/keccak256_packed_complex_types`: no deployable contracts
+- `builtinFunctions/keccak256_with_bytes`: no deployable contracts
+- `builtinFunctions/ripemd160`: no deployable contracts
+- `builtinFunctions/ripemd160_empty`: no deployable contracts
+- `builtinFunctions/ripemd160_packed`: no deployable contracts
+- `calldata/calldata_array_access`: no deployable contracts
+- `calldata/calldata_array_dynamic_bytes`: no deployable contracts
+- `calldata/calldata_array_index_range_access`: no deployable contracts
+- `calldata/calldata_array_length`: no deployable contracts
+- `calldata/calldata_array_three_dimensional`: no deployable contracts
+- `calldata/calldata_attached_to_dynamic_array_or_slice`: no deployable contracts
+- `calldata/calldata_internal_function_pointer`: no deployable contracts
+- `calldata/calldata_internal_library`: no deployable contracts
+- `calldata/calldata_internal_multi_array`: no deployable contracts
+- `calldata/calldata_internal_multi_fixed_array`: no deployable contracts
+- `calldata/calldata_memory_mixed`: no deployable contracts
+- `calldata/calldata_string_array`: no deployable contracts
+- `cleanup/cleanup_bytes_types_shortening_OldCodeGen`: no deployable contracts
+- `cleanup/cleanup_bytes_types_shortening_newCodeGen`: no deployable contracts
+- `cleanup/exp_cleanup_nonzero_base`: no deployable contracts
+- `cleanup/exp_cleanup_smaller_base`: no deployable contracts
+- `constants/constant_string_at_file_level`: no deployable contracts
+- `constants/constant_variables`: no deployable contracts
+- `constants/constants_at_file_level_referencing`: no deployable contracts
+- `constants/same_constants_different_files`: no deployable contracts
+- `constructor/arrays_in_constructors`: no deployable contracts
+- `constructor/bytes_in_constructors_packer`: no deployable contracts
+- `constructor/constructor_arguments_external`: no deployable contracts
+- `constructor/constructor_arguments_internal`: no deployable contracts
+- `constructor/constructor_function_argument`: no deployable contracts
+- `constructor/constructor_function_complex`: no deployable contracts
+- `constructor/constructor_static_array_argument`: no deployable contracts
+- `constructor/evm_exceptions_in_constructor_call_fail`: no deployable contracts
+- `constructor/functions_called_by_constructor_through_dispatch`: no deployable contracts
+- `constructor/store_function_in_constructor`: no deployable contracts
+- `constructor/store_function_in_constructor_packed`: no deployable contracts
+- `constructor/store_internal_unused_function_in_constructor`: no deployable contracts
+- `constructor/store_internal_unused_library_function_in_constructor`: no deployable contracts
+- `conversions/function_type_array_to_storage`: no deployable contracts
+- `deployedCodeExclusion/library_function_deployed`: no deployable contracts
+- `deployedCodeExclusion/module_function`: no deployable contracts
+- `deployedCodeExclusion/module_function_deployed`: no deployable contracts
+- `deployedCodeExclusion/static_base_function_deployed`: no deployable contracts
+- `deployedCodeExclusion/subassembly_deduplication`: no deployable contracts
+- `deployedCodeExclusion/super_function_deployed`: no deployable contracts
+- `deployedCodeExclusion/virtual_function_deployed`: no deployable contracts
+- `errors/error_throw_from_module_via_member_access`: no deployable contracts
+- `errors/panic_via_import`: no deployable contracts
+- `errors/small_error_optimization`: no deployable contracts
+- `errors/via_import`: no deployable contracts
+- `events/emit_three_identical_events`: no deployable contracts
+- `events/emit_two_identical_events`: no deployable contracts
+- `events/event_access_through_base_name_emit`: no deployable contracts
+- `events/event_anonymous`: no deployable contracts
+- `events/event_dynamic_nested_array_memory_v2`: no deployable contracts
+- `events/event_dynamic_nested_array_storage_v2`: no deployable contracts
+- `events/event_emit_from_a_foreign_contract`: no deployable contracts
+- `events/event_emit_from_module_via_member_access`: no deployable contracts
+- `events/event_emit_interface_event_via_library`: no deployable contracts
+- `events/event_indexed_string`: no deployable contracts
+- `events/event_no_arguments`: no deployable contracts
+- `events/event_really_lots_of_data_from_storage`: no deployable contracts
+- `events/event_really_really_lots_of_data_from_storage`: no deployable contracts
+- `events/events_with_same_name`: no deployable contracts
+- `events/events_with_same_name_file_level`: no deployable contracts
+- `events/events_with_same_name_inherited_emit`: no deployable contracts
+- `events/simple`: no deployable contracts
+- `exponentiation/signed_base`: no deployable contracts
+- `exponentiation/small_exp`: no deployable contracts
+- `expressions/conditional_expression_functions`: no deployable contracts
+- `expressions/conditional_expression_tuples`: no deployable contracts
+- `expressions/exp_operator_const_signed`: no deployable contracts
+- `expressions/module_from_ternary_expression`: no deployable contracts
+- `externalContracts/base64`: no deployable contracts
+- `externalContracts/prbmath_signed`: no deployable contracts
+- `externalContracts/prbmath_unsigned`: no deployable contracts
+- `externalContracts/ramanujan_pi`: no deployable contracts
+- `externalContracts/strings`: no deployable contracts
+- `freeFunctions/import`: no deployable contracts
+- `freeFunctions/new_operator`: no deployable contracts
+- `functionCall/call_attached_library_function_on_function`: no deployable contracts
+- `functionCall/call_attached_library_function_on_storage_variable`: no deployable contracts
+- `functionCall/call_attached_library_function_on_string`: no deployable contracts
+- `functionCall/call_function_returning_function`: no deployable contracts
+- `functionCall/call_internal_function_via_expression`: no deployable contracts
+- `functionCall/call_internal_function_with_multislot_arguments_via_pointer`: no deployable contracts
+- `functionCall/calling_nonexisting_contract_throws`: no deployable contracts
+- `functionCall/calling_uninitialized_function_through_array`: no deployable contracts
+- `functionCall/conditional_with_arguments`: no deployable contracts
+- `functionCall/creation_function_call_no_args`: no deployable contracts
+- `functionCall/creation_function_call_with_args`: no deployable contracts
+- `functionCall/creation_function_call_with_salt`: no deployable contracts
+- `functionCall/external_call_at_construction_time`: no deployable contracts
+- `functionCall/external_call_dynamic_returndata`: no deployable contracts
+- `functionCall/file_level_call_via_module`: no deployable contracts
+- `functionCall/mapping_array_internal_argument`: no deployable contracts
+- `functionCall/member_accessors`: no deployable contracts
+- `functionCall/return_size_bigger_than_expected`: no deployable contracts
+- `functionCall/return_size_shorter_than_expected`: no deployable contracts
+- `functionCall/return_size_shorter_than_expected_evm_version_after_homestead`: no deployable contracts
+- `functionTypes/address_member`: no deployable contracts
+- `functionTypes/call_to_zero_initialized_function_type_ir`: no deployable contracts
+- `functionTypes/call_to_zero_initialized_function_type_legacy`: no deployable contracts
+- `functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type`: no deployable contracts
+- `functionTypes/function_delete_storage`: no deployable contracts
+- `functionTypes/function_type_library_internal`: no deployable contracts
+- `functionTypes/mapping_of_functions`: no deployable contracts
+- `functionTypes/pass_function_types_externally`: no deployable contracts
+- `functionTypes/pass_function_types_internally`: no deployable contracts
+- `functionTypes/selector_ternary_function_pointer_from_function_call`: no deployable contracts
+- `functionTypes/store_function`: no deployable contracts
+- `functionTypes/struct_with_external_function`: no deployable contracts
+- `functionTypes/struct_with_functions`: no deployable contracts
+- `functionTypes/ternary_contract_internal_function`: no deployable contracts
+- `functionTypes/ternary_contract_library_internal_function`: no deployable contracts
+- `functionTypes/ternary_contract_public_function`: no deployable contracts
+- `getters/array_mapping_struct`: no deployable contracts
+- `getters/arrays`: no deployable contracts
+- `getters/mapping_array_struct`: no deployable contracts
+- `getters/string_and_bytes`: no deployable contracts
+- `getters/struct_with_bytes`: no deployable contracts
+- `getters/struct_with_bytes_simple`: no deployable contracts
+- `immutable/delete`: no deployable contracts
+- `immutable/increment_decrement`: no deployable contracts
+- `immutable/internal_function_pointer`: no deployable contracts
+- `immutable/multi_creation`: no deployable contracts
+- `immutable/multiple_initializations`: no deployable contracts
+- `inheritance/address_overload_resolution`: no deployable contracts
+- `inheritance/base_access_to_function_type_variables`: no deployable contracts
+- `inheritance/inherited_function_calldata_calldata_interface`: no deployable contracts
+- `inheritance/inherited_function_calldata_memory`: no deployable contracts
+- `inheritance/inherited_function_calldata_memory_interface`: no deployable contracts
+- `inheritance/inherited_function_through_dispatch`: no deployable contracts
+- `inheritance/member_notation_ctor`: no deployable contracts
+- `inheritance/super_in_constructor_assignment`: no deployable contracts
+- `inlineAssembly/basefee_berlin_function`: no deployable contracts
+- `inlineAssembly/blobbasefee_shanghai_function`: no deployable contracts
+- `inlineAssembly/blobhash_pre_cancun`: no deployable contracts
+- `inlineAssembly/calldata_array_assign_dynamic`: no deployable contracts
+- `inlineAssembly/calldata_array_assign_static`: no deployable contracts
+- `inlineAssembly/clz`: no deployable contracts
+- `inlineAssembly/constant_access`: no deployable contracts
+- `inlineAssembly/difficulty`: no deployable contracts
+- `inlineAssembly/inline_assembly_embedded_function_call`: no deployable contracts
+- `inlineAssembly/inline_assembly_function_call`: no deployable contracts
+- `inlineAssembly/inline_assembly_function_call2`: no deployable contracts
+- `inlineAssembly/inline_assembly_function_call_assignment`: no deployable contracts
+- `inlineAssembly/inline_assembly_memory_access`: no deployable contracts
+- `inlineAssembly/inline_assembly_write_to_stack`: no deployable contracts
+- `inlineAssembly/mcopy_as_identifier_pre_cancun`: no deployable contracts
+- `inlineAssembly/slot_access`: no deployable contracts
+- `inlineAssembly/tload_tstore_not_reserved_before_cancun`: no deployable contracts
+- `inlineAssembly/transient_storage_creation`: no deployable contracts
+- `inlineAssembly/transient_storage_multiple_calls_different_transactions`: no deployable contracts
+- `inlineAssembly/transient_storage_multiple_transactions`: no deployable contracts
+- `inlineAssembly/transient_storage_reset_between_creation_runtime`: no deployable contracts
+- `inlineAssembly/transient_storage_sanity_checks`: no deployable contracts
+- `integer/int`: no deployable contracts
+- `isoltestTesting/empty_contract`: no deployable contracts
+- `libraries/external_call_with_function_pointer_parameter`: no deployable contracts
+- `libraries/external_call_with_storage_array_parameter`: no deployable contracts
+- `libraries/external_call_with_storage_mapping_parameter`: no deployable contracts
+- `libraries/internal_call_attached_with_parentheses`: no deployable contracts
+- `libraries/internal_call_unattached_with_parentheses`: no deployable contracts
+- `libraries/internal_library_function_attached_to_array_named_pop_push`: no deployable contracts
+- `libraries/internal_library_function_attached_to_contract`: no deployable contracts
+- `libraries/internal_library_function_attached_to_external_function_type`: no deployable contracts
+- `libraries/internal_library_function_attached_to_interface`: no deployable contracts
+- `libraries/internal_library_function_attached_to_internal_function_type`: no deployable contracts
+- `libraries/internal_library_function_attached_to_internal_function_type_named_selector`: no deployable contracts
+- `libraries/internal_library_function_pointer`: no deployable contracts
+- `libraries/library_references_preserve`: no deployable contracts
+- `libraries/mapping_arguments_in_library`: no deployable contracts
+- `libraries/mapping_returns_in_library_named`: no deployable contracts
+- `libraries/using_for_by_name`: no deployable contracts
+- `libraries/using_for_overload`: no deployable contracts
+- `libraries/using_library_mappings_public`: no deployable contracts
+- `libraries/using_library_structs`: no deployable contracts
+- `literals/hex_string_with_non_printable_characters`: no deployable contracts
+- `modifiers/access_through_module_name`: no deployable contracts
+- `modifiers/function_modifier_empty`: no deployable contracts
+- `modifiers/function_modifier_library`: no deployable contracts
+- `modifiers/function_modifier_library_inheritance`: no deployable contracts
+- `modifiers/function_modifier_local_variables`: no deployable contracts
+- `modifiers/modifier_in_constructor_ice`: no deployable contracts
+- `modifiers/modifiers_in_construction_context`: no deployable contracts
+- `modifiers/stacked_return_with_modifiers`: no deployable contracts
+- `multiSource/circular_import`: no deployable contracts
+- `multiSource/circular_import_2`: no deployable contracts
+- `multiSource/circular_reimport`: no deployable contracts
+- `multiSource/circular_reimport_2`: no deployable contracts
+- `multiSource/free_different_interger_types`: no deployable contracts
+- `multiSource/free_function_resolution_base_contract`: no deployable contracts
+- `multiSource/free_function_resolution_override_virtual`: no deployable contracts
+- `multiSource/free_function_resolution_override_virtual_super`: no deployable contracts
+- `multiSource/free_function_resolution_override_virtual_transitive`: no deployable contracts
+- `multiSource/free_function_transitive_import`: no deployable contracts
+- `multiSource/import`: no deployable contracts
+- `multiSource/import_overloaded_function`: no deployable contracts
+- `multiSource/imported_free_function_via_alias`: no deployable contracts
+- `multiSource/imported_free_function_via_alias_direct_call`: no deployable contracts
+- `multiSource/reimport_imported_function`: no deployable contracts
+- `optimizer/unused_store_storage_removal_bug`: no deployable contracts
+- `revertStrings/array_slices`: no deployable contracts
+- `revertStrings/bubble`: no deployable contracts
+- `revertStrings/calldata_array_dynamic_invalid`: no deployable contracts
+- `revertStrings/calldata_array_dynamic_static_short_decode`: no deployable contracts
+- `revertStrings/calldata_array_dynamic_static_short_reencode`: no deployable contracts
+- `revertStrings/calldata_array_invalid_length`: no deployable contracts
+- `revertStrings/calldata_tail_short`: no deployable contracts
+- `revertStrings/called_contract_has_code`: no deployable contracts
+- `saltedCreate/prediction_example`: no deployable contracts
+- `saltedCreate/salted_create`: no deployable contracts
+- `shanghai/evmone_support`: no deployable contracts
+- `smoke/alignment`: no deployable contracts
+- `smoke/arrays`: no deployable contracts
+- `state/blobhash`: no deployable contracts
+- `state/blockhash_basic`: no deployable contracts
+- `state/uncalled_blobhash`: no deployable contracts
+- `state/uncalled_blockhash`: no deployable contracts
+- `statements/do_while_loop_continue`: no deployable contracts
+- `storage/array_accessor`: no deployable contracts
+- `storage/delete_overlapping_transient_after_storage_array_delete_different_base_type`: no deployable contracts
+- `storage/delete_overlapping_transient_after_storage_struct_delete_same_value_type`: no deployable contracts
+- `storage/delete_overlapping_transient_before_storage_array_delete_different_base_type`: no deployable contracts
+- `storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type`: no deployable contracts
+- `storage/delete_overlapping_transient_before_storage_struct_delete_same_value_type`: no deployable contracts
+- `storage/mappings_array2d_pop_delete`: no deployable contracts
+- `storage/mappings_array_pop_delete`: no deployable contracts
+- `storage/packed_functions`: no deployable contracts
+- `storage/packed_storage_structs_bytes`: no deployable contracts
+- `storage/static_array_copy_cleanup`: no deployable contracts
+- `storage/storage_boundary_array_and_partial_assignment_with_layout`: no deployable contracts
+- `storage/storage_boundary_array_copy`: no deployable contracts
+- `storage/storage_boundary_array_delete`: no deployable contracts
+- `storage/storage_boundary_array_delete_overlapping_variable`: no deployable contracts
+- `storage/storage_boundary_array_packing_not_overlapping_variable`: no deployable contracts
+- `storage/storage_boundary_array_partial_assignment`: no deployable contracts
+- `storage/storage_boundary_delete_overflow_bug`: no deployable contracts
+- `storage/storage_boundary_packed_array`: no deployable contracts
+- `storage/storage_boundary_struct_array_mixed_types`: no deployable contracts
+- `storage/storage_boundary_struct_array_multislot`: no deployable contracts
+- `storage/storage_boundary_struct_array_packed`: no deployable contracts
+- `storage/storage_packed_array_copy`: no deployable contracts
+- `storageLayoutSpecifier/base_slot_max_value`: no deployable contracts
+- `storageLayoutSpecifier/constructor`: no deployable contracts
+- `storageLayoutSpecifier/delete`: no deployable contracts
+- `storageLayoutSpecifier/delete_transient_storage`: no deployable contracts
+- `storageLayoutSpecifier/dynamic_array_storage_end`: no deployable contracts
+- `storageLayoutSpecifier/function_from_base_contract`: no deployable contracts
+- `storageLayoutSpecifier/getters`: no deployable contracts
+- `storageLayoutSpecifier/inheritance_from_abstract_contract`: no deployable contracts
+- `storageLayoutSpecifier/inheritance_from_interface`: no deployable contracts
+- `storageLayoutSpecifier/inheritance_from_same_base_state_var_slots`: no deployable contracts
+- `storageLayoutSpecifier/inheritance_simple`: no deployable contracts
+- `storageLayoutSpecifier/inheritance_state_variable_slot_offset`: no deployable contracts
+- `storageLayoutSpecifier/inline_assembly_direct_load`: no deployable contracts
+- `storageLayoutSpecifier/inline_assembly_direct_store`: no deployable contracts
+- `storageLayoutSpecifier/last_allowed_storage_slot`: no deployable contracts
+- `storageLayoutSpecifier/mapping_storage_end`: no deployable contracts
+- `storageLayoutSpecifier/multiple_inheritance`: no deployable contracts
+- `storageLayoutSpecifier/multiple_inheritance_state_var_slots`: no deployable contracts
+- `storageLayoutSpecifier/state_variable_arithmetic_expression`: no deployable contracts
+- `storageLayoutSpecifier/state_variable_constant_and_immutable`: no deployable contracts
+- `storageLayoutSpecifier/state_variable_dynamic_array`: no deployable contracts
+- `storageLayoutSpecifier/state_variable_enum`: no deployable contracts
+- `storageLayoutSpecifier/state_variable_mapping`: no deployable contracts
+- `storageLayoutSpecifier/state_variable_reference_types_slot_offset`: no deployable contracts
+- `storageLayoutSpecifier/state_variable_slot_offset`: no deployable contracts
+- `storageLayoutSpecifier/state_variable_struct`: no deployable contracts
+- `storageLayoutSpecifier/state_variables_transient`: no deployable contracts
+- `storageLayoutSpecifier/storage_reference_array`: no deployable contracts
+- `storageLayoutSpecifier/storage_reference_inheritance`: no deployable contracts
+- `storageLayoutSpecifier/storage_reference_library_function`: no deployable contracts
+- `storageLayoutSpecifier/transient_state_variable_slot_offset`: no deployable contracts
+- `storageLayoutSpecifier/variable_cleanup`: no deployable contracts
+- `storageLayoutSpecifier/variable_cleanup_sstore`: no deployable contracts
+- `storageLayoutSpecifier/virtual_functions`: no deployable contracts
+- `structs/array_of_recursive_struct`: no deployable contracts
+- `structs/copy_from_mapping`: no deployable contracts
+- `structs/copy_struct_array_from_storage`: no deployable contracts
+- `structs/copy_substructures_from_mapping`: no deployable contracts
+- `structs/copy_substructures_to_mapping`: no deployable contracts
+- `structs/copy_to_mapping`: no deployable contracts
+- `structs/delete_struct`: no deployable contracts
+- `structs/function_type_copy`: no deployable contracts
+- `structs/lone_struct_array_type`: no deployable contracts
+- `structs/memory_structs_nested`: no deployable contracts
+- `structs/memory_structs_nested_load`: no deployable contracts
+- `structs/multislot_struct_allocation`: no deployable contracts
+- `structs/packed_storage_structs_delete`: no deployable contracts
+- `structs/recursive_struct_2`: no deployable contracts
+- `structs/recursive_structs`: no deployable contracts
+- `structs/struct_containing_bytes_copy_and_delete`: no deployable contracts
+- `structs/struct_copy`: no deployable contracts
+- `structs/struct_delete_storage`: no deployable contracts
+- `structs/struct_delete_storage_nested_small`: no deployable contracts
+- `structs/struct_delete_storage_small`: no deployable contracts
+- `structs/struct_delete_storage_with_array`: no deployable contracts
+- `structs/struct_delete_storage_with_arrays_small`: no deployable contracts
+- `structs/struct_memory_to_storage_function_ptr`: no deployable contracts
+- `structs/struct_storage_push_zero_value`: no deployable contracts
+- `structs/struct_storage_to_memory_function_ptr`: no deployable contracts
+- `structs/structs`: no deployable contracts
+- `structs/using_for_function_on_struct`: no deployable contracts
+- `tryCatch/malformed_error`: no deployable contracts
+- `tryCatch/simple`: no deployable contracts
+- `types/array_mapping_abstract_constructor_param`: no deployable contracts
+- `types/external_function_to_address`: no deployable contracts
+- `types/mapping_abstract_constructor_param`: no deployable contracts
+- `types/mapping_contract_key_getter`: no deployable contracts
+- `types/mapping_contract_key_library`: no deployable contracts
+- `types/mapping_enum_key_getter_v2`: no deployable contracts
+- `types/mapping_enum_key_library_v2`: no deployable contracts
+- `types/nested_tuples`: no deployable contracts
+- `types/strings`: no deployable contracts
+- `types/tuple_assign_multi_slot_grow`: no deployable contracts
+- `uninitializedFunctionPointer/invalidInConstructor`: no deployable contracts
+- `uninitializedFunctionPointer/invalidStoredInConstructor`: no deployable contracts
+- `userDefinedValueType/calldata`: no deployable contracts
+- `userDefinedValueType/dirty_slot`: no deployable contracts
+- `userDefinedValueType/erc20`: no deployable contracts
+- `userDefinedValueType/fixedpoint`: no deployable contracts
+- `userDefinedValueType/immutable_signed`: no deployable contracts
+- `userDefinedValueType/in_parenthesis`: no deployable contracts
+- `userDefinedValueType/mapping_key`: no deployable contracts
+- `userDefinedValueType/memory_to_storage`: no deployable contracts
+- `userDefinedValueType/multisource`: no deployable contracts
+- `userDefinedValueType/multisource_module`: no deployable contracts
+- `userDefinedValueType/ownable`: no deployable contracts
+- `userDefinedValueType/parameter`: no deployable contracts
+- `userDefinedValueType/simple`: no deployable contracts
+- `userDefinedValueType/storage_layout`: no deployable contracts
+- `userDefinedValueType/storage_layout_struct`: no deployable contracts
+- `userDefinedValueType/storage_signed`: no deployable contracts
+- `userDefinedValueType/wrap_unwrap`: no deployable contracts
+- `userDefinedValueType/wrap_unwrap_via_contract_name`: no deployable contracts
+- `userDefinedValueType/zero_cost_abstraction_comparison_elementary`: no deployable contracts
+- `userDefinedValueType/zero_cost_abstraction_comparison_userdefined`: no deployable contracts
+- `using/calldata_memory_copy`: no deployable contracts
+- `using/free_function_braces`: no deployable contracts
+- `using/free_function_multi`: no deployable contracts
+- `using/free_functions_individual`: no deployable contracts
+- `using/imported_functions`: no deployable contracts
+- `using/library_functions_inside_contract`: no deployable contracts
+- `using/library_on_interface`: no deployable contracts
+- `using/library_through_module`: no deployable contracts
+- `using/module_renamed`: no deployable contracts
+- `using/private_library_function`: no deployable contracts
+- `using/recursive_import`: no deployable contracts
+- `using/using_global_all_the_types`: no deployable contracts
+- `using/using_global_for_global`: no deployable contracts
+- `using/using_global_invisible`: no deployable contracts
+- `using/using_global_library`: no deployable contracts
+- `variables/delete_local`: no deployable contracts
+- `variables/delete_transient_state_variable_non_zero_offset`: no deployable contracts
+- `various/address_code`: no deployable contracts
+- `various/address_code_complex`: no deployable contracts
+- `various/code_access_content`: no deployable contracts
+- `various/code_access_runtime`: no deployable contracts
+- `various/code_length_contract_member`: no deployable contracts
+- `various/contract_binary_dependencies`: no deployable contracts
+- `various/create_random`: no deployable contracts
+- `various/destructuring_assignment`: no deployable contracts
+- `various/external_types_in_calls`: no deployable contracts
+- `various/many_subassemblies`: no deployable contracts
+- `various/memory_overwrite`: no deployable contracts
+- `various/negative_stack_height`: no deployable contracts
+- `various/skip_dynamic_types_for_static_arrays_with_dynamic_elements`: no deployable contracts
+- `various/skip_dynamic_types_for_structs`: no deployable contracts
+- `various/staticcall_for_view_and_pure`: no deployable contracts
+- `various/staticcall_for_view_and_pure_pre_byzantium`: no deployable contracts
+- `various/super_parentheses`: no deployable contracts
+- `various/tuples`: no deployable contracts
+- `viaYul/assert`: no deployable contracts
+- `viaYul/assert_and_require`: no deployable contracts
+- `viaYul/assign_tuple_from_function_call`: no deployable contracts
+- `viaYul/comparison`: no deployable contracts
+- `viaYul/comparison_functions`: no deployable contracts
+- `viaYul/copy_struct_invalid_ir_bug`: no deployable contracts
+- `viaYul/define_tuple_from_function_call`: no deployable contracts
+- `viaYul/delete`: no deployable contracts
+- `viaYul/detect_add_overflow`: no deployable contracts
+- `viaYul/detect_add_overflow_signed`: no deployable contracts
+- `viaYul/detect_div_overflow`: no deployable contracts
+- `viaYul/detect_mod_zero`: no deployable contracts
+- `viaYul/detect_mod_zero_signed`: no deployable contracts
+- `viaYul/detect_mul_overflow`: no deployable contracts
+- `viaYul/detect_mul_overflow_signed`: no deployable contracts
+- `viaYul/detect_sub_overflow`: no deployable contracts
+- `viaYul/detect_sub_overflow_signed`: no deployable contracts
+- `viaYul/dirty_memory_dynamic_array`: no deployable contracts
+- `viaYul/dirty_memory_int32`: no deployable contracts
+- `viaYul/dirty_memory_static_array`: no deployable contracts
+- `viaYul/dirty_memory_struct`: no deployable contracts
+- `viaYul/dirty_memory_uint32`: no deployable contracts
+- `viaYul/empty_return_corrupted_free_memory_pointer`: no deployable contracts
+- `viaYul/exp`: no deployable contracts
+- `viaYul/function_address`: no deployable contracts
+- `viaYul/function_pointers`: no deployable contracts
+- `viaYul/local_tuple_assignment`: no deployable contracts
+- `viaYul/require`: no deployable contracts
+- `viaYul/return_storage_pointers`: no deployable contracts
+- `viaYul/smoke_test`: no deployable contracts
+- `viaYul/struct_member_access`: no deployable contracts
+- `viaYul/various_inline_asm`: no deployable contracts
+
+## Skipped Tests
+
+- `abiEncodeDecode/abi_decode_calldata`: abi.decode complex cases
+- `abiEncodeDecode/abi_decode_simple`: abi.decode complex cases
+- `abiEncodeDecode/abi_decode_simple_storage`: abi.decode complex cases
+- `abiEncodeDecode/abi_encode_call_declaration`: abi.decode complex cases
+- `abiEncodeDecode/abi_encode_empty_string_v1`: ABIEncoderV1 not supported
+- `abiEncodeDecode/abi_encode_with_selector`: ABIEncoderV1 not supported
+- `abiEncodeDecode/abi_encode_with_signature`: ABIEncoderV1 not supported
+- `abiEncodeDecode/contract_array`: abi.decode complex cases
+- `abiEncodeDecode/contract_array_v2`: abi.decode complex cases
+- `abiEncodeDecode/offset_overflow_in_array_decoding`: abi.decode complex cases
+- `abiEncodeDecode/offset_overflow_in_array_decoding_2`: abi.decode complex cases
+- `abiEncodeDecode/offset_overflow_in_array_decoding_3`: abi.decode complex cases
+- `abiEncoderV1/abi_decode_dynamic_array`: abi.decode complex cases
+- `abiEncoderV1/abi_decode_static_array`: abi.decode complex cases
+- `abiEncoderV1/abi_decode_static_array_v2`: abi.decode complex cases
+- `abiEncoderV1/abi_decode_trivial`: abi.decode complex cases
+- `abiEncoderV1/abi_decode_v2`: abi.decode complex cases
+- `abiEncoderV1/abi_decode_v2_calldata`: abi.decode complex cases
+- `abiEncoderV1/abi_decode_v2_storage`: abi.decode complex cases
+- `abiEncoderV1/abi_encode_decode_simple`: abi.decode complex cases
+- `abiEncoderV1/abi_encode_empty_string`: ABIEncoderV1 not supported
+- `abiEncoderV1/bool_out_of_bounds`: ABIEncoderV1 not supported
+- `abiEncoderV1/calldata_bytes_bytes32_arrays`: ABIEncoderV1 not supported
+- `abiEncoderV1/decode_slice`: abi.decode complex cases
+- `abiEncoderV1/dynamic_memory_copy`: abi.decode complex cases
+- `abiEncoderV1/enums`: ABIEncoderV1 not supported
+- `abiEncoderV1/memory_dynamic_array_and_calldata_bytes`: ABIEncoderV1 not supported
+- `abiEncoderV2/abi_encode_v2_in_function_inherited_in_v1_contract`: ABIEncoderV1 not supported
+- `abiEncoderV2/abi_encode_v2_in_modifier_used_in_v1_contract`: ABIEncoderV1 not supported
+- `abiEncoderV2/abi_encoder_v2_head_overflow_with_static_array_cleanup_bug`: no parseable assertions
+- `abiEncoderV2/calldata_array_struct_dynamic`: no parseable assertions
+- `abiEncoderV2/calldata_struct_array_reencode`: no parseable assertions
+- `abiEncoderV2/calldata_struct_dynamic`: no parseable assertions
+- `abiEncoderV2/calldata_struct_simple`: no parseable assertions
+- `arithmetics/check_var_init`: payable not supported on AVM
+- `arithmetics/checked_add_v1`: ABIEncoderV1 not supported
+- `array/bytes_to_fixed_bytes_cleanup`: complex assembly
+- `array/calldata_array_of_struct`: no parseable assertions
+- `calldata/calldata_attached_to_struct`: no parseable assertions
+- `calldata/calldata_struct`: no parseable assertions
+- `calldata/calldata_struct_cleaning`: no parseable assertions
+- `calldata/calldata_struct_internal`: no parseable assertions
+- `calldata/copy_from_calldata_removes_bytes_data`: fallback not supported
+- `cleanup/bool_conversion_v1`: ABIEncoderV1 not supported
+- `cleanup/cleanup_address_types_shortening`: payable not supported on AVM
+- `cleanup/cleanup_address_types_v1`: ABIEncoderV1 not supported
+- `cleanup/cleanup_address_types_v2`: payable not supported on AVM
+- `cleanup/cleanup_bytes_types_v1`: ABIEncoderV1 not supported
+- `constructor/callvalue_check`: payable not supported on AVM
+- `constructor/no_callvalue_check`: payable not supported on AVM
+- `constructor/payable_constructor`: payable not supported on AVM
+- `ecrecover/ecrecover`: no parseable assertions
+- `ecrecover/ecrecover_abiV2`: no parseable assertions
+- `enums/enum_with_256_members`: abi.decode complex cases
+- `errors/require_error_evaluation_order_1`: complex assembly
+- `events/event`: payable not supported on AVM
+- `events/event_anonymous_with_signature_collision`: payable not supported on AVM
+- `events/event_anonymous_with_signature_collision2`: payable not supported on AVM
+- `events/event_anonymous_with_topics`: payable not supported on AVM
+- `events/event_constructor`: no parseable assertions
+- `events/event_emit`: payable not supported on AVM
+- `events/event_emit_file_level`: payable not supported on AVM
+- `events/event_emit_from_other_contract`: payable not supported on AVM
+- `events/event_lots_of_data`: payable not supported on AVM
+- `events/event_signature_in_library`: no parseable assertions
+- `experimental/stub`: fallback not supported
+- `experimental/type_class`: fallback not supported
+- `expressions/uncalled_address_transfer_send`: payable not supported on AVM
+- `externalContracts/FixedFeeRegistrar`: payable not supported on AVM
+- `externalContracts/deposit_contract`: payable not supported on AVM
+- `externalContracts/snark`: abi.decode complex cases
+- `externalSource/multiple_equals_signs`: no parseable assertions
+- `externalSource/multiple_external_source`: no parseable assertions
+- `externalSource/multisource`: no parseable assertions
+- `externalSource/non_normalized_paths`: no parseable assertions
+- `externalSource/relative_imports`: no parseable assertions
+- `externalSource/source`: no parseable assertions
+- `externalSource/source_import`: no parseable assertions
+- `externalSource/source_import_subdir`: no parseable assertions
+- `externalSource/source_name_starting_with_dots`: no parseable assertions
+- `externalSource/source_remapping`: no parseable assertions
+- `fallback/call_forward_bytes`: fallback not supported
+- `fallback/fallback_or_receive`: payable not supported on AVM
+- `fallback/inherited`: fallback not supported
+- `functionCall/call_options_overload`: payable not supported on AVM
+- `functionCall/delegatecall_return_value`: delegatecall not supported
+- `functionCall/delegatecall_return_value_pre_byzantium`: delegatecall not supported
+- `functionCall/external_call_to_nonexisting`: payable not supported on AVM
+- `functionCall/external_call_to_nonexisting_debugstrings`: payable not supported on AVM
+- `functionCall/external_call_value`: payable not supported on AVM
+- `functionCall/failed_create`: payable not supported on AVM
+- `functionCall/gas_and_value_basic`: payable not supported on AVM
+- `functionCall/precompile_extcodesize_check`: abi.decode complex cases
+- `functionCall/send_zero_ether`: payable not supported on AVM
+- `functionCall/value_test`: payable not supported on AVM
+- `functionTypes/duplicated_function_definition_with_same_id_in_internal_dispatcher`: no parseable assertions
+- `functionTypes/inline_array_with_value_call_option`: payable not supported on AVM
+- `functionTypes/stack_height_check_on_adding_gas_variable_to_function`: payable not supported on AVM
+- `immutable/immutable_tag_too_large_bug`: payable not supported on AVM
+- `inheritance/value_for_constructor`: payable not supported on AVM
+- `inlineAssembly/calldata_struct_assign`: no parseable assertions
+- `inlineAssembly/calldata_struct_assign_and_return`: abi.decode complex cases
+- `inlineAssembly/selfbalance`: payable not supported on AVM
+- `inlineAssembly/transient_storage_low_level_calls`: delegatecall not supported
+- `inlineAssembly/transient_storage_selfdestruct`: selfdestruct not supported
+- `isoltestTesting/balance_other_contract`: payable not supported on AVM
+- `isoltestTesting/balance_with_balance`: payable not supported on AVM
+- `isoltestTesting/balance_with_balance2`: payable not supported on AVM
+- `isoltestTesting/balance_without_balance`: no parseable assertions
+- `isoltestTesting/builtins`: no parseable assertions
+- `isoltestTesting/effects`: no parseable assertions
+- `libraries/library_address`: delegatecall not supported
+- `libraries/library_address_homestead`: delegatecall not supported
+- `libraries/library_address_via_module`: delegatecall not supported
+- `libraries/library_delegatecall_guard_pure`: delegatecall not supported
+- `libraries/library_delegatecall_guard_view_needed`: delegatecall not supported
+- `libraries/library_delegatecall_guard_view_not_needed`: delegatecall not supported
+- `libraries/library_delegatecall_guard_view_staticcall`: delegatecall not supported
+- `libraries/library_function_selectors`: delegatecall not supported
+- `libraries/library_function_selectors_struct`: delegatecall not supported
+- `libraries/payable_function_calls_library`: payable not supported on AVM
+- `modifiers/function_modifier`: payable not supported on AVM
+- `payable/no_nonpayable_circumvention_by_modifier`: msg.value not supported on AVM
+- `receive/empty_calldata_calls_receive`: payable not supported on AVM
+- `receive/ether_and_data`: payable not supported on AVM
+- `receive/inherited`: payable not supported on AVM
+- `revertStrings/calldata_too_short_v1`: ABIEncoderV1 not supported
+- `revertStrings/empty_v1`: ABIEncoderV1 not supported
+- `revertStrings/enum_v1`: ABIEncoderV1 not supported
+- `revertStrings/ether_non_payable_function`: payable not supported on AVM
+- `revertStrings/function_entry_checks_v1`: ABIEncoderV1 not supported
+- `revertStrings/invalid_abi_decoding_calldata_v1`: ABIEncoderV1 not supported
+- `revertStrings/invalid_abi_decoding_memory_v1`: ABIEncoderV1 not supported
+- `revertStrings/transfer`: payable not supported on AVM
+- `revertStrings/unknown_sig_no_fallback`: payable not supported on AVM
+- `reverts/revert_return_area`: fallback not supported
+- `saltedCreate/salted_create_with_value`: payable not supported on AVM
+- `smoke/basic`: payable not supported on AVM
+- `smoke/constructor`: payable not supported on AVM
+- `smoke/fallback`: payable not supported on AVM
+- `smoke/multiline`: no parseable assertions
+- `smoke/multiline_comments`: no parseable assertions
+- `specialFunctions/abi_functions_member_access`: abi.decode complex cases
+- `state/block_coinbase`: payable not supported on AVM
+- `state/msg_value`: payable not supported on AVM
+- `storage/empty_nonempty_empty`: no parseable assertions
+- `structs/copy_struct_with_nested_array_from_calldata_to_memory`: no parseable assertions
+- `structs/copy_struct_with_nested_array_from_calldata_to_storage`: no parseable assertions
+- `structs/copy_struct_with_nested_array_from_memory_to_memory`: no parseable assertions
+- `structs/copy_struct_with_nested_array_from_storage_to_storage`: no parseable assertions
+- `structs/global`: no parseable assertions
+- `types/mapping_enum_key_getter_v1`: ABIEncoderV1 not supported
+- `types/mapping_enum_key_library_v1`: ABIEncoderV1 not supported
+- `types/mapping_enum_key_v1`: ABIEncoderV1 not supported
+- `types/packing_unpacking_types`: no parseable assertions
+- `userDefinedValueType/abicodec`: abi.decode complex cases
+- `userDefinedValueType/assembly_access_bytes2_abicoder_v1`: ABIEncoderV1 not supported
+- `userDefinedValueType/cleanup_abicoderv1`: ABIEncoderV1 not supported
+- `userDefinedValueType/conversion_abicoderv1`: ABIEncoderV1 not supported
+- `various/balance`: payable not supported on AVM
+- `various/codebalance_assembly`: payable not supported on AVM
+- `various/different_call_type_transient`: delegatecall not supported
+- `various/nested_calldata_struct`: no parseable assertions
+- `various/nested_calldata_struct_to_memory`: no parseable assertions
+- `various/selfdestruct_post_cancun`: selfdestruct not supported
+- `various/selfdestruct_post_cancun_multiple_beneficiaries`: selfdestruct not supported
+- `various/selfdestruct_post_cancun_redeploy`: selfdestruct not supported
+- `various/selfdestruct_pre_cancun`: selfdestruct not supported
+- `various/selfdestruct_pre_cancun_multiple_beneficiaries`: selfdestruct not supported
+- `various/selfdestruct_pre_cancun_redeploy`: selfdestruct not supported
+- `various/senders_balance`: payable not supported on AVM
+- `various/write_storage_external`: payable not supported on AVM
+- `viaYul/dirty_calldata_struct`: no parseable assertions
+- `viaYul/function_entry_checks`: payable not supported on AVM

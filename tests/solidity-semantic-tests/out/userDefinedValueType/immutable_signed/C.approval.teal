@@ -19,6 +19,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
@@ -26,16 +33,20 @@ main_after_if_else@2:
     assert
     pushbytess 0xd843465e 0xd9d12b48 // method "direct()(uint64,byte[2])", method "viaasm()(byte[32],byte[32])"
     txna ApplicationArgs 0
-    match main_direct_route@5 main_viaasm_route@6
+    match main_direct_route@5 viaasm
     err
 
-main_viaasm_route@6:
+main_direct_route@5:
     bytec_0 // 0x151f7c75fffffffffffffffe6162
     log
     pushint 1
     return
 
-main_direct_route@5:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/immutable_signed.sol.C.viaasm[routing]() -> void:
+viaasm:
+    load 0
+    store 0
     bytec_0 // 0x151f7c75fffffffffffffffe6162
     log
     pushint 1

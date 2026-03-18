@@ -25,6 +25,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
@@ -32,20 +39,17 @@ main_after_if_else@2:
     assert
     pushbytess 0x219b312e 0x595e23e2 0x185e9ff4 // method "f()(uint256,uint256)", method "g()(uint256,uint256)", method "h()(uint256,uint256)"
     txna ApplicationArgs 0
-    match f g main_h_route@7
+    match f g h
     err
-
-main_h_route@7:
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_slot_inline_assembly.sol.C.f[routing]() -> void:
 f:
     intc_2 // 0
-    dupn 2
+    dup
+    load 0
+    store 0
+    dup
     len
     intc_1 // 32
     <=
@@ -74,10 +78,13 @@ f:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_slot_inline_assembly.sol.C.g[routing]() -> void:
 g:
     bytec_0 // ""
-    dup
+    load 0
+    bytec_0 // ""
     itob
-    swap
+    uncover 2
     itob
+    uncover 2
+    store 0
     intc_1 // 32
     bzero
     uncover 2
@@ -89,6 +96,16 @@ g:
     bytec_1 // 0x151f7c75
     swap
     concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_slot_inline_assembly.sol.C.h[routing]() -> void:
+h:
+    load 0
+    store 0
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return

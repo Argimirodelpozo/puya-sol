@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/conversion.sol.C.approval_program() -> uint64:
 main:
-    intcblock 8 1 32
+    intcblock 8 1 32 255
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -11,6 +11,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
@@ -38,8 +45,10 @@ f:
     len
     intc_0 // 8
     -
-    intc_0 // 8
-    extract3
+    extract_uint64
+    intc_3 // 255
+    &
+    itob
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -64,8 +73,10 @@ g:
     len
     intc_0 // 8
     -
-    intc_0 // 8
-    extract3
+    extract_uint64
+    intc_3 // 255
+    &
+    itob
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -151,6 +162,10 @@ m:
     intc_0 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    btoi
+    intc_3 // 255
+    &
+    itob
     bytec_0 // 0x151f7c75
     swap
     concat

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 0
-    bytecblock 0x base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    bytecblock 0x base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) 0x151f7c75 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
     pushbytes "a"
@@ -32,6 +32,13 @@ main:
     return
 
 main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
     txn OnCompletion
     !
     assert
@@ -39,35 +46,20 @@ main_after_if_else@2:
     assert
     pushbytess 0x1b7e7c40 0x5fb55aa6 0x2905c9dd 0x6369193c 0xcdc2beb7 0xd36355c1 0xc14a27a2 // method "storage_a()(uint256,uint256)", method "storage_b()(uint256,uint256)", method "storage_c()(uint256,uint256)", method "storage_d()(uint256,uint256)", method "storage_e()(uint256,uint256)", method "storage_f()(uint256,uint256)", method "storage_g()(uint256,uint256)"
     txna ApplicationArgs 0
-    match storage_a storage_b storage_c main_storage_d_route@8 main_storage_e_route@9 main_storage_f_route@10 storage_g
+    match storage_a storage_b storage_c storage_d storage_e storage_f storage_g
     err
-
-main_storage_f_route@10:
-    bytec_2 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
-
-main_storage_e_route@9:
-    bytec_2 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
-
-main_storage_d_route@8:
-    bytec_2 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout.sol.C.storage_a[routing]() -> void:
 storage_a:
     bytec_0 // ""
-    dup
+    load 0
+    bytec_0 // ""
     itob
-    swap
+    uncover 2
     itob
+    uncover 2
+    store 0
     intc_1 // 32
     bzero
     uncover 2
@@ -76,7 +68,7 @@ storage_a:
     cover 2
     b|
     concat
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -87,10 +79,13 @@ storage_a:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout.sol.C.storage_b[routing]() -> void:
 storage_b:
     bytec_0 // ""
-    dup
+    load 0
+    bytec_0 // ""
     itob
-    swap
+    uncover 2
     itob
+    uncover 2
+    store 0
     intc_1 // 32
     bzero
     uncover 2
@@ -99,7 +94,7 @@ storage_b:
     cover 2
     b|
     concat
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -109,8 +104,11 @@ storage_b:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout.sol.C.storage_c[routing]() -> void:
 storage_c:
+    load 0
     bytec_0 // ""
     itob
+    swap
+    store 0
     intc_1 // 32
     bzero
     b|
@@ -122,10 +120,43 @@ storage_c:
     return
 
 
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout.sol.C.storage_d[routing]() -> void:
+storage_d:
+    load 0
+    store 0
+    bytec_3 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout.sol.C.storage_e[routing]() -> void:
+storage_e:
+    load 0
+    store 0
+    bytec_3 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout.sol.C.storage_f[routing]() -> void:
+storage_f:
+    load 0
+    store 0
+    bytec_3 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout.sol.C.storage_g[routing]() -> void:
 storage_g:
     intc_2 // 0
-    dupn 2
+    dup
+    load 0
+    store 0
+    dup
     len
     intc_1 // 32
     <=
@@ -143,7 +174,7 @@ storage_g:
     cover 2
     b|
     concat
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
