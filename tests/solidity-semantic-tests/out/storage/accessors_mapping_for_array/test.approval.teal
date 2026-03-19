@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/accessors_mapping_for_array.sol.test.approval_program() -> uint64:
 main:
-    intcblock 0 1
-    bytecblock "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000008
+    intcblock 32 1 0
+    bytecblock "__ctor_pending" 0x 0x0000000000000000000000000000000000000000000000000000000000000008 0x151f7c75
     pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
     store 5
     txn ApplicationID
@@ -23,18 +23,15 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xbacc49e3 // method "__postInit()void"
-    txna ApplicationArgs 0
-    match main___postInit_route@4
-    err
-
-main___postInit_route@4:
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
-    b __postInit
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xcbf39868 0xb83d2dcb // method "__postInit()void", method "data(uint256,uint256)uint256", method "dynamicData(uint256,uint256)uint256"
+    txna ApplicationArgs 0
+    match __postInit data dynamicData
+    err
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/accessors_mapping_for_array.sol.test.__postInit[routing]() -> void:
@@ -43,13 +40,13 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_0 // 0
+    intc_2 // 0
     app_global_put
     callsub _puya_lib.mem.new_slot
     dup
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     stores
-    pushbytes 0x64617461cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
+    pushbytes 0x646174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
     box_get
     callsub _puya_lib.mem.new_slot
     dup
@@ -59,10 +56,10 @@ __postInit:
     select
     dup
     loads
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000008
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000008
     replace2 64 // on error: index access is out of bounds
     stores
-    intc_0 // 0
+    intc_2 // 0
     itob
 
 __postInit_while_top@2:
@@ -79,13 +76,13 @@ __postInit_while_top@2:
 __postInit_after_while@4:
     callsub _puya_lib.mem.new_slot
     dup
-    pushbytes 0x
+    bytec_1 // 0x
     stores
-    pushbytes 0x64796e616d696344617461cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
+    pushbytes 0x64796e616d6963446174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
     box_get
     swap
     pushint 2
-    intc_0 // 0
+    intc_2 // 0
     extract3
     callsub _puya_lib.mem.new_slot
     dup
@@ -95,9 +92,123 @@ __postInit_after_while@4:
     select
     dup
     loads
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000008
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000008
     replace2 64 // on error: index access is out of bounds
     stores
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/accessors_mapping_for_array.sol.test.data[routing]() -> void:
+data:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    sha256
+    pushbytes "data"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/accessors_mapping_for_array.sol.test.dynamicData[routing]() -> void:
+dynamicData:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    sha256
+    pushbytes "dynamicData"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
     intc_1 // 1
     return
 
@@ -110,7 +221,7 @@ _puya_lib.mem.new_slot:
     pushint 256
     dig 2
     -
-    intc_0 // 0
+    intc_2 // 0
     setbit // on error: no available slots
     store 5
     retsub

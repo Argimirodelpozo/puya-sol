@@ -65,6 +65,11 @@ public:
 	bool visit(solidity::frontend::EmitStatement const& _node) override;
 	bool visit(solidity::frontend::RevertStatement const& _node) override;
 	bool visit(solidity::frontend::InlineAssembly const& _node) override;
+	bool visit(solidity::frontend::PlaceholderStatement const& _node) override;
+
+	/// Set the function body to inline at `_;` placeholder statements in modifiers.
+	void setPlaceholderBody(std::shared_ptr<awst::Block> _body) { m_placeholderBody = std::move(_body); }
+	std::shared_ptr<awst::Block> takePlaceholderBody() { return std::move(m_placeholderBody); }
 
 private:
 	ExpressionBuilder& m_exprBuilder;
@@ -85,6 +90,13 @@ private:
 	/// For-loop post expression (increment). When set, `continue` statements
 	/// are preceded by this expression so the loop variable advances.
 	std::shared_ptr<awst::Statement> m_forLoopPost;
+
+	/// Do-while condition check + break. When set, `continue` in a do-while
+	/// emits this block (evaluates condition, breaks if false) then LoopContinue.
+	std::shared_ptr<awst::Statement> m_doWhileCondBreak;
+
+	/// Modifier placeholder body: the function body to inline at each `_;`.
+	std::shared_ptr<awst::Block> m_placeholderBody;
 
 	void push(std::shared_ptr<awst::Statement> _stmt);
 	std::shared_ptr<awst::Statement> pop();

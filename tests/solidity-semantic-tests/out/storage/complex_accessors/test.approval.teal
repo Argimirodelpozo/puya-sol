@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/complex_accessors.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "__ctor_pending" 0x746f5f75696e745f6d6170a6bb133cb1e3638ad7b8a3ff0539668e9e56f9b850ef1b2a810f5422eaa6c323 0x746f5f6d756c7469706c655f6d617056295d08ad255bc1dcdee7db6829d5612a7a47b11652d3d16e9080ee6cc72af7
+    intcblock 32 1 0
+    bytecblock 0x151f7c75 "__ctor_pending" 0x746f5f75696e745f6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf 0x746f5f6d756c7469706c655f6d61705c81b5d4d259ebc3b87024e3c2c7f4452419ff22698d0b4d3001709241cd1e9d
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
-    intc_0 // 1
+    bytec_1 // "__ctor_pending"
+    intc_1 // 1
     app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -21,50 +21,220 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xbacc49e3 // method "__postInit()void"
-    txna ApplicationArgs 0
-    match main___postInit_route@4
-    err
-
-main___postInit_route@4:
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
-    b __postInit
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x6b6d77ff 0xbafe2a00 0xe02cc6cf 0x19995877 // method "__postInit()void", method "to_string_map(uint256)byte[4]", method "to_bool_map(uint256)bool", method "to_uint_map(uint256)uint256", method "to_multiple_map(uint256,uint256)uint256"
+    txna ApplicationArgs 0
+    match __postInit to_string_map to_bool_map to_uint_map to_multiple_map
+    err
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/complex_accessors.sol.test.__postInit[routing]() -> void:
 __postInit:
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_0 // "__ctor_pending"
-    intc_1 // 0
+    bytec_1 // "__ctor_pending"
+    intc_2 // 0
     app_global_put
-    pushbytess 0x746f5f737472696e675f6d6170a6bb133cb1e3638ad7b8a3ff0539668e9e56f9b850ef1b2a810f5422eaa6c323 "24"
+    pushbytess 0x746f5f737472696e675f6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf "24"
     box_put
-    intc_1 // 0
+    intc_2 // 0
     itob
-    pushbytes 0x746f5f626f6f6c5f6d6170a6bb133cb1e3638ad7b8a3ff0539668e9e56f9b850ef1b2a810f5422eaa6c323
+    pushbytes 0x746f5f626f6f6c5f6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
     swap
     box_put
     pushint 12
     itob
-    bytec_1 // 0x746f5f75696e745f6d6170a6bb133cb1e3638ad7b8a3ff0539668e9e56f9b850ef1b2a810f5422eaa6c323
+    bytec_2 // 0x746f5f75696e745f6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
     box_del
     pop
-    bytec_1 // 0x746f5f75696e745f6d6170a6bb133cb1e3638ad7b8a3ff0539668e9e56f9b850ef1b2a810f5422eaa6c323
+    bytec_2 // 0x746f5f75696e745f6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
     swap
     box_put
     pushint 31
     itob
-    bytec_2 // 0x746f5f6d756c7469706c655f6d617056295d08ad255bc1dcdee7db6829d5612a7a47b11652d3d16e9080ee6cc72af7
+    bytec_3 // 0x746f5f6d756c7469706c655f6d61705c81b5d4d259ebc3b87024e3c2c7f4452419ff22698d0b4d3001709241cd1e9d
     box_del
     pop
-    bytec_2 // 0x746f5f6d756c7469706c655f6d617056295d08ad255bc1dcdee7db6829d5612a7a47b11652d3d16e9080ee6cc72af7
+    bytec_3 // 0x746f5f6d756c7469706c655f6d61705c81b5d4d259ebc3b87024e3c2c7f4452419ff22698d0b4d3001709241cd1e9d
     swap
     box_put
-    intc_0 // 1
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/complex_accessors.sol.test.to_string_map[routing]() -> void:
+to_string_map:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    pushbytes "to_string_map"
+    swap
+    concat
+    box_get
+    pushbytes 0x00000000
+    cover 2
+    select
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/complex_accessors.sol.test.to_bool_map[routing]() -> void:
+to_bool_map:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    pushbytes "to_bool_map"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/complex_accessors.sol.test.to_uint_map[routing]() -> void:
+to_uint_map:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    pushbytes "to_uint_map"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/complex_accessors.sol.test.to_multiple_map[routing]() -> void:
+to_multiple_map:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    sha256
+    pushbytes "to_multiple_map"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
     return

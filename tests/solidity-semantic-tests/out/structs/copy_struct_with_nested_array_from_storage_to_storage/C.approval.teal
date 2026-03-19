@@ -1,0 +1,125 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/copy_struct_with_nested_array_from_storage_to_storage.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 8 2 3
+    bytecblock "src" 0x "dst"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "src"
+    bytec_1 // 0x
+    app_global_put
+    bytec_2 // "dst"
+    bytec_1 // 0x
+    app_global_put
+    intc_3 // 3
+    itob
+    pop
+    intc_0 // 0
+    bytec_0 // "src"
+    app_global_get_ex
+    assert // check src exists
+    dup
+    intc_1 // 8
+    extract_uint16
+    dig 1
+    len
+    substring3
+    pushbytes 0x0000000000000003000a
+    swap
+    concat
+    bytec_0 // "src"
+    dig 1
+    app_global_put
+    dup
+    extract 0 8
+    pop
+    dup
+    intc_1 // 8
+    extract_uint16
+    dig 1
+    len
+    substring3
+    intc_2 // 2
+    intc_0 // 0
+    extract3
+    dup
+    pushint 7
+    itob
+    concat // on error: max array length exceeded
+    pop
+    pushint 11
+    itob
+    concat // on error: max array length exceeded
+    pop
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0xa78000de // method "test()void"
+    txna ApplicationArgs 0
+    match main_test_route@4
+    err
+
+main_test_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b test
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/copy_struct_with_nested_array_from_storage_to_storage.sol.C.test[routing]() -> void:
+test:
+    intc_0 // 0
+    bytec_0 // "src"
+    app_global_get_ex
+    assert // check src exists
+    bytec_2 // "dst"
+    dig 1
+    app_global_put
+    dup
+    extract 0 8
+    intc_0 // 0
+    extract_uint64
+    intc_3 // 3
+    ==
+    assert
+    dup
+    intc_1 // 8
+    extract_uint16
+    dig 1
+    len
+    substring3
+    intc_2 // 2
+    intc_0 // 0
+    extract3
+    dup
+    len
+    intc_1 // 8
+    /
+    intc_2 // 2
+    ==
+    assert
+    dup
+    intc_0 // 0
+    extract_uint64
+    pushint 7
+    ==
+    assert
+    intc_1 // 8
+    extract_uint64
+    pushint 11
+    ==
+    assert
+    pushint 1
+    return

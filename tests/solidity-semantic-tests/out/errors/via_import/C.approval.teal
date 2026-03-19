@@ -1,0 +1,36 @@
+#pragma version 10
+#pragma typetrack false
+
+// /tmp/multisource_k5a_uh0h/s3.sol.C.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb13faba1 0x598118aa 0x1db3c594 // method "x()void", method "y()void", method "z()void"
+    txna ApplicationArgs 0
+    match main_x_route@5 main_y_route@6 main_z_route@7
+    err
+
+main_z_route@7:
+    err // E
+
+main_y_route@6:
+    err // E
+
+main_x_route@5:
+    err // E

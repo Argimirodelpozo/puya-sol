@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/mapping_key.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1
+    bytecblock "m"
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -22,9 +23,9 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x76a2115c 0x043cd6f0 // method "set(uint256,uint256)void", method "set_unwrapped(uint256,uint256)void"
+    pushbytess 0x76a2115c 0x043cd6f0 0x8338d04b // method "set(uint256,uint256)void", method "set_unwrapped(uint256,uint256)void", method "m(uint256)uint256"
     txna ApplicationArgs 0
-    match set set_unwrapped
+    match set set_unwrapped m
     err
 
 
@@ -53,7 +54,7 @@ set:
     intc_0 // 32
     extract3
     sha256
-    pushbytes "m"
+    bytec_0 // "m"
     swap
     concat
     dup
@@ -90,7 +91,7 @@ set_unwrapped:
     intc_0 // 32
     extract3
     sha256
-    pushbytes "m"
+    bytec_0 // "m"
     swap
     concat
     dup
@@ -98,5 +99,46 @@ set_unwrapped:
     pop
     swap
     box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/mapping_key.sol.C.m[routing]() -> void:
+m:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "m"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
     intc_1 // 1
     return

@@ -1,0 +1,57 @@
+#pragma version 10
+#pragma typetrack false
+
+// /tmp/multisource_y_adr8at/s3.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 32
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0x4b2c0376 // method "g()uint256"
+    txna ApplicationArgs 0
+    match main_g_route@4
+    err
+
+main_g_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b g
+
+
+// /tmp/multisource_y_adr8at/s3.sol.f() -> bytes:
+f:
+    pushint 1337
+    itob
+    retsub
+
+
+// /tmp/multisource_y_adr8at/s3.sol.C.g[routing]() -> void:
+g:
+    callsub f
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

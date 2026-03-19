@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/mapping_getters.sol.test.approval_program() -> uint64:
 main:
     intcblock 32 1
+    bytecblock "m1" "m2" 0x 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -22,9 +23,9 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x76a2115c 0xfa6f9035 // method "set(uint256,uint256)void", method "set(uint256,uint256,uint256)void"
+    pushbytess 0x76a2115c 0xfa6f9035 0x249cf2cf 0x47cd50d7 // method "set(uint256,uint256)void", method "set(uint256,uint256,uint256)void", method "m1(uint256)uint256", method "m2(uint256,uint256)uint256"
     txna ApplicationArgs 0
-    match set(u256,u256) set(u256,u256,u256)
+    match set(u256,u256) set(u256,u256,u256) m1 m2
     err
 
 
@@ -53,7 +54,7 @@ set(u256,u256):
     intc_0 // 32
     extract3
     sha256
-    pushbytes "m1"
+    bytec_0 // "m1"
     swap
     concat
     dup
@@ -107,7 +108,7 @@ set(u256,u256,u256):
     extract3
     concat
     sha256
-    pushbytes "m2"
+    bytec_1 // "m2"
     swap
     concat
     dup
@@ -115,5 +116,103 @@ set(u256,u256,u256):
     pop
     swap
     box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/mapping_getters.sol.test.m1[routing]() -> void:
+m1:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "m1"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/mapping_getters.sol.test.m2[routing]() -> void:
+m2:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    sha256
+    bytec_1 // "m2"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
     intc_1 // 1
     return

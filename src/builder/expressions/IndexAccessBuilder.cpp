@@ -134,17 +134,46 @@ bool ExpressionBuilder::visit(solidity::frontend::IndexAccess const& _node)
 			cursor = &idxAccess->baseExpression();
 		}
 		// cursor should now be the root Identifier, or a MemberAccess for struct.mapping access
+		solidity::frontend::Type const* rootMappingType = nullptr;
 		if (auto const* ident = dynamic_cast<solidity::frontend::Identifier const*>(cursor))
+		{
 			varName = ident->name();
+			rootMappingType = ident->annotation().type;
+		}
 		else if (auto const* ma = dynamic_cast<solidity::frontend::MemberAccess const*>(cursor))
 		{
 			// Handle struct.mapping[key] pattern, e.g. self.sideNodes[level]
 			// Build varName from the member name (the mapping field name)
 			varName = ma->memberName();
+			rootMappingType = ma->annotation().type;
 		}
 
 		// Reverse so keys are in order: outermost first
 		std::reverse(indexExprs.begin(), indexExprs.end());
+
+		// Collect the declared mapping key types by walking the mapping type chain.
+		// This ensures key encoding matches the getter (which uses the declared types).
+		std::vector<awst::WType const*> declaredKeyWTypes;
+		{
+			solidity::frontend::Type const* walkType = rootMappingType;
+			for (size_t i = 0; i < indexExprs.size(); ++i)
+			{
+				if (auto const* mt = dynamic_cast<solidity::frontend::MappingType const*>(walkType))
+				{
+					declaredKeyWTypes.push_back(m_typeMapper.map(mt->keyType()));
+					walkType = mt->valueType();
+				}
+				else
+				{
+					// Array index or unknown — use nullptr to signal "use translated type"
+					declaredKeyWTypes.push_back(nullptr);
+					if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(walkType))
+						walkType = at->baseType();
+					else
+						break;
+				}
+			}
+		}
 
 		// Determine the final value type (the non-mapping type at this access level)
 		awst::WType const* valueWType = nullptr;
@@ -175,11 +204,25 @@ bool ExpressionBuilder::visit(solidity::frontend::IndexAccess const& _node)
 		{
 			// Translate all index expressions to bytes
 			std::vector<std::shared_ptr<awst::Expression>> keyParts;
-			for (auto const* idxExpr: indexExprs)
+			for (size_t ki = 0; ki < indexExprs.size(); ++ki)
 			{
+				auto const* idxExpr = indexExprs[ki];
 				auto translated = build(*idxExpr);
+
+				// Use the declared mapping key type to determine encoding,
+				// so that the write path matches the getter's encoding.
+				// E.g. mapping(uint256 => ...) always uses 32-byte biguint encoding,
+				// even if the literal key fits in uint64.
+				awst::WType const* keyWType = (ki < declaredKeyWTypes.size() && declaredKeyWTypes[ki])
+					? declaredKeyWTypes[ki]
+					: translated->wtype;
+
+				// Coerce translated value to declared key type if they differ
+				if (keyWType != translated->wtype)
+					translated = implicitNumericCast(std::move(translated), keyWType, loc);
+
 				std::shared_ptr<awst::Expression> keyBytes;
-				if (translated->wtype == awst::WType::uint64Type())
+				if (keyWType == awst::WType::uint64Type())
 				{
 					// uint64 → bytes via itob intrinsic
 					auto itob = std::make_shared<awst::IntrinsicCall>();
@@ -189,7 +232,7 @@ bool ExpressionBuilder::visit(solidity::frontend::IndexAccess const& _node)
 					itob->stackArgs.push_back(std::move(translated));
 					keyBytes = std::move(itob);
 				}
-				else if (translated->wtype == awst::WType::biguintType())
+				else if (keyWType == awst::WType::biguintType())
 				{
 					// biguint → normalize to exactly 32 bytes before hashing.
 					// AVM biguint ops (b+, b-) produce minimal-length bytes via

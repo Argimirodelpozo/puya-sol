@@ -1,0 +1,78 @@
+#pragma version 10
+#pragma typetrack false
+
+// /tmp/multisource_coj1ewio/B.sol.B.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    bytecblock 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x1928cd24 0xc14ad39f // method "f(uint256)uint256", method "g(uint256)uint256"
+    txna ApplicationArgs 0
+    match f g
+    err
+
+
+// /tmp/multisource_coj1ewio/B.sol.B.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /tmp/multisource_coj1ewio/B.sol.B.g[routing]() -> void:
+g:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    pushbytes 0x01
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

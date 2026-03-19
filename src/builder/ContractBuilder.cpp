@@ -323,38 +323,89 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// Auto-generate getter methods for public state variables BEFORE inheriting
 	// functions. This ensures that `uint256 public override test;` takes precedence
 	// over an inherited `function test()` from a base contract.
+	//
+	// Uses Solidity's FunctionType(VariableDeclaration) to determine the getter
+	// signature: mappings add key params, arrays add uint256 index params,
+	// structs return only non-mapping/non-dynamic-array fields.
 	for (auto const* base: _contract.annotation().linearizedBaseContracts)
 	{
 		for (auto const* var: base->stateVariables())
 		{
 			if (var->visibility() != solidity::frontend::Visibility::Public)
 				continue;
-			// Skip mappings — they require key parameters (not yet supported)
-			if (var->type()->category() == solidity::frontend::Type::Category::Mapping)
-				continue;
 			if (translatedFunctions.count(var->name()))
 				continue; // explicit getter already exists
 
+			// Get the Solidity-computed getter function type.
+			// This gives us parameter types (mapping keys, array indices)
+			// and return types (struct field filtering).
+			auto getterFuncType = var->functionType(/*_internal=*/false);
+			if (!getterFuncType)
+				continue;
+
 			translatedFunctions.insert(var->name());
 
+			auto loc = makeLoc(var->location());
+
 			awst::ContractMethod getter;
-			getter.sourceLocation = makeLoc(var->location());
+			getter.sourceLocation = loc;
 			getter.cref = m_sourceFile + "." + contractName;
 			getter.memberName = var->name();
-			getter.returnType = m_typeMapper.map(var->type());
 			getter.pure = var->isConstant();
 
 			awst::ARC4ABIMethodConfig config;
 			config.name = var->name();
-			config.sourceLocation = getter.sourceLocation;
+			config.sourceLocation = loc;
 			config.allowedCompletionTypes = {0}; // NoOp
 			config.create = 3; // Disallow
 			config.readonly = true;
 			getter.arc4MethodConfig = config;
 
+			// Build getter parameters from the Solidity getter function type.
+			auto const& solParamTypes = getterFuncType->parameterTypes();
+			auto const solParamNames = getterFuncType->parameterNames();
+			for (size_t i = 0; i < solParamTypes.size(); ++i)
+			{
+				awst::SubroutineArgument arg;
+				std::string paramName = (i < solParamNames.size() && !solParamNames[i].empty())
+					? solParamNames[i]
+					: "key" + std::to_string(i);
+				arg.name = paramName;
+				arg.sourceLocation = loc;
+				arg.wtype = m_typeMapper.map(solParamTypes[i]);
+				getter.args.push_back(std::move(arg));
+			}
+
+			// Determine return type from Solidity getter return types.
+			auto const& solReturnTypes = getterFuncType->returnParameterTypes();
+			auto const& solReturnNames = getterFuncType->returnParameterNames();
+			if (solReturnTypes.size() == 1)
+			{
+				getter.returnType = m_typeMapper.map(solReturnTypes[0]);
+			}
+			else if (solReturnTypes.size() > 1)
+			{
+				// Multiple return values (struct fields) — use WTuple.
+				std::vector<awst::WType const*> tupleTypes;
+				std::vector<std::string> tupleNames;
+				for (size_t i = 0; i < solReturnTypes.size(); ++i)
+				{
+					tupleTypes.push_back(m_typeMapper.map(solReturnTypes[i]));
+					tupleNames.push_back(i < solReturnNames.size() ? solReturnNames[i] : "");
+				}
+				getter.returnType = m_typeMapper.createType<awst::WTuple>(
+					std::move(tupleTypes), std::move(tupleNames)
+				);
+			}
+			else
+			{
+				// No return types — shouldn't happen for getters, skip.
+				continue;
+			}
+
 			// Build body: return value
 			auto body = std::make_shared<awst::Block>();
-			body->sourceLocation = getter.sourceLocation;
+			body->sourceLocation = loc;
 
 			std::shared_ptr<awst::Expression> readExpr;
 			if (var->isConstant())
@@ -363,27 +414,316 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				if (var->value())
 					readExpr = m_exprBuilder->build(*var->value());
 				if (!readExpr)
-					readExpr = StorageMapper::makeDefaultValue(getter.returnType, getter.sourceLocation);
-				// Ensure the expression type matches the declared return type
-				// (e.g., literal 18 as uint64 but declared type is uint256/biguint)
+					readExpr = StorageMapper::makeDefaultValue(getter.returnType, loc);
 				if (readExpr && readExpr->wtype != getter.returnType)
 					readExpr = ExpressionBuilder::implicitNumericCast(
-						std::move(readExpr), getter.returnType, getter.sourceLocation
+						std::move(readExpr), getter.returnType, loc
 					);
 			}
-			else
+			else if (getter.args.empty())
 			{
-				// State variable or immutable — read from storage.
+				// Simple state variable (no mapping/array params) — read from storage.
 				auto storageKind = StorageMapper::shouldUseBoxStorage(*var)
 					? awst::AppStorageKind::Box
 					: awst::AppStorageKind::AppGlobal;
-				readExpr = m_storageMapper.createStateRead(
-					var->name(), getter.returnType, storageKind, getter.sourceLocation
-				);
+
+				// For struct types with multiple return values, read the full
+				// ARC4Struct and extract/decode each returned field.
+				auto const* solStructType = dynamic_cast<solidity::frontend::StructType const*>(var->type());
+				if (solStructType && solReturnTypes.size() > 1)
+				{
+					auto* storedWType = m_typeMapper.map(var->type());
+					auto fullStruct = m_storageMapper.createStateRead(
+						var->name(), storedWType, storageKind, loc
+					);
+
+					auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(storedWType);
+					auto tuple = std::make_shared<awst::TupleExpression>();
+					tuple->sourceLocation = loc;
+					tuple->wtype = getter.returnType;
+
+					for (auto const& member: solStructType->members(nullptr))
+					{
+						if (member.type->category() == solidity::frontend::Type::Category::Mapping)
+							continue;
+						if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(member.type))
+							if (!at->isByteArrayOrString())
+								continue;
+
+						awst::WType const* arc4FieldType = nullptr;
+						if (arc4Struct)
+							for (auto const& [fname, ftype]: arc4Struct->fields())
+								if (fname == member.name)
+								{
+									arc4FieldType = ftype;
+									break;
+								}
+
+						auto fieldExpr = std::make_shared<awst::FieldExpression>();
+						fieldExpr->sourceLocation = loc;
+						fieldExpr->wtype = arc4FieldType ? arc4FieldType : m_typeMapper.map(member.type);
+						fieldExpr->base = fullStruct;
+						fieldExpr->name = member.name;
+
+						auto* nativeType = m_typeMapper.map(member.type);
+						if (arc4FieldType && arc4FieldType != nativeType)
+						{
+							auto decode = std::make_shared<awst::ARC4Decode>();
+							decode->sourceLocation = loc;
+							decode->wtype = nativeType;
+							decode->value = std::move(fieldExpr);
+							tuple->items.push_back(std::move(decode));
+						}
+						else
+							tuple->items.push_back(std::move(fieldExpr));
+					}
+					readExpr = std::move(tuple);
+				}
+				else
+				{
+					readExpr = m_storageMapper.createStateRead(
+						var->name(), getter.returnType, storageKind, loc
+					);
+				}
+			}
+			else
+			{
+				// Mapping/array getter — build box read with key from arguments.
+				// Unwound value type: walk past mappings and arrays to get the stored type.
+				solidity::frontend::Type const* valueType = var->type();
+				size_t paramIdx = 0;
+				while (paramIdx < getter.args.size())
+				{
+					if (auto const* mt = dynamic_cast<solidity::frontend::MappingType const*>(valueType))
+					{
+						valueType = mt->valueType();
+						paramIdx++;
+					}
+					else if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(valueType))
+					{
+						if (at->isByteArrayOrString())
+							break;
+						valueType = at->baseType();
+						paramIdx++;
+					}
+					else
+						break;
+				}
+
+				// Map the unwound value type (may be a struct, in which case we need
+				// the full stored type, not the getter return type).
+				awst::WType const* storedWType = m_typeMapper.map(valueType);
+
+				// Build the box key from the getter arguments.
+				// Each arg is converted to bytes, concatenated, then sha256-hashed.
+				auto prefix = std::make_shared<awst::BytesConstant>();
+				prefix->sourceLocation = loc;
+				prefix->wtype = awst::WType::boxKeyType();
+				prefix->encoding = awst::BytesEncoding::Utf8;
+				std::string varName = var->name();
+				prefix->value = std::vector<uint8_t>(varName.begin(), varName.end());
+
+				std::vector<std::shared_ptr<awst::Expression>> keyParts;
+				for (size_t i = 0; i < getter.args.size(); ++i)
+				{
+					auto argRef = std::make_shared<awst::VarExpression>();
+					argRef->sourceLocation = loc;
+					argRef->wtype = getter.args[i].wtype;
+					argRef->name = getter.args[i].name;
+
+					std::shared_ptr<awst::Expression> keyBytes;
+					if (argRef->wtype == awst::WType::uint64Type())
+					{
+						auto itob = std::make_shared<awst::IntrinsicCall>();
+						itob->sourceLocation = loc;
+						itob->wtype = awst::WType::bytesType();
+						itob->opCode = "itob";
+						itob->stackArgs.push_back(std::move(argRef));
+						keyBytes = std::move(itob);
+					}
+					else if (argRef->wtype == awst::WType::biguintType())
+					{
+						// Normalize biguint to exactly 32 bytes before hashing.
+						auto reinterpret = std::make_shared<awst::ReinterpretCast>();
+						reinterpret->sourceLocation = loc;
+						reinterpret->wtype = awst::WType::bytesType();
+						reinterpret->expr = std::move(argRef);
+
+						auto padWidth = std::make_shared<awst::IntegerConstant>();
+						padWidth->sourceLocation = loc;
+						padWidth->wtype = awst::WType::uint64Type();
+						padWidth->value = "32";
+
+						auto pad = std::make_shared<awst::IntrinsicCall>();
+						pad->sourceLocation = loc;
+						pad->wtype = awst::WType::bytesType();
+						pad->opCode = "bzero";
+						pad->stackArgs.push_back(std::move(padWidth));
+
+						auto cat = std::make_shared<awst::IntrinsicCall>();
+						cat->sourceLocation = loc;
+						cat->wtype = awst::WType::bytesType();
+						cat->opCode = "concat";
+						cat->stackArgs.push_back(std::move(pad));
+						cat->stackArgs.push_back(std::move(reinterpret));
+
+						auto lenCall = std::make_shared<awst::IntrinsicCall>();
+						lenCall->sourceLocation = loc;
+						lenCall->wtype = awst::WType::uint64Type();
+						lenCall->opCode = "len";
+						lenCall->stackArgs.push_back(cat);
+
+						auto width32 = std::make_shared<awst::IntegerConstant>();
+						width32->sourceLocation = loc;
+						width32->wtype = awst::WType::uint64Type();
+						width32->value = "32";
+
+						auto offset = std::make_shared<awst::IntrinsicCall>();
+						offset->sourceLocation = loc;
+						offset->wtype = awst::WType::uint64Type();
+						offset->opCode = "-";
+						offset->stackArgs.push_back(std::move(lenCall));
+						offset->stackArgs.push_back(std::move(width32));
+
+						auto width32b = std::make_shared<awst::IntegerConstant>();
+						width32b->sourceLocation = loc;
+						width32b->wtype = awst::WType::uint64Type();
+						width32b->value = "32";
+
+						auto extract = std::make_shared<awst::IntrinsicCall>();
+						extract->sourceLocation = loc;
+						extract->wtype = awst::WType::bytesType();
+						extract->opCode = "extract3";
+						extract->stackArgs.push_back(std::move(cat));
+						extract->stackArgs.push_back(std::move(offset));
+						extract->stackArgs.push_back(std::move(width32b));
+
+						keyBytes = std::move(extract);
+					}
+					else
+					{
+						// string / bytes / address → ReinterpretCast to bytes
+						auto reinterpret = std::make_shared<awst::ReinterpretCast>();
+						reinterpret->sourceLocation = loc;
+						reinterpret->wtype = awst::WType::bytesType();
+						reinterpret->expr = std::move(argRef);
+						keyBytes = std::move(reinterpret);
+					}
+					keyParts.push_back(std::move(keyBytes));
+				}
+
+				// Concatenate key parts
+				std::shared_ptr<awst::Expression> compositeKey;
+				if (keyParts.size() == 1)
+					compositeKey = std::move(keyParts[0]);
+				else
+				{
+					compositeKey = std::move(keyParts[0]);
+					for (size_t i = 1; i < keyParts.size(); ++i)
+					{
+						auto concat = std::make_shared<awst::IntrinsicCall>();
+						concat->sourceLocation = loc;
+						concat->wtype = awst::WType::bytesType();
+						concat->opCode = "concat";
+						concat->stackArgs.push_back(std::move(compositeKey));
+						concat->stackArgs.push_back(std::move(keyParts[i]));
+						compositeKey = std::move(concat);
+					}
+				}
+
+				// Hash the composite key
+				auto hashCall = std::make_shared<awst::IntrinsicCall>();
+				hashCall->sourceLocation = loc;
+				hashCall->wtype = awst::WType::bytesType();
+				hashCall->opCode = "sha256";
+				hashCall->stackArgs.push_back(std::move(compositeKey));
+
+				auto boxKey = std::make_shared<awst::BoxPrefixedKeyExpression>();
+				boxKey->sourceLocation = loc;
+				boxKey->wtype = awst::WType::boxKeyType();
+				boxKey->prefix = prefix;
+				boxKey->key = std::move(hashCall);
+
+				auto boxExpr = std::make_shared<awst::BoxValueExpression>();
+				boxExpr->sourceLocation = loc;
+				boxExpr->wtype = storedWType;
+				boxExpr->key = std::move(boxKey);
+
+				auto defaultVal = StorageMapper::makeDefaultValue(storedWType, loc);
+
+				auto stateGet = std::make_shared<awst::StateGet>();
+				stateGet->sourceLocation = loc;
+				stateGet->wtype = storedWType;
+				stateGet->field = std::move(boxExpr);
+				stateGet->defaultValue = std::move(defaultVal);
+
+				// If the stored type is a struct but the getter returns a tuple
+				// of selected fields, extract and ARC4-decode each field.
+				if (auto const* structType = dynamic_cast<solidity::frontend::StructType const*>(valueType))
+				{
+					if (solReturnTypes.size() > 1)
+					{
+						// stateGet returns the full ARC4Struct; extract fields.
+						std::shared_ptr<awst::Expression> fullStruct = std::move(stateGet);
+						auto tuple = std::make_shared<awst::TupleExpression>();
+						tuple->sourceLocation = loc;
+						tuple->wtype = getter.returnType;
+
+						// Get the ARC4Struct type's field types for FieldExpression
+						auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(storedWType);
+
+						for (auto const& member: structType->members(nullptr))
+						{
+							if (member.type->category() == solidity::frontend::Type::Category::Mapping)
+								continue;
+							if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(member.type))
+								if (!at->isByteArrayOrString())
+									continue;
+
+							// Look up the ARC4 field type from the struct type
+							awst::WType const* arc4FieldType = nullptr;
+							if (arc4Struct)
+								for (auto const& [fname, ftype]: arc4Struct->fields())
+									if (fname == member.name)
+									{
+										arc4FieldType = ftype;
+										break;
+									}
+
+							auto fieldExpr = std::make_shared<awst::FieldExpression>();
+							fieldExpr->sourceLocation = loc;
+							fieldExpr->wtype = arc4FieldType ? arc4FieldType : m_typeMapper.map(member.type);
+							fieldExpr->base = fullStruct;
+							fieldExpr->name = member.name;
+
+							// ARC4Decode to native type if needed
+							auto* nativeType = m_typeMapper.map(member.type);
+							if (arc4FieldType && arc4FieldType != nativeType)
+							{
+								auto decode = std::make_shared<awst::ARC4Decode>();
+								decode->sourceLocation = loc;
+								decode->wtype = nativeType;
+								decode->value = std::move(fieldExpr);
+								tuple->items.push_back(std::move(decode));
+							}
+							else
+								tuple->items.push_back(std::move(fieldExpr));
+						}
+						readExpr = std::move(tuple);
+					}
+					else
+					{
+						readExpr = std::move(stateGet);
+					}
+				}
+				else
+				{
+					readExpr = std::move(stateGet);
+				}
 			}
 
 			auto ret = std::make_shared<awst::ReturnStatement>();
-			ret->sourceLocation = getter.sourceLocation;
+			ret->sourceLocation = loc;
 			ret->value = std::move(readExpr);
 			body->body.push_back(std::move(ret));
 
@@ -1796,59 +2136,42 @@ void ContractBuilder::inlineModifiers(
 			}
 		}
 
-		// Collect epilog statements (those after the placeholder `_`)
-		// These must execute BEFORE any return statement in the function body.
-		std::vector<std::shared_ptr<awst::Statement>> epilogStmts;
-		bool seenPlaceholder = false;
-		for (auto const& stmt: modDef->body().statements())
+		// Separate the function body's return statement from the placeholder body.
+		// The `_;` in a modifier should execute the function body WITHOUT the return;
+		// the return is appended after the entire modifier body completes.
+		auto placeholderBody = std::make_shared<awst::Block>();
+		placeholderBody->sourceLocation = _body->sourceLocation;
+		std::shared_ptr<awst::Statement> deferredReturn;
+		for (auto const& bodyStmt: _body->body)
 		{
-			if (dynamic_cast<solidity::frontend::PlaceholderStatement const*>(stmt.get()))
-			{
-				seenPlaceholder = true;
-			}
-			else if (seenPlaceholder)
-			{
-				// Epilog statement — translate and save for later insertion
-				auto translated = m_stmtBuilder->build(*stmt);
-				if (translated)
-					epilogStmts.push_back(std::move(translated));
-			}
+			if (dynamic_cast<awst::ReturnStatement const*>(bodyStmt.get()))
+				deferredReturn = bodyStmt;
 			else
-			{
-				// Prolog statement — translate and add directly
-				auto translated = m_stmtBuilder->build(*stmt);
-				if (translated)
-					modBody->body.push_back(std::move(translated));
-			}
+				placeholderBody->body.push_back(bodyStmt);
 		}
 
-		if (seenPlaceholder)
+		// Translate the entire modifier body through the statement builder.
+		// The `_;` (PlaceholderStatement) will be replaced with the function body
+		// wherever it appears — including inside loops and conditionals.
+		m_stmtBuilder->setPlaceholderBody(placeholderBody);
+		auto translatedModBody = m_stmtBuilder->buildBlock(modDef->body());
+		m_stmtBuilder->setPlaceholderBody(nullptr);
+
+		if (translatedModBody)
 		{
-			// Insert function body, but move any trailing ReturnStatement
-			// to AFTER the epilog. This ensures modifier cleanup runs before return.
-			std::shared_ptr<awst::Statement> deferredReturn;
-			for (auto const& bodyStmt: _body->body)
-			{
-				if (dynamic_cast<awst::ReturnStatement const*>(bodyStmt.get()))
-					deferredReturn = bodyStmt;  // capture return, insert later
-				else
-					modBody->body.push_back(bodyStmt);
-			}
-
-			// Insert epilog before the return
-			for (auto& epilogStmt: epilogStmts)
-				modBody->body.push_back(std::move(epilogStmt));
-
-			// Now add the return
-			if (deferredReturn)
-				modBody->body.push_back(std::move(deferredReturn));
+			for (auto& stmt: translatedModBody->body)
+				modBody->body.push_back(std::move(stmt));
 		}
 		else
 		{
-			// No placeholder — just copy body as-is
+			// Fallback: copy body as-is
 			for (auto const& bodyStmt: _body->body)
 				modBody->body.push_back(bodyStmt);
 		}
+
+		// Append the deferred return after the modifier body
+		if (deferredReturn)
+			modBody->body.push_back(std::move(deferredReturn));
 
 		// Unregister remaps so they don't affect subsequent code
 		for (auto declId: remappedDeclIds)

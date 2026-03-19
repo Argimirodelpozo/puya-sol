@@ -38,14 +38,63 @@ def localnet():
     return client, account
 
 
+def _split_multi_source(sol_path):
+    """Split multi-source test files (==== Source: name ====) into temp files.
+
+    Returns (main_source_path, import_dir) or (sol_path, None) if single-source.
+    """
+    import tempfile
+    content = sol_path.read_text()
+    if "==== Source:" not in content:
+        return sol_path, None
+
+    # Split on ==== Source: name ==== delimiters
+    import re
+    parts = re.split(r'^==== Source: (.+?) ====$', content, flags=re.MULTILINE)
+    # parts[0] is before first delimiter (usually empty), then alternating name/content
+    if len(parts) < 3:
+        return sol_path, None
+
+    tmp_dir = Path(tempfile.mkdtemp(prefix="multisource_"))
+    sources = {}
+    last_name = None
+    for i in range(1, len(parts), 2):
+        name = parts[i].strip()
+        body = parts[i + 1] if i + 1 < len(parts) else ""
+        # Strip trailing test assertions (// ----)
+        if "// ----" in body:
+            body = body[:body.index("// ----")]
+        # Write with exact name (for import resolution) and .sol variant
+        (tmp_dir / name).write_text(body)
+        if not name.endswith(".sol"):
+            (tmp_dir / (name + ".sol")).write_text(body)
+        sources[name] = body
+        last_name = name
+
+    # The main source is the last one (contains the contract to deploy)
+    main = last_name + ".sol" if not last_name.endswith(".sol") else last_name
+    return tmp_dir / main, tmp_dir
+
+
 def compile_sol(sol_path, out_dir):
     out_dir.mkdir(parents=True, exist_ok=True)
-    result = subprocess.run(
-        [str(COMPILER), "--source", str(sol_path),
-         "--output-dir", str(out_dir),
-         "--puya-path", str(PUYA)],
-        capture_output=True, text=True, timeout=120,
-    )
+
+    # Handle multi-source test files
+    source_path, import_dir = _split_multi_source(sol_path)
+
+    cmd = [str(COMPILER), "--source", str(source_path),
+           "--output-dir", str(out_dir),
+           "--puya-path", str(PUYA)]
+    if import_dir:
+        cmd += ["--import-path", str(import_dir)]
+
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+
+    # Clean up temp files
+    if import_dir:
+        import shutil
+        shutil.rmtree(import_dir, ignore_errors=True)
+
     if result.returncode != 0:
         return None
     contracts = {}
@@ -86,11 +135,52 @@ def deploy_app(localnet, account, artifacts):
         pay = PaymentTxn(account.address, sp2, app_addr, 1_000_000)
         wait_for_confirmation(algod,
             algod.send_transaction(pay.sign(account.private_key)), 4)
-        return au.AppClient(au.AppClientParams(
+        app = au.AppClient(au.AppClientParams(
             algorand=localnet, app_spec=app_spec,
             app_id=app_id, default_sender=account.address))
+
+        # Call __postInit if it exists (constructor body that writes to boxes)
+        has_post_init = any(
+            m.name == "__postInit" for m in app_spec.methods
+        )
+        if has_post_init:
+            app.send.call(
+                au.AppClientMethodCallParams(
+                    method="__postInit",
+                    args=[],
+                ),
+            )
+
+        return app
     except Exception:
         return None
+
+
+def _extract_box_refs(teal_path):
+    """Extract box references from TEAL bytecblock constants."""
+    import re
+    teal = teal_path.read_text()
+    refs = []
+    # Find the __postInit section and extract box key constants
+    in_postinit = False
+    for line in teal.split('\n'):
+        if '__postInit' in line and 'routing' in line:
+            in_postinit = True
+        elif in_postinit and line.strip().startswith('//') and 'routing' in line:
+            in_postinit = False
+        if in_postinit and 'box_' in line:
+            # Look for bytec references used with box ops
+            pass
+    # Simpler approach: find all hex constants in bytecblock that look like box keys
+    # (prefixed with a variable name byte)
+    bytecblock_match = re.search(r'bytecblock\s+(.*)', teal)
+    if bytecblock_match:
+        tokens = bytecblock_match.group(1).split()
+        for token in tokens:
+            if token.startswith('0x') and len(token) > 10:
+                key_bytes = bytes.fromhex(token[2:])
+                refs.append(au.BoxReference(app_id=0, name=key_bytes))
+    return refs
 
 
 def compare_values(actual, expected):
@@ -103,10 +193,23 @@ def compare_values(actual, expected):
             return (1 if actual else 0) == expected
         if isinstance(actual, int):
             return actual == expected
+        # Unwrap single-value dicts (ARC4 struct with one field)
+        if isinstance(actual, dict) and len(actual) == 1:
+            return compare_values(list(actual.values())[0], expected)
         if isinstance(actual, (list, tuple)):
             try:
-                actual_int = int.from_bytes(bytes(actual), 'big')
-                return actual_int == expected
+                actual_bytes = bytes(actual)
+                actual_int = int.from_bytes(actual_bytes, 'big')
+                if actual_int == expected:
+                    return True
+                # EVM bytesN returns are left-padded to 32 bytes.
+                # ARC4 returns raw N bytes. Left-pad actual to 32 and compare.
+                if len(actual_bytes) < 32:
+                    padded = actual_bytes + b'\x00' * (32 - len(actual_bytes))
+                    padded_int = int.from_bytes(padded, 'big')
+                    if padded_int == expected:
+                        return True
+                return False
             except (ValueError, OverflowError):
                 pass
     if isinstance(expected, bytes):

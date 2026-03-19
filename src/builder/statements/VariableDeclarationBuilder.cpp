@@ -189,14 +189,15 @@ bool StatementBuilder::visit(solidity::frontend::VariableDeclarationStatement co
 			}
 		}
 
-		// Storage pointer alias: Type storage p = _mapping[key]
-		// Don't create a local variable — register as alias to the box expression.
-		// Later references to `p` will resolve to the box read, so field writes persist.
+		// Storage pointer alias: Type storage p = _mapping[key] or p = stateVar
+		// Don't create a local variable — register as alias to the storage expression.
+		// Later references to `p` will resolve to the storage read, so field writes persist.
 		if (decl.referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 			&& initialValue)
 		{
 			if (dynamic_cast<awst::StateGet const*>(value.get())
-				|| dynamic_cast<awst::BoxValueExpression const*>(value.get()))
+				|| dynamic_cast<awst::BoxValueExpression const*>(value.get())
+				|| dynamic_cast<awst::AppStateExpression const*>(value.get()))
 			{
 				// Ensure it's wrapped in StateGet for proper read semantics
 				auto aliasExpr = value;
@@ -207,6 +208,16 @@ bool StatementBuilder::visit(solidity::frontend::VariableDeclarationStatement co
 					stateGet->wtype = boxVal->wtype;
 					stateGet->field = value;
 					stateGet->defaultValue = StorageMapper::makeDefaultValue(boxVal->wtype, loc);
+					aliasExpr = stateGet;
+				}
+				else if (auto const* appState = dynamic_cast<awst::AppStateExpression const*>(value.get()))
+				{
+					// AppGlobal state: wrap in StateGet for read semantics
+					auto stateGet = std::make_shared<awst::StateGet>();
+					stateGet->sourceLocation = loc;
+					stateGet->wtype = appState->wtype;
+					stateGet->field = value;
+					stateGet->defaultValue = StorageMapper::makeDefaultValue(appState->wtype, loc);
 					aliasExpr = stateGet;
 				}
 				m_exprBuilder.addStorageAlias(decl.id(), aliasExpr);

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding_dynamic_struct.sol.X.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 32 0
     bytecblock "test"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -34,12 +34,12 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding_dynamic_struct.sol.X.set[routing]() -> void:
 set:
-    intc_1 // 0
+    intc_2 // 0
     bytec_0 // "test"
     app_global_get_ex
     assert // check test exists
     dup
-    pushint 32
+    intc_1 // 32
     extract_uint16
     dig 1
     len
@@ -59,10 +59,36 @@ set:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding_dynamic_struct.sol.X.test[routing]() -> void:
 test:
-    intc_1 // 0
+    intc_2 // 0
     bytec_0 // "test"
     app_global_get_ex
     assert // check test exists
+    dup
+    extract 0 32
+    dig 1
+    intc_1 // 32
+    extract_uint16
+    dig 2
+    len
+    uncover 3
+    cover 2
+    substring3
+    extract 2 0
+    intc_1 // 32
+    bzero
+    uncover 2
+    b|
+    dig 1
+    len
+    itob
+    extract 6 2
+    uncover 2
+    concat
+    swap
+    pushbytes 0x0022
+    concat
+    swap
+    concat
     pushbytes 0x151f7c75
     swap
     concat

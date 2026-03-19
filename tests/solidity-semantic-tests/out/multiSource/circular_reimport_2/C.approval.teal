@@ -1,0 +1,89 @@
+#pragma version 10
+#pragma typetrack false
+
+// /tmp/multisource_9ylhjn96/s3.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 32
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0xeddddc3d // method "foo()uint256"
+    txna ApplicationArgs 0
+    match main_foo_route@4
+    err
+
+main_foo_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b foo
+
+
+// /tmp/multisource_9ylhjn96/s3.sol.f() -> bytes:
+f:
+    callsub g
+    pushbytes 0x0100000000000000000000000000000000000000000000000000000000000003e8
+    b+
+    callsub /tmp/multisource_9ylhjn96/s3.sol.f_30
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    retsub
+
+
+// /tmp/multisource_9ylhjn96/s3.sol.f_30() -> bytes:
+/tmp/multisource_9ylhjn96/s3.sol.f_30:
+    pushint 2
+    itob
+    retsub
+
+
+// /tmp/multisource_9ylhjn96/s3.sol.g() -> bytes:
+g:
+    pushint 4
+    itob
+    retsub
+
+
+// /tmp/multisource_9ylhjn96/s3.sol.C.foo[routing]() -> void:
+foo:
+    callsub /tmp/multisource_9ylhjn96/s3.sol.f_30
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000002710
+    b+
+    callsub g
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    callsub f
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

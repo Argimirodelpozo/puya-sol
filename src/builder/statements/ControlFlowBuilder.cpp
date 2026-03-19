@@ -81,18 +81,9 @@ bool StatementBuilder::visit(solidity::frontend::WhileStatement const& _node)
 		auto body = std::make_shared<awst::Block>();
 		body->sourceLocation = makeLoc(_node.body().location());
 
-		// Body statements
-		if (auto const* block = dynamic_cast<solidity::frontend::Block const*>(&_node.body()))
-		{
-			for (auto const& stmt: block->statements())
-			{
-				auto translated = build(*stmt);
-				if (translated)
-					body->body.push_back(std::move(translated));
-			}
-		}
-
-		// Check condition at end
+		// Build the condition-check-and-break block upfront so `continue`
+		// can reference it. In Solidity, `continue` in do-while jumps to
+		// the condition check, not back to the body top.
 		auto cond = m_exprBuilder.build(_node.condition());
 		auto notCond = std::make_shared<awst::Not>();
 		notCond->sourceLocation = loc;
@@ -108,7 +99,55 @@ bool StatementBuilder::visit(solidity::frontend::WhileStatement const& _node)
 		ifBreak->condition = notCond;
 		ifBreak->ifBranch = breakBlock;
 
-		body->body.push_back(ifBreak);
+		// Set m_doWhileCondBreak so `continue` emits the condition check
+		auto savedCondBreak = m_doWhileCondBreak;
+		m_doWhileCondBreak = ifBreak;
+
+		// Body statements
+		bool bodyTerminated = false;
+		if (auto const* block = dynamic_cast<solidity::frontend::Block const*>(&_node.body()))
+		{
+			for (auto const& stmt: block->statements())
+			{
+				auto translated = build(*stmt);
+				if (translated)
+				{
+					body->body.push_back(std::move(translated));
+					// Check if this statement terminates control flow
+					auto const& last = body->body.back();
+					if (dynamic_cast<awst::LoopContinue const*>(last.get())
+						|| dynamic_cast<awst::LoopExit const*>(last.get())
+						|| dynamic_cast<awst::ReturnStatement const*>(last.get()))
+					{
+						bodyTerminated = true;
+						Logger::instance().warning("do-while body: ignoring unreachable code after terminal statement", loc);
+						break;
+					}
+					// Also check for blocks ending in terminal statements
+					if (auto const* blk = dynamic_cast<awst::Block const*>(last.get()))
+					{
+						if (!blk->body.empty())
+						{
+							auto const& lastInBlock = blk->body.back();
+							if (dynamic_cast<awst::LoopContinue const*>(lastInBlock.get())
+								|| dynamic_cast<awst::LoopExit const*>(lastInBlock.get())
+								|| dynamic_cast<awst::ReturnStatement const*>(lastInBlock.get()))
+							{
+								bodyTerminated = true;
+								Logger::instance().warning("do-while body: ignoring unreachable code after terminal statement", loc);
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		m_doWhileCondBreak = savedCondBreak;
+
+		// Check condition at end (normal fall-through path) — skip if body always terminates
+		if (!bodyTerminated)
+			body->body.push_back(ifBreak);
 		loop->loopBody = body;
 
 		push(loop);
@@ -227,6 +266,20 @@ bool StatementBuilder::visit(solidity::frontend::Continue const& _node)
 		block->body.push_back(std::move(cont));
 		push(block);
 	}
+	else if (m_doWhileCondBreak)
+	{
+		// In do-while, `continue` jumps to the condition check.
+		// Emit the condition-check (if !cond: break) then LoopContinue.
+		// The LoopContinue goes back to while(true) → re-enters body.
+		// If condition is false, LoopExit fires first and exits the loop.
+		auto block = std::make_shared<awst::Block>();
+		block->sourceLocation = loc;
+		block->body.push_back(m_doWhileCondBreak);
+		auto cont = std::make_shared<awst::LoopContinue>();
+		cont->sourceLocation = loc;
+		block->body.push_back(std::move(cont));
+		push(block);
+	}
 	else
 	{
 		auto stmt = std::make_shared<awst::LoopContinue>();
@@ -241,6 +294,21 @@ bool StatementBuilder::visit(solidity::frontend::Break const& _node)
 	auto stmt = std::make_shared<awst::LoopExit>();
 	stmt->sourceLocation = makeLoc(_node.location());
 	push(stmt);
+	return false;
+}
+
+
+bool StatementBuilder::visit(solidity::frontend::PlaceholderStatement const& _node)
+{
+	// `_;` in a modifier body: inline the function body here.
+	if (m_placeholderBody)
+	{
+		auto block = std::make_shared<awst::Block>();
+		block->sourceLocation = makeLoc(_node.location());
+		for (auto const& stmt: m_placeholderBody->body)
+			block->body.push_back(stmt);
+		push(block);
+	}
 	return false;
 }
 

@@ -47,7 +47,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x1b7e7c40 0x33fe5706 0x5fb55aa6 0xcf17cb7e 0x2905c9dd 0x30516f86 0x6369193c 0xf7f72106 0x553aaaf5 0x9a3f9185 0x7a66f091 0x0b4bc485 0x5af2a918 0xcd328dae 0xe53b59b3 0x0eb0769d 0xdce9cebd 0xdad7beec 0x8a350bda 0xe492266c 0x44e23cd9 0xc6c11df2 0x60b24ec0 0xe5e8a40d 0x737e11ff 0x59224954 // method "storage_a()(uint256,uint256)", method "storage_ra()(uint256,uint256)", method "storage_b()(uint256,uint256)", method "storage_rb()(uint256,uint256)", method "storage_c()(uint256,uint256)", method "storage_rc()(uint256,uint256)", method "storage_d()(uint256,uint256)", method "storage_rd()(uint256,uint256)", method "set_a(uint64,uint64)void", method "set_ra(uint64,uint64)void", method "set_b(uint64,uint64)void", method "set_rb(uint64,uint64)void", method "set_c(uint64,uint64)void", method "set_rc(uint64,uint64)void", method "set_d(uint256,address)void", method "set_rd(uint256,address)void", method "read_slot(uint256)uint256", method "read_contents_asm()(byte[32],byte[32],byte[32],byte[32])", method "a()(uint64,uint64)", method "ra()(uint64,uint64)", method "b()(uint64,uint64)", method "rb()(uint64,uint64)", method "c()(uint64,uint64)", method "rc()(uint64,uint64)", method "d()(uint256,uint8[32])", method "rd()(uint256,uint8[32])"
+    pushbytess 0x1b7e7c40 0x33fe5706 0x5fb55aa6 0xcf17cb7e 0x2905c9dd 0x30516f86 0x6369193c 0xf7f72106 0x553aaaf5 0x9a3f9185 0x7a66f091 0x0b4bc485 0x5af2a918 0xcd328dae 0xe53b59b3 0x0eb0769d 0xdce9cebd 0xdad7beec 0x8a350bda 0xe492266c 0x44e23cd9 0xc6c11df2 0x60b24ec0 0xe5e8a40d 0xc5d1e484 0x53744efb // method "storage_a()(uint256,uint256)", method "storage_ra()(uint256,uint256)", method "storage_b()(uint256,uint256)", method "storage_rb()(uint256,uint256)", method "storage_c()(uint256,uint256)", method "storage_rc()(uint256,uint256)", method "storage_d()(uint256,uint256)", method "storage_rd()(uint256,uint256)", method "set_a(uint64,uint64)void", method "set_ra(uint64,uint64)void", method "set_b(uint64,uint64)void", method "set_rb(uint64,uint64)void", method "set_c(uint64,uint64)void", method "set_rc(uint64,uint64)void", method "set_d(uint256,address)void", method "set_rd(uint256,address)void", method "read_slot(uint256)uint256", method "read_contents_asm()(byte[32],byte[32],byte[32],byte[32])", method "a()(uint64,uint64)", method "ra()(uint64,uint64)", method "b()(uint64,uint64)", method "rb()(uint64,uint64)", method "c()(uint64,uint64)", method "rc()(uint64,uint64)", method "d()(uint256,address)", method "rd()(uint256,address)"
     txna ApplicationArgs 0
     match storage_a storage_ra storage_b storage_rb storage_c storage_rc storage_d storage_rd set_a set_ra set_b set_rb set_c set_rc set_d set_rd read_slot read_contents_asm a ra b rb c rc d rd
     err
@@ -463,6 +463,11 @@ a:
     bytec 4 // "a"
     app_global_get_ex
     assert // check a exists
+    dup
+    extract 0 8
+    swap
+    extract 8 8
+    concat
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -477,6 +482,11 @@ ra:
     bytec 5 // "ra"
     app_global_get_ex
     assert // check ra exists
+    dup
+    extract 0 8
+    swap
+    extract 8 8
+    concat
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -491,6 +501,11 @@ b:
     bytec_3 // "b"
     app_global_get_ex
     assert // check b exists
+    dup
+    extract 0 8
+    swap
+    extract 8 8
+    concat
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -505,6 +520,11 @@ rb:
     bytec 6 // "rb"
     app_global_get_ex
     assert // check rb exists
+    dup
+    extract 0 8
+    swap
+    extract 8 8
+    concat
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -519,6 +539,11 @@ c:
     bytec 7 // "c"
     app_global_get_ex
     assert // check c exists
+    dup
+    extract 0 8
+    swap
+    extract 8 8
+    concat
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -533,6 +558,11 @@ rc:
     bytec 8 // "rc"
     app_global_get_ex
     assert // check rc exists
+    dup
+    extract 0 8
+    swap
+    extract 8 8
+    concat
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -547,6 +577,16 @@ d:
     bytec 9 // "d"
     app_global_get_ex
     assert // check d exists
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    intc_3 // 32
+    bzero
+    uncover 2
+    b|
+    swap
+    concat
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -561,6 +601,16 @@ rd:
     bytec 10 // "rd"
     app_global_get_ex
     assert // check rd exists
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    intc_3 // 32
+    bzero
+    uncover 2
+    b|
+    swap
+    concat
     bytec_0 // 0x151f7c75
     swap
     concat

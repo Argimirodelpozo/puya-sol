@@ -116,6 +116,26 @@ def _parse_assertion_line(line: str) -> TestCall | None:
     )
 
     if not match:
+        # Try matching lines without '->' (void calls with no return assertion)
+        match_no_arrow = re.match(
+            r'^([a-zA-Z_]\w*\([^)]*\))'  # method signature
+            r'(?:,\s*(\d+)\s+(wei|ether))?'  # optional value
+            r'(?:\s*:\s*(.+?))?'  # optional args after ':'
+            r'\s*$',  # end of line, no '->'
+            line
+        )
+        if match_no_arrow:
+            method_sig = match_no_arrow.group(1)
+            args_str = match_no_arrow.group(4)
+            args = [a.strip() for a in _split_values(args_str)] if args_str else []
+            return TestCall(
+                method_signature=method_sig,
+                args=args,
+                expected=[""],  # void
+                expect_failure=False,
+                value_wei=0,
+                raw_line=line,
+            )
         return None
 
     method_sig = match.group(1)

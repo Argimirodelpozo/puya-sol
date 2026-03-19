@@ -1,0 +1,81 @@
+#pragma version 10
+#pragma typetrack false
+
+// /tmp/multisource_y72ujxd7/b.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0x219b312e // method "f()(uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b /tmp/multisource_y72ujxd7/b.sol.C.f[routing]
+
+
+// /tmp/multisource_y72ujxd7/b.sol.f(_param0: bytes) -> bytes:
+f:
+    proto 1 1
+    pushint 7
+    itob
+    retsub
+
+
+// /tmp/multisource_y72ujxd7/b.sol.f_42(x: bytes) -> bytes:
+/tmp/multisource_y72ujxd7/b.sol.f_42:
+    proto 1 1
+    frame_dig -1
+    len
+    itob
+    retsub
+
+
+// /tmp/multisource_y72ujxd7/b.sol.C.f[routing]() -> void:
+/tmp/multisource_y72ujxd7/b.sol.C.f[routing]:
+    pushint 2
+    itob
+    callsub f
+    pushbytes "abc"
+    callsub /tmp/multisource_y72ujxd7/b.sol.f_42
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 2
+    dig 1
+    b|
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

@@ -213,6 +213,35 @@ bool ExpressionBuilder::visit(solidity::frontend::MemberAccess const& _node)
 			push(e);
 			return false;
 		}
+
+	}
+
+	// type(C).name → contract/interface name as string constant
+	if (memberName == "name")
+	{
+		auto const* baseType = baseExpr.annotation().type;
+		solidity::frontend::Type const* typeArg = nullptr;
+		if (auto const* magicType = dynamic_cast<solidity::frontend::MagicType const*>(baseType))
+			typeArg = magicType->typeArgument();
+		else if (auto const* typeType = dynamic_cast<solidity::frontend::TypeType const*>(baseType))
+			typeArg = typeType->actualType();
+
+		if (typeArg)
+		{
+			std::string typeName;
+			if (auto const* ct = dynamic_cast<solidity::frontend::ContractType const*>(typeArg))
+				typeName = ct->contractDefinition().name();
+			else
+				typeName = typeArg->toString(true);
+
+			auto strConst = std::make_shared<awst::BytesConstant>();
+			strConst->sourceLocation = loc;
+			strConst->wtype = awst::WType::stringType();
+			strConst->encoding = awst::BytesEncoding::Utf8;
+			strConst->value = std::vector<uint8_t>(typeName.begin(), typeName.end());
+			push(strConst);
+			return false;
+		}
 	}
 
 	// .length on arrays or bytes

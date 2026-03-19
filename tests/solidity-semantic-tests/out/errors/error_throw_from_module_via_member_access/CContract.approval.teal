@@ -1,0 +1,36 @@
+#pragma version 10
+#pragma typetrack false
+
+// /tmp/multisource_9bm1u1fc/C.sol.CContract.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x522de3ce 0xf03d4950 0x8fb0ebb2 // method "error1()void", method "error2()void", method "error3()void"
+    txna ApplicationArgs 0
+    match main_error1_route@5 main_error2_route@6 main_error3_route@7
+    err
+
+main_error3_route@7:
+    err // ErrorA
+
+main_error2_route@6:
+    err // ErrorB
+
+main_error1_route@5:
+    err // ErrorB

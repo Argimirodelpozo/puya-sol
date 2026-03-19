@@ -1,0 +1,70 @@
+#pragma version 10
+#pragma typetrack false
+
+// /tmp/multisource_5snc9_yj/s2.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1
+    bytecblock 0x151f7c750003030102
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x38b8b62f 0x4b25d408 0xafedb2e5 0xba05598b // method "f()byte[]", method "g()byte[]", method "h()uint256", method "i()byte[]"
+    txna ApplicationArgs 0
+    match main_f_route@5 main_g_route@6 main_h_route@7 i
+    err
+
+main_h_route@7:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000005
+    log
+    intc_0 // 1
+    return
+
+main_g_route@6:
+    bytec_0 // 0x151f7c750003030102
+    log
+    intc_0 // 1
+    return
+
+main_f_route@5:
+    bytec_0 // 0x151f7c750003030102
+    log
+    intc_0 // 1
+    return
+
+
+// /tmp/multisource_5snc9_yj/s2.sol.fre() -> bytes:
+fre:
+    pushbytes 0x030102
+    retsub
+
+
+// /tmp/multisource_5snc9_yj/s2.sol.C.i[routing]() -> void:
+i:
+    callsub fre
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

@@ -4,16 +4,16 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/use_scratch.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock "x" "y" "__ctor_pending" 0x
+    bytecblock "x" 0x "y" "__ctor_pending" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
-    bytec_3 // 0x
+    bytec_1 // 0x
     app_global_put
-    bytec_1 // "y"
-    bytec_3 // 0x
+    bytec_2 // "y"
+    bytec_1 // 0x
     app_global_put
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -32,9 +32,9 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xa5074cc7 0x219b312e // method "__postInit(uint256)void", method "f()(uint256,uint256)"
+    pushbytess 0xa5074cc7 0x219b312e 0x8338d04b // method "__postInit(uint256)void", method "f()(uint256,uint256)", method "m(uint256)uint256"
     txna ApplicationArgs 0
-    match __postInit f
+    match __postInit f m
     err
 
 
@@ -46,10 +46,10 @@ __postInit:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_2 // 0
     app_global_put
     pushint 42
@@ -59,7 +59,7 @@ __postInit:
     app_global_put
     pushint 23
     itob
-    bytec_1 // "y"
+    bytec_2 // "y"
     swap
     app_global_put
     pushint 7
@@ -96,7 +96,7 @@ f:
     dup
     b+
     intc_2 // 0
-    bytec_1 // "y"
+    bytec_2 // "y"
     app_global_get_ex
     assert // check y exists
     dig 1
@@ -117,7 +117,48 @@ f:
     cover 2
     b|
     concat
-    pushbytes 0x151f7c75
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/use_scratch.sol.C.m[routing]() -> void:
+m:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    pushbytes "m"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec 4 // 0x151f7c75
     swap
     concat
     log

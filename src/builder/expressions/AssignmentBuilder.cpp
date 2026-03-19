@@ -431,6 +431,18 @@ bool ExpressionBuilder::visit(solidity::frontend::Assignment const& _node)
 			value = std::move(cast);
 		}
 	}
+	// Coerce bytes → string when target is string (e.g., b = hex"41424344" where b is string)
+	if (value->wtype != target->wtype
+		&& target->wtype == awst::WType::stringType()
+		&& value->wtype && (value->wtype->kind() == awst::WTypeKind::Bytes
+			|| value->wtype == awst::WType::bytesType()))
+	{
+		auto cast = std::make_shared<awst::ReinterpretCast>();
+		cast->sourceLocation = loc;
+		cast->wtype = target->wtype;
+		cast->expr = std::move(value);
+		value = std::move(cast);
+	}
 
 	// Unwrap ARC4Decode for assignment targets — ARC4Decode is not an Lvalue.
 	if (auto const* decodeExpr = dynamic_cast<awst::ARC4Decode const*>(target.get()))

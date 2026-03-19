@@ -1,0 +1,94 @@
+#pragma version 10
+#pragma typetrack false
+
+// /tmp/multisource_vps75k74/B.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    bytecblock 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x1928cd24 0xc14ad39f // method "f(uint256)uint256", method "g(uint256)uint256"
+    txna ApplicationArgs 0
+    match f g
+    err
+
+
+// /tmp/multisource_vps75k74/B.sol.L.id(x: bytes) -> bytes:
+L.id:
+    proto 1 1
+    frame_dig -1
+    retsub
+
+
+// /tmp/multisource_vps75k74/B.sol.L.one_ext(_param0: bytes) -> bytes:
+L.one_ext:
+    proto 1 1
+    intc_1 // 1
+    itob
+    retsub
+
+
+// /tmp/multisource_vps75k74/B.sol.C.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub L.id
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /tmp/multisource_vps75k74/B.sol.C.g[routing]() -> void:
+g:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub L.one_ext
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

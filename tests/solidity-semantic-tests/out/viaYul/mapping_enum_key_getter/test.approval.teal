@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/mapping_enum_key_getter.sol.test.approval_program() -> uint64:
 main:
     intcblock 1 8
+    bytecblock "table"
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -17,18 +18,15 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xced1bdc6 // method "set(uint64,uint64)void"
-    txna ApplicationArgs 0
-    match main_set_route@4
-    err
-
-main_set_route@4:
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
-    b set
+    txn ApplicationID
+    assert
+    pushbytess 0xced1bdc6 0x43ea1406 // method "set(uint64,uint64)void", method "table(uint64)uint64"
+    txna ApplicationArgs 0
+    match set table
+    err
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/mapping_enum_key_getter.sol.test.set[routing]() -> void:
@@ -50,11 +48,41 @@ set:
     swap
     itob
     sha256
-    pushbytes "table"
+    bytec_0 // "table"
     swap
     concat
     swap
     itob
     box_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/mapping_enum_key_getter.sol.test.table[routing]() -> void:
+table:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    itob
+    sha256
+    bytec_0 // "table"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    pushint 0
+    swap
+    uncover 2
+    select
+    itob
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
     intc_0 // 1
     return
