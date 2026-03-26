@@ -226,7 +226,7 @@ awst::WType const* TypeMapper::mapToARC4Type(awst::WType const* _type)
 	if (_type == awst::WType::accountType())
 		return createType<awst::ARC4StaticArray>(arc4Byte, 32);
 	if (_type == awst::WType::bytesType())
-		return createType<awst::ARC4DynamicArray>(arc4Byte);
+		return createType<awst::ARC4DynamicArray>(arc4Byte, std::string("byte[]"));
 	if (_type == awst::WType::stringType())
 		return createType<awst::ARC4DynamicArray>(arc4Byte, std::string("string"));
 

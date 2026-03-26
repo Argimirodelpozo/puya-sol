@@ -3,6 +3,7 @@
 
 #include "builder/expressions/ExpressionBuilder.h"
 #include "builder/storage/StorageMapper.h"
+#include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/TypeProvider.h>
@@ -101,6 +102,19 @@ bool ExpressionBuilder::visit(solidity::frontend::Identifier const& _node)
 					bc->value = std::move(bytes);
 					push(std::move(bc));
 					return false;
+				}
+			}
+			// String constant → bytes[N]: right-pad to N bytes
+			if (auto const* bwt = dynamic_cast<awst::BytesWType const*>(targetType))
+			{
+				if (bwt->length().has_value() && *bwt->length() > 0)
+				{
+					if (auto padded = TypeCoercion::stringToBytesN(
+							val.get(), targetType, *bwt->length(), val->sourceLocation))
+					{
+						push(std::move(padded));
+						return false;
+					}
 				}
 			}
 			// If declared type is bytes but inlined value is string, cast

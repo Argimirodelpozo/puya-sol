@@ -499,6 +499,10 @@ njson AWSTSerializer::serializeExpression(awst::Expression const& _expr)
 		j["base"] = serializeExpression(*e->base);
 		j["other"] = serializeExpression(*e->other);
 	}
+	else if (auto const* e = dynamic_cast<awst::ConvertArray const*>(&_expr))
+	{
+		j["expr"] = serializeExpression(*e->expr);
+	}
 	else if (auto const* e = dynamic_cast<awst::NewStruct const*>(&_expr))
 	{
 		njson vals = njson::object();

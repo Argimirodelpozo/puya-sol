@@ -1,0 +1,69 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_storage.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 23 17 1
+    bytecblock "s" "b" "a"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "b"
+    intc_1 // 23
+    app_global_put
+    bytec_0 // "s"
+    pushbytes 0x
+    app_global_put
+    bytec_2 // "a"
+    intc_2 // 17
+    app_global_put
+    intc_3 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0x2d4970c7 // method "f()void"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_storage.sol.C.f[routing]() -> void:
+f:
+    intc_0 // 0
+    bytec_0 // "s"
+    app_global_get_ex
+    bury 1
+    assert // check s exists
+    bytec_0 // "s"
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    intc_0 // 0
+    bytec_1 // "b"
+    app_global_get_ex
+    assert // check b exists
+    intc_1 // 23
+    ==
+    assert
+    intc_0 // 0
+    bytec_2 // "a"
+    app_global_get_ex
+    assert // check a exists
+    intc_2 // 17
+    ==
+    assert
+    intc_3 // 1
+    return

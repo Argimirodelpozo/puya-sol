@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/checked_called_by_unchecked.sol.C.approval_program() -> uint64:
 main:
-    intcblock 8 1
+    intcblock 8 1 65535
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -46,6 +46,10 @@ add:
     assert // invalid number of bytes for arc4.uint64
     btoi
     +
+    dup
+    intc_2 // 65535
+    <=
+    assert // overflow
     itob
     bytec_0 // 0x151f7c75
     swap
@@ -80,6 +84,10 @@ f:
     btoi
     cover 2
     +
+    dup
+    intc_2 // 65535
+    <=
+    assert // overflow
     +
     itob
     bytec_0 // 0x151f7c75

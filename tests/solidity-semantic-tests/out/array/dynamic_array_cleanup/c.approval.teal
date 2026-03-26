@@ -1,0 +1,110 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/dynamic_array_cleanup.sol.c.approval_program() -> uint64:
+main:
+    intcblock 0 1 32 2
+    bytecblock "dynamic_length" "dynamic"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytess "spacer" 0x
+    app_global_put
+    bytec_0 // "dynamic_length"
+    intc_0 // 0
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x5cd3f78a 0x5b7ea1f3 0x3b2ed18f // method "fill()void", method "halfClear()void", method "fullClear()void"
+    txna ApplicationArgs 0
+    match fill halfClear fullClear
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/dynamic_array_cleanup.sol.c.fill[routing]() -> void:
+fill:
+    intc_0 // 0
+    itob
+
+fill_while_top@2:
+    dup
+    pushbytes 0x15
+    b<
+    bz fill_after_while@4
+    bytec_1 // "dynamic"
+    box_get
+    assert // box exists
+    intc_3 // 2
+    intc_0 // 0
+    extract3
+    dig 1
+    pushbytes 0x01
+    b+
+    dup
+    bury 3
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    concat // on error: max array length exceeded
+    pop
+    b fill_while_top@2
+
+fill_after_while@4:
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/dynamic_array_cleanup.sol.c.halfClear[routing]() -> void:
+halfClear:
+
+halfClear_while_top@2:
+    intc_0 // 0
+    bytec_0 // "dynamic_length"
+    app_global_get_ex
+    assert // check dynamic_length exists
+    pushint 5
+    >
+    bz halfClear_after_while@4
+    bytec_1 // "dynamic"
+    box_get
+    assert // box exists
+    intc_3 // 2
+    intc_0 // 0
+    extract3
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_0 // 0
+    swap
+    substring3
+    pop
+    b halfClear_while_top@2
+
+halfClear_after_while@4:
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/dynamic_array_cleanup.sol.c.fullClear[routing]() -> void:
+fullClear:
+    intc_1 // 1
+    return

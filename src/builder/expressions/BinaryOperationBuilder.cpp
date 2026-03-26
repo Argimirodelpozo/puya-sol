@@ -322,6 +322,27 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 
 		if (_op == Token::Sub || _op == Token::AssignSub)
 		{
+			// Checked subtraction: assert a >= b before wrapping
+			if (!m_inUncheckedBlock)
+			{
+				auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+				cmp->sourceLocation = _loc;
+				cmp->wtype = awst::WType::boolType();
+				cmp->lhs = _left;   // shared ref, OK since BigUInt is immutable
+				cmp->op = awst::NumericComparison::Gte;
+				cmp->rhs = _right;  // shared ref
+
+				auto assertStmt = std::make_shared<awst::ExpressionStatement>();
+				assertStmt->sourceLocation = _loc;
+				auto assertExpr = std::make_shared<awst::AssertExpression>();
+				assertExpr->sourceLocation = _loc;
+				assertExpr->wtype = awst::WType::voidType();
+				assertExpr->condition = std::move(cmp);
+				assertExpr->errorMessage = "underflow";
+				assertStmt->expr = std::move(assertExpr);
+				m_prePendingStatements.push_back(std::move(assertStmt));
+			}
+
 			// Biguint subtraction needs wrapping mod 2^256 to avoid AVM underflow.
 			// Pattern: (a + 2^256 - b) % 2^256
 			auto pow256 = std::make_shared<awst::IntegerConstant>();
@@ -529,7 +550,37 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 		case Token::Mul: case Token::AssignMul: e->op = awst::UInt64BinaryOperator::Mult; break;
 		case Token::Div: case Token::AssignDiv: e->op = awst::UInt64BinaryOperator::FloorDiv; break;
 		case Token::Mod: case Token::AssignMod: e->op = awst::UInt64BinaryOperator::Mod; break;
-		case Token::Exp: e->op = awst::UInt64BinaryOperator::Pow; break;
+		case Token::Exp:
+		{
+			// AVM `exp` opcode asserts on 0^0. Solidity defines 0**0 = 1.
+			// Wrap: y == 0 ? 1 : x ** y
+			e->op = awst::UInt64BinaryOperator::Pow;
+
+			auto zero = std::make_shared<awst::IntegerConstant>();
+			zero->sourceLocation = _loc;
+			zero->wtype = awst::WType::uint64Type();
+			zero->value = "0";
+
+			auto cond = std::make_shared<awst::NumericComparisonExpression>();
+			cond->sourceLocation = _loc;
+			cond->wtype = awst::WType::boolType();
+			cond->lhs = e->right; // y (shared ref)
+			cond->op = awst::NumericComparison::Eq;
+			cond->rhs = std::move(zero);
+
+			auto one = std::make_shared<awst::IntegerConstant>();
+			one->sourceLocation = _loc;
+			one->wtype = awst::WType::uint64Type();
+			one->value = "1";
+
+			auto ternary = std::make_shared<awst::ConditionalExpression>();
+			ternary->sourceLocation = _loc;
+			ternary->wtype = awst::WType::uint64Type();
+			ternary->condition = std::move(cond);
+			ternary->trueExpr = std::move(one);
+			ternary->falseExpr = e;
+			return ternary;
+		}
 		case Token::SHL: case Token::AssignShl: e->op = awst::UInt64BinaryOperator::LShift; break;
 		case Token::SHR: case Token::AssignShr: case Token::SAR: case Token::AssignSar: e->op = awst::UInt64BinaryOperator::RShift; break;
 		case Token::BitOr: case Token::AssignBitOr: e->op = awst::UInt64BinaryOperator::BitOr; break;
@@ -702,7 +753,88 @@ bool ExpressionBuilder::visit(solidity::frontend::BinaryOperation const& _node)
 		}
 	}
 
-	push(buildBinaryOp(_node.getOperator(), std::move(left), std::move(right), resultType, loc));
+	auto result = buildBinaryOp(_node.getOperator(), std::move(left), std::move(right), resultType, loc);
+
+	// Checked arithmetic: for non-unchecked add/sub/mul on integer types,
+	// assert the result fits in the Solidity type's bit width.
+	// AVM biguint is arbitrary-precision and uint64 is 64-bit, so neither
+	// naturally detects overflow for narrower Solidity types (uint8, uint16, etc.).
+	if (!m_inUncheckedBlock
+		&& (result->wtype == awst::WType::biguintType()
+			|| result->wtype == awst::WType::uint64Type()))
+	{
+		auto const* solType = dynamic_cast<solidity::frontend::IntegerType const*>(
+			_node.annotation().type);
+		if (solType)
+		{
+			unsigned bits = solType->numBits();
+			bool isSigned = solType->isSigned();
+			auto checkOp = _node.getOperator();
+			bool needsCheck = (checkOp == Token::Add || checkOp == Token::AssignAdd
+				|| checkOp == Token::Sub || checkOp == Token::AssignSub
+				|| checkOp == Token::Mul || checkOp == Token::AssignMul
+				|| checkOp == Token::Exp);
+
+			// For biguint: check bits < 256 (256-bit is full range, no overflow possible)
+			// For uint64: check bits < 64 (e.g. uint8, uint16, uint32 need checking)
+			unsigned maxBits = (result->wtype == awst::WType::biguintType()) ? 256 : 64;
+			if (needsCheck && !isSigned && bits < maxBits)
+			{
+				// Emit: __checked_result = <result>
+				// assert(__checked_result <= typeMax, "overflow")
+				// <use __checked_result>
+				static int checkedCounter = 0;
+				std::string tmpName = "__checked_" + std::to_string(checkedCounter++);
+				auto* resType = result->wtype;
+
+				auto tmpVar = std::make_shared<awst::VarExpression>();
+				tmpVar->sourceLocation = loc;
+				tmpVar->wtype = resType;
+				tmpVar->name = tmpName;
+
+				auto assign = std::make_shared<awst::AssignmentStatement>();
+				assign->sourceLocation = loc;
+				assign->target = tmpVar;
+				assign->value = std::move(result);
+				m_prePendingStatements.push_back(std::move(assign));
+
+				auto maxConst = std::make_shared<awst::IntegerConstant>();
+				maxConst->sourceLocation = loc;
+				maxConst->wtype = resType;
+				if (resType == awst::WType::biguintType())
+				{
+					solidity::u256 maxVal = (solidity::u256(1) << bits) - 1;
+					maxConst->value = maxVal.str();
+				}
+				else
+				{
+					uint64_t maxVal = (uint64_t(1) << bits) - 1;
+					maxConst->value = std::to_string(maxVal);
+				}
+
+				auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+				cmp->sourceLocation = loc;
+				cmp->wtype = awst::WType::boolType();
+				cmp->lhs = tmpVar;
+				cmp->op = awst::NumericComparison::Lte;
+				cmp->rhs = std::move(maxConst);
+
+				auto assertStmt = std::make_shared<awst::ExpressionStatement>();
+				assertStmt->sourceLocation = loc;
+				auto assertExpr = std::make_shared<awst::AssertExpression>();
+				assertExpr->sourceLocation = loc;
+				assertExpr->wtype = awst::WType::voidType();
+				assertExpr->condition = std::move(cmp);
+				assertExpr->errorMessage = "overflow";
+				assertStmt->expr = std::move(assertExpr);
+				m_prePendingStatements.push_back(std::move(assertStmt));
+
+				result = tmpVar;
+			}
+		}
+	}
+
+	push(std::move(result));
 	return false;
 }
 

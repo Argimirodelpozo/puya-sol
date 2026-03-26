@@ -3,7 +3,6 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blockhash_shadow_resolution.sol.C.approval_program() -> uint64:
 main:
-    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
     pushint 1
@@ -24,14 +23,8 @@ main_after_if_else@2:
     assert
     pushbytess 0x54b2ad6e 0x4494bd16 // method "blockhash(uint256)byte[32]", method "f()byte[32]"
     txna ApplicationArgs 0
-    match blockhash main_f_route@6
+    match blockhash f
     err
-
-main_f_route@6:
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
-    log
-    pushint 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blockhash_shadow_resolution.sol.C.blockhash[routing]() -> void:
@@ -41,7 +34,19 @@ blockhash:
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    pushint 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blockhash_shadow_resolution.sol.C.f[routing]() -> void:
+f:
+    pushint 3
+    block BlkSeed
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
     pushint 1
     return

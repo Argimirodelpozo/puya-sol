@@ -1,0 +1,50 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/revert_return_area.sol.C.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x76e0504c 0x219b312e // method "()void", method "f()(uint256,uint256)"
+    txna ApplicationArgs 0
+    match main__route@5 f
+    err
+
+main__route@5:
+    err // abc
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/revert_return_area.sol.C.f[routing]() -> void:
+f:
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
+    replace2 0
+    dup
+    extract 0 32
+    swap
+    store 0
+    pushint 32
+    bzero
+    b|
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    swap
+    concat
+    log
+    pushint 1
+    return

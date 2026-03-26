@@ -1,0 +1,117 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_entry_checks.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 32
+    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xcd78b354 0x6a732b8a 0xafedb2e5 0x89f1af73 0x38ab25d1 0xae700653 0x36b2ea77 0x293e4c45 // method "f()uint256", method "g(uint256,uint256)uint256", method "h()uint256", method "i(byte[32])byte[32]", method "j(bool)bool", method "k(byte[32])byte[32]", method "s()uint256[]", method "t(uint256)void"
+    txna ApplicationArgs 0
+    match main_f_route@5 g main_h_route@7 i j k s t
+    err
+
+main_h_route@7:
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_f_route@5:
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_entry_checks.sol.C.g[routing]() -> void:
+g:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_entry_checks.sol.C.i[routing]() -> void:
+i:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_entry_checks.sol.C.j[routing]() -> void:
+j:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    pushbytes 0x151f7c7500
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_entry_checks.sol.C.k[routing]() -> void:
+k:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_entry_checks.sol.C.s[routing]() -> void:
+s:
+    pushbytes 0x151f7c750000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_entry_checks.sol.C.t[routing]() -> void:
+t:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 1
+    return

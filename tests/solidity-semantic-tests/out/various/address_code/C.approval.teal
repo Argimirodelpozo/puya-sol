@@ -1,0 +1,123 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 24 0 32
+    bytecblock 0x151f7c75 "initCode"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    global CurrentApplicationAddress
+    intc_1 // 24
+    extract_uint64
+    app_params_get AppApprovalProgram
+    pop
+    len
+    !
+    assert
+    global CurrentApplicationAddress
+    intc_1 // 24
+    extract_uint64
+    app_params_get AppApprovalProgram
+    pop
+    bytec_1 // "initCode"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x4b4fb052 0x4b2c0376 0xafedb2e5 0x0cc35549 // method "f()bool", method "g()uint256", method "h()uint256", method "initCode()byte[]"
+    txna ApplicationArgs 0
+    match f g h initCode
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol.C.f[routing]() -> void:
+f:
+    global CurrentApplicationAddress
+    intc_1 // 24
+    extract_uint64
+    app_params_get AppApprovalProgram
+    pop
+    len
+    pushint 380
+    >
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol.C.g[routing]() -> void:
+g:
+    intc_2 // 0
+    app_params_get AppApprovalProgram
+    pop
+    len
+    itob
+    intc_3 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol.C.h[routing]() -> void:
+h:
+    intc_0 // 1
+    app_params_get AppApprovalProgram
+    pop
+    len
+    itob
+    intc_3 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol.C.initCode[routing]() -> void:
+initCode:
+    intc_2 // 0
+    bytec_1 // "initCode"
+    app_global_get_ex
+    assert // check initCode exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

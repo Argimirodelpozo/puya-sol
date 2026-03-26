@@ -3,14 +3,13 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/gasleft_decrease.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
     bytecblock "v" 0x151f7c7580
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "v"
     pushbytes 0x
     app_global_put
-    intc_0 // 1
+    pushint 1
     return
 
 main_after_if_else@2:
@@ -34,7 +33,9 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/gasleft_decrease.sol.C.f[routing]() -> void:
 f:
-    intc_1 // 0
+    global OpcodeBudget
+    itob
+    pushint 0
     bytec_0 // "v"
     app_global_get_ex
     assert // check v exists
@@ -43,19 +44,25 @@ f:
     bytec_0 // "v"
     swap
     app_global_put
-    intc_1 // 0
+    global OpcodeBudget
+    itob
+    b>
     assert
     bytec_1 // 0x151f7c7580
     log
-    intc_0 // 1
+    pushint 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/gasleft_decrease.sol.C.g[routing]() -> void:
 g:
-    intc_1 // 0
+    global OpcodeBudget
+    itob
+    global OpcodeBudget
+    itob
+    b>
     assert
     bytec_1 // 0x151f7c7580
     log
-    intc_0 // 1
+    pushint 1
     return

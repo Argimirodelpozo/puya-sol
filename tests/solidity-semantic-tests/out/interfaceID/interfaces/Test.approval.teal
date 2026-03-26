@@ -4,13 +4,13 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/interfaces.sol.Test.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0x151f7c75 "ghello_world_interfaceId" "ERC165_interfaceId" 0x151f7c75c6be8b58
+    bytecblock "ghello_world_interfaceId" "ERC165_interfaceId" 0x151f7c7585295877 0x151f7c75c6be8b58 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "ghello_world_interfaceId"
+    bytec_0 // "ghello_world_interfaceId"
     pushbytes 0xc6be8b58
     app_global_put
-    bytec_2 // "ERC165_interfaceId"
+    bytec_1 // "ERC165_interfaceId"
     pushbytes 0x01ffc9a7
     app_global_put
     intc_0 // 1
@@ -35,13 +35,13 @@ main_after_if_else@2:
     err
 
 main_hello_world_derived_interfaceId_route@10:
-    pushbytes 0x151f7c7585295877
+    bytec_2 // 0x151f7c7585295877
     log
     intc_0 // 1
     return
 
 main_other_route@9:
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c7585295877
     log
     intc_0 // 1
     return
@@ -59,13 +59,13 @@ main_hello_world_route@7:
     return
 
 main_world_route@6:
-    bytec_0 // 0x151f7c75
+    pushbytes 0x151f7c75df419679
     log
     intc_0 // 1
     return
 
 main_hello_route@5:
-    bytec_0 // 0x151f7c75
+    pushbytes 0x151f7c7519ff1d21
     log
     intc_0 // 1
     return
@@ -74,10 +74,10 @@ main_hello_route@5:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/interfaces.sol.Test.ghello_world_interfaceId[routing]() -> void:
 ghello_world_interfaceId:
     intc_1 // 0
-    bytec_1 // "ghello_world_interfaceId"
+    bytec_0 // "ghello_world_interfaceId"
     app_global_get_ex
     assert // check ghello_world_interfaceId exists
-    bytec_0 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -88,10 +88,10 @@ ghello_world_interfaceId:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/interfaces.sol.Test.ERC165_interfaceId[routing]() -> void:
 ERC165_interfaceId:
     intc_1 // 0
-    bytec_2 // "ERC165_interfaceId"
+    bytec_1 // "ERC165_interfaceId"
     app_global_get_ex
     assert // check ERC165_interfaceId exists
-    bytec_0 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log

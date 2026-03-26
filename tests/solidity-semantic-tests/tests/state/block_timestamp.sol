@@ -1,10 +1,16 @@
 contract C {
+    // AVM: block.timestamp maps to `global LatestTimestamp` — the Unix
+    // timestamp of the latest confirmed block. Analogous to EVM block.timestamp
+    // but returns real wall-clock time, not synthetic 15-second increments.
+    // Original EVM expected:
+    //   constructor() # block 1
+    //   f() -> 0x1e  # block 2, 30 seconds
+    //   f() -> 0x2d  # block 3, 45 seconds
     constructor() {}
-    function f() public returns (uint) {
-        return block.timestamp;
+    function f() public returns (bool) {
+        return block.timestamp > 0;
     }
 }
 // ----
-// constructor() # This is the 1st block #
-// f() -> 0x1e # This is the 2nd block (each block is "15 seconds") #
-// f() -> 0x2d # This is the 3rd block #
+// f() -> true
+// f() -> true

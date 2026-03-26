@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_uint8_read.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "x" 0x151f7c75
+    intcblock 1 0 32
+    bytecblock "x" 0xff 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x9172775d 0x0232350d 0xdf01cac5 // method "create_dirty_slot()void", method "read_unclean_value()byte[32]", method "x()uint64"
+    pushbytess 0x9172775d 0x0232350d 0x7c1072af // method "create_dirty_slot()void", method "read_unclean_value()byte[32]", method "x()uint256"
     txna ApplicationArgs 0
     match create_dirty_slot read_unclean_value x
     err
@@ -51,7 +51,7 @@ read_unclean_value:
     itob
     swap
     store 0
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -66,9 +66,45 @@ x:
     app_global_get_ex
     assert // check x exists
     itob
-    bytec_1 // 0x151f7c75
+    bytec_1 // 0xff
+    b&
+    pushbytes 0x80
+    b>=
+    bz x_ternary_false@3
+    intc_1 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    itob
+    bytec_1 // 0xff
+    b&
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b+
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+x_ternary_merge@4:
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
+
+x_ternary_false@3:
+    intc_1 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    itob
+    bytec_1 // 0xff
+    b&
+    b x_ternary_merge@4

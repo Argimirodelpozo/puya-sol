@@ -48,6 +48,10 @@ FixedMath.add:
 FixedMath.sub:
     proto 2 1
     frame_dig -2
+    frame_dig -1
+    b>=
+    assert // underflow
+    frame_dig -2
     bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     frame_dig -1

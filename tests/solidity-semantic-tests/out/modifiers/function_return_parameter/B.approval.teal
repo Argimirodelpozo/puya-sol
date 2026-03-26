@@ -38,21 +38,13 @@ f:
     ==
     assert // invalid number of bytes for arc4.uint64
     pushint 0
-    dup
 
 f_while_top@2:
-    dig 1
+    dup
     pushbytes "1234567"
     ==
-    bz f_after_while@6
-    pushbytes 0x00000000000000
-    bury 1
-    b f_while_top@2
-
-f_after_while@6:
-    pushbytes 0x151f7c75
-    dig 1
-    concat
+    bnz f_while_top@2
+    pushbytes 0x151f7c7500000000000000
     log
     pushint 1
     return

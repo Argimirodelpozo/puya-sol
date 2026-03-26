@@ -43,6 +43,9 @@ f:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    dup2
+    b>=
+    assert // underflow
     swap
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
@@ -83,6 +86,10 @@ g:
     assert // invalid number of bytes for arc4.uint64
     btoi
     -
+    dup
+    pushint 255
+    <=
+    assert // overflow
     itob
     bytec_1 // 0x151f7c75
     swap

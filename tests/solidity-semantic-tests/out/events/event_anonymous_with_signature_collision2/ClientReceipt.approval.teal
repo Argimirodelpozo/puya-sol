@@ -1,0 +1,56 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_anonymous_with_signature_collision2.sol.ClientReceipt.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0xc7d12872 // method "deposit(byte[32])void"
+    txna ApplicationArgs 0
+    match main_deposit_route@4
+    err
+
+main_deposit_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b deposit
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_anonymous_with_signature_collision2.sol.ClientReceipt.deposit[routing]() -> void:
+deposit:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+    itob
+    pushbytes 0x5ddaa77ac5bda319ba947e31bee594711f39ed1b20d079d438dbad5ed729fb30
+    uncover 2
+    concat
+    swap
+    concat
+    pushbytes 0x67299d0f // method "Deposit(uint256,byte[32],uint256)"
+    swap
+    concat
+    log
+    pushint 1
+    return

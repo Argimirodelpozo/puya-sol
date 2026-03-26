@@ -1,0 +1,66 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/iterated_keccak256_with_bytes.sol.c.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    bytecblock "data"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "data"
+    pushbytes 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0xb08efba2 // method "foo()byte[32]"
+    txna ApplicationArgs 0
+    match main_foo_route@4
+    err
+
+main_foo_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b foo
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/iterated_keccak256_with_bytes.sol.c.foo[routing]() -> void:
+foo:
+    pushint 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    intc_0 // 32
+    bzero
+    swap
+    keccak256
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes "b"
+    swap
+    concat
+    pushbytes "a"
+    concat
+    keccak256
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

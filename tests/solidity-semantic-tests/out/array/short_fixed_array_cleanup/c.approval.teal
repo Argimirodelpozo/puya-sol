@@ -1,0 +1,109 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/short_fixed_array_cleanup.sol.c.approval_program() -> uint64:
+main:
+    intcblock 0 1 32 8
+    bytecblock "data" 0x
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytes "spacer1"
+    bytec_1 // 0x
+    app_global_put
+    pushbytes "spacer2"
+    bytec_1 // 0x
+    app_global_put
+    bytec_0 // "data"
+    bytec_1 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x5cd3f78a 0x44977246 // method "fill()void", method "clear()void"
+    txna ApplicationArgs 0
+    match fill clear
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/short_fixed_array_cleanup.sol.c.fill[routing]() -> void:
+fill:
+    intc_0 // 0
+    itob
+
+fill_while_top@2:
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    bury 1
+    assert // check data exists
+    pushint 3
+    itob
+    dig 1
+    b>
+    bz fill_after_while@4
+    dupn 2
+    pushbytes 0x01
+    b+
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    intc_3 // 8
+    bzero
+    uncover 3
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dig 2
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    dig 3
+    b|
+    swap
+    intc_2 // 32
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    bytec_0 // "data"
+    swap
+    app_global_put
+    bury 1
+    b fill_while_top@2
+
+fill_after_while@4:
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/short_fixed_array_cleanup.sol.c.clear[routing]() -> void:
+clear:
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    bury 1
+    assert // check data exists
+    bytec_0 // "data"
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    intc_1 // 1
+    return

@@ -33,14 +33,26 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleGas(
 	awst::SourceLocation const& _loc
 )
 {
-	// gas() has no AVM equivalent — return a large constant (used only as
-	// the gas argument to staticcall, which is pattern-matched away)
-	Logger::instance().debug("gas() has no AVM equivalent, returning max uint64", _loc);
-	auto node = std::make_shared<awst::IntegerConstant>();
-	node->sourceLocation = _loc;
-	node->wtype = awst::WType::biguintType();
-	node->value = "0";
-	return node;
+	// gas() → global OpcodeBudget (uint64) → itob → reinterpret as biguint
+	Logger::instance().debug(
+		"gas() mapped to AVM OpcodeBudget (analogous but not equivalent to EVM gas)", _loc);
+	auto gasCall = std::make_shared<awst::IntrinsicCall>();
+	gasCall->sourceLocation = _loc;
+	gasCall->wtype = awst::WType::uint64Type();
+	gasCall->opCode = "global";
+	gasCall->immediates = {std::string("OpcodeBudget")};
+
+	auto itobCall = std::make_shared<awst::IntrinsicCall>();
+	itobCall->sourceLocation = _loc;
+	itobCall->wtype = awst::WType::bytesType();
+	itobCall->opCode = "itob";
+	itobCall->stackArgs.push_back(std::move(gasCall));
+
+	auto biguintCast = std::make_shared<awst::ReinterpretCast>();
+	biguintCast->sourceLocation = _loc;
+	biguintCast->wtype = awst::WType::biguintType();
+	biguintCast->expr = std::move(itobCall);
+	return biguintCast;
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleTimestamp(

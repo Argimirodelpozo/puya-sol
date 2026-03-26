@@ -21,6 +21,64 @@ from conftest import (
 )
 
 
+def _call_with_payment(app, method, args, value_wei, localnet, account):
+    """Call an app method with a preceding payment transaction (msg.value equivalent).
+
+    Groups a payment txn to the app address before the app call so that
+    `msg.value` (mapped to `gtxns Amount` of previous txn) reads correctly.
+    """
+    from algosdk.transaction import PaymentTxn
+    from algosdk.atomic_transaction_composer import (
+        AtomicTransactionComposer, TransactionWithSigner, AccountTransactionSigner
+    )
+    from algosdk.abi import Method as ABIMethod
+
+    algod = localnet.client.algod
+    sp = algod.suggested_params()
+    sp.flat_fee = True
+    sp.fee = 2000  # cover both txns
+
+    app_addr = encoding.encode_address(
+        encoding.checksum(b"appID" + app.app_id.to_bytes(8, "big")))
+
+    pay_txn = PaymentTxn(account.address, sp, app_addr, value_wei)
+    signer = AccountTransactionSigner(account.private_key)
+
+    atc = AtomicTransactionComposer()
+    atc.add_transaction(TransactionWithSigner(pay_txn, signer))
+
+    # Find the ABI method
+    abi_method = None
+    for m in app.app_spec.methods:
+        sig = m.to_abi_method().get_signature()
+        if m.name == method or sig == method:
+            abi_method = m.to_abi_method()
+            break
+    if not abi_method:
+        abi_method = ABIMethod.from_signature(method if "(" in method else method + "()")
+
+    sp2 = algod.suggested_params()
+    sp2.flat_fee = True
+    sp2.fee = 2000
+    atc.add_method_call(
+        app_id=app.app_id,
+        method=abi_method,
+        sender=account.address,
+        sp=sp2,
+        signer=signer,
+        method_args=args if args else [],
+    )
+    resp = atc.execute(algod, 4)
+    # Return a result-like object with abi_return
+    abi_return = resp.abi_results[-1].return_value if resp.abi_results else None
+
+    class _Result:
+        pass
+    r = _Result()
+    r.abi_return = abi_return
+    return r
+
+
 def find_last_contract(sol_path, deployable):
     """Find the last contract defined in the source that has deployable artifacts."""
     content = sol_path.read_text()
@@ -104,9 +162,6 @@ def test_semantic(test, localnet_session):
     # Execute each call assertion
     failures = []
     for call in test.calls:
-        # Skip payable
-        if call.value_wei > 0:
-            continue
 
         try:
             args = []
@@ -148,20 +203,23 @@ def test_semantic(test, localnet_session):
                     if raw_idx >= len(args):
                         break
                     atype = marg.type if isinstance(marg.type, str) else str(marg.type)
-                    if atype == "string" and isinstance(args[raw_idx], int):
-                        # EVM string arg: 0x20, length, "data" → just "data"
-                        # Skip offset (0x20), skip length, take string data
+                    if atype in ("string", "byte[]") and isinstance(args[raw_idx], int):
+                        # EVM dynamic arg: 0x20, length, "data" → just the data
+                        # Skip offset (0x20), skip length, take data
                         raw_idx += 1  # skip offset
                         if raw_idx < len(args):
                             raw_idx += 1  # skip length
                         if raw_idx < len(args) and isinstance(args[raw_idx], bytes):
-                            coerced.append(args[raw_idx].decode('utf-8', errors='replace'))
+                            if atype == "string":
+                                coerced.append(args[raw_idx].decode('utf-8', errors='replace'))
+                            else:
+                                coerced.append(list(args[raw_idx]))
                             raw_idx += 1
                         elif raw_idx - 1 < len(args) and parse_value(call.args[raw_idx - 1]) == 0:
-                            # Empty string (length=0, no data word)
-                            coerced.append("")
+                            # Empty (length=0, no data word)
+                            coerced.append("" if atype == "string" else [])
                         else:
-                            coerced.append("")
+                            coerced.append("" if atype == "string" else [])
                     elif atype == "bool" and isinstance(args[raw_idx], int):
                         coerced.append(bool(args[raw_idx]))
                         raw_idx += 1
@@ -178,6 +236,43 @@ def test_semantic(test, localnet_session):
                         from algosdk import encoding
                         coerced.append(encoding.encode_address(args[raw_idx].to_bytes(32, "big")))
                         raw_idx += 1
+                    elif isinstance(args[raw_idx], int) and args[raw_idx] >= 2**128:
+                        # Large two's complement value (negative in EVM).
+                        # Convert from uint256 two's complement to the target unsigned type.
+                        val = args[raw_idx]
+                        if atype.startswith("uint"):
+                            m_bits = re.match(r"uint(\d+)$", atype)
+                            if m_bits:
+                                bits = int(m_bits.group(1))
+                                # Convert uint256 two's complement to uintN two's complement
+                                signed_val = val - 2**256  # negative
+                                val = signed_val % (2**bits)  # wrap to uintN
+                        coerced.append(val)
+                        raw_idx += 1
+                    elif isinstance(args[raw_idx], int) and re.match(r"(\w+)\[(\d+)\]$", atype):
+                        # Static array: uint256[3] → consume N sequential values
+                        sm = re.match(r"(\w+)\[(\d+)\]$", atype)
+                        n = int(sm.group(2))
+                        arr = []
+                        for _ in range(n):
+                            if raw_idx < len(args):
+                                arr.append(args[raw_idx])
+                                raw_idx += 1
+                        coerced.append(arr)
+                    elif isinstance(args[raw_idx], int) and re.match(r"(\w+)\[\]$", atype):
+                        # Dynamic array: offset, length, val0, val1, ...
+                        raw_idx += 1  # skip offset
+                        if raw_idx < len(args):
+                            n = args[raw_idx]
+                            raw_idx += 1  # skip length
+                            arr = []
+                            for _ in range(n if isinstance(n, int) else 0):
+                                if raw_idx < len(args):
+                                    arr.append(args[raw_idx])
+                                    raw_idx += 1
+                            coerced.append(arr)
+                        else:
+                            coerced.append([])
                     else:
                         coerced.append(args[raw_idx])
                         raw_idx += 1
@@ -188,12 +283,27 @@ def test_semantic(test, localnet_session):
 
             if call.expect_failure:
                 try:
-                    app.send.call(params, send_params=NO_POPULATE)
+                    if call.value_wei > 0:
+                        _call_with_payment(app, method, args if args else [], call.value_wei, localnet, account)
+                    else:
+                        app.send.call(params, send_params=NO_POPULATE)
                     failures.append(f"{call.raw_line}: expected FAILURE but succeeded")
                 except Exception:
                     pass  # Correctly reverted
             else:
-                result = app.send.call(params)
+                try:
+                    if call.value_wei > 0:
+                        result = _call_with_payment(app, method, args if args else [], call.value_wei, localnet, account)
+                    else:
+                        result = app.send.call(params)
+                except Exception as ex1:
+                    err_str = str(ex1)
+                    if "fee too small" in err_str:
+                        # Inner txns need fee pooling — retry with extra budget
+                        from run_tests import _call_with_extra_budget
+                        result = _call_with_extra_budget(app, method, args if args else [], extra_calls=3)
+                    else:
+                        raise
                 actual = result.abi_return
 
                 # Void return
@@ -227,7 +337,7 @@ def test_semantic(test, localnet_session):
                                                 f"{call.raw_line}: expected {exp_data!r}, got {actual!r}")
                                             evm_string_handled = True
 
-                    # EVM dynamic array return: 0x20, length, elem0, elem1, ...
+                    # EVM dynamic array/bytes return: 0x20, length, data...
                     # ARC4 returns the array directly as a list.
                     elif (call.expected[0].strip() == "0x20"
                           and isinstance(actual, (list, tuple))):
@@ -238,19 +348,32 @@ def test_semantic(test, localnet_session):
                             list(v.values())[0] if isinstance(v, dict) and len(v) == 1 else v
                             for v in actual_list
                         ]
-                        if isinstance(exp_len, int) and exp_len == len(actual_list):
-                            exp_elems = [parse_value(e) for e in call.expected[2:2+exp_len]]
-                            all_match = all(
-                                compare_values(a, e) for a, e in zip(actual_list, exp_elems)
-                            )
-                            if all_match:
-                                evm_string_handled = True
-                            else:
-                                for i, (a, e) in enumerate(zip(actual_list, exp_elems)):
-                                    if not compare_values(a, e):
-                                        failures.append(
-                                            f"{call.raw_line}: elem[{i}] expected {e}, got {a}")
-                                evm_string_handled = True
+                        if isinstance(exp_len, int):
+                            # Check if expected data is a single blob (bytes/string)
+                            # vs individual elements
+                            remaining = call.expected[2:]
+                            if len(remaining) == 1:
+                                exp_data = parse_value(remaining[0])
+                                actual_bytes = bytes(actual_list)
+                                if isinstance(exp_data, bytes) and actual_bytes == exp_data:
+                                    evm_string_handled = True
+                                elif isinstance(exp_data, bytes):
+                                    failures.append(
+                                        f"{call.raw_line}: expected {exp_data!r}, got {actual_bytes!r}")
+                                    evm_string_handled = True
+                            elif exp_len == len(actual_list):
+                                exp_elems = [parse_value(e) for e in remaining[:exp_len]]
+                                all_match = all(
+                                    compare_values(a, e) for a, e in zip(actual_list, exp_elems)
+                                )
+                                if all_match:
+                                    evm_string_handled = True
+                                else:
+                                    for i, (a, e) in enumerate(zip(actual_list, exp_elems)):
+                                        if not compare_values(a, e):
+                                            failures.append(
+                                                f"{call.raw_line}: elem[{i}] expected {e}, got {a}")
+                                    evm_string_handled = True
 
                     # Multi-return with strings
                     elif "string" in ret_str and isinstance(actual, (list, tuple, dict)):

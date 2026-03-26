@@ -3,10 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_fixed_bytes.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 65535 2
+    intcblock 65535 1 2
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -36,13 +36,17 @@ L.add:
     proto 2 1
     frame_dig -2
     btoi
-    intc_1 // 65535
+    intc_0 // 65535
     &
     frame_dig -1
     btoi
-    intc_1 // 65535
+    intc_0 // 65535
     &
     +
+    dup
+    intc_0 // 65535
+    <=
+    assert // overflow
     itob
     extract 6 2
     retsub
@@ -67,5 +71,5 @@ sum:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return

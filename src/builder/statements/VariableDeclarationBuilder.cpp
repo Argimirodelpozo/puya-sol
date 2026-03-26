@@ -4,6 +4,7 @@
 #include "builder/statements/StatementBuilder.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/storage/StorageMapper.h"
+#include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 
 namespace puyasol::builder
@@ -78,15 +79,28 @@ bool StatementBuilder::visit(solidity::frontend::VariableDeclarationStatement co
 			// Coerce between bytes-compatible types (string → bytes, bytes → bytes[N], etc.)
 			if (value->wtype != type && type && type->kind() == awst::WTypeKind::Bytes)
 			{
-				bool valueIsCompatible = value->wtype == awst::WType::stringType()
-					|| (value->wtype && value->wtype->kind() == awst::WTypeKind::Bytes);
-				if (valueIsCompatible)
+				auto const* bytesType = dynamic_cast<awst::BytesWType const*>(type);
+				auto const* strConst = dynamic_cast<awst::StringConstant const*>(value.get());
+
+				// String literal → bytes[N]: create right-padded BytesConstant
+				if (bytesType && bytesType->length().has_value() && *bytesType->length() > 0 && strConst)
 				{
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = loc;
-					cast->wtype = type;
-					cast->expr = std::move(value);
-					value = std::move(cast);
+					if (auto padded = TypeCoercion::stringToBytesN(
+							value.get(), type, *bytesType->length(), loc))
+						value = std::move(padded);
+				}
+				else
+				{
+					bool valueIsCompatible = value->wtype == awst::WType::stringType()
+						|| (value->wtype && value->wtype->kind() == awst::WTypeKind::Bytes);
+					if (valueIsCompatible)
+					{
+						auto cast = std::make_shared<awst::ReinterpretCast>();
+						cast->sourceLocation = loc;
+						cast->wtype = type;
+						cast->expr = std::move(value);
+						value = std::move(cast);
+					}
 				}
 			}
 		}

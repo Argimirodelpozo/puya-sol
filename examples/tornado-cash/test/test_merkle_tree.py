@@ -30,8 +30,8 @@ ZEROS = [
 
 
 def int_key(i: int) -> bytes:
-    """Mapping key for integer indices — compiler uses itob (8-byte big-endian)."""
-    return i.to_bytes(8, "big")
+    """Mapping key for integer indices — compiler normalizes to 32-byte biguint."""
+    return i.to_bytes(32, "big")
 
 
 NO_POPULATE = au.SendParams(populate_app_call_resources=False)

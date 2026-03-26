@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/dynamic_arrays.sol.C.approval_program() -> uint64:
 main:
-    intcblock 8 32 1 0
+    intcblock 8 32 1
     txn ApplicationID
     bnz main_after_if_else@2
     intc_2 // 1
@@ -41,7 +41,7 @@ f:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    intc_3 // 0
+    pushint 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 8
     *
@@ -59,9 +59,7 @@ f:
     ==
     assert // invalid number of bytes for arc4.uint256
     uncover 2
-    pushint 2
-    intc_3 // 0
-    extract3
+    extract 2 0
     dup
     len
     intc_0 // 8

@@ -1,0 +1,181 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_nested_load.sol.Test.approval_program() -> uint64:
+main:
+    intcblock 1
+    bytecblock "m_x"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "m_x"
+    pushbytes 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x4cc7401d 0x50114961 // method "load()(uint256,uint256,uint256,uint256,uint256,uint256)", method "store()(uint256,uint256,uint256,uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match load store
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_nested_load.sol.Test.load[routing]() -> void:
+load:
+    pushint 0
+    bytec_0 // "m_x"
+    app_global_get_ex
+    assert // check m_x exists
+    dup
+    extract 56 16
+    swap
+    extract 8 48
+    intc_0 // 1
+    itob
+    swap
+    concat
+    swap
+    concat
+    dup
+    extract 56 16
+    pushint 2
+    itob
+    dig 2
+    extract 8 48
+    dup
+    extract 8 8
+    swap
+    extract 16 32
+    cover 2
+    concat
+    swap
+    concat
+    uncover 2
+    extract 0 8
+    swap
+    concat
+    swap
+    concat
+    dup
+    extract 56 16
+    dig 1
+    extract 8 48
+    dup
+    extract 0 8
+    pushint 3
+    itob
+    uncover 2
+    extract 16 32
+    cover 2
+    concat
+    swap
+    concat
+    uncover 2
+    extract 0 8
+    swap
+    concat
+    swap
+    concat
+    dup
+    extract 56 16
+    dig 1
+    extract 8 48
+    dup
+    extract 0 8
+    swap
+    extract 8 8
+    pushint 32
+    bzero
+    cover 2
+    concat
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
+    concat
+    uncover 3
+    extract 0 8
+    swap
+    concat
+    uncover 2
+    concat
+    bytec_0 // "m_x"
+    dig 1
+    app_global_put
+    dup
+    extract 56 16
+    pushint 5
+    itob
+    dig 1
+    swap
+    replace2 0 // on error: index access is out of bounds
+    pop
+    pushint 6
+    itob
+    dig 1
+    swap
+    replace2 8 // on error: index access is out of bounds
+    pop
+    dig 1
+    extract 0 8
+    uncover 2
+    extract 8 48
+    dup
+    extract 0 8
+    dig 1
+    extract 8 8
+    uncover 2
+    extract 16 32
+    dig 4
+    extract 0 8 // on error: index access is out of bounds
+    uncover 5
+    extract 8 8 // on error: index access is out of bounds
+    uncover 5
+    dig 6
+    b|
+    uncover 5
+    dig 6
+    b|
+    concat
+    uncover 4
+    dig 5
+    b|
+    concat
+    uncover 3
+    dig 4
+    b|
+    concat
+    uncover 2
+    dig 3
+    b|
+    concat
+    swap
+    uncover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_nested_load.sol.Test.store[routing]() -> void:
+store:
+    bytec_0 // "m_x"
+    pushbytes 0x000000000000000100000000000000020000000000000003000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000
+    app_global_put
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return

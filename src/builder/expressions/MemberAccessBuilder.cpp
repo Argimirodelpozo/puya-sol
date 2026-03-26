@@ -21,13 +21,91 @@ bool ExpressionBuilder::visit(solidity::frontend::MemberAccess const& _node)
 
 	auto const& baseExpr = _node.expression();
 
+	// block.prevrandao → block BlkSeed (global Round)
+	// block.difficulty → 0 (Algorand has no PoW difficulty)
+	if (auto const* baseId = dynamic_cast<solidity::frontend::Identifier const*>(&baseExpr))
+	{
+		if (baseId->name() == "block" && memberName == "difficulty")
+		{
+			Logger::instance().warning(
+				"block.difficulty returns 0 on AVM — Algorand has no proof-of-work. "
+				"Post-Paris EVM also deprecated this (returns prevrandao instead). "
+				"Use block.prevrandao for randomness.", loc);
+			auto zero = std::make_shared<awst::IntegerConstant>();
+			zero->sourceLocation = loc;
+			zero->wtype = awst::WType::biguintType();
+			zero->value = "0";
+			push(std::move(zero));
+			return false;
+		}
+		if (baseId->name() == "block" && memberName == "prevrandao")
+		{
+			Logger::instance().warning(
+				"block.prevrandao mapped to AVM block seed (BlkSeed) of previous round. "
+				"AVM block seed is the VRF output — analogous but not equivalent to "
+				"EVM prevrandao. Both provide pseudo-randomness from the block proposer.", loc);
+
+			// global Round - 2 (the `block` opcode can only access rounds that
+			// are fully confirmed; Round-1 is the latest confirmed but the opcode
+			// window on localnet only includes Round-2 and earlier)
+			auto round = std::make_shared<awst::IntrinsicCall>();
+			round->sourceLocation = loc;
+			round->wtype = awst::WType::uint64Type();
+			round->opCode = "global";
+			round->immediates = {std::string("Round")};
+
+			auto one = std::make_shared<awst::IntegerConstant>();
+			one->sourceLocation = loc;
+			one->wtype = awst::WType::uint64Type();
+			one->value = "2";
+
+			auto prevRound = std::make_shared<awst::UInt64BinaryOperation>();
+			prevRound->sourceLocation = loc;
+			prevRound->wtype = awst::WType::uint64Type();
+			prevRound->left = std::move(round);
+			prevRound->op = awst::UInt64BinaryOperator::Sub;
+			prevRound->right = std::move(one);
+
+			// block BlkSeed (prevRound) → bytes
+			auto blockSeed = std::make_shared<awst::IntrinsicCall>();
+			blockSeed->sourceLocation = loc;
+			blockSeed->wtype = awst::WType::bytesType();
+			blockSeed->opCode = "block";
+			blockSeed->immediates = {std::string("BlkSeed")};
+			blockSeed->stackArgs.push_back(std::move(prevRound));
+
+			// Cast bytes → biguint (Solidity returns uint256)
+			auto cast = std::make_shared<awst::ReinterpretCast>();
+			cast->sourceLocation = loc;
+			cast->wtype = awst::WType::biguintType();
+			cast->expr = std::move(blockSeed);
+			push(std::move(cast));
+			return false;
+		}
+	}
+
 	// Try intrinsic mapping first (msg.sender, block.timestamp, etc.)
 	if (auto const* baseId = dynamic_cast<solidity::frontend::Identifier const*>(&baseExpr))
 	{
 		auto intrinsic = IntrinsicMapper::tryMapMemberAccess(baseId->name(), memberName, loc);
 		if (intrinsic)
 		{
-			push(intrinsic);
+			// If the intrinsic returns bytes but the Solidity type expects uint/biguint,
+			// wrap in ReinterpretCast (e.g. GenesisHash bytes → uint256 for block.chainid)
+			auto* solType = m_typeMapper.map(_node.annotation().type);
+			if (intrinsic->wtype == awst::WType::bytesType()
+				&& solType == awst::WType::biguintType())
+			{
+				auto cast = std::make_shared<awst::ReinterpretCast>();
+				cast->sourceLocation = loc;
+				cast->wtype = awst::WType::biguintType();
+				cast->expr = std::move(intrinsic);
+				push(std::move(cast));
+			}
+			else
+			{
+				push(intrinsic);
+			}
 			return false;
 		}
 	}
@@ -58,48 +136,181 @@ bool ExpressionBuilder::visit(solidity::frontend::MemberAccess const& _node)
 		}
 	}
 
-	// Event selector: E.selector → keccak256("EventName(type1,type2,...)")
+	// Selector: E.selector or f.selector → keccak256("Name(type1,type2,...)")[:4]
 	if (memberName == "selector")
 	{
-		// The base expression's type is FunctionType(Kind::Event) for event selectors.
-		// This works for both `E.selector` and `L.E.selector` (chained access).
-		solidity::frontend::EventDefinition const* eventDef = nullptr;
 		auto const* baseType = baseExpr.annotation().type;
+		std::string sig;
 
-		// Direct: FunctionType(Event)
-		if (auto const* funcType = dynamic_cast<solidity::frontend::FunctionType const*>(baseType))
+		// Resolve the declaration (event or function)
+		solidity::frontend::FunctionType const* funcType = nullptr;
+		if (auto const* ft = dynamic_cast<solidity::frontend::FunctionType const*>(baseType))
+			funcType = ft;
+		else if (auto const* typeType = dynamic_cast<solidity::frontend::TypeType const*>(baseType))
+			funcType = dynamic_cast<solidity::frontend::FunctionType const*>(typeType->actualType());
+
+		if (funcType)
 		{
 			if (funcType->kind() == solidity::frontend::FunctionType::Kind::Event)
-				eventDef = dynamic_cast<solidity::frontend::EventDefinition const*>(&funcType->declaration());
-		}
-		// Via TypeType wrapping
-		if (!eventDef && baseType && baseType->category() == solidity::frontend::Type::Category::TypeType)
-		{
-			auto const* typeType = dynamic_cast<solidity::frontend::TypeType const*>(baseType);
-			if (typeType)
 			{
-				if (auto const* funcType = dynamic_cast<solidity::frontend::FunctionType const*>(typeType->actualType()))
+				// Event selector: keccak256("EventName(type1,...)")
+				auto const* eventDef = dynamic_cast<solidity::frontend::EventDefinition const*>(
+					&funcType->declaration());
+				if (eventDef)
 				{
-					if (funcType->kind() == solidity::frontend::FunctionType::Kind::Event)
-						eventDef = dynamic_cast<solidity::frontend::EventDefinition const*>(&funcType->declaration());
+					sig = eventDef->name() + "(";
+					bool first = true;
+					for (auto const& param: eventDef->parameters())
+					{
+						if (!first) sig += ",";
+						sig += param->type()->canonicalName();
+						first = false;
+					}
+					sig += ")";
+				}
+			}
+			else
+			{
+				// Function selector: keccak256("funcName(type1,...)")[:4]
+				// Use the FunctionType's externalSignature() which gives the canonical form.
+				// This can throw for function types without a bound declaration
+				// (e.g. ternary result: (c ? this.f : this.g).selector).
+				try
+				{
+					sig = funcType->externalSignature();
+				}
+				catch (...)
+				{
+					// Fallback: check if base is a ternary (c ? f : g).selector
+					// → distribute: c ? f.selector : g.selector
+					if (auto const* cond = dynamic_cast<solidity::frontend::Conditional const*>(&baseExpr))
+					{
+						// Helper: resolve selector from a sub-expression
+						auto resolveSelector = [&](solidity::frontend::Expression const& _expr)
+							-> std::string
+						{
+							auto const* ft = dynamic_cast<solidity::frontend::FunctionType const*>(
+								_expr.annotation().type);
+							if (ft)
+							{
+								try { return ft->externalSignature(); }
+								catch (...) {}
+							}
+							// Try identifier resolution
+							if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(&_expr))
+							{
+								if (auto const* fd = dynamic_cast<solidity::frontend::FunctionDefinition const*>(
+										id->annotation().referencedDeclaration))
+								{
+									std::string s = fd->name() + "(";
+									bool first = true;
+									for (auto const& p: fd->parameters())
+									{
+										if (!first) s += ",";
+										s += p->type()->canonicalName();
+										first = false;
+									}
+									return s + ")";
+								}
+							}
+							// Try MemberAccess (this.f)
+							if (auto const* ma = dynamic_cast<solidity::frontend::MemberAccess const*>(&_expr))
+							{
+								auto const* mft = dynamic_cast<solidity::frontend::FunctionType const*>(
+									ma->annotation().type);
+								if (mft)
+								{
+									try { return mft->externalSignature(); }
+									catch (...) {}
+								}
+							}
+							return {};
+						};
+
+						std::string trueSig = resolveSelector(cond->trueExpression());
+						std::string falseSig = resolveSelector(cond->falseExpression());
+
+						if (!trueSig.empty() && !falseSig.empty())
+						{
+							// Build: cond ? keccak256(trueSig)[:4] : keccak256(falseSig)[:4]
+							auto condition = build(cond->condition());
+
+							auto makeSelectorExpr = [&](std::string const& s)
+								-> std::shared_ptr<awst::Expression>
+							{
+								auto sigConst = std::make_shared<awst::BytesConstant>();
+								sigConst->sourceLocation = loc;
+								sigConst->wtype = awst::WType::bytesType();
+								sigConst->encoding = awst::BytesEncoding::Utf8;
+								sigConst->value = std::vector<uint8_t>(s.begin(), s.end());
+
+								auto keccak = std::make_shared<awst::IntrinsicCall>();
+								keccak->sourceLocation = loc;
+								keccak->wtype = awst::WType::bytesType();
+								keccak->opCode = "keccak256";
+								keccak->stackArgs.push_back(std::move(sigConst));
+
+								auto zero = std::make_shared<awst::IntegerConstant>();
+								zero->sourceLocation = loc;
+								zero->wtype = awst::WType::uint64Type();
+								zero->value = "0";
+								auto four = std::make_shared<awst::IntegerConstant>();
+								four->sourceLocation = loc;
+								four->wtype = awst::WType::uint64Type();
+								four->value = "4";
+
+								auto extract = std::make_shared<awst::IntrinsicCall>();
+								extract->sourceLocation = loc;
+								extract->wtype = awst::WType::bytesType();
+								extract->opCode = "extract3";
+								extract->stackArgs.push_back(std::move(keccak));
+								extract->stackArgs.push_back(std::move(zero));
+								extract->stackArgs.push_back(std::move(four));
+								return extract;
+							};
+
+							auto ternary = std::make_shared<awst::ConditionalExpression>();
+							ternary->sourceLocation = loc;
+							ternary->wtype = awst::WType::bytesType();
+							ternary->condition = std::move(condition);
+							ternary->trueExpr = makeSelectorExpr(trueSig);
+							ternary->falseExpr = makeSelectorExpr(falseSig);
+
+							// Cast to biguint for ARC4 return encoding
+							auto cast = std::make_shared<awst::ReinterpretCast>();
+							cast->sourceLocation = loc;
+							cast->wtype = awst::WType::biguintType();
+							cast->expr = std::move(ternary);
+							push(cast);
+							return false;
+						}
+					}
+					// Final fallback: try identifier
+					if (auto const* ident = dynamic_cast<solidity::frontend::Identifier const*>(&baseExpr))
+					{
+						if (auto const* funcDef = dynamic_cast<solidity::frontend::FunctionDefinition const*>(
+								ident->annotation().referencedDeclaration))
+						{
+							sig = funcDef->name() + "(";
+							bool first = true;
+							for (auto const& param: funcDef->parameters())
+							{
+								if (!first) sig += ",";
+								sig += param->type()->canonicalName();
+								first = false;
+							}
+							sig += ")";
+						}
+					}
+					if (sig.empty())
+						Logger::instance().warning("could not resolve function selector (no declaration)", loc);
 				}
 			}
 		}
 
-		if (eventDef)
+		if (!sig.empty())
 		{
-			// Build the event signature string: "EventName(type1,type2,...)"
-			std::string sig = eventDef->name() + "(";
-			bool first = true;
-			for (auto const& param: eventDef->parameters())
-			{
-				if (!first) sig += ",";
-				sig += param->type()->canonicalName();
-				first = false;
-			}
-			sig += ")";
-
-			Logger::instance().debug("event selector: " + sig, loc);
+			Logger::instance().debug("selector: " + sig, loc);
 
 			// Compute keccak256 of the signature
 			auto keccak = std::make_shared<awst::IntrinsicCall>();
@@ -114,9 +325,27 @@ bool ExpressionBuilder::visit(solidity::frontend::MemberAccess const& _node)
 			sigBytes->value = std::vector<uint8_t>(sig.begin(), sig.end());
 			keccak->stackArgs.push_back(std::move(sigBytes));
 
-			// Cast to bytes[32]
+			// For bytes4 selector: extract first 4 bytes
 			auto* targetType = m_typeMapper.map(_node.annotation().type);
-			if (targetType != awst::WType::bytesType())
+			auto const* bytesWType = dynamic_cast<awst::BytesWType const*>(targetType);
+			if (bytesWType && bytesWType->length().has_value() && *bytesWType->length() == 4)
+			{
+				// extract first 4 bytes: IntrinsicCall("extract", [0, 4], [keccak_result])
+				auto extract = std::make_shared<awst::IntrinsicCall>();
+				extract->sourceLocation = loc;
+				extract->wtype = awst::WType::bytesType();
+				extract->opCode = "extract";
+				extract->immediates = {0, 4};
+				extract->stackArgs.push_back(std::move(keccak));
+
+				// Right-pad to 4 bytes and cast to bytes[4]
+				auto padded = std::make_shared<awst::ReinterpretCast>();
+				padded->sourceLocation = loc;
+				padded->wtype = targetType;
+				padded->expr = std::move(extract);
+				push(std::move(padded));
+			}
+			else if (targetType != awst::WType::bytesType())
 			{
 				auto cast = std::make_shared<awst::ReinterpretCast>();
 				cast->sourceLocation = loc;

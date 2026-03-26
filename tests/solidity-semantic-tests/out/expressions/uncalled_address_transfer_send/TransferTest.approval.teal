@@ -1,0 +1,35 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/uncalled_address_transfer_send.sol.TransferTest.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x76e0504c 0x2d4970c7 // method "()void", method "f()void"
+    txna ApplicationArgs 0
+    match main__route@5 main_f_route@6
+    err
+
+main_f_route@6:
+    pushint 1
+    return
+
+main__route@5:
+    pushint 1
+    return

@@ -52,14 +52,12 @@ c:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
-    intc_3 // 2
-    intc_0 // 0
-    extract3
-    swap
+    dup
+    extract 2 0
+    uncover 2
     pushbytes 0x05
     b==
     assert
-    dup
     len
     intc_2 // 32
     /
@@ -67,11 +65,11 @@ c:
     ==
     assert
     dup
-    extract 0 32 // on error: index access is out of bounds
+    extract 2 32
     pushbytes 0x06
     b==
     assert
-    extract 32 32 // on error: index access is out of bounds
+    extract 34 32
     pushbytes 0x07
     b==
     assert

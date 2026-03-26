@@ -1,0 +1,110 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/keccak256_packed_complex_types.sol.C.approval_program() -> uint64:
+main:
+    intcblock 15 1
+    bytecblock "x" 0x0000000000000000000000000000000000fffffffffffffffffffffffffffffd 0x0000000000000000000000000000000000fffffffffffffffffffffffffffffc
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "x"
+    pushbytes 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0x00819a4d // method "f()(byte[32],byte[32],byte[32])"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/keccak256_packed_complex_types.sol.C.f[routing]() -> void:
+f:
+    pushbytes 0x0000000000000000000000000000000000fffffffffffffffffffffffffffffe00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    pushint 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    pushbytes 0x0000000000000000000000000000000000fffffffffffffffffffffffffffffe
+    replace2 0 // on error: index access is out of bounds
+    swap
+    bytec_1 // 0x0000000000000000000000000000000000fffffffffffffffffffffffffffffd
+    replace2 32 // on error: index access is out of bounds
+    swap
+    bytec_1 // 0x0000000000000000000000000000000000fffffffffffffffffffffffffffffd
+    replace2 32 // on error: index access is out of bounds
+    swap
+    bytec_2 // 0x0000000000000000000000000000000000fffffffffffffffffffffffffffffc
+    replace2 64 // on error: index access is out of bounds
+    swap
+    bytec_2 // 0x0000000000000000000000000000000000fffffffffffffffffffffffffffffc
+    replace2 64 // on error: index access is out of bounds
+    bytec_0 // "x"
+    dig 1
+    app_global_put
+    intc_0 // 15
+    bzero
+    dig 1
+    extract 0 32 // on error: index access is out of bounds
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 15
+    -
+    intc_0 // 15
+    extract3
+    dig 2
+    extract 32 32 // on error: index access is out of bounds
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 15
+    -
+    intc_0 // 15
+    extract3
+    concat
+    uncover 2
+    extract 64 32 // on error: index access is out of bounds
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 15
+    -
+    intc_0 // 15
+    extract3
+    concat
+    keccak256
+    swap
+    keccak256
+    concat
+    pushbytes 0xe321d900f3fd366734e2d071e30949ded20c27fd638f1a059390091c643b62c5
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

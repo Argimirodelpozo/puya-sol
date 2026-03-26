@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/memory_to_storage.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 1 2
+    intcblock 32 1 0 2
     bytecblock 0x151f7c75 "s"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -11,12 +11,12 @@ main:
     pushbytes 0x
     app_global_put
     pushbytes "small_length"
-    intc_0 // 0
+    intc_2 // 0
     app_global_put
     pushbytes "l_length"
-    intc_0 // 0
+    intc_2 // 0
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -49,7 +49,7 @@ f:
     bytec_1 // "s"
     swap
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -57,7 +57,7 @@ f:
 g:
     txna ApplicationArgs 1
     dup
-    intc_0 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     pushint 8
     *
@@ -67,9 +67,7 @@ g:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint64>
-    intc_3 // 2
-    intc_0 // 0
-    extract3
+    extract 2 0
     dup
     len
     pushint 8
@@ -82,7 +80,7 @@ g:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -90,7 +88,7 @@ g:
 h:
     txna ApplicationArgs 1
     dup
-    intc_0 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_3 // 2
     *
@@ -100,9 +98,7 @@ h:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 2>>
-    intc_3 // 2
-    intc_0 // 0
-    extract3
+    extract 2 0
     dup
     len
     intc_3 // 2
@@ -115,13 +111,13 @@ h:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/memory_to_storage.sol.C.s[routing]() -> void:
 s:
-    intc_0 // 0
+    intc_2 // 0
     bytec_1 // "s"
     app_global_get_ex
     assert // check s exists
@@ -144,7 +140,7 @@ s:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -153,18 +149,18 @@ small:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_1 // 32
+    intc_0 // 32
     bzero
     swap
     concat
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    intc_0 // 32
     extract3
     sha256
     pushbytes "small"
@@ -173,7 +169,7 @@ small:
     box_get
     swap
     btoi
-    intc_0 // 0
+    intc_2 // 0
     swap
     uncover 2
     select
@@ -182,7 +178,7 @@ small:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -191,18 +187,18 @@ l:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_1 // 32
+    intc_0 // 32
     bzero
     swap
     concat
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    intc_0 // 32
     extract3
     sha256
     pushbytes "l"
@@ -216,5 +212,5 @@ l:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return

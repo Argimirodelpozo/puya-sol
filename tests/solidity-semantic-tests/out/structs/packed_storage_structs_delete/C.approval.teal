@@ -1,0 +1,238 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/packed_storage_structs_delete.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 2 250 43981
+    bytecblock "data" "x" "y"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "x"
+    intc_0 // 0
+    app_global_put
+    bytec_2 // "y"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "data"
+    pushbytes 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0xc95a9d21 // method "test()uint256"
+    txna ApplicationArgs 0
+    match main_test_route@4
+    err
+
+main_test_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b test
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/packed_storage_structs_delete.sol.C.test[routing]() -> void:
+test:
+    bytec_1 // "x"
+    intc_1 // 1
+    app_global_put
+    bytec_2 // "y"
+    intc_2 // 2
+    app_global_put
+    intc_2 // 2
+    itob
+    dup
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    dup
+    extract 8 8
+    swap
+    extract 16 8
+    cover 2
+    concat
+    swap
+    concat
+    dup
+    extract 0 8
+    intc 4 // 43981
+    itob
+    uncover 2
+    extract 16 8
+    cover 2
+    concat
+    swap
+    concat
+    dup
+    extract 0 8
+    swap
+    extract 8 8
+    intc_3 // 250
+    itob
+    cover 2
+    concat
+    swap
+    concat
+    bytec_0 // "data"
+    swap
+    app_global_put
+    intc_0 // 0
+    bytec_1 // "x"
+    app_global_get_ex
+    assert // check x exists
+    intc_1 // 1
+    !=
+    bnz test_if_body@6
+    intc_0 // 0
+    bytec_2 // "y"
+    app_global_get_ex
+    assert // check y exists
+    intc_2 // 2
+    !=
+    bnz test_if_body@6
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    intc_0 // 0
+    extract_uint64
+    intc_2 // 2
+    !=
+    bnz test_if_body@6
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    pushint 8
+    extract_uint64
+    intc 4 // 43981
+    !=
+    bnz test_if_body@6
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    pushint 16
+    extract_uint64
+    intc_3 // 250
+    !=
+    bz test_after_if_else@7
+
+test_if_body@6:
+    dup
+
+test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/packed_storage_structs_delete.sol.C.test@14:
+    dup
+    len
+    pushint 32
+    <=
+    assert // overflow
+    pushint 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+test_after_if_else@7:
+    intc_0 // 0
+    bytec_2 // "y"
+    app_global_get_ex
+    bury 1
+    assert // check y exists
+    bytec_2 // "y"
+    intc_0 // 0
+    app_global_put
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    dup
+    extract 0 8
+    swap
+    extract 16 8
+    swap
+    pushbytes 0x0000000000000000
+    concat
+    swap
+    concat
+    bytec_0 // "data"
+    swap
+    app_global_put
+    intc_0 // 0
+    bytec_1 // "x"
+    app_global_get_ex
+    assert // check x exists
+    intc_1 // 1
+    !=
+    bnz test_if_body@12
+    intc_0 // 0
+    bytec_2 // "y"
+    app_global_get_ex
+    assert // check y exists
+    bnz test_if_body@12
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    intc_0 // 0
+    extract_uint64
+    intc_2 // 2
+    !=
+    bnz test_if_body@12
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    pushint 8
+    extract_uint64
+    bnz test_if_body@12
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    pushint 16
+    extract_uint64
+    intc_3 // 250
+    !=
+    bz test_after_if_else@13
+
+test_if_body@12:
+    pushint 3
+    itob
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/packed_storage_structs_delete.sol.C.test@14
+
+test_after_if_else@13:
+    intc_0 // 0
+    bytec_1 // "x"
+    app_global_get_ex
+    bury 1
+    assert // check x exists
+    bytec_1 // "x"
+    intc_0 // 0
+    app_global_put
+    intc_0 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    bury 1
+    assert // check data exists
+    bytec_0 // "data"
+    pushbytes 0x000000000000000000000000000000000000000000000000
+    app_global_put
+    intc_1 // 1
+    itob
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/packed_storage_structs_delete.sol.C.test@14

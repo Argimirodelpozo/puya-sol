@@ -381,43 +381,9 @@ bool ExpressionBuilder::visit(solidity::frontend::UnaryOperation const& _node)
 				}
 			}
 
-			// For other targets: assign the zero/default value
-			std::shared_ptr<awst::Expression> defaultVal;
-			if (target->wtype == awst::WType::accountType())
-			{
-				// address → zero address constant
-				auto addr = std::make_shared<awst::AddressConstant>();
-				addr->sourceLocation = loc;
-				addr->wtype = awst::WType::accountType();
-				addr->value = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ";
-				defaultVal = std::move(addr);
-			}
-			else if (isBigUInt(target->wtype))
-			{
-				auto intVal = std::make_shared<awst::IntegerConstant>();
-				intVal->sourceLocation = loc;
-				intVal->wtype = awst::WType::biguintType();
-				intVal->value = "0";
-				defaultVal = std::move(intVal);
-			}
-			else if (target->wtype && target->wtype->kind() == awst::WTypeKind::Bytes)
-			{
-				// bytes/bytes[N]/string → empty bytes
-				auto bytesVal = std::make_shared<awst::BytesConstant>();
-				bytesVal->sourceLocation = loc;
-				bytesVal->wtype = target->wtype;
-				bytesVal->encoding = awst::BytesEncoding::Base16;
-				bytesVal->value = {};
-				defaultVal = std::move(bytesVal);
-			}
-			else
-			{
-				auto intVal = std::make_shared<awst::IntegerConstant>();
-				intVal->sourceLocation = loc;
-				intVal->wtype = awst::WType::uint64Type();
-				intVal->value = "0";
-				defaultVal = std::move(intVal);
-			}
+			// For other targets: assign the zero/default value.
+			// Use StorageMapper::makeDefaultValue which handles all types correctly.
+			auto defaultVal = StorageMapper::makeDefaultValue(target->wtype, loc);
 
 			// Unwrap StateGet for write targets
 			if (auto const* sg = dynamic_cast<awst::StateGet const*>(target.get()))

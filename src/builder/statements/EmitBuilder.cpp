@@ -133,32 +133,84 @@ bool StatementBuilder::visit(solidity::frontend::EmitStatement const& _node)
 		}
 	}
 
-	// Build ARC4Struct wtype for the event
-	std::vector<std::pair<std::string, awst::WType const*>> structFields;
-	for (auto const& f: fields)
-		structFields.emplace_back(f.name, f.arc4Type);
-	auto const* structType = m_typeMapper.createType<awst::ARC4Struct>(
-		eventName, std::move(structFields), true
-	);
+	if (fields.empty())
+	{
+		// Zero-argument event: emit raw log with just the 4-byte ARC-28 selector.
+		// Puya's Emit node requires a non-empty ARC4Struct, so we use a raw log instead.
+		// ARC-28 selector = first 4 bytes of keccak256(signature)
+		auto sigBytes = std::make_shared<awst::BytesConstant>();
+		sigBytes->sourceLocation = loc;
+		sigBytes->wtype = awst::WType::bytesType();
+		sigBytes->encoding = awst::BytesEncoding::Utf8;
+		std::vector<uint8_t> sigVec(eventSignature.begin(), eventSignature.end());
+		sigBytes->value = std::move(sigVec);
 
-	// Build NewStruct with the ARC4-encoded field values
-	auto newStruct = std::make_shared<awst::NewStruct>();
-	newStruct->sourceLocation = loc;
-	newStruct->wtype = structType;
-	for (auto& f: fields)
-		newStruct->values[f.name] = std::move(f.value);
+		// keccak256(signature)
+		auto hash = std::make_shared<awst::IntrinsicCall>();
+		hash->sourceLocation = loc;
+		hash->wtype = awst::WType::bytesType();
+		hash->opCode = "keccak256";
+		hash->stackArgs.push_back(std::move(sigBytes));
 
-	// Emit the ARC-28 event
-	auto emit = std::make_shared<awst::Emit>();
-	emit->sourceLocation = loc;
-	emit->wtype = awst::WType::voidType();
-	emit->signature = eventSignature;
-	emit->value = std::move(newStruct);
+		// extract first 4 bytes: extract3(hash, 0, 4)
+		auto zero = std::make_shared<awst::IntegerConstant>();
+		zero->sourceLocation = loc;
+		zero->wtype = awst::WType::uint64Type();
+		zero->value = "0";
+		auto four = std::make_shared<awst::IntegerConstant>();
+		four->sourceLocation = loc;
+		four->wtype = awst::WType::uint64Type();
+		four->value = "4";
 
-	auto stmt = std::make_shared<awst::ExpressionStatement>();
-	stmt->sourceLocation = loc;
-	stmt->expr = emit;
-	push(stmt);
+		auto selector = std::make_shared<awst::IntrinsicCall>();
+		selector->sourceLocation = loc;
+		selector->wtype = awst::WType::bytesType();
+		selector->opCode = "extract3";
+		selector->stackArgs.push_back(std::move(hash));
+		selector->stackArgs.push_back(std::move(zero));
+		selector->stackArgs.push_back(std::move(four));
+
+		// log(selector)
+		auto logCall = std::make_shared<awst::IntrinsicCall>();
+		logCall->sourceLocation = loc;
+		logCall->wtype = awst::WType::voidType();
+		logCall->opCode = "log";
+		logCall->stackArgs.push_back(std::move(selector));
+
+		auto stmt = std::make_shared<awst::ExpressionStatement>();
+		stmt->sourceLocation = loc;
+		stmt->expr = logCall;
+		push(stmt);
+	}
+	else
+	{
+		// Build ARC4Struct wtype for the event
+		std::vector<std::pair<std::string, awst::WType const*>> structFields;
+		for (auto const& f: fields)
+			structFields.emplace_back(f.name, f.arc4Type);
+		auto const* structType = m_typeMapper.createType<awst::ARC4Struct>(
+			eventName, std::move(structFields), true
+		);
+
+		// Build NewStruct with the ARC4-encoded field values
+		auto newStruct = std::make_shared<awst::NewStruct>();
+		newStruct->sourceLocation = loc;
+		newStruct->wtype = structType;
+		for (auto& f: fields)
+			newStruct->values[f.name] = std::move(f.value);
+
+		// Emit the ARC-28 event
+		auto emit = std::make_shared<awst::Emit>();
+		emit->sourceLocation = loc;
+		emit->wtype = awst::WType::voidType();
+		emit->signature = eventSignature;
+		emit->value = std::move(newStruct);
+
+		auto stmt = std::make_shared<awst::ExpressionStatement>();
+		stmt->sourceLocation = loc;
+		stmt->expr = emit;
+		push(stmt);
+	}
 
 	return false;
 }

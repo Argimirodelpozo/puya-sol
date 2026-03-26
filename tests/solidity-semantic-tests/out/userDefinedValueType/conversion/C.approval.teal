@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/conversion.sol.C.approval_program() -> uint64:
 main:
     intcblock 8 1 32 255
-    bytecblock 0x151f7c75
+    bytecblock 0x151f7c75 0xff 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xc38cc40c 0x0d344e11 0x8abb0e72 0x0e5a6e3c 0xa7348d1d 0x2aa15a5a 0x38b44a3e // method "f(uint256)uint64", method "g(uint256)uint64", method "h(uint64)uint64", method "i(uint64)uint64", method "j(uint64)uint256", method "k(uint64)uint64", method "m(uint64)uint64"
+    pushbytess 0xc38cc40c 0xc14ad39f 0x8ca5396c 0x0e5a6e3c 0xa7348d1d 0x2aa15a5a 0x38b44a3e // method "f(uint256)uint64", method "g(uint256)uint256", method "h(uint64)uint256", method "i(uint64)uint64", method "j(uint64)uint256", method "k(uint64)uint64", method "m(uint64)uint64"
     txna ApplicationArgs 0
     match f g h i j k m
     err
@@ -77,12 +77,35 @@ g:
     intc_3 // 255
     &
     itob
+    bytec_1 // 0xff
+    b&
+    dup
+    bytec_2 // 0x80
+    b>=
+    bz g_ternary_false@3
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b+
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+g_ternary_merge@4:
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
     bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
+
+g_ternary_false@3:
+    b g_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/conversion.sol.C.h[routing]() -> void:
@@ -93,12 +116,37 @@ h:
     intc_0 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    btoi
+    itob
+    bytec_1 // 0xff
+    b&
+    dup
+    bytec_2 // 0x80
+    b>=
+    bz h_ternary_false@3
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b+
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+h_ternary_merge@4:
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
     bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
+
+h_ternary_false@3:
+    b h_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/conversion.sol.C.i[routing]() -> void:

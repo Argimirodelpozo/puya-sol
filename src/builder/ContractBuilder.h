@@ -53,6 +53,9 @@ private:
 	std::unique_ptr<StatementBuilder> m_stmtBuilder;
 	OverloadedNamesSet m_overloadedNames;
 
+	/// The contract currently being built (for modifier override resolution).
+	solidity::frontend::ContractDefinition const* m_currentContract = nullptr;
+
 	awst::SourceLocation makeLoc(solidity::langutil::SourceLocation const& _solLoc);
 
 	/// Build the approval program for the contract.
@@ -72,6 +75,14 @@ private:
 		solidity::frontend::FunctionDefinition const& _func,
 		std::string const& _contractName,
 		std::string const& _nameOverride = ""
+	);
+
+	/// Sign-extend a value from N-bit signed integer to 256-bit two's complement.
+	/// Masks to N bits, then if sign bit is set, adds (2^256 - 2^N) mod 2^256.
+	static std::shared_ptr<awst::Expression> signExtendToUint256(
+		std::shared_ptr<awst::Expression> _value,
+		unsigned _bits,
+		awst::SourceLocation const& _loc
 	);
 
 	/// Build an ARC4 method config for a public/external function.

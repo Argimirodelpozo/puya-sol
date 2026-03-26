@@ -16,7 +16,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xcd78b354 // method "f()uint256"
+    pushbytes 0x4b4fb052 // method "f()bool"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -32,11 +32,13 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/block_chainid.sol.C.f[routing]() -> void:
 f:
-    global CurrentApplicationID
-    itob
-    pushint 32
-    bzero
-    b|
+    global GenesisHash
+    pushbytes 0x
+    b>
+    pushbytes 0x00
+    pushint 0
+    uncover 2
+    setbit
     pushbytes 0x151f7c75
     swap
     concat

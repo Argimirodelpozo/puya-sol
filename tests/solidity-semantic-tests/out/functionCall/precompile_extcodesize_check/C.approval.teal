@@ -1,0 +1,100 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/precompile_extcodesize_check.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 6 4
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x7b7e2103 0x60c57321 0x1ea87231 // method "testHighLevel()bool", method "testHighLevel2()(uint256,uint256,uint256)", method "testLowLevel()uint256"
+    txna ApplicationArgs 0
+    match testHighLevel testHighLevel2 main_testLowLevel_route@7
+    err
+
+main_testLowLevel_route@7:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/precompile_extcodesize_check.sol.C.testHighLevel[routing]() -> void:
+testHighLevel:
+    itxn_begin
+    pushint 5
+    itob
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    intc_3 // 4
+    itxn_field ApplicationID
+    pushbytes 0xb55e211f // method "selectorAndAppendValue(uint256)uint256"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    pushbytes 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/precompile_extcodesize_check.sol.C.testHighLevel2[routing]() -> void:
+testHighLevel2:
+    itxn_begin
+    pushint 2
+    itob
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    intc_3 // 4
+    itxn_field ApplicationID
+    pushbytes 0xc14fe2fb // method "f(uint256)(uint256,uint256,uint256)"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 32
+    itxn LastLog
+    extract 36 32
+    itxn LastLog
+    extract 68 32
+    pushint 32
+    bzero
+    uncover 3
+    dig 1
+    b|
+    uncover 3
+    dig 2
+    b|
+    concat
+    cover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

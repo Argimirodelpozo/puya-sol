@@ -1,0 +1,114 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/callvalue_check.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 32
+    bytecblock 0x151f7c7500
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x3366a15d 0x06897437 0xc2e41121 0x93093311 0x37e18899 // method "createWithValue(byte[],uint256)bool", method "f(uint256)bool", method "g(uint256)bool", method "h(uint256)bool", method "i(uint256)bool"
+    txna ApplicationArgs 0
+    match createWithValue f g h i
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/callvalue_check.sol.C.createWithValue[routing]() -> void:
+createWithValue:
+    txna ApplicationArgs 1
+    dup
+    pushint 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    load 0
+    store 0
+    bytec_0 // 0x151f7c7500
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/callvalue_check.sol.C.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    load 0
+    store 0
+    bytec_0 // 0x151f7c7500
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/callvalue_check.sol.C.g[routing]() -> void:
+g:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    load 0
+    store 0
+    bytec_0 // 0x151f7c7500
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/callvalue_check.sol.C.h[routing]() -> void:
+h:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    load 0
+    store 0
+    bytec_0 // 0x151f7c7500
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/callvalue_check.sol.C.i[routing]() -> void:
+i:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    load 0
+    store 0
+    bytec_0 // 0x151f7c7500
+    log
+    intc_0 // 1
+    return

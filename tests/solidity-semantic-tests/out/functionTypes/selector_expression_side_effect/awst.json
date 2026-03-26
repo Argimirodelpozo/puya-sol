@@ -555,7 +555,7 @@
                 "end_column": null
               },
               "expr": {
-                "_type": "BytesConstant",
+                "_type": "ReinterpretCast",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_expression_side_effect.sol",
                   "line": 65,
@@ -566,12 +566,74 @@
                 },
                 "wtype": {
                   "_type": "BytesWType",
-                  "name": "bytes",
+                  "name": "bytes[4]",
                   "immutable": true,
-                  "length": null
+                  "length": 4
                 },
-                "value": "",
-                "encoding": "base16"
+                "expr": {
+                  "_type": "IntrinsicCall",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_expression_side_effect.sol",
+                    "line": 65,
+                    "end_line": 79,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "BytesWType",
+                    "name": "bytes",
+                    "immutable": true,
+                    "length": null
+                  },
+                  "op_code": "extract",
+                  "immediates": [
+                    0,
+                    4
+                  ],
+                  "stack_args": [
+                    {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_expression_side_effect.sol",
+                        "line": 65,
+                        "end_line": 79,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "keccak256",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_expression_side_effect.sol",
+                            "line": 65,
+                            "end_line": 79,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "W+*8",
+                          "encoding": "utf8"
+                        }
+                      ]
+                    }
+                  ]
+                }
               }
             },
             {

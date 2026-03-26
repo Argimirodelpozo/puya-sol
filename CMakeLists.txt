@@ -73,6 +73,9 @@ set(SOURCES
 	src/builder/assembly/MemoryOps.cpp
 	src/builder/assembly/StatementOps.cpp
 
+	# Type coercion utilities
+	src/builder/sol-types/TypeCoercion.cpp
+
 	# Storage, type, and intrinsic mappers
 	src/builder/storage/StorageMapper.cpp
 	src/builder/sol-types/TypeMapper.cpp

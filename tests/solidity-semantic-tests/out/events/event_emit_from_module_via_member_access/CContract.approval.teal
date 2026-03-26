@@ -1,0 +1,42 @@
+#pragma version 10
+#pragma typetrack false
+
+// /tmp/multisource_4fmue2qe/C.sol.CContract.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0x9d9c28c6 // method "returnAddress()void"
+    txna ApplicationArgs 0
+    match main_returnAddress_route@4
+    err
+
+main_returnAddress_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b returnAddress
+
+
+// /tmp/multisource_4fmue2qe/C.sol.CContract.returnAddress[routing]() -> void:
+returnAddress:
+    pushbytes 0x51542f67000000000000000000000000000000000000000000000000000000000000000b000000000000000000000000000000000000000000000000000000000000000c000000000000000d
+    log
+    pushbytes 0x51542f67000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000000f0000000000000010
+    log
+    pushbytes 0x51542f67000000000000000000000000000000000000000000000000000000000000001100000000000000000000000000000000000000000000000000000000000000120000000000000013
+    log
+    pushint 1
+    return

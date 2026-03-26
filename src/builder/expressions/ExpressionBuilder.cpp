@@ -1,5 +1,6 @@
 #include "builder/expressions/ExpressionBuilder.h"
 #include "builder/storage/StorageMapper.h"
+#include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/TypeProvider.h>
@@ -18,101 +19,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::implicitNumericCast(
 	awst::SourceLocation const& _loc
 )
 {
-	if (!_expr || !_targetType || _expr->wtype == _targetType)
-		return _expr;
-
-	// uint64 → biguint: itob then reinterpret as biguint
-	if (_expr->wtype == awst::WType::uint64Type() && _targetType == awst::WType::biguintType())
-	{
-		auto itob = std::make_shared<awst::IntrinsicCall>();
-		itob->sourceLocation = _loc;
-		itob->wtype = awst::WType::bytesType();
-		itob->opCode = "itob";
-		itob->stackArgs.push_back(std::move(_expr));
-
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = awst::WType::biguintType();
-		cast->expr = std::move(itob);
-		return cast;
-	}
-
-	// biguint → uint64: safely extract lower 64 bits
-	// btoi only works on ≤8 bytes, but biguint from ABI-decoded uint256 is 32 bytes.
-	// Approach: prepend 8 zero bytes, then extract last 8 bytes, then btoi.
-	// This is always safe: concat(bzero(8), bytes) has len ≥ 9, so (len-8) ≥ 1.
-	if (_expr->wtype == awst::WType::biguintType() && _targetType == awst::WType::uint64Type())
-	{
-		// reinterpret biguint → bytes
-		auto toBytes = std::make_shared<awst::ReinterpretCast>();
-		toBytes->sourceLocation = _loc;
-		toBytes->wtype = awst::WType::bytesType();
-		toBytes->expr = std::move(_expr);
-
-		// bzero(8) — 8 zero bytes padding
-		auto eight = std::make_shared<awst::IntegerConstant>();
-		eight->sourceLocation = _loc;
-		eight->wtype = awst::WType::uint64Type();
-		eight->value = "8";
-
-		auto padding = std::make_shared<awst::IntrinsicCall>();
-		padding->sourceLocation = _loc;
-		padding->wtype = awst::WType::bytesType();
-		padding->opCode = "bzero";
-		padding->stackArgs.push_back(std::move(eight));
-
-		// concat(padding, bytes) → padded
-		auto padded = std::make_shared<awst::IntrinsicCall>();
-		padded->sourceLocation = _loc;
-		padded->wtype = awst::WType::bytesType();
-		padded->opCode = "concat";
-		padded->stackArgs.push_back(std::move(padding));
-		padded->stackArgs.push_back(std::move(toBytes));
-
-		// len(padded) → paddedLen
-		auto paddedLen = std::make_shared<awst::IntrinsicCall>();
-		paddedLen->sourceLocation = _loc;
-		paddedLen->wtype = awst::WType::uint64Type();
-		paddedLen->opCode = "len";
-		paddedLen->stackArgs.push_back(padded);
-
-		// paddedLen - 8 → offset
-		auto eight2 = std::make_shared<awst::IntegerConstant>();
-		eight2->sourceLocation = _loc;
-		eight2->wtype = awst::WType::uint64Type();
-		eight2->value = "8";
-
-		auto offset = std::make_shared<awst::UInt64BinaryOperation>();
-		offset->sourceLocation = _loc;
-		offset->wtype = awst::WType::uint64Type();
-		offset->left = std::move(paddedLen);
-		offset->op = awst::UInt64BinaryOperator::Sub;
-		offset->right = std::move(eight2);
-
-		// extract3(padded, offset, 8) → last 8 bytes
-		auto eight3 = std::make_shared<awst::IntegerConstant>();
-		eight3->sourceLocation = _loc;
-		eight3->wtype = awst::WType::uint64Type();
-		eight3->value = "8";
-
-		auto extract = std::make_shared<awst::IntrinsicCall>();
-		extract->sourceLocation = _loc;
-		extract->wtype = awst::WType::bytesType();
-		extract->opCode = "extract3";
-		extract->stackArgs.push_back(std::move(padded));
-		extract->stackArgs.push_back(std::move(offset));
-		extract->stackArgs.push_back(std::move(eight3));
-
-		// btoi(last8) → uint64
-		auto btoi = std::make_shared<awst::IntrinsicCall>();
-		btoi->sourceLocation = _loc;
-		btoi->wtype = awst::WType::uint64Type();
-		btoi->opCode = "btoi";
-		btoi->stackArgs.push_back(std::move(extract));
-		return btoi;
-	}
-
-	return _expr;
+	return TypeCoercion::implicitNumericCast(std::move(_expr), _targetType, _loc);
 }
 
 static OverloadedNamesSet const s_emptyOverloads;

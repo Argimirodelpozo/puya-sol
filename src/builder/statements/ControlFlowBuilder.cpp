@@ -313,4 +313,16 @@ bool StatementBuilder::visit(solidity::frontend::PlaceholderStatement const& _no
 }
 
 
+bool StatementBuilder::visit(solidity::frontend::TryStatement const& _node)
+{
+	Logger::instance().error(
+		"try/catch is not supported on AVM. "
+		"AVM errors (overflow, assert, inner transaction failures) are not catchable — "
+		"they abort the entire transaction group. "
+		"Refactor to use explicit condition checks instead of try/catch.",
+		makeLoc(_node.location()));
+	return false;
+}
+
+
 } // namespace puyasol::builder

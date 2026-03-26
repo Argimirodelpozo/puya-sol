@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/evaluation_order.sol.D.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 0 32
     bytecblock "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -43,14 +43,21 @@ __postInit:
     bytec_0 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    pushbytes "x"
-    box_get
-    assert // box exists
-    pushint 2
-    intc_1 // 0
-    extract3
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
-    concat // on error: max array length exceeded
+    pushint 5
+    itob
+    callsub f
+    pop
+    pushint 3
+    itob
+    callsub f
+    pop
+    intc_0 // 1
+    itob
+    callsub f
+    pop
+    pushint 7
+    itob
+    callsub f
     pop
     intc_0 // 1
     return
@@ -62,7 +69,7 @@ query:
     loads
     dup
     len
-    pushint 32
+    intc_2 // 32
     /
     itob
     extract 6 2
@@ -74,3 +81,28 @@ query:
     log
     intc_0 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/evaluation_order.sol.D.f(y: bytes) -> bytes:
+f:
+    proto 1 1
+    pushbytes "x"
+    box_get
+    assert // box exists
+    pushint 2
+    intc_1 // 0
+    extract3
+    frame_dig -1
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    frame_dig -1
+    b|
+    concat // on error: max array length exceeded
+    pop
+    intc_1 // 0
+    itob
+    retsub

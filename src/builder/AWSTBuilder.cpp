@@ -512,9 +512,9 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				}
 
 				// Synthesize implicit return for named return parameters
-				if (!sub->body->body.empty()
-					&& !blockAlwaysTerminates(*sub->body)
-					&& !returnParams.empty())
+				// Also handle library functions with storage params that augment the return type
+				if (!blockAlwaysTerminates(*sub->body)
+					&& (!returnParams.empty() || !storageParamIndices.empty()))
 				{
 					bool hasNamedReturns = false;
 					for (auto const& rp: returnParams)
@@ -738,8 +738,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 			}
 
 			// Synthesize implicit return for named return parameters
-			if (!sub->body->body.empty()
-				&& !blockAlwaysTerminates(*sub->body)
+			if (!blockAlwaysTerminates(*sub->body)
 				&& !returnParams.empty())
 			{
 				bool hasNamedReturns = false;
@@ -833,10 +832,10 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 			);
 			auto awstContract = translator.build(*contract);
 
-			// Only emit deployable contracts (those with public/external methods).
-			// Non-deployable contracts (e.g., ErrorReporter with only internal functions)
-			// are translated (for MRO/inheritance resolution) but not emitted to AWST,
-			// since puya would fail trying to build a router for them.
+			// Only emit deployable contracts (those with public/external methods
+			// or a constructor). Non-deployable contracts (e.g., ErrorReporter
+			// with only internal functions) are translated for MRO/inheritance
+			// resolution but not emitted to AWST.
 			bool hasPublicMethod = false;
 			for (auto const& method: awstContract->methods)
 			{
@@ -845,6 +844,38 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					hasPublicMethod = true;
 					break;
 				}
+			}
+			// Constructor-only contracts have no routable methods, but puya's
+			// ARC4 router requires at least one. Add a dummy no-op method so
+			// the contract is deployable and the constructor can run at create time.
+			if (!hasPublicMethod && !contract->abstract())
+			{
+				awst::ContractMethod dummy;
+				dummy.sourceLocation = awstContract->sourceLocation;
+				dummy.cref = awstContract->id;
+				dummy.memberName = "__dummy";
+				dummy.returnType = awst::WType::boolType();
+
+				auto body = std::make_shared<awst::Block>();
+				body->sourceLocation = dummy.sourceLocation;
+				auto trueLit = std::make_shared<awst::BoolConstant>();
+				trueLit->sourceLocation = dummy.sourceLocation;
+				trueLit->wtype = awst::WType::boolType();
+				trueLit->value = true;
+				auto ret = std::make_shared<awst::ReturnStatement>();
+				ret->sourceLocation = dummy.sourceLocation;
+				ret->value = trueLit;
+				body->body.push_back(ret);
+				dummy.body = body;
+
+				awst::ARC4BareMethodConfig config;
+				config.sourceLocation = dummy.sourceLocation;
+				config.allowedCompletionTypes = {0}; // NoOp
+				config.create = 3; // Disallow
+				dummy.arc4MethodConfig = config;
+
+				awstContract->methods.push_back(std::move(dummy));
+				hasPublicMethod = true;
 			}
 			if (hasPublicMethod)
 				roots.push_back(std::move(awstContract));

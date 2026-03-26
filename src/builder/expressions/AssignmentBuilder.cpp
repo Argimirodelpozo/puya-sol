@@ -3,6 +3,7 @@
 
 #include "builder/expressions/ExpressionBuilder.h"
 #include "builder/storage/StorageMapper.h"
+#include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/TypeProvider.h>
@@ -67,6 +68,7 @@ bool ExpressionBuilder::visit(solidity::frontend::Assignment const& _node)
 				}
 				if (targetIsArc4)
 				{
+					assignValue = TypeCoercion::stringToBytes(std::move(assignValue), loc);
 					auto encode = std::make_shared<awst::ARC4Encode>();
 					encode->sourceLocation = loc;
 					encode->wtype = assignTarget->wtype;
@@ -112,6 +114,7 @@ bool ExpressionBuilder::visit(solidity::frontend::Assignment const& _node)
 						if (fn == fName) { fieldType = ft; break; }
 					if (fieldType && assignValue->wtype != fieldType)
 					{
+						assignValue = TypeCoercion::stringToBytes(std::move(assignValue), loc);
 						auto enc = std::make_shared<awst::ARC4Encode>();
 						enc->sourceLocation = loc;
 						enc->wtype = fieldType;
@@ -137,11 +140,49 @@ bool ExpressionBuilder::visit(solidity::frontend::Assignment const& _node)
 						}
 					}
 
+					// Recursively apply copy-on-write for nested struct field chains.
+					// e.g. s.inner.x = val → s.inner = NewStruct{x: val, ...}
+					//                      → s = NewStruct{inner: NewStruct{...}, ...}
+					std::shared_ptr<awst::Expression> assignTarget2 = std::move(base);
+					std::shared_ptr<awst::Expression> assignValue2 = std::move(newStruct);
+
+					while (auto const* outerField =
+						dynamic_cast<awst::FieldExpression const*>(assignTarget2.get()))
+					{
+						auto const* outerStructType =
+							dynamic_cast<awst::ARC4Struct const*>(outerField->base->wtype);
+						if (!outerStructType)
+							break;
+
+						auto outerBase = outerField->base;
+						std::string outerFieldName = outerField->name;
+
+						auto outerNewStruct = std::make_shared<awst::NewStruct>();
+						outerNewStruct->sourceLocation = loc;
+						outerNewStruct->wtype = outerStructType;
+						for (auto const& [fn, ft]: outerStructType->fields())
+						{
+							if (fn == outerFieldName)
+								outerNewStruct->values[fn] = std::move(assignValue2);
+							else
+							{
+								auto f = std::make_shared<awst::FieldExpression>();
+								f->sourceLocation = loc;
+								f->base = outerBase;
+								f->name = fn;
+								f->wtype = ft;
+								outerNewStruct->values[fn] = std::move(f);
+							}
+						}
+						assignTarget2 = std::move(outerBase);
+						assignValue2 = std::move(outerNewStruct);
+					}
+
 					auto e = std::make_shared<awst::AssignmentExpression>();
 					e->sourceLocation = loc;
-					e->wtype = base->wtype;
-					e->target = std::move(base);
-					e->value = std::move(newStruct);
+					e->wtype = assignTarget2->wtype;
+					e->target = std::move(assignTarget2);
+					e->value = std::move(assignValue2);
 					auto stmt = std::make_shared<awst::ExpressionStatement>();
 					stmt->sourceLocation = loc;
 					stmt->expr = e;
@@ -187,8 +228,35 @@ bool ExpressionBuilder::visit(solidity::frontend::Assignment const& _node)
 			if (op != Token::Assign)
 				value = buildBinaryOp(op, build(_node.leftHandSide()), std::move(value), indexExpr->wtype, loc);
 
-			// Coerce value to bytes if needed (e.g. bytes[1])
-			if (value->wtype && value->wtype->kind() == awst::WTypeKind::Bytes
+			// Coerce value to a single byte for replace3
+			if (value->wtype == awst::WType::uint64Type())
+			{
+				// uint64 → single byte: itob then extract last byte
+				auto itob = std::make_shared<awst::IntrinsicCall>();
+				itob->sourceLocation = loc;
+				itob->wtype = awst::WType::bytesType();
+				itob->opCode = "itob";
+				itob->stackArgs.push_back(std::move(value));
+
+				auto seven = std::make_shared<awst::IntegerConstant>();
+				seven->sourceLocation = loc;
+				seven->wtype = awst::WType::uint64Type();
+				seven->value = "7";
+				auto one = std::make_shared<awst::IntegerConstant>();
+				one->sourceLocation = loc;
+				one->wtype = awst::WType::uint64Type();
+				one->value = "1";
+
+				auto extract = std::make_shared<awst::IntrinsicCall>();
+				extract->sourceLocation = loc;
+				extract->wtype = awst::WType::bytesType();
+				extract->opCode = "extract3";
+				extract->stackArgs.push_back(std::move(itob));
+				extract->stackArgs.push_back(std::move(seven));
+				extract->stackArgs.push_back(std::move(one));
+				value = std::move(extract);
+			}
+			else if (value->wtype && value->wtype->kind() == awst::WTypeKind::Bytes
 				&& value->wtype != awst::WType::bytesType())
 			{
 				auto cast = std::make_shared<awst::ReinterpretCast>();
@@ -197,6 +265,8 @@ bool ExpressionBuilder::visit(solidity::frontend::Assignment const& _node)
 				cast->expr = std::move(value);
 				value = std::move(cast);
 			}
+			// String literal → raw bytes
+			value = TypeCoercion::stringToBytes(std::move(value), loc);
 
 			auto replace = std::make_shared<awst::IntrinsicCall>();
 			replace->sourceLocation = loc;
@@ -319,20 +389,76 @@ bool ExpressionBuilder::visit(solidity::frontend::Assignment const& _node)
 			if (auto const* sg = dynamic_cast<awst::StateGet const*>(base.get()))
 				writeTarget = sg->field;
 
+			// Recursively apply copy-on-write for nested struct field chains.
+			// Track field names for extraction after unwinding.
+			std::shared_ptr<awst::Expression> assignTarget2 = std::move(writeTarget);
+			std::shared_ptr<awst::Expression> assignValue2 = std::move(newStruct);
+			std::vector<std::pair<std::string, awst::WType const*>> fieldChain;
+
+			while (auto const* outerField =
+				dynamic_cast<awst::FieldExpression const*>(assignTarget2.get()))
+			{
+				auto const* outerStructType =
+					dynamic_cast<awst::ARC4Struct const*>(outerField->base->wtype);
+				if (!outerStructType)
+					break;
+
+				auto outerBase = outerField->base;
+				std::string outerFieldName = outerField->name;
+				// Record this level for extracting the value later
+				awst::WType const* outerFieldWtype = nullptr;
+				for (auto const& [fn, ft]: outerStructType->fields())
+					if (fn == outerFieldName) { outerFieldWtype = ft; break; }
+				fieldChain.push_back({outerFieldName, outerFieldWtype});
+
+				auto outerNewStruct = std::make_shared<awst::NewStruct>();
+				outerNewStruct->sourceLocation = loc;
+				outerNewStruct->wtype = outerStructType;
+				for (auto const& [fn, ft]: outerStructType->fields())
+				{
+					if (fn == outerFieldName)
+						outerNewStruct->values[fn] = std::move(assignValue2);
+					else
+					{
+						auto f = std::make_shared<awst::FieldExpression>();
+						f->sourceLocation = loc;
+						f->base = outerBase;
+						f->name = fn;
+						f->wtype = ft;
+						outerNewStruct->values[fn] = std::move(f);
+					}
+				}
+				assignTarget2 = std::move(outerBase);
+				assignValue2 = std::move(outerNewStruct);
+			}
+
 			auto e = std::make_shared<awst::AssignmentExpression>();
 			e->sourceLocation = loc;
-			e->wtype = writeTarget->wtype;
-			e->target = std::move(writeTarget);
-			e->value = std::move(newStruct);
+			e->wtype = assignTarget2->wtype;
+			e->target = std::move(assignTarget2);
+			e->value = std::move(assignValue2);
 
 			// In Solidity, (struct.field = val) evaluates to the assigned field
 			// value, not the whole struct. Wrap in FieldExpression + ARC4Decode
 			// to extract the field value from the struct assignment result.
 			if (arc4FieldType)
 			{
+				// Walk through the field chain (outer→inner) then the leaf field.
+				// e.g. for s.s.x = val: chain=[("s", S_type)], fieldName="x"
+				// extraction: result.s.x
+				std::shared_ptr<awst::Expression> extractBase = std::move(e);
+				for (auto it = fieldChain.rbegin(); it != fieldChain.rend(); ++it)
+				{
+					auto fe = std::make_shared<awst::FieldExpression>();
+					fe->sourceLocation = loc;
+					fe->base = std::move(extractBase);
+					fe->name = it->first;
+					fe->wtype = it->second;
+					extractBase = std::move(fe);
+				}
 				auto fieldExtract = std::make_shared<awst::FieldExpression>();
 				fieldExtract->sourceLocation = loc;
-				fieldExtract->base = std::move(e);
+				fieldExtract->base = std::move(extractBase);
 				fieldExtract->name = fieldName;
 				fieldExtract->wtype = arc4FieldType;
 
@@ -420,15 +546,27 @@ bool ExpressionBuilder::visit(solidity::frontend::Assignment const& _node)
 	if (value->wtype != target->wtype
 		&& target->wtype && target->wtype->kind() == awst::WTypeKind::Bytes)
 	{
-		bool valueIsCompatible = value->wtype == awst::WType::stringType()
-			|| (value->wtype && value->wtype->kind() == awst::WTypeKind::Bytes);
-		if (valueIsCompatible)
+		auto const* bytesType = dynamic_cast<awst::BytesWType const*>(target->wtype);
+		auto const* strConst = dynamic_cast<awst::StringConstant const*>(value.get());
+		// String literal → bytes[N]: right-pad to N bytes
+		if (bytesType && bytesType->length().has_value() && *bytesType->length() > 0 && strConst)
 		{
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = loc;
-			cast->wtype = target->wtype;
-			cast->expr = std::move(value);
-			value = std::move(cast);
+			if (auto padded = TypeCoercion::stringToBytesN(
+					value.get(), target->wtype, *bytesType->length(), loc))
+				value = std::move(padded);
+		}
+		else
+		{
+			bool valueIsCompatible = value->wtype == awst::WType::stringType()
+				|| (value->wtype && value->wtype->kind() == awst::WTypeKind::Bytes);
+			if (valueIsCompatible)
+			{
+				auto cast = std::make_shared<awst::ReinterpretCast>();
+				cast->sourceLocation = loc;
+				cast->wtype = target->wtype;
+				cast->expr = std::move(value);
+				value = std::move(cast);
+			}
 		}
 	}
 	// Coerce bytes → string when target is string (e.g., b = hex"41424344" where b is string)
@@ -471,6 +609,9 @@ bool ExpressionBuilder::visit(solidity::frontend::Assignment const& _node)
 		}
 		if (targetIsArc4)
 		{
+			// Coerce string literal to bytes before ARC4 encoding
+			// (puya can't ARC4Encode string→uint8[1], but bytes→uint8[1] works)
+			value = TypeCoercion::stringToBytes(std::move(value), loc);
 			auto encode = std::make_shared<awst::ARC4Encode>();
 			encode->sourceLocation = loc;
 			encode->wtype = target->wtype;

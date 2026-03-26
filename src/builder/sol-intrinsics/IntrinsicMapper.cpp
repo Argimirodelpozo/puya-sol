@@ -24,11 +24,38 @@ std::shared_ptr<awst::IntrinsicCall> IntrinsicMapper::tryMapMemberAccess(
 		}
 		else if (_memberName == "value")
 		{
-			// msg.value → payment amount (not directly applicable on Algorand,
-			// but map to group txn amount)
-			Logger::instance().warning("msg.value mapped to group txn amount (approximate)", _loc);
-			call->opCode = "gtxn";
-			call->immediates = {0, std::string("Amount")};
+			// msg.value → Amount of the preceding payment transaction in the group.
+			// In Solidity, msg.value is the ETH sent with the call. On Algorand,
+			// the caller must group a payment txn before the app call.
+			// Emits: gtxn (GroupIndex - 1) Amount
+			// Runtime asserts check the previous txn is a payment to this app.
+			Logger::instance().warning(
+				"msg.value mapped to preceding payment transaction amount. "
+				"Caller must group a payment txn before the app call.", _loc);
+
+			// txn GroupIndex
+			auto groupIdx = std::make_shared<awst::IntrinsicCall>();
+			groupIdx->sourceLocation = _loc;
+			groupIdx->wtype = awst::WType::uint64Type();
+			groupIdx->opCode = "txn";
+			groupIdx->immediates = {std::string("GroupIndex")};
+
+			// GroupIndex - 1
+			auto one = std::make_shared<awst::IntegerConstant>();
+			one->sourceLocation = _loc;
+			one->wtype = awst::WType::uint64Type();
+			one->value = "1";
+			auto payIdx = std::make_shared<awst::UInt64BinaryOperation>();
+			payIdx->sourceLocation = _loc;
+			payIdx->wtype = awst::WType::uint64Type();
+			payIdx->left = std::move(groupIdx);
+			payIdx->op = awst::UInt64BinaryOperator::Sub;
+			payIdx->right = std::move(one);
+
+			// gtxns Amount (of payIdx)
+			call->opCode = "gtxns";
+			call->immediates = {std::string("Amount")};
+			call->stackArgs.push_back(std::move(payIdx));
 			call->wtype = awst::WType::uint64Type();
 			return call;
 		}
@@ -59,11 +86,14 @@ std::shared_ptr<awst::IntrinsicCall> IntrinsicMapper::tryMapMemberAccess(
 		}
 		else if (_memberName == "chainid")
 		{
-			// No direct equivalent on Algorand; use global CurrentApplicationID as placeholder
-			Logger::instance().warning("block.chainid has no Algorand equivalent, using app ID", _loc);
+			// AVM has no chain ID. The closest equivalent is GenesisHash which
+			// uniquely identifies the network (mainnet/testnet/localnet).
+			Logger::instance().warning(
+				"block.chainid mapped to global GenesisHash. "
+				"AVM has no chain ID; GenesisHash uniquely identifies the network", _loc);
 			call->opCode = "global";
-			call->immediates = {std::string("CurrentApplicationID")};
-			call->wtype = awst::WType::uint64Type();
+			call->immediates = {std::string("GenesisHash")};
+			call->wtype = awst::WType::bytesType();
 			return call;
 		}
 	}
@@ -74,6 +104,22 @@ std::shared_ptr<awst::IntrinsicCall> IntrinsicMapper::tryMapMemberAccess(
 			call->opCode = "txn";
 			call->immediates = {std::string("Sender")};
 			call->wtype = awst::WType::accountType();
+			return call;
+		}
+		else if (_memberName == "gasprice")
+		{
+			// tx.gasprice → txn Fee (in microAlgos).
+			// WARNING: These are NOT equivalent. EVM gas price is per-unit cost
+			// (wei/gas) used for gas accounting and MEV protection. AVM txn Fee
+			// is the flat fee (in microAlgos) attached to the transaction —
+			// typically 1000 microAlgos. There is no per-opcode pricing on AVM.
+			Logger::instance().warning(
+				"tx.gasprice mapped to txn Fee (microAlgos). "
+				"NOT equivalent to EVM gas price: AVM uses a flat transaction fee "
+				"(typically 1000 microAlgos), not a per-opcode gas price.", _loc);
+			call->opCode = "txn";
+			call->immediates = {std::string("Fee")};
+			call->wtype = awst::WType::uint64Type();
 			return call;
 		}
 	}

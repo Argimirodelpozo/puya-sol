@@ -39,48 +39,124 @@ def localnet():
 
 
 def _split_multi_source(sol_path):
-    """Split multi-source test files (==== Source: name ====) into temp files.
+    """Split multi-source test files into temp files.
+
+    Handles both ==== Source: name ==== (inline source) and
+    ==== ExternalSource: path ==== (reference to upstream Solidity test data).
 
     Returns (main_source_path, import_dir) or (sol_path, None) if single-source.
     """
-    import tempfile
-    content = sol_path.read_text()
-    if "==== Source:" not in content:
-        return sol_path, None
+    import tempfile, re, shutil
 
-    # Split on ==== Source: name ==== delimiters
-    import re
-    parts = re.split(r'^==== Source: (.+?) ====$', content, flags=re.MULTILINE)
-    # parts[0] is before first delimiter (usually empty), then alternating name/content
-    if len(parts) < 3:
+    content = sol_path.read_text()
+    has_source = "==== Source:" in content
+    has_external = "==== ExternalSource:" in content
+
+    if not has_source and not has_external:
         return sol_path, None
 
     tmp_dir = Path(tempfile.mkdtemp(prefix="multisource_"))
-    sources = {}
-    last_name = None
-    for i in range(1, len(parts), 2):
-        name = parts[i].strip()
-        body = parts[i + 1] if i + 1 < len(parts) else ""
-        # Strip trailing test assertions (// ----)
-        if "// ----" in body:
-            body = body[:body.index("// ----")]
-        # Write with exact name (for import resolution) and .sol variant
-        (tmp_dir / name).write_text(body)
-        if not name.endswith(".sol"):
-            (tmp_dir / (name + ".sol")).write_text(body)
-        sources[name] = body
-        last_name = name
 
-    # The main source is the last one (contains the contract to deploy)
-    main = last_name + ".sol" if not last_name.endswith(".sol") else last_name
-    return tmp_dir / main, tmp_dir
+    # Upstream Solidity test data directory (for ExternalSource resolution)
+    upstream_dir = ROOT / "solidity" / "test" / "libsolidity" / "semanticTests"
+    # ExternalSource paths are relative to the test's category directory upstream
+    test_category = sol_path.parent.name
+    upstream_category_dir = upstream_dir / test_category
+
+    # Handle ExternalSource directives: copy files from upstream
+    for m in re.finditer(r'^==== ExternalSource: (.+?) ====$', content, re.MULTILINE):
+        spec = m.group(1).strip()
+        # Format: "importName=filesystemPath" or just "path" (same for both)
+        if "=" in spec:
+            # Could have multiple = signs: first = splits import name from path
+            # e.g. "a=_external/external.sol=sol" means import "a" from "_external/external.sol=sol"
+            # But the Solidity test uses first = as the split
+            parts = spec.split("=", 1)
+            import_name = parts[0]
+            fs_path = parts[1]
+        else:
+            import_name = spec
+            fs_path = spec
+
+        # Resolve the filesystem path from upstream
+        src_file = upstream_category_dir / fs_path
+        if not src_file.exists():
+            # Try normalizing the path
+            src_file = upstream_category_dir / Path(fs_path).as_posix()
+
+        # Sanitize import name: strip leading / and ../ to keep within tmp_dir
+        safe_name = import_name.lstrip("/")
+        while safe_name.startswith("../"):
+            safe_name = safe_name[3:]
+        dst_file = tmp_dir / safe_name
+        dst_file.parent.mkdir(parents=True, exist_ok=True)
+        if src_file.exists():
+            shutil.copy2(src_file, dst_file)
+        else:
+            # Create empty placeholder
+            dst_file.write_text(f"// ExternalSource not found: {fs_path}\n")
+
+    # Handle inline Source directives
+    # Strip ExternalSource lines before splitting on Source
+    stripped = re.sub(r'^==== ExternalSource: .+? ====$', '', content, flags=re.MULTILINE)
+
+    if has_source:
+        parts = re.split(r'^==== Source: (.+?) ====$', stripped, flags=re.MULTILINE)
+        if len(parts) >= 3:
+            last_name = None
+            for i in range(1, len(parts), 2):
+                name = parts[i].strip()
+                body = parts[i + 1] if i + 1 < len(parts) else ""
+                if "// ----" in body:
+                    body = body[:body.index("// ----")]
+                dst = tmp_dir / name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                dst.write_text(body)
+                if not name.endswith(".sol"):
+                    (tmp_dir / (name + ".sol")).write_text(body)
+                last_name = name
+
+            main = last_name + ".sol" if not last_name.endswith(".sol") else last_name
+            return tmp_dir / main, tmp_dir
+
+    # No inline Source directives — the main source is the test file itself
+    # (minus the ExternalSource directives and test assertions)
+    main_content = stripped
+    if "// ----" in main_content:
+        main_content = main_content[:main_content.index("// ----")]
+    # Also strip any ==== lines
+    main_content = re.sub(r'^====.*====$', '', main_content, flags=re.MULTILINE).strip()
+
+    main_file = tmp_dir / sol_path.name
+    main_file.write_text(main_content + "\n")
+    return main_file, tmp_dir
 
 
 def compile_sol(sol_path, out_dir):
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Handle multi-source test files
-    source_path, import_dir = _split_multi_source(sol_path)
+    content = sol_path.read_text()
+    has_multi = "==== Source:" in content or "==== ExternalSource:" in content
+
+    if has_multi:
+        # Use puya-sol's --split-test to handle Source/ExternalSource directives
+        import tempfile
+        split_dir = Path(tempfile.mkdtemp(prefix="split_"))
+        # Determine upstream test dir for ExternalSource resolution
+        upstream_dir = ROOT / "solidity" / "test" / "libsolidity" / "semanticTests" / sol_path.parent.name
+        split_cmd = [
+            str(COMPILER), "--source", str(sol_path),
+            "--split-test", "--output-dir", str(split_dir),
+            "--upstream-test-dir", str(upstream_dir),
+        ]
+        split_result = subprocess.run(split_cmd, capture_output=True, text=True, timeout=30)
+        if split_result.returncode != 0:
+            return None
+        source_path = Path(split_result.stdout.strip())
+        import_dir = split_dir
+    else:
+        source_path = sol_path
+        import_dir = None
 
     cmd = [str(COMPILER), "--source", str(source_path),
            "--output-dir", str(out_dir),
@@ -213,6 +289,8 @@ def compare_values(actual, expected):
             except (ValueError, OverflowError):
                 pass
     if isinstance(expected, bytes):
+        if isinstance(actual, str):
+            actual = actual.encode('utf-8')
         if isinstance(actual, bytes):
             if actual == expected:
                 return True

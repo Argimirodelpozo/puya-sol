@@ -1,0 +1,182 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock "testArray" 0x 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "testArray"
+    bytec_1 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x4fa0465e 0xa3e4ca32 0xc81142a1 0x2bbf0199 0x58d0419e 0xc67bf355 // method "getArrayDataAreaSlot()uint256", method "getCanarySlot()uint256", method "checkSlots()(uint256,uint256,uint256,uint256,uint256)", method "fillArray()void", method "deleteArray()void", method "canaryValue()uint256"
+    txna ApplicationArgs 0
+    match getArrayDataAreaSlot getCanarySlot checkSlots fillArray deleteArray canaryValue
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.getArrayDataAreaSlot[routing]() -> void:
+getArrayDataAreaSlot:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.getArrayDataAreaSlot
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.getCanarySlot[routing]() -> void:
+getCanarySlot:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.getArrayDataAreaSlot
+    pushbytes 0x03
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.checkSlots[routing]() -> void:
+checkSlots:
+    load 0
+    store 0
+    intc_2 // 0
+    bytec_0 // "testArray"
+    app_global_get_ex
+    assert // check testArray exists
+    len
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.fillArray[routing]() -> void:
+fillArray:
+    intc_2 // 0
+    itob
+
+fillArray_while_top@2:
+    dup
+    pushbytes 0x60
+    b<
+    bz fillArray_after_while@4
+    intc_2 // 0
+    bytec_0 // "testArray"
+    app_global_get_ex
+    bury 1
+    assert // check testArray exists
+    dup
+    pushbytes 0x01
+    b+
+    bury 1
+    b fillArray_while_top@2
+
+fillArray_after_while@4:
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.deleteArray[routing]() -> void:
+deleteArray:
+    intc_2 // 0
+    bytec_0 // "testArray"
+    app_global_get_ex
+    bury 1
+    assert // check testArray exists
+    bytec_0 // "testArray"
+    bytec_1 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.canaryValue[routing]() -> void:
+canaryValue:
+    intc_2 // 0
+    load 0
+    intc_0 // 32
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.getArrayDataAreaSlot() -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.getArrayDataAreaSlot:
+    intc_2 // 0
+    load 0
+    intc_0 // 32
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 0
+    dup
+    extract 0 32
+    keccak256
+    swap
+    store 0
+    dup
+    pushbytes 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    b==
+    assert
+    retsub

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/erc20.sol.ERC20.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock 0x 0x010000000000000000000000000000000000000000000000000000000000000000 base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) "_allowances" 0x151f7c7580 "_totalSupply" "_balances" "__ctor_pending" 0x151f7c75 0x28918861
+    bytecblock 0x "_allowances" 0x010000000000000000000000000000000000000000000000000000000000000000 base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) 0x151f7c7580 "_totalSupply" "_balances" "__ctor_pending" 0x151f7c75 0x28918861
     txn ApplicationID
     bnz main_after_if_else@2
     bytec 5 // "_totalSupply"
@@ -47,7 +47,7 @@ __postInit:
     pushint 20
     itob
     dig 1
-    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec_3 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     !=
     assert // ERC20: mint to the zero address
     intc_2 // 0
@@ -75,7 +75,7 @@ __postInit:
     box_del
     pop
     box_put
-    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec_3 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     swap
     concat
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000014
@@ -158,7 +158,7 @@ allowance:
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     concat
     sha256
-    bytec_3 // "_allowances"
+    bytec_1 // "_allowances"
     swap
     concat
     box_get
@@ -251,23 +251,37 @@ transferFrom:
     uncover 2
     dig 2
     callsub _transfer
-    txn Sender
-    dig 2
+    dig 1
     txn Sender
     concat
     sha256
-    bytec_3 // "_allowances"
+    bytec_1 // "_allowances"
     swap
     concat
     box_get
     bytec_0 // 0x
     cover 2
     select
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 1
+    b>=
+    assert // underflow
+    txn Sender
+    dig 2
+    txn Sender
+    concat
+    sha256
+    bytec_1 // "_allowances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     uncover 2
     b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     callsub _approve
     bytec 4 // 0x151f7c7580
@@ -295,7 +309,7 @@ increaseAllowance:
     dig 3
     concat
     sha256
-    bytec_3 // "_allowances"
+    bytec_1 // "_allowances"
     swap
     concat
     box_get
@@ -328,22 +342,36 @@ decreaseAllowance:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn Sender
-    dup
-    dig 3
+    dig 2
     concat
     sha256
-    bytec_3 // "_allowances"
+    bytec_1 // "_allowances"
     swap
     concat
     box_get
     bytec_0 // 0x
     cover 2
     select
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 1
+    b>=
+    assert // underflow
+    txn Sender
+    dup
+    dig 3
+    concat
+    sha256
+    bytec_1 // "_allowances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     uncover 2
     b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     swap
     cover 2
@@ -358,7 +386,7 @@ decreaseAllowance:
 _transfer:
     proto 3 0
     frame_dig -2
-    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec_3 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     !=
     assert // ERC20: transfer to the zero address
     frame_dig -3
@@ -371,11 +399,15 @@ _transfer:
     bytec_0 // 0x
     cover 2
     select
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dup
+    frame_dig -1
+    b>=
+    assert // underflow
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     frame_dig -1
     b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dig 1
     box_del
@@ -422,11 +454,11 @@ _transfer:
 _approve:
     proto 3 0
     frame_dig -3
-    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec_3 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     !=
     assert // ERC20: approve from the zero address
     frame_dig -2
-    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec_3 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     !=
     assert // ERC20: approve to the zero address
     frame_dig -3
@@ -434,7 +466,7 @@ _approve:
     concat
     dup
     sha256
-    bytec_3 // "_allowances"
+    bytec_1 // "_allowances"
     swap
     concat
     dup

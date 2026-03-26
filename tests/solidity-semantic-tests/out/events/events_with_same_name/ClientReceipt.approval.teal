@@ -1,0 +1,113 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/events_with_same_name.sol.ClientReceipt.approval_program() -> uint64:
+main:
+    intcblock 1 32
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x046ef2d5 0x24c1cdc8 0x8bd51f2f 0x64a16438 // method "deposit()uint256", method "deposit(address)uint256", method "deposit(address,uint256)uint256", method "deposit(address,bool)uint256"
+    txna ApplicationArgs 0
+    match deposit() deposit(addr) deposit(addr,u256) deposit(addr,b)
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/events_with_same_name.sol.ClientReceipt.deposit()[routing]() -> void:
+deposit():
+    pushbytes 0xed21248c
+    log
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/events_with_same_name.sol.ClientReceipt.deposit(addr)[routing]() -> void:
+deposit(addr):
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    pushbytes 0x08db9ab9 // method "Deposit(address)"
+    swap
+    concat
+    log
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/events_with_same_name.sol.ClientReceipt.deposit(addr,u256)[routing]() -> void:
+deposit(addr,u256):
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    concat
+    pushbytes 0x18a962c4 // method "Deposit(address,uint256)"
+    swap
+    concat
+    log
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000003
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/events_with_same_name.sol.ClientReceipt.deposit(addr,b)[routing]() -> void:
+deposit(addr,b):
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    concat
+    pushbytes 0x1a400015 // method "Deposit(address,bool)"
+    swap
+    concat
+    log
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000004
+    log
+    intc_0 // 1
+    return

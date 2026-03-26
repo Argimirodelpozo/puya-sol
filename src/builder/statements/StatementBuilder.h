@@ -66,6 +66,7 @@ public:
 	bool visit(solidity::frontend::RevertStatement const& _node) override;
 	bool visit(solidity::frontend::InlineAssembly const& _node) override;
 	bool visit(solidity::frontend::PlaceholderStatement const& _node) override;
+	bool visit(solidity::frontend::TryStatement const& _node) override;
 
 	/// Set the function body to inline at `_;` placeholder statements in modifiers.
 	void setPlaceholderBody(std::shared_ptr<awst::Block> _body) { m_placeholderBody = std::move(_body); }

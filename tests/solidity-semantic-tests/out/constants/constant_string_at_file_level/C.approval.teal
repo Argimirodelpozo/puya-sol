@@ -1,0 +1,53 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/constant_string_at_file_level.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1
+    bytecblock 0x151f7c750003030102
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x38b8b62f 0x4b25d408 0x1f6cd751 0xf609e965 // method "f()byte[]", method "g()byte[]", method "h()byte[]", method "i()(uint256,uint64,byte[32])"
+    txna ApplicationArgs 0
+    match main_f_route@5 main_g_route@6 main_h_route@7 main_i_route@8
+    err
+
+main_i_route@8:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000038000000000000000161626300ff5f5f00000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_h_route@7:
+    pushbytes 0x151f7c75000568656c6c6f
+    log
+    intc_0 // 1
+    return
+
+main_g_route@6:
+    bytec_0 // 0x151f7c750003030102
+    log
+    intc_0 // 1
+    return
+
+main_f_route@5:
+    bytec_0 // 0x151f7c750003030102
+    log
+    intc_0 // 1
+    return

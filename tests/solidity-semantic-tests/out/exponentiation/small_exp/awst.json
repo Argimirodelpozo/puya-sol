@@ -1525,7 +1525,7 @@
                     "immediates": [],
                     "stack_args": [
                       {
-                        "_type": "UInt64BinaryOperation",
+                        "_type": "ConditionalExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/exponentiation/small_exp.sol",
                           "line": 205,
@@ -1539,29 +1539,63 @@
                           "name": "uint64",
                           "immutable": true
                         },
-                        "left": {
-                          "_type": "VarExpression",
+                        "condition": {
+                          "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/exponentiation/small_exp.sol",
                             "line": 205,
-                            "end_line": 206,
+                            "end_line": 209,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
                           },
                           "wtype": {
                             "_type": "WType",
-                            "name": "uint64",
+                            "name": "bool",
                             "immutable": true
                           },
-                          "name": "x"
+                          "lhs": {
+                            "_type": "VarExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/exponentiation/small_exp.sol",
+                              "line": 208,
+                              "end_line": 209,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "name": "y"
+                          },
+                          "operator": "==",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/exponentiation/small_exp.sol",
+                              "line": 205,
+                              "end_line": 209,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 0,
+                            "teal_alias": null
+                          }
                         },
-                        "op": "**",
-                        "right": {
-                          "_type": "VarExpression",
+                        "true_expr": {
+                          "_type": "IntegerConstant",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/exponentiation/small_exp.sol",
-                            "line": 208,
+                            "line": 205,
                             "end_line": 209,
                             "comment_lines": 0,
                             "column": null,
@@ -1572,7 +1606,59 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "name": "y"
+                          "value": 1,
+                          "teal_alias": null
+                        },
+                        "false_expr": {
+                          "_type": "UInt64BinaryOperation",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/exponentiation/small_exp.sol",
+                            "line": 205,
+                            "end_line": 209,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "left": {
+                            "_type": "VarExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/exponentiation/small_exp.sol",
+                              "line": 205,
+                              "end_line": 206,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "name": "x"
+                          },
+                          "op": "**",
+                          "right": {
+                            "_type": "VarExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/exponentiation/small_exp.sol",
+                              "line": 208,
+                              "end_line": 209,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "name": "y"
+                          }
                         }
                       }
                     ]

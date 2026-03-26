@@ -69,16 +69,26 @@ testCalc:
     concat
     pushbytes 0x01
     concat
+    intc_0 // 32
+    bzero
+    swap
     keccak256
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffff
     b&
-    global CurrentApplicationAddress
-    intc_0 // 32
-    bzero
+    dig 1
+    swap
+    concat
     dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    global CurrentApplicationAddress
+    dig 2
     global CurrentApplicationAddress
     concat
-    dig 1
+    dig 3
     global CurrentApplicationAddress
     concat
     len
@@ -86,6 +96,8 @@ testCalc:
     -
     intc_0 // 32
     extract3
+    dig 3
+    swap
     concat
     dup
     len
@@ -99,6 +111,15 @@ testCalc:
     keccak256
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffff
     b&
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     bytec_0 // 0x151f7c75
     swap

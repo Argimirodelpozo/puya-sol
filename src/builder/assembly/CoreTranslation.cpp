@@ -299,25 +299,20 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		return handleTimestamp(loc);
 	if (funcName == "chainid")
 	{
-		// chainid() has no AVM equivalent — return 0 (Algorand has no chain ID)
-		// Use itob(0) to produce an 8-byte zeros value that stays as bytes
-		// through the puya backend's optimizer (prevents folding to uint64).
-		Logger::instance().debug("chainid() has no AVM equivalent, returning 0", loc);
-		auto zero_u64 = std::make_shared<awst::IntegerConstant>();
-		zero_u64->sourceLocation = loc;
-		zero_u64->wtype = awst::WType::uint64Type();
-		zero_u64->value = "0";
-
-		auto itob_call = std::make_shared<awst::IntrinsicCall>();
-		itob_call->sourceLocation = loc;
-		itob_call->wtype = awst::WType::bytesType();
-		itob_call->opCode = "itob";
-		itob_call->stackArgs.push_back(std::move(zero_u64));
+		// chainid() → global GenesisHash (32 bytes) → reinterpret as biguint
+		// AVM has no chain ID; GenesisHash uniquely identifies the network.
+		Logger::instance().debug(
+			"chainid() mapped to global GenesisHash (network identifier)", loc);
+		auto ghCall = std::make_shared<awst::IntrinsicCall>();
+		ghCall->sourceLocation = loc;
+		ghCall->wtype = awst::WType::bytesType();
+		ghCall->opCode = "global";
+		ghCall->immediates = {std::string("GenesisHash")};
 
 		auto cast = std::make_shared<awst::ReinterpretCast>();
 		cast->sourceLocation = loc;
 		cast->wtype = awst::WType::biguintType();
-		cast->expr = std::move(itob_call);
+		cast->expr = std::move(ghCall);
 		return cast;
 	}
 	if (funcName == "calldataload")

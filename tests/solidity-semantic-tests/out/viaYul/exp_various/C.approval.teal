@@ -45,7 +45,15 @@ f:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    exp
+    dup
+    bnz f_ternary_false@3
+    intc_1 // 1
+
+f_ternary_merge@4:
+    dup
+    pushint 255
+    <=
+    assert // overflow
     itob
     intc_0 // 32
     bzero
@@ -56,6 +64,11 @@ f:
     log
     intc_1 // 1
     return
+
+f_ternary_false@3:
+    dup2
+    exp
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_various.sol.C.g[routing]() -> void:

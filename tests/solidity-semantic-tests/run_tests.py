@@ -64,15 +64,54 @@ def setup_localnet():
     return localnet, account
 
 
+def _split_multi_source(sol_path):
+    """Split multi-source test files (==== Source: name ====) into temp files.
+
+    Returns (main_source_path, import_dir) or (sol_path, None) if single-source.
+    """
+    import tempfile
+    content = sol_path.read_text()
+    if "==== Source:" not in content:
+        return sol_path, None
+
+    parts = re.split(r'^==== Source: (.+?) ====$', content, flags=re.MULTILINE)
+    if len(parts) < 3:
+        return sol_path, None
+
+    tmp_dir = Path(tempfile.mkdtemp(prefix="multisource_"))
+    last_name = None
+    for i in range(1, len(parts), 2):
+        name = parts[i].strip()
+        body = parts[i + 1] if i + 1 < len(parts) else ""
+        if "// ----" in body:
+            body = body[:body.index("// ----")]
+        (tmp_dir / name).write_text(body)
+        if not name.endswith(".sol"):
+            (tmp_dir / (name + ".sol")).write_text(body)
+        last_name = name
+
+    main = last_name + ".sol" if not last_name.endswith(".sol") else last_name
+    return tmp_dir / main, tmp_dir
+
+
 def compile_test(sol_path: Path, out_dir: Path) -> dict | None:
     """Compile a .sol file. Returns dict of contract artifacts or None on failure."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    result = subprocess.run(
-        [str(COMPILER), "--source", str(sol_path),
+
+    source_path, import_dir = _split_multi_source(sol_path)
+
+    cmd = [str(COMPILER), "--source", str(source_path),
          "--output-dir", str(out_dir),
-         "--puya-path", str(PUYA)],
-        capture_output=True, text=True, timeout=120,
-    )
+         "--puya-path", str(PUYA)]
+    if import_dir:
+        cmd += ["--import-path", str(import_dir)]
+
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+
+    if import_dir:
+        import shutil
+        shutil.rmtree(import_dir, ignore_errors=True)
+
     if result.returncode != 0:
         return None
 
@@ -181,13 +220,15 @@ def resolve_method(app_spec, sol_sig):
 _budget_helper_app_id = None
 
 def _get_budget_helper(algod, sender, signer):
-    """Deploy (once) a tiny app that just approves — used for opcode budget pooling."""
+    """Deploy (once) a tiny app that just approves — used for opcode budget pooling.
+
+    With 15 helper calls in a group, total budget is 16 × 700 = 11,200 opcodes.
+    """
     global _budget_helper_app_id
     if _budget_helper_app_id is not None:
         return _budget_helper_app_id
     from algosdk.transaction import ApplicationCreateTxn, OnComplete, StateSchema, wait_for_confirmation
     from algosdk import encoding
-    # Minimal TEAL: #pragma version 10\nint 1
     approval = encoding.base64.b64decode(
         algod.compile("#pragma version 10\nint 1")["result"])
     clear = approval
@@ -258,9 +299,9 @@ def _call_with_extra_budget(app, method, args, extra_calls=15):
 def _regroup_args(raw_args, method_sig):
     """Regroup flat EVM ABI-encoded args into structured ARC4 args.
 
-    For static arrays like uint256[4], EVM passes 4 separate values inline.
-    For dynamic arrays like uint256[], EVM passes offset, length, then elements.
-    ARC4 expects a single list arg for each.
+    EVM ABI encoding places static values and offsets for dynamic types in
+    the "head" region (one word per param), then dynamic data in the "tail".
+    This function decodes that layout into individual ARC4-compatible args.
     """
     import re as _re
     m = _re.match(r'\w+\(([^)]*)\)', method_sig)
@@ -272,8 +313,10 @@ def _regroup_args(raw_args, method_sig):
     depth = 0
     current = ""
     for c in m.group(1):
-        if c == '(' : depth += 1
-        elif c == ')': depth -= 1
+        if c == '(':
+            depth += 1
+        elif c == ')':
+            depth -= 1
         if c == ',' and depth == 0:
             param_types.append(current.strip())
             current = ""
@@ -282,64 +325,151 @@ def _regroup_args(raw_args, method_sig):
     if current.strip():
         param_types.append(current.strip())
 
-    # Check if all params are simple scalars — no regrouping needed
+    # If arg count matches param count, no regrouping needed
+    if len(raw_args) == len(param_types):
+        return raw_args
+
+    # Check if any params are complex (arrays/strings/bytes)
     dynamic_types = {'string', 'bytes'}
     has_complex = any('[' in p or p in dynamic_types for p in param_types)
     if not has_complex:
         return raw_args
 
-    # Check if arg count matches param count — if so, no regrouping needed
-    if len(raw_args) == len(param_types):
-        return raw_args
+    def _is_dynamic(pt):
+        return pt in dynamic_types or _re.match(r'.*\[\]$', pt)
 
-    # Regroup: consume flat args according to param types
-    result = []
-    idx = 0
-    for pt in param_types:
-        static_match = _re.match(r'.*\[(\d+)\]$', pt)
-        dynamic_match = _re.match(r'.*\[\]$', pt)
+    def _static_array_dims(pt):
+        """Parse static array dimensions. Returns list of sizes or None.
+        e.g. 'uint256[3]' -> [3], 'uint256[3][2]' -> [3, 2], 'uint256' -> None
+        """
+        dims = _re.findall(r'\[(\d+)\]', pt)
+        return [int(d) for d in dims] if dims else None
 
-        if static_match:
-            # Static array: consume N elements inline
-            n = int(static_match.group(1))
-            if idx + n <= len(raw_args):
-                result.append([raw_args[idx + j] for j in range(n)])
-                idx += n
-            else:
-                result.append(raw_args[idx] if idx < len(raw_args) else 0)
-                idx += 1
-        elif dynamic_match or pt in dynamic_types:
-            # Dynamic type: EVM format is offset, length, then data
-            # Skip offset (int), read length (int), then consume data
-            if idx < len(raw_args) and isinstance(raw_args[idx], int):
-                idx += 1  # skip offset
-            if idx < len(raw_args) and isinstance(raw_args[idx], int):
-                length = raw_args[idx]
-                idx += 1
-                if pt in dynamic_types:
-                    # String/bytes: the next value should be the actual bytes data
-                    if idx < len(raw_args) and isinstance(raw_args[idx], bytes):
-                        result.append(raw_args[idx])
-                        idx += 1
+    def _static_array_size(pt):
+        dims = _static_array_dims(pt)
+        if not dims:
+            return None
+        total = 1
+        for d in dims:
+            total *= d
+        return total
+
+    # Two-pass ABI decode: head (one word per param) then tail (dynamic data)
+    # Head region: N words where N = number of params (each static param is
+    # its value, each dynamic param is an offset into the tail)
+    n_params = len(param_types)
+
+    def _build_nested_array(flat, offset, dims):
+        """Build nested list from flat args. Returns (nested_list, new_offset)."""
+        if len(dims) == 1:
+            arr = flat[offset:offset + dims[0]]
+            return arr, offset + dims[0]
+        outer_size = dims[-1]  # outermost dimension
+        inner_dims = dims[:-1]
+        result = []
+        for _ in range(outer_size):
+            inner, offset = _build_nested_array(flat, offset, inner_dims)
+            result.append(inner)
+        return result, offset
+
+    # If no dynamic types, use simple sequential consumption
+    if not any(_is_dynamic(pt) for pt in param_types):
+        result = []
+        idx = 0
+        for pt in param_types:
+            dims = _static_array_dims(pt)
+            if dims is not None:
+                total = _static_array_size(pt)
+                if idx + total <= len(raw_args):
+                    if len(dims) == 1:
+                        result.append(raw_args[idx:idx + total])
                     else:
-                        # Collect as array elements
-                        arr = []
-                        for j in range(int(length)):
-                            arr.append(raw_args[idx] if idx < len(raw_args) else 0)
-                            idx += 1
-                        result.append(bytes(arr) if pt in dynamic_types else arr)
+                        nested, _ = _build_nested_array(raw_args, idx, dims)
+                        result.append(nested)
+                    idx += total
                 else:
-                    arr = []
-                    for j in range(int(length)):
-                        arr.append(raw_args[idx] if idx < len(raw_args) else 0)
-                        idx += 1
-                    result.append(arr)
+                    result.append(raw_args[idx] if idx < len(raw_args) else 0)
+                    idx += 1
             else:
                 result.append(raw_args[idx] if idx < len(raw_args) else 0)
                 idx += 1
+        return result
+
+    # Has dynamic types: proper ABI head/tail decode
+    # Head: one word per param. For static types, the value is inline.
+    # For dynamic types, the word is an offset (in bytes) to the tail data.
+    result = []
+    head_idx = 0
+    for pt in param_types:
+        dims = _static_array_dims(pt)
+        sz = _static_array_size(pt)
+        if sz is not None and not _is_dynamic(pt):
+            # Static array: consumes total elements inline in the head
+            if head_idx + sz <= len(raw_args):
+                if dims and len(dims) > 1:
+                    nested, _ = _build_nested_array(raw_args, head_idx, dims)
+                    result.append(nested)
+                else:
+                    result.append(raw_args[head_idx:head_idx + sz])
+                head_idx += sz
+            else:
+                result.append(raw_args[head_idx] if head_idx < len(raw_args) else 0)
+                head_idx += 1
+        elif _is_dynamic(pt):
+            # Dynamic type: head word is offset (in bytes)
+            offset = raw_args[head_idx] if head_idx < len(raw_args) else 0
+            head_idx += 1
+            # Decode data at offset
+            if isinstance(offset, int):
+                word_idx = offset // 32  # convert byte offset to word index
+                if word_idx < len(raw_args):
+                    length = raw_args[word_idx]
+                    if isinstance(length, int):
+                        data_start = word_idx + 1
+                        if pt in dynamic_types:
+                            # string/bytes: collect data words and concatenate
+                            if length == 0:
+                                result.append("" if pt == 'string' else b"")
+                            elif data_start < len(raw_args) and length <= 10000:
+                                val = raw_args[data_start]
+                                if isinstance(val, bytes):
+                                    result.append(val[:length])
+                                elif isinstance(val, int):
+                                    # Data as int words
+                                    data = b""
+                                    n_words = min((length + 31) // 32, len(raw_args) - data_start)
+                                    for w in range(n_words):
+                                        if data_start + w < len(raw_args):
+                                            wv = raw_args[data_start + w]
+                                            if isinstance(wv, bytes):
+                                                data += wv
+                                            elif isinstance(wv, int):
+                                                data += wv.to_bytes(32, 'big')
+                                    result.append(data[:length])
+                                elif val is None:
+                                    result.append("" if pt == 'string' else b"")
+                                else:
+                                    result.append(val)
+                            else:
+                                result.append("" if pt == 'string' else b"")
+                        else:
+                            # Dynamic array: collect elements (cap to available args)
+                            n_avail = len(raw_args) - data_start
+                            n_elems = min(int(length), n_avail) if length <= 10000 else n_avail
+                            arr = []
+                            for j in range(n_elems):
+                                arr.append(raw_args[data_start + j])
+                            result.append(arr)
+                    else:
+                        result.append(raw_args[word_idx])
+                else:
+                    result.append("" if pt in dynamic_types else [])
+            else:
+                result.append(offset)
         else:
-            result.append(raw_args[idx] if idx < len(raw_args) else 0)
-            idx += 1
+            # Simple scalar
+            result.append(raw_args[head_idx] if head_idx < len(raw_args) else 0)
+            head_idx += 1
 
     return result
 
@@ -357,12 +487,14 @@ def execute_call(app, call, app_spec=None, verbose=False):
         # Determine expected parameter sizes from ARC4 method spec
         resolved = resolve_method(app_spec, call.method_signature) if app_spec else call.method_signature
         param_sizes = {}  # index → expected byte count for byte[N] params
+        param_types = {}  # index → ARC4 type string
         if app_spec:
             import re as _re
             pm = _re.match(r'\w+\(([^)]*)\)', resolved)
             if pm and pm.group(1):
                 ptypes = pm.group(1).split(',')
                 for idx, pt in enumerate(ptypes):
+                    param_types[idx] = pt.strip()
                     bm = _re.match(r'byte\[(\d+)\]', pt)
                     if bm:
                         param_sizes[idx] = int(bm.group(1))
@@ -381,6 +513,19 @@ def execute_call(app, call, app_spec=None, verbose=False):
                 else:
                     # string/bytes/other: pass as bytes directly
                     args.append(a)
+            elif isinstance(a, int) and i in param_sizes:
+                # int → byte[N]: convert large int (EVM left-padded) to N-byte list
+                expected_size = param_sizes[i]
+                byte_len = max(expected_size, (a.bit_length() + 7) // 8) if a else expected_size
+                a_bytes = a.to_bytes(byte_len, 'big')[-expected_size:] if a else b'\x00' * expected_size
+                if len(a_bytes) < expected_size:
+                    a_bytes = b'\x00' * (expected_size - len(a_bytes)) + a_bytes
+                args.append(list(a_bytes))
+            elif isinstance(a, int) and param_types.get(i) == 'address':
+                # int → address: encode as 32-byte Algorand address
+                from algosdk import encoding
+                a_bytes = a.to_bytes(32, 'big')
+                args.append(encoding.encode_address(a_bytes))
             else:
                 args.append(a)
 
@@ -392,6 +537,15 @@ def execute_call(app, call, app_spec=None, verbose=False):
 
         # Regroup flat args for static/dynamic array parameters
         args = _regroup_args(args, call.method_signature)
+
+        # Trim excess args if method expects fewer (extra calldata in EVM tests)
+        if app_spec:
+            import re as _re2
+            pm2 = _re2.match(r'\w+\(([^)]*)\)', method)
+            if pm2:
+                n_expected = len([p for p in pm2.group(1).split(',') if p.strip()]) if pm2.group(1).strip() else 0
+                if len(args) > n_expected:
+                    args = args[:n_expected]
 
         # Convert bytes to str for string params (algokit expects str)
         if app_spec:
@@ -417,11 +571,17 @@ def execute_call(app, call, app_spec=None, verbose=False):
                 result = app.send.call(params)
             except Exception as ex1:
                 err_str = str(ex1)
-                if "cost budget exceeded" in err_str or "dynamic cost budget" in err_str:
+                is_budget = "cost budget exceeded" in err_str or "dynamic cost budget" in err_str
+                is_fee = "fee too small" in err_str
+                is_simulate = "simulate" in err_str.lower() or "resolving execution info" in err_str.lower()
+                if is_budget or is_fee or is_simulate:
                     try:
-                        result = _call_with_extra_budget(app, method, args)
+                        result = _call_with_extra_budget(
+                            app, method, args,
+                            extra_calls=3 if is_fee and not is_budget else 15,
+                        )
                     except Exception:
-                        raise ex1  # If budget retry also fails, report original error
+                        raise ex1
                 else:
                     raise
             actual = result.abi_return
@@ -476,21 +636,62 @@ def execute_call(app, call, app_spec=None, verbose=False):
 
             expected_list = [parse_value(e) for e in call.expected]
 
-            # Handle EVM ABI-encoded dynamic return values:
-            # If expected has [offset, length, data] pattern, decode it.
-            if len(actual_list) != len(expected_list):
-                if (len(expected_list) >= 3
+            # Struct return: EVM wraps in offset (0x20) then fields inline/dynamic.
+            # If actual is a dict and expected starts with 0x20, skip the offset
+            # and try matching the struct fields against the remaining expected values.
+            if (isinstance(actual, dict)
+                and len(expected_list) >= 2
+                and isinstance(expected_list[0], int) and expected_list[0] == 32):
+                struct_expected = expected_list[1:]
+                struct_vals = list(actual.values())
+                decoded = _try_decode_evm_returns(struct_expected, struct_vals)
+                if decoded is not None:
+                    return True, f"{actual}"
+
+            # Handle EVM ABI-encoded dynamic return values.
+            # EVM returns strings/bytes as [offset, length, data_word1, data_word2, ...]
+            # Multi-return with strings: [off1, off2, ..., len1, data1..., len2, data2...]
+            # ARC4 returns values directly. Try to decode EVM format.
+            # Also try when lengths coincidentally match (e.g., byte[] "abc" → 3 elements
+            # vs EVM [0x20, 3, padded_data] → also 3 elements).
+            if (len(actual_list) != len(expected_list)
+                or (len(expected_list) >= 2
+                    and isinstance(expected_list[0], int) and expected_list[0] == 32)):
+                decoded = _try_decode_evm_returns(expected_list, actual_list)
+                if decoded is not None:
+                    return True, f"{actual}"
+                # Simple single dynamic return: [0x20, len, data...]
+                if (len(expected_list) >= 2
                     and isinstance(expected_list[0], int) and expected_list[0] == 32
                     and isinstance(expected_list[1], int)):
-                    # ABI-encoded dynamic type: skip offset+length, take data
+                    exp_len = expected_list[1]
                     collapsed = expected_list[2:]
-                    if len(collapsed) == 1 and isinstance(collapsed[0], bytes):
-                        # Single bytes data — compare as bytes
-                        actual_bytes = bytes(actual_list) if all(isinstance(x, int) for x in actual_list) else actual
-                        if _compare_values(actual_bytes, collapsed[0]):
+                    if not collapsed and exp_len == 0:
+                        if isinstance(actual, str) and actual == "":
                             return True, f"{actual}"
-                        return False, f"expected {collapsed[0]}, got {actual_bytes}"
-                    expected_list = collapsed
+                        if isinstance(actual, bytes) and actual == b"":
+                            return True, f"{actual}"
+                        if isinstance(actual, (list, tuple)) and len(actual) == 0:
+                            return True, f"{actual}"
+                    elif len(collapsed) >= 1:
+                        # Concatenate multi-word data
+                        data = b""
+                        for c in collapsed:
+                            if isinstance(c, bytes):
+                                data += c
+                            elif isinstance(c, int):
+                                data += c.to_bytes(32, 'big')
+                        data = data[:exp_len]  # trim to declared length
+                        # Compare with original actual (not split actual_list).
+                        # ARC4 byte[] returns as list of ints — convert to bytes.
+                        actual_for_cmp = actual
+                        if isinstance(actual, (list, tuple)) and all(isinstance(x, int) for x in actual):
+                            actual_for_cmp = bytes(actual)
+                        if _compare_values(actual_for_cmp, data):
+                            return True, f"{actual}"
+                        return False, f"expected {data}, got {actual_for_cmp}"
+                    if collapsed:
+                        expected_list = collapsed
 
             if len(actual_list) != len(expected_list):
                 return False, f"expected {len(expected_list)} values, got {len(actual_list)}"
@@ -507,6 +708,71 @@ def execute_call(app, call, app_spec=None, verbose=False):
         return False, f"exception: {str(ex)[:100]}"
 
 
+def _try_decode_evm_returns(expected_list, actual_list):
+    """Try to match EVM ABI-encoded multi-return values against ARC4 actual values.
+
+    EVM head/tail encoding: the head has N words (one per return value).
+    Dynamic types (string, bytes) have an offset in the head pointing to tail data.
+    Static types have their value inline in the head.
+
+    We detect which head slots are offsets (pointing into tail) vs inline values,
+    decode the dynamic data, and compare with the ARC4 actual values.
+
+    Returns True if they match, None if pattern not recognized.
+    """
+    n_actual = len(actual_list)
+    if n_actual < 1 or n_actual > len(expected_list):
+        return None
+
+    head = expected_list[:n_actual]
+    tail_start = n_actual  # word index where tail begins
+
+    # Determine which head slots are dynamic offsets vs static values.
+    # A head word is likely an offset if: it's an int, multiple of 32, and >= tail_start*32
+    decoded = []
+    for i in range(n_actual):
+        v = head[i]
+        is_offset = (isinstance(v, int) and v >= tail_start * 32 and v % 32 == 0
+                     and v // 32 < len(expected_list))
+        if is_offset:
+            # Decode dynamic value at offset
+            slot_idx = v // 32
+            if slot_idx >= len(expected_list):
+                return None
+            length = expected_list[slot_idx]
+            if not isinstance(length, int):
+                return None
+            data_start = slot_idx + 1
+            if length == 0:
+                decoded.append("")
+            else:
+                data = b""
+                n_words = (length + 31) // 32
+                for w in range(n_words):
+                    if data_start + w >= len(expected_list):
+                        break
+                    val = expected_list[data_start + w]
+                    if isinstance(val, bytes):
+                        data += val
+                    elif isinstance(val, int):
+                        data += val.to_bytes(32, 'big')
+                data = data[:length]
+                try:
+                    decoded.append(data.decode('utf-8', errors='replace'))
+                except Exception:
+                    decoded.append(data)
+        else:
+            # Static value — use as-is
+            decoded.append(v)
+
+    if len(decoded) != len(actual_list):
+        return None
+    for a, d in zip(actual_list, decoded):
+        if not _compare_values(a, d):
+            return None
+    return True
+
+
 def _compare_values(actual, expected):
     """Compare an actual AVM return value with an expected semantic test value."""
     if expected is None:
@@ -520,11 +786,22 @@ def _compare_values(actual, expected):
             return actual == expected
         if isinstance(actual, (list, tuple)):
             try:
-                actual_int = int.from_bytes(bytes(actual), 'big')
-                return actual_int == expected
+                actual_bytes = bytes(actual)
+                actual_int = int.from_bytes(actual_bytes, 'big')
+                if actual_int == expected:
+                    return True
+                # EVM bytesN returns are right-padded to 32 bytes.
+                # ARC4 returns raw N bytes. Right-pad actual to 32 and compare.
+                if len(actual_bytes) < 32:
+                    padded = actual_bytes + b'\x00' * (32 - len(actual_bytes))
+                    if int.from_bytes(padded, 'big') == expected:
+                        return True
+                return False
             except (ValueError, OverflowError):
                 pass
     if isinstance(expected, bytes):
+        if isinstance(actual, str):
+            actual = actual.encode('utf-8')
         if isinstance(actual, bytes):
             if actual == expected:
                 return True
@@ -538,6 +815,11 @@ def _compare_values(actual, expected):
             if actual_bytes.rstrip(b'\x00') == expected.rstrip(b'\x00'):
                 return True
             return False
+    if isinstance(expected, int) and isinstance(actual, str):
+        # String return compared to int (e.g. EVM dynamic encoding offset/length)
+        return False
+    if isinstance(actual, str) and isinstance(expected, str):
+        return actual == expected
     return str(actual) == str(expected)
 
 

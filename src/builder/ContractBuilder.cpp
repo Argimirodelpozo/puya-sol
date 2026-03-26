@@ -1,9 +1,11 @@
 #include "builder/ContractBuilder.h"
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
 
+#include <boost/multiprecision/cpp_int.hpp>
 #include <map>
 #include <set>
 
@@ -157,6 +159,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	solidity::frontend::ContractDefinition const& _contract
 )
 {
+	m_currentContract = &_contract;
 	std::string contractName = _contract.name();
 	std::string contractId = m_sourceFile + "." + contractName;
 
@@ -379,9 +382,23 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 			// Determine return type from Solidity getter return types.
 			auto const& solReturnTypes = getterFuncType->returnParameterTypes();
 			auto const& solReturnNames = getterFuncType->returnParameterNames();
+			// Track signed return for sign-extension
+			unsigned signedGetterBits = 0;
 			if (solReturnTypes.size() == 1)
 			{
 				getter.returnType = m_typeMapper.map(solReturnTypes[0]);
+				// Detect signed integer return ≤64 bits for sign-extension
+				auto const* solType = solReturnTypes[0];
+				if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
+					solType = &udvt->underlyingType();
+				if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(solType))
+				{
+					if (intType->isSigned() && intType->numBits() <= 64)
+					{
+						getter.returnType = awst::WType::biguintType();
+						signedGetterBits = intType->numBits();
+					}
+				}
 			}
 			else if (solReturnTypes.size() > 1)
 			{
@@ -419,6 +436,31 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 					readExpr = ExpressionBuilder::implicitNumericCast(
 						std::move(readExpr), getter.returnType, loc
 					);
+				// String literal → bytes[N]: right-pad to N bytes
+				if (readExpr && readExpr->wtype != getter.returnType)
+				{
+					auto const* bytesType = dynamic_cast<awst::BytesWType const*>(getter.returnType);
+					if (bytesType && bytesType->length().has_value() && *bytesType->length() > 0)
+					{
+						if (auto padded = TypeCoercion::stringToBytesN(
+								readExpr.get(), getter.returnType, *bytesType->length(), loc))
+							readExpr = std::move(padded);
+					}
+					else
+					{
+						// Generic ReinterpretCast for other bytes-compatible coercions
+						bool compat = readExpr->wtype == awst::WType::stringType()
+							|| (readExpr->wtype && readExpr->wtype->kind() == awst::WTypeKind::Bytes);
+						if (compat)
+						{
+							auto cast = std::make_shared<awst::ReinterpretCast>();
+							cast->sourceLocation = loc;
+							cast->wtype = getter.returnType;
+							cast->expr = std::move(readExpr);
+							readExpr = std::move(cast);
+						}
+					}
+				}
 			}
 			else if (getter.args.empty())
 			{
@@ -481,8 +523,11 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				}
 				else
 				{
+					// Read with original storage type (not promoted return type)
+					auto* readType = signedGetterBits > 0
+						? m_typeMapper.map(var->type()) : getter.returnType;
 					readExpr = m_storageMapper.createStateRead(
-						var->name(), getter.returnType, storageKind, loc
+						var->name(), readType, storageKind, loc
 					);
 				}
 			}
@@ -720,6 +765,12 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				{
 					readExpr = std::move(stateGet);
 				}
+			}
+
+			// Sign-extend getter return for signed integer types
+			if (signedGetterBits > 0 && readExpr)
+			{
+				readExpr = signExtendToUint256(std::move(readExpr), signedGetterBits, loc);
 			}
 
 			auto ret = std::make_shared<awst::ReturnStatement>();
@@ -1426,6 +1477,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				}
 
 				auto baseBody = m_stmtBuilder->buildBlock(baseCtor->body());
+				inlineModifiers(*baseCtor, baseBody);
 				for (auto& stmt: baseBody->body)
 					postInitBody->body.push_back(std::move(stmt));
 			}
@@ -1434,6 +1486,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			if (constructor && constructor->body().statements().size() > 0)
 			{
 				auto ctorBody = m_stmtBuilder->buildBlock(constructor->body());
+				inlineModifiers(*constructor, ctorBody);
 				for (auto& stmt: ctorBody->body)
 					postInitBody->body.push_back(std::move(stmt));
 			}
@@ -1487,8 +1540,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				}
 			}
 
-			// Translate the base constructor body
+			// Translate the base constructor body and inline its modifiers
 			auto baseBody = m_stmtBuilder->buildBlock(baseCtor->body());
+			inlineModifiers(*baseCtor, baseBody);
 			for (auto& stmt: baseBody->body)
 				createBlock->body.push_back(std::move(stmt));
 		}
@@ -1497,6 +1551,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		if (constructor && constructor->body().statements().size() > 0)
 		{
 			auto ctorBody = m_stmtBuilder->buildBlock(constructor->body());
+			inlineModifiers(*constructor, ctorBody);
 			for (auto& stmt: ctorBody->body)
 				createBlock->body.push_back(std::move(stmt));
 		}
@@ -1702,19 +1757,54 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 	// Return type
 	auto const& returnParams = _func.returnParameters();
+	// Track signed return params for sign-extension before ARC4 encoding
+	struct SignedReturnInfo {
+		unsigned bits;
+		size_t index; // which return param (for tuples)
+	};
+	std::vector<SignedReturnInfo> signedReturns;
+
 	if (returnParams.empty())
 		method.returnType = awst::WType::voidType();
 	else if (returnParams.size() == 1)
+	{
 		method.returnType = m_typeMapper.map(returnParams[0]->type());
+		// For signed integer returns ≤64 bits, promote to biguint for proper
+		// 256-bit two's complement ARC4 encoding.
+		// Unwrap UserDefinedValueType to find the underlying IntegerType.
+		auto const* retSolType = returnParams[0]->type();
+		if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(retSolType))
+			retSolType = &udvt->underlyingType();
+		auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(retSolType);
+		if (intType && intType->isSigned() && intType->numBits() <= 64)
+		{
+			method.returnType = awst::WType::biguintType();
+			signedReturns.push_back({intType->numBits(), 0});
+		}
+	}
 	else
 	{
 		// Multiple return values → tuple
 		std::vector<awst::WType const*> types;
 		std::vector<std::string> names;
 		bool hasNames = false;
-		for (auto const& rp: returnParams)
+		for (size_t ri = 0; ri < returnParams.size(); ++ri)
 		{
-			types.push_back(m_typeMapper.map(rp->type()));
+			auto const& rp = returnParams[ri];
+			auto* mappedType = m_typeMapper.map(rp->type());
+			// Detect signed integer elements for sign-extension
+			auto const* retSolType = rp->type();
+			if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(retSolType))
+				retSolType = &udvt->underlyingType();
+			if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(retSolType))
+			{
+				if (intType->isSigned() && intType->numBits() <= 64)
+				{
+					mappedType = awst::WType::biguintType();
+					signedReturns.push_back({intType->numBits(), ri});
+				}
+			}
+			types.push_back(mappedType);
 			names.push_back(rp->name());
 			if (!rp->name().empty())
 				hasNames = true;
@@ -1935,6 +2025,52 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			}
 		}
 
+		// Sign-extend return values for signed integer types ≤64 bits.
+		if (!signedReturns.empty() && method.arc4MethodConfig.has_value())
+		{
+			std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> walk;
+			walk = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
+			{
+				for (auto& stmt: stmts)
+				{
+					if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
+					{
+						if (!ret->value) continue;
+						auto srcLoc = ret->value->sourceLocation;
+
+						if (signedReturns.size() == 1 && signedReturns[0].index == 0
+							&& returnParams.size() == 1)
+						{
+							// Single return — sign-extend directly
+							ret->value = signExtendToUint256(
+								std::move(ret->value), signedReturns[0].bits, srcLoc);
+						}
+						else if (auto* tuple = dynamic_cast<awst::TupleExpression*>(ret->value.get()))
+						{
+							// Tuple return — sign-extend individual elements
+							for (auto const& sr: signedReturns)
+							{
+								if (sr.index < tuple->items.size())
+								{
+									tuple->items[sr.index] = signExtendToUint256(
+										std::move(tuple->items[sr.index]), sr.bits, srcLoc);
+								}
+							}
+							tuple->wtype = method.returnType;
+						}
+					}
+					else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
+					{
+						if (ifElse->ifBranch) walk(ifElse->ifBranch->body);
+						if (ifElse->elseBranch) walk(ifElse->elseBranch->body);
+					}
+					else if (auto* block = dynamic_cast<awst::Block*>(stmt.get()))
+						walk(block->body);
+				}
+			};
+			walk(method.body->body);
+		}
+
 		// Skip ARC4 decode for functions with inline assembly blocks.
 		// The assembly translator handles parameter data directly via
 		// calldataload mapping using ARC4-encoded types.
@@ -1968,15 +2104,40 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				}
 
 				// Create: <name> = arc4_decode(__arc4_<name>)
+				// For dynamic arrays (ReferenceArray with null array_size), use
+				// IntrinsicCall("extract", [2, 0]) to strip the ARC4 length header
+				// instead of ARC4Decode — works around a puya backend issue where
+				// extract3(value, 2, 0) returns empty bytes instead of extracting
+				// to end (see puya-possible-bug.md).
 				auto arc4Var = std::make_shared<awst::VarExpression>();
 				arc4Var->sourceLocation = pd.loc;
 				arc4Var->name = arc4Name;
 				arc4Var->wtype = pd.arc4Type;
 
-				auto decode = std::make_shared<awst::ARC4Decode>();
-				decode->sourceLocation = pd.loc;
-				decode->wtype = pd.nativeType;
-				decode->value = std::move(arc4Var);
+				std::shared_ptr<awst::Expression> decodeExpr;
+				auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(pd.nativeType);
+				if (refArr && !refArr->arraySize().has_value())
+				{
+					// Dynamic array: use ConvertArray instead of ARC4Decode.
+					// This works around a puya backend bug where ARC4Decode
+					// uses extract3(value, 2, 0) to strip the length header,
+					// but extract3 with length=0 returns empty bytes instead
+					// of extracting to end (see puya-possible-bug.md).
+					// ConvertArray uses len+substring3 which works correctly.
+					auto convert = std::make_shared<awst::ConvertArray>();
+					convert->sourceLocation = pd.loc;
+					convert->wtype = pd.nativeType;
+					convert->expr = std::move(arc4Var);
+					decodeExpr = std::move(convert);
+				}
+				else
+				{
+					auto decode = std::make_shared<awst::ARC4Decode>();
+					decode->sourceLocation = pd.loc;
+					decode->wtype = pd.nativeType;
+					decode->value = std::move(arc4Var);
+					decodeExpr = std::move(decode);
+				}
 
 				auto target = std::make_shared<awst::VarExpression>();
 				target->sourceLocation = pd.loc;
@@ -1986,7 +2147,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				auto assign = std::make_shared<awst::AssignmentStatement>();
 				assign->sourceLocation = pd.loc;
 				assign->target = std::move(target);
-				assign->value = std::move(decode);
+				assign->value = std::move(decodeExpr);
 				decodeStmts.push_back(std::move(assign));
 			}
 			method.body->body.insert(
@@ -2040,6 +2201,16 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	return method;
 }
 
+std::shared_ptr<awst::Expression> ContractBuilder::signExtendToUint256(
+	std::shared_ptr<awst::Expression> _value,
+	unsigned _bits,
+	awst::SourceLocation const& _loc
+)
+{
+	return TypeCoercion::signExtendToUint256(std::move(_value), _bits, _loc);
+}
+
+
 std::optional<awst::ARC4MethodConfig> ContractBuilder::buildARC4Config(
 	solidity::frontend::FunctionDefinition const& _func,
 	awst::SourceLocation const& _loc
@@ -2085,6 +2256,27 @@ void ContractBuilder::inlineModifiers(
 
 		if (!modDef)
 			continue;
+
+		// Resolve modifier overrides: walk the linearized base contracts
+		// (most-derived first) to find the most-derived definition of this modifier.
+		// e.g. if A defines `mod virtual` and C overrides `mod override`,
+		// we want C's version when building contract C.
+		if (m_currentContract)
+		{
+			std::string modName = modDef->name();
+			for (auto const* base: m_currentContract->annotation().linearizedBaseContracts)
+			{
+				for (auto const* mod: base->functionModifiers())
+				{
+					if (mod->name() == modName)
+					{
+						modDef = mod;
+						goto modResolved;
+					}
+				}
+			}
+			modResolved:;
+		}
 
 		// Translate modifier body, replacing `_` (PlaceholderStatement) with the original body
 		auto modBody = std::make_shared<awst::Block>();
@@ -2136,18 +2328,99 @@ void ContractBuilder::inlineModifiers(
 			}
 		}
 
-		// Separate the function body's return statement from the placeholder body.
-		// The `_;` in a modifier should execute the function body WITHOUT the return;
-		// the return is appended after the entire modifier body completes.
+		// Separate the function body into:
+		// 1. Named return var initializations (hoisted before modifier)
+		// 2. Placeholder body (the `_;` replacement)
+		// 3. Deferred return (appended after modifier)
+		//
+		// Named return vars must be initialized before the modifier body so
+		// that multiple `_;` invocations (e.g. in loops) share the same
+		// variable rather than re-initializing it each time.
 		auto placeholderBody = std::make_shared<awst::Block>();
 		placeholderBody->sourceLocation = _body->sourceLocation;
 		std::shared_ptr<awst::Statement> deferredReturn;
+
+		// Collect named return parameter names
+		std::set<std::string> returnParamNames;
+		for (auto const& retParam: _func.returnParameters())
+			if (!retParam->name().empty())
+				returnParamNames.insert(retParam->name());
+
+		// Track which named return vars have already been hoisted (only hoist
+		// the first assignment — the default init — not subsequent assignments
+		// like `r = true` from `return true;`)
+		std::set<std::string> hoistedReturnVars;
+
 		for (auto const& bodyStmt: _body->body)
 		{
-			if (dynamic_cast<awst::ReturnStatement const*>(bodyStmt.get()))
-				deferredReturn = bodyStmt;
+			if (auto const* retStmt = dynamic_cast<awst::ReturnStatement const*>(bodyStmt.get()))
+			{
+				// For named returns: split `return expr;` into `r = expr;` (in
+				// placeholder body) + `return r;` (deferred). This ensures the
+				// modifier controls whether the assignment executes.
+				if (returnParamNames.size() == 1 && retStmt->value)
+				{
+					auto const& retName = *returnParamNames.begin();
+					// Check if the return value is NOT just a reference to the
+					// named return var itself (avoid redundant r = r;)
+					bool isJustRetVar = false;
+					if (auto const* varRef = dynamic_cast<awst::VarExpression const*>(retStmt->value.get()))
+						isJustRetVar = (varRef->name == retName);
+
+					if (!isJustRetVar)
+					{
+						// Create assignment: r = expr
+						auto target = std::make_shared<awst::VarExpression>();
+						target->sourceLocation = retStmt->sourceLocation;
+						target->wtype = retStmt->value->wtype;
+						target->name = retName;
+
+						auto assign = std::make_shared<awst::AssignmentStatement>();
+						assign->sourceLocation = retStmt->sourceLocation;
+						assign->target = std::move(target);
+						assign->value = retStmt->value;
+						placeholderBody->body.push_back(std::move(assign));
+					}
+
+					// Create deferred return: return r
+					auto retVar = std::make_shared<awst::VarExpression>();
+					retVar->sourceLocation = retStmt->sourceLocation;
+					retVar->wtype = retStmt->value->wtype;
+					retVar->name = retName;
+
+					auto deferRet = std::make_shared<awst::ReturnStatement>();
+					deferRet->sourceLocation = retStmt->sourceLocation;
+					deferRet->value = std::move(retVar);
+					deferredReturn = std::move(deferRet);
+				}
+				else
+				{
+					deferredReturn = bodyStmt;
+				}
+			}
+			else if (!returnParamNames.empty())
+			{
+				// Check if this is a named return var initialization (first assignment only)
+				auto const* assign = dynamic_cast<awst::AssignmentStatement const*>(bodyStmt.get());
+				auto const* targetVar = assign
+					? dynamic_cast<awst::VarExpression const*>(assign->target.get())
+					: nullptr;
+				if (targetVar && returnParamNames.count(targetVar->name)
+					&& !hoistedReturnVars.count(targetVar->name))
+				{
+					// Hoist: put initialization before the modifier body
+					modBody->body.push_back(bodyStmt);
+					hoistedReturnVars.insert(targetVar->name);
+				}
+				else
+				{
+					placeholderBody->body.push_back(bodyStmt);
+				}
+			}
 			else
+			{
 				placeholderBody->body.push_back(bodyStmt);
+			}
 		}
 
 		// Translate the entire modifier body through the statement builder.

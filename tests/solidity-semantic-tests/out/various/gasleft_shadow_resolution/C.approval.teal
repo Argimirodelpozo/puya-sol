@@ -3,7 +3,6 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/gasleft_shadow_resolution.sol.C.approval_program() -> uint64:
 main:
-    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
     pushint 1
@@ -24,17 +23,26 @@ main_after_if_else@2:
     assert
     pushbytess 0x7cee671a 0xcd78b354 // method "gasleft()uint256", method "f()uint256"
     txna ApplicationArgs 0
-    match main_gasleft_route@5 main_f_route@6
+    match main_gasleft_route@5 f
     err
 
-main_f_route@6:
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+main_gasleft_route@5:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     pushint 1
     return
 
-main_gasleft_route@5:
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/gasleft_shadow_resolution.sol.C.f[routing]() -> void:
+f:
+    global OpcodeBudget
+    itob
+    pushint 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
     pushint 1
     return

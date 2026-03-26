@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <sstream>
+#include <sys/wait.h>
 
 namespace puyasol::runner
 {
@@ -28,7 +29,11 @@ int PuyaRunner::run(
 	std::string cmdStr = cmd.str();
 	Logger::instance().debug("Running: " + cmdStr);
 
-	int result = std::system(cmdStr.c_str());
+	int rawResult = std::system(cmdStr.c_str());
+
+	// Extract actual exit code from system() return value.
+	// On Unix, system() returns a wait-status; WEXITSTATUS extracts the 8-bit code.
+	int result = WIFEXITED(rawResult) ? WEXITSTATUS(rawResult) : rawResult;
 
 	if (result != 0)
 		Logger::instance().error("puya exited with code: " + std::to_string(result));

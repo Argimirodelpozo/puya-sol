@@ -1,0 +1,188 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup_abicoderv1.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 8 511
+    bytecblock 0x151f7c75 "a" "c" "b"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "a"
+    intc_0 // 0
+    app_global_put
+    bytec_3 // "b"
+    intc_0 // 0
+    app_global_put
+    bytec_2 // "c"
+    intc_0 // 0
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x27439992 0x0fe30569 0xaf16a343 0xc37f81de // method "ret()uint64", method "f(uint64)uint64", method "mem()uint64[]", method "stor()(uint64,uint64,uint64)"
+    txna ApplicationArgs 0
+    match ret f mem stor
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup_abicoderv1.sol.wrap(x: bytes) -> uint64:
+wrap:
+    proto 1 1
+    load 0
+    intc_2 // 8
+    bzero
+    frame_dig -1
+    pushbytes 0xff
+    b&
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    swap
+    store 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup_abicoderv1.sol.unwrap(x: uint64) -> uint64:
+unwrap:
+    proto 1 1
+    load 0
+    store 0
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup_abicoderv1.sol.C.ret[routing]() -> void:
+ret:
+    intc_3 // 511
+    itob
+    callsub wrap
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup_abicoderv1.sol.C.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup_abicoderv1.sol.C.mem[routing]() -> void:
+mem:
+    intc_3 // 511
+    itob
+    callsub wrap
+    itob
+    pushbytes 0x00000000000000000000000000000000
+    swap
+    replace2 0 // on error: index access is out of bounds
+    pushint 255
+    itob
+    callsub wrap
+    itob
+    replace2 8 // on error: index access is out of bounds
+    dup
+    intc_0 // 0
+    extract_uint64
+    dup
+    callsub unwrap
+    dig 2
+    intc_2 // 8
+    extract_uint64
+    dup
+    callsub unwrap
+    uncover 2
+    ==
+    assert
+    load 0
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000001ff
+    replace2 32
+    store 0
+    swap
+    callsub unwrap
+    swap
+    callsub unwrap
+    ==
+    assert
+    dup
+    len
+    intc_2 // 8
+    /
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup_abicoderv1.sol.C.stor[routing]() -> void:
+stor:
+    bytec_1 // "a"
+    intc_1 // 1
+    app_global_put
+    bytec_2 // "c"
+    pushint 2
+    app_global_put
+    intc_3 // 511
+    itob
+    callsub wrap
+    bytec_3 // "b"
+    dig 1
+    app_global_put
+    intc_0 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    assert // check a exists
+    intc_0 // 0
+    bytec_2 // "c"
+    app_global_get_ex
+    assert // check c exists
+    swap
+    itob
+    uncover 2
+    itob
+    concat
+    swap
+    itob
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

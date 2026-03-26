@@ -434,6 +434,12 @@ struct ArrayExtend: Expression
 	std::shared_ptr<Expression> other;
 };
 
+struct ConvertArray: Expression
+{
+	std::string nodeType() const override { return "ConvertArray"; }
+	std::shared_ptr<Expression> expr;
+};
+
 struct NewStruct: Expression
 {
 	std::string nodeType() const override { return "NewStruct"; }

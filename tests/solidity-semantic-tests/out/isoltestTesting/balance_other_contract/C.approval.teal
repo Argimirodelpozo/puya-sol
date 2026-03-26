@@ -1,0 +1,36 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/balance_other_contract.sol.C.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@3
+    itxn_begin
+    pushint 1
+    itxn_field TypeEnum
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000001234
+    itxn_field Receiver
+    pushint 0
+    itxn_field Fee
+    pushint 500
+    itxn_field Amount
+    itxn_submit
+    pushint 1
+    return
+
+main_after_if_else@3:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn NumAppArgs
+    !
+    assert
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    return

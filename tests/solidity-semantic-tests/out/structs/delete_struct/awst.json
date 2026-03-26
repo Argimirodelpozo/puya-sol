@@ -1950,7 +1950,7 @@
                         "source_location": null
                       },
                       "base": {
-                        "_type": "AssignmentExpression",
+                        "_type": "FieldExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
                           "line": 419,
@@ -1984,22 +1984,47 @@
                           "source_location": null,
                           "desc": null
                         },
-                        "target": {
-                          "_type": "FieldExpression",
+                        "base": {
+                          "_type": "AssignmentExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
                             "line": 419,
-                            "end_line": 427,
+                            "end_line": 443,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
                           },
                           "wtype": {
                             "_type": "ARC4Struct",
-                            "name": "nestedStruct",
+                            "name": "topStruct",
                             "immutable": true,
                             "fields": {
-                              "nestedValue": {
+                              "nstr": {
+                                "_type": "ARC4Struct",
+                                "name": "nestedStruct",
+                                "immutable": true,
+                                "fields": {
+                                  "nestedValue": {
+                                    "_type": "ARC4UIntN",
+                                    "name": "arc4.uint256",
+                                    "immutable": true,
+                                    "n": 256,
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "nestedMapping": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  }
+                                },
+                                "frozen": true,
+                                "arc4_alias": null,
+                                "source_location": null,
+                                "desc": null
+                              },
+                              "topValue": {
                                 "_type": "ARC4UIntN",
                                 "name": "arc4.uint256",
                                 "immutable": true,
@@ -2007,7 +2032,7 @@
                                 "arc4_alias": null,
                                 "source_location": null
                               },
-                              "nestedMapping": {
+                              "topMapping": {
                                 "_type": "BytesWType",
                                 "name": "bytes",
                                 "immutable": true,
@@ -2019,7 +2044,7 @@
                             "source_location": null,
                             "desc": null
                           },
-                          "base": {
+                          "target": {
                             "_type": "AppStateExpression",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
@@ -2099,66 +2124,73 @@
                             },
                             "exists_assertion_message": "check str exists"
                           },
-                          "name": "nstr"
-                        },
-                        "value": {
-                          "_type": "NewStruct",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
-                            "line": 419,
-                            "end_line": 443,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "ARC4Struct",
-                            "name": "nestedStruct",
-                            "immutable": true,
-                            "fields": {
-                              "nestedValue": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint256",
-                                "immutable": true,
-                                "n": 256,
-                                "arc4_alias": null,
-                                "source_location": null
-                              },
-                              "nestedMapping": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              }
+                          "value": {
+                            "_type": "NewStruct",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
+                              "line": 419,
+                              "end_line": 443,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
                             },
-                            "frozen": true,
-                            "arc4_alias": null,
-                            "source_location": null,
-                            "desc": null
-                          },
-                          "values": {
-                            "nestedMapping": {
-                              "_type": "FieldExpression",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
-                                "line": 419,
-                                "end_line": 443,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
+                            "wtype": {
+                              "_type": "ARC4Struct",
+                              "name": "topStruct",
+                              "immutable": true,
+                              "fields": {
+                                "nstr": {
+                                  "_type": "ARC4Struct",
+                                  "name": "nestedStruct",
+                                  "immutable": true,
+                                  "fields": {
+                                    "nestedValue": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint256",
+                                      "immutable": true,
+                                      "n": 256,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "nestedMapping": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    }
+                                  },
+                                  "frozen": true,
+                                  "arc4_alias": null,
+                                  "source_location": null,
+                                  "desc": null
+                                },
+                                "topValue": {
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint256",
+                                  "immutable": true,
+                                  "n": 256,
+                                  "arc4_alias": null,
+                                  "source_location": null
+                                },
+                                "topMapping": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                }
                               },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "base": {
-                                "_type": "FieldExpression",
+                              "frozen": true,
+                              "arc4_alias": null,
+                              "source_location": null,
+                              "desc": null
+                            },
+                            "values": {
+                              "nstr": {
+                                "_type": "NewStruct",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
                                   "line": 419,
-                                  "end_line": 427,
+                                  "end_line": 443,
                                   "comment_lines": 0,
                                   "column": null,
                                   "end_column": null
@@ -2187,6 +2219,198 @@
                                   "arc4_alias": null,
                                   "source_location": null,
                                   "desc": null
+                                },
+                                "values": {
+                                  "nestedMapping": {
+                                    "_type": "FieldExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
+                                      "line": 419,
+                                      "end_line": 443,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "base": {
+                                      "_type": "FieldExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
+                                        "line": 419,
+                                        "end_line": 427,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "ARC4Struct",
+                                        "name": "nestedStruct",
+                                        "immutable": true,
+                                        "fields": {
+                                          "nestedValue": {
+                                            "_type": "ARC4UIntN",
+                                            "name": "arc4.uint256",
+                                            "immutable": true,
+                                            "n": 256,
+                                            "arc4_alias": null,
+                                            "source_location": null
+                                          },
+                                          "nestedMapping": {
+                                            "_type": "BytesWType",
+                                            "name": "bytes",
+                                            "immutable": true,
+                                            "length": null
+                                          }
+                                        },
+                                        "frozen": true,
+                                        "arc4_alias": null,
+                                        "source_location": null,
+                                        "desc": null
+                                      },
+                                      "base": {
+                                        "_type": "AppStateExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
+                                          "line": 419,
+                                          "end_line": 422,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "ARC4Struct",
+                                          "name": "topStruct",
+                                          "immutable": true,
+                                          "fields": {
+                                            "nstr": {
+                                              "_type": "ARC4Struct",
+                                              "name": "nestedStruct",
+                                              "immutable": true,
+                                              "fields": {
+                                                "nestedValue": {
+                                                  "_type": "ARC4UIntN",
+                                                  "name": "arc4.uint256",
+                                                  "immutable": true,
+                                                  "n": 256,
+                                                  "arc4_alias": null,
+                                                  "source_location": null
+                                                },
+                                                "nestedMapping": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                }
+                                              },
+                                              "frozen": true,
+                                              "arc4_alias": null,
+                                              "source_location": null,
+                                              "desc": null
+                                            },
+                                            "topValue": {
+                                              "_type": "ARC4UIntN",
+                                              "name": "arc4.uint256",
+                                              "immutable": true,
+                                              "n": 256,
+                                              "arc4_alias": null,
+                                              "source_location": null
+                                            },
+                                            "topMapping": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            }
+                                          },
+                                          "frozen": true,
+                                          "arc4_alias": null,
+                                          "source_location": null,
+                                          "desc": null
+                                        },
+                                        "key": {
+                                          "_type": "BytesConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
+                                            "line": 419,
+                                            "end_line": 422,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "state_key",
+                                            "immutable": true
+                                          },
+                                          "value": "b98b",
+                                          "encoding": "utf8"
+                                        },
+                                        "exists_assertion_message": "check str exists"
+                                      },
+                                      "name": "nstr"
+                                    },
+                                    "name": "nestedMapping"
+                                  },
+                                  "nestedValue": {
+                                    "_type": "ARC4Encode",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
+                                      "line": 419,
+                                      "end_line": 443,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint256",
+                                      "immutable": true,
+                                      "n": 256,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "value": {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
+                                        "line": 442,
+                                        "end_line": 443,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 2,
+                                      "teal_alias": null
+                                    },
+                                    "error_message": null
+                                  }
+                                }
+                              },
+                              "topMapping": {
+                                "_type": "FieldExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
+                                  "line": 419,
+                                  "end_line": 443,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
                                 },
                                 "base": {
                                   "_type": "AppStateExpression",
@@ -2268,50 +2492,112 @@
                                   },
                                   "exists_assertion_message": "check str exists"
                                 },
-                                "name": "nstr"
+                                "name": "topMapping"
                               },
-                              "name": "nestedMapping"
-                            },
-                            "nestedValue": {
-                              "_type": "ARC4Encode",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
-                                "line": 419,
-                                "end_line": 443,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint256",
-                                "immutable": true,
-                                "n": 256,
-                                "arc4_alias": null,
-                                "source_location": null
-                              },
-                              "value": {
-                                "_type": "IntegerConstant",
+                              "topValue": {
+                                "_type": "FieldExpression",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
-                                  "line": 442,
+                                  "line": 419,
                                   "end_line": 443,
                                   "comment_lines": 0,
                                   "column": null,
                                   "end_column": null
                                 },
                                 "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint256",
+                                  "immutable": true,
+                                  "n": 256,
+                                  "arc4_alias": null,
+                                  "source_location": null
                                 },
-                                "value": 2,
-                                "teal_alias": null
-                              },
-                              "error_message": null
+                                "base": {
+                                  "_type": "AppStateExpression",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
+                                    "line": 419,
+                                    "end_line": 422,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "ARC4Struct",
+                                    "name": "topStruct",
+                                    "immutable": true,
+                                    "fields": {
+                                      "nstr": {
+                                        "_type": "ARC4Struct",
+                                        "name": "nestedStruct",
+                                        "immutable": true,
+                                        "fields": {
+                                          "nestedValue": {
+                                            "_type": "ARC4UIntN",
+                                            "name": "arc4.uint256",
+                                            "immutable": true,
+                                            "n": 256,
+                                            "arc4_alias": null,
+                                            "source_location": null
+                                          },
+                                          "nestedMapping": {
+                                            "_type": "BytesWType",
+                                            "name": "bytes",
+                                            "immutable": true,
+                                            "length": null
+                                          }
+                                        },
+                                        "frozen": true,
+                                        "arc4_alias": null,
+                                        "source_location": null,
+                                        "desc": null
+                                      },
+                                      "topValue": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint256",
+                                        "immutable": true,
+                                        "n": 256,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "topMapping": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      }
+                                    },
+                                    "frozen": true,
+                                    "arc4_alias": null,
+                                    "source_location": null,
+                                    "desc": null
+                                  },
+                                  "key": {
+                                    "_type": "BytesConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
+                                      "line": 419,
+                                      "end_line": 422,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "state_key",
+                                      "immutable": true
+                                    },
+                                    "value": "b98b",
+                                    "encoding": "utf8"
+                                  },
+                                  "exists_assertion_message": "check str exists"
+                                },
+                                "name": "topValue"
+                              }
                             }
                           }
-                        }
+                        },
+                        "name": "nstr"
                       },
                       "name": "nestedValue"
                     },
@@ -3454,7 +3740,7 @@
                     "exists_assertion_message": "check str exists"
                   },
                   "value": {
-                    "_type": "IntegerConstant",
+                    "_type": "NewStruct",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
                       "line": 538,
@@ -3464,12 +3750,175 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "WType",
-                      "name": "uint64",
-                      "immutable": true
+                      "_type": "ARC4Struct",
+                      "name": "topStruct",
+                      "immutable": true,
+                      "fields": {
+                        "nstr": {
+                          "_type": "ARC4Struct",
+                          "name": "nestedStruct",
+                          "immutable": true,
+                          "fields": {
+                            "nestedValue": {
+                              "_type": "ARC4UIntN",
+                              "name": "arc4.uint256",
+                              "immutable": true,
+                              "n": 256,
+                              "arc4_alias": null,
+                              "source_location": null
+                            },
+                            "nestedMapping": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            }
+                          },
+                          "frozen": true,
+                          "arc4_alias": null,
+                          "source_location": null,
+                          "desc": null
+                        },
+                        "topValue": {
+                          "_type": "ARC4UIntN",
+                          "name": "arc4.uint256",
+                          "immutable": true,
+                          "n": 256,
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "topMapping": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        }
+                      },
+                      "frozen": true,
+                      "arc4_alias": null,
+                      "source_location": null,
+                      "desc": null
                     },
-                    "value": 0,
-                    "teal_alias": null
+                    "values": {
+                      "nstr": {
+                        "_type": "NewStruct",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
+                          "line": 538,
+                          "end_line": 548,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "ARC4Struct",
+                          "name": "nestedStruct",
+                          "immutable": true,
+                          "fields": {
+                            "nestedValue": {
+                              "_type": "ARC4UIntN",
+                              "name": "arc4.uint256",
+                              "immutable": true,
+                              "n": 256,
+                              "arc4_alias": null,
+                              "source_location": null
+                            },
+                            "nestedMapping": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            }
+                          },
+                          "frozen": true,
+                          "arc4_alias": null,
+                          "source_location": null,
+                          "desc": null
+                        },
+                        "values": {
+                          "nestedMapping": {
+                            "_type": "BytesConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
+                              "line": 538,
+                              "end_line": 548,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "value": "",
+                            "encoding": "base16"
+                          },
+                          "nestedValue": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
+                              "line": 538,
+                              "end_line": 548,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "ARC4UIntN",
+                              "name": "arc4.uint256",
+                              "immutable": true,
+                              "n": 256,
+                              "arc4_alias": null,
+                              "source_location": null
+                            },
+                            "value": 0,
+                            "teal_alias": null
+                          }
+                        }
+                      },
+                      "topMapping": {
+                        "_type": "BytesConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
+                          "line": 538,
+                          "end_line": 548,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "value": "",
+                        "encoding": "base16"
+                      },
+                      "topValue": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/delete_struct.sol",
+                          "line": 538,
+                          "end_line": 548,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "ARC4UIntN",
+                          "name": "arc4.uint256",
+                          "immutable": true,
+                          "n": 256,
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "value": 0,
+                        "teal_alias": null
+                      }
+                    }
                   }
                 },
                 {
