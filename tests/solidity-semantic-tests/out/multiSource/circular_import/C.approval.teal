@@ -1,7 +1,7 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_cqetpnep/s2.sol.C.approval_program() -> uint64:
+// /tmp/split_xc9k95dh/s2.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -32,30 +32,30 @@ main_foo_route@4:
     b foo
 
 
-// /tmp/multisource_cqetpnep/s2.sol.f() -> bytes:
+// /tmp/split_xc9k95dh/s2.sol.f() -> bytes:
 f:
-    pushint 2
-    itob
-    retsub
-
-
-// /tmp/multisource_cqetpnep/s2.sol.f_34() -> bytes:
-/tmp/multisource_cqetpnep/s2.sol.f_34:
     intc_0 // 1
     itob
     retsub
 
 
-// /tmp/multisource_cqetpnep/s2.sol.C.foo[routing]() -> void:
+// /tmp/split_xc9k95dh/s2.sol.f_45() -> bytes:
+/tmp/split_xc9k95dh/s2.sol.f_45:
+    pushint 2
+    itob
+    retsub
+
+
+// /tmp/split_xc9k95dh/s2.sol.C.foo[routing]() -> void:
 foo:
+    callsub /tmp/split_xc9k95dh/s2.sol.f_45
     callsub f
-    callsub /tmp/multisource_cqetpnep/s2.sol.f_34
     b>=
     assert // underflow
-    callsub f
+    callsub /tmp/split_xc9k95dh/s2.sol.f_45
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    callsub /tmp/multisource_cqetpnep/s2.sol.f_34
+    callsub f
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%

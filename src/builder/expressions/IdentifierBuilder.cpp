@@ -58,8 +58,10 @@ bool ExpressionBuilder::visit(solidity::frontend::Identifier const& _node)
 	// Check if this is a variable reference (state, constant, or immutable)
 	if (auto const* varDecl = dynamic_cast<solidity::frontend::VariableDeclaration const*>(decl))
 	{
-		// File-level and contract-level constants/immutables: inline the value
-		if ((varDecl->isConstant() || varDecl->immutable()) && varDecl->value())
+		// File-level and contract-level constants/immutables: inline the value.
+		// Exception: immutable variables in constructor context are writable,
+		// so treat them as regular state variables.
+		if ((varDecl->isConstant() || (varDecl->immutable() && !m_inConstructor)) && varDecl->value())
 		{
 			auto val = build(*varDecl->value());
 			// If the declared type is bytes[N] but the literal translated as
@@ -154,7 +156,8 @@ bool ExpressionBuilder::visit(solidity::frontend::Identifier const& _node)
 			}
 
 			// Constants and immutables are handled as literal values
-			if (varDecl->isConstant() || varDecl->immutable())
+			// (except immutables in constructor context — they're writable)
+			if (varDecl->isConstant() || (varDecl->immutable() && !m_inConstructor))
 			{
 				// Try to evaluate the constant
 				if (varDecl->value())

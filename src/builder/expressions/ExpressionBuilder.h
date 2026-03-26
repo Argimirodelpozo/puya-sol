@@ -142,6 +142,10 @@ public:
 	/// Remove a previously registered storage pointer alias.
 	void removeStorageAlias(int64_t _declId);
 
+	/// Set constructor context: immutable variables are writable during construction.
+	void setInConstructor(bool _inConstructor) { m_inConstructor = _inConstructor; }
+	bool inConstructor() const { return m_inConstructor; }
+
 
 private:
 
@@ -154,6 +158,9 @@ private:
 	/// Super call target names: base function AST ID → subroutine name.
 	/// Populated by ContractBuilder for functions called via `super.method()`.
 	std::unordered_map<int64_t, std::string> m_superTargetNames;
+
+	/// Whether currently inside a constructor (immutable vars are writable).
+	bool m_inConstructor = false;
 
 	/// Storage pointer aliases: maps AST declaration ID to the box read expression.
 	/// For `Type storage p = _mapping[key]`, stores the StateGet(BoxValueExpression)

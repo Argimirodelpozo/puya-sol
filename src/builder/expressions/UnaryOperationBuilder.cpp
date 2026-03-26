@@ -139,6 +139,12 @@ bool ExpressionBuilder::visit(solidity::frontend::UnaryOperation const& _node)
 		bool isPrefix = _node.isPrefixOperation();
 		auto isInc = (_node.getOperator() == Token::Inc);
 
+		// Check if the Solidity type is signed (int, int8, ..., int256)
+		bool isSigned = false;
+		if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(
+				_node.subExpression().annotation().type))
+			isSigned = intType->isSigned();
+
 		// For box-stored mappings, the operand is a bare BoxValueExpression
 		// (willBeWrittenTo=true skips StateGet wrapping). Wrap it in StateGet
 		// with a default value so the read works for uninitialized boxes.
@@ -164,13 +170,76 @@ bool ExpressionBuilder::visit(solidity::frontend::UnaryOperation const& _node)
 			std::shared_ptr<awst::Expression> newValue;
 			if (isBigUInt(operand->wtype))
 			{
-				auto binOp = std::make_shared<awst::BigUIntBinaryOperation>();
-				binOp->sourceLocation = loc;
-				binOp->wtype = awst::WType::biguintType();
-				binOp->left = operand;
-				binOp->op = isInc ? awst::BigUIntBinaryOperator::Add : awst::BigUIntBinaryOperator::Sub;
-				binOp->right = std::move(one);
-				newValue = std::move(binOp);
+				if (isSigned && !isInc)
+				{
+					// Signed decrement: (a + 2^256 - 1) % 2^256
+					// This wraps correctly for two's complement: 0 - 1 → 2^256 - 1
+					static const std::string pow256Minus1 =
+						"115792089237316195423570985008687907853269984665640564039457584007913129639935";
+					static const std::string pow256 =
+						"115792089237316195423570985008687907853269984665640564039457584007913129639936";
+
+					auto offset = std::make_shared<awst::IntegerConstant>();
+					offset->sourceLocation = loc;
+					offset->wtype = awst::WType::biguintType();
+					offset->value = pow256Minus1;
+
+					auto add = std::make_shared<awst::BigUIntBinaryOperation>();
+					add->sourceLocation = loc;
+					add->wtype = awst::WType::biguintType();
+					add->left = operand;
+					add->op = awst::BigUIntBinaryOperator::Add;
+					add->right = std::move(offset);
+
+					auto modConst = std::make_shared<awst::IntegerConstant>();
+					modConst->sourceLocation = loc;
+					modConst->wtype = awst::WType::biguintType();
+					modConst->value = pow256;
+
+					auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
+					mod->sourceLocation = loc;
+					mod->wtype = awst::WType::biguintType();
+					mod->left = std::move(add);
+					mod->op = awst::BigUIntBinaryOperator::Mod;
+					mod->right = std::move(modConst);
+					newValue = std::move(mod);
+				}
+				else if (isSigned && isInc)
+				{
+					// Signed increment: (a + 1) % 2^256
+					static const std::string pow256 =
+						"115792089237316195423570985008687907853269984665640564039457584007913129639936";
+
+					auto add = std::make_shared<awst::BigUIntBinaryOperation>();
+					add->sourceLocation = loc;
+					add->wtype = awst::WType::biguintType();
+					add->left = operand;
+					add->op = awst::BigUIntBinaryOperator::Add;
+					add->right = std::move(one);
+
+					auto modConst = std::make_shared<awst::IntegerConstant>();
+					modConst->sourceLocation = loc;
+					modConst->wtype = awst::WType::biguintType();
+					modConst->value = pow256;
+
+					auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
+					mod->sourceLocation = loc;
+					mod->wtype = awst::WType::biguintType();
+					mod->left = std::move(add);
+					mod->op = awst::BigUIntBinaryOperator::Mod;
+					mod->right = std::move(modConst);
+					newValue = std::move(mod);
+				}
+				else
+				{
+					auto binOp = std::make_shared<awst::BigUIntBinaryOperation>();
+					binOp->sourceLocation = loc;
+					binOp->wtype = awst::WType::biguintType();
+					binOp->left = operand;
+					binOp->op = isInc ? awst::BigUIntBinaryOperator::Add : awst::BigUIntBinaryOperator::Sub;
+					binOp->right = std::move(one);
+					newValue = std::move(binOp);
+				}
 			}
 			else
 			{
@@ -210,7 +279,66 @@ bool ExpressionBuilder::visit(solidity::frontend::UnaryOperation const& _node)
 
 			// Build new value: singleEval +/- 1
 			std::shared_ptr<awst::Expression> newValue;
-			if (isBigUInt(operand->wtype))
+			if (isBigUInt(operand->wtype) && isSigned && !isInc)
+			{
+				// Signed postfix decrement: (a + 2^256 - 1) % 2^256
+				static const std::string pow256Minus1 =
+					"115792089237316195423570985008687907853269984665640564039457584007913129639935";
+				static const std::string pow256 =
+					"115792089237316195423570985008687907853269984665640564039457584007913129639936";
+
+				auto offset = std::make_shared<awst::IntegerConstant>();
+				offset->sourceLocation = loc;
+				offset->wtype = awst::WType::biguintType();
+				offset->value = pow256Minus1;
+
+				auto add = std::make_shared<awst::BigUIntBinaryOperation>();
+				add->sourceLocation = loc;
+				add->wtype = awst::WType::biguintType();
+				add->left = singleEval;
+				add->op = awst::BigUIntBinaryOperator::Add;
+				add->right = std::move(offset);
+
+				auto modConst = std::make_shared<awst::IntegerConstant>();
+				modConst->sourceLocation = loc;
+				modConst->wtype = awst::WType::biguintType();
+				modConst->value = pow256;
+
+				auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
+				mod->sourceLocation = loc;
+				mod->wtype = awst::WType::biguintType();
+				mod->left = std::move(add);
+				mod->op = awst::BigUIntBinaryOperator::Mod;
+				mod->right = std::move(modConst);
+				newValue = std::move(mod);
+			}
+			else if (isBigUInt(operand->wtype) && isSigned && isInc)
+			{
+				// Signed postfix increment: (a + 1) % 2^256
+				static const std::string pow256 =
+					"115792089237316195423570985008687907853269984665640564039457584007913129639936";
+
+				auto add = std::make_shared<awst::BigUIntBinaryOperation>();
+				add->sourceLocation = loc;
+				add->wtype = awst::WType::biguintType();
+				add->left = singleEval;
+				add->op = awst::BigUIntBinaryOperator::Add;
+				add->right = std::move(one);
+
+				auto modConst = std::make_shared<awst::IntegerConstant>();
+				modConst->sourceLocation = loc;
+				modConst->wtype = awst::WType::biguintType();
+				modConst->value = pow256;
+
+				auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
+				mod->sourceLocation = loc;
+				mod->wtype = awst::WType::biguintType();
+				mod->left = std::move(add);
+				mod->op = awst::BigUIntBinaryOperator::Mod;
+				mod->right = std::move(modConst);
+				newValue = std::move(mod);
+			}
+			else if (isBigUInt(operand->wtype))
 			{
 				auto binOp = std::make_shared<awst::BigUIntBinaryOperation>();
 				binOp->sourceLocation = loc;
