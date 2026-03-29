@@ -1627,6 +1627,92 @@ bool ExpressionBuilder::visit(solidity::frontend::FunctionCall const& _node)
 					e->other = std::move(singleArr);
 					push(e);
 				}
+				else if (memberName == "push" && _node.arguments().empty())
+				{
+					// push() with no args — use box_resize + box_replace to add zero element
+					// 1. Read current length
+					auto lengthKey = arrayVarName + "_length";
+					auto readLen = m_storageMapper.createStateRead(
+						lengthKey, awst::WType::uint64Type(),
+						awst::AppStorageKind::AppGlobal, loc
+					);
+
+					// 2. Compute element size and new box size
+					// Element size = 32 bytes for biguint (ARC4 uint256)
+					unsigned elemSize = 32; // TODO: compute from elemType
+					auto elemSizeConst = std::make_shared<awst::IntegerConstant>();
+					elemSizeConst->sourceLocation = loc;
+					elemSizeConst->wtype = awst::WType::uint64Type();
+					elemSizeConst->value = std::to_string(elemSize);
+
+					// newBoxSize = (length + 1) * elemSize
+					auto one = std::make_shared<awst::IntegerConstant>();
+					one->sourceLocation = loc;
+					one->wtype = awst::WType::uint64Type();
+					one->value = "1";
+					auto newLen = std::make_shared<awst::UInt64BinaryOperation>();
+					newLen->sourceLocation = loc;
+					newLen->wtype = awst::WType::uint64Type();
+					newLen->left = readLen;
+					newLen->op = awst::UInt64BinaryOperator::Add;
+					newLen->right = std::move(one);
+
+					auto newSize = std::make_shared<awst::UInt64BinaryOperation>();
+					newSize->sourceLocation = loc;
+					newSize->wtype = awst::WType::uint64Type();
+					newSize->left = newLen;
+					newSize->op = awst::UInt64BinaryOperator::Mult;
+					newSize->right = std::move(elemSizeConst);
+
+					// 3. box_resize(key, newSize)
+					auto boxKeyBytes = std::make_shared<awst::BytesConstant>();
+					boxKeyBytes->sourceLocation = loc;
+					boxKeyBytes->wtype = awst::WType::bytesType();
+					boxKeyBytes->encoding = awst::BytesEncoding::Utf8;
+					boxKeyBytes->value = std::vector<uint8_t>(arrayVarName.begin(), arrayVarName.end());
+
+					auto resize = std::make_shared<awst::IntrinsicCall>();
+					resize->sourceLocation = loc;
+					resize->wtype = awst::WType::voidType();
+					resize->opCode = "box_resize";
+					resize->stackArgs.push_back(boxKeyBytes);
+					resize->stackArgs.push_back(std::move(newSize));
+
+					auto resizeStmt = std::make_shared<awst::ExpressionStatement>();
+					resizeStmt->sourceLocation = loc;
+					resizeStmt->expr = std::move(resize);
+					m_pendingStatements.push_back(std::move(resizeStmt));
+
+					// 4. Increment the _length counter
+					auto readLen2 = m_storageMapper.createStateRead(
+						lengthKey, awst::WType::uint64Type(),
+						awst::AppStorageKind::AppGlobal, loc
+					);
+					auto one2 = std::make_shared<awst::IntegerConstant>();
+					one2->sourceLocation = loc;
+					one2->wtype = awst::WType::uint64Type();
+					one2->value = "1";
+					auto updatedLen = std::make_shared<awst::UInt64BinaryOperation>();
+					updatedLen->sourceLocation = loc;
+					updatedLen->wtype = awst::WType::uint64Type();
+					updatedLen->left = std::move(readLen2);
+					updatedLen->op = awst::UInt64BinaryOperator::Add;
+					updatedLen->right = std::move(one2);
+					auto writeLen = m_storageMapper.createStateWrite(
+						lengthKey, std::move(updatedLen), awst::WType::uint64Type(),
+						awst::AppStorageKind::AppGlobal, loc
+					);
+					auto writeLenStmt = std::make_shared<awst::ExpressionStatement>();
+					writeLenStmt->sourceLocation = loc;
+					writeLenStmt->expr = std::move(writeLen);
+					m_pendingStatements.push_back(std::move(writeLenStmt));
+
+					// push() returns void
+					auto vc = std::make_shared<awst::VoidConstant>();
+					vc->sourceLocation = loc;
+					vc->wtype = awst::WType::voidType();
+					push(std::move(vc));
+				}
 				else if (memberName == "pop")
 				{
 					auto popExpr = std::make_shared<awst::ArrayPop>();

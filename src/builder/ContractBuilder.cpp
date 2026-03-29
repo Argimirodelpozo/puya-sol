@@ -1149,6 +1149,31 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					stmt->sourceLocation = method.sourceLocation;
 					stmt->expr = put;
 					createBlock->body.push_back(stmt);
+
+					// Also create the box with size 0 for the dynamic array
+					auto boxKey = std::make_shared<awst::BytesConstant>();
+					boxKey->sourceLocation = method.sourceLocation;
+					boxKey->wtype = awst::WType::bytesType();
+					boxKey->encoding = awst::BytesEncoding::Utf8;
+					std::string varName = var->name();
+					boxKey->value = std::vector<uint8_t>(varName.begin(), varName.end());
+
+					auto boxSize = std::make_shared<awst::IntegerConstant>();
+					boxSize->sourceLocation = method.sourceLocation;
+					boxSize->wtype = awst::WType::uint64Type();
+					boxSize->value = "0";
+
+					auto boxCreate = std::make_shared<awst::IntrinsicCall>();
+					boxCreate->sourceLocation = method.sourceLocation;
+					boxCreate->opCode = "box_create";
+					boxCreate->wtype = awst::WType::boolType();
+					boxCreate->stackArgs.push_back(boxKey);
+					boxCreate->stackArgs.push_back(boxSize);
+
+					auto boxStmt = std::make_shared<awst::ExpressionStatement>();
+					boxStmt->sourceLocation = method.sourceLocation;
+					boxStmt->expr = boxCreate;
+					createBlock->body.push_back(boxStmt);
 				}
 			}
 		}
