@@ -66,7 +66,6 @@ def parse_test_file(path: Path) -> SemanticTest:
         ("receive()", "receive not supported"),
         ("fallback()", "fallback not supported"),
         ("try {", "try/catch not supported"),
-        ("abi.decode", "abi.decode complex cases"),
     ]
 
     for pattern, reason in skip_patterns:
