@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/uncalled_blockhash.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 8
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x01
+    bytecblock 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -36,29 +36,34 @@ main_f_route@4:
 f:
     global Round
     itob
-    bytec_1 // 0x01
+    bytec_0 // 0x01
+    b>=
+    assert // underflow
+    global Round
+    itob
+    bytec_0 // 0x01
     b>=
     assert // underflow
     intc_1 // 8
     bzero
     global Round
     itob
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b-
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dig 1
     swap
     concat
     global Round
     itob
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b-
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     uncover 2
     swap

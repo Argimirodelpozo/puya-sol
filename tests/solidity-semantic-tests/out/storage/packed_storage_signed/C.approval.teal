@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_signed.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 18446744073709551614
+    intcblock 0 1 18446744073709551614 256
     bytecblock "a" "b" "c" "d"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -52,8 +52,12 @@ test:
     intc_0 // 0
     intc_2 // 18446744073709551614
     -
+    intc_3 // 256
+    %
     pushint 2
     *
+    intc_3 // 256
+    %
     bytec_1 // "b"
     swap
     app_global_put

@@ -3,17 +3,17 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_overlapped_dynamic_arrays.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 2
-    bytecblock 0x151f7c75 "n"
+    intcblock 32 1 0 2
+    bytecblock 0x151f7c75 "__ctor_pending" "n"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "n"
+    bytec_2 // "n"
     pushbytes 0x
     app_global_put
-    pushbytes "s_length"
-    intc_1 // 0
+    bytec_1 // "__ctor_pending"
+    intc_1 // 1
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -29,17 +29,33 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x560ea6a7 0x48f9eced 0x3a06436a 0x82e68c81 // method "f_memory(uint256[],uint256[2])(uint256[],uint256[2])", method "f_encode(uint256[],uint256[2])byte[]", method "f_which(uint256[],uint256[2],uint256)byte[]", method "f_storage(uint256[],uint256[2])byte[]"
+    pushbytess 0xbacc49e3 0x560ea6a7 0x48f9eced 0x3a06436a 0x82e68c81 // method "__postInit()void", method "f_memory(uint256[],uint256[2])(uint256[],uint256[2])", method "f_encode(uint256[],uint256[2])byte[]", method "f_which(uint256[],uint256[2],uint256)byte[]", method "f_storage(uint256[],uint256[2])byte[]"
     txna ApplicationArgs 0
-    match f_memory f_encode f_which f_storage
+    match __postInit f_memory f_encode f_which f_storage
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_overlapped_dynamic_arrays.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    pushbytes "s"
+    intc_2 // 0
+    box_create
+    pop
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_overlapped_dynamic_arrays.sol.C.f_memory[routing]() -> void:
 f_memory:
     txna ApplicationArgs 1
     dup
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
@@ -74,7 +90,7 @@ f_memory:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -82,7 +98,7 @@ f_memory:
 f_encode:
     txna ApplicationArgs 1
     dup
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
@@ -116,7 +132,7 @@ f_encode:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -124,7 +140,7 @@ f_encode:
 f_which:
     txna ApplicationArgs 1
     dup
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
@@ -175,7 +191,7 @@ f_which:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -183,7 +199,7 @@ f_which:
 f_storage:
     txna ApplicationArgs 1
     dup
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
@@ -201,7 +217,7 @@ f_storage:
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
     swap
     extract 2 0
-    bytec_1 // "n"
+    bytec_2 // "n"
     uncover 2
     app_global_put
     dup
@@ -214,5 +230,5 @@ f_storage:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return

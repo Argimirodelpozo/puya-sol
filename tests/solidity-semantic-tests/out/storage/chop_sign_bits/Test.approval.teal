@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/chop_sign_bits.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 32 0 1
-    bytecblock 0xffff "z" "y" 0x8000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    intcblock 0 32 1
+    bytecblock 0xffff "z" "y" "__ctor_pending" 0x8000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
     store 5
     txn ApplicationID
@@ -17,10 +17,10 @@ main:
     swap
     app_global_put
     bytec_1 // "z"
-    intc_1 // 0
+    intc_0 // 0
     app_global_put
-    pushbytes "x_length"
-    intc_1 // 0
+    bytec_3 // "__ctor_pending"
+    intc_2 // 1
     app_global_put
     intc_2 // 1
     return
@@ -38,10 +38,26 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x04244689 0x49769d80 0x8ca5396c 0x1cd31b6c 0x0ce9f74a // method "f()uint64[]", method "g()uint64[2]", method "h(uint64)uint256", method "x(uint256)uint256", method "y(uint256)uint256"
+    pushbytess 0xbacc49e3 0x04244689 0x49769d80 0x8ca5396c 0x1cd31b6c 0x0ce9f74a // method "__postInit()void", method "f()uint64[]", method "g()uint64[2]", method "h(uint64)uint256", method "x(uint256)uint256", method "y(uint256)uint256"
     txna ApplicationArgs 0
-    match f g h x y
+    match __postInit f g h x y
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/chop_sign_bits.sol.Test.__postInit[routing]() -> void:
+__postInit:
+    bytec_3 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_3 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    pushbytes "x"
+    intc_0 // 0
+    box_create
+    pop
+    intc_2 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/chop_sign_bits.sol.Test.f[routing]() -> void:
@@ -78,31 +94,31 @@ h:
     itob
     bytec_0 // 0xffff
     b&
-    bytec_3 // 0x8000
+    bytec 4 // 0x8000
     b>=
     bz h_ternary_false@3
-    intc_1 // 0
+    intc_0 // 0
     bytec_1 // "z"
     app_global_get_ex
     assert // check z exists
     itob
     bytec_0 // 0xffff
     b&
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
     b+
-    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 h_ternary_merge@4:
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
-    bytec 6 // 0x151f7c75
+    bytec 7 // 0x151f7c75
     swap
     concat
     log
@@ -110,7 +126,7 @@ h_ternary_merge@4:
     return
 
 h_ternary_false@3:
-    intc_1 // 0
+    intc_0 // 0
     bytec_1 // "z"
     app_global_get_ex
     assert // check z exists
@@ -125,19 +141,19 @@ x:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_0 // 32
+    intc_1 // 32
     bzero
     dup
     uncover 2
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     sha256
     pushbytes "x"
@@ -147,40 +163,40 @@ x:
     box_get
     swap
     btoi
-    intc_1 // 0
+    intc_0 // 0
     swap
     uncover 2
     select
     itob
     bytec_0 // 0xffff
     b&
-    bytec_3 // 0x8000
+    bytec 4 // 0x8000
     b>=
     bz x_ternary_false@3
     box_get
     swap
     btoi
-    intc_1 // 0
+    intc_0 // 0
     swap
     uncover 2
     select
     itob
     bytec_0 // 0xffff
     b&
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
     b+
-    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 x_ternary_merge@4:
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
     dig 1
     b|
-    bytec 6 // 0x151f7c75
+    bytec 7 // 0x151f7c75
     swap
     concat
     log
@@ -191,7 +207,7 @@ x_ternary_false@3:
     box_get
     swap
     btoi
-    intc_1 // 0
+    intc_0 // 0
     swap
     uncover 2
     select
@@ -206,19 +222,19 @@ y:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_0 // 32
+    intc_1 // 32
     bzero
     dup
     uncover 2
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     sha256
     bytec_2 // "y"
@@ -228,40 +244,40 @@ y:
     box_get
     swap
     btoi
-    intc_1 // 0
+    intc_0 // 0
     swap
     uncover 2
     select
     itob
     bytec_0 // 0xffff
     b&
-    bytec_3 // 0x8000
+    bytec 4 // 0x8000
     b>=
     bz y_ternary_false@3
     box_get
     swap
     btoi
-    intc_1 // 0
+    intc_0 // 0
     swap
     uncover 2
     select
     itob
     bytec_0 // 0xffff
     b&
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
     b+
-    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 y_ternary_merge@4:
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
     dig 1
     b|
-    bytec 6 // 0x151f7c75
+    bytec 7 // 0x151f7c75
     swap
     concat
     log
@@ -272,7 +288,7 @@ y_ternary_false@3:
     box_get
     swap
     btoi
-    intc_1 // 0
+    intc_0 // 0
     swap
     uncover 2
     select
@@ -290,7 +306,7 @@ _puya_lib.mem.new_slot:
     pushint 256
     dig 2
     -
-    intc_1 // 0
+    intc_0 // 0
     setbit // on error: no available slots
     store 5
     retsub

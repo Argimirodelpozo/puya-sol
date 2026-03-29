@@ -3,13 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/storage_calldata_refs.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 2
+    intcblock 0 32 1 2
+    bytecblock "__ctor_pending" "data"
     pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytes "data_length"
-    intc_1 // 0
+    bytec_0 // "__ctor_pending"
+    intc_2 // 1
     app_global_put
     intc_2 // 1
     return
@@ -22,18 +23,15 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x7a2e6430 // method "f(uint256,uint256[])(uint256,uint256)"
-    txna ApplicationArgs 0
-    match main_f_route@4
-    err
-
-main_f_route@4:
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
-    b f
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x7a2e6430 // method "__postInit()void", method "f(uint256,uint256[])(uint256,uint256)"
+    txna ApplicationArgs 0
+    match __postInit f
+    err
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/storage_calldata_refs.sol.fun(_x: uint64, _y: uint64) -> bytes, uint64:
@@ -46,20 +44,36 @@ fun:
     retsub
 
 
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/storage_calldata_refs.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_1 // "data"
+    intc_0 // 0
+    box_create
+    pop
+    intc_2 // 1
+    return
+
+
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/storage_calldata_refs.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
     dup
     len
     dup
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    intc_0 // 32
+    intc_1 // 32
     *
     intc_3 // 2
     +
@@ -74,17 +88,17 @@ f:
     dup
     uncover 2
     stores
-    pushbytes "data"
+    bytec_1 // "data"
     box_get
     assert // box exists
     intc_3 // 2
-    intc_1 // 0
+    intc_0 // 0
     extract3
     uncover 3
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     uncover 4
     dig 1
@@ -106,7 +120,7 @@ f:
     extract 32 32 // on error: index access is out of bounds
     dig 2
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
     uncover 2
@@ -132,7 +146,7 @@ _puya_lib.mem.new_slot:
     pushint 256
     dig 2
     -
-    intc_1 // 0
+    intc_0 // 0
     setbit // on error: no available slots
     store 5
     retsub

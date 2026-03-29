@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/arrays_complex_from_and_to_storage.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 24
-    bytecblock 0x151f7c75 "data_length"
+    intcblock 32 1 0 24
+    bytecblock "__ctor_pending" "data" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "data_length"
-    intc_1 // 0
+    bytec_0 // "__ctor_pending"
+    intc_1 // 1
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -26,17 +26,33 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x10395df8 0x95713e09 0x11d11551 // method "set(uint64[3][])uint256", method "get()uint64[3][]", method "data(uint256,uint256)uint64"
+    pushbytess 0xbacc49e3 0x10395df8 0x95713e09 0x11d11551 // method "__postInit()void", method "set(uint64[3][])uint256", method "get()uint64[3][]", method "data(uint256,uint256)uint64"
     txna ApplicationArgs 0
-    match set get data
+    match __postInit set get data
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/arrays_complex_from_and_to_storage.sol.Test.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_1 // "data"
+    intc_2 // 0
+    box_create
+    pop
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/arrays_complex_from_and_to_storage.sol.Test.set[routing]() -> void:
 set:
     txna ApplicationArgs 1
     dup
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_3 // 24
     *
@@ -48,19 +64,20 @@ set:
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint64, 3>>
     extract 2 0
     pop
-    intc_1 // 0
-    bytec_1 // "data_length"
-    app_global_get_ex
-    assert // check data_length exists
+    bytec_1 // "data"
+    box_len
+    pop
+    intc_3 // 24
+    /
     itob
     intc_0 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -76,11 +93,11 @@ get:
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -120,20 +137,20 @@ data:
     extract3
     concat
     sha256
-    pushbytes "data"
+    bytec_1 // "data"
     swap
     concat
     box_get
     swap
     btoi
-    intc_1 // 0
+    intc_2 // 0
     swap
     uncover 2
     select
     itob
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return

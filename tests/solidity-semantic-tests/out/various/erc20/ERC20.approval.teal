@@ -265,6 +265,20 @@ transferFrom:
     dig 1
     b>=
     assert // underflow
+    dig 1
+    txn Sender
+    concat
+    sha256
+    bytec_1 // "_allowances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b>=
+    assert // underflow
     txn Sender
     dig 2
     txn Sender
@@ -341,6 +355,20 @@ decreaseAllowance:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn Sender
+    dig 2
+    concat
+    sha256
+    bytec_1 // "_allowances"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x
+    cover 2
+    select
+    dig 1
+    b>=
+    assert // underflow
     txn Sender
     dig 2
     concat

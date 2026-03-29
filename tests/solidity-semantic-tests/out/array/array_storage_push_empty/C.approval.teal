@@ -4,13 +4,13 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_push_empty.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 32 1 8
-    bytecblock "storageArray_length" 0x
+    bytecblock "storageArray" "__ctor_pending" 0x
     pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "storageArray_length"
-    intc_0 // 0
+    bytec_1 // "__ctor_pending"
+    intc_2 // 1
     app_global_put
     intc_2 // 1
     return
@@ -23,18 +23,31 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x1e3ddb1a // method "pushEmpty(uint256)void"
-    txna ApplicationArgs 0
-    match main_pushEmpty_route@4
-    err
-
-main_pushEmpty_route@4:
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
-    b pushEmpty
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x1e3ddb1a // method "__postInit()void", method "pushEmpty(uint256)void"
+    txna ApplicationArgs 0
+    match __postInit pushEmpty
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_push_empty.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "storageArray"
+    intc_0 // 0
+    box_create
+    pop
+    intc_2 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_push_empty.sol.C.pushEmpty[routing]() -> void:
@@ -48,14 +61,26 @@ pushEmpty:
     assert // invalid number of bytes for arc4.uint256
 
 pushEmpty_while_top@2:
-    intc_0 // 0
-    bytec_0 // "storageArray_length"
-    app_global_get_ex
-    assert // check storageArray_length exists
+    bytec_0 // "storageArray"
+    box_len
+    pop
+    intc_1 // 32
+    /
     itob
     dig 1
     b<
-    bnz pushEmpty_while_top@2
+    bz pushEmpty_after_while@4
+    bytec_0 // "storageArray"
+    box_len
+    pop
+    intc_1 // 32
+    +
+    bytec_0 // "storageArray"
+    swap
+    box_resize
+    b pushEmpty_while_top@2
+
+pushEmpty_after_while@4:
     intc_0 // 0
     itob
     bury 2
@@ -66,9 +91,9 @@ pushEmpty_while_top@5:
     bz pushEmpty_after_while@7
     callsub _puya_lib.mem.new_slot
     dup
-    bytec_1 // 0x
+    bytec_2 // 0x
     stores
-    pushbytes "storageArray"
+    bytec_0 // "storageArray"
     box_get
     swap
     pushint 2
@@ -98,7 +123,7 @@ pushEmpty_while_top@5:
     *
     intc_1 // 32
     extract3 // on error: index access is out of bounds
-    bytec_1 // 0x
+    bytec_2 // 0x
     b==
     assert
     pushbytes 0x01

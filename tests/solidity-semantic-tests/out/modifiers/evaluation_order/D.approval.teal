@@ -4,12 +4,9 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/evaluation_order.sol.D.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "__ctor_pending"
+    bytecblock "__ctor_pending" "x"
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytes "x_length"
-    intc_1 // 0
-    app_global_put
     bytec_0 // "__ctor_pending"
     intc_0 // 1
     app_global_put
@@ -43,6 +40,10 @@ __postInit:
     bytec_0 // "__ctor_pending"
     intc_1 // 0
     app_global_put
+    bytec_1 // "x"
+    intc_1 // 0
+    box_create
+    pop
     pushint 5
     itob
     callsub f
@@ -86,7 +87,7 @@ query:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/evaluation_order.sol.D.f(y: bytes) -> bytes:
 f:
     proto 1 1
-    pushbytes "x"
+    bytec_1 // "x"
     box_get
     assert // box exists
     pushint 2

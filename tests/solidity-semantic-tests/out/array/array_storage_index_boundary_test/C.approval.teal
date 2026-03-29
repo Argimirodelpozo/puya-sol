@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_boundary_test.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 1 2
-    bytecblock "storageArray_length" "storageArray"
+    intcblock 32 0 1 2
+    bytecblock "storageArray" "__ctor_pending"
     pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "storageArray_length"
-    intc_0 // 0
+    bytec_1 // "__ctor_pending"
+    intc_2 // 1
     app_global_put
     intc_2 // 1
     return
@@ -23,18 +23,31 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x1dba4875 // method "test_boundary_check(uint256,uint256)uint256"
-    txna ApplicationArgs 0
-    match main_test_boundary_check_route@4
-    err
-
-main_test_boundary_check_route@4:
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
-    b test_boundary_check
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x1dba4875 // method "__postInit()void", method "test_boundary_check(uint256,uint256)uint256"
+    txna ApplicationArgs 0
+    match __postInit test_boundary_check
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_boundary_test.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_0 // "storageArray"
+    intc_1 // 0
+    box_create
+    pop
+    intc_2 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_boundary_test.sol.C.test_boundary_check[routing]() -> void:
@@ -42,46 +55,57 @@ test_boundary_check:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
 
 test_boundary_check_while_top@2:
-    intc_0 // 0
-    bytec_0 // "storageArray_length"
-    app_global_get_ex
-    assert // check storageArray_length exists
+    bytec_0 // "storageArray"
+    box_len
+    pop
+    intc_0 // 32
+    /
     itob
     dig 2
     b<
-    bnz test_boundary_check_while_top@2
+    bz test_boundary_check_while_top@5
+    bytec_0 // "storageArray"
+    box_len
+    pop
+    intc_0 // 32
+    +
+    bytec_0 // "storageArray"
+    swap
+    box_resize
+    b test_boundary_check_while_top@2
 
 test_boundary_check_while_top@5:
-    intc_0 // 0
-    bytec_0 // "storageArray_length"
-    app_global_get_ex
-    assert // check storageArray_length exists
+    bytec_0 // "storageArray"
+    box_len
+    pop
+    intc_0 // 32
+    /
     itob
     dig 2
     b>
     bz test_boundary_check_after_while@7
-    bytec_1 // "storageArray"
+    bytec_0 // "storageArray"
     box_get
     assert // box exists
     intc_3 // 2
-    intc_0 // 0
+    intc_1 // 0
     extract3
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_0 // 0
+    intc_1 // 0
     swap
     substring3
     pop
@@ -92,11 +116,11 @@ test_boundary_check_after_while@7:
     dup
     pushbytes 0x
     stores
-    bytec_1 // "storageArray"
+    bytec_0 // "storageArray"
     box_get
     swap
     intc_3 // 2
-    intc_0 // 0
+    intc_1 // 0
     extract3
     callsub _puya_lib.mem.new_slot
     dup
@@ -116,16 +140,16 @@ test_boundary_check_after_while@7:
     swap
     loads
     swap
-    intc_1 // 32
+    intc_0 // 32
     *
-    intc_1 // 32
+    intc_0 // 32
     extract3 // on error: index access is out of bounds
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -144,7 +168,7 @@ _puya_lib.mem.new_slot:
     pushint 256
     dig 2
     -
-    intc_0 // 0
+    intc_1 // 0
     setbit // on error: no available slots
     store 5
     retsub

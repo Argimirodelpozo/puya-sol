@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/storage_array_ref.sol.Store.approval_program() -> uint64:
 main:
-    intcblock 32 8 0 1
-    bytecblock 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 "data" "data_length"
+    intcblock 32 8 1 0
+    bytecblock "data" 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_3 // "data_length"
-    intc_2 // 0
+    bytec_3 // "__ctor_pending"
+    intc_2 // 1
     app_global_put
-    intc_3 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -26,10 +26,26 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x8e1be510 0x85d76e5a // method "add(uint256)void", method "find(uint256)uint256"
+    pushbytess 0xbacc49e3 0x8e1be510 0x85d76e5a // method "__postInit()void", method "add(uint256)void", method "find(uint256)uint256"
     txna ApplicationArgs 0
-    match add find(u256)
+    match __postInit add find(u256)
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/storage_array_ref.sol.Store.__postInit[routing]() -> void:
+__postInit:
+    bytec_3 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_3 // "__ctor_pending"
+    intc_3 // 0
+    app_global_put
+    bytec_0 // "data"
+    intc_3 // 0
+    box_create
+    pop
+    intc_2 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/storage_array_ref.sol.Store.add[routing]() -> void:
@@ -41,11 +57,11 @@ add:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_2 // "data"
+    bytec_0 // "data"
     box_get
     assert // box exists
     pushint 2
-    intc_2 // 0
+    intc_3 // 0
     extract3
     dup
     intc_0 // 32
@@ -54,13 +70,14 @@ add:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     concat // on error: max array length exceeded
     pop
-    intc_2 // 0
-    bytec_3 // "data_length"
-    app_global_get_ex
-    assert // check data_length exists
+    bytec_0 // "data"
+    box_len
+    pop
+    intc_0 // 32
+    /
     itob
     dup
-    bytec_0 // 0x01
+    bytec_1 // 0x01
     b>=
     assert // underflow
     uncover 3
@@ -73,11 +90,11 @@ add:
     intc_1 // 8
     bzero
     uncover 2
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_0 // 0x01
+    bytec_1 // 0x01
     b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     concat
     dup
@@ -97,13 +114,13 @@ add:
     extract 6 2
     swap
     concat
-    bytec_2 // "data"
+    bytec_0 // "data"
     box_del
     pop
-    bytec_2 // "data"
+    bytec_0 // "data"
     swap
     box_put
-    intc_3 // 1
+    intc_2 // 1
     return
 
 
@@ -116,7 +133,7 @@ find(u256):
     ==
     assert // invalid number of bytes for arc4.uint256
     pushbytes ""
-    intc_2 // 0
+    intc_3 // 0
     itob
     dig 1
     loads
@@ -138,21 +155,21 @@ find(u256):
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/storage_array_ref.sol.Store.find(23,u256,u256,u256)(_data: uint64, _begin: bytes, _len: bytes, _value: bytes) -> bytes:
 find(23,u256,u256,u256):
     proto 4 1
-    intc_2 // 0
+    intc_3 // 0
     dupn 2
     frame_dig -2
     pushbytes 0x
     b==
     bnz find(23,u256,u256,u256)_if_body@3
     frame_dig -2
-    bytec_0 // 0x01
+    bytec_1 // 0x01
     b==
     bz find(23,u256,u256,u256)_after_if_else@4
     intc_1 // 8
@@ -225,14 +242,14 @@ find(23,u256,u256,u256)_else_body@6:
     b>
     bz find(23,u256,u256,u256)_else_body@8
     frame_dig 1
-    bytec_0 // 0x01
+    bytec_1 // 0x01
     b+
     frame_dig 0
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_0 // 0x01
+    bytec_1 // 0x01
     b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     frame_dig -4
     cover 2
