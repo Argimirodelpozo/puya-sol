@@ -4,6 +4,7 @@
 #include "builder/expressions/ExpressionBuilder.h"
 #include "builder/statements/StatementBuilder.h"
 #include "builder/storage/StorageMapper.h"
+#include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
 
 #include <libsolidity/ast/AST.h>
@@ -55,6 +56,9 @@ private:
 
 	/// Box-stored dynamic array variable names that need box_create in __postInit
 	std::vector<std::string> m_boxArrayVarNames;
+
+	/// Transient storage manager (blob-based, reset per transaction)
+	TransientStorage m_transientStorage;
 
 	/// The contract currently being built (for modifier override resolution).
 	solidity::frontend::ContractDefinition const* m_currentContract = nullptr;

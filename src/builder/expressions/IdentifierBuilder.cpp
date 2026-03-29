@@ -136,6 +136,18 @@ bool ExpressionBuilder::visit(solidity::frontend::Identifier const& _node)
 
 		if (varDecl->isStateVariable())
 		{
+			// Transient state variables → read from transient blob
+			if (m_transientStorage && m_transientStorage->isTransient(*varDecl))
+			{
+				auto* type = m_typeMapper.map(varDecl->type());
+				auto expr = m_transientStorage->buildRead(name, type, loc);
+				if (expr)
+				{
+					push(std::move(expr));
+					return false;
+				}
+			}
+
 			auto* type = m_typeMapper.map(varDecl->type());
 			auto kind = StorageMapper::shouldUseBoxStorage(*varDecl)
 				? awst::AppStorageKind::Box

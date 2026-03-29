@@ -2,6 +2,7 @@
 
 #include "awst/Node.h"
 #include "builder/sol-eb/BuiltinCallables.h"
+#include "builder/storage/TransientStorage.h"
 #include "builder/sol-intrinsics/IntrinsicMapper.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -97,6 +98,7 @@ public:
 private:
 	TypeMapper& m_typeMapper;
 	StorageMapper& m_storageMapper;
+	TransientStorage* m_transientStorage = nullptr;
 	eb::BuiltinCallableRegistry m_builtinCallables;
 	std::string m_sourceFile;
 	std::string m_contractName;
@@ -145,6 +147,7 @@ public:
 	void removeStorageAlias(int64_t _declId);
 
 	/// Set constructor context: immutable variables are writable during construction.
+	void setTransientStorage(TransientStorage* _ts) { m_transientStorage = _ts; }
 	void setInConstructor(bool _inConstructor) { m_inConstructor = _inConstructor; }
 	bool inConstructor() const { return m_inConstructor; }
 

@@ -86,7 +86,8 @@ std::vector<awst::AppStorageDefinition> StorageMapper::mapStateVariables(
 		{
 			if (var->isConstant())
 				continue;
-			// On Algorand, immutable vars are stored in global state (no code-embedded storage)
+			if (var->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Transient)
+				continue;
 			if (seen.count(var->name()))
 				continue;
 			seen.insert(var->name());

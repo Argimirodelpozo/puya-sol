@@ -19,6 +19,86 @@ bool ExpressionBuilder::visit(solidity::frontend::Assignment const& _node)
 	using Token = solidity::frontend::Token;
 	auto loc = makeLoc(_node.location());
 
+	// Transient state variable assignment: write to transient blob
+	if (m_transientStorage)
+	{
+		if (auto const* ident = dynamic_cast<solidity::frontend::Identifier const*>(&_node.leftHandSide()))
+		{
+			if (auto const* varDecl = dynamic_cast<solidity::frontend::VariableDeclaration const*>(
+				ident->annotation().referencedDeclaration))
+			{
+				if (varDecl->isStateVariable() && m_transientStorage->isTransient(*varDecl))
+				{
+					Token op = _node.assignmentOperator();
+					auto value = build(_node.rightHandSide());
+					std::string name = ident->name();
+					auto* type = m_typeMapper.map(varDecl->type());
+
+					// For compound assignment (+=, -=, etc.), read current value first
+					if (op != Token::Assign)
+					{
+						auto current = m_transientStorage->buildRead(name, type, loc);
+						// Apply the operator
+						awst::BigUIntBinaryOperator binOp;
+						switch (op)
+						{
+						case Token::AssignAdd: binOp = awst::BigUIntBinaryOperator::Add; break;
+						case Token::AssignSub: binOp = awst::BigUIntBinaryOperator::Sub; break;
+						case Token::AssignMul: binOp = awst::BigUIntBinaryOperator::Mult; break;
+						default: binOp = awst::BigUIntBinaryOperator::Add; break;
+						}
+						if (type == awst::WType::uint64Type())
+						{
+							awst::UInt64BinaryOperator u64Op;
+							switch (op)
+							{
+							case Token::AssignAdd: u64Op = awst::UInt64BinaryOperator::Add; break;
+							case Token::AssignSub: u64Op = awst::UInt64BinaryOperator::Sub; break;
+							case Token::AssignMul: u64Op = awst::UInt64BinaryOperator::Mult; break;
+							default: u64Op = awst::UInt64BinaryOperator::Add; break;
+							}
+							auto binExpr = std::make_shared<awst::UInt64BinaryOperation>();
+							binExpr->sourceLocation = loc;
+							binExpr->wtype = awst::WType::uint64Type();
+							binExpr->left = std::move(current);
+							binExpr->op = u64Op;
+							binExpr->right = std::move(value);
+							value = std::move(binExpr);
+						}
+						else
+						{
+							value = implicitNumericCast(std::move(value), awst::WType::biguintType(), loc);
+							auto binExpr = std::make_shared<awst::BigUIntBinaryOperation>();
+							binExpr->sourceLocation = loc;
+							binExpr->wtype = awst::WType::biguintType();
+							binExpr->left = std::move(current);
+							binExpr->op = binOp;
+							binExpr->right = std::move(value);
+							value = std::move(binExpr);
+						}
+					}
+
+					auto writeStmt = m_transientStorage->buildWrite(name, std::move(value), loc);
+					if (writeStmt)
+						m_pendingStatements.push_back(std::move(writeStmt));
+
+					// Assignment expressions return the written value — read it back
+					auto readBack = m_transientStorage->buildRead(name, type, loc);
+					if (readBack)
+						push(std::move(readBack));
+					else
+					{
+						auto vc = std::make_shared<awst::VoidConstant>();
+						vc->sourceLocation = loc;
+						vc->wtype = awst::WType::voidType();
+						push(std::move(vc));
+					}
+					return false;
+				}
+			}
+		}
+	}
+
 	auto target = build(_node.leftHandSide());
 	auto value = build(_node.rightHandSide());
 

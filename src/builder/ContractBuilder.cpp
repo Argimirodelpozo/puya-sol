@@ -163,6 +163,10 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	std::string contractName = _contract.name();
 	std::string contractId = m_sourceFile + "." + contractName;
 
+	// Collect transient state variables
+	m_transientStorage.collectVars(_contract, m_typeMapper);
+	// Note: setTransientStorage called after m_exprBuilder is created (below)
+
 	// Detect overloaded function names across all linearized base contracts
 	// Must happen BEFORE creating translators so constructor body uses correct names.
 	// Virtual overrides should NOT count as separate overloads — they occupy the same
@@ -215,6 +219,8 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	m_stmtBuilder = std::make_unique<StatementBuilder>(
 		*m_exprBuilder, m_typeMapper, m_sourceFile
 	);
+	m_exprBuilder->setTransientStorage(
+		m_transientStorage.hasTransientVars() ? &m_transientStorage : nullptr);
 
 	auto contract = std::make_shared<awst::Contract>();
 	contract->sourceLocation = makeLoc(_contract.location());
@@ -2168,6 +2174,13 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				std::make_move_iterator(decodeStmts.begin()),
 				std::make_move_iterator(decodeStmts.end())
 			);
+		}
+
+		// Initialize transient storage blob at method entry
+		if (m_transientStorage.hasTransientVars() && method.arc4MethodConfig.has_value())
+		{
+			auto initStmt = m_transientStorage.buildInit(method.sourceLocation);
+			method.body->body.insert(method.body->body.begin(), std::move(initStmt));
 		}
 
 		// Inline modifiers
