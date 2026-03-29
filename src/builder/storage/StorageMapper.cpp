@@ -86,9 +86,6 @@ std::vector<awst::AppStorageDefinition> StorageMapper::mapStateVariables(
 		{
 			if (var->isConstant())
 				continue;
-			// Transient state vars reset per-transaction — mapped to local vars, not storage
-			if (var->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Transient)
-				continue;
 			// On Algorand, immutable vars are stored in global state (no code-embedded storage)
 			if (seen.count(var->name()))
 				continue;
