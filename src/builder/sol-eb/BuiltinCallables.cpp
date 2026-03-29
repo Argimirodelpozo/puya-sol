@@ -96,6 +96,36 @@ std::shared_ptr<awst::Expression> BuiltinCallableRegistry::promoteToBigUInt(
 	return cast;
 }
 
+static void emitModByZeroCheck(
+	BuilderContext& _ctx,
+	std::shared_ptr<awst::Expression> const& _modulus,
+	awst::SourceLocation const& _loc)
+{
+	// assert(modulus != 0, "modulo by zero") — prevents optimizer from eliminating
+	auto zero = std::make_shared<awst::IntegerConstant>();
+	zero->sourceLocation = _loc;
+	zero->wtype = awst::WType::biguintType();
+	zero->value = "0";
+
+	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+	cmp->sourceLocation = _loc;
+	cmp->wtype = awst::WType::boolType();
+	cmp->lhs = _modulus;
+	cmp->op = awst::NumericComparison::Ne;
+	cmp->rhs = std::move(zero);
+
+	auto assertExpr = std::make_shared<awst::AssertExpression>();
+	assertExpr->sourceLocation = _loc;
+	assertExpr->wtype = awst::WType::voidType();
+	assertExpr->condition = std::move(cmp);
+	assertExpr->errorMessage = "modulo by zero";
+
+	auto stmt = std::make_shared<awst::ExpressionStatement>();
+	stmt->sourceLocation = _loc;
+	stmt->expr = std::move(assertExpr);
+	_ctx.prePendingStatements.push_back(std::move(stmt));
+}
+
 std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleMulmod(
 	BuilderContext& _ctx,
 	std::vector<std::shared_ptr<awst::Expression>>& _args,
@@ -106,6 +136,9 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleMulmod(
 	auto x = promoteToBigUInt(std::move(_args[0]), _loc);
 	auto y = promoteToBigUInt(std::move(_args[1]), _loc);
 	auto z = promoteToBigUInt(std::move(_args[2]), _loc);
+
+	// EVM reverts on mod by zero
+	emitModByZeroCheck(_ctx, z, _loc);
 
 	auto mul = std::make_shared<awst::BigUIntBinaryOperation>();
 	mul->sourceLocation = _loc;
@@ -134,6 +167,9 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleAddmod(
 	auto x = promoteToBigUInt(std::move(_args[0]), _loc);
 	auto y = promoteToBigUInt(std::move(_args[1]), _loc);
 	auto z = promoteToBigUInt(std::move(_args[2]), _loc);
+
+	// EVM reverts on mod by zero
+	emitModByZeroCheck(_ctx, z, _loc);
 
 	auto add = std::make_shared<awst::BigUIntBinaryOperation>();
 	add->sourceLocation = _loc;

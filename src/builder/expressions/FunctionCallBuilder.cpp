@@ -1904,6 +1904,29 @@ bool ExpressionBuilder::visit(solidity::frontend::FunctionCall const& _node)
 			promoteToBigUInt(y);
 			promoteToBigUInt(z);
 
+			// assert(z != 0) — EVM reverts on mod by zero
+			{
+				auto zero = std::make_shared<awst::IntegerConstant>();
+				zero->sourceLocation = loc;
+				zero->wtype = awst::WType::biguintType();
+				zero->value = "0";
+				auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+				cmp->sourceLocation = loc;
+				cmp->wtype = awst::WType::boolType();
+				cmp->lhs = z;
+				cmp->op = awst::NumericComparison::Ne;
+				cmp->rhs = std::move(zero);
+				auto assertExpr = std::make_shared<awst::AssertExpression>();
+				assertExpr->sourceLocation = loc;
+				assertExpr->wtype = awst::WType::voidType();
+				assertExpr->condition = std::move(cmp);
+				assertExpr->errorMessage = "modulo by zero";
+				auto stmt = std::make_shared<awst::ExpressionStatement>();
+				stmt->sourceLocation = loc;
+				stmt->expr = std::move(assertExpr);
+				m_prePendingStatements.push_back(std::move(stmt));
+			}
+
 			// x * y
 			auto mul = std::make_shared<awst::BigUIntBinaryOperation>();
 			mul->sourceLocation = loc;
@@ -1950,6 +1973,29 @@ bool ExpressionBuilder::visit(solidity::frontend::FunctionCall const& _node)
 			promoteToBigUInt(x);
 			promoteToBigUInt(y);
 			promoteToBigUInt(z);
+
+			// assert(z != 0) — EVM reverts on mod by zero
+			{
+				auto zero = std::make_shared<awst::IntegerConstant>();
+				zero->sourceLocation = loc;
+				zero->wtype = awst::WType::biguintType();
+				zero->value = "0";
+				auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+				cmp->sourceLocation = loc;
+				cmp->wtype = awst::WType::boolType();
+				cmp->lhs = z;
+				cmp->op = awst::NumericComparison::Ne;
+				cmp->rhs = std::move(zero);
+				auto assertExpr = std::make_shared<awst::AssertExpression>();
+				assertExpr->sourceLocation = loc;
+				assertExpr->wtype = awst::WType::voidType();
+				assertExpr->condition = std::move(cmp);
+				assertExpr->errorMessage = "modulo by zero";
+				auto stmt = std::make_shared<awst::ExpressionStatement>();
+				stmt->sourceLocation = loc;
+				stmt->expr = std::move(assertExpr);
+				m_prePendingStatements.push_back(std::move(stmt));
+			}
 
 			auto add = std::make_shared<awst::BigUIntBinaryOperation>();
 			add->sourceLocation = loc;
