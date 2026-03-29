@@ -755,6 +755,41 @@ bool ExpressionBuilder::visit(solidity::frontend::BinaryOperation const& _node)
 
 	auto result = buildBinaryOp(_node.getOperator(), std::move(left), std::move(right), resultType, loc);
 
+	// Unchecked wrapping for uint64 results:
+	// AVM uint64 doesn't naturally wrap — mask to Solidity bit width.
+	// result = result & ((1 << bits) - 1)
+	if (m_inUncheckedBlock && result->wtype == awst::WType::uint64Type())
+	{
+		auto const* solType = dynamic_cast<solidity::frontend::IntegerType const*>(
+			_node.annotation().type);
+		if (solType && !solType->isSigned())
+		{
+			unsigned bits = solType->numBits();
+			auto checkOp = _node.getOperator();
+			bool needsWrap = (checkOp == Token::Add || checkOp == Token::AssignAdd
+				|| checkOp == Token::Sub || checkOp == Token::AssignSub
+				|| checkOp == Token::Mul || checkOp == Token::AssignMul);
+
+			if (needsWrap && bits < 64)
+			{
+				// Mask: result % (1 << bits)
+				uint64_t modVal = uint64_t(1) << bits;
+				auto modConst = std::make_shared<awst::IntegerConstant>();
+				modConst->sourceLocation = loc;
+				modConst->wtype = awst::WType::uint64Type();
+				modConst->value = std::to_string(modVal);
+
+				auto masked = std::make_shared<awst::UInt64BinaryOperation>();
+				masked->sourceLocation = loc;
+				masked->wtype = awst::WType::uint64Type();
+				masked->left = std::move(result);
+				masked->op = awst::UInt64BinaryOperator::Mod;
+				masked->right = std::move(modConst);
+				result = std::move(masked);
+			}
+		}
+	}
+
 	// Checked arithmetic: for non-unchecked add/sub/mul on integer types,
 	// assert the result fits in the Solidity type's bit width.
 	// AVM biguint is arbitrary-precision and uint64 is 64-bit, so neither
