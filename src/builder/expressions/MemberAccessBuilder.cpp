@@ -485,12 +485,50 @@ bool ExpressionBuilder::visit(solidity::frontend::MemberAccess const& _node)
 				if (varDecl->isStateVariable() && StorageMapper::shouldUseBoxStorage(*varDecl)
 					&& dynamic_cast<solidity::frontend::ArrayType const*>(varDecl->type()))
 				{
-					// Read the _length global state variable
-					std::string lengthVar = ident->name() + "_length";
-					push(m_storageMapper.createStateRead(
-						lengthVar, awst::WType::uint64Type(),
-						awst::AppStorageKind::AppGlobal, loc
-					));
+					// length = box_len(key) / element_size
+					auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(varDecl->type());
+					auto* rawElemType = m_typeMapper.map(arrType->baseType());
+					auto* arc4ElemType = m_typeMapper.mapToARC4Type(rawElemType);
+					unsigned elemSize = StorageMapper::computeEncodedElementSize(arc4ElemType);
+
+					std::string varName = ident->name();
+					auto boxKey = std::make_shared<awst::BytesConstant>();
+					boxKey->sourceLocation = loc;
+					boxKey->wtype = awst::WType::bytesType();
+					boxKey->encoding = awst::BytesEncoding::Utf8;
+					boxKey->value = std::vector<uint8_t>(varName.begin(), varName.end());
+
+					// box_len returns (uint64, bool)
+					auto* tupleType = m_typeMapper.createType<awst::WTuple>(
+						std::vector<awst::WType const*>{awst::WType::uint64Type(), awst::WType::boolType()}
+					);
+					auto boxLen = std::make_shared<awst::IntrinsicCall>();
+					boxLen->sourceLocation = loc;
+					boxLen->wtype = tupleType;
+					boxLen->opCode = "box_len";
+					boxLen->stackArgs.push_back(std::move(boxKey));
+
+					// Extract the length (index 0)
+					auto lenVal = std::make_shared<awst::TupleItemExpression>();
+					lenVal->sourceLocation = loc;
+					lenVal->wtype = awst::WType::uint64Type();
+					lenVal->base = std::move(boxLen);
+					lenVal->index = 0;
+
+					// Divide by element size
+					auto elemSizeConst = std::make_shared<awst::IntegerConstant>();
+					elemSizeConst->sourceLocation = loc;
+					elemSizeConst->wtype = awst::WType::uint64Type();
+					elemSizeConst->value = std::to_string(elemSize);
+
+					auto divExpr = std::make_shared<awst::UInt64BinaryOperation>();
+					divExpr->sourceLocation = loc;
+					divExpr->wtype = awst::WType::uint64Type();
+					divExpr->left = std::move(lenVal);
+					divExpr->op = awst::UInt64BinaryOperator::FloorDiv;
+					divExpr->right = std::move(elemSizeConst);
+
+					push(std::move(divExpr));
 					return false;
 				}
 			}

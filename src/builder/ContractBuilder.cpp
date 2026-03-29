@@ -1124,59 +1124,16 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 						continue;
 
 					lengthInitialized.insert(var->name());
-
-					// Initialize varName_length = 0 in global state
-					std::string lenKeyStr = var->name() + "_length";
-					auto key = std::make_shared<awst::BytesConstant>();
-					key->sourceLocation = method.sourceLocation;
-					key->wtype = awst::WType::bytesType();
-					key->encoding = awst::BytesEncoding::Utf8;
-					key->value = std::vector<uint8_t>(lenKeyStr.begin(), lenKeyStr.end());
-
-					auto zero = std::make_shared<awst::IntegerConstant>();
-					zero->sourceLocation = method.sourceLocation;
-					zero->wtype = awst::WType::uint64Type();
-					zero->value = "0";
-
-					auto put = std::make_shared<awst::IntrinsicCall>();
-					put->sourceLocation = method.sourceLocation;
-					put->opCode = "app_global_put";
-					put->wtype = awst::WType::voidType();
-					put->stackArgs.push_back(key);
-					put->stackArgs.push_back(zero);
-
-					auto stmt = std::make_shared<awst::ExpressionStatement>();
-					stmt->sourceLocation = method.sourceLocation;
-					stmt->expr = put;
-					createBlock->body.push_back(stmt);
-
-					// Also create the box with size 0 for the dynamic array
-					auto boxKey = std::make_shared<awst::BytesConstant>();
-					boxKey->sourceLocation = method.sourceLocation;
-					boxKey->wtype = awst::WType::bytesType();
-					boxKey->encoding = awst::BytesEncoding::Utf8;
-					std::string varName = var->name();
-					boxKey->value = std::vector<uint8_t>(varName.begin(), varName.end());
-
-					auto boxSize = std::make_shared<awst::IntegerConstant>();
-					boxSize->sourceLocation = method.sourceLocation;
-					boxSize->wtype = awst::WType::uint64Type();
-					boxSize->value = "0";
-
-					auto boxCreate = std::make_shared<awst::IntrinsicCall>();
-					boxCreate->sourceLocation = method.sourceLocation;
-					boxCreate->opCode = "box_create";
-					boxCreate->wtype = awst::WType::boolType();
-					boxCreate->stackArgs.push_back(boxKey);
-					boxCreate->stackArgs.push_back(boxSize);
-
-					auto boxStmt = std::make_shared<awst::ExpressionStatement>();
-					boxStmt->sourceLocation = method.sourceLocation;
-					boxStmt->expr = boxCreate;
-					createBlock->body.push_back(boxStmt);
+					// Dynamic array boxes are created in __postInit (after funding)
+					// Length is derived from box_len / element_size (no separate counter)
+					m_boxArrayVarNames.push_back(var->name());
 				}
 			}
 		}
+
+		// Force __postInit if we have box array vars that need box_create
+		if (!m_boxArrayVarNames.empty())
+			needsPostInit = true;
 
 		// Collect explicit base constructor calls from the constructor's modifiers
 		auto const* constructor = _contract.constructor();
@@ -1457,6 +1414,33 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			clearStmt->sourceLocation = method.sourceLocation;
 			clearStmt->expr = clearPending;
 			postInitBody->body.push_back(std::move(clearStmt));
+
+			// Create boxes for dynamic array state variables
+			for (auto const& varName: m_boxArrayVarNames)
+			{
+				auto boxKey = std::make_shared<awst::BytesConstant>();
+				boxKey->sourceLocation = method.sourceLocation;
+				boxKey->wtype = awst::WType::bytesType();
+				boxKey->encoding = awst::BytesEncoding::Utf8;
+				boxKey->value = std::vector<uint8_t>(varName.begin(), varName.end());
+
+				auto boxSize = std::make_shared<awst::IntegerConstant>();
+				boxSize->sourceLocation = method.sourceLocation;
+				boxSize->wtype = awst::WType::uint64Type();
+				boxSize->value = "0";
+
+				auto boxCreate = std::make_shared<awst::IntrinsicCall>();
+				boxCreate->sourceLocation = method.sourceLocation;
+				boxCreate->opCode = "box_create";
+				boxCreate->wtype = awst::WType::boolType();
+				boxCreate->stackArgs.push_back(std::move(boxKey));
+				boxCreate->stackArgs.push_back(std::move(boxSize));
+
+				auto boxStmt = std::make_shared<awst::ExpressionStatement>();
+				boxStmt->sourceLocation = method.sourceLocation;
+				boxStmt->expr = std::move(boxCreate);
+				postInitBody->body.push_back(std::move(boxStmt));
+			}
 
 			// Inline base constructor bodies into __postInit
 			auto const& linearized = _contract.annotation().linearizedBaseContracts;
