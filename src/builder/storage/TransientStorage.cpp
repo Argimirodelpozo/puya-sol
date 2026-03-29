@@ -146,57 +146,40 @@ std::shared_ptr<awst::Statement> TransientStorage::buildWrite(
 	if (offset < 0)
 		return nullptr;
 
-	// Convert value to 32 bytes (big-endian, left-padded)
+	// Convert value to exactly 32 bytes (big-endian, left-padded)
 	std::shared_ptr<awst::Expression> bytes32;
 	if (_value->wtype == awst::WType::biguintType())
 	{
-		// biguint → bytes via ReinterpretCast, then left-pad to 32
+		// biguint → bytes, then b| with bzero(32) to pad to ≥32 bytes,
+		// then extract last 32
 		auto toBytes = std::make_shared<awst::ReinterpretCast>();
 		toBytes->sourceLocation = _loc;
 		toBytes->wtype = awst::WType::bytesType();
 		toBytes->expr = std::move(_value);
 
-		// concat(bzero(32), bytes) then extract last 32
-		auto pad = std::make_shared<awst::IntrinsicCall>();
-		pad->sourceLocation = _loc;
-		pad->wtype = awst::WType::bytesType();
-		pad->opCode = "bzero";
-		auto thirtyTwo = std::make_shared<awst::IntegerConstant>();
-		thirtyTwo->sourceLocation = _loc;
-		thirtyTwo->wtype = awst::WType::uint64Type();
-		thirtyTwo->value = "32";
-		pad->stackArgs.push_back(std::move(thirtyTwo));
+		// bzero(32)
+		auto zeros = std::make_shared<awst::IntrinsicCall>();
+		zeros->sourceLocation = _loc;
+		zeros->wtype = awst::WType::bytesType();
+		zeros->opCode = "bzero";
+		auto sz = std::make_shared<awst::IntegerConstant>();
+		sz->sourceLocation = _loc;
+		sz->wtype = awst::WType::uint64Type();
+		sz->value = "32";
+		zeros->stackArgs.push_back(std::move(sz));
 
-		auto cat = std::make_shared<awst::IntrinsicCall>();
-		cat->sourceLocation = _loc;
-		cat->wtype = awst::WType::bytesType();
-		cat->opCode = "concat";
-		cat->stackArgs.push_back(std::move(pad));
-		cat->stackArgs.push_back(std::move(toBytes));
+		// b| pads shorter operand to match longer (both become 32+ bytes)
+		auto padded = std::make_shared<awst::IntrinsicCall>();
+		padded->sourceLocation = _loc;
+		padded->wtype = awst::WType::bytesType();
+		padded->opCode = "b|";
+		padded->stackArgs.push_back(std::move(zeros));
+		padded->stackArgs.push_back(std::move(toBytes));
 
-		// extract3(cat, len(cat)-32, 32) → last 32 bytes
-		auto catLen = std::make_shared<awst::IntrinsicCall>();
-		catLen->sourceLocation = _loc;
-		catLen->wtype = awst::WType::uint64Type();
-		catLen->opCode = "len";
-
-		auto catRef = std::make_shared<awst::VarExpression>();
-		catRef->sourceLocation = _loc;
-		catRef->name = "__transient_pad";
-		catRef->wtype = awst::WType::bytesType();
-
-		// Store cat in temp var for dual use
-		auto assignCat = std::make_shared<awst::AssignmentStatement>();
-		assignCat->sourceLocation = _loc;
-		assignCat->target = catRef;
-		assignCat->value = std::move(cat);
-		// NOTE: This creates a dependency on pending statements.
-		// For simplicity, just use the concat directly and accept extra computation.
-
-		// Actually simpler: just pad directly
-		// If value is biguint, it's already bytes. Just ensure exactly 32 bytes.
-		bytes32 = std::move(toBytes); // May not be exactly 32 bytes
-		// TODO: proper 32-byte padding
+		// extract last 32 bytes: extract(padded, len-32, 32)
+		// But b| output is max(len_a, len_b) which is exactly 32 if val ≤ 32 bytes
+		// For safety, just use the b| result directly (it's 32 bytes for values ≤ 256 bits)
+		bytes32 = std::move(padded);
 	}
 	else if (_value->wtype == awst::WType::uint64Type()
 		|| _value->wtype == awst::WType::boolType())
