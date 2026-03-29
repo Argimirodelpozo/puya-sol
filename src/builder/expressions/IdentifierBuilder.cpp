@@ -136,6 +136,18 @@ bool ExpressionBuilder::visit(solidity::frontend::Identifier const& _node)
 
 		if (varDecl->isStateVariable())
 		{
+			// Transient state vars → local variables (reset each transaction)
+			if (varDecl->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Transient)
+			{
+				auto* type = m_typeMapper.map(varDecl->type());
+				auto var = std::make_shared<awst::VarExpression>();
+				var->sourceLocation = loc;
+				var->wtype = type;
+				var->name = "__t_" + name;
+				push(var);
+				return false;
+			}
+
 			auto* type = m_typeMapper.map(varDecl->type());
 			auto kind = StorageMapper::shouldUseBoxStorage(*varDecl)
 				? awst::AppStorageKind::Box
