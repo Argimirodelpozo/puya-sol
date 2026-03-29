@@ -301,7 +301,9 @@ def test_semantic(test, localnet_session):
                     if "fee too small" in err_str:
                         # Inner txns need fee pooling — retry with extra budget
                         from run_tests import _call_with_extra_budget
-                        result = _call_with_extra_budget(app, method, args if args else [], extra_calls=3)
+                        # Use full ABI signature for method resolution
+                        method_sig = matched_method.to_abi_method().get_signature() if matched_method else method
+                        result = _call_with_extra_budget(app, method_sig, args if args else [], extra_calls=3)
                     else:
                         raise
                 actual = result.abi_return
