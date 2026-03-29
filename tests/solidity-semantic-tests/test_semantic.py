@@ -139,14 +139,14 @@ def test_semantic(test, localnet_session):
     contracts = compile_sol(test.source_path, out_dir)
     if not contracts:
         log.info("  COMPILE FAILED %s/%s", test.category, test.name)
-        pytest.xfail("compilation failed")
+        pytest.skip("compilation failed")
 
     # Find main contract (last deployable)
     deployable = {k: v for k, v in contracts.items()
                   if v["approval_teal"].exists()}
     if not deployable:
         log.info("  NO DEPLOYABLE %s/%s", test.category, test.name)
-        pytest.xfail("no deployable contracts")
+        pytest.skip("no deployable contracts")
 
     contract_name = find_last_contract(test.source_path, deployable)
     artifacts = deployable[contract_name]
@@ -156,7 +156,7 @@ def test_semantic(test, localnet_session):
     app = deploy_app(localnet, account, artifacts)
     if not app:
         log.info("  DEPLOY FAILED %s/%s", test.category, test.name)
-        pytest.xfail("deployment failed")
+        pytest.skip("deployment failed")
     log.info("  DEPLOYED %s/%s (app_id=%s)", test.category, test.name, app.app_id)
 
     # Execute each call assertion
@@ -410,7 +410,7 @@ def test_semantic(test, localnet_session):
                 failures.append(f"{call.raw_line}: {type(ex).__name__}: {str(ex)[:80]}")
 
     if failures:
-        log.info("  XFAIL %s/%s: %s", test.category, test.name, failures[0][:80])
-        pytest.xfail("\n".join(failures))
+        log.info("  FAIL %s/%s: %s", test.category, test.name, failures[0][:80])
+        pytest.fail("\n".join(failures))
     else:
         log.info("  PASS %s/%s (%d assertions)", test.category, test.name, len(test.calls))
