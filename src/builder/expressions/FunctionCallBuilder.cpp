@@ -106,6 +106,40 @@ bool ExpressionBuilder::visit(solidity::frontend::FunctionCall const& _node)
 		{
 			auto* targetType = m_typeMapper.map(_node.annotation().type);
 
+			// Enum range check: EnumType(x) must assert x < numMembers
+			if (auto const* enumType = dynamic_cast<EnumType const*>(_node.annotation().type))
+			{
+				auto argExpr = build(*_node.arguments()[0]);
+				auto result = implicitNumericCast(std::move(argExpr), awst::WType::uint64Type(), loc);
+
+				unsigned numMembers = enumType->numberOfMembers();
+				auto maxVal = std::make_shared<awst::IntegerConstant>();
+				maxVal->sourceLocation = loc;
+				maxVal->wtype = awst::WType::uint64Type();
+				maxVal->value = std::to_string(numMembers);
+
+				auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+				cmp->sourceLocation = loc;
+				cmp->wtype = awst::WType::boolType();
+				cmp->lhs = result;
+				cmp->op = awst::NumericComparison::Lt;
+				cmp->rhs = std::move(maxVal);
+
+				auto assertExpr = std::make_shared<awst::AssertExpression>();
+				assertExpr->sourceLocation = loc;
+				assertExpr->wtype = awst::WType::voidType();
+				assertExpr->condition = std::move(cmp);
+				assertExpr->errorMessage = "enum out of range";
+
+				auto stmt = std::make_shared<awst::ExpressionStatement>();
+				stmt->sourceLocation = loc;
+				stmt->expr = std::move(assertExpr);
+				m_prePendingStatements.push_back(std::move(stmt));
+
+				push(std::move(result));
+				return false;
+			}
+
 			// address(expr) → convert integer/bytes to 32-byte account
 			if (targetType == awst::WType::accountType())
 			{

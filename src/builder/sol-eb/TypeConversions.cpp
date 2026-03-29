@@ -423,9 +423,35 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToEnum(
 	auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(_targetSolType);
 	if (!enumType) return nullptr;
 
-	// Enums are uint64 on AVM — just coerce
+	// Coerce to uint64
 	auto result = TypeCoercion::implicitNumericCast(
 		std::move(_arg), awst::WType::uint64Type(), _loc);
+
+	// EVM reverts with Panic(0x21) if value >= numMembers
+	unsigned numMembers = enumType->numberOfMembers();
+	auto maxVal = std::make_shared<awst::IntegerConstant>();
+	maxVal->sourceLocation = _loc;
+	maxVal->wtype = awst::WType::uint64Type();
+	maxVal->value = std::to_string(numMembers);
+
+	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+	cmp->sourceLocation = _loc;
+	cmp->wtype = awst::WType::boolType();
+	cmp->lhs = result; // shared_ptr ref
+	cmp->op = awst::NumericComparison::Lt;
+	cmp->rhs = std::move(maxVal);
+
+	auto assertExpr = std::make_shared<awst::AssertExpression>();
+	assertExpr->sourceLocation = _loc;
+	assertExpr->wtype = awst::WType::voidType();
+	assertExpr->condition = std::move(cmp);
+	assertExpr->errorMessage = "enum out of range";
+
+	auto stmt = std::make_shared<awst::ExpressionStatement>();
+	stmt->sourceLocation = _loc;
+	stmt->expr = std::move(assertExpr);
+	_ctx.prePendingStatements.push_back(std::move(stmt));
+
 	return std::make_unique<SolEnumBuilder>(_ctx, enumType, std::move(result));
 }
 
