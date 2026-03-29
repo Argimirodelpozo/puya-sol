@@ -4,10 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/operators/transient_storage_variable_increment_decrement.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32
-    bytecblock "x" 0x01
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 "x" 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "x"
+    bytec_1 // "x"
     pushbytes 0x
     app_global_put
     intc_0 // 1
@@ -38,18 +38,30 @@ main_f_route@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/operators/transient_storage_variable_increment_decrement.sol.C.f[routing]() -> void:
 f:
     pushint 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
     assert // check x exists
-    pushbytes 0x02
+    bytec_2 // 0x01
     b+
-    bytec_1 // 0x01
-    b-
-    bytec_1 // 0x01
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_2 // 0x01
     b+
-    bytec_1 // 0x01
-    b-
-    bytec_0 // "x"
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_2 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // "x"
     dig 1
     app_global_put
     dup

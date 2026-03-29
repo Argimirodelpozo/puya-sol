@@ -1,0 +1,76 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/value_for_constructor.sol.Helper.approval_program() -> uint64:
+main:
+    intcblock 0 1
+    bytecblock "name" "flag" 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "name"
+    pushbytes 0x
+    app_global_put
+    bytec_1 // "flag"
+    intc_0 // 0
+    app_global_put
+    txna ApplicationArgs 0
+    txna ApplicationArgs 1
+    btoi
+    bytec_0 // "name"
+    uncover 2
+    app_global_put
+    bytec_1 // "flag"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x0a5c26e3 0x2fe85e04 // method "getName()byte[3]", method "getFlag()bool"
+    txna ApplicationArgs 0
+    match getName getFlag
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/value_for_constructor.sol.Helper.getName[routing]() -> void:
+getName:
+    intc_0 // 0
+    bytec_0 // "name"
+    app_global_get_ex
+    assert // check name exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/value_for_constructor.sol.Helper.getFlag[routing]() -> void:
+getFlag:
+    intc_0 // 0
+    bytec_1 // "flag"
+    app_global_get_ex
+    assert // check flag exists
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

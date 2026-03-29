@@ -1,0 +1,62 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/return_storage_pointers.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 32
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytes "arr1_length"
+    intc_0 // 0
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0x595e23e2 // method "g()(uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_g_route@4
+    err
+
+main_g_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b g
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/return_storage_pointers.sol.C.g[routing]() -> void:
+g:
+    intc_0 // 0
+    pushbytes ""
+    loads
+    len
+    intc_2 // 32
+    /
+    itob
+    swap
+    len
+    itob
+    intc_2 // 32
+    bzero
+    uncover 2
+    dig 1
+    b|
+    cover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

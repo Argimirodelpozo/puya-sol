@@ -1,0 +1,105 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_static_array_argument.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    bytecblock "a" 0x "b" 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "a"
+    bytec_1 // 0x
+    app_global_put
+    bytec_2 // "b"
+    bytec_1 // 0x
+    app_global_put
+    txna ApplicationArgs 1
+    bytec_0 // "a"
+    txna ApplicationArgs 0
+    app_global_put
+    bytec_2 // "b"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb5251388 0x2930a603 // method "a()uint256", method "b(uint256)uint256"
+    txna ApplicationArgs 0
+    match a b
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_static_array_argument.sol.C.a[routing]() -> void:
+a:
+    pushint 0
+    bytec_0 // "a"
+    app_global_get_ex
+    assert // check a exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_static_array_argument.sol.C.b[routing]() -> void:
+b:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_2 // "b"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

@@ -1,0 +1,165 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/gas_and_value_basic.sol.test.approval_program() -> uint64:
+main:
+    intcblock 0 6 24 1
+    bytecblock "h" 0x151f7c75 TMPL_CHILD_helper_APPROVAL TMPL_CHILD_helper_CLEAR
+    txn ApplicationID
+    bnz main_after_if_else@3
+    itxn_begin
+    bytec_2 // TMPL_CHILD_helper_APPROVAL
+    bytec_3 // TMPL_CHILD_helper_CLEAR
+    intc_1 // 6
+    itxn_field TypeEnum
+    pushint 16
+    itxn_field GlobalNumUint
+    pushint 16
+    itxn_field GlobalNumByteSlice
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ClearStateProgramPages
+    itxn_field ApprovalProgramPages
+    itxn_submit
+    itxn CreatedApplicationID
+    intc_2 // 24
+    bzero
+    swap
+    itob
+    concat
+    bytec_0 // "h"
+    swap
+    app_global_put
+    intc_3 // 1
+    return
+
+main_after_if_else@3:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xafa0ab92 0xd1b41813 0x1cded7a1 // method "sendAmount(uint256)uint256", method "outOfGas()bool", method "checkState()(bool,uint256)"
+    txna ApplicationArgs 0
+    match sendAmount outOfGas checkState
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/gas_and_value_basic.sol.test.sendAmount[routing]() -> void:
+sendAmount:
+    txna ApplicationArgs 1
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    itxn_begin
+    intc_0 // 0
+    bytec_0 // "h"
+    app_global_get_ex
+    assert // check h exists
+    intc_2 // 24
+    extract_uint64
+    intc_1 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0xad7db34f // method "getBalance()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    len
+    pushint 32
+    <=
+    assert // overflow
+    pushint 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/gas_and_value_basic.sol.test.outOfGas[routing]() -> void:
+outOfGas:
+    itxn_begin
+    intc_0 // 0
+    bytec_0 // "h"
+    app_global_get_ex
+    assert // check h exists
+    intc_2 // 24
+    extract_uint64
+    intc_1 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x19d9fbcf // method "setFlag()void"
+    itxn_field ApplicationArgs
+    itxn_submit
+    pushbytes 0x151f7c7580
+    log
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/gas_and_value_basic.sol.test.checkState[routing]() -> void:
+checkState:
+    itxn_begin
+    intc_0 // 0
+    bytec_0 // "h"
+    app_global_get_ex
+    assert // check h exists
+    intc_2 // 24
+    extract_uint64
+    intc_1 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x2fe85e04 // method "getFlag()bool"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    intc_0 // 0
+    getbit
+    intc_0 // 0
+    !=
+    global CurrentApplicationAddress
+    acct_params_get AcctBalance
+    pop
+    itob
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 3
+    setbit
+    pushint 32
+    bzero
+    uncover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return

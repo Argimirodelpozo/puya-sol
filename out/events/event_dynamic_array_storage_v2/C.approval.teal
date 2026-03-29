@@ -1,0 +1,167 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_dynamic_array_storage_v2.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 0 2 1
+    bytecblock "arr"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytes "arr_length"
+    intc_1 // 0
+    app_global_put
+    intc_3 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0x7bc493c6 // method "createEvent(uint256)void"
+    txna ApplicationArgs 0
+    match main_createEvent_route@4
+    err
+
+main_createEvent_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b createEvent
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_dynamic_array_storage_v2.sol.C.createEvent[routing]() -> void:
+createEvent:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    pushbytes ""
+
+createEvent_while_top@2:
+    dup
+    loads
+    len
+    intc_0 // 32
+    /
+    itob
+    pushbytes 0x03
+    b<
+    bnz createEvent_while_top@2
+    dig 1
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    dig 3
+    dup
+    cover 2
+    dig 1
+    b|
+    bytec_0 // "arr"
+    box_get
+    assert // box exists
+    intc_2 // 2
+    intc_1 // 0
+    extract3
+    swap
+    replace2 0 // on error: index access is out of bounds
+    dup
+    len
+    intc_0 // 32
+    /
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // "arr"
+    box_del
+    pop
+    bytec_0 // "arr"
+    dig 1
+    box_put
+    dig 2
+    pushbytes 0x01
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    swap
+    intc_2 // 2
+    intc_1 // 0
+    extract3
+    swap
+    replace2 32 // on error: index access is out of bounds
+    dup
+    len
+    intc_0 // 32
+    /
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // "arr"
+    box_del
+    pop
+    bytec_0 // "arr"
+    dig 1
+    box_put
+    uncover 2
+    pushbytes 0x02
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    swap
+    intc_2 // 2
+    intc_1 // 0
+    extract3
+    swap
+    replace2 64 // on error: index access is out of bounds
+    dup
+    len
+    intc_0 // 32
+    /
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // "arr"
+    box_del
+    pop
+    bytec_0 // "arr"
+    swap
+    box_put
+    dup
+    loads
+    dup
+    len
+    intc_0 // 32
+    /
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0xa41861880002
+    swap
+    concat
+    log
+    intc_3 // 1
+    return

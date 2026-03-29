@@ -1,0 +1,231 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/array_mapping_struct.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    bytecblock 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" "n" 0x6d3d0ad12b8ee8928edf248ca91ca55600fb383f07c32bff1d6dec472b25cf59a7 0x6d9dc370feada93d1fd34c91899db53bf71d131f52af4c0c16c9d8d6b28ac27464 0x6e3d0ad12b8ee8928edf248ca91ca55600fb383f07c32bff1d6dec472b25cf59a7 0x6e9dc370feada93d1fd34c91899db53bf71d131f52af4c0c16c9d8d6b28ac27464 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "n"
+    pushbytes 0x
+    app_global_put
+    bytec_1 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xc4886c13 0x9c4bd9b7 // method "__postInit()void", method "m(uint256,uint256)(uint256,uint256)", method "n(uint256,uint256)(uint256,uint256)"
+    txna ApplicationArgs 0
+    match __postInit m n
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/array_mapping_struct.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    pushint 0
+    app_global_put
+    bytec_3 // 0x6d3d0ad12b8ee8928edf248ca91ca55600fb383f07c32bff1d6dec472b25cf59a7
+    box_get
+    bytec_0 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 32 32
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
+    swap
+    concat
+    extract 0 32
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    concat
+    bytec_3 // 0x6d3d0ad12b8ee8928edf248ca91ca55600fb383f07c32bff1d6dec472b25cf59a7
+    swap
+    box_put
+    bytec 4 // 0x6d9dc370feada93d1fd34c91899db53bf71d131f52af4c0c16c9d8d6b28ac27464
+    box_get
+    bytec_0 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 32 32
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
+    swap
+    concat
+    extract 0 32
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
+    concat
+    bytec 4 // 0x6d9dc370feada93d1fd34c91899db53bf71d131f52af4c0c16c9d8d6b28ac27464
+    swap
+    box_put
+    bytec 5 // 0x6e3d0ad12b8ee8928edf248ca91ca55600fb383f07c32bff1d6dec472b25cf59a7
+    box_get
+    bytec_0 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 32 32
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
+    swap
+    concat
+    extract 0 32
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
+    concat
+    bytec 5 // 0x6e3d0ad12b8ee8928edf248ca91ca55600fb383f07c32bff1d6dec472b25cf59a7
+    swap
+    box_put
+    bytec 6 // 0x6e9dc370feada93d1fd34c91899db53bf71d131f52af4c0c16c9d8d6b28ac27464
+    box_get
+    bytec_0 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 32 32
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000009
+    swap
+    concat
+    extract 0 32
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a
+    concat
+    bytec 6 // 0x6e9dc370feada93d1fd34c91899db53bf71d131f52af4c0c16c9d8d6b28ac27464
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/array_mapping_struct.sol.C.m[routing]() -> void:
+m:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    sha256
+    pushbytes "m"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    swap
+    dig 2
+    b|
+    swap
+    uncover 2
+    b|
+    concat
+    bytec 7 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/array_mapping_struct.sol.C.n[routing]() -> void:
+n:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    sha256
+    bytec_2 // "n"
+    swap
+    concat
+    box_get
+    bytec_0 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    swap
+    dig 2
+    b|
+    swap
+    uncover 2
+    b|
+    concat
+    bytec 7 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

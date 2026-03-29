@@ -1,0 +1,227 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_array_length.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 2 0 1
+    bytecblock 0x 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_3 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x72a794c0 0xa7b961a7 0x9d94d93b // method "f(uint256[])uint256", method "f(uint256[][])(uint256,uint256,uint256)", method "f(uint256[2])uint256"
+    txna ApplicationArgs 0
+    match f(4) f(17) f(58)
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_array_length.sol.C.f(4)[routing]() -> void:
+f(4):
+    txna ApplicationArgs 1
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    intc_1 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    extract 2 0
+    len
+    intc_0 // 32
+    /
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_array_length.sol.C.f(17)[routing]() -> void:
+f(17):
+    intc_2 // 0
+    dupn 2
+    txna ApplicationArgs 1
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    cover 2
+    intc_1 // 2
+    *
+    swap
+    dup
+    len
+    swap
+    extract 2 0
+    intc_2 // 0
+
+f(17)_for_header@1:
+    dup
+    dig 5
+    <
+    bz f(17)_after_for@4
+    dupn 2
+    intc_1 // 2
+    *
+    dig 3
+    dup
+    uncover 2
+    extract_uint16 // on error: invalid array encoding
+    dup
+    dig 7
+    dup
+    cover 4
+    ==
+    assert // invalid tail pointer for (len+(len+uint256[])[])
+    dig 1
+    len
+    substring3
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    intc_1 // 2
+    +
+    +
+    bury 5
+    intc_3 // 1
+    +
+    bury 1
+    b f(17)_for_header@1
+
+f(17)_after_for@4:
+    dig 3
+    intc_1 // 2
+    +
+    dig 3
+    dup
+    uncover 2
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>
+    bytec_0 // 0x
+    bury 8
+    bytec_0 // 0x
+    bury 7
+    itob
+    dup
+    bury 9
+    bytec_0 // 0x
+    b>
+    bz f(17)_after_if_else@7
+    dig 4
+    assert // index access is out of bounds
+    dig 1
+    dup
+    intc_2 // 0
+    extract_uint16
+    dup2
+    extract_uint16
+    intc_0 // 32
+    *
+    intc_1 // 2
+    +
+    extract3
+    intc_1 // 2
+    intc_2 // 0
+    extract3
+    len
+    intc_0 // 32
+    /
+    itob
+    bury 7
+
+f(17)_after_if_else@7:
+    dig 7
+    pushbytes 0x01
+    b>
+    bz f(17)_after_if_else@9
+    intc_3 // 1
+    dig 5
+    <
+    assert // index access is out of bounds
+    dig 1
+    dup
+    intc_1 // 2
+    extract_uint16
+    dup2
+    extract_uint16
+    intc_0 // 32
+    *
+    intc_1 // 2
+    +
+    extract3
+    intc_1 // 2
+    intc_2 // 0
+    extract3
+    len
+    intc_0 // 32
+    /
+    itob
+    bury 6
+
+f(17)_after_if_else@9:
+    intc_0 // 32
+    bzero
+    dig 8
+    dig 1
+    b|
+    dig 8
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    concat
+    dig 7
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_array_length.sol.C.f(58)[routing]() -> void:
+f(58):
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
+    log
+    intc_3 // 1
+    return

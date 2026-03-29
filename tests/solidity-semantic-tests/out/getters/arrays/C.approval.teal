@@ -1,0 +1,115 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/arrays.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 2 0 1
+    bytecblock 0x "a"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "a"
+    bytec_0 // 0x
+    app_global_put
+    bytec_0 // 0x
+    intc_1 // 2
+    extract_uint16
+    bytec_0 // 0x
+    dig 1
+    extract_uint16
+    pushint 8
+    *
+    intc_1 // 2
+    +
+    bytec_0 // 0x
+    cover 2
+    extract3
+    intc_1 // 2
+    intc_2 // 0
+    extract3
+    dup
+    pushint 3
+    itob
+    concat // on error: max array length exceeded
+    pop
+    pushint 4
+    itob
+    concat // on error: max array length exceeded
+    pop
+    intc_3 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0x23e53d16 // method "a(uint256,uint256)uint64"
+    txna ApplicationArgs 0
+    match main_a_route@4
+    err
+
+main_a_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b a
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/arrays.sol.C.a[routing]() -> void:
+a:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    sha256
+    bytec_1 // "a"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    itob
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return

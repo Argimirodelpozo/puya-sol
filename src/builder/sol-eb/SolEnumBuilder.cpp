@@ -1,0 +1,52 @@
+/// @file SolEnumBuilder.cpp
+/// Solidity enum type builder — enums encoded as uint64 on AVM.
+
+#include "builder/sol-eb/SolEnumBuilder.h"
+
+namespace puyasol::builder::eb
+{
+
+std::unique_ptr<InstanceBuilder> SolEnumBuilder::compare(
+	InstanceBuilder& _other, BuilderComparisonOp _op,
+	awst::SourceLocation const& _loc)
+{
+	// Enums compare as uint64
+	if (_other.wtype() != awst::WType::uint64Type())
+		return nullptr;
+
+	auto e = std::make_shared<awst::NumericComparisonExpression>();
+	e->sourceLocation = _loc;
+	e->wtype = awst::WType::boolType();
+	e->lhs = resolve();
+	e->rhs = _other.resolve();
+
+	switch (_op)
+	{
+	case BuilderComparisonOp::Eq: e->op = awst::NumericComparison::Eq; break;
+	case BuilderComparisonOp::Ne: e->op = awst::NumericComparison::Ne; break;
+	case BuilderComparisonOp::Lt: e->op = awst::NumericComparison::Lt; break;
+	case BuilderComparisonOp::Lte: e->op = awst::NumericComparison::Lte; break;
+	case BuilderComparisonOp::Gt: e->op = awst::NumericComparison::Gt; break;
+	case BuilderComparisonOp::Gte: e->op = awst::NumericComparison::Gte; break;
+	}
+	return std::make_unique<SolEnumBuilder>(m_ctx, m_enumType, std::move(e));
+}
+
+std::unique_ptr<InstanceBuilder> SolEnumBuilder::bool_eval(
+	awst::SourceLocation const& _loc, bool _negate)
+{
+	auto zero = std::make_shared<awst::IntegerConstant>();
+	zero->sourceLocation = _loc;
+	zero->wtype = awst::WType::uint64Type();
+	zero->value = "0";
+
+	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+	cmp->sourceLocation = _loc;
+	cmp->wtype = awst::WType::boolType();
+	cmp->lhs = resolve();
+	cmp->rhs = std::move(zero);
+	cmp->op = _negate ? awst::NumericComparison::Eq : awst::NumericComparison::Ne;
+	return std::make_unique<SolEnumBuilder>(m_ctx, m_enumType, std::move(cmp));
+}
+
+} // namespace puyasol::builder::eb

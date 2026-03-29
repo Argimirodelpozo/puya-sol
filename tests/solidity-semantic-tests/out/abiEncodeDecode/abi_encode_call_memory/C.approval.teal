@@ -1,0 +1,57 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_memory.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 16 0
+    bytecblock TMPL_CHILD_D_APPROVAL TMPL_CHILD_D_CLEAR
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x40e33532 0x32064c45 // method "something()void", method "test()byte[4]"
+    txna ApplicationArgs 0
+    match main_something_route@5 test
+    err
+
+main_something_route@5:
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_memory.sol.C.test[routing]() -> void:
+test:
+    itxn_begin
+    bytec_0 // TMPL_CHILD_D_APPROVAL
+    bytec_1 // TMPL_CHILD_D_CLEAR
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 16
+    itxn_field GlobalNumUint
+    intc_1 // 16
+    itxn_field GlobalNumByteSlice
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ClearStateProgramPages
+    itxn_field ApprovalProgramPages
+    itxn_submit
+    intc_2 // 0
+    assert
+    pushbytes 0x151f7c75
+    log
+    intc_0 // 1
+    return

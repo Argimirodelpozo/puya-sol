@@ -1,0 +1,352 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mappings_array2d_pop_delete.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1 2 0
+    bytecblock 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 "a" 0x0000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x2eb8d5fd 0xb5288a7b 0xd2e971a4 0x97d26e57 0x4075f398 // method "n1(uint256,uint256)void", method "n2()void", method "map(uint256)uint256", method "p()void", method "d()uint256"
+    txna ApplicationArgs 0
+    match n1 n2 map p main_d_route@9
+    err
+
+main_d_route@9:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mappings_array2d_pop_delete.sol.C.n1[routing]() -> void:
+n1:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_3 // 0
+    len
+    itob
+    dup
+    bytec_0 // 0x01
+    b>=
+    assert // underflow
+    bytec_2 // "a"
+    box_get
+    bytec_3 // 0x0000
+    cover 2
+    select
+    pushint 8
+    bzero
+    uncover 2
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec_0 // 0x01
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 1
+    extract 2 0
+    uncover 2
+    intc_3 // 0
+    extract_uint16 // on error: invalid array length header
+    dig 2
+    intc_2 // 2
+    *
+    dig 2
+    swap
+    extract_uint16
+    uncover 3
+    intc_1 // 1
+    +
+    uncover 2
+    dig 1
+    - // on error: index access is out of bounds
+    dig 3
+    len
+    uncover 2
+    intc_2 // 2
+    *
+    dig 4
+    swap
+    extract_uint16
+    uncover 2
+    select
+    substring3
+    len
+    itob
+    dup
+    bytec_0 // 0x01
+    b>=
+    assert // underflow
+    intc_0 // 32
+    bzero
+    swap
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec_0 // 0x01
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    sha256
+    pushbytes "b"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mappings_array2d_pop_delete.sol.C.n2[routing]() -> void:
+n2:
+    intc_3 // 0
+    len
+    itob
+    bytec_0 // 0x01
+    b>=
+    assert // underflow
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mappings_array2d_pop_delete.sol.C.map[routing]() -> void:
+map:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_3 // 0
+    len
+    itob
+    dup
+    bytec_0 // 0x01
+    b>=
+    assert // underflow
+    bytec_2 // "a"
+    box_get
+    bytec_3 // 0x0000
+    cover 2
+    select
+    pushint 8
+    bzero
+    uncover 2
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec_0 // 0x01
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 1
+    extract 2 0
+    uncover 2
+    intc_3 // 0
+    extract_uint16 // on error: invalid array length header
+    dig 2
+    intc_2 // 2
+    *
+    dig 2
+    swap
+    extract_uint16
+    uncover 3
+    intc_1 // 1
+    +
+    uncover 2
+    dig 1
+    - // on error: index access is out of bounds
+    dig 3
+    len
+    uncover 2
+    intc_2 // 2
+    *
+    dig 4
+    swap
+    extract_uint16
+    uncover 2
+    select
+    substring3
+    len
+    itob
+    dup
+    bytec_0 // 0x01
+    b>=
+    assert // underflow
+    intc_0 // 32
+    bzero
+    swap
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec_0 // 0x01
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    sha256
+    pushbytes "b"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mappings_array2d_pop_delete.sol.C.p[routing]() -> void:
+p:
+    bytec_2 // "a"
+    box_get
+    assert // box exists
+    dup
+    intc_3 // 0
+    extract_uint16
+    intc_1 // 1
+    -
+    dup
+    cover 2
+    intc_2 // 2
+    *
+    dup
+    uncover 2
+    extract 2 0
+    dup
+    uncover 2
+    extract_uint16
+    pushbytes 0x
+    intc_3 // 0
+
+p_for_header@2:
+    dup
+    dig 5
+    <
+    bz p_after_for@4
+    dig 3
+    dig 1
+    dup
+    cover 2
+    extract_uint16
+    intc_2 // 2
+    -
+    itob
+    extract 6 2
+    dig 3
+    swap
+    concat
+    bury 3
+    intc_2 // 2
+    +
+    bury 1
+    b p_for_header@2
+
+p_after_for@4:
+    dig 5
+    itob
+    extract 6 2
+    dig 2
+    concat
+    dig 5
+    intc_2 // 2
+    +
+    dig 5
+    swap
+    dig 5
+    substring3
+    concat
+    bytec_2 // "a"
+    box_del
+    pop
+    bytec_2 // "a"
+    swap
+    box_put
+    intc_1 // 1
+    return

@@ -1,0 +1,237 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/calldata_array_dynamic_static_short_reencode.sol.C.approval_program() -> uint64:
+main:
+    intcblock 2 0 1 4
+    bytecblock "" 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x47dd4dc9 0x39298a9f // method "f(uint256[][2][])uint256", method "g(uint256[][2][])uint256"
+    txna ApplicationArgs 0
+    match f g
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/calldata_array_dynamic_static_short_reencode.sol.C.f[routing]() -> void:
+f:
+    intc_1 // 0
+    bytec_0 // ""
+    dup
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    cover 2
+    intc_0 // 2
+    *
+    swap
+    dup
+    len
+    swap
+    extract 2 0
+    intc_1 // 0
+
+f_for_header@1:
+    dup
+    dig 5
+    <
+    bz f_after_for@8
+    dup
+    intc_0 // 2
+    *
+    dig 2
+    dup
+    uncover 2
+    extract_uint16 // on error: invalid array encoding
+    dup
+    dig 6
+    ==
+    assert // invalid tail pointer for (len+(len+uint256[])[2][])
+    dig 1
+    len
+    substring3
+    bury 8
+    intc_3 // 4
+    bury 6
+    intc_1 // 0
+    bury 7
+
+f_for_header@3:
+    dig 6
+    intc_0 // 2
+    <
+    bz f_after_for@6
+    dig 6
+    dup
+    intc_0 // 2
+    *
+    dig 9
+    dup
+    uncover 2
+    extract_uint16 // on error: invalid array encoding
+    dup
+    dig 9
+    dup
+    cover 4
+    ==
+    assert // invalid tail pointer for (len+uint256[])[2]
+    dig 1
+    len
+    substring3
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 32
+    *
+    intc_0 // 2
+    +
+    +
+    bury 7
+    intc_2 // 1
+    +
+    bury 7
+    b f_for_header@3
+
+f_after_for@6:
+    dig 3
+    dig 6
+    +
+    bury 4
+    dup
+    intc_2 // 1
+    +
+    bury 1
+    b f_for_header@1
+
+f_after_for@8:
+    dig 3
+    intc_0 // 2
+    +
+    dig 3
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint256>, 2>>
+    bytec_1 // 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/calldata_array_dynamic_static_short_reencode.sol.C.g[routing]() -> void:
+g:
+    intc_1 // 0
+    bytec_0 // ""
+    dup
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    cover 2
+    intc_0 // 2
+    *
+    swap
+    dup
+    len
+    swap
+    extract 2 0
+    intc_1 // 0
+
+g_for_header@1:
+    dup
+    dig 5
+    <
+    bz g_after_for@8
+    dup
+    intc_0 // 2
+    *
+    dig 2
+    dup
+    uncover 2
+    extract_uint16 // on error: invalid array encoding
+    dup
+    dig 6
+    ==
+    assert // invalid tail pointer for (len+(len+uint256[])[2][])
+    dig 1
+    len
+    substring3
+    bury 8
+    intc_3 // 4
+    bury 6
+    intc_1 // 0
+    bury 7
+
+g_for_header@3:
+    dig 6
+    intc_0 // 2
+    <
+    bz g_after_for@6
+    dig 6
+    dup
+    intc_0 // 2
+    *
+    dig 9
+    dup
+    uncover 2
+    extract_uint16 // on error: invalid array encoding
+    dup
+    dig 9
+    dup
+    cover 4
+    ==
+    assert // invalid tail pointer for (len+uint256[])[2]
+    dig 1
+    len
+    substring3
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 32
+    *
+    intc_0 // 2
+    +
+    +
+    bury 7
+    intc_2 // 1
+    +
+    bury 7
+    b g_for_header@3
+
+g_after_for@6:
+    dig 3
+    dig 6
+    +
+    bury 4
+    dup
+    intc_2 // 1
+    +
+    bury 1
+    b g_for_header@1
+
+g_after_for@8:
+    dig 3
+    intc_0 // 2
+    +
+    dig 3
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint256>, 2>>
+    bytec_1 // 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
+    log
+    intc_2 // 1
+    return
