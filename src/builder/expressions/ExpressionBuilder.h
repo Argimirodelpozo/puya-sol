@@ -1,6 +1,7 @@
 #pragma once
 
 #include "awst/Node.h"
+#include "builder/sol-eb/BuiltinCallables.h"
 #include "builder/sol-intrinsics/IntrinsicMapper.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -96,6 +97,7 @@ public:
 private:
 	TypeMapper& m_typeMapper;
 	StorageMapper& m_storageMapper;
+	eb::BuiltinCallableRegistry m_builtinCallables;
 	std::string m_sourceFile;
 	std::string m_contractName;
 	LibraryFunctionIdMap const& m_libraryFunctionIds;
@@ -148,6 +150,7 @@ public:
 
 
 private:
+	eb::BuilderContext makeBuilderContext();
 
 	awst::SourceLocation makeLoc(solidity::langutil::SourceLocation const& _solLoc);
 

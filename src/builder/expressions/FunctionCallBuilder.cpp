@@ -1852,167 +1852,18 @@ bool ExpressionBuilder::visit(solidity::frontend::FunctionCall const& _node)
 			return false;
 		}
 
-		if (name == "keccak256")
+		// Try builtin callable registry (handles mulmod, addmod, keccak256, sha256, etc.)
 		{
-			auto call = std::make_shared<awst::IntrinsicCall>();
-			call->sourceLocation = loc;
-			call->opCode = "keccak256";
-			call->wtype = awst::WType::bytesType();
+			auto ctx = makeBuilderContext();
+			std::vector<std::shared_ptr<awst::Expression>> builtinArgs;
 			for (auto const& arg: _node.arguments())
-				call->stackArgs.push_back(build(*arg));
-			push(call);
-			return false;
-		}
-
-		if (name == "sha256")
-		{
-			auto call = std::make_shared<awst::IntrinsicCall>();
-			call->sourceLocation = loc;
-			call->opCode = "sha256";
-			call->wtype = awst::WType::bytesType();
-			for (auto const& arg: _node.arguments())
-				call->stackArgs.push_back(build(*arg));
-			push(call);
-			return false;
-		}
-
-		// mulmod(x, y, z) → (x * y) % z using biguint full precision
-		if (name == "mulmod" && _node.arguments().size() == 3)
-		{
-			auto x = build(*_node.arguments()[0]);
-			auto y = build(*_node.arguments()[1]);
-			auto z = build(*_node.arguments()[2]);
-
-			// Promote all to biguint if needed
-			auto promoteToBigUInt = [&](std::shared_ptr<awst::Expression>& operand)
+				builtinArgs.push_back(build(*arg));
+			auto result = m_builtinCallables.tryCall(ctx, name, builtinArgs, loc);
+			if (result)
 			{
-				if (operand->wtype == awst::WType::uint64Type())
-				{
-					auto itob = std::make_shared<awst::IntrinsicCall>();
-					itob->sourceLocation = loc;
-					itob->wtype = awst::WType::bytesType();
-					itob->opCode = "itob";
-					itob->stackArgs.push_back(std::move(operand));
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = loc;
-					cast->wtype = awst::WType::biguintType();
-					cast->expr = std::move(itob);
-					operand = std::move(cast);
-				}
-			};
-			promoteToBigUInt(x);
-			promoteToBigUInt(y);
-			promoteToBigUInt(z);
-
-			// assert(z != 0) — EVM reverts on mod by zero
-			{
-				auto zero = std::make_shared<awst::IntegerConstant>();
-				zero->sourceLocation = loc;
-				zero->wtype = awst::WType::biguintType();
-				zero->value = "0";
-				auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-				cmp->sourceLocation = loc;
-				cmp->wtype = awst::WType::boolType();
-				cmp->lhs = z;
-				cmp->op = awst::NumericComparison::Ne;
-				cmp->rhs = std::move(zero);
-				auto assertExpr = std::make_shared<awst::AssertExpression>();
-				assertExpr->sourceLocation = loc;
-				assertExpr->wtype = awst::WType::voidType();
-				assertExpr->condition = std::move(cmp);
-				assertExpr->errorMessage = "modulo by zero";
-				auto stmt = std::make_shared<awst::ExpressionStatement>();
-				stmt->sourceLocation = loc;
-				stmt->expr = std::move(assertExpr);
-				m_prePendingStatements.push_back(std::move(stmt));
+				push(result->resolve());
+				return false;
 			}
-
-			// x * y
-			auto mul = std::make_shared<awst::BigUIntBinaryOperation>();
-			mul->sourceLocation = loc;
-			mul->wtype = awst::WType::biguintType();
-			mul->left = std::move(x);
-			mul->right = std::move(y);
-			mul->op = awst::BigUIntBinaryOperator::Mult;
-
-			// (x * y) % z
-			auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
-			mod->sourceLocation = loc;
-			mod->wtype = awst::WType::biguintType();
-			mod->left = std::move(mul);
-			mod->right = std::move(z);
-			mod->op = awst::BigUIntBinaryOperator::Mod;
-
-			push(mod);
-			return false;
-		}
-
-		// addmod(x, y, z) → (x + y) % z using biguint full precision
-		if (name == "addmod" && _node.arguments().size() == 3)
-		{
-			auto x = build(*_node.arguments()[0]);
-			auto y = build(*_node.arguments()[1]);
-			auto z = build(*_node.arguments()[2]);
-
-			auto promoteToBigUInt = [&](std::shared_ptr<awst::Expression>& operand)
-			{
-				if (operand->wtype == awst::WType::uint64Type())
-				{
-					auto itob = std::make_shared<awst::IntrinsicCall>();
-					itob->sourceLocation = loc;
-					itob->wtype = awst::WType::bytesType();
-					itob->opCode = "itob";
-					itob->stackArgs.push_back(std::move(operand));
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = loc;
-					cast->wtype = awst::WType::biguintType();
-					cast->expr = std::move(itob);
-					operand = std::move(cast);
-				}
-			};
-			promoteToBigUInt(x);
-			promoteToBigUInt(y);
-			promoteToBigUInt(z);
-
-			// assert(z != 0) — EVM reverts on mod by zero
-			{
-				auto zero = std::make_shared<awst::IntegerConstant>();
-				zero->sourceLocation = loc;
-				zero->wtype = awst::WType::biguintType();
-				zero->value = "0";
-				auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-				cmp->sourceLocation = loc;
-				cmp->wtype = awst::WType::boolType();
-				cmp->lhs = z;
-				cmp->op = awst::NumericComparison::Ne;
-				cmp->rhs = std::move(zero);
-				auto assertExpr = std::make_shared<awst::AssertExpression>();
-				assertExpr->sourceLocation = loc;
-				assertExpr->wtype = awst::WType::voidType();
-				assertExpr->condition = std::move(cmp);
-				assertExpr->errorMessage = "modulo by zero";
-				auto stmt = std::make_shared<awst::ExpressionStatement>();
-				stmt->sourceLocation = loc;
-				stmt->expr = std::move(assertExpr);
-				m_prePendingStatements.push_back(std::move(stmt));
-			}
-
-			auto add = std::make_shared<awst::BigUIntBinaryOperation>();
-			add->sourceLocation = loc;
-			add->wtype = awst::WType::biguintType();
-			add->left = std::move(x);
-			add->right = std::move(y);
-			add->op = awst::BigUIntBinaryOperator::Add;
-
-			auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
-			mod->sourceLocation = loc;
-			mod->wtype = awst::WType::biguintType();
-			mod->left = std::move(add);
-			mod->right = std::move(z);
-			mod->op = awst::BigUIntBinaryOperator::Mod;
-
-			push(mod);
-			return false;
 		}
 
 		// blockhash(blockNumber) → block BlkSeed blockNumber
@@ -2049,26 +1900,7 @@ bool ExpressionBuilder::visit(solidity::frontend::FunctionCall const& _node)
 			return false;
 		}
 
-		// gasleft() → global OpcodeBudget
-		// Note: Solidity's gasleft() returns remaining gas (starts high, decreases).
-		// AVM's OpcodeBudget is analogous but not equivalent: it returns the remaining
-		// opcode budget for the current transaction group (starts at N*700 where N is
-		// the group size, decreases per opcode executed). The units and scale differ
-		// from EVM gas, but the semantic of "remaining computational budget" is the same.
-		if (name == "gasleft")
-		{
-			Logger::instance().warning(
-				"gasleft() mapped to AVM OpcodeBudget. "
-				"Note: AVM opcode budget is analogous but not equivalent to EVM gas — "
-				"units and scale differ (budget = group_size * 700, decreases per opcode)", loc);
-			auto e = std::make_shared<awst::IntrinsicCall>();
-			e->sourceLocation = loc;
-			e->wtype = awst::WType::uint64Type();
-			e->opCode = "global";
-			e->immediates = {std::string("OpcodeBudget")};
-			push(e);
-			return false;
-		}
+		// gasleft is handled by the builtin callable registry above
 
 		// ecrecover(digest, v, r, s) → address
 		// Pipeline: ecdsa_pk_recover → concat(X,Y) → keccak256 → extract last 20 bytes → pad to 32

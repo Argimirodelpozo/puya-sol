@@ -191,4 +191,41 @@ bool ExpressionBuilder::isBigUInt(awst::WType const* _type)
 }
 
 
+eb::BuilderContext ExpressionBuilder::makeBuilderContext()
+{
+	// Minimal context for builtin callable dispatch.
+	// Only typeMapper, storageMapper, pendingStatements, prePendingStatements
+	// are used by the builtin handlers.
+	static std::map<int64_t, eb::ParamRemap> dummyParamRemaps;
+	static std::unordered_map<int64_t, std::string> dummySuperTargets;
+	static std::map<int64_t, std::shared_ptr<awst::Expression>> dummyStorageAliases;
+	static std::map<int64_t, solidity::frontend::FunctionDefinition const*> dummyFuncPtrTargets;
+	static std::unordered_map<int64_t, unsigned long long> dummyConstantLocals;
+
+	return eb::BuilderContext{
+		/*.typeMapper =*/ m_typeMapper,
+		/*.storageMapper =*/ m_storageMapper,
+		/*.sourceFile =*/ m_sourceFile,
+		/*.contractName =*/ m_contractName,
+		/*.libraryFunctionIds =*/ m_libraryFunctionIds,
+		/*.overloadedNames =*/ m_overloadedNames,
+		/*.freeFunctionById =*/ m_freeFunctionById,
+		/*.pendingStatements =*/ m_pendingStatements,
+		/*.prePendingStatements =*/ m_prePendingStatements,
+		/*.paramRemaps =*/ dummyParamRemaps,
+		/*.superTargetNames =*/ dummySuperTargets,
+		/*.storageAliases =*/ dummyStorageAliases,
+		/*.funcPtrTargets =*/ dummyFuncPtrTargets,
+		/*.constantLocals =*/ dummyConstantLocals,
+		/*.inConstructor =*/ m_inConstructor,
+		/*.inUncheckedBlock =*/ m_inUncheckedBlock,
+		/*.buildExpr =*/ [this](solidity::frontend::Expression const& _expr) {
+			return this->build(_expr);
+		},
+		/*.builderForInstance =*/ [](solidity::frontend::Type const*, std::shared_ptr<awst::Expression>) {
+			return std::unique_ptr<eb::InstanceBuilder>(nullptr);
+		},
+	};
+}
+
 } // namespace puyasol::builder

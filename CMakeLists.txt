@@ -80,6 +80,24 @@ set(SOURCES
 	src/builder/storage/StorageMapper.cpp
 	src/builder/sol-types/TypeMapper.cpp
 	src/builder/sol-intrinsics/IntrinsicMapper.cpp
+
+	# Expression builder helpers (sol-eb/)
+	src/builder/sol-eb/BuiltinCallables.cpp
+	src/builder/sol-eb/InnerCallHandlers.cpp
+	src/builder/sol-eb/NodeBuilder.cpp
+	src/builder/sol-eb/SolArrayBuilder.cpp
+	src/builder/sol-eb/SolBoolBuilder.cpp
+	src/builder/sol-eb/SolIntegerBuilder.cpp
+	src/builder/sol-eb/SolStringBuilder.cpp
+	src/builder/sol-eb/SolStructBuilder.cpp
+	src/builder/sol-eb/SolAddressBuilder.cpp
+	src/builder/sol-eb/SolEnumBuilder.cpp
+	src/builder/sol-eb/SolFixedBytesBuilder.cpp
+	src/builder/sol-eb/BuilderRegistry.cpp
+	src/builder/sol-eb/CallResolver.cpp
+	src/builder/sol-eb/AbiEncoderBuilder.cpp
+	src/builder/sol-eb/AssignmentHelper.cpp
+	src/builder/sol-eb/TypeConversions.cpp
 	src/json/AWSTSerializer.cpp
 	src/json/Base85.cpp
 	src/json/OptionsWriter.cpp
