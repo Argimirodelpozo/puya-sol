@@ -644,6 +644,33 @@ void AssemblyBuilder::buildExpressionStatement(
 			handleSstore(args, loc, _out);
 			return;
 		}
+		if (funcName == "invalid")
+		{
+			// EVM INVALID opcode — unconditional revert
+			auto assertExpr = std::make_shared<awst::AssertExpression>();
+			assertExpr->sourceLocation = loc;
+			assertExpr->wtype = awst::WType::voidType();
+			auto falseLit = std::make_shared<awst::BoolConstant>();
+			falseLit->sourceLocation = loc;
+			falseLit->wtype = awst::WType::boolType();
+			falseLit->value = false;
+			assertExpr->condition = std::move(falseLit);
+			assertExpr->errorMessage = "invalid";
+			auto stmt = std::make_shared<awst::ExpressionStatement>();
+			stmt->sourceLocation = loc;
+			stmt->expr = std::move(assertExpr);
+			_out.push_back(std::move(stmt));
+			return;
+		}
+		if (funcName == "stop")
+		{
+			// EVM STOP — halt execution successfully
+			auto retStmt = std::make_shared<awst::ReturnStatement>();
+			retStmt->sourceLocation = loc;
+			retStmt->value = nullptr;
+			_out.push_back(std::move(retStmt));
+			return;
+		}
 		if (funcName == "returndatacopy" || funcName == "pop")
 		{
 			// No-op on AVM (returndatacopy: no return data; pop: discard value)
