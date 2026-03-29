@@ -193,7 +193,11 @@ def deploy_app(localnet, account, artifacts):
         clear_bin = encoding.base64.b64decode(
             algod.compile(artifacts["clear_teal"].read_text())["result"])
         extra_pages = max(0, (max(len(approval_bin), len(clear_bin)) - 1) // 2048)
+        # Extract box references from TEAL for constructor box_create calls
+        box_refs = _extract_box_refs(artifacts["approval_teal"])
         sp = algod.suggested_params()
+        sp.flat_fee = True
+        sp.fee = max(sp.min_fee, 1000) * 4  # cover inner txns
         txn = ApplicationCreateTxn(
             sender=account.address, sp=sp,
             on_complete=OnComplete.NoOpOC,
@@ -201,6 +205,7 @@ def deploy_app(localnet, account, artifacts):
             global_schema=StateSchema(num_uints=16, num_byte_slices=16),
             local_schema=StateSchema(num_uints=0, num_byte_slices=0),
             extra_pages=extra_pages,
+            boxes=box_refs if box_refs else None,
         )
         txid = algod.send_transaction(txn.sign(account.private_key))
         result = wait_for_confirmation(algod, txid, 4)
@@ -233,29 +238,47 @@ def deploy_app(localnet, account, artifacts):
 
 
 def _extract_box_refs(teal_path):
-    """Extract box references from TEAL bytecblock constants."""
+    """Extract box references from TEAL — find strings used with box_create/box_get/box_resize."""
     import re
     teal = teal_path.read_text()
     refs = []
-    # Find the __postInit section and extract box key constants
-    in_postinit = False
-    for line in teal.split('\n'):
-        if '__postInit' in line and 'routing' in line:
-            in_postinit = True
-        elif in_postinit and line.strip().startswith('//') and 'routing' in line:
-            in_postinit = False
-        if in_postinit and 'box_' in line:
-            # Look for bytec references used with box ops
-            pass
-    # Simpler approach: find all hex constants in bytecblock that look like box keys
-    # (prefixed with a variable name byte)
+    seen = set()
+
+    # Find all pushbytes before box_* ops
+    lines = teal.split('\n')
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if stripped.startswith('box_') or 'box_create' in stripped or 'box_get' in stripped or 'box_resize' in stripped:
+            # Look backwards for the key pushbytes
+            for j in range(max(0, i-5), i):
+                prev = lines[j].strip()
+                # Match: pushbytes "key" or bytec_N // "key"
+                m = re.search(r'// "([^"]+)"', prev)
+                if m:
+                    key = m.group(1)
+                    if key not in seen:
+                        seen.add(key)
+                        refs.append((0, key.encode()))
+                    break
+                m2 = re.search(r'pushbytes "([^"]+)"', prev)
+                if m2:
+                    key = m2.group(1)
+                    if key not in seen:
+                        seen.add(key)
+                        refs.append((0, key.encode()))
+                    break
+
+    # Also grab hex constants from bytecblock that are box keys
     bytecblock_match = re.search(r'bytecblock\s+(.*)', teal)
     if bytecblock_match:
         tokens = bytecblock_match.group(1).split()
         for token in tokens:
             if token.startswith('0x') and len(token) > 10:
                 key_bytes = bytes.fromhex(token[2:])
-                refs.append(au.BoxReference(app_id=0, name=key_bytes))
+                if key_bytes not in seen:
+                    seen.add(key_bytes)
+                    refs.append((0, key_bytes))
+
     return refs
 
 
