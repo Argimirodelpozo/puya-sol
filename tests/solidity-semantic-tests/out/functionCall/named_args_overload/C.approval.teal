@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1
-    bytecblock 0x151f7c75 0x03
+    bytecblock 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x03
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -73,6 +73,8 @@ f(u256,u256):
     ==
     assert // invalid number of bytes for arc4.uint256
     b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     dup
     len
     intc_0 // 32
@@ -111,7 +113,11 @@ f(u256,u256,u256):
     assert // invalid number of bytes for arc4.uint256
     cover 2
     b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     dup
     len
     intc_0 // 32
@@ -172,12 +178,12 @@ call_after_if_else@5:
     pushbytes 0x02
     b==
     bz call_after_if_else@7
-    bytec_1 // 0x03
+    bytec_2 // 0x03
     b call_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args_overload.sol.C.call@12
 
 call_after_if_else@7:
     dup
-    bytec_1 // 0x03
+    bytec_2 // 0x03
     b==
     bz call_after_if_else@9
     pushbytes 0x06

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
-    bytecblock 0x151f7c75 "testArray" 0x 0x01
+    bytecblock 0x151f7c75 "testArray" 0x 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
     pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
     store 5
     txn ApplicationID
@@ -238,7 +238,7 @@ getSlot1LastBytes:
     swap
     pushbytes 0x0000000000000000000000000001000000000000000000000000000000000000
     b*
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     swap
     store 0
@@ -287,6 +287,8 @@ getArrayBytes_while_top@2:
     dig 4
     dig 1
     b+
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     dup
     bury 7
     intc_2 // 0

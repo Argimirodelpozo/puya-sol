@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 8 0 255
+    intcblock 32 1 8 0
     bytecblock 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0xff 0x80 0x01
     txn ApplicationID
     bnz main_after_if_else@2
@@ -42,10 +42,6 @@ preincr_u8:
     +
     dup
     +
-    dup
-    intc 4 // 255
-    <=
-    assert // overflow
     itob
     bytec_0 // 0x151f7c75
     swap
@@ -64,12 +60,10 @@ postincr_u8:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    dup
+    intc_1 // 1
     +
     dup
-    intc 4 // 255
-    <=
-    assert // overflow
+    +
     itob
     bytec_0 // 0x151f7c75
     swap
@@ -92,10 +86,6 @@ predecr_u8:
     -
     dup
     +
-    dup
-    intc 4 // 255
-    <=
-    assert // overflow
     itob
     bytec_0 // 0x151f7c75
     swap
@@ -114,12 +104,10 @@ postdecr_u8:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    intc_1 // 1
+    -
     dup
     +
-    dup
-    intc 4 // 255
-    <=
-    assert // overflow
     itob
     bytec_0 // 0x151f7c75
     swap
@@ -443,6 +431,8 @@ preincr:
     b+
     dup
     b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     dup
     len
     intc_0 // 32
@@ -471,6 +461,8 @@ postincr:
     b+
     dup
     b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     dup
     len
     intc_0 // 32
@@ -499,6 +491,8 @@ predecr:
     b-
     dup
     b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     dup
     len
     intc_0 // 32
@@ -527,6 +521,8 @@ postdecr:
     b-
     dup
     b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     dup
     len
     intc_0 // 32

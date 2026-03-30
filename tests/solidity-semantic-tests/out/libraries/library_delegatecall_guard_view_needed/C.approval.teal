@@ -3,15 +3,12 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_delegatecall_guard_view_needed.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    bytecblock "__ctor_pending" 0x 0x151f7c75800000000000000000000000000000000000000000000000000000000000000000
+    intcblock 1 32 0
+    bytecblock "__ctor_pending" 0x "y" 0x151f7c75800000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
     pushbytes "x"
     bytec_1 // 0x
-    app_global_put
-    pushbytes "y_length"
-    intc_1 // 0
     app_global_put
     bytec_0 // "__ctor_pending"
     intc_0 // 1
@@ -44,7 +41,7 @@ L.f:
     frame_dig -1
     loads
     len
-    intc_2 // 32
+    intc_1 // 32
     /
     itob
     retsub
@@ -56,13 +53,17 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_1 // 0
+    intc_2 // 0
     app_global_put
-    pushbytes "y"
+    bytec_2 // "y"
+    intc_2 // 0
+    box_create
+    pop
+    bytec_2 // "y"
     box_get
-    assert // box exists
+    pop
     pushint 2
-    intc_1 // 0
+    intc_2 // 0
     extract3
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000002a
     concat // on error: max array length exceeded
@@ -77,10 +78,10 @@ f:
     callsub L.f
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -95,7 +96,7 @@ f:
 g:
     load 0
     store 0
-    bytec_2 // 0x151f7c75800000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x151f7c75800000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
@@ -105,7 +106,7 @@ g:
 h:
     load 0
     store 0
-    bytec_2 // 0x151f7c75800000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x151f7c75800000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return

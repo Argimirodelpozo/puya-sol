@@ -4,12 +4,9 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "__ctor_pending" 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000 "s_length"
+    bytecblock "__ctor_pending" 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000 "s"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "s_length"
-    intc_1 // 0
-    app_global_put
     bytec_0 // "__ctor_pending"
     intc_0 // 1
     app_global_put
@@ -55,16 +52,21 @@ __postInit:
     bytec_0 // "__ctor_pending"
     intc_1 // 0
     app_global_put
+    bytec_2 // "s"
+    intc_1 // 0
+    box_create
+    pop
 
 __postInit_while_top@2:
-    intc_1 // 0
-    bytec_2 // "s_length"
-    app_global_get_ex
-    assert // check s_length exists
+    bytec_2 // "s"
+    box_len
+    pop
+    pushint 32
+    /
     pushint 42
     <
     bz __postInit_after_while@4
-    pushbytes "s"
+    bytec_2 // "s"
     box_get
     assert // box exists
     pushint 2

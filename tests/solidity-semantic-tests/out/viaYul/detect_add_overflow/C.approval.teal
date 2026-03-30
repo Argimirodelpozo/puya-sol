@@ -44,6 +44,8 @@ f:
     ==
     assert // invalid number of bytes for arc4.uint256
     b+
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     dup
     len
     intc_0 // 32
@@ -77,10 +79,6 @@ g:
     assert // invalid number of bytes for arc4.uint64
     btoi
     +
-    dup
-    pushint 255
-    <=
-    assert // overflow
     itob
     bytec_0 // 0x151f7c75
     swap

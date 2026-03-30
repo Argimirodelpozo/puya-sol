@@ -4,12 +4,9 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_delegatecall_guard_view_not_needed.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "__ctor_pending" 0x151f7c75800000000000000000000000000000000000000000000000000000000000000000
+    bytecblock "__ctor_pending" "y" 0x151f7c75800000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytes "y_length"
-    intc_1 // 0
-    app_global_put
     bytec_0 // "__ctor_pending"
     intc_0 // 1
     app_global_put
@@ -51,9 +48,13 @@ __postInit:
     bytec_0 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    pushbytes "y"
+    bytec_1 // "y"
+    intc_1 // 0
+    box_create
+    pop
+    bytec_1 // "y"
     box_get
-    assert // box exists
+    pop
     pushint 2
     intc_1 // 0
     extract3
@@ -88,7 +89,7 @@ f:
 g:
     load 0
     store 0
-    bytec_1 // 0x151f7c75800000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x151f7c75800000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
@@ -98,7 +99,7 @@ g:
 h:
     load 0
     store 0
-    bytec_1 // 0x151f7c75800000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x151f7c75800000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return

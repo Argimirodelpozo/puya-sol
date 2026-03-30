@@ -140,6 +140,21 @@ bool ExpressionBuilder::visit(solidity::frontend::FunctionCall const& _node)
 				return false;
 			}
 
+			// Try sol-eb TypeConversion registry first
+			{
+				auto argExpr = build(*_node.arguments()[0]);
+				auto ctx = makeBuilderContext();
+				auto converted = m_typeConversions.tryConvert(
+					ctx, _node.annotation().type, targetType,
+					argExpr, loc);
+				if (converted)
+				{
+					push(converted->resolve());
+					return false;
+				}
+				// argExpr wasn't consumed (shared_ptr copy), continue with inline handlers
+			}
+
 			// address(expr) → convert integer/bytes to 32-byte account
 			if (targetType == awst::WType::accountType())
 			{

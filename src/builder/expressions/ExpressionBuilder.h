@@ -3,6 +3,7 @@
 #include "awst/Node.h"
 #include "builder/sol-eb/BuilderRegistry.h"
 #include "builder/sol-eb/BuiltinCallables.h"
+#include "builder/sol-eb/TypeConversions.h"
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-intrinsics/IntrinsicMapper.h"
 #include "builder/storage/StorageMapper.h"
@@ -102,6 +103,7 @@ private:
 	TransientStorage* m_transientStorage = nullptr;
 	eb::BuilderRegistry m_registry;
 	eb::BuiltinCallableRegistry m_builtinCallables;
+	eb::TypeConversionRegistry m_typeConversions;
 	std::string m_sourceFile;
 	std::string m_contractName;
 	LibraryFunctionIdMap const& m_libraryFunctionIds;

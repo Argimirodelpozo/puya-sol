@@ -3,11 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/ternary_operator_with_literal_types_overflow.sol.TestTernary.approval_program() -> uint64:
 main:
-    intcblock 1 0
     bytecblock 0x151f7c75000000000000013e
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    pushint 1
     return
 
 main_after_if_else@2:
@@ -25,25 +24,17 @@ main_after_if_else@2:
     assert
     pushbytess 0x35009996 0x7466167f // method "h()uint64", method "g()uint64"
     txna ApplicationArgs 0
-    match h g
+    match main_h_route@5 main_g_route@6
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/ternary_operator_with_literal_types_overflow.sol.TestTernary.h[routing]() -> void:
-h:
-    intc_1 // 0
-    assert // overflow
+main_g_route@6:
     bytec_0 // 0x151f7c75000000000000013e
     log
-    intc_0 // 1
+    pushint 1
     return
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/ternary_operator_with_literal_types_overflow.sol.TestTernary.g[routing]() -> void:
-g:
-    intc_1 // 0
-    assert // overflow
+main_h_route@5:
     bytec_0 // 0x151f7c75000000000000013e
     log
-    intc_0 // 1
+    pushint 1
     return
