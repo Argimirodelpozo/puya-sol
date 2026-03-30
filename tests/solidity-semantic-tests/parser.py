@@ -58,20 +58,7 @@ def parse_test_file(path: Path) -> SemanticTest:
     source_code = parts[0].strip()
     assertion_block = parts[1]
 
-    # Check for features we can't handle
-    skip_patterns = [
-        ("pragma abicoder v1", "ABIEncoderV1 not supported"),
-        ("delegatecall", "delegatecall not supported"),
-        ("selfdestruct", "selfdestruct not supported"),
-        ("receive()", "receive not supported"),
-        ("fallback()", "fallback not supported"),
-        ("try {", "try/catch not supported"),
-    ]
-
-    for pattern, reason in skip_patterns:
-        if pattern in content:
-            return SemanticTest(source_path=path, source_code=source_code,
-                               skipped=True, skip_reason=reason)
+    # No parser-level skips — let everything compile or fail honestly
 
     calls = []
     for line in assertion_block.strip().split("\n"):
