@@ -12,6 +12,7 @@ from pathlib import Path
 
 import algokit_utils as au
 import pytest
+from algosdk import encoding
 
 from parser import parse_test_file, parse_value
 
