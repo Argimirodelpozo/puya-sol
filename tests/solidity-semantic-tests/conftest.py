@@ -296,6 +296,15 @@ def compare_values(actual, expected):
             return (1 if actual else 0) == expected
         if isinstance(actual, int):
             return actual == expected
+        # Algorand address string → decode to integer for comparison
+        if isinstance(actual, str) and len(actual) == 58:
+            try:
+                from algosdk import encoding
+                addr_bytes = encoding.decode_address(actual)
+                addr_int = int.from_bytes(addr_bytes, 'big')
+                return addr_int == expected
+            except Exception:
+                pass
         # Unwrap single-value dicts (ARC4 struct with one field)
         if isinstance(actual, dict) and len(actual) == 1:
             return compare_values(list(actual.values())[0], expected)
