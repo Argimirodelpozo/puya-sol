@@ -133,6 +133,10 @@ def _split_multi_source(sol_path):
 
 
 def compile_sol(sol_path, out_dir):
+    # Always clean and recompile — no stale cache
+    import shutil
+    if out_dir.exists():
+        shutil.rmtree(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     content = sol_path.read_text()
