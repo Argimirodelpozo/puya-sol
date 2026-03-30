@@ -753,6 +753,201 @@ bool ExpressionBuilder::visit(solidity::frontend::BinaryOperation const& _node)
 		}
 	}
 
+	// Signed modulo/division: operate on absolute values, then apply sign
+	{
+		auto const* leftInt = dynamic_cast<solidity::frontend::IntegerType const*>(
+			_node.leftExpression().annotation().type);
+		auto const* rightInt = dynamic_cast<solidity::frontend::IntegerType const*>(
+			_node.rightExpression().annotation().type);
+		bool isSigned = (leftInt && leftInt->isSigned()) || (rightInt && rightInt->isSigned());
+		auto op = _node.getOperator();
+		bool isModOrDiv = (op == Token::Mod || op == Token::AssignMod
+			|| op == Token::Div || op == Token::AssignDiv);
+
+		if (isSigned && isModOrDiv && isBigUInt(left->wtype))
+		{
+			// Two's complement: negative if value >= 2^255
+			// abs(x) = x < 2^255 ? x : 2^256 - x
+			// neg(x) = 2^256 - x
+			auto pow255 = std::make_shared<awst::IntegerConstant>();
+			pow255->sourceLocation = loc;
+			pow255->wtype = awst::WType::biguintType();
+			pow255->value = "57896044618658097711785492504343953926634992332820282019728792003956564819968"; // 2^255
+
+			auto pow256 = std::make_shared<awst::IntegerConstant>();
+			pow256->sourceLocation = loc;
+			pow256->wtype = awst::WType::biguintType();
+			pow256->value = "115792089237316195423570985008687907853269984665640564039457584007913129639936"; // 2^256
+
+			// isLeftNeg = left >= 2^255
+			auto isLeftNeg = std::make_shared<awst::NumericComparisonExpression>();
+			isLeftNeg->sourceLocation = loc;
+			isLeftNeg->wtype = awst::WType::boolType();
+			isLeftNeg->lhs = left;
+			isLeftNeg->op = awst::NumericComparison::Gte;
+			isLeftNeg->rhs = pow255;
+
+			// absLeft = isLeftNeg ? (2^256 - left) : left
+			auto negLeft = std::make_shared<awst::BigUIntBinaryOperation>();
+			negLeft->sourceLocation = loc;
+			negLeft->wtype = awst::WType::biguintType();
+			negLeft->left = pow256;
+			negLeft->op = awst::BigUIntBinaryOperator::Sub;
+			negLeft->right = left;
+
+			auto absLeft = std::make_shared<awst::ConditionalExpression>();
+			absLeft->sourceLocation = loc;
+			absLeft->wtype = awst::WType::biguintType();
+			absLeft->condition = isLeftNeg;
+			absLeft->trueExpr = std::move(negLeft);
+			absLeft->falseExpr = left;
+
+			// isRightNeg = right >= 2^255
+			auto pow255_2 = std::make_shared<awst::IntegerConstant>();
+			pow255_2->sourceLocation = loc;
+			pow255_2->wtype = awst::WType::biguintType();
+			pow255_2->value = "57896044618658097711785492504343953926634992332820282019728792003956564819968";
+
+			auto isRightNeg = std::make_shared<awst::NumericComparisonExpression>();
+			isRightNeg->sourceLocation = loc;
+			isRightNeg->wtype = awst::WType::boolType();
+			isRightNeg->lhs = right;
+			isRightNeg->op = awst::NumericComparison::Gte;
+			isRightNeg->rhs = std::move(pow255_2);
+
+			auto pow256_2 = std::make_shared<awst::IntegerConstant>();
+			pow256_2->sourceLocation = loc;
+			pow256_2->wtype = awst::WType::biguintType();
+			pow256_2->value = "115792089237316195423570985008687907853269984665640564039457584007913129639936";
+
+			auto negRight = std::make_shared<awst::BigUIntBinaryOperation>();
+			negRight->sourceLocation = loc;
+			negRight->wtype = awst::WType::biguintType();
+			negRight->left = std::move(pow256_2);
+			negRight->op = awst::BigUIntBinaryOperator::Sub;
+			negRight->right = right;
+
+			auto absRight = std::make_shared<awst::ConditionalExpression>();
+			absRight->sourceLocation = loc;
+			absRight->wtype = awst::WType::biguintType();
+			absRight->condition = isRightNeg;
+			absRight->trueExpr = std::move(negRight);
+			absRight->falseExpr = right;
+
+			// Compute abs result
+			awst::BigUIntBinaryOperator unsignedOp =
+				(op == Token::Mod || op == Token::AssignMod)
+				? awst::BigUIntBinaryOperator::Mod
+				: awst::BigUIntBinaryOperator::FloorDiv;
+
+			auto absResult = std::make_shared<awst::BigUIntBinaryOperation>();
+			absResult->sourceLocation = loc;
+			absResult->wtype = awst::WType::biguintType();
+			absResult->left = std::move(absLeft);
+			absResult->op = unsignedOp;
+			absResult->right = std::move(absRight);
+
+			// Apply sign:
+			// mod: sign follows dividend (left)
+			// div: sign is negative if signs differ
+			auto pow256_3 = std::make_shared<awst::IntegerConstant>();
+			pow256_3->sourceLocation = loc;
+			pow256_3->wtype = awst::WType::biguintType();
+			pow256_3->value = "115792089237316195423570985008687907853269984665640564039457584007913129639936";
+
+			auto negResult = std::make_shared<awst::BigUIntBinaryOperation>();
+			negResult->sourceLocation = loc;
+			negResult->wtype = awst::WType::biguintType();
+			negResult->left = std::move(pow256_3);
+			negResult->op = awst::BigUIntBinaryOperator::Sub;
+			negResult->right = absResult;
+
+			std::shared_ptr<awst::Expression> shouldNegate;
+			if (op == Token::Mod || op == Token::AssignMod)
+			{
+				// mod: negate if dividend was negative
+				shouldNegate = isLeftNeg;
+			}
+			else
+			{
+				// div: negate if signs differ (XOR of sign bits)
+				auto xorSigns = std::make_shared<awst::BooleanBinaryOperation>();
+				xorSigns->sourceLocation = loc;
+				xorSigns->wtype = awst::WType::boolType();
+				xorSigns->left = isLeftNeg;
+				xorSigns->op = awst::BinaryBooleanOperator::And;
+				// Actually need XOR: (a && !b) || (!a && b)
+				// Simpler: just check if isLeftNeg != isRightNeg
+				auto notEqual = std::make_shared<awst::Not>();
+				notEqual->sourceLocation = loc;
+				notEqual->wtype = awst::WType::boolType();
+
+				auto bothNeg = std::make_shared<awst::BooleanBinaryOperation>();
+				bothNeg->sourceLocation = loc;
+				bothNeg->wtype = awst::WType::boolType();
+				bothNeg->left = isLeftNeg;
+				bothNeg->op = awst::BinaryBooleanOperator::And;
+				bothNeg->right = isRightNeg;
+
+				auto eitherNeg = std::make_shared<awst::BooleanBinaryOperation>();
+				eitherNeg->sourceLocation = loc;
+				eitherNeg->wtype = awst::WType::boolType();
+				eitherNeg->left = isLeftNeg;
+				eitherNeg->op = awst::BinaryBooleanOperator::Or;
+				eitherNeg->right = isRightNeg;
+
+				// XOR = eitherNeg && !bothNeg
+				auto notBothNeg = std::make_shared<awst::Not>();
+				notBothNeg->sourceLocation = loc;
+				notBothNeg->wtype = awst::WType::boolType();
+				notBothNeg->expr = std::move(bothNeg);
+
+				shouldNegate = std::make_shared<awst::BooleanBinaryOperation>();
+				shouldNegate->sourceLocation = loc;
+				shouldNegate->wtype = awst::WType::boolType();
+				std::static_pointer_cast<awst::BooleanBinaryOperation>(shouldNegate)->left = std::move(eitherNeg);
+				std::static_pointer_cast<awst::BooleanBinaryOperation>(shouldNegate)->op = awst::BinaryBooleanOperator::And;
+				std::static_pointer_cast<awst::BooleanBinaryOperation>(shouldNegate)->right = std::move(notBothNeg);
+			}
+
+			// result = shouldNegate ? negResult : absResult
+			// But only if absResult != 0 (negating 0 gives 2^256 which is wrong)
+			auto zero = std::make_shared<awst::IntegerConstant>();
+			zero->sourceLocation = loc;
+			zero->wtype = awst::WType::biguintType();
+			zero->value = "0";
+
+			auto isZero = std::make_shared<awst::NumericComparisonExpression>();
+			isZero->sourceLocation = loc;
+			isZero->wtype = awst::WType::boolType();
+			isZero->lhs = absResult;
+			isZero->op = awst::NumericComparison::Eq;
+			isZero->rhs = std::move(zero);
+
+			auto notZero = std::make_shared<awst::Not>();
+			notZero->sourceLocation = loc;
+			notZero->wtype = awst::WType::boolType();
+			notZero->expr = std::move(isZero);
+
+			auto shouldNegateAndNonZero = std::make_shared<awst::BooleanBinaryOperation>();
+			shouldNegateAndNonZero->sourceLocation = loc;
+			shouldNegateAndNonZero->wtype = awst::WType::boolType();
+			shouldNegateAndNonZero->left = std::move(shouldNegate);
+			shouldNegateAndNonZero->op = awst::BinaryBooleanOperator::And;
+			shouldNegateAndNonZero->right = std::move(notZero);
+
+			auto signedResult = std::make_shared<awst::ConditionalExpression>();
+			signedResult->sourceLocation = loc;
+			signedResult->wtype = awst::WType::biguintType();
+			signedResult->condition = std::move(shouldNegateAndNonZero);
+			signedResult->trueExpr = std::move(negResult);
+			signedResult->falseExpr = std::move(absResult);
+
+			push(std::move(signedResult));
+			return false;
+		}
+	}
+
 	auto result = buildBinaryOp(_node.getOperator(), std::move(left), std::move(right), resultType, loc);
 
 	// Unchecked wrapping for uint64 results:
