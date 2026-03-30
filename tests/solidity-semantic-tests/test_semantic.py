@@ -226,8 +226,22 @@ def test_semantic(test, localnet_session):
                         m = re.match(r"byte\[(\d+)\]", atype) or re.match(r"bytes(\d+)", atype)
                         if m:
                             n = int(m.group(1))
-                            byte_len = max(n, (args[raw_idx].bit_length() + 7) // 8) if args[raw_idx] else n
-                            coerced.append(list(args[raw_idx].to_bytes(byte_len, "big")[-n:].ljust(n, b'\x00')))
+                            val = args[raw_idx]
+                            if val == 0:
+                                coerced.append(list(b'\x00' * n))
+                            else:
+                                byte_len = max(n, (val.bit_length() + 7) // 8)
+                                full_bytes = val.to_bytes(byte_len, "big")
+                                # Left-aligned values (from left() parser): take first N bytes
+                                # Right-aligned values: take last N bytes
+                                if byte_len > n:
+                                    # Check if it's left-aligned (trailing zeros)
+                                    if full_bytes[-n:] == b'\x00' * n and full_bytes[:n] != b'\x00' * n:
+                                        coerced.append(list(full_bytes[:n]))
+                                    else:
+                                        coerced.append(list(full_bytes[-n:].ljust(n, b'\x00')))
+                                else:
+                                    coerced.append(list(full_bytes[-n:].ljust(n, b'\x00')))
                         raw_idx += 1
                     elif atype == "address" and isinstance(args[raw_idx], int):
                         from algosdk import encoding
