@@ -3,11 +3,18 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_creation.sol.C.approval_program() -> uint64:
 main:
+    pushint 0
     txn ApplicationID
     bnz main_after_if_else@2
     load 0
+    dig 1
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000002a
+    replace2 0
+    extract 0 32
+    swap
     store 0
-    pushint 0
+    pushbytes 0x2a
+    b==
     assert
     pushint 1
     return

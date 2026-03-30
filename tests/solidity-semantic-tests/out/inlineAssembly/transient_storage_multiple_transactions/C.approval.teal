@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_transactions.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
-    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    intcblock 1 32
+    bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -39,9 +39,19 @@ f:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_transactions.sol.C.g[routing]() -> void:
 g:
+    pushint 160
+    bzero
     load 0
+    swap
+    extract 0 32
+    swap
     store 0
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
@@ -52,8 +62,16 @@ h:
     load 0
     store 0
     load 0
+    pushint 0
+    extract 0 32
+    swap
     store 0
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return

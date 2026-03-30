@@ -3,12 +3,12 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/enum_explicit_overflow_homestead.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 32 8
+    intcblock 1 32 8 0
     bytecblock "choice" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "choice"
-    pushint 0
+    intc_3 // 0
     app_global_put
     intc_0 // 1
     return
@@ -49,6 +49,10 @@ getChoiceExp:
     intc_2 // 8
     -
     extract_uint64
+    dup
+    pushint 3
+    <
+    assert // enum out of range
     bytec_0 // "choice"
     dig 1
     app_global_put
@@ -81,6 +85,10 @@ getChoiceFromSigned:
     intc_2 // 8
     -
     extract_uint64
+    dup
+    pushint 3
+    <
+    assert // enum out of range
     bytec_0 // "choice"
     dig 1
     app_global_put
@@ -98,6 +106,8 @@ getChoiceFromSigned:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/enum_explicit_overflow_homestead.sol.test.getChoiceFromMax[routing]() -> void:
 getChoiceFromMax:
+    intc_3 // 0
+    assert // enum out of range
     bytec_0 // "choice"
     pushint 18446744073709551615
     app_global_put

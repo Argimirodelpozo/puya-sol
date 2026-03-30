@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 32 0 42
+    bytecblock 0x 0x15
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -31,13 +32,23 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.get[routing]() -> void:
 get:
     txna ApplicationArgs 1
+    dup
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    load 0
-    store 0
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.get
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
@@ -63,19 +74,90 @@ set:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.test[routing]() -> void:
 test:
-    load 0
-    store 0
-    load 0
-    store 0
-    load 0
-    store 0
-    load 0
-    store 0
-    pushint 0
+    intc_2 // 0
+    dup
+    itob
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.get
+    bytec_0 // 0x
+    b==
+    bz test_bool_false@4
+    intc_3 // 42
+    itob
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.get
+    bytec_0 // 0x
+    b==
+    bz test_bool_false@4
+    intc_0 // 1
+
+test_bool_merge@5:
     assert
     load 0
     store 0
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.get
+    bytec_1 // 0x15
+    b==
+    bz test_bool_false@8
+    intc_3 // 42
+    itob
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.get
+    bytec_0 // 0x
+    b==
+    bz test_bool_false@8
+    intc_0 // 1
+
+test_bool_merge@9:
+    assert
+    intc_3 // 42
+    itob
+    bury 2
     load 0
     store 0
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.get
+    bytec_1 // 0x15
+    b==
+    bz test_bool_false@12
+    dig 1
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.get
+    pushbytes 0x83
+    b==
+    bz test_bool_false@12
+    intc_0 // 1
+
+test_bool_merge@13:
+    assert
     intc_0 // 1
     return
+
+test_bool_false@12:
+    intc_2 // 0
+    b test_bool_merge@13
+
+test_bool_false@8:
+    intc_2 // 0
+    b test_bool_merge@9
+
+test_bool_false@4:
+    intc_2 // 0
+    b test_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.get(addr: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.get:
+    proto 1 1
+    pushint 160
+    bzero
+    load 0
+    frame_dig -1
+    btoi
+    intc_1 // 32
+    *
+    uncover 2
+    swap
+    intc_1 // 32
+    extract3
+    swap
+    store 0
+    retsub

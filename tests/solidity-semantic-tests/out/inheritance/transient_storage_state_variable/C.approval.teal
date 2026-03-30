@@ -3,20 +3,20 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 32
-    bytecblock "y" "z" 0xffffff "x" "w" 0x800000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000 0x010000000000000000000000000000000000000000000000000000000000000000
+    intcblock 0 1 32 24
+    bytecblock "y" "w" 0xffffff 0x800000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_3 // "x"
+    pushbytes "x"
     intc_0 // 0
     app_global_put
     bytec_0 // "y"
     intc_0 // 0
     app_global_put
-    bytec 4 // "w"
+    bytec_1 // "w"
     intc_0 // 0
     app_global_put
-    bytec_1 // "z"
+    pushbytes "z"
     intc_0 // 0
     app_global_put
     intc_1 // 1
@@ -48,15 +48,22 @@ main_f_route@4:
 f:
     intc_0 // 0
     pushbytes ""
-    intc_0 // 0
-    bytec_3 // "x"
-    app_global_get_ex
-    assert // check x exists
+    pushint 160
+    bzero
+    intc_3 // 24
+    bzero
+    dig 1
+    pushint 56
+    extract_uint64
     intc_1 // 1
     +
-    bytec_3 // "x"
+    itob
+    dig 1
     swap
-    app_global_put
+    concat
+    uncover 2
+    swap
+    replace2 32
     intc_0 // 0
     bytec_0 // "y"
     app_global_get_ex
@@ -67,27 +74,24 @@ f:
     swap
     app_global_put
     intc_0 // 0
-    bytec 4 // "w"
+    bytec_1 // "w"
     app_global_get_ex
     assert // check w exists
     pushint 3
     +
-    bytec 4 // "w"
+    bytec_1 // "w"
     swap
     app_global_put
-    intc_0 // 0
-    bytec_1 // "z"
-    app_global_get_ex
-    assert // check z exists
+    dup
+    intc_3 // 24
+    extract_uint64
     pushint 4
     +
-    bytec_1 // "z"
+    itob
+    uncover 2
     swap
-    app_global_put
-    intc_0 // 0
-    bytec_3 // "x"
-    app_global_get_ex
-    assert // check x exists
+    concat
+    replace2 0
     intc_0 // 0
     bytec_0 // "y"
     app_global_get_ex
@@ -95,7 +99,7 @@ f:
     itob
     bytec_2 // 0xffffff
     b&
-    bytec 5 // 0x800000
+    bytec_3 // 0x800000
     b>=
     bz f_ternary_false@3
     intc_0 // 0
@@ -105,44 +109,35 @@ f:
     itob
     bytec_2 // 0xffffff
     b&
-    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
     b+
-    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bury 3
 
 f_ternary_merge@4:
     intc_0 // 0
-    bytec 4 // "w"
+    bytec_1 // "w"
     app_global_get_ex
     swap
     bury 3
     assert // check w exists
-    intc_0 // 0
-    bytec_1 // "z"
-    app_global_get_ex
-    assert // check z exists
-    itob
+    dup
+    extract 24 8
     bytec_2 // 0xffffff
     b&
-    bytec 5 // 0x800000
+    dup
+    bytec_3 // 0x800000
     b>=
     bz f_ternary_false@6
-    intc_0 // 0
-    bytec_1 // "z"
-    app_global_get_ex
-    assert // check z exists
-    itob
-    bytec_2 // 0xffffff
-    b&
-    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
     b+
-    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 f_ternary_merge@7:
     dig 1
-    itob
+    extract 56 8
     dig 4
     dup
     len
@@ -177,13 +172,6 @@ f_ternary_merge@7:
     return
 
 f_ternary_false@6:
-    intc_0 // 0
-    bytec_1 // "z"
-    app_global_get_ex
-    assert // check z exists
-    itob
-    bytec_2 // 0xffffff
-    b&
     b f_ternary_merge@7
 
 f_ternary_false@3:

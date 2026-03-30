@@ -3,15 +3,15 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/operators/compound_assign_transient_storage.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    bytecblock "value1" "value2" 0x
+    intcblock 32 1
+    bytecblock "value1" 0x
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "value1"
-    bytec_2 // 0x
+    bytec_1 // 0x
     app_global_put
-    bytec_1 // "value2"
-    bytec_2 // 0x
+    pushbytes "value2"
+    bytec_1 // 0x
     app_global_put
     intc_1 // 1
     return
@@ -52,38 +52,42 @@ f:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_2 // 0
+    pushint 160
+    bzero
+    pushint 0
     bytec_0 // "value1"
     app_global_get_ex
     assert // check value1 exists
-    dig 2
+    dig 3
     b+
     bytec_0 // "value1"
     dig 1
     app_global_put
-    swap
     uncover 2
+    uncover 3
     b*
-    intc_2 // 0
-    bytec_1 // "value2"
-    app_global_get_ex
-    assert // check value2 exists
-    swap
-    uncover 2
-    b+
-    b+
-    pushbytes 0x07
-    b+
-    bytec_1 // "value2"
-    dig 1
-    app_global_put
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
     intc_0 // 32
     bzero
+    dig 3
+    extract 0 32
+    uncover 2
+    uncover 3
+    b+
+    b+
+    dig 1
+    b|
+    uncover 2
+    swap
+    replace2 0
+    dup
+    extract 0 32
+    pushint 7
+    itob
+    b+
+    dig 2
+    b|
+    replace2 0
+    extract 0 32
     b|
     pushbytes 0x151f7c75
     swap
