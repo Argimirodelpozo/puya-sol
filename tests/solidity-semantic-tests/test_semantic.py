@@ -126,12 +126,9 @@ def localnet_session():
 def test_semantic(test, localnet_session):
     localnet, account = localnet_session
 
-    # Skip tests that use unsupported features
+    # Skip tests with no parseable assertion format
     if test.skipped:
         pytest.skip(test.skip_reason)
-
-    if not test.calls:
-        pytest.skip("no assertions")
 
     # Compile
     out_dir = OUT_DIR / test.category / test.name
