@@ -56,11 +56,12 @@ int TransientStorage::getOffset(std::string const& _name) const
 std::shared_ptr<awst::Statement> TransientStorage::buildInit(
 	awst::SourceLocation const& _loc) const
 {
-	// __transient = bzero(blobSize)
+	// __transient = bzero(size) — always at least MAX_SLOTS for assembly tload/tstore
+	unsigned sz = std::max(blobSize(), MAX_SLOTS * SLOT_SIZE);
 	auto size = std::make_shared<awst::IntegerConstant>();
 	size->sourceLocation = _loc;
 	size->wtype = awst::WType::uint64Type();
-	size->value = std::to_string(blobSize());
+	size->value = std::to_string(sz);
 
 	auto bzero = std::make_shared<awst::IntrinsicCall>();
 	bzero->sourceLocation = _loc;

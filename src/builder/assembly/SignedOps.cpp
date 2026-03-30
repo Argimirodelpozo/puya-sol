@@ -14,16 +14,59 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTload(
 	awst::SourceLocation const& _loc
 )
 {
-	// tload(slot) — EVM transient storage (per-transaction, shared across calls).
-	// Stubbed: returns 0. Needs scratch-based implementation for correct semantics.
-	Logger::instance().warning(
-		"tload() stubbed as 0 (EVM transient storage not yet implemented on AVM)", _loc
-	);
-	auto zero = std::make_shared<awst::IntegerConstant>();
-	zero->sourceLocation = _loc;
-	zero->wtype = awst::WType::biguintType();
-	zero->value = "0";
-	return zero;
+	// tload(slot) → extract 32 bytes from __transient blob at slot*32
+	if (_args.empty()) return nullptr;
+
+	auto slot = ensureBiguint(_args[0], _loc);
+
+	// Convert slot to uint64 offset: slot * 32
+	auto slotBytes = std::make_shared<awst::ReinterpretCast>();
+	slotBytes->sourceLocation = _loc;
+	slotBytes->wtype = awst::WType::bytesType();
+	slotBytes->expr = std::move(slot);
+	auto slotU64 = std::make_shared<awst::IntrinsicCall>();
+	slotU64->sourceLocation = _loc;
+	slotU64->wtype = awst::WType::uint64Type();
+	slotU64->opCode = "btoi";
+	slotU64->stackArgs.push_back(std::move(slotBytes));
+
+	auto thirtyTwo = std::make_shared<awst::IntegerConstant>();
+	thirtyTwo->sourceLocation = _loc;
+	thirtyTwo->wtype = awst::WType::uint64Type();
+	thirtyTwo->value = "32";
+
+	auto offset = std::make_shared<awst::UInt64BinaryOperation>();
+	offset->sourceLocation = _loc;
+	offset->wtype = awst::WType::uint64Type();
+	offset->left = std::move(slotU64);
+	offset->op = awst::UInt64BinaryOperator::Mult;
+	offset->right = std::move(thirtyTwo);
+
+	// extract3(__transient, offset, 32)
+	auto blob = std::make_shared<awst::VarExpression>();
+	blob->sourceLocation = _loc;
+	blob->name = "__transient";
+	blob->wtype = awst::WType::bytesType();
+
+	auto thirtyTwo2 = std::make_shared<awst::IntegerConstant>();
+	thirtyTwo2->sourceLocation = _loc;
+	thirtyTwo2->wtype = awst::WType::uint64Type();
+	thirtyTwo2->value = "32";
+
+	auto extract = std::make_shared<awst::IntrinsicCall>();
+	extract->sourceLocation = _loc;
+	extract->wtype = awst::WType::bytesType();
+	extract->opCode = "extract3";
+	extract->stackArgs.push_back(std::move(blob));
+	extract->stackArgs.push_back(std::move(offset));
+	extract->stackArgs.push_back(std::move(thirtyTwo2));
+
+	// Reinterpret as biguint
+	auto cast = std::make_shared<awst::ReinterpretCast>();
+	cast->sourceLocation = _loc;
+	cast->wtype = awst::WType::biguintType();
+	cast->expr = std::move(extract);
+	return cast;
 }
 
 void AssemblyBuilder::handleTstore(
@@ -32,11 +75,83 @@ void AssemblyBuilder::handleTstore(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	// tstore(slot, value) — EVM transient storage (per-transaction, shared across calls).
-	// Stubbed: no-op. Needs scratch-based implementation for correct semantics.
-	Logger::instance().warning(
-		"tstore() stubbed as no-op (EVM transient storage not yet implemented on AVM)", _loc
-	);
+	// tstore(slot, value) → replace 32 bytes in __transient blob at slot*32
+	if (_args.size() < 2) return;
+
+	auto slot = ensureBiguint(_args[0], _loc);
+	auto value = ensureBiguint(_args[1], _loc);
+
+	// Convert slot to uint64 offset: slot * 32
+	auto slotBytes = std::make_shared<awst::ReinterpretCast>();
+	slotBytes->sourceLocation = _loc;
+	slotBytes->wtype = awst::WType::bytesType();
+	slotBytes->expr = std::move(slot);
+	auto slotU64 = std::make_shared<awst::IntrinsicCall>();
+	slotU64->sourceLocation = _loc;
+	slotU64->wtype = awst::WType::uint64Type();
+	slotU64->opCode = "btoi";
+	slotU64->stackArgs.push_back(std::move(slotBytes));
+
+	auto thirtyTwo = std::make_shared<awst::IntegerConstant>();
+	thirtyTwo->sourceLocation = _loc;
+	thirtyTwo->wtype = awst::WType::uint64Type();
+	thirtyTwo->value = "32";
+
+	auto offset = std::make_shared<awst::UInt64BinaryOperation>();
+	offset->sourceLocation = _loc;
+	offset->wtype = awst::WType::uint64Type();
+	offset->left = std::move(slotU64);
+	offset->op = awst::UInt64BinaryOperator::Mult;
+	offset->right = std::move(thirtyTwo);
+
+	// Convert value to 32 bytes: b| with bzero(32)
+	auto valueBytes = std::make_shared<awst::ReinterpretCast>();
+	valueBytes->sourceLocation = _loc;
+	valueBytes->wtype = awst::WType::bytesType();
+	valueBytes->expr = std::move(value);
+
+	auto zeros = std::make_shared<awst::IntrinsicCall>();
+	zeros->sourceLocation = _loc;
+	zeros->wtype = awst::WType::bytesType();
+	zeros->opCode = "bzero";
+	auto sz = std::make_shared<awst::IntegerConstant>();
+	sz->sourceLocation = _loc;
+	sz->wtype = awst::WType::uint64Type();
+	sz->value = "32";
+	zeros->stackArgs.push_back(std::move(sz));
+
+	auto padded = std::make_shared<awst::IntrinsicCall>();
+	padded->sourceLocation = _loc;
+	padded->wtype = awst::WType::bytesType();
+	padded->opCode = "b|";
+	padded->stackArgs.push_back(std::move(zeros));
+	padded->stackArgs.push_back(std::move(valueBytes));
+
+	// replace3(__transient, offset, padded_value)
+	auto blobRead = std::make_shared<awst::VarExpression>();
+	blobRead->sourceLocation = _loc;
+	blobRead->name = "__transient";
+	blobRead->wtype = awst::WType::bytesType();
+
+	auto replace = std::make_shared<awst::IntrinsicCall>();
+	replace->sourceLocation = _loc;
+	replace->wtype = awst::WType::bytesType();
+	replace->opCode = "replace3";
+	replace->stackArgs.push_back(std::move(blobRead));
+	replace->stackArgs.push_back(std::move(offset));
+	replace->stackArgs.push_back(std::move(padded));
+
+	// __transient = replace3(...)
+	auto target = std::make_shared<awst::VarExpression>();
+	target->sourceLocation = _loc;
+	target->name = "__transient";
+	target->wtype = awst::WType::bytesType();
+
+	auto assign = std::make_shared<awst::AssignmentStatement>();
+	assign->sourceLocation = _loc;
+	assign->target = std::move(target);
+	assign->value = std::move(replace);
+	_out.push_back(std::move(assign));
 }
 
 // ─── Signed integer helpers ──────────────────────────────────────────────────

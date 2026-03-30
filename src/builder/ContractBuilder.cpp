@@ -2177,7 +2177,13 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		}
 
 		// Initialize transient storage blob at method entry
-		if (m_transientStorage.hasTransientVars() && method.arc4MethodConfig.has_value())
+		// Needed for Solidity transient vars AND assembly tload/tstore
+		bool hasInlineAsm = !_func.body().statements().empty() && std::any_of(
+			_func.body().statements().begin(), _func.body().statements().end(),
+			[](auto const& s) { return dynamic_cast<solidity::frontend::InlineAssembly const*>(s.get()) != nullptr; }
+		);
+		if (method.arc4MethodConfig.has_value()
+			&& (m_transientStorage.hasTransientVars() || hasInlineAsm))
 		{
 			auto initStmt = m_transientStorage.buildInit(method.sourceLocation);
 			method.body->body.insert(method.body->body.begin(), std::move(initStmt));
