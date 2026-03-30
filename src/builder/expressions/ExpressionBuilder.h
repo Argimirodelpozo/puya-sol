@@ -1,6 +1,7 @@
 #pragma once
 
 #include "awst/Node.h"
+#include "builder/sol-eb/BuilderRegistry.h"
 #include "builder/sol-eb/BuiltinCallables.h"
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-intrinsics/IntrinsicMapper.h"
@@ -99,6 +100,7 @@ private:
 	TypeMapper& m_typeMapper;
 	StorageMapper& m_storageMapper;
 	TransientStorage* m_transientStorage = nullptr;
+	eb::BuilderRegistry m_registry;
 	eb::BuiltinCallableRegistry m_builtinCallables;
 	std::string m_sourceFile;
 	std::string m_contractName;

@@ -222,8 +222,9 @@ eb::BuilderContext ExpressionBuilder::makeBuilderContext()
 		/*.buildExpr =*/ [this](solidity::frontend::Expression const& _expr) {
 			return this->build(_expr);
 		},
-		/*.builderForInstance =*/ [](solidity::frontend::Type const*, std::shared_ptr<awst::Expression>) {
-			return std::unique_ptr<eb::InstanceBuilder>(nullptr);
+		/*.builderForInstance =*/ [this](solidity::frontend::Type const* _solType, std::shared_ptr<awst::Expression> _expr) {
+			auto ctx = makeBuilderContext();
+			return m_registry.tryBuildInstance(ctx, _solType, std::move(_expr));
 		},
 	};
 }

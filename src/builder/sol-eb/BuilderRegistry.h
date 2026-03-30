@@ -23,6 +23,9 @@ namespace puyasol::builder::eb
 class BuilderRegistry
 {
 public:
+	/// Initialize with all type builder factories registered.
+	BuilderRegistry();
+
 	/// Factory: (context, Solidity type, AWST expression) → instance builder.
 	/// The factory receives the full Solidity type to inspect parameters.
 	using InstanceFactory = std::function<std::unique_ptr<InstanceBuilder>(

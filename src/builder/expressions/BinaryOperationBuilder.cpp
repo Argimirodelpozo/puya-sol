@@ -671,6 +671,56 @@ bool ExpressionBuilder::visit(solidity::frontend::BinaryOperation const& _node)
 	auto right = build(_node.rightExpression());
 	auto* resultType = m_typeMapper.map(_node.annotation().type);
 
+	// Try type-driven builder pattern (sol-eb/) for binary operations.
+	// This handles signed arithmetic, overflow checking, and type-specific wrapping.
+	{
+		using Token = solidity::frontend::Token;
+		auto solOp = _node.getOperator();
+
+		// Map Solidity Token to BuilderBinaryOp
+		eb::BuilderBinaryOp builderOp;
+		bool hasBinOp = true;
+		switch (solOp)
+		{
+		case Token::Add: case Token::AssignAdd: builderOp = eb::BuilderBinaryOp::Add; break;
+		case Token::Sub: case Token::AssignSub: builderOp = eb::BuilderBinaryOp::Sub; break;
+		case Token::Mul: case Token::AssignMul: builderOp = eb::BuilderBinaryOp::Mult; break;
+		case Token::Div: case Token::AssignDiv: builderOp = eb::BuilderBinaryOp::FloorDiv; break;
+		case Token::Mod: case Token::AssignMod: builderOp = eb::BuilderBinaryOp::Mod; break;
+		case Token::Exp: builderOp = eb::BuilderBinaryOp::Pow; break;
+		case Token::SHL: case Token::AssignShl: builderOp = eb::BuilderBinaryOp::LShift; break;
+		case Token::SHR: case Token::SAR: case Token::AssignShr: case Token::AssignSar:
+			builderOp = eb::BuilderBinaryOp::RShift; break;
+		case Token::BitOr: case Token::AssignBitOr: builderOp = eb::BuilderBinaryOp::BitOr; break;
+		case Token::BitXor: case Token::AssignBitXor: builderOp = eb::BuilderBinaryOp::BitXor; break;
+		case Token::BitAnd: case Token::AssignBitAnd: builderOp = eb::BuilderBinaryOp::BitAnd; break;
+		default: hasBinOp = false; break;
+		}
+
+		if (hasBinOp)
+		{
+			auto ctx = makeBuilderContext();
+			auto* leftSolType = _node.leftExpression().annotation().type;
+			auto leftBuilder = ctx.builderForInstance(leftSolType, left);
+			if (leftBuilder)
+			{
+				auto* rightSolType = _node.rightExpression().annotation().type;
+				auto rightBuilder = ctx.builderForInstance(rightSolType, right);
+				if (rightBuilder)
+				{
+					auto result = leftBuilder->binary_op(
+						*rightBuilder, builderOp,
+						makeLoc(_node.location()));
+					if (result)
+					{
+						push(result->resolve());
+						return false;
+					}
+				}
+			}
+		}
+	}
+
 	// For signed integer comparisons (<, >, <=, >=), we need signed semantics.
 	// AVM only has unsigned comparison, so we XOR both operands with the sign bit
 	// (2^63 for uint64, 2^255 for biguint) to convert signed ordering to unsigned ordering.
