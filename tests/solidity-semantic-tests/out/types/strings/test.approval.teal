@@ -1,0 +1,69 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/strings.sol.test.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb9304266 0xf71817e5 0x7de11924 // method "fixedBytesHex()byte[32]", method "fixedBytes()byte[32]", method "pipeThrough(byte[2],bool)(byte[16],bool)"
+    txna ApplicationArgs 0
+    match main_fixedBytesHex_route@5 main_fixedBytes_route@6 pipeThrough
+    err
+
+main_fixedBytes_route@6:
+    pushbytes 0x151f7c7561626300ff5f5f00000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_fixedBytesHex_route@5:
+    pushbytes 0x151f7c75aabb00ff
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/strings.sol.test.pipeThrough[routing]() -> void:
+pipeThrough:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 2
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 2>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
