@@ -721,24 +721,48 @@ def execute_call(app, call, app_spec=None, verbose=False):
             except Exception:
                 return True, "correctly reverted"
         else:
-            try:
-                result = app.send.call(params, send_params=POPULATE)
-            except Exception as ex1:
-                err_str = str(ex1)
-                is_budget = "cost budget exceeded" in err_str or "dynamic cost budget" in err_str
-                is_fee = "fee too small" in err_str
-                is_simulate = "simulate" in err_str.lower() or "resolving execution info" in err_str.lower()
-                if is_budget or is_fee or is_simulate:
-                    try:
-                        # Retry with budget pooling (includes simulate for resources)
-                        result = _call_with_extra_budget(
-                            app, method, args,
-                            extra_calls=15,
-                        )
-                    except Exception:
-                        raise ex1
-                else:
-                    raise
+            if hasattr(app, '_ensure_budget_fee') and app._ensure_budget_fee > 3000:
+                # ensure_budget was injected — use direct ATC with high fee
+                # (algokit's simulate can't handle OpUp inner txns)
+                from algosdk.atomic_transaction_composer import AtomicTransactionComposer as _ATC
+                from algosdk.abi import Method as _AbiMethod
+                from algosdk.transaction import BoxReference as _BoxRef
+                import os as _os
+                _algod = app.algorand.client.algod
+                _sender = app._default_sender
+                _signer = app._default_signer or app.algorand.account.get_signer(_sender)
+                _sp = _algod.suggested_params()
+                _sp.flat_fee = True
+                _sp.fee = 1000 + app._ensure_budget_fee
+                _atc = _ATC()
+                _boxes = [_BoxRef(app_index=0, name=r[1]) for r in app._box_refs] if hasattr(app, '_box_refs') and app._box_refs else None
+                _atc.add_method_call(
+                    app_id=app.app_id, method=_AbiMethod.from_signature(method),
+                    sender=_sender, sp=_sp, signer=_signer,
+                    method_args=args if args else [],
+                    note=_os.urandom(8), boxes=_boxes,
+                )
+                _raw = _atc.execute(_algod, wait_rounds=4)
+                class _R: pass
+                result = _R()
+                result.abi_return = _raw.abi_results[0].return_value if _raw.abi_results else None
+            else:
+                try:
+                    result = app.send.call(params, send_params=POPULATE)
+                except Exception as ex1:
+                    err_str = str(ex1)
+                    is_budget = "cost budget exceeded" in err_str or "dynamic cost budget" in err_str
+                    is_fee = "fee too small" in err_str
+                    is_simulate = "simulate" in err_str.lower() or "resolving execution info" in err_str.lower()
+                    if is_budget or is_fee or is_simulate:
+                        try:
+                            result = _call_with_extra_budget(
+                                app, method, args, extra_calls=15,
+                            )
+                        except Exception:
+                            raise ex1
+                    else:
+                        raise
 
             actual = result.abi_return
 
@@ -861,7 +885,7 @@ def execute_call(app, call, app_spec=None, verbose=False):
     except Exception as ex:
         if call.expect_failure:
             return True, "correctly reverted"
-        return False, f"exception: {str(ex)[:100]}"
+        return False, f"exception: {str(ex)[:300]}"
 
 
 def _try_decode_evm_returns(expected_list, actual_list):
@@ -1027,6 +1051,11 @@ def run_test(test: SemanticTest, localnet, account, verbose=False):
     if not app:
         return "DEPLOY_ERROR", "deployment failed"
 
+    # On budget retry, set fee hint so execute_call uses enough fee for OpUp inner txns
+    if ensure_budget:
+        max_budget = max(ensure_budget.values())
+        n_inner = (max_budget + 699) // 700
+        app._ensure_budget_fee = int(n_inner * 1100)  # 10% margin
 
     # Execute calls
     passed = 0
@@ -1051,8 +1080,6 @@ def run_test(test: SemanticTest, localnet, account, verbose=False):
             failed += 1
             details.append(f"  FAIL: {call.raw_line} — {detail}")
 
-    # Budget retry is handled at the call level (see execute_call),
-    # not by recompilation. Removed the ensure_budget retry to keep it simple.
 
     if failed > 0:
         return "FAIL", f"{passed}p/{failed}f/{skipped}s" + "\n".join([""] + details)
