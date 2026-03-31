@@ -659,7 +659,11 @@ def execute_call(app, call, app_spec=None, verbose=False):
                     if pt2.strip() == 'string' and i2 < len(args) and isinstance(args[i2], bytes):
                         args[i2] = args[i2].decode('utf-8', errors='replace')
 
-        params = au.AppClientMethodCallParams(method=method, args=args if args else None)
+        # Extra fee to cover potential inner transactions (e.g., this.f() self-calls)
+        params = au.AppClientMethodCallParams(
+            method=method, args=args if args else None,
+            extra_fee=au.AlgoAmount(micro_algo=3000),  # 3 extra txns worth
+        )
 
         if call.expect_failure:
             try:
