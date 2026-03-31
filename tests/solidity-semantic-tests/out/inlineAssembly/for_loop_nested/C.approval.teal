@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/for_loop_nested.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    bytecblock 0x068101 0x 0x02 0x01
+    intcblock 32 1
+    bytecblock 0x 0x02 0x01
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -34,54 +34,29 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/for_loop_nested.sol.C.f[routing]() -> void:
 f:
-    intc_2 // 0
-    dup
     txna ApplicationArgs 1
     dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-
-f_while_top@17:
-    pushint 100010
-    global OpcodeBudget
-    >
-    bz f_after_while@22
-    itxn_begin
-    pushint 6 // appl
-    itxn_field TypeEnum
-    pushint 5 // DeleteApplication
-    itxn_field OnCompletion
-    bytec_0 // 0x068101
-    itxn_field ApprovalProgram
-    bytec_0 // 0x068101
-    itxn_field ClearStateProgram
-    intc_2 // 0
-    itxn_field Fee
-    itxn_submit
-    b f_while_top@17
-
-f_after_while@22:
-    bytec_1 // 0x
-    bury 2
+    bytec_0 // 0x
     load 0
-    bury 3
 
 f_while_top@2:
     dig 1
     pushbytes 0x0a
     b<
     bz f_after_while@15
-    dup
-    bytec_1 // 0x
+    dig 2
+    bytec_0 // 0x
     b==
     bz f_while_top@6
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     bury 2
 
 f_after_while@15:
-    dig 2
+    dup
     store 0
     dig 1
     dup
@@ -100,26 +75,26 @@ f_after_while@15:
     return
 
 f_while_top@6:
-    dup
+    dig 2
     pushbytes 0x03
     b<
     bz f_after_while@12
-    dup
-    bytec_3 // 0x01
+    dig 2
+    bytec_2 // 0x01
     b==
     bnz f_while_top@6
-    dup
-    bytec_2 // 0x02
+    dig 2
+    bytec_1 // 0x02
     b==
     bnz f_after_while@12
     pushbytes 0x11
     bury 2
     pushbytes 0x09
-    bury 1
+    bury 3
     b f_while_top@6
 
 f_after_while@12:
-    dup
+    dig 2
     pushbytes 0x04
     b==
     bz f_after_if_else@14
@@ -128,7 +103,7 @@ f_after_while@12:
 
 f_after_if_else@14:
     dig 1
-    bytec_3 // 0x01
+    bytec_2 // 0x01
     b+
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
