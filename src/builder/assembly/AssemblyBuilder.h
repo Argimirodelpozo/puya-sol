@@ -632,6 +632,10 @@ private:
 	/// evaluating expressions.
 	std::vector<std::shared_ptr<awst::Statement>> m_pendingStatements;
 
+	/// Current for-loop post statements — `continue` must emit these before LoopContinue.
+	/// In Yul, `continue` jumps to the post expression, not the condition.
+	std::vector<solidity::yul::Statement> const* m_forLoopPost = nullptr;
+
 };
 
 } // namespace puyasol::builder

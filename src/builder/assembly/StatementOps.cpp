@@ -100,14 +100,20 @@ void AssemblyBuilder::buildStatement(
 				loop->sourceLocation = loc;
 				loop->condition = ensureBool(buildExpression(*_node.condition), loc);
 
+				// Set post statements so `continue` can emit them
+				auto* savedPost = m_forLoopPost;
+				m_forLoopPost = &_node.post.statements;
+
 				auto body = std::make_shared<awst::Block>();
 				body->sourceLocation = loc;
 				for (auto const& bodyStmt: _node.body.statements)
 					buildStatement(bodyStmt, body->body);
+				// Post statements at end of body (normal iteration path)
 				for (auto const& postStmt: _node.post.statements)
 					buildStatement(postStmt, body->body);
 				loop->loopBody = std::move(body);
 
+				m_forLoopPost = savedPost;
 				_out.push_back(std::move(loop));
 			}
 			else if constexpr (std::is_same_v<T, solidity::yul::Break>)
@@ -118,6 +124,13 @@ void AssemblyBuilder::buildStatement(
 			}
 			else if constexpr (std::is_same_v<T, solidity::yul::Continue>)
 			{
+				// In Yul, `continue` jumps to the for-loop's post expression,
+				// not the condition. Emit post statements before LoopContinue.
+				if (m_forLoopPost)
+				{
+					for (auto const& postStmt: *m_forLoopPost)
+						buildStatement(postStmt, _out);
+				}
 				auto stmt = std::make_shared<awst::LoopContinue>();
 				stmt->sourceLocation = makeLoc(_node.debugData);
 				_out.push_back(std::move(stmt));
