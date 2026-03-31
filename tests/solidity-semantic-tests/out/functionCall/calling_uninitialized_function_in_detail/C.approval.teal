@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_uninitialized_function_in_detail.sol.C.approval_program() -> uint64:
 main:
-    bytecblock 0x "mutex"
+    bytecblock "mutex" 0x 0x8000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
     pushbytes "x"
-    bytec_0 // 0x
+    bytec_1 // 0x
     app_global_put
-    bytec_1 // "mutex"
-    bytec_0 // 0x
+    bytec_0 // "mutex"
+    bytec_1 // 0x
     app_global_put
     pushint 1
     return
@@ -40,10 +40,12 @@ main_t_route@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/calling_uninitialized_function_in_detail.sol.C.t[routing]() -> void:
 t:
     pushint 0
-    bytec_1 // "mutex"
+    bytec_0 // "mutex"
     app_global_get_ex
     assert // check mutex exists
-    bytec_0 // 0x
+    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b^
+    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b>
     bz t_after_if_else@3
     load 0
@@ -65,7 +67,7 @@ t:
 t_after_if_else@3:
     pushint 1
     itob
-    bytec_1 // "mutex"
+    bytec_0 // "mutex"
     swap
     app_global_put
     err // uninitialized function pointer

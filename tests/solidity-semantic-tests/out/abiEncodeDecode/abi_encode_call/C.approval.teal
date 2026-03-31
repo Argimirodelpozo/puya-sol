@@ -116,8 +116,9 @@ callMeMaybe:
     len
     intc_3 // 32
     /
-    pushint 3
-    ==
+    itob
+    pushbytes 0x03
+    b==
     assert
     dup
     extract 0 32 // on error: index access is out of bounds

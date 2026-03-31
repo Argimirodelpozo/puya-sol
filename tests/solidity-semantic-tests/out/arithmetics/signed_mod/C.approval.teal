@@ -167,6 +167,10 @@ f_ternary_false@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.g[routing]() -> void:
 g:
+    intc_2 // 0
+    dup
+    bytec_1 // ""
+    dup
     txna ApplicationArgs 1
     dup
     len
@@ -175,16 +179,46 @@ g:
     assert // invalid number of bytes for arc4.bool
     intc_2 // 0
     getbit
-    bz g_else_body@3
+    bz g_else_body@28
     intc_2 // 0
     intc_0 // 1
     -
     itob
+    dup
+    bury 5
+    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    bury 3
+    bz g_ternary_false@20
+    dig 1
+    bz g_ternary_false@11
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 4
+    b-
+
+g_ternary_merge@12:
     bytec_1 // 0x
     swap
     b/
+    bytec_1 // 0x
+    b==
+    bnz g_ternary_false@20
+    dig 1
+    bz g_ternary_false@18
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 4
+    b-
 
-g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.g@4:
+g_ternary_merge@19:
+    bytec_1 // 0x
+    swap
+    b/
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+
+g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.g@54:
     dup
     len
     intc_1 // 32
@@ -200,12 +234,92 @@ g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tes
     intc_0 // 1
     return
 
-g_else_body@3:
+g_ternary_false@18:
+    dig 3
+    b g_ternary_merge@19
+
+g_ternary_false@20:
+    dig 1
+    bz g_ternary_false@25
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 4
+    b-
+
+g_ternary_merge@26:
+    bytec_1 // 0x
+    swap
+    b/
+    b g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.g@54
+
+g_ternary_false@25:
+    dig 3
+    b g_ternary_merge@26
+
+g_ternary_false@11:
+    dig 3
+    b g_ternary_merge@12
+
+g_else_body@28:
     intc_2 // 0
     intc_0 // 1
     -
     itob
+    dup
+    bury 4
+    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    bury 2
+    bz g_ternary_false@46
+    dup
+    bz g_ternary_false@37
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 3
+    b-
+
+g_ternary_merge@38:
     bytec_1 // 0x
     swap
     b/
-    b g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.g@4
+    bytec_1 // 0x
+    b==
+    bnz g_ternary_false@46
+    dup
+    bz g_ternary_false@44
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 3
+    b-
+
+g_ternary_merge@45:
+    bytec_1 // 0x
+    swap
+    b/
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+    b g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.g@54
+
+g_ternary_false@44:
+    dig 2
+    b g_ternary_merge@45
+
+g_ternary_false@46:
+    dup
+    bz g_ternary_false@51
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 3
+    b-
+
+g_ternary_merge@52:
+    bytec_1 // 0x
+    swap
+    b/
+    b g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.g@54
+
+g_ternary_false@51:
+    dig 2
+    b g_ternary_merge@52
+
+g_ternary_false@37:
+    dig 2
+    b g_ternary_merge@38

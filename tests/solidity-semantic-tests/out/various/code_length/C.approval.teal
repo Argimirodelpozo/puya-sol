@@ -4,14 +4,14 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/code_length.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 24
-    bytecblock "len1" 0x "len2"
+    bytecblock 0x "len1" "len2"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "len1"
-    bytec_1 // 0x
+    bytec_1 // "len1"
+    bytec_0 // 0x
     app_global_put
     bytec_2 // "len2"
-    bytec_1 // 0x
+    bytec_0 // 0x
     app_global_put
     load 0
     dup
@@ -23,7 +23,7 @@ main:
     pop
     len
     itob
-    bytec_0 // "len1"
+    bytec_1 // "len1"
     swap
     app_global_put
     load 0
@@ -89,8 +89,9 @@ f:
     app_params_get AppApprovalProgram
     pop
     len
-    pushint 50
-    >
+    itob
+    pushbytes 0x32
+    b>
     load 0
     dup
     extract 64 32
@@ -103,7 +104,9 @@ f:
     app_params_get AppApprovalProgram
     pop
     len
-    !
+    itob
+    bytec_0 // 0x
+    b==
     load 0
     store 0
     pushbytes 0x00

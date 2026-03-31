@@ -3,10 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/block_timestamp.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    pushint 1
     return
 
 main_after_if_else@2:
@@ -34,15 +33,16 @@ main_f_route@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/block_timestamp.sol.C.f[routing]() -> void:
 f:
     global LatestTimestamp
-    intc_1 // 0
-    >
+    itob
+    pushbytes 0x
+    b>
     pushbytes 0x00
-    intc_1 // 0
+    pushint 0
     uncover 2
     setbit
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    pushint 1
     return

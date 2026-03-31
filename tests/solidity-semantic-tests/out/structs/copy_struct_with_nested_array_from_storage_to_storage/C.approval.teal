@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/copy_struct_with_nested_array_from_storage_to_storage.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 8 2 3
+    intcblock 0 8 3 2
     bytecblock "src" 0x "dst"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -13,7 +13,7 @@ main:
     bytec_2 // "dst"
     bytec_1 // 0x
     app_global_put
-    intc_3 // 3
+    intc_2 // 3
     itob
     pop
     intc_0 // 0
@@ -41,7 +41,7 @@ main:
     dig 1
     len
     substring3
-    intc_2 // 2
+    intc_3 // 2
     intc_0 // 0
     extract3
     dup
@@ -91,7 +91,7 @@ test:
     extract 0 8
     intc_0 // 0
     extract_uint64
-    intc_3 // 3
+    intc_2 // 3
     ==
     assert
     dup
@@ -100,15 +100,16 @@ test:
     dig 1
     len
     substring3
-    intc_2 // 2
+    intc_3 // 2
     intc_0 // 0
     extract3
     dup
     len
     intc_1 // 8
     /
-    intc_2 // 2
-    ==
+    itob
+    pushbytes 0x02
+    b==
     assert
     dup
     intc_0 // 0

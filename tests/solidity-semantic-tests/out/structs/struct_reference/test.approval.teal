@@ -115,6 +115,19 @@ set:
     bytec_2 // "data"
     swap
     app_global_put
+    bytec_3 // 0x726563757273697665cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
+    box_get
+    bytec_1 // 0x0000000000000000000a0000
+    cover 2
+    select
+    intc_0 // 0
+    extract_uint64
+    intc_1 // 1
+    +
+    dup
+    pushint 4294967295
+    <=
+    assert // overflow
     bytec_0 // 0x726563757273697665af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
     box_get
     bytec_1 // 0x0000000000000000000a0000
@@ -127,15 +140,7 @@ set:
     len
     substring3
     extract 2 0
-    bytec_3 // 0x726563757273697665cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
-    box_get
-    bytec_1 // 0x0000000000000000000a0000
-    cover 2
-    select
-    intc_0 // 0
-    extract_uint64
-    intc_1 // 1
-    +
+    swap
     itob
     dig 1
     len

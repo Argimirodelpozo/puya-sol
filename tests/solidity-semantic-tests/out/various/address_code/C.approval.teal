@@ -13,7 +13,9 @@ main:
     app_params_get AppApprovalProgram
     pop
     len
-    !
+    itob
+    pushbytes 0x
+    b==
     assert
     global CurrentApplicationAddress
     intc_1 // 24
@@ -53,8 +55,9 @@ f:
     app_params_get AppApprovalProgram
     pop
     len
-    pushint 380
-    >
+    itob
+    pushbytes 0x017c
+    b>
     pushbytes 0x00
     intc_2 // 0
     uncover 2

@@ -636,83 +636,87 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ArrayLength",
+                    "_type": "ReinterpretCast",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call.sol",
                       "line": 338,
-                      "end_line": 363,
+                      "end_line": 368,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
                     "wtype": {
                       "_type": "WType",
-                      "name": "uint64",
+                      "name": "biguint",
                       "immutable": true
                     },
-                    "array": {
-                      "_type": "ARC4Decode",
+                    "expr": {
+                      "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call.sol",
                         "line": 338,
-                        "end_line": 356,
+                        "end_line": 368,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "ReferenceArray",
-                        "name": "array<biguint>",
+                        "_type": "BytesWType",
+                        "name": "bytes",
                         "immutable": true,
-                        "element_type": {
-                          "_type": "WType",
-                          "name": "biguint",
-                          "immutable": true
-                        },
-                        "array_size": null,
-                        "source_location": null
+                        "length": null
                       },
-                      "value": {
-                        "_type": "FieldExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call.sol",
-                          "line": 338,
-                          "end_line": 356,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "ARC4DynamicArray",
-                          "name": "arc4.dynamic_array<arc4.uint256>",
-                          "immutable": true,
-                          "element_type": {
-                            "_type": "ARC4UIntN",
-                            "name": "arc4.uint256",
-                            "immutable": true,
-                            "n": 256,
-                            "arc4_alias": null,
-                            "source_location": null
-                          },
-                          "arc4_alias": null,
-                          "source_location": null
-                        },
-                        "base": {
-                          "_type": "VarExpression",
+                      "op_code": "itob",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "ArrayLength",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call.sol",
                             "line": 338,
-                            "end_line": 343,
+                            "end_line": 363,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
                           },
                           "wtype": {
-                            "_type": "ARC4Struct",
-                            "name": "Struct",
-                            "immutable": true,
-                            "fields": {
-                              "dynamicArray": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "array": {
+                            "_type": "ARC4Decode",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call.sol",
+                              "line": 338,
+                              "end_line": 356,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "ReferenceArray",
+                              "name": "array<biguint>",
+                              "immutable": true,
+                              "element_type": {
+                                "_type": "WType",
+                                "name": "biguint",
+                                "immutable": true
+                              },
+                              "array_size": null,
+                              "source_location": null
+                            },
+                            "value": {
+                              "_type": "FieldExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call.sol",
+                                "line": 338,
+                                "end_line": 356,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
                                 "_type": "ARC4DynamicArray",
                                 "name": "arc4.dynamic_array<arc4.uint256>",
                                 "immutable": true,
@@ -727,63 +731,96 @@
                                 "arc4_alias": null,
                                 "source_location": null
                               },
-                              "justAnInt": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint256",
-                                "immutable": true,
-                                "n": 256,
-                                "arc4_alias": null,
-                                "source_location": null
-                              },
-                              "name": {
-                                "_type": "ARC4DynamicArray",
-                                "name": "string",
-                                "immutable": true,
-                                "element_type": {
-                                  "_type": "ARC4UIntN",
-                                  "name": "arc4.uint8",
-                                  "immutable": true,
-                                  "n": 8,
-                                  "arc4_alias": null,
-                                  "source_location": null
+                              "base": {
+                                "_type": "VarExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call.sol",
+                                  "line": 338,
+                                  "end_line": 343,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
                                 },
-                                "arc4_alias": "string",
-                                "source_location": null
-                              },
-                              "someBytes": {
-                                "_type": "ARC4DynamicArray",
-                                "name": "byte[]",
-                                "immutable": true,
-                                "element_type": {
-                                  "_type": "ARC4UIntN",
-                                  "name": "arc4.uint8",
+                                "wtype": {
+                                  "_type": "ARC4Struct",
+                                  "name": "Struct",
                                   "immutable": true,
-                                  "n": 8,
+                                  "fields": {
+                                    "dynamicArray": {
+                                      "_type": "ARC4DynamicArray",
+                                      "name": "arc4.dynamic_array<arc4.uint256>",
+                                      "immutable": true,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint256",
+                                        "immutable": true,
+                                        "n": 256,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "justAnInt": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint256",
+                                      "immutable": true,
+                                      "n": 256,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "name": {
+                                      "_type": "ARC4DynamicArray",
+                                      "name": "string",
+                                      "immutable": true,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint8",
+                                        "immutable": true,
+                                        "n": 8,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "arc4_alias": "string",
+                                      "source_location": null
+                                    },
+                                    "someBytes": {
+                                      "_type": "ARC4DynamicArray",
+                                      "name": "byte[]",
+                                      "immutable": true,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint8",
+                                        "immutable": true,
+                                        "n": 8,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "arc4_alias": "byte[]",
+                                      "source_location": null
+                                    },
+                                    "theEnum": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint64",
+                                      "immutable": true,
+                                      "n": 64,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    }
+                                  },
+                                  "frozen": true,
                                   "arc4_alias": null,
-                                  "source_location": null
+                                  "source_location": null,
+                                  "desc": null
                                 },
-                                "arc4_alias": "byte[]",
-                                "source_location": null
+                                "name": "_data"
                               },
-                              "theEnum": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint64",
-                                "immutable": true,
-                                "n": 64,
-                                "arc4_alias": null,
-                                "source_location": null
-                              }
+                              "name": "dynamicArray"
                             },
-                            "frozen": true,
-                            "arc4_alias": null,
-                            "source_location": null,
-                            "desc": null
-                          },
-                          "name": "_data"
-                        },
-                        "name": "dynamicArray"
-                      },
-                      "error_message": null
+                            "error_message": null
+                          }
+                        }
+                      ]
                     }
                   },
                   "operator": "==",
@@ -791,7 +828,7 @@
                     "_type": "IntegerConstant",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call.sol",
-                      "line": 367,
+                      "line": 338,
                       "end_line": 368,
                       "comment_lines": 0,
                       "column": null,
@@ -799,7 +836,7 @@
                     },
                     "wtype": {
                       "_type": "WType",
-                      "name": "uint64",
+                      "name": "biguint",
                       "immutable": true
                     },
                     "value": 3,

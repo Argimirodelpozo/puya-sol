@@ -3095,107 +3095,87 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "ArrayLength",
+                    "_type": "ReinterpretCast",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_storage_with_arrays_small.sol",
                       "line": 482,
-                      "end_line": 492,
+                      "end_line": 497,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
                     "wtype": {
                       "_type": "WType",
-                      "name": "uint64",
+                      "name": "biguint",
                       "immutable": true
                     },
-                    "array": {
-                      "_type": "ARC4Decode",
+                    "expr": {
+                      "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_storage_with_arrays_small.sol",
                         "line": 482,
-                        "end_line": 485,
+                        "end_line": 497,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "ReferenceArray",
-                        "name": "array<uint64>",
+                        "_type": "BytesWType",
+                        "name": "bytes",
                         "immutable": true,
-                        "element_type": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "array_size": null,
-                        "source_location": null
+                        "length": null
                       },
-                      "value": {
-                        "_type": "FieldExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_storage_with_arrays_small.sol",
-                          "line": 482,
-                          "end_line": 485,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "ARC4DynamicArray",
-                          "name": "arc4.dynamic_array<arc4.uint64>",
-                          "immutable": true,
-                          "element_type": {
-                            "_type": "ARC4UIntN",
-                            "name": "arc4.uint64",
-                            "immutable": true,
-                            "n": 64,
-                            "arc4_alias": null,
-                            "source_location": null
-                          },
-                          "arc4_alias": null,
-                          "source_location": null
-                        },
-                        "base": {
-                          "_type": "AppStateExpression",
+                      "op_code": "itob",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "ArrayLength",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_storage_with_arrays_small.sol",
                             "line": 482,
-                            "end_line": 483,
+                            "end_line": 492,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
                           },
                           "wtype": {
-                            "_type": "ARC4Struct",
-                            "name": "S",
-                            "immutable": true,
-                            "fields": {
-                              "a": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint64",
-                                "immutable": true,
-                                "n": 64,
-                                "arc4_alias": null,
-                                "source_location": null
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "array": {
+                            "_type": "ARC4Decode",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_storage_with_arrays_small.sol",
+                              "line": 482,
+                              "end_line": 485,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "ReferenceArray",
+                              "name": "array<uint64>",
+                              "immutable": true,
+                              "element_type": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
                               },
-                              "b": {
-                                "_type": "ARC4StaticArray",
-                                "name": "arc4.static_array<arc4.uint64, 3>",
-                                "immutable": true,
-                                "element_type": {
-                                  "_type": "ARC4UIntN",
-                                  "name": "arc4.uint64",
-                                  "immutable": true,
-                                  "n": 64,
-                                  "arc4_alias": null,
-                                  "source_location": null
-                                },
-                                "array_size": 3,
-                                "arc4_alias": null,
-                                "source_location": null
+                              "array_size": null,
+                              "source_location": null
+                            },
+                            "value": {
+                              "_type": "FieldExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_storage_with_arrays_small.sol",
+                                "line": 482,
+                                "end_line": 485,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
                               },
-                              "x": {
+                              "wtype": {
                                 "_type": "ARC4DynamicArray",
                                 "name": "arc4.dynamic_array<arc4.uint64>",
                                 "immutable": true,
@@ -3209,36 +3189,93 @@
                                 },
                                 "arc4_alias": null,
                                 "source_location": null
-                              }
+                              },
+                              "base": {
+                                "_type": "AppStateExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_storage_with_arrays_small.sol",
+                                  "line": 482,
+                                  "end_line": 483,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "ARC4Struct",
+                                  "name": "S",
+                                  "immutable": true,
+                                  "fields": {
+                                    "a": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint64",
+                                      "immutable": true,
+                                      "n": 64,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "b": {
+                                      "_type": "ARC4StaticArray",
+                                      "name": "arc4.static_array<arc4.uint64, 3>",
+                                      "immutable": true,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint64",
+                                        "immutable": true,
+                                        "n": 64,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "array_size": 3,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "x": {
+                                      "_type": "ARC4DynamicArray",
+                                      "name": "arc4.dynamic_array<arc4.uint64>",
+                                      "immutable": true,
+                                      "element_type": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint64",
+                                        "immutable": true,
+                                        "n": 64,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    }
+                                  },
+                                  "frozen": true,
+                                  "arc4_alias": null,
+                                  "source_location": null,
+                                  "desc": null
+                                },
+                                "key": {
+                                  "_type": "BytesConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_storage_with_arrays_small.sol",
+                                    "line": 482,
+                                    "end_line": 483,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "state_key",
+                                    "immutable": true
+                                  },
+                                  "value": "a{",
+                                  "encoding": "utf8"
+                                },
+                                "exists_assertion_message": "check s exists"
+                              },
+                              "name": "x"
                             },
-                            "frozen": true,
-                            "arc4_alias": null,
-                            "source_location": null,
-                            "desc": null
-                          },
-                          "key": {
-                            "_type": "BytesConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_storage_with_arrays_small.sol",
-                              "line": 482,
-                              "end_line": 483,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "state_key",
-                              "immutable": true
-                            },
-                            "value": "a{",
-                            "encoding": "utf8"
-                          },
-                          "exists_assertion_message": "check s exists"
-                        },
-                        "name": "x"
-                      },
-                      "error_message": null
+                            "error_message": null
+                          }
+                        }
+                      ]
                     }
                   },
                   "operator": "==",
@@ -3246,7 +3283,7 @@
                     "_type": "IntegerConstant",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_storage_with_arrays_small.sol",
-                      "line": 496,
+                      "line": 482,
                       "end_line": 497,
                       "comment_lines": 0,
                       "column": null,
@@ -3254,7 +3291,7 @@
                     },
                     "wtype": {
                       "_type": "WType",
-                      "name": "uint64",
+                      "name": "biguint",
                       "immutable": true
                     },
                     "value": 0,

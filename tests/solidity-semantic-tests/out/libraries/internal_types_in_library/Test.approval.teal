@@ -59,8 +59,9 @@ f_while_top@2:
     len
     intc_1 // 8
     /
-    pushint 20
-    <
+    itob
+    pushbytes 0x14
+    b<
     bnz f_while_top@2
     callsub _puya_lib.mem.new_slot
     dup

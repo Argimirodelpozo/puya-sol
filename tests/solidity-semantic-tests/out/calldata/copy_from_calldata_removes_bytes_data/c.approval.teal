@@ -4,11 +4,11 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "data"
+    bytecblock "data" 0x
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "data"
-    pushbytes 0x
+    bytec_1 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -56,7 +56,9 @@ checkIfDataIsEmpty:
     app_global_get_ex
     assert // check data exists
     len
-    !
+    itob
+    bytec_1 // 0x
+    b==
     pushbytes 0x00
     intc_1 // 0
     uncover 2
