@@ -9,8 +9,12 @@ main:
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
+    callsub _puya_lib.mem.new_slot
+    dup
+    pushbytes 0x00000000
+    stores
     bytec_0 // "data1"
-    pushbytes 0x
+    swap
     app_global_put
     intc_0 // 1
     return

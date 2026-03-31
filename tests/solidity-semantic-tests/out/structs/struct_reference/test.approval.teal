@@ -4,11 +4,11 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_reference.sol.test.approval_program() -> uint64:
 main:
     intcblock 0 1 8
-    bytecblock 0x726563757273697665af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc 0x0000000000000000000a0000 "data" 0x726563757273697665cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
+    bytecblock 0x0000000000000000000a0000 0x726563757273697665af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc "data" 0x726563757273697665cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_2 // "data"
-    pushbytes 0x
+    bytec_0 // 0x0000000000000000000a0000
     app_global_put
     intc_1 // 1
     return
@@ -43,9 +43,9 @@ check:
     pushint 2
     ==
     bz check_bool_false@6
-    bytec_0 // 0x726563757273697665af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
+    bytec_1 // 0x726563757273697665af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
     box_get
-    bytec_1 // 0x0000000000000000000a0000
+    bytec_0 // 0x0000000000000000000a0000
     cover 2
     select
     intc_0 // 0
@@ -55,15 +55,15 @@ check:
     bz check_bool_false@6
     bytec_3 // 0x726563757273697665cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
     box_get
-    bytec_1 // 0x0000000000000000000a0000
+    bytec_0 // 0x0000000000000000000a0000
     cover 2
     select
     intc_0 // 0
     extract_uint64
     bnz check_bool_false@6
-    bytec_0 // 0x726563757273697665af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
+    bytec_1 // 0x726563757273697665af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
     box_get
-    bytec_1 // 0x0000000000000000000a0000
+    bytec_0 // 0x0000000000000000000a0000
     cover 2
     select
     intc_0 // 0
@@ -117,7 +117,7 @@ set:
     app_global_put
     bytec_3 // 0x726563757273697665cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
     box_get
-    bytec_1 // 0x0000000000000000000a0000
+    bytec_0 // 0x0000000000000000000a0000
     cover 2
     select
     intc_0 // 0
@@ -128,9 +128,9 @@ set:
     pushint 4294967295
     <=
     assert // overflow
-    bytec_0 // 0x726563757273697665af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
+    bytec_1 // 0x726563757273697665af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
     box_get
-    bytec_1 // 0x0000000000000000000a0000
+    bytec_0 // 0x0000000000000000000a0000
     cover 2
     select
     dup
@@ -153,10 +153,10 @@ set:
     concat
     swap
     concat
-    bytec_0 // 0x726563757273697665af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
+    bytec_1 // 0x726563757273697665af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
     box_del
     pop
-    bytec_0 // 0x726563757273697665af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
+    bytec_1 // 0x726563757273697665af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
     swap
     box_put
     intc_1 // 1

@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_storage_small.sol.C.approval_program() -> uint64:
 main:
-    bytecblock "s"
+    bytecblock "s" 0x00000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "s"
-    pushbytes 0x
+    bytec_1 // 0x00000000000000000000000000000000
     app_global_put
     pushint 1
     return
@@ -44,7 +44,7 @@ f:
     bury 1
     assert // check s exists
     bytec_0 // "s"
-    pushbytes 0x00000000000000000000000000000000
+    bytec_1 // 0x00000000000000000000000000000000
     app_global_put
     load 0
     store 0

@@ -5,10 +5,16 @@
 main:
     intcblock 32 1 0 2
     bytecblock 0x151f7c75 "__ctor_pending" "n"
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
+    callsub _puya_lib.mem.new_slot
+    dup
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    stores
     bytec_2 // "n"
-    pushbytes 0x
+    swap
     app_global_put
     bytec_1 // "__ctor_pending"
     intc_1 // 1
@@ -232,3 +238,17 @@ f_storage:
     log
     intc_1 // 1
     return
+
+
+// _puya_lib.mem.new_slot() -> uint64:
+_puya_lib.mem.new_slot:
+    load 5
+    bitlen
+    load 5
+    pushint 256
+    dig 2
+    -
+    intc_2 // 0
+    setbit // on error: no available slots
+    store 5
+    retsub

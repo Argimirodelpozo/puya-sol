@@ -4,13 +4,17 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/conditional_expression_storage_memory_2.sol.test.approval_program() -> uint64:
 main:
     intcblock 0 1 32
-    bytecblock "data1" 0x 0x6363
+    bytecblock "data1" 0x6363
     pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
+    callsub _puya_lib.mem.new_slot
+    dup
+    pushbytes 0x00000000
+    stores
     bytec_0 // "data1"
-    bytec_1 // 0x
+    swap
     app_global_put
     intc_1 // 1
     return
@@ -40,7 +44,7 @@ main_f_route@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/conditional_expression_storage_memory_2.sol.test.f[routing]() -> void:
 f:
     intc_0 // 0
-    bytec_1 // ""
+    pushbytes ""
     txna ApplicationArgs 1
     dup
     len
@@ -53,7 +57,7 @@ f:
     bytec_0 // "data1"
     app_global_get_ex
     assert // check data1 exists
-    bytec_2 // 0x6363
+    bytec_1 // 0x6363
     replace2 0 // on error: index access is out of bounds
     bytec_0 // "data1"
     swap
@@ -85,7 +89,7 @@ f_after_if_else@6:
     dig 1
     loads
     extract 0 2 // on error: index access is out of bounds
-    bytec_2 // "cc"
+    bytec_1 // "cc"
     ==
     bz f_after_if_else@8
     pushint 2

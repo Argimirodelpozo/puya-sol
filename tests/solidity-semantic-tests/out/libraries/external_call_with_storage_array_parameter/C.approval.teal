@@ -3,12 +3,18 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/external_call_with_storage_array_parameter.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 1
+    intcblock 0 32 1
     bytecblock "x"
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
+    store 5
     txn ApplicationID
     bnz main_after_if_else@2
+    callsub _puya_lib.mem.new_slot
+    dup
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    stores
     bytec_0 // "x"
-    pushbytes 0x
+    swap
     app_global_put
     intc_2 // 1
     return
@@ -41,20 +47,20 @@ g:
     dup
     len
     dup
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_1 // 0
+    intc_0 // 0
     cover 2
-    intc_1 // 0
+    intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     swap
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     uncover 2
     dig 1
@@ -73,9 +79,9 @@ g:
     extract_uint64
     pushint 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
     pushbytes 0x9d94d93b // method "f(uint256[2])uint256"
@@ -86,7 +92,7 @@ g:
     extract 4 0
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
     b|
@@ -96,3 +102,17 @@ g:
     log
     intc_2 // 1
     return
+
+
+// _puya_lib.mem.new_slot() -> uint64:
+_puya_lib.mem.new_slot:
+    load 5
+    bitlen
+    load 5
+    pushint 256
+    dig 2
+    -
+    intc_0 // 0
+    setbit // on error: no available slots
+    store 5
+    retsub

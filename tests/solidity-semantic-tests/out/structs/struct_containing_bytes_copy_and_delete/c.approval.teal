@@ -4,14 +4,14 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_containing_bytes_copy_and_delete.sol.c.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
-    bytecblock "data1" 0x0042 0x151f7c7580 0x "data2"
+    bytecblock "data1" 0x0000000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000000000 0x0042 0x151f7c7580 "data2"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "data1"
-    bytec_3 // 0x
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     bytec 4 // "data2"
-    bytec_3 // 0x
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     intc_1 // 1
     return
@@ -85,7 +85,7 @@ set:
     cover 2
     substring3
     uncover 2
-    bytec_1 // 0x0042
+    bytec_2 // 0x0042
     concat
     uncover 2
     concat
@@ -109,7 +109,7 @@ set:
     cover 2
     substring3
     uncover 2
-    bytec_1 // 0x0042
+    bytec_2 // 0x0042
     concat
     uncover 2
     concat
@@ -120,7 +120,7 @@ set:
     swap
     extract 34 32
     swap
-    bytec_1 // 0x0042
+    bytec_2 // 0x0042
     concat
     swap
     concat
@@ -129,7 +129,7 @@ set:
     bytec_0 // "data1"
     swap
     app_global_put
-    bytec_2 // 0x151f7c7580
+    bytec_3 // 0x151f7c7580
     log
     intc_1 // 1
     return
@@ -144,7 +144,7 @@ copy:
     bytec_0 // "data1"
     swap
     app_global_put
-    bytec_2 // 0x151f7c7580
+    bytec_3 // 0x151f7c7580
     log
     intc_1 // 1
     return
@@ -158,9 +158,9 @@ del:
     bury 1
     assert // check data1 exists
     bytec_0 // "data1"
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    bytec_2 // 0x151f7c7580
+    bytec_3 // 0x151f7c7580
     log
     intc_1 // 1
     return
