@@ -20,6 +20,79 @@ solidity::frontend::IntegerType const* resolveIntegerType(solidity::frontend::Ty
 		return dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
 	return nullptr;
 }
+
+/// Recursively resolve a constant variable's value to a u256 integer.
+/// Follows reference chains (e.g., `uint constant aa = a;` where `a = 2`).
+/// @param _varDecl  The constant VariableDeclaration to resolve.
+/// @return The resolved u256 value, or nullopt if unresolvable.
+std::optional<solidity::u256> resolveConstantU256(
+	solidity::frontend::VariableDeclaration const& _varDecl,
+	int _depth = 0)
+{
+	using namespace solidity::frontend;
+	if (_depth > 10 || !_varDecl.isConstant() || !_varDecl.value())
+		return std::nullopt;
+
+	auto const* initExpr = _varDecl.value().get();
+	auto const* exprType = initExpr->annotation().type;
+
+	// 1. RationalNumberType (numeric literals and compile-time constant expressions)
+	if (auto const* ratType = dynamic_cast<RationalNumberType const*>(exprType))
+	{
+		if (!ratType->isFractional())
+		{
+			auto const& val = ratType->value();
+			solidity::u256 intVal = solidity::u256(val.numerator() / val.denominator());
+			// For FixedBytesType (bytesN), left-shift to match EVM representation
+			if (auto const* fixedBytes = dynamic_cast<FixedBytesType const*>(_varDecl.type()))
+			{
+				size_t shiftBits = (32 - fixedBytes->numBytes()) * 8;
+				intVal <<= shiftBits;
+			}
+			return intVal;
+		}
+	}
+
+	// 2. Bool constants: true → 1, false → 0
+	if (dynamic_cast<BoolType const*>(exprType))
+	{
+		if (auto const* literal = dynamic_cast<Literal const*>(initExpr))
+			return (literal->value() == "true") ? solidity::u256(1) : solidity::u256(0);
+	}
+
+	// 3. Literal (hex or string)
+	if (auto const* literal = dynamic_cast<Literal const*>(initExpr))
+	{
+		std::string value = literal->value();
+		if (value.size() > 2 && value.substr(0, 2) == "0x")
+		{
+			try
+			{
+				return solidity::u256(value);
+			}
+			catch (...) {}
+		}
+		else
+		{
+			solidity::u256 numVal = 0;
+			for (char ch: value)
+				numVal = (numVal << 8) | static_cast<unsigned char>(ch);
+			size_t shiftBits = (32 - value.size()) * 8;
+			numVal <<= shiftBits;
+			return numVal;
+		}
+	}
+
+	// 4. Identifier referencing another constant — follow the chain
+	if (auto const* identifier = dynamic_cast<Identifier const*>(initExpr))
+	{
+		if (auto const* refDecl = dynamic_cast<VariableDeclaration const*>(
+				identifier->annotation().referencedDeclaration))
+			return resolveConstantU256(*refDecl, _depth + 1);
+	}
+
+	return std::nullopt;
+}
 }
 
 namespace puyasol::builder::sol_ast
@@ -60,45 +133,13 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		if (!extInfo.declaration) continue;
 		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
 		if (!varDecl || !varDecl->isConstant()) continue;
-		auto const& initExpr = varDecl->value();
-		if (!initExpr) continue;
 
-		auto const* exprType = initExpr->annotation().type;
-		auto const* ratType = dynamic_cast<RationalNumberType const*>(exprType);
-		if (ratType && !ratType->isFractional())
+		auto resolved = resolveConstantU256(*varDecl);
+		if (resolved)
 		{
-			auto const& val = ratType->value();
-			solidity::u256 intVal = solidity::u256(val.numerator() / val.denominator());
 			std::ostringstream oss;
-			oss << intVal;
+			oss << *resolved;
 			constants[yulId->name.str()] = oss.str();
-		}
-		else if (auto const* literal = dynamic_cast<Literal const*>(initExpr.get()))
-		{
-			std::string name = yulId->name.str();
-			std::string value = literal->value();
-			if (value.size() > 2 && value.substr(0, 2) == "0x")
-			{
-				try
-				{
-					solidity::u256 numVal(value);
-					std::ostringstream oss;
-					oss << numVal;
-					constants[name] = oss.str();
-				}
-				catch (...) {}
-			}
-			else
-			{
-				solidity::u256 numVal = 0;
-				for (char ch: value)
-					numVal = (numVal << 8) | static_cast<unsigned char>(ch);
-				size_t shiftBits = (32 - value.size()) * 8;
-				numVal <<= shiftBits;
-				std::ostringstream oss;
-				oss << numVal;
-				constants[name] = oss.str();
-			}
 		}
 	}
 

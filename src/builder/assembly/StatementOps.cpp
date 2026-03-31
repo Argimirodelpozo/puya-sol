@@ -487,18 +487,40 @@ void AssemblyBuilder::buildAssignment(
 		}
 		else if (target->wtype->kind() == awst::WTypeKind::Bytes)
 		{
-			// Target is bytes — coerce biguint to bytes via ReinterpretCast
-			if (value->wtype == awst::WType::biguintType())
+			auto const* bytesType = dynamic_cast<awst::BytesWType const*>(target->wtype);
+			// For fixed-size bytes[N], pad biguint to 32 bytes then extract first N bytes
+			// (EVM stores bytesN left-aligned in 256-bit words)
+			if (bytesType && bytesType->length() && *bytesType->length() > 0)
 			{
+				int n = *bytesType->length();
+				auto biguintVal = ensureBiguint(std::move(value), loc);
+				// padTo32Bytes: ensures exactly 32 bytes big-endian
+				auto padded = padTo32Bytes(std::move(biguintVal), loc);
+				// Extract first N bytes (EVM left-aligned)
+				auto zero = std::make_shared<awst::IntegerConstant>();
+				zero->sourceLocation = loc;
+				zero->wtype = awst::WType::uint64Type();
+				zero->value = "0";
+				auto lenConst = std::make_shared<awst::IntegerConstant>();
+				lenConst->sourceLocation = loc;
+				lenConst->wtype = awst::WType::uint64Type();
+				lenConst->value = std::to_string(n);
+				auto extract = std::make_shared<awst::IntrinsicCall>();
+				extract->sourceLocation = loc;
+				extract->wtype = awst::WType::bytesType();
+				extract->opCode = "extract3";
+				extract->stackArgs.push_back(std::move(padded));
+				extract->stackArgs.push_back(std::move(zero));
+				extract->stackArgs.push_back(std::move(lenConst));
 				auto cast = std::make_shared<awst::ReinterpretCast>();
 				cast->sourceLocation = loc;
 				cast->wtype = target->wtype;
-				cast->expr = std::move(value);
+				cast->expr = std::move(extract);
 				value = std::move(cast);
 			}
 			else
 			{
-				// uint64/bool → biguint → bytes
+				// Untyped bytes — coerce biguint to bytes via ReinterpretCast
 				auto biguintVal = ensureBiguint(std::move(value), loc);
 				auto cast = std::make_shared<awst::ReinterpretCast>();
 				cast->sourceLocation = loc;
@@ -506,6 +528,17 @@ void AssemblyBuilder::buildAssignment(
 				cast->expr = std::move(biguintVal);
 				value = std::move(cast);
 			}
+		}
+		else if (target->wtype == awst::WType::accountType())
+		{
+			// Account (address) — pad biguint to 32 bytes for AVM address
+			auto biguintVal = ensureBiguint(std::move(value), loc);
+			auto padded = padTo32Bytes(std::move(biguintVal), loc);
+			auto cast = std::make_shared<awst::ReinterpretCast>();
+			cast->sourceLocation = loc;
+			cast->wtype = awst::WType::accountType();
+			cast->expr = std::move(padded);
+			value = std::move(cast);
 		}
 		else if (target->wtype == awst::WType::uint64Type())
 		{
