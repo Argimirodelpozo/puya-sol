@@ -347,12 +347,17 @@ def _get_budget_helper(algod, sender, signer):
 
 
 def _call_with_extra_budget(app, method, args, extra_calls=15):
-    """Call an app method with extra opcode budget by pooling dummy app calls."""
+    """Call an app method with extra opcode budget by pooling dummy app calls.
+
+    Uses simulate first to discover required resources (boxes, accounts, etc.),
+    then builds the real ATC with those resources + budget-pooling dummy txns.
+    """
     from algosdk.transaction import ApplicationCallTxn, OnComplete
     from algosdk.atomic_transaction_composer import (
         AtomicTransactionComposer, TransactionWithSigner,
     )
     from algosdk.abi import Method
+    from algosdk.transaction import BoxReference as AlgoBoxRef
     import os
 
     algod = app.algorand.client.algod
@@ -363,19 +368,53 @@ def _call_with_extra_budget(app, method, args, extra_calls=15):
     # Get or deploy the budget helper app
     helper_id = _get_budget_helper(algod, sender, signer)
 
-    sp = algod.suggested_params()
-    sp.flat_fee = True
-    sp.fee = 1000 * (extra_calls + 1)
+    # Step 1: Simulate with extra budget to discover resource requirements
+    sim_sp = algod.suggested_params()
+    sim_sp.flat_fee = True
+    sim_sp.fee = 1000 * (extra_calls + 1)
 
-    atc = AtomicTransactionComposer()
+    sim_atc = AtomicTransactionComposer()
 
-    # The real method call — include box refs if available
-    from algosdk.transaction import BoxReference as AlgoBoxRef
+    # Known box refs from TEAL analysis
     box_refs = []
     if hasattr(app, '_box_refs') and app._box_refs:
         box_refs = [AlgoBoxRef(app_index=0, name=ref[1]) for ref in app._box_refs]
 
     abi_method = Method.from_signature(method)
+    sim_atc.add_method_call(
+        app_id=app_id, method=abi_method, sender=sender,
+        sp=sim_sp, signer=signer, method_args=args if args else [],
+        note=os.urandom(8),
+        boxes=box_refs if box_refs else None,
+    )
+    for _ in range(extra_calls):
+        txn = ApplicationCallTxn(
+            sender=sender, sp=algod.suggested_params(),
+            index=helper_id, on_complete=OnComplete.NoOpOC,
+            note=os.urandom(8),
+        )
+        txn.fee = 0
+        sim_atc.add_transaction(TransactionWithSigner(txn, signer))
+
+    # Simulate to discover resources (allow extra budget and unnamed resources)
+    try:
+        from algosdk.v2client.models import SimulateRequest
+        sim_req = SimulateRequest(
+            txn_groups=[],
+            allow_more_logging=True,
+            allow_unnamed_resources=True,
+            extra_opcode_budget=320000,
+        )
+        sim_result = sim_atc.simulate(algod, sim_req)
+    except Exception:
+        sim_result = None
+
+    # Step 2: Build the real ATC with discovered resources + budget pooling
+    sp = algod.suggested_params()
+    sp.flat_fee = True
+    sp.fee = 1000 * (extra_calls + 1)
+
+    atc = AtomicTransactionComposer()
     atc.add_method_call(
         app_id=app_id, method=abi_method, sender=sender,
         sp=sp, signer=signer, method_args=args if args else [],
@@ -383,7 +422,6 @@ def _call_with_extra_budget(app, method, args, extra_calls=15):
         boxes=box_refs if box_refs else None,
     )
 
-    # Dummy budget-pooling calls to the helper app (cheap, always succeeds)
     sp_dummy = algod.suggested_params()
     sp_dummy.flat_fee = True
     sp_dummy.fee = 0
@@ -687,9 +725,10 @@ def execute_call(app, call, app_spec=None, verbose=False):
                 is_simulate = "simulate" in err_str.lower() or "resolving execution info" in err_str.lower()
                 if is_budget or is_fee or is_simulate:
                     try:
+                        # Retry with budget pooling (includes simulate for resources)
                         result = _call_with_extra_budget(
                             app, method, args,
-                            extra_calls=3 if is_fee and not is_budget else 15,
+                            extra_calls=15,
                         )
                     except Exception:
                         raise ex1
