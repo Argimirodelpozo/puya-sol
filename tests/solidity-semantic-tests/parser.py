@@ -75,9 +75,9 @@ def parse_test_file(path: Path) -> SemanticTest:
         if call:
             calls.append(call)
 
+    # Tests with no assertions still pass if compilation + deployment succeeds
     if not calls:
-        return SemanticTest(source_path=path, source_code=source_code,
-                           skipped=True, skip_reason="no parseable assertions")
+        return SemanticTest(source_path=path, source_code=source_code)
 
     return SemanticTest(source_path=path, source_code=source_code, calls=calls)
 

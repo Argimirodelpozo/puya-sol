@@ -491,6 +491,27 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 		return vc;
 	}
 
+	// Detect delegatecall to library functions — not supported on AVM
+	if (auto const* refDecl = memberAccess->annotation().referencedDeclaration)
+	{
+		if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(refDecl))
+		{
+			if (auto const* scope = funcDef->scope())
+			{
+				if (auto const* contractDef = dynamic_cast<ContractDefinition const*>(scope))
+				{
+					if (contractDef->isLibrary())
+					{
+						Logger::instance().error(
+							"delegatecall to public library function '" + contractDef->name()
+							+ "." + funcDef->name() + "' is not supported on AVM. "
+							"Use internal library functions instead.", m_loc);
+					}
+				}
+			}
+		}
+	}
+
 	auto baseTranslated = buildExpr(memberAccess->expression());
 
 	// Build method selector
