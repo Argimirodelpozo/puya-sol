@@ -722,20 +722,46 @@ def execute_call(app, call, app_spec=None, verbose=False):
                 return True, "correctly reverted"
         else:
             if hasattr(app, '_ensure_budget_fee') and app._ensure_budget_fee > 3000:
-                # ensure_budget was injected — use direct ATC with high fee
-                # (algokit's simulate can't handle OpUp inner txns)
+                # ensure_budget was injected — simulate with extra budget first,
+                # then execute with real fee
                 from algosdk.atomic_transaction_composer import AtomicTransactionComposer as _ATC
                 from algosdk.abi import Method as _AbiMethod
                 from algosdk.transaction import BoxReference as _BoxRef
+                from algosdk.v2client.models import SimulateRequest
                 import os as _os
                 _algod = app.algorand.client.algod
                 _sender = app._default_sender
                 _signer = app._default_signer or app.algorand.account.get_signer(_sender)
+                _fee = 1000 + app._ensure_budget_fee
+                _boxes = [_BoxRef(app_index=0, name=r[1]) for r in app._box_refs] if hasattr(app, '_box_refs') and app._box_refs else None
+
+                # Step 1: Simulate with extra_opcode_budget to discover resources
+                _sim_sp = _algod.suggested_params()
+                _sim_sp.flat_fee = True
+                _sim_sp.fee = _fee
+                _sim_atc = _ATC()
+                _sim_atc.add_method_call(
+                    app_id=app.app_id, method=_AbiMethod.from_signature(method),
+                    sender=_sender, sp=_sim_sp, signer=_signer,
+                    method_args=args if args else [],
+                    note=_os.urandom(8), boxes=_boxes,
+                )
+                try:
+                    _sim_req = SimulateRequest(
+                        txn_groups=[],
+                        allow_more_logging=True,
+                        allow_unnamed_resources=True,
+                        extra_opcode_budget=320000,
+                    )
+                    _sim_atc.simulate(_algod, _sim_req)
+                except Exception:
+                    pass  # simulation may fail but we still try execution
+
+                # Step 2: Execute with real fee
                 _sp = _algod.suggested_params()
                 _sp.flat_fee = True
-                _sp.fee = 1000 + app._ensure_budget_fee
+                _sp.fee = _fee
                 _atc = _ATC()
-                _boxes = [_BoxRef(app_index=0, name=r[1]) for r in app._box_refs] if hasattr(app, '_box_refs') and app._box_refs else None
                 _atc.add_method_call(
                     app_id=app.app_id, method=_AbiMethod.from_signature(method),
                     sender=_sender, sp=_sp, signer=_signer,
@@ -1010,14 +1036,15 @@ def _compare_values(actual, expected):
     return str(actual) == str(expected)
 
 
-def run_test(test: SemanticTest, localnet, account, verbose=False):
+def run_test(test: SemanticTest, localnet, account, verbose=False, _budget_retry=False):
     """Run a single semantic test. Returns (status, details)."""
     if test.skipped:
         return "SKIP", test.skip_reason
 
-    # Compile
+    # Compile — on budget retry, inject ensure_budget for failing functions
     out_dir = OUT_DIR / test.category / test.name
-    contracts = compile_test(test.source_path, out_dir)
+    ensure_budget = getattr(test, '_ensure_budget', None) if _budget_retry else None
+    contracts = compile_test(test.source_path, out_dir, ensure_budget=ensure_budget)
     if not contracts:
         return "COMPILE_ERROR", "compilation failed"
 
@@ -1080,6 +1107,19 @@ def run_test(test: SemanticTest, localnet, account, verbose=False):
             failed += 1
             details.append(f"  FAIL: {call.raw_line} — {detail}")
 
+
+    # If budget exceeded even with group pooling, retry with ensure_budget
+    if failed > 0 and not _budget_retry:
+        budget_fails = [d for d in details if "cost budget" in d or "dynamic cost" in d]
+        if budget_fails:
+            budget_funcs = {}
+            for d in budget_fails:
+                m = re.match(r'\s*FAIL:\s+(\w+)\(', d)
+                if m:
+                    budget_funcs[m.group(1)] = 170000
+            if budget_funcs:
+                test._ensure_budget = budget_funcs
+                return run_test(test, localnet, account, verbose, _budget_retry=True)
 
     if failed > 0:
         return "FAIL", f"{passed}p/{failed}f/{skipped}s" + "\n".join([""] + details)
