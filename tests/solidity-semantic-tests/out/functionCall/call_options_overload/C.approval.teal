@@ -3,10 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_options_overload.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 32 0 1 24
+    bytecblock 0x2b9082ff 0x1928cd24 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -22,25 +23,15 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x1928cd24 0x2b9082ff 0x74551a15 0xf3869829 0x76e0504c // method "f(uint256)uint256", method "f(uint256,uint256)uint256", method "call()(uint256,uint256,uint256,uint256)", method "bal()uint256", method "()void"
+    bytec_1 // method "f(uint256)uint256"
+    bytec_0 // method "f(uint256,uint256)uint256"
+    pushbytess 0x74551a15 0xf3869829 0x76e0504c // method "call()(uint256,uint256,uint256,uint256)", method "bal()uint256", method "()void"
     txna ApplicationArgs 0
-    match f(u256) f(u256,u256) main_call_route@7 main_bal_route@8 main__route@9
+    match f(u256) f(u256,u256) call bal main__route@9
     err
 
 main__route@9:
-    intc_0 // 1
-    return
-
-main_bal_route@8:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
-
-main_call_route@7:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002
-    log
-    intc_0 // 1
+    intc_2 // 1
     return
 
 
@@ -48,12 +39,12 @@ main_call_route@7:
 f(u256):
     txna ApplicationArgs 1
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     log
-    intc_0 // 1
+    intc_2 // 1
     return
 
 
@@ -61,15 +52,160 @@ f(u256):
 f(u256,u256):
     txna ApplicationArgs 1
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
     log
-    intc_0 // 1
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_options_overload.sol.C.call[routing]() -> void:
+call:
+    itxn_begin
+    pushint 2
+    itob
+    global CurrentApplicationAddress
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_1 // method "f(uint256)uint256"
+    itxn_field ApplicationArgs
+    dup
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    itxn_begin
+    pushint 3
+    itob
+    global CurrentApplicationAddress
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_0 // method "f(uint256,uint256)uint256"
+    itxn_field ApplicationArgs
+    dig 2
+    itxn_field ApplicationArgs
+    dup
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    itxn_begin
+    global CurrentApplicationAddress
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_0 // method "f(uint256,uint256)uint256"
+    itxn_field ApplicationArgs
+    dig 3
+    itxn_field ApplicationArgs
+    dig 1
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    itxn_begin
+    global CurrentApplicationAddress
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_0 // method "f(uint256,uint256)uint256"
+    itxn_field ApplicationArgs
+    uncover 4
+    itxn_field ApplicationArgs
+    uncover 2
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dig 3
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 4
+    dig 1
+    b|
+    dig 4
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    dig 2
+    b|
+    concat
+    dig 3
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    dig 2
+    b|
+    concat
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_options_overload.sol.C.bal[routing]() -> void:
+bal:
+    global CurrentApplicationAddress
+    acct_params_get AcctBalance
+    pop
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
     return

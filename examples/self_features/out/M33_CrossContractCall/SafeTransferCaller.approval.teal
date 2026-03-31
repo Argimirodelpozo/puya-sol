@@ -1,0 +1,79 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M33_CrossContractCall.sol.SafeTransferCaller.approval_program() -> uint64:
+main:
+    intcblock 32 0 1
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0xdca044eb // method "safeTransfer(address,address,uint256)void"
+    txna ApplicationArgs 0
+    match main_safeTransfer_route@4
+    err
+
+main_safeTransfer_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b safeTransfer
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M33_CrossContractCall.sol.SafeTransferCaller.safeTransfer[routing]() -> void:
+safeTransfer:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    itxn_begin
+    intc_0 // 32
+    bzero
+    swap
+    concat
+    intc_1 // 0
+    dup
+    extract3
+    uncover 2
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x198c9820 // method "transfer(address,uint256)bool"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_2 // 1
+    return

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_getter_v1.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 8
+    intcblock 1 8 0
     bytecblock "table" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -67,7 +67,25 @@ get:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_getter_v1.sol.test.table
+    itxn_begin
+    itob
+    global CurrentApplicationAddress
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0xdf212945 // method "table()byte[]"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    btoi
     itob
     bytec_1 // 0x151f7c75
     swap
@@ -86,20 +104,6 @@ table:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_getter_v1.sol.test.table
-    itob
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_getter_v1.sol.test.table(key0: uint64) -> uint64:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_getter_v1.sol.test.table:
-    proto 1 1
-    frame_dig -1
     itob
     sha256
     bytec_0 // "table"
@@ -108,8 +112,14 @@ table:
     box_get
     swap
     btoi
-    pushint 0
+    intc_2 // 0
     swap
     uncover 2
     select
-    retsub
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

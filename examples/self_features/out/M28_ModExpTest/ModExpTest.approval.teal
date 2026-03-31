@@ -1,0 +1,165 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M28_ModExpTest.sol.ModExpTest.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000020 0x01 0x
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0x89955700 // method "modexp(uint256,uint256,uint256)uint256"
+    txna ApplicationArgs 0
+    match main_modexp_route@4
+    err
+
+main_modexp_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b modexp
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M28_ModExpTest.sol.ModExpTest.modexp[routing]() -> void:
+modexp:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    load 0
+    intc_0 // 32
+    bzero
+    dup
+    cover 2
+    cover 5
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    replace2 0
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    replace2 32
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    replace2 64
+    dig 1
+    uncover 5
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 96
+    dig 1
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 128
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 160
+    dupn 2
+    extract 160 32
+    dup
+    uncover 2
+    bytec_1 // 0x01
+    cover 2
+    dup
+    extract 96 32
+    uncover 2
+    b%
+    swap
+    extract 128 32
+
+modexp_while_top@2:
+    dup
+    bytec_2 // 0x
+    b>
+    bz modexp_after_while@6
+    dup
+    bytec_1 // 0x01
+    b&
+    bytec_2 // 0x
+    b!=
+    bz modexp_after_if_else@5
+    dig 2
+    dig 2
+    b*
+    dig 4
+    b%
+    bury 3
+
+modexp_after_if_else@5:
+    dup
+    pushbytes 0x02
+    b/
+    bury 1
+    dig 1
+    dup
+    b*
+    dig 4
+    b%
+    bury 2
+    b modexp_while_top@2
+
+modexp_after_while@6:
+    dig 5
+    dup
+    dig 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 6
+    swap
+    replace2 192
+    dup
+    extract 192 32
+    swap
+    store 0
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

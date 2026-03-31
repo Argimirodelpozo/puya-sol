@@ -3,9 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_memory_uint32.sol.C.approval_program() -> uint64:
 main:
+    intcblock 1 0
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -32,15 +34,42 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_memory_uint32.sol.C.f[routing]() -> void:
 f:
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 128
     pushbytes 0x00000000000000000000000000000000000000000000000000deadbeef15dead
     replace2 0
     store 0
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    btoi
     load 0
+    swap
+    itob
+    swap
     store 0
-    pushbytes 0x151f7c7500
+    pushbytes 0xef15dead
+    b==
+    bz f_bool_false@4
+    dup
+    extract 0 32 // on error: index access is out of bounds
+    pushbytes 0xdeadbeef15dead
+    b==
+    bz f_bool_false@4
+    intc_0 // 1
+
+f_bool_merge@5:
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
-    pushint 1
+    intc_0 // 1
     return
+
+f_bool_false@4:
+    intc_1 // 0
+    b f_bool_merge@5

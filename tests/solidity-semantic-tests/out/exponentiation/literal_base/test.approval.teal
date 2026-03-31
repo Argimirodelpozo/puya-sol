@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/exponentiation/literal_base.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 32 1 0
     bytecblock 0x01 0x 0x02
     txn ApplicationID
     bnz main_after_if_else@2
@@ -34,7 +34,7 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/exponentiation/literal_base.sol.test.f[routing]() -> void:
 f:
-    pushint 0
+    intc_2 // 0
     dupn 2
     txna ApplicationArgs 1
     dupn 2
@@ -77,7 +77,10 @@ f_after_if_else@5:
 f_after_while@6:
     bytec_0 // 0x01
     bury 5
-    pushbytes 0xfffffffffffffffe
+    intc_2 // 0
+    pushint 2
+    -
+    itob
     bury 7
     dig 3
     bury 6

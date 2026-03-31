@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/detect_mod_zero_signed.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 8
-    bytecblock 0x151f7c75
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x8000000000000000000000000000000000000000000000000000000000000000 0x 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -31,19 +31,74 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/detect_mod_zero_signed.sol.C.f[routing]() -> void:
 f:
+    pushint 0
+    dupn 2
+    bytec_2 // ""
     txna ApplicationArgs 1
-    dup
+    dupn 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
+    cover 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    bz f_ternary_false@16
+    dup
+    bz f_ternary_false@4
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 3
+    b-
+    bury 7
+
+f_ternary_merge@5:
+    dig 1
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    bury 5
+    bz f_ternary_false@7
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 2
+    b-
+
+f_ternary_merge@8:
+    dig 7
+    swap
     b%
+    bytec_2 // 0x
+    b==
+    bnz f_ternary_false@16
+    dup
+    bz f_ternary_false@11
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 3
+    b-
+    bury 6
+
+f_ternary_merge@12:
+    dig 3
+    bz f_ternary_false@14
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 2
+    b-
+
+f_ternary_merge@15:
+    dig 6
+    swap
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+
+f_ternary_merge@23:
     dup
     len
     intc_0 // 32
@@ -52,12 +107,62 @@ f:
     intc_0 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
+
+f_ternary_false@14:
+    dig 1
+    b f_ternary_merge@15
+
+f_ternary_false@11:
+    dig 2
+    bury 6
+    b f_ternary_merge@12
+
+f_ternary_false@16:
+    dup
+    bz f_ternary_false@18
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 3
+    b-
+    bury 5
+
+f_ternary_merge@19:
+    dig 1
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz f_ternary_false@21
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 2
+    b-
+
+f_ternary_merge@22:
+    dig 5
+    swap
+    b%
+    b f_ternary_merge@23
+
+f_ternary_false@21:
+    dig 1
+    b f_ternary_merge@22
+
+f_ternary_false@18:
+    dig 2
+    bury 5
+    b f_ternary_merge@19
+
+f_ternary_false@7:
+    dig 1
+    b f_ternary_merge@8
+
+f_ternary_false@4:
+    dig 2
+    bury 7
+    b f_ternary_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/detect_mod_zero_signed.sol.C.g[routing]() -> void:
@@ -86,7 +191,7 @@ g:
     bz g_ternary_false@3
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 g_ternary_merge@4:
@@ -98,7 +203,7 @@ g_ternary_merge@4:
     intc_0 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log

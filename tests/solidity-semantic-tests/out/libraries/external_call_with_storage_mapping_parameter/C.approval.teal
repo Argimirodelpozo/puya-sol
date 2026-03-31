@@ -1,0 +1,92 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/external_call_with_storage_mapping_parameter.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 0 1
+    bytecblock 0x78ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5 0x7866687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0xc14ad39f // method "g(uint256)uint256"
+    txna ApplicationArgs 0
+    match main_g_route@4
+    err
+
+main_g_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b g
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/external_call_with_storage_mapping_parameter.sol.C.g[routing]() -> void:
+g:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 0
+    swap
+    bytec_0 // 0x78ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
+    box_del
+    pop
+    bytec_0 // 0x78ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
+    dig 1
+    box_put
+    bytec_1 // 0x7866687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    box_del
+    pop
+    bytec_1 // 0x7866687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    swap
+    box_put
+    itxn_begin
+    pushbytes "x"
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    swap
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x4e631e90 // method "f(byte[])uint256"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

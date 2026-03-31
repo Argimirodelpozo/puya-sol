@@ -1,0 +1,107 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/transient_storage_reentrancy_lock.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 32
+    bytecblock "locked" 0x955000da
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "locked"
+    intc_0 // 0
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    bytec_1 // method "test(address,bool)void"
+    pushbytes 0x6fa91285 // method "reentrantCall(address)void"
+    txna ApplicationArgs 0
+    match test reentrantCall
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/transient_storage_reentrancy_lock.sol.C.test[routing]() -> void:
+test:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_0 // 0
+    getbit
+    intc_0 // 0
+    bytec_0 // "locked"
+    app_global_get_ex
+    assert // check locked exists
+    !
+    assert // Reentrancy attempt
+    bytec_0 // "locked"
+    intc_1 // 1
+    app_global_put
+    bz test_after_if_else@3
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/transient_storage_reentrancy_lock.sol.C.reentrantCall
+
+test_after_if_else@3:
+    bytec_0 // "locked"
+    intc_0 // 0
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/transient_storage_reentrancy_lock.sol.C.reentrantCall[routing]() -> void:
+reentrantCall:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/transient_storage_reentrancy_lock.sol.C.reentrantCall
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/transient_storage_reentrancy_lock.sol.C.reentrantCall(a: bytes) -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/transient_storage_reentrancy_lock.sol.C.reentrantCall:
+    proto 1 0
+    itxn_begin
+    global CurrentApplicationAddress
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_1 // method "test(address,bool)void"
+    itxn_field ApplicationArgs
+    frame_dig -1
+    itxn_field ApplicationArgs
+    pushbytes 0x00
+    itxn_field ApplicationArgs
+    itxn_submit
+    retsub

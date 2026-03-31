@@ -1,0 +1,374 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock 0x151f7c75 0x01 "counter" "nonces"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_2 // 0
+    itob
+    bytec_2 // "counter"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x90ef599a 0xe89028ba 0x879a0284 0xc7ee69c4 0x76978257 0xe0b11e7e 0xb4b24d37 0xa0b69804 0x69705dd6 0xd1c0e0b1 0x5f026f4f // method "testLocalPostInc(uint256)(uint256,uint256)", method "testLocalPreInc(uint256)(uint256,uint256)", method "testLocalPostDec(uint256)(uint256,uint256)", method "testLocalPreDec(uint256)(uint256,uint256)", method "useNonce(address)uint256", method "getNonce(address)uint256", method "postIncCounter()uint256", method "preIncCounter()uint256", method "incrementNonce(address)void", method "nonces(address)uint256", method "counter()uint256"
+    txna ApplicationArgs 0
+    match testLocalPostInc testLocalPreInc testLocalPostDec testLocalPreDec useNonce getNonce postIncCounter preIncCounter incrementNonce nonces counter
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.testLocalPostInc[routing]() -> void:
+testLocalPostInc:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    dig 1
+    bytec_1 // 0x01
+    b+
+    swap
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 2
+    dig 1
+    b|
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.testLocalPreInc[routing]() -> void:
+testLocalPreInc:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_1 // 0x01
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    dup
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.testLocalPostDec[routing]() -> void:
+testLocalPostDec:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    dig 1
+    bytec_1 // 0x01
+    b-
+    swap
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 2
+    dig 1
+    b|
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.testLocalPreDec[routing]() -> void:
+testLocalPreDec:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_1 // 0x01
+    b-
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    dup
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.useNonce[routing]() -> void:
+useNonce:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_3 // "nonces"
+    swap
+    concat
+    dup
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    bytec_1 // 0x01
+    b+
+    dig 2
+    box_del
+    pop
+    uncover 2
+    swap
+    box_put
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.getNonce[routing]() -> void:
+getNonce:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_3 // "nonces"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.postIncCounter[routing]() -> void:
+postIncCounter:
+    intc_2 // 0
+    bytec_2 // "counter"
+    app_global_get_ex
+    assert // check counter exists
+    dup
+    bytec_1 // 0x01
+    b+
+    bytec_2 // "counter"
+    swap
+    app_global_put
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.preIncCounter[routing]() -> void:
+preIncCounter:
+    intc_2 // 0
+    bytec_2 // "counter"
+    app_global_get_ex
+    assert // check counter exists
+    bytec_1 // 0x01
+    b+
+    bytec_2 // "counter"
+    dig 1
+    app_global_put
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.incrementNonce[routing]() -> void:
+incrementNonce:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_3 // "nonces"
+    swap
+    concat
+    dup
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    bytec_1 // 0x01
+    b+
+    dig 1
+    box_del
+    pop
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.nonces[routing]() -> void:
+nonces:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_3 // "nonces"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M39_PostIncrement.sol.PostIncrementTest.counter[routing]() -> void:
+counter:
+    intc_2 // 0
+    bytec_2 // "counter"
+    app_global_get_ex
+    assert // check counter exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

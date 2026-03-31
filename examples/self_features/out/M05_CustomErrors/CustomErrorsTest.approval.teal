@@ -1,0 +1,176 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M05_CustomErrors.sol.CustomErrorsTest.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock "balances" "owner" 0x 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "owner"
+    txn Sender
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x25ea3536 0x532c815a 0x74aea993 0xb1bbb0a8 0x1d543f54 // method "onlyOwnerAction()bool", method "withdraw(uint256)uint256", method "deposit(uint256)void", method "owner()address", method "balances(address)uint256"
+    txna ApplicationArgs 0
+    match onlyOwnerAction withdraw deposit owner balances
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M05_CustomErrors.sol.CustomErrorsTest.onlyOwnerAction[routing]() -> void:
+onlyOwnerAction:
+    txn Sender
+    intc_2 // 0
+    bytec_1 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    !=
+    !
+    assert // Unauthorized
+    pushbytes 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M05_CustomErrors.sol.CustomErrorsTest.withdraw[routing]() -> void:
+withdraw:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn Sender
+    sha256
+    bytec_0 // "balances"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    dig 2
+    b<
+    !
+    assert // InsufficientBalance
+    dup
+    dig 2
+    b>=
+    assert // underflow
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M05_CustomErrors.sol.CustomErrorsTest.deposit[routing]() -> void:
+deposit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn Sender
+    sha256
+    bytec_0 // "balances"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    b+
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    txn Sender
+    sha256
+    bytec_0 // "balances"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M05_CustomErrors.sol.CustomErrorsTest.owner[routing]() -> void:
+owner:
+    intc_2 // 0
+    bytec_1 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M05_CustomErrors.sol.CustomErrorsTest.balances[routing]() -> void:
+balances:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    sha256
+    bytec_0 // "balances"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

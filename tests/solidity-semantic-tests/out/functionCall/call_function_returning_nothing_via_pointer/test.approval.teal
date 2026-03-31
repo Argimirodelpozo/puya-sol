@@ -28,24 +28,16 @@ main_after_if_else@2:
     assert
     pushbytess 0x10b04df6 0x4b4fb052 0xfc32fe40 // method "f0()void", method "f()bool", method "flag()bool"
     txna ApplicationArgs 0
-    match main_f0_route@5 f flag
+    match main_f0_route@5 main_f_route@6 flag
     err
+
+main_f_route@6:
+    err // uninitialized function pointer
 
 main_f0_route@5:
     bytec_0 // "flag"
     intc_0 // 1
     app_global_put
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_function_returning_nothing_via_pointer.sol.test.f[routing]() -> void:
-f:
-    bytec_0 // "flag"
-    intc_0 // 1
-    app_global_put
-    pushbytes 0x151f7c7580
-    log
     intc_0 // 1
     return
 

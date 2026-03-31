@@ -1,4 +1,5 @@
 #include "builder/AWSTBuilder.h"
+#include "builder/sol-ast/stmts/SolBlock.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
@@ -315,14 +316,21 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				// Pure
 				sub->pure = func->stateMutability() == solidity::frontend::StateMutability::Pure;
 
-				// Translate body using ExpressionBuilder and StatementBuilder
+				// Translate body
 				ExpressionBuilder exprBuilder(
 					m_typeMapper, *m_storageMapper, _sourceFile, libraryName, m_libraryFunctionIds,
 					{}, m_freeFunctionById
 				);
-				StatementBuilder stmtBuilder(exprBuilder, m_typeMapper, _sourceFile);
+				sol_ast::StatementContext stmtCtx{
+					&exprBuilder, &m_typeMapper, _sourceFile,
+					[&](solidity::frontend::Expression const& e) { return exprBuilder.build(e); },
+					[&](solidity::frontend::Statement const& s) { return sol_ast::buildStatement(stmtCtx, exprBuilder, s); },
+					[&](solidity::frontend::Block const& b) { return sol_ast::buildBlock(stmtCtx, exprBuilder, b); },
+					[&]() { return exprBuilder.takePrePendingStatements(); },
+					[&]() { return exprBuilder.takePendingStatements(); },
+					{}, nullptr, {}, nullptr, nullptr, nullptr,
+				};
 
-				// Set function context for inline assembly translation
 			{
 				std::vector<std::pair<std::string, awst::WType const*>> paramContext;
 				std::map<std::string, unsigned> bitWidths;
@@ -353,10 +361,12 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					if (intType && intType->numBits() < 64)
 						bitWidths[rp->name()] = intType->numBits();
 				}
-				stmtBuilder.setFunctionContext(paramContext, sub->returnType, bitWidths);
+				stmtCtx.functionParams = paramContext;
+				stmtCtx.returnType = sub->returnType;
+				stmtCtx.functionParamBitWidths = bitWidths;
 			}
 
-			sub->body = stmtBuilder.buildBlock(func->body());
+			sub->body = sol_ast::buildBlock(stmtCtx, exprBuilder, func->body());
 
 				// Insert zero-initialization for named return variables
 				// Solidity implicitly initializes named returns to their zero values
@@ -646,7 +656,15 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				m_typeMapper, *m_storageMapper, _sourceFile, "", m_libraryFunctionIds,
 				{}, m_freeFunctionById
 			);
-			StatementBuilder stmtBuilder(exprBuilder, m_typeMapper, _sourceFile);
+			sol_ast::StatementContext stmtCtx{
+				&exprBuilder, &m_typeMapper, _sourceFile,
+				[&](solidity::frontend::Expression const& e) { return exprBuilder.build(e); },
+				[&](solidity::frontend::Statement const& s) { return sol_ast::buildStatement(stmtCtx, exprBuilder, s); },
+				[&](solidity::frontend::Block const& b) { return sol_ast::buildBlock(stmtCtx, exprBuilder, b); },
+				[&]() { return exprBuilder.takePrePendingStatements(); },
+				[&]() { return exprBuilder.takePendingStatements(); },
+				{}, nullptr, {}, nullptr, nullptr, nullptr,
+			};
 
 			{
 				std::vector<std::pair<std::string, awst::WType const*>> paramContext;
@@ -678,10 +696,12 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					if (intType && intType->numBits() < 64)
 						bitWidths[rp->name()] = intType->numBits();
 				}
-				stmtBuilder.setFunctionContext(paramContext, sub->returnType, bitWidths);
+				stmtCtx.functionParams = paramContext;
+				stmtCtx.returnType = sub->returnType;
+				stmtCtx.functionParamBitWidths = bitWidths;
 			}
 
-			sub->body = stmtBuilder.buildBlock(func->body());
+			sub->body = sol_ast::buildBlock(stmtCtx, exprBuilder, func->body());
 
 			// Insert zero-initialization for named return variables
 			{

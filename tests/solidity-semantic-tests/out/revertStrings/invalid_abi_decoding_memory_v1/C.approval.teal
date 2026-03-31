@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/invalid_abi_decoding_memory_v1.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 8
+    intcblock 32 1 8 0
+    bytecblock 0x418f84c4
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -22,7 +23,8 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x418f84c4 0xcc049d17 // method "dyn(uint256,uint256,uint256)byte[]", method "f(uint256,uint256,uint256)bool"
+    bytec_0 // method "dyn(uint256,uint256,uint256)byte[]"
+    pushbytes 0xcc049d17 // method "f(uint256,uint256,uint256)bool"
     txna ApplicationArgs 0
     match dyn f
     err
@@ -31,7 +33,6 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/invalid_abi_decoding_memory_v1.sol.C.dyn[routing]() -> void:
 dyn:
     txna ApplicationArgs 1
-    dup
     len
     intc_0 // 32
     ==
@@ -43,19 +44,54 @@ dyn:
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
-    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/invalid_abi_decoding_memory_v1.sol.C.dyn
+    load 0
+    intc_2 // 8
+    bzero
+    intc_0 // 32
+    bzero
+    dup
+    dig 4
+    concat
     dup
     len
-    itob
-    extract 6 2
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    swap
+    replace2 0
+    uncover 2
+    dig 3
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    uncover 3
+    pushbytes 0x01
+    b+
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 3
     swap
     concat
-    pushbytes 0x151f7c75
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace3
+    dup
+    store 0
+    extract 4 32
+    pushbytes 0x151f7c750020
     swap
     concat
     log
@@ -83,58 +119,55 @@ f:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/invalid_abi_decoding_memory_v1.sol.C.dyn
-    pop
+    itxn_begin
+    intc_0 // 32
+    bzero
+    dup
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    global CurrentApplicationAddress
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_3 // 0
+    itxn_field OnCompletion
+    intc_3 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_0 // method "dyn(uint256,uint256,uint256)byte[]"
+    itxn_field ApplicationArgs
+    uncover 2
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
     pushbytes 0x151f7c7580
     log
     intc_1 // 1
     return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/invalid_abi_decoding_memory_v1.sol.C.dyn(ptr: bytes, start: bytes, x: bytes) -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/invalid_abi_decoding_memory_v1.sol.C.dyn:
-    proto 3 1
-    load 0
-    intc_2 // 8
-    bzero
-    intc_0 // 32
-    bzero
-    dup
-    frame_dig -2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    uncover 3
-    swap
-    replace2 0
-    uncover 2
-    frame_dig -2
-    concat
-    dup
-    len
-    intc_2 // 8
-    -
-    extract_uint64
-    frame_dig -2
-    pushbytes 0x01
-    b+
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    replace3
-    dup
-    store 0
-    extract 4 32
-    retsub

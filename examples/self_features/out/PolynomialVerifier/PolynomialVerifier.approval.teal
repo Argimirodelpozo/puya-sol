@@ -3,15 +3,22 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/PolynomialVerifier.sol.PolynomialVerifier.approval_program() -> uint64:
 main:
-    intcblock 32 0 64 1
-    bytecblock 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001 0x068101 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47 0x
+    intcblock 32 8 1 64
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000000 0x20 0x40 0x60
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_3 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
-    pushbytes 0x1b30f5ce // method "verifyProof(uint512[2],uint512[4],uint512[2],uint512[9])bool"
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0x3619167e // method "verifyProof(uint256[2],uint256[2][2],uint256[2],uint256[9])bool"
     txna ApplicationArgs 0
     match main_verifyProof_route@4
     err
@@ -27,821 +34,1345 @@ main_verifyProof_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/PolynomialVerifier.sol.PolynomialVerifier.verifyProof[routing]() -> void:
 verifyProof:
-    intc_1 // 0
-    dupn 8
     txna ApplicationArgs 1
     dup
     len
-    pushint 128
+    intc_3 // 64
     ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint512, 2>
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
     txna ApplicationArgs 2
     dup
     len
-    pushint 256
+    pushint 128
     ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint512, 4>
+    assert // invalid number of bytes for arc4.static_array<arc4.static_array<arc4.uint256, 2>, 2>
     txna ApplicationArgs 3
     dup
     len
-    pushint 128
+    intc_3 // 64
     ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint512, 2>
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
     txna ApplicationArgs 4
+    len
+    pushint 288
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint256, 9>
+    load 0
+    intc_1 // 8
+    bzero
+    dig 1
+    extract 64 32
+    intc_0 // 32
+    bzero
+    dig 1
+    pushbytes 0x0380
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 1
+    swap
+    concat
     dup
     len
-    pushint 576
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint512, 9>
-
-verifyProof_while_top@58:
-    pushint 30010
-    global OpcodeBudget
-    >
-    bz verifyProof_after_while@63
-    itxn_begin
-    pushint 6 // appl
-    itxn_field TypeEnum
-    pushint 5 // DeleteApplication
-    itxn_field OnCompletion
-    bytec_1 // 0x068101
-    itxn_field ApprovalProgram
-    bytec_1 // 0x068101
-    itxn_field ClearStateProgram
-    intc_1 // 0
-    itxn_field Fee
-    itxn_submit
-    b verifyProof_while_top@58
-
-verifyProof_after_while@63:
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 4
+    swap
+    replace2 64
+    dig 2
+    pushbytes 0x80
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 3
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 5
+    dig 1
+    concat
     dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 3
+    dig 1
+    pushbytes 0x0ef4b8d43b705787325cb4251cec6eca845a0cdcd06202a2defae62e09ba4dfc
+    replace3
+    uncover 2
+    bytec_2 // 0x20
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    swap
+    dig 1
+    pushbytes 0x0b0384e2754d53716a6fcd41e44bac27ae338137aaa0b6f298c1593707bcba56
+    replace3
+    dup
+    extract 64 32
+    dig 7
+    dig 1
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 2
+    swap
+    pushbytes 0x0c8d3b4d7769dad025831055b17f517197bc2d6d78068b41b83495338d30d4e3
+    replace3
+    dig 1
+    bytec_2 // 0x20
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x09cf4951f69b4842440a349c3be1decd960beed325e1f52e8254223d0f443b25
+    replace3
+    dig 1
+    bytec_3 // 0x40
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    swap
+    dig 1
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace3
+    dup
+    dig 5
+    intc_0 // 32
+    extract3
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    cover 2
+    replace3
+    swap
+    bytec 4 // 0x60
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dig 1
+    dig 3
+    intc_0 // 32
+    extract3
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace3
+    dup
+    extract 64 32
+    dig 7
+    dig 1
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 2
+    swap
+    pushbytes 0x16537c55a8a79b4289b41aa78d6c1f3df6d4059cdae827efcbbf7326e563ba23
+    replace3
+    dig 1
+    bytec_2 // 0x20
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x1de60553a2ca848fdd670732eef60b9bba27517eb002ff04857e0ba980b25e9b
+    replace3
+    dig 1
+    bytec_3 // 0x40
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    swap
+    dig 1
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace3
+    dup
+    dig 5
+    intc_0 // 32
+    extract3
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    cover 2
+    replace3
+    swap
+    bytec 4 // 0x60
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dig 1
+    dig 3
+    intc_0 // 32
+    extract3
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace3
+    dup
+    extract 64 32
+    dig 7
+    dig 1
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 2
+    swap
+    pushbytes 0x0bbda39479ae85c56d6e96d6e0d9311dec13ee334604bffebc3995cec7fd1937
+    replace3
+    dig 1
+    bytec_2 // 0x20
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x1a68f4c5b9e91e5402978f1d41ed44fefdec326cc59e772f30955d0c10bf0ca9
+    replace3
+    dig 1
+    bytec_3 // 0x40
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    swap
+    dig 1
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace3
+    dup
+    dig 5
+    intc_0 // 32
+    extract3
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    cover 2
+    replace3
+    swap
+    bytec 4 // 0x60
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dig 1
+    dig 3
+    intc_0 // 32
+    extract3
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace3
+    dup
+    extract 64 32
+    dig 7
+    dig 1
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 2
+    swap
+    pushbytes 0x14d45d1bc24ea2d7f98cb34f9c42edd13186f8ffde3fa207b36b130b3712a586
+    replace3
+    dig 1
+    bytec_2 // 0x20
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x08c4f198245c167d435a7d5a2d35a01b3302b6327d624afc8cc4b97eecaffb5c
+    replace3
+    dig 1
+    bytec_3 // 0x40
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    swap
+    dig 1
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace3
+    dup
+    dig 5
+    intc_0 // 32
+    extract3
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    cover 2
+    replace3
+    swap
+    bytec 4 // 0x60
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dig 1
+    dig 3
+    intc_0 // 32
+    extract3
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace3
+    dup
+    extract 64 32
+    dig 7
+    dig 1
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 2
+    swap
+    pushbytes 0x0d622708bed96d3288d17e74339c1111273d8077f6fda1a0e1dd7c7f8888b544
+    replace3
+    dig 1
+    bytec_2 // 0x20
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x0df2b0c549540e840d73ccfaa49014ac486f0e8c395c88eecf802c87a6fe7a24
+    replace3
+    dig 1
+    bytec_3 // 0x40
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    swap
+    dig 1
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace3
+    dup
+    dig 5
+    intc_0 // 32
+    extract3
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    cover 2
+    replace3
+    swap
+    bytec 4 // 0x60
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dig 1
+    dig 3
+    intc_0 // 32
+    extract3
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace3
+    dup
+    extract 64 32
+    dig 7
+    dig 1
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 2
+    swap
+    pushbytes 0x0d87b7e90b83ff21c00804f94abc45a9f95934c6e77dd39adeb2ca80070f1455
+    replace3
+    dig 1
+    bytec_2 // 0x20
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x0922937e9285f30cbca4f50e703a01af6f9d03bde462feb46fd06ba5d1709dd8
+    replace3
+    dig 1
+    bytec_3 // 0x40
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    swap
+    dig 1
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace3
+    dup
+    dig 5
+    intc_0 // 32
+    extract3
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    cover 2
+    replace3
+    swap
+    bytec 4 // 0x60
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dig 1
+    dig 3
+    intc_0 // 32
+    extract3
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace3
+    dup
+    extract 64 32
+    dig 7
+    dig 1
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 2
+    swap
+    pushbytes 0x07971bee6933553088d41d8eae9c5591e056123315a37fc9b561a6fac58360a1
+    replace3
+    dig 1
+    bytec_2 // 0x20
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x2090a3e84fb43c698a059954824136dad8ffc891c7a0f3919b9b8c04d894a652
+    replace3
+    dig 1
+    bytec_3 // 0x40
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    swap
+    dig 1
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace3
+    dup
+    dig 5
+    intc_0 // 32
+    extract3
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    cover 2
+    replace3
+    swap
+    bytec 4 // 0x60
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dig 1
+    dig 3
+    intc_0 // 32
+    extract3
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace3
+    dup
+    extract 64 32
+    dig 7
+    dig 1
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 2
+    swap
+    pushbytes 0x2f49fcfd79cff182682af2fd7e7c8755c8a779451543c345e00c4c9a9d199e9b
+    replace3
+    dig 1
+    bytec_2 // 0x20
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x2a15b11e0ed6a90670efa3dec33973c7d838bf407cf4ad120bc231012a6b83ef
+    replace3
+    dig 1
+    bytec_3 // 0x40
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    swap
+    dig 1
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace3
+    dup
+    dig 5
+    intc_0 // 32
+    extract3
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    cover 2
+    replace3
+    swap
+    bytec 4 // 0x60
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dig 1
+    dig 3
+    intc_0 // 32
+    extract3
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace3
+    dup
+    extract 64 32
+    dig 7
+    dig 1
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 2
+    swap
+    pushbytes 0x25cdc0d29e426c938bfd49d8a48e803e86152e8030450fab7cd08448934704ac
+    replace3
+    dig 1
+    bytec_2 // 0x20
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x10151eb531cd88f0e32b64d65ddcfb1c69dd5102f1791bdf61a148e9503b484f
+    replace3
+    dig 1
+    bytec_3 // 0x40
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    swap
+    dig 1
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace3
+    dup
+    dig 5
+    intc_0 // 32
+    extract3
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    cover 2
+    replace3
+    swap
+    bytec 4 // 0x60
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dig 1
+    uncover 3
+    intc_0 // 32
+    extract3
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace3
+    dig 5
+    dig 3
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 9
+    extract 0 32 // on error: index access is out of bounds
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    dig 2
+    uncover 2
+    replace3
+    dig 3
+    bytec_2 // 0x20
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace3
+    dig 3
+    bytec_3 // 0x40
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 9
     extract 0 64 // on error: index access is out of bounds
+    extract 0 32 // on error: index access is out of bounds
+    dig 6
+    swap
+    concat
     dup
-    bury 14
-    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
-    b<
-    bnz verifyProof_after_if_else@3
-    intc_1 // 0
-
-verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/PolynomialVerifier.sol.PolynomialVerifier.verifyProof@56:
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace3
+    dig 3
+    bytec 4 // 0x60
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace3
+    dig 3
+    pushbytes 0x80
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace3
+    dig 3
+    pushbytes 0xa0
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace3
+    dig 3
+    pushbytes 0xc0
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x24600b12401cdc26c9972993620ef869cb53c1742621ad704469d88a7d89974a
+    replace3
+    dig 3
+    pushbytes 0xe0
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x030a8c253e951e5fc594943745b65652e568f8f8348315fe44f1a2afc3dd8762
+    replace3
+    dig 3
+    pushbytes 0x0100
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x255f874ec465e2aa3b017395ed6e054aa82818b00072bf9da58b8d527778b4d2
+    replace3
+    dig 3
+    pushbytes 0x0120
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x1a68c388a69670b69b6ec0e54d448c47912f6f074906e7d2565d9b60ab1e3fc6
+    replace3
+    dig 3
+    pushbytes 0x0140
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x1995d7c5228316f73f16f722bddefeae035bce9e272fb6024cdcd245b33ea7e5
+    replace3
+    dig 3
+    pushbytes 0x0160
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x17a0bf2628101e69e641cbc314e2e8226bf6502a63d873bfb3b5315a742025b7
+    replace3
+    dig 3
+    pushbytes 0x0180
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dig 1
+    uncover 4
+    intc_0 // 32
+    extract3
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace3
+    dig 2
+    pushbytes 0x01a0
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 5
+    bytec_2 // 0x20
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dig 2
+    swap
+    intc_0 // 32
+    extract3
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace3
+    dig 2
+    pushbytes 0x01c0
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c2
+    replace3
+    dig 2
+    pushbytes 0x01e0
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x1800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed
+    replace3
+    dig 2
+    pushbytes 0x0200
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x090689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b
+    replace3
+    dig 2
+    pushbytes 0x0220
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x12c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa
+    replace3
+    dig 2
+    pushbytes 0x0240
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 6
+    extract 0 32 // on error: index access is out of bounds
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace3
+    dig 2
+    pushbytes 0x0260
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace3
+    dig 2
+    pushbytes 0x0280
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x281c96e091962d64450863d9ec5f10c2a954d75f58aff58d5f516f2c65d2e561
+    replace3
+    dig 2
+    pushbytes 0x02a0
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x283b2890bf5cd3948d41ab94ec92c7e74d93c4da20ab810779df77824e9ca99b
+    replace3
+    dig 2
+    pushbytes 0x02c0
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x133b74204ecece31dbffaa97a81b2af6b976a483972afa70ee793e97e4463709
+    replace3
+    uncover 2
+    pushbytes 0x02e0
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 4
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushbytes 0x1bbc11daae063b00bc3c9c8b16856062db1ff4d68c973b78556ed8a39bcddd33
+    replace3
+    dup
+    uncover 2
+    intc_0 // 32
+    extract3
+    pushbytes 0x01
+    b&
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 0
+    dup
+    store 0
+    extract 0 32
+    pushbytes 0x
+    b!=
     pushbytes 0x00
-    intc_1 // 0
+    pushint 0
     uncover 2
     setbit
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
-
-verifyProof_after_if_else@3:
-    dup
-    extract 64 64 // on error: index access is out of bounds
-    dup
-    bury 13
-    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
-    b<
-    bnz verifyProof_after_if_else@5
-    intc_1 // 0
-    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/PolynomialVerifier.sol.PolynomialVerifier.verifyProof@56
-
-verifyProof_after_if_else@5:
-    dup
-    extract 128 64 // on error: index access is out of bounds
-    dup
-    bury 12
-    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
-    b<
-    bnz verifyProof_after_if_else@7
-    intc_1 // 0
-    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/PolynomialVerifier.sol.PolynomialVerifier.verifyProof@56
-
-verifyProof_after_if_else@7:
-    dup
-    extract 192 64 // on error: index access is out of bounds
-    dup
-    bury 11
-    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
-    b<
-    bnz verifyProof_after_if_else@9
-    intc_1 // 0
-    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/PolynomialVerifier.sol.PolynomialVerifier.verifyProof@56
-
-verifyProof_after_if_else@9:
-    dup
-    pushint 256
-    intc_2 // 64
-    extract3 // on error: index access is out of bounds
-    dup
-    bury 10
-    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
-    b<
-    bnz verifyProof_after_if_else@11
-    intc_1 // 0
-    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/PolynomialVerifier.sol.PolynomialVerifier.verifyProof@56
-
-verifyProof_after_if_else@11:
-    dup
-    pushint 320
-    intc_2 // 64
-    extract3 // on error: index access is out of bounds
-    dup
-    bury 9
-    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
-    b<
-    bnz verifyProof_after_if_else@13
-    intc_1 // 0
-    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/PolynomialVerifier.sol.PolynomialVerifier.verifyProof@56
-
-verifyProof_after_if_else@13:
-    dup
-    pushint 384
-    intc_2 // 64
-    extract3 // on error: index access is out of bounds
-    dup
-    bury 8
-    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
-    b<
-    bnz verifyProof_after_if_else@15
-    intc_1 // 0
-    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/PolynomialVerifier.sol.PolynomialVerifier.verifyProof@56
-
-verifyProof_after_if_else@15:
-    dup
-    pushint 448
-    intc_2 // 64
-    extract3 // on error: index access is out of bounds
-    dup
-    bury 7
-    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
-    b<
-    bnz verifyProof_after_if_else@17
-    intc_1 // 0
-    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/PolynomialVerifier.sol.PolynomialVerifier.verifyProof@56
-
-verifyProof_after_if_else@17:
-    dup
-    pushint 512
-    intc_2 // 64
-    extract3 // on error: index access is out of bounds
-    dup
-    bury 6
-    bytec_0 // 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
-    b<
-    bnz verifyProof_after_if_else@19
-    intc_1 // 0
-    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/PolynomialVerifier.sol.PolynomialVerifier.verifyProof@56
-
-verifyProof_after_if_else@19:
-    intc_0 // 32
-    bzero
-    dup
-    dig 14
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes 0x0c8d3b4d7769dad025831055b17f517197bc2d6d78068b41b83495338d30d4e309cf4951f69b4842440a349c3be1decd960beed325e1f52e8254223d0f443b25
-    swap
-    ec_scalar_mul BN254g1
-    dup
-    extract 0 32
-    swap
-    extract 32 32
-    dig 2
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 2
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    pushbytes 0x0ef4b8d43b705787325cb4251cec6eca845a0cdcd06202a2defae62e09ba4dfc0b0384e2754d53716a6fcd41e44bac27ae338137aaa0b6f298c1593707bcba56
-    ec_add BN254g1
-    dup
-    extract 0 32
-    swap
-    extract 32 32
-    dig 2
-    dig 15
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes 0x16537c55a8a79b4289b41aa78d6c1f3df6d4059cdae827efcbbf7326e563ba231de60553a2ca848fdd670732eef60b9bba27517eb002ff04857e0ba980b25e9b
-    swap
-    ec_scalar_mul BN254g1
-    dup
-    extract 0 32
-    swap
-    extract 32 32
-    dig 4
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 4
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    ec_add BN254g1
-    dup
-    extract 0 32
-    swap
-    extract 32 32
-    dig 2
-    dig 14
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes 0x0bbda39479ae85c56d6e96d6e0d9311dec13ee334604bffebc3995cec7fd19371a68f4c5b9e91e5402978f1d41ed44fefdec326cc59e772f30955d0c10bf0ca9
-    swap
-    ec_scalar_mul BN254g1
-    dup
-    extract 0 32
-    swap
-    extract 32 32
-    dig 4
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 4
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    ec_add BN254g1
-    dup
-    extract 0 32
-    swap
-    extract 32 32
-    dig 2
-    dig 13
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes 0x14d45d1bc24ea2d7f98cb34f9c42edd13186f8ffde3fa207b36b130b3712a58608c4f198245c167d435a7d5a2d35a01b3302b6327d624afc8cc4b97eecaffb5c
-    swap
-    ec_scalar_mul BN254g1
-    dup
-    extract 0 32
-    swap
-    extract 32 32
-    dig 4
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 4
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    ec_add BN254g1
-    dup
-    extract 0 32
-    swap
-    extract 32 32
-    dig 2
-    dig 12
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes 0x0d622708bed96d3288d17e74339c1111273d8077f6fda1a0e1dd7c7f8888b5440df2b0c549540e840d73ccfaa49014ac486f0e8c395c88eecf802c87a6fe7a24
-    swap
-    ec_scalar_mul BN254g1
-    dup
-    extract 0 32
-    swap
-    extract 32 32
-    dig 4
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 4
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    ec_add BN254g1
-    dup
-    extract 0 32
-    swap
-    extract 32 32
-    dig 2
-    dig 11
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes 0x0d87b7e90b83ff21c00804f94abc45a9f95934c6e77dd39adeb2ca80070f14550922937e9285f30cbca4f50e703a01af6f9d03bde462feb46fd06ba5d1709dd8
-    swap
-    ec_scalar_mul BN254g1
-    dup
-    extract 0 32
-    swap
-    extract 32 32
-    dig 4
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 4
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    ec_add BN254g1
-    dup
-    extract 0 32
-    swap
-    extract 32 32
-    dig 2
-    dig 10
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes 0x07971bee6933553088d41d8eae9c5591e056123315a37fc9b561a6fac58360a12090a3e84fb43c698a059954824136dad8ffc891c7a0f3919b9b8c04d894a652
-    swap
-    ec_scalar_mul BN254g1
-    dup
-    extract 0 32
-    swap
-    extract 32 32
-    dig 4
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 4
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    ec_add BN254g1
-    dup
-    extract 0 32
-    swap
-    extract 32 32
-    dig 2
-    dig 9
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes 0x2f49fcfd79cff182682af2fd7e7c8755c8a779451543c345e00c4c9a9d199e9b2a15b11e0ed6a90670efa3dec33973c7d838bf407cf4ad120bc231012a6b83ef
-    swap
-    ec_scalar_mul BN254g1
-    dup
-    extract 0 32
-    swap
-    extract 32 32
-    dig 4
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 4
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    ec_add BN254g1
-    dup
-    extract 0 32
-    swap
-    extract 32 32
-    dig 2
-    dig 8
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes 0x25cdc0d29e426c938bfd49d8a48e803e86152e8030450fab7cd08448934704ac10151eb531cd88f0e32b64d65ddcfb1c69dd5102f1791bdf61a148e9503b484f
-    swap
-    ec_scalar_mul BN254g1
-    dup
-    extract 0 32
-    swap
-    extract 32 32
-    dig 4
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 4
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    ec_add BN254g1
-    dup
-    extract 0 32
-    swap
-    extract 32 32
-    dig 6
-    dup
-    extract 0 64 // on error: index access is out of bounds
-    swap
-    extract 64 64 // on error: index access is out of bounds
-    bytec_2 // 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
-    swap
-    b-
-    bytec_2 // 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
-    b%
-    dig 7
-    dup
-    extract 0 64 // on error: index access is out of bounds
-    dig 1
-    extract 64 64 // on error: index access is out of bounds
-    dig 2
-    extract 128 64 // on error: index access is out of bounds
-    uncover 3
-    extract 192 64 // on error: index access is out of bounds
-    dig 10
-    dup
-    extract 0 64 // on error: index access is out of bounds
-    swap
-    extract 64 64 // on error: index access is out of bounds
-    dig 10
-    uncover 8
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 10
-    uncover 8
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    pushbytes 0x24600b12401cdc26c9972993620ef869cb53c1742621ad704469d88a7d89974a030a8c253e951e5fc594943745b65652e568f8f8348315fe44f1a2afc3dd8762
-    concat
-    dig 9
-    uncover 9
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 9
-    uncover 9
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    concat
-    dig 7
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 7
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    concat
-    dig 5
-    uncover 4
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 5
-    uncover 5
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    dig 4
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    uncover 4
-    uncover 4
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    concat
-    pushbytes 0x1a68c388a69670b69b6ec0e54d448c47912f6f074906e7d2565d9b60ab1e3fc6255f874ec465e2aa3b017395ed6e054aa82818b00072bf9da58b8d527778b4d217a0bf2628101e69e641cbc314e2e8226bf6502a63d873bfb3b5315a742025b71995d7c5228316f73f16f722bddefeae035bce9e272fb6024cdcd245b33ea7e51800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c212c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa090689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b283b2890bf5cd3948d41ab94ec92c7e74d93c4da20ab810779df77824e9ca99b281c96e091962d64450863d9ec5f10c2a954d75f58aff58d5f516f2c65d2e5611bbc11daae063b00bc3c9c8b16856062db1ff4d68c973b78556ed8a39bcddd33133b74204ecece31dbffaa97a81b2af6b976a483972afa70ee793e97e4463709
-    concat
-    ec_pairing_check BN254g1
-    bytec_3 // 0x
-    pushbytes 0x01
-    uncover 2
-    select
-    pushbytes 0x01
-    b&
-    bytec_3 // 0x
-    b!=
-    b verifyProof_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/PolynomialVerifier.sol.PolynomialVerifier.verifyProof@56

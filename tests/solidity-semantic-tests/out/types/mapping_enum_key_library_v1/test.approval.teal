@@ -1,0 +1,126 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v1.sol.test.approval_program() -> uint64:
+main:
+    intcblock 0 1 8 24
+    bytecblock "table" 0x
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb4369c36 0xced1bdc6 // method "get(uint64)uint64", method "set(uint64,uint64)void"
+    txna ApplicationArgs 0
+    match get set
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v1.sol.test.get[routing]() -> void:
+get:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    intc_0 // 0
+    swap
+    itxn_begin
+    bytec_0 // "table"
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    swap
+    itob
+    uncover 2
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x38acad73 // method "get(byte[],uint64)uint64"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    btoi
+    itob
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v1.sol.test.set[routing]() -> void:
+set:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    intc_0 // 0
+    swap
+    itxn_begin
+    bytec_0 // "table"
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    uncover 3
+    itob
+    uncover 2
+    itob
+    uncover 3
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0xbefbd3f0 // method "set(byte[],uint64,uint64)void"
+    itxn_field ApplicationArgs
+    uncover 2
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_1 // 1
+    return

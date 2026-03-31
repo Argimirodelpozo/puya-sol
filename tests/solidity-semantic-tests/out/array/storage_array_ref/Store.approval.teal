@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/storage_array_ref.sol.Store.approval_program() -> uint64:
 main:
     intcblock 32 8 1 0
-    bytecblock "data" 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending"
+    bytecblock 0x01 "data" 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_3 // "__ctor_pending"
@@ -40,7 +40,7 @@ __postInit:
     bytec_3 // "__ctor_pending"
     intc_3 // 0
     app_global_put
-    bytec_0 // "data"
+    bytec_1 // "data"
     intc_3 // 0
     box_create
     pop
@@ -57,7 +57,7 @@ add:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_0 // "data"
+    bytec_1 // "data"
     box_get
     assert // box exists
     pushint 2
@@ -70,14 +70,14 @@ add:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     concat // on error: max array length exceeded
     pop
-    bytec_0 // "data"
+    bytec_1 // "data"
     box_len
     pop
     intc_0 // 32
     /
     itob
     dup
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b>=
     assert // underflow
     uncover 3
@@ -92,7 +92,7 @@ add:
     uncover 2
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b-
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -114,10 +114,10 @@ add:
     extract 6 2
     swap
     concat
-    bytec_0 // "data"
+    bytec_1 // "data"
     box_del
     pop
-    bytec_0 // "data"
+    bytec_1 // "data"
     swap
     box_put
     intc_2 // 1
@@ -169,7 +169,7 @@ find(23,u256,u256,u256):
     b==
     bnz find(23,u256,u256,u256)_if_body@3
     frame_dig -2
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b==
     bz find(23,u256,u256,u256)_after_if_else@4
     intc_1 // 8
@@ -208,8 +208,6 @@ find(23,u256,u256,u256)_after_if_else@4:
     frame_dig -3
     uncover 2
     b+
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     dup
     frame_bury 1
     concat
@@ -243,13 +241,18 @@ find(23,u256,u256,u256)_else_body@6:
     frame_dig 2
     b>
     bz find(23,u256,u256,u256)_else_body@8
-    frame_dig 1
-    bytec_1 // 0x01
-    b+
     frame_dig 0
+    dup
+    bytec_0 // 0x01
+    b>=
+    assert // underflow
+    frame_dig 1
+    bytec_0 // 0x01
+    b+
+    swap
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b-
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%

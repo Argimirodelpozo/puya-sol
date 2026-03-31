@@ -1,0 +1,75 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_mapping_delete_same_value_type.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 32
+    bytecblock 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925 0x "t"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "t"
+    bytec_1 // 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x9939b21d 0xef1080bf // method "setAndClear()void", method "getM()uint256"
+    txna ApplicationArgs 0
+    match setAndClear getM
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_mapping_delete_same_value_type.sol.C.setAndClear[routing]() -> void:
+setAndClear:
+    intc_0 // 1
+    itob
+    bytec_0 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    box_del
+    pop
+    bytec_0 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    swap
+    box_put
+    bytec_0 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    box_del
+    pop
+    bytec_2 // "t"
+    bytec_1 // 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_mapping_delete_same_value_type.sol.C.getM[routing]() -> void:
+getM:
+    bytec_0 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

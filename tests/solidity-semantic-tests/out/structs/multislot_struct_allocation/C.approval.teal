@@ -1,0 +1,91 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/multislot_struct_allocation.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    bytecblock 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x04738df9 0xcd78b354 // method "o(uint256)uint256", method "f()uint256"
+    txna ApplicationArgs 0
+    match o f
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/multislot_struct_allocation.sol.C.o[routing]() -> void:
+o:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    pushbytes 0x01
+    b+
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/multislot_struct_allocation.sol.C.f[routing]() -> void:
+f:
+    intc_0 // 1
+    itob
+    intc_1 // 32
+    bzero
+    itxn_begin
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    intc_0 // 1
+    itxn_field ApplicationID
+    pushbytes 0x0bdce004 // method "x()byte[]"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

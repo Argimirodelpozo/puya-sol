@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/create_random.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 20
-    bytecblock 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffff
+    intcblock 32 1
+    bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -53,19 +53,8 @@ testRunner:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/create_random.sol.C.testCalc[routing]() -> void:
 testCalc:
-    global CurrentApplicationAddress
-    intc_2 // 20
-    bzero
-    swap
-    concat
-    dup
-    len
-    intc_2 // 20
-    -
-    intc_2 // 20
-    extract3
     pushbytes 0xd694
-    swap
+    global CurrentApplicationAddress
     concat
     pushbytes 0x01
     concat
@@ -73,8 +62,8 @@ testCalc:
     bzero
     swap
     keccak256
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffff
-    b&
+    btoi
+    itob
     dig 1
     swap
     concat
@@ -88,17 +77,6 @@ testCalc:
     dig 2
     global CurrentApplicationAddress
     concat
-    dig 3
-    global CurrentApplicationAddress
-    concat
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 3
-    swap
-    concat
     dup
     len
     intc_0 // 32
@@ -109,8 +87,8 @@ testCalc:
     pushbytes 0x5e59e02549ba8e07ea50ebd4ed8e46ed3ef88ddfb158dda6108a036181bc9bad
     concat
     keccak256
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffff
-    b&
+    btoi
+    itob
     uncover 2
     swap
     concat

@@ -98,6 +98,13 @@ private:
 		std::shared_ptr<awst::Expression> _expr,
 		awst::SourceLocation const& _loc);
 
+	/// Build signed modulo or division: operate on abs values, apply sign.
+	std::shared_ptr<awst::Expression> buildSignedModDiv(
+		std::shared_ptr<awst::Expression> _left,
+		std::shared_ptr<awst::Expression> _right,
+		BuilderBinaryOp _op,
+		awst::SourceLocation const& _loc);
+
 	/// The 2^256 constant string.
 	static constexpr char const* POW_2_256 =
 		"115792089237316195423570985008687907853269984665640564039457584007913129639936";

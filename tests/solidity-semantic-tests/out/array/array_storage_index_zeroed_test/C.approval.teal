@@ -4,12 +4,12 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_zeroed_test.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 2 1
-    bytecblock "storageArray" "__ctor_pending" 0x01 0x
+    bytecblock "storageArray" 0x01 0x "__ctor_pending"
     pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_3 // 1
     app_global_put
     intc_3 // 1
@@ -36,10 +36,10 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_zeroed_test.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_1 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_1 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_1 // 0
     app_global_put
     bytec_0 // "storageArray"
@@ -60,7 +60,6 @@ test_zeroed_indices:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_1 // 0
 
 test_zeroed_indices_while_top@2:
     bytec_0 // "storageArray"
@@ -69,7 +68,7 @@ test_zeroed_indices_while_top@2:
     intc_0 // 32
     /
     itob
-    dig 2
+    dig 1
     b<
     bz test_zeroed_indices_while_top@5
     bytec_0 // "storageArray"
@@ -89,7 +88,7 @@ test_zeroed_indices_while_top@5:
     intc_0 // 32
     /
     itob
-    dig 2
+    dig 1
     b>
     bz test_zeroed_indices_after_while@7
     bytec_0 // "storageArray"
@@ -112,17 +111,16 @@ test_zeroed_indices_after_while@7:
     intc_1 // 0
     itob
     dup
-    bury 5
-    bury 3
+    bury 4
+    bury 2
 
 test_zeroed_indices_while_top@8:
-    dig 2
-    dig 2
+    dup2
     b<
     bz test_zeroed_indices_after_while@10
-    dig 2
+    dig 1
     dup
-    bytec_2 // 0x01
+    bytec_1 // 0x01
     b+
     dup
     len
@@ -166,11 +164,11 @@ test_zeroed_indices_while_top@8:
     bytec_0 // "storageArray"
     swap
     box_put
-    bury 3
+    bury 2
     b test_zeroed_indices_while_top@8
 
 test_zeroed_indices_after_while@10:
-    dig 1
+    dup
     pushbytes 0x03
     b>
     bz test_zeroed_indices_while_top@22
@@ -218,25 +216,22 @@ test_zeroed_indices_while_top@15:
     b test_zeroed_indices_while_top@15
 
 test_zeroed_indices_after_while@17:
+    pushint 3
+    itob
+    bury 2
+
+test_zeroed_indices_while_top@18:
+    dup2
+    b<
+    bz test_zeroed_indices_while_top@22
     load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
-    bury 1
-    pushint 3
-    itob
-    bury 3
-
-test_zeroed_indices_while_top@18:
-    dig 2
-    dig 2
-    b<
-    bz test_zeroed_indices_while_top@22
-    dup
     store 0
-    dig 2
-    bytec_2 // 0x01
+    dig 1
+    bytec_1 // 0x01
     b+
-    bury 3
+    bury 2
     b test_zeroed_indices_while_top@18
 
 test_zeroed_indices_while_top@22:
@@ -269,7 +264,7 @@ test_zeroed_indices_while_top@25:
     intc_0 // 32
     /
     itob
-    dig 2
+    dig 1
     b<
     bz test_zeroed_indices_while_top@28
     bytec_0 // "storageArray"
@@ -283,13 +278,13 @@ test_zeroed_indices_while_top@25:
     b test_zeroed_indices_while_top@25
 
 test_zeroed_indices_while_top@28:
-    dig 3
     dig 2
+    dig 1
     b<
     bz test_zeroed_indices_after_while@30
     callsub _puya_lib.mem.new_slot
     dup
-    bytec_3 // 0x
+    bytec_2 // 0x
     stores
     bytec_0 // "storageArray"
     box_get
@@ -307,7 +302,7 @@ test_zeroed_indices_while_top@28:
     select
     pushint 8
     bzero
-    dig 7
+    dig 6
     dup
     cover 5
     concat
@@ -321,30 +316,43 @@ test_zeroed_indices_while_top@28:
     swap
     intc_0 // 32
     *
+    swap
+    dig 1
     intc_0 // 32
     extract3 // on error: index access is out of bounds
-    bytec_3 // 0x
+    bytec_2 // 0x
     b==
     assert
     callsub _puya_lib.mem.new_slot
     dup
-    bytec_3 // 0x
+    bytec_2 // 0x
     stores
     callsub _puya_lib.mem.new_slot
     dup
-    uncover 3
+    uncover 4
     stores
-    uncover 2
+    uncover 3
     select
     loads
-    pop
-    dig 1
+    swap
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    load 0
+    swap
+    bytec_2 // 0x
+    b==
+    bytec_2 // 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    swap
     store 0
-    intc_1 // 0
+    bytec_1 // 0x01
+    b==
     assert
-    bytec_2 // 0x01
+    bytec_1 // 0x01
     b+
-    bury 4
+    bury 3
     b test_zeroed_indices_while_top@28
 
 test_zeroed_indices_after_while@30:

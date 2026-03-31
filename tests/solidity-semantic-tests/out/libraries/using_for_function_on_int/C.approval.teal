@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_function_on_int.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 32 1 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -31,15 +31,6 @@ main_f_route@4:
     b f
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_function_on_int.sol.D.double(self: bytes) -> bytes:
-D.double:
-    proto 1 1
-    pushbytes 0x02
-    frame_dig -1
-    b*
-    retsub
-
-
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_function_on_int.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
@@ -48,7 +39,21 @@ f:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub D.double
+    itxn_begin
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x82fadf35 // method "double(uint256)uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
     dup
     len
     intc_0 // 32

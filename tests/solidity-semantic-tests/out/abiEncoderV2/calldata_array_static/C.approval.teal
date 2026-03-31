@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_static.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 96 24
-    bytecblock 0x151f7c75
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
-    store 5
+    intcblock 1 24 0 96
+    bytecblock 0x151f7c75 0x48269b17 0x7a4cf74f
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -25,7 +23,10 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x48269b17 0x7391bb21 0x7a4cf74f 0x442dc514 // method "f(uint256[3])byte[]", method "g(uint256[3])byte[]", method "h(uint64[3])byte[]", method "i(uint64[3])byte[]"
+    bytec_1 // method "f(uint256[3])byte[]"
+    pushbytes 0x7391bb21 // method "g(uint256[3])byte[]"
+    bytec_2 // method "h(uint64[3])byte[]"
+    pushbytes 0x442dc514 // method "i(uint64[3])byte[]"
     txna ApplicationArgs 0
     match f g h i
     err
@@ -36,10 +37,17 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 96
+    intc_3 // 96
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 3>
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_static.sol.C.f
+    dup
+    extract 0 32 // on error: index access is out of bounds
+    dig 1
+    extract 32 32 // on error: index access is out of bounds
+    concat
+    swap
+    extract 64 32 // on error: index access is out of bounds
+    concat
     dup
     len
     itob
@@ -59,14 +67,26 @@ g:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 96
+    intc_3 // 96
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 3>
-    callsub _puya_lib.mem.new_slot
-    dup
-    uncover 2
-    stores
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_static.sol.C.f
+    itxn_begin
+    global CurrentApplicationAddress
+    intc_1 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_1 // method "f(uint256[3])byte[]"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
     dup
     len
     itob
@@ -86,10 +106,17 @@ h:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 24
+    intc_1 // 24
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint64, 3>
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_static.sol.C.h
+    dup
+    extract 0 8 // on error: index access is out of bounds
+    dig 1
+    extract 8 8 // on error: index access is out of bounds
+    concat
+    swap
+    extract 16 8 // on error: index access is out of bounds
+    concat
     dup
     len
     itob
@@ -109,14 +136,26 @@ i:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 24
+    intc_1 // 24
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint64, 3>
-    callsub _puya_lib.mem.new_slot
-    dup
-    uncover 2
-    stores
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_static.sol.C.h
+    itxn_begin
+    global CurrentApplicationAddress
+    intc_1 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "h(uint64[3])byte[]"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
     dup
     len
     itob
@@ -129,45 +168,3 @@ i:
     log
     intc_0 // 1
     return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_static.sol.C.f(__arc4_s: bytes) -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_static.sol.C.f:
-    proto 1 1
-    frame_dig -1
-    extract 0 32 // on error: index access is out of bounds
-    frame_dig -1
-    extract 32 32 // on error: index access is out of bounds
-    concat
-    frame_dig -1
-    extract 64 32 // on error: index access is out of bounds
-    concat
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_static.sol.C.h(__arc4_s: bytes) -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_static.sol.C.h:
-    proto 1 1
-    frame_dig -1
-    extract 0 8 // on error: index access is out of bounds
-    frame_dig -1
-    extract 8 8 // on error: index access is out of bounds
-    concat
-    frame_dig -1
-    extract 16 8 // on error: index access is out of bounds
-    concat
-    retsub
-
-
-// _puya_lib.mem.new_slot() -> uint64:
-_puya_lib.mem.new_slot:
-    load 5
-    bitlen
-    load 5
-    pushint 256
-    dig 2
-    -
-    pushint 0
-    setbit // on error: no available slots
-    store 5
-    retsub

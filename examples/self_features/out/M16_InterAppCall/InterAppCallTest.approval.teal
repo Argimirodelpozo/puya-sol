@@ -1,0 +1,353 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M16_InterAppCall.sol.InterAppCallTest.approval_program() -> uint64:
+main:
+    intcblock 32 0 1 6
+    bytecblock "calculator" 0x151f7c75 0xac976e02 0x413eca59
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "calculator"
+    txna ApplicationArgs 0
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xdd71b809 0xee64acf2 0x5abf9a60 0x09287e9e 0x147f6911 // method "callAdd(uint256,uint256)uint256", method "callMultiply(uint256,uint256)uint256", method "callIsPositive(uint256)bool", method "callAddThenMultiply(uint256,uint256,uint256)uint256", method "calculator()address"
+    txna ApplicationArgs 0
+    match callAdd callMultiply callIsPositive callAddThenMultiply calculator
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M16_InterAppCall.sol.InterAppCallTest.callAdd[routing]() -> void:
+callAdd:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    itxn_begin
+    intc_0 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 0
+    bytec_0 // "calculator"
+    app_global_get_ex
+    assert // check calculator exists
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "add(uint256,uint256)uint256"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M16_InterAppCall.sol.InterAppCallTest.callMultiply[routing]() -> void:
+callMultiply:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    itxn_begin
+    intc_0 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 0
+    bytec_0 // "calculator"
+    app_global_get_ex
+    assert // check calculator exists
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_3 // method "multiply(uint256,uint256)uint256"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M16_InterAppCall.sol.InterAppCallTest.callIsPositive[routing]() -> void:
+callIsPositive:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    itxn_begin
+    intc_0 // 32
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 0
+    bytec_0 // "calculator"
+    app_global_get_ex
+    assert // check calculator exists
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x98708847 // method "isPositive(uint256)bool"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    intc_1 // 0
+    getbit
+    intc_1 // 0
+    !=
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M16_InterAppCall.sol.InterAppCallTest.callAddThenMultiply[routing]() -> void:
+callAddThenMultiply:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    itxn_begin
+    intc_0 // 32
+    bzero
+    dup
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 0
+    bytec_0 // "calculator"
+    app_global_get_ex
+    assert // check calculator exists
+    pushint 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec_2 // method "add(uint256,uint256)uint256"
+    itxn_field ApplicationArgs
+    uncover 2
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    itxn_begin
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    uncover 2
+    itxn_field ApplicationID
+    bytec_3 // method "multiply(uint256,uint256)uint256"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M16_InterAppCall.sol.InterAppCallTest.calculator[routing]() -> void:
+calculator:
+    intc_1 // 0
+    bytec_0 // "calculator"
+    app_global_get_ex
+    assert // check calculator exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

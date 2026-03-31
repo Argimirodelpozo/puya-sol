@@ -3,9 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_function_type_state_variable.sol.C.approval_program() -> uint64:
 main:
+    bytecblock "f" "g"
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytess "f" 0x
+    bytec_0 // "f"
+    pushbytes 0x
     app_global_put
     pushint 1
     return
@@ -25,15 +27,27 @@ main_after_if_else@2:
     assert
     pushbytess 0xf2b65f27 0xf59e3cc4 // method "g()void", method "test()bool"
     txna ApplicationArgs 0
-    match main_g_route@5 main_test_route@6
+    match main_g_route@5 test
     err
 
-main_test_route@6:
-    pushbytes 0x151f7c7500
-    log
+main_g_route@5:
     pushint 1
     return
 
-main_g_route@5:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_function_type_state_variable.sol.C.test[routing]() -> void:
+test:
+    pushint 0
+    bytec_0 // "f"
+    app_global_get_ex
+    assert // check f exists
+    bytec_1 // "g"
+    !=
+    assert
+    bytec_0 // "f"
+    bytec_1 // "g"
+    app_global_put
+    pushbytes 0x151f7c7580
+    log
     pushint 1
     return

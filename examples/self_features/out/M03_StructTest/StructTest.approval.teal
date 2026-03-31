@@ -1,0 +1,182 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M03_StructTest.sol.StructTest.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    bytecblock 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x342cad9c 0x4ab00c3b // method "makePoint(uint256,uint256)(uint256,uint256)", method "addPoints(uint256,uint256,uint256,uint256)(uint256,uint256)"
+    txna ApplicationArgs 0
+    match makePoint addPoints
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M03_StructTest.sol.StructTest.makePoint[routing]() -> void:
+makePoint:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    uncover 2
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 3
+    dig 1
+    b|
+    uncover 2
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    dig 2
+    b|
+    concat
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    swap
+    dig 2
+    b|
+    swap
+    uncover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M03_StructTest.sol.StructTest.addPoints[routing]() -> void:
+addPoints:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    uncover 6
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 7
+    dig 1
+    b|
+    uncover 6
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 6
+    dig 2
+    b|
+    concat
+    uncover 4
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    dig 2
+    b|
+    uncover 3
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    dig 3
+    b|
+    concat
+    dig 1
+    extract 0 32
+    dig 1
+    extract 0 32
+    b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 2
+    extract 32 32
+    uncover 2
+    extract 32 32
+    b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    uncover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

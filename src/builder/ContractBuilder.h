@@ -1,8 +1,8 @@
 #pragma once
 
 #include "awst/Node.h"
-#include "builder/expressions/ExpressionBuilder.h"
-#include "builder/statements/StatementBuilder.h"
+#include "builder/ExpressionBuilder.h"
+#include "builder/sol-ast/SolStatement.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -51,7 +51,22 @@ private:
 	FreeFunctionIdMap const& m_freeFunctionById;
 
 	std::unique_ptr<ExpressionBuilder> m_exprBuilder;
-	std::unique_ptr<StatementBuilder> m_stmtBuilder;
+
+	/// Shared statement context for block building.
+	sol_ast::StatementContext m_stmtCtx;
+
+	/// Build a function body block with function context set.
+	std::shared_ptr<awst::Block> buildBlock(
+		solidity::frontend::Block const& _block);
+
+	/// Set function context for inline assembly.
+	void setFunctionContext(
+		std::vector<std::pair<std::string, awst::WType const*>> const& _params,
+		awst::WType const* _returnType,
+		std::map<std::string, unsigned> const& _bitWidths = {});
+
+	/// Set/clear placeholder body for modifier inlining.
+	void setPlaceholderBody(std::shared_ptr<awst::Block> _body);
 	OverloadedNamesSet m_overloadedNames;
 
 	/// Box-stored dynamic array variable names that need box_create in __postInit

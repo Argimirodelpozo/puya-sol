@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
-    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    intcblock 0 32 1 24
+    bytecblock 0xe9e76f25 0x151f7c75 0xecb66829 0x9a55e4c8
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -23,43 +23,182 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xe9e76f25 0xecb66829 0x9a55e4c8 0x53cd411f 0xb4e2b703 0xa31afe56 // method "parentFun()uint256", method "subAFun()uint256", method "subBFun()uint256", method "convertParent()uint256", method "convertSubA()(uint256,uint256)", method "convertSubB()(uint256,uint256)"
+    bytec_0 // method "parentFun()uint256"
+    bytec_2 // method "subAFun()uint256"
+    bytec_3 // method "subBFun()uint256"
+    pushbytess 0x53cd411f 0xb4e2b703 0xa31afe56 // method "convertParent()uint256", method "convertSubA()(uint256,uint256)", method "convertSubB()(uint256,uint256)"
     txna ApplicationArgs 0
-    match main_parentFun_route@5 main_subAFun_route@6 main_subBFun_route@7 main_convertParent_route@8 main_convertSubA_route@9 main_convertSubB_route@10
+    match main_parentFun_route@5 main_subAFun_route@6 main_subBFun_route@7 convertParent convertSubA convertSubB
     err
-
-main_convertSubB_route@10:
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000003
-    log
-    intc_0 // 1
-    return
-
-main_convertSubA_route@9:
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002
-    log
-    intc_0 // 1
-    return
-
-main_convertParent_route@8:
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
-    log
-    intc_0 // 1
-    return
 
 main_subBFun_route@7:
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000003
     log
-    intc_0 // 1
+    intc_2 // 1
     return
 
 main_subAFun_route@6:
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
     log
-    intc_0 // 1
+    intc_2 // 1
     return
 
 main_parentFun_route@5:
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     log
-    intc_0 // 1
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.convertParent[routing]() -> void:
+convertParent:
+    itxn_begin
+    global CurrentApplicationAddress
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_0 // method "parentFun()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.convertSubA[routing]() -> void:
+convertSubA:
+    itxn_begin
+    global CurrentApplicationAddress
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_0 // method "parentFun()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn_begin
+    global CurrentApplicationAddress
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_2 // method "subAFun()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    itxn LastLog
+    extract 4 0
+    dig 1
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    uncover 2
+    dig 1
+    b|
+    dig 2
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.convertSubB[routing]() -> void:
+convertSubB:
+    itxn_begin
+    global CurrentApplicationAddress
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_0 // method "parentFun()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn_begin
+    global CurrentApplicationAddress
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_3 // method "subBFun()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    itxn LastLog
+    extract 4 0
+    dig 1
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    uncover 2
+    dig 1
+    b|
+    dig 2
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
     return

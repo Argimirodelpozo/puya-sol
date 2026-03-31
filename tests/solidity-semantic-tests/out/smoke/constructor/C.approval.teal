@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/constructor.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32
-    bytecblock "state"
+    bytecblock "state" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "state"
@@ -28,11 +28,22 @@ main_after_if_else@2:
     assert
     pushbytess 0x76d8a28f 0x70dc8bf7 0xd327fc16 // method "balance()uint256", method "update(uint256)void", method "state()uint256"
     txna ApplicationArgs 0
-    match main_balance_route@5 update state
+    match balance update state
     err
 
-main_balance_route@5:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/constructor.sol.C.balance[routing]() -> void:
+balance:
+    global CurrentApplicationAddress
+    acct_params_get AcctBalance
+    pop
+    itob
+    intc_1 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
@@ -67,7 +78,7 @@ state:
     intc_1 // 32
     bzero
     b|
-    pushbytes 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log

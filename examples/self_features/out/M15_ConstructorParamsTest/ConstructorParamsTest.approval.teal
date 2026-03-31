@@ -1,0 +1,164 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M15_ConstructorParamsTest.sol.ConstructorParamsTest.approval_program() -> uint64:
+main:
+    intcblock 0 1 32
+    bytecblock 0x151f7c75 "owner" "threshold" 0x00
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "owner"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_2 // "threshold"
+    pushbytes 0x
+    app_global_put
+    txna ApplicationArgs 1
+    bytec_1 // "owner"
+    txna ApplicationArgs 0
+    app_global_put
+    bytec_2 // "threshold"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x0c262987 0x6da23006 0xcd7cb5e8 0x1e866fc8 0xb1bbb0a8 0xf461de0e // method "getOwner()address", method "getThreshold()uint256", method "isOwner(address)bool", method "isAboveThreshold(uint256)bool", method "owner()address", method "threshold()uint256"
+    txna ApplicationArgs 0
+    match getOwner getThreshold isOwner isAboveThreshold owner threshold
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M15_ConstructorParamsTest.sol.ConstructorParamsTest.getOwner[routing]() -> void:
+getOwner:
+    intc_0 // 0
+    bytec_1 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M15_ConstructorParamsTest.sol.ConstructorParamsTest.getThreshold[routing]() -> void:
+getThreshold:
+    intc_0 // 0
+    bytec_2 // "threshold"
+    app_global_get_ex
+    assert // check threshold exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M15_ConstructorParamsTest.sol.ConstructorParamsTest.isOwner[routing]() -> void:
+isOwner:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_0 // 0
+    bytec_1 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    ==
+    bytec_3 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M15_ConstructorParamsTest.sol.ConstructorParamsTest.isAboveThreshold[routing]() -> void:
+isAboveThreshold:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 0
+    bytec_2 // "threshold"
+    app_global_get_ex
+    assert // check threshold exists
+    b>
+    bytec_3 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M15_ConstructorParamsTest.sol.ConstructorParamsTest.owner[routing]() -> void:
+owner:
+    intc_0 // 0
+    bytec_1 // "owner"
+    app_global_get_ex
+    assert // check owner exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M15_ConstructorParamsTest.sol.ConstructorParamsTest.threshold[routing]() -> void:
+threshold:
+    intc_0 // 0
+    bytec_2 // "threshold"
+    app_global_get_ex
+    assert // check threshold exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

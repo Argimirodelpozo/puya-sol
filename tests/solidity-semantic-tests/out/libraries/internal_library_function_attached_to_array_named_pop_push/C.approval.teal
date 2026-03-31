@@ -1,0 +1,71 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_array_named_pop_push.sol.C.approval_program() -> uint64:
+main:
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
+    store 5
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0xa78000de // method "test()void"
+    txna ApplicationArgs 0
+    match main_test_route@4
+    err
+
+main_test_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b test
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_array_named_pop_push.sol.L.pop(a: uint64) -> void:
+L.pop:
+    proto 1 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_array_named_pop_push.sol.L.push(a: uint64) -> void:
+L.push:
+    proto 1 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_array_named_pop_push.sol.C.test[routing]() -> void:
+test:
+    callsub _puya_lib.mem.new_slot
+    dup
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    stores
+    dup
+    callsub L.push
+    callsub L.pop
+    pushint 1
+    return
+
+
+// _puya_lib.mem.new_slot() -> uint64:
+_puya_lib.mem.new_slot:
+    load 5
+    bitlen
+    load 5
+    pushint 256
+    dig 2
+    -
+    pushint 0
+    setbit // on error: no available slots
+    store 5
+    retsub

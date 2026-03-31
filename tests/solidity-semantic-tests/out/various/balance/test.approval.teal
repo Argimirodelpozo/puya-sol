@@ -27,7 +27,21 @@ main_getBalance_route@4:
     txn ApplicationID
     &&
     assert
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    b getBalance
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/balance.sol.test.getBalance[routing]() -> void:
+getBalance:
+    global CurrentApplicationAddress
+    acct_params_get AcctBalance
+    pop
+    itob
+    pushint 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
     pushint 1
     return

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_loop.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 0 32
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -33,10 +33,9 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_loop.sol.C.f[routing]() -> void:
 f:
-    pushint 10
-    itob
+    intc_1 // 0
     pushbytes 0x
-    pushint 0
+    intc_1 // 0
     itob
 
 f_while_top@2:
@@ -47,6 +46,8 @@ f_while_top@2:
     dig 1
     pushbytes 0x01
     b+
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     bury 2
     dup
     pushbytes 0x01
@@ -58,10 +59,10 @@ f_after_while@4:
     dig 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     pushbytes 0x151f7c75

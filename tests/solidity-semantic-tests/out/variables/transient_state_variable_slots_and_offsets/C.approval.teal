@@ -3,18 +3,21 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_slots_and_offsets.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1
+    intcblock 0 1 32
+    bytecblock "x" "y" "w" 0x
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytess "x" 0x
+    bytec_0 // "x"
+    bytec_3 // 0x
     app_global_put
-    pushbytes "y"
+    bytec_1 // "y"
     intc_0 // 0
     app_global_put
-    pushbytes "w"
+    bytec_2 // "w"
     intc_0 // 0
     app_global_put
-    pushbytess "z" 0x
+    pushbytes "z"
+    bytec_3 // 0x
     app_global_put
     intc_1 // 1
     return
@@ -43,33 +46,50 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_slots_and_offsets.sol.C.f[routing]() -> void:
 f:
-    pushint 160
+    intc_1 // 1
+    itob
+    bytec_0 // "x"
+    swap
+    app_global_put
+    bytec_1 // "y"
+    pushint 2
+    app_global_put
+    bytec_2 // "w"
+    pushint 3
+    app_global_put
+    pushint 4
+    itob
+    pushbytes "z"
+    swap
+    app_global_put
+    intc_0 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    intc_0 // 0
+    bytec_1 // "y"
+    app_global_get_ex
+    assert // check y exists
+    intc_0 // 0
+    bytec_2 // "w"
+    app_global_get_ex
+    assert // check w exists
+    dig 2
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
     bzero
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
-    replace2 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
-    replace2 32
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
-    replace2 64
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
-    replace2 96
-    dup
-    extract 0 32
-    dig 1
-    extract 96 32
-    pushint 32
-    bzero
-    uncover 2
-    dig 1
-    b|
-    dig 3
-    extract 56 8
-    concat
     uncover 3
-    extract 88 8
-    concat
-    cover 2
     b|
+    uncover 2
+    itob
+    concat
+    swap
+    itob
+    concat
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
     concat
     pushbytes 0x151f7c75
     swap

@@ -1,0 +1,150 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M40_ReturnCallee.sol.ReturnCallee.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock "storedValue" 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 42
+    itob
+    bytec_0 // "storedValue"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x18d5f28c 0xac976e02 0x4b25d867 0x232cb8b5 0xc98c4991 // method "getNumber()uint256", method "add(uint256,uint256)uint256", method "isEven(uint256)bool", method "setNumber(uint256)void", method "storedValue()uint256"
+    txna ApplicationArgs 0
+    match getNumber add isEven setNumber storedValue
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M40_ReturnCallee.sol.ReturnCallee.getNumber[routing]() -> void:
+getNumber:
+    intc_2 // 0
+    bytec_0 // "storedValue"
+    app_global_get_ex
+    assert // check storedValue exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M40_ReturnCallee.sol.ReturnCallee.add[routing]() -> void:
+add:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    b+
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M40_ReturnCallee.sol.ReturnCallee.isEven[routing]() -> void:
+isEven:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    pushbytes 0x02
+    b%
+    pushbytes 0x
+    b==
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M40_ReturnCallee.sol.ReturnCallee.setNumber[routing]() -> void:
+setNumber:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // "storedValue"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M40_ReturnCallee.sol.ReturnCallee.storedValue[routing]() -> void:
+storedValue:
+    intc_2 // 0
+    bytec_0 // "storedValue"
+    app_global_get_ex
+    assert // check storedValue exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

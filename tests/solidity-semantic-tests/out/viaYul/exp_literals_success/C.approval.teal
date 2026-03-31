@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_literals_success.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 32 1 0
     bytecblock 0x01 0x 0x02 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -97,7 +97,10 @@ exp_minus_2:
     assert // invalid number of bytes for arc4.uint256
     bytec_0 // 0x01
     swap
-    pushbytes 0xfffffffffffffffe
+    intc_2 // 0
+    pushint 2
+    -
+    itob
     swap
 
 exp_minus_2_while_top@2:
@@ -329,7 +332,10 @@ exp_minus_5:
     assert // invalid number of bytes for arc4.uint256
     bytec_0 // 0x01
     swap
-    pushbytes 0xfffffffffffffffb
+    intc_2 // 0
+    pushint 5
+    -
+    itob
     swap
 
 exp_minus_5_while_top@2:
@@ -445,7 +451,10 @@ exp_minus_256:
     assert // invalid number of bytes for arc4.uint256
     bytec_0 // 0x01
     swap
-    pushbytes 0xffffffffffffff00
+    intc_2 // 0
+    pushint 256
+    -
+    itob
     swap
 
 exp_minus_256_while_top@2:

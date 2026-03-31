@@ -4,6 +4,7 @@
 #include "awst/WType.h"
 
 #include <libsolidity/ast/Types.h>
+#include <liblangutil/Token.h>
 
 #include <cstdint>
 #include <functional>
@@ -74,6 +75,13 @@ struct BuilderContext
 	/// Build a child Solidity expression into an AWST Expression.
 	std::function<std::shared_ptr<awst::Expression>(
 		solidity::frontend::Expression const&)> buildExpr;
+
+	// ── Binary/unary operation callbacks (delegates back to ExpressionBuilder) ──
+	/// Build a binary operation from already-resolved operands (fallback when sol-eb builders don't handle it).
+	std::function<std::shared_ptr<awst::Expression>(
+		solidity::frontend::Token, std::shared_ptr<awst::Expression>,
+		std::shared_ptr<awst::Expression>, awst::WType const*,
+		awst::SourceLocation const&)> buildBinaryOp;
 
 	// ── Builder factory callback ──
 	/// Get a type-specific InstanceBuilder for an already-resolved expression.

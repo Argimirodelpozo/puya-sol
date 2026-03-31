@@ -1,0 +1,237 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M07_NestedMap.sol.NestedMapTest.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock "nullifiers" 0x00 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x2363c328 0x22fd5ff9 0xd7bbbd88 0x8d5a3bf2 // method "setNullifier(uint256,uint256)void", method "clearNullifier(uint256,uint256)void", method "isNullified(uint256,uint256)bool", method "nullifiers(uint256,uint256)bool"
+    txna ApplicationArgs 0
+    match setNullifier clearNullifier isNullified nullifiers
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M07_NestedMap.sol.NestedMapTest.setNullifier[routing]() -> void:
+setNullifier:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    sha256
+    bytec_0 // "nullifiers"
+    swap
+    concat
+    intc_1 // 1
+    itob
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M07_NestedMap.sol.NestedMapTest.clearNullifier[routing]() -> void:
+clearNullifier:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    sha256
+    bytec_0 // "nullifiers"
+    swap
+    concat
+    intc_2 // 0
+    itob
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M07_NestedMap.sol.NestedMapTest.isNullified[routing]() -> void:
+isNullified:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    sha256
+    bytec_0 // "nullifiers"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    bytec_1 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M07_NestedMap.sol.NestedMapTest.nullifiers[routing]() -> void:
+nullifiers:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    sha256
+    bytec_0 // "nullifiers"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    bytec_1 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

@@ -1,0 +1,114 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M08_Events.sol.EventsTest.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    bytecblock "value"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "value"
+    pushbytes 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xc46a4b39 0x6c4a2b31 0x75d12918 // method "setValue(uint256)void", method "emitTransfer(address,uint256)void", method "value()uint256"
+    txna ApplicationArgs 0
+    match setValue emitTransfer value
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M08_Events.sol.EventsTest.setValue[routing]() -> void:
+setValue:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_0 // "value"
+    dig 2
+    app_global_put
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    pushbytes 0x8b8d27bf // method "ValueSet(uint256)"
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M08_Events.sol.EventsTest.emitTransfer[routing]() -> void:
+emitTransfer:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    txn Sender
+    uncover 2
+    concat
+    swap
+    concat
+    pushbytes 0x28918861 // method "Transfer(address,address,uint256)"
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M08_Events.sol.EventsTest.value[routing]() -> void:
+value:
+    pushint 0
+    bytec_0 // "value"
+    app_global_get_ex
+    assert // check value exists
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_bytes_external.sol.CalldataTest.approval_program() -> uint64:
 main:
-    intcblock 1 0 2
-    bytecblock 0x151f7c75
+    intcblock 0 1 2
+    bytecblock 0x8ffd49b0 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -23,7 +23,8 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x8ffd49b0 0x2d81a1d5 // method "test(byte[])byte[]", method "tester(byte[])byte[1]"
+    bytec_0 // method "test(byte[])byte[]"
+    pushbytes 0x2d81a1d5 // method "tester(byte[])byte[1]"
     txna ApplicationArgs 0
     match test tester
     err
@@ -33,7 +34,7 @@ main_after_if_else@2:
 test:
     txna ApplicationArgs 1
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
     intc_2 // 2
     +
@@ -41,11 +42,11 @@ test:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
@@ -53,7 +54,7 @@ test:
 tester:
     txna ApplicationArgs 1
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
     intc_2 // 2
     +
@@ -61,10 +62,33 @@ tester:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    extract 4 1
-    bytec_0 // 0x151f7c75
+    extract 2 0
+    itxn_begin
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    global CurrentApplicationAddress
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_0 // method "test(byte[])byte[]"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 6 1
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return

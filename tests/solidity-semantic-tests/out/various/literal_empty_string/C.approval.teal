@@ -4,14 +4,14 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/literal_empty_string.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 0
-    bytecblock "x" "a" 0x 0x151f7c75
+    bytecblock "x" 0x "a" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
-    bytec_2 // 0x
+    bytec_1 // 0x
     app_global_put
-    bytec_1 // "a"
-    bytec_2 // 0x
+    bytec_2 // "a"
+    bytec_1 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -52,7 +52,7 @@ f:
     bytec_0 // "x"
     uncover 2
     app_global_put
-    bytec_1 // "a"
+    bytec_2 // "a"
     swap
     app_global_put
     intc_0 // 1
@@ -61,14 +61,25 @@ f:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/literal_empty_string.sol.C.g[routing]() -> void:
 g:
+    itxn_begin
     pushint 2
     itob
-    bytec_0 // "x"
-    bytec_2 // ""
-    app_global_put
-    bytec_1 // "a"
-    swap
-    app_global_put
+    global CurrentApplicationAddress
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x0fa32405 // method "f(uint8[32],uint256)void"
+    itxn_field ApplicationArgs
+    bytec_1 // ""
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
     intc_0 // 1
     return
 
@@ -90,7 +101,7 @@ x:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/literal_empty_string.sol.C.a[routing]() -> void:
 a:
     intc_2 // 0
-    bytec_1 // "a"
+    bytec_2 // "a"
     app_global_get_ex
     assert // check a exists
     dup

@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/recursion.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x01
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -51,14 +52,18 @@ exp_after_if_else@2:
     callsub exp
     dup
     b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     frame_dig -1
-    pushbytes 0x01
+    bytec_1 // 0x01
     b&
-    pushbytes 0x01
+    bytec_1 // 0x01
     b==
     bz exp_after_if_else@4
     frame_dig -2
     b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
 
 exp_after_if_else@4:
     retsub

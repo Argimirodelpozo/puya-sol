@@ -36,29 +36,9 @@ set(SOURCES
 	src/builder/AWSTBuilder.cpp
 	src/builder/ContractBuilder.cpp
 
-	# Expression builder (split by expression type)
-	src/builder/expressions/ExpressionBuilder.cpp
-	src/builder/expressions/LiteralBuilder.cpp
-	src/builder/expressions/IdentifierBuilder.cpp
-	src/builder/expressions/BinaryOperationBuilder.cpp
-	src/builder/expressions/UnaryOperationBuilder.cpp
-	src/builder/expressions/FunctionCallBuilder.cpp
-	src/builder/expressions/MemberAccessBuilder.cpp
-	src/builder/expressions/IndexAccessBuilder.cpp
-	src/builder/expressions/ConditionalBuilder.cpp
-	src/builder/expressions/AssignmentBuilder.cpp
-	src/builder/expressions/TupleBuilder.cpp
-	src/builder/expressions/HelpersBuilder.cpp
+	# Expression state container + helpers
+	src/builder/ExpressionBuilder.cpp
 
-	# Statement builder (split by statement type)
-	src/builder/statements/StatementBuilder.cpp
-	src/builder/statements/ExpressionStatementBuilder.cpp
-	src/builder/statements/ReturnBuilder.cpp
-	src/builder/statements/ControlFlowBuilder.cpp
-	src/builder/statements/VariableDeclarationBuilder.cpp
-	src/builder/statements/EmitBuilder.cpp
-	src/builder/statements/RevertBuilder.cpp
-	src/builder/statements/InlineAssemblyBuilder.cpp
 
 	# Assembly builder (split by operation type)
 	src/builder/assembly/AssemblyBuilder.cpp
@@ -99,6 +79,50 @@ set(SOURCES
 	src/builder/sol-eb/AbiEncoderBuilder.cpp
 	src/builder/sol-eb/AssignmentHelper.cpp
 	src/builder/sol-eb/TypeConversions.cpp
+	src/builder/sol-ast/SolExpression.cpp
+	src/builder/sol-ast/SolFunctionCall.cpp
+	src/builder/sol-ast/SolExpressionFactory.cpp
+	src/builder/sol-ast/SolExpressionDispatch.cpp
+	src/builder/sol-ast/calls/SolRequireAssert.cpp
+	src/builder/sol-ast/calls/SolRevert.cpp
+	src/builder/sol-ast/calls/SolBuiltinCall.cpp
+	src/builder/sol-ast/calls/SolTypeConversion.cpp
+	src/builder/sol-ast/calls/SolWrapUnwrap.cpp
+	src/builder/sol-ast/calls/SolStructConstruction.cpp
+	src/builder/sol-ast/calls/SolTransferSend.cpp
+	src/builder/sol-ast/calls/SolBareCall.cpp
+	src/builder/sol-ast/calls/SolAbiEncode.cpp
+	src/builder/sol-ast/calls/SolAbiDecode.cpp
+	src/builder/sol-ast/calls/SolArrayMethod.cpp
+	src/builder/sol-ast/calls/SolInternalCall.cpp
+	src/builder/sol-ast/calls/SolExternalCall.cpp
+	src/builder/sol-ast/calls/SolNewExpression.cpp
+	src/builder/sol-ast/calls/SolBytesConcat.cpp
+	src/builder/sol-ast/calls/SolMetaType.cpp
+	src/builder/sol-ast/SolMemberAccess.cpp
+	src/builder/sol-ast/members/SolIntrinsicAccess.cpp
+	src/builder/sol-ast/members/SolEnumValueAccess.cpp
+	src/builder/sol-ast/members/SolSelectorAccess.cpp
+	src/builder/sol-ast/members/SolMetaTypeAccess.cpp
+	src/builder/sol-ast/members/SolLengthAccess.cpp
+	src/builder/sol-ast/members/SolFieldAccess.cpp
+	src/builder/sol-ast/members/SolAddressProperty.cpp
+	src/builder/sol-ast/members/SolConstantAccess.cpp
+	src/builder/sol-ast/exprs/SolLiteral.cpp
+	src/builder/sol-ast/exprs/SolConditional.cpp
+	src/builder/sol-ast/exprs/SolIdentifier.cpp
+	src/builder/sol-ast/exprs/SolTupleExpression.cpp
+	src/builder/sol-ast/exprs/SolBinaryOperation.cpp
+	src/builder/sol-ast/exprs/SolUnaryOperation.cpp
+	src/builder/sol-ast/exprs/SolIndexAccess.cpp
+	src/builder/sol-ast/exprs/SolAssignment.cpp
+	src/builder/sol-ast/SolStatement.cpp
+	src/builder/sol-ast/stmts/SolExpressionStatement.cpp
+	src/builder/sol-ast/stmts/SolControlFlow.cpp
+	src/builder/sol-ast/stmts/SolEmitStatement.cpp
+	src/builder/sol-ast/stmts/SolVariableDeclaration.cpp
+	src/builder/sol-ast/stmts/SolInlineAssembly.cpp
+	src/builder/sol-ast/stmts/SolBlock.cpp
 	src/json/AWSTSerializer.cpp
 	src/json/Base85.cpp
 	src/json/OptionsWriter.cpp

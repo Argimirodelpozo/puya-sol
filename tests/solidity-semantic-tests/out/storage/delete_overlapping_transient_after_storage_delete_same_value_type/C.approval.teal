@@ -1,0 +1,86 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_delete_same_value_type.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 32
+    bytecblock "varTransient" "varStorage" 0x
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "varTransient"
+    bytec_2 // 0x
+    app_global_put
+    pushint 1026210852590
+    itob
+    bytec_1 // "varStorage"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x9939b21d 0xdd9bf710 // method "setAndClear()void", method "varStorage()uint256"
+    txna ApplicationArgs 0
+    match setAndClear varStorage
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_delete_same_value_type.sol.C.setAndClear[routing]() -> void:
+setAndClear:
+    pushint 4294967295
+    itob
+    bytec_0 // "varTransient"
+    swap
+    app_global_put
+    intc_1 // 0
+    bytec_1 // "varStorage"
+    app_global_get_ex
+    bury 1
+    assert // check varStorage exists
+    bytec_1 // "varStorage"
+    bytec_2 // 0x
+    app_global_put
+    intc_1 // 0
+    bytec_0 // "varTransient"
+    app_global_get_ex
+    bury 1
+    assert // check varTransient exists
+    bytec_0 // "varTransient"
+    bytec_2 // 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_delete_same_value_type.sol.C.varStorage[routing]() -> void:
+varStorage:
+    intc_1 // 0
+    bytec_1 // "varStorage"
+    app_global_get_ex
+    assert // check varStorage exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

@@ -3,9 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol.B.approval_program() -> uint64:
 main:
+    intcblock 1 32
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -27,7 +28,31 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000003
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol.B.f[routing]() -> void:
+f:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol.B.f
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
-    pushint 1
+    intc_0 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol.B.f() -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol.B.f:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol.B.f
+    pushbytes 0x02
+    b|
+    retsub

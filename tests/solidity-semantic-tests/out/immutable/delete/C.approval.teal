@@ -5,6 +5,7 @@
 main:
     intcblock 0 1 32
     bytecblock "a" "b" "c" 0x151f7c75
+    pushbytes ""
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "a"
@@ -32,10 +33,7 @@ main:
     bytec_1 // "b"
     intc_0 // 0
     app_global_put
-    intc_0 // 0
-    bytec_0 // "a"
-    app_global_get_ex
-    assert // check a exists
+    dup
     itob
     bytec_2 // "c"
     swap

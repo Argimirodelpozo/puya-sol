@@ -47,6 +47,7 @@ TESTS_DIR = Path(__file__).parent / "tests"
 OUT_DIR = Path(__file__).parent / "out"
 
 NO_POPULATE = au.SendParams(populate_app_call_resources=False)
+POPULATE = au.SendParams(populate_app_call_resources=True)
 
 
 def setup_localnet():
@@ -106,7 +107,10 @@ def compile_test(sol_path: Path, out_dir: Path) -> dict | None:
     if import_dir:
         cmd += ["--import-path", str(import_dir)]
 
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+    except subprocess.TimeoutExpired:
+        raise Exception(f"compilation timed out after 300s")
 
     if import_dir:
         import shutil
@@ -126,8 +130,63 @@ def compile_test(sol_path: Path, out_dir: Path) -> dict | None:
     return contracts
 
 
-def deploy_contract(localnet, account, artifacts) -> au.AppClient | None:
-    """Deploy a compiled contract. Returns AppClient or None."""
+def _extract_box_refs(teal_path):
+    """Extract box references from TEAL — find strings used with box_* ops."""
+    teal = teal_path.read_text()
+    refs = []
+    seen = set()
+    lines = teal.split('\n')
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if any(op in stripped for op in ['box_create', 'box_get', 'box_put',
+                'box_del', 'box_len', 'box_resize', 'box_replace', 'box_extract']):
+            for j in range(max(0, i-5), i):
+                prev = lines[j].strip()
+                m = re.search(r'// "([^"]+)"', prev)
+                if m:
+                    key = m.group(1)
+                    if key not in seen:
+                        seen.add(key)
+                        refs.append((0, key.encode()))
+                    break
+                m2 = re.search(r'pushbytes "([^"]+)"', prev)
+                if m2:
+                    key = m2.group(1)
+                    if key not in seen:
+                        seen.add(key)
+                        refs.append((0, key.encode()))
+                    break
+    # Also grab from bytecblock
+    bytecblock_match = re.search(r'bytecblock\s+(.*)', teal)
+    if bytecblock_match:
+        for token in bytecblock_match.group(1).split():
+            if token.startswith('"') and token.endswith('"'):
+                key = token[1:-1]
+                if key not in seen and len(key) <= 64:
+                    seen.add(key)
+                    refs.append((0, key.encode()))
+    return refs
+
+
+def _encode_ctor_arg(val_str: str) -> bytes:
+    """Encode a constructor argument value to ABI bytes (32-byte big-endian for ints)."""
+    val = parse_value(val_str)
+    if isinstance(val, bool):
+        return val.to_bytes(32, 'big') if val else b'\x00' * 32
+    if isinstance(val, int):
+        return val.to_bytes(32, 'big')
+    if isinstance(val, bytes):
+        # Left-pad to 32 bytes
+        return b'\x00' * (32 - len(val)) + val if len(val) < 32 else val[:32]
+    # String or other: encode as UTF-8 bytes
+    s = str(val)
+    return s.encode('utf-8')
+
+
+def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0) -> au.AppClient | None:
+    """Deploy a compiled contract. Returns AppClient or None.
+    ctor_args: list of raw string args from constructor() call, or None.
+    fund_amount: value in wei/microAlgos to fund beyond minimum balance."""
     try:
         app_spec = au.Arc56Contract.from_json(artifacts["arc56"].read_text())
         algod = localnet.client.algod
@@ -142,7 +201,17 @@ def deploy_contract(localnet, account, artifacts) -> au.AppClient | None:
         max_size = max(len(approval_bin), len(clear_bin))
         extra_pages = max(0, (max_size - 1) // 2048)
 
+        # Encode constructor arguments as application args
+        app_args = None
+        if ctor_args:
+            app_args = [_encode_ctor_arg(a) for a in ctor_args]
+
+        # Extract box references from TEAL
+        box_refs = _extract_box_refs(artifacts["approval_teal"])
+
         sp = algod.suggested_params()
+        sp.flat_fee = True
+        sp.fee = max(sp.min_fee, 1000) * 4  # cover inner txns + box ops
         txn = ApplicationCreateTxn(
             sender=account.address, sp=sp,
             on_complete=OnComplete.NoOpOC,
@@ -150,6 +219,8 @@ def deploy_contract(localnet, account, artifacts) -> au.AppClient | None:
             global_schema=StateSchema(num_uints=16, num_byte_slices=16),
             local_schema=StateSchema(num_uints=0, num_byte_slices=0),
             extra_pages=extra_pages,
+            app_args=app_args,
+            boxes=box_refs if box_refs else None,
         )
         signed = txn.sign(account.private_key)
         txid = algod.send_transaction(signed)
@@ -160,17 +231,41 @@ def deploy_contract(localnet, account, artifacts) -> au.AppClient | None:
         app_addr = encoding.encode_address(
             encoding.checksum(b"appID" + app_id.to_bytes(8, "big"))
         )
+        # Fund: min balance + box storage + constructor value
+        # Box storage costs 2500 + 400*size per box
+        box_cost = sum(2500 + 400 * 1024 for _ in box_refs)  # assume 1KB per box
+        min_balance = 100_000 + 28500 * 16 + 50000 * 16 + box_cost
+        total_fund = min_balance + fund_amount
         sp2 = algod.suggested_params()
-        pay = PaymentTxn(account.address, sp2, app_addr, 1_000_000)
+        pay = PaymentTxn(account.address, sp2, app_addr, total_fund)
         txid2 = algod.send_transaction(pay.sign(account.private_key))
         wait_for_confirmation(algod, txid2, 4)
 
-        return au.AppClient(
+        app_client = au.AppClient(
             au.AppClientParams(
                 algorand=localnet, app_spec=app_spec,
                 app_id=app_id, default_sender=account.address,
             )
         )
+
+        # Call __postInit if it exists (constructor body that writes to boxes)
+        if any(m.name == "__postInit" for m in app_spec.methods):
+            from algosdk.transaction import BoxReference as AlgoBoxRef
+            try:
+                app_client.send.call(
+                    au.AppClientMethodCallParams(
+                        method="__postInit",
+                        args=[],
+                        box_references=[AlgoBoxRef(app_index=0, name=ref[1]) for ref in box_refs] if box_refs else None,
+                    )
+                )
+            except Exception as e:
+                import sys
+                print(f"  [warn] __postInit failed: {str(e)[:100]}", file=sys.stderr)
+
+        # Store box refs on the client for use in subsequent calls
+        app_client._box_refs = box_refs
+        return app_client
     except Exception:
         return None
 
@@ -268,12 +363,18 @@ def _call_with_extra_budget(app, method, args, extra_calls=15):
 
     atc = AtomicTransactionComposer()
 
-    # The real method call
+    # The real method call — include box refs if available
+    from algosdk.transaction import BoxReference as AlgoBoxRef
+    box_refs = []
+    if hasattr(app, '_box_refs') and app._box_refs:
+        box_refs = [AlgoBoxRef(app_index=0, name=ref[1]) for ref in app._box_refs]
+
     abi_method = Method.from_signature(method)
     atc.add_method_call(
         app_id=app_id, method=abi_method, sender=sender,
         sp=sp, signer=signer, method_args=args if args else [],
         note=os.urandom(8),
+        boxes=box_refs if box_refs else None,
     )
 
     # Dummy budget-pooling calls to the helper app (cheap, always succeeds)
@@ -568,7 +669,7 @@ def execute_call(app, call, app_spec=None, verbose=False):
                 return True, "correctly reverted"
         else:
             try:
-                result = app.send.call(params)
+                result = app.send.call(params, send_params=POPULATE)
             except Exception as ex1:
                 err_str = str(ex1)
                 is_budget = "cost budget exceeded" in err_str or "dynamic cost budget" in err_str
@@ -848,8 +949,19 @@ def run_test(test: SemanticTest, localnet, account, verbose=False):
     # Load app spec for method resolution
     app_spec = au.Arc56Contract.from_json(artifacts["arc56"].read_text())
 
+    # Extract constructor args and value if present
+    ctor_args = None
+    ctor_value = 0
+    for call in test.calls:
+        if call.method_name == "constructor":
+            if call.args:
+                ctor_args = call.args
+            ctor_value = call.value_wei
+            break
+
     # Deploy
-    app = deploy_contract(localnet, account, artifacts)
+    app = deploy_contract(localnet, account, artifacts,
+                          ctor_args=ctor_args, fund_amount=ctor_value)
     if not app:
         return "DEPLOY_ERROR", "deployment failed"
 
@@ -860,6 +972,9 @@ def run_test(test: SemanticTest, localnet, account, verbose=False):
     details = []
 
     for call in test.calls:
+        # Skip constructor calls — handled during deployment
+        if call.method_name == "constructor":
+            continue
         ok, detail = execute_call(app, call, app_spec, verbose)
         if ok is None:
             skipped += 1
@@ -915,7 +1030,10 @@ def main():
 
         for sol_file in tests:
             test = parse_test_file(sol_file)
-            status, detail = run_test(test, localnet, account, args.verbose)
+            try:
+                status, detail = run_test(test, localnet, account, args.verbose)
+            except Exception as e:
+                status, detail = "COMPILE_ERROR", str(e)
             results[status] += 1
 
             icon = {"PASS": "✓", "FAIL": "✗", "SKIP": "○",

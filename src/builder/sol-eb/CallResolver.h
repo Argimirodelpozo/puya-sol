@@ -58,6 +58,12 @@ public:
 		std::string const& _resolvedName,
 		size_t _argCount);
 
+	/// Get the disambiguated method name for a function.
+	/// Returns "name(paramTypes)" if the function name is overloaded, else just "name".
+	static std::string resolveMethodName(
+		BuilderContext& _ctx,
+		solidity::frontend::FunctionDefinition const& _func);
+
 private:
 	/// Try library/free function resolution by AST ID and name.
 	static bool tryResolveLibraryOrFree(

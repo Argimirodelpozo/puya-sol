@@ -1,0 +1,135 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M02_BytesLib.sol.BytesLibTest.approval_program() -> uint64:
+main:
+    intcblock 1 0 32 2
+    bytecblock 0x30 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xd341622c 0xe0479f55 // method "testAsciiDigit(uint256)uint256", method "testConcat(byte[],byte[])byte[]"
+    txna ApplicationArgs 0
+    match testAsciiDigit testConcat
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M02_BytesLib.sol.BytesLib.asciiDigitToUint(asciiCode: bytes) -> bytes:
+BytesLib.asciiDigitToUint:
+    proto 1 1
+    frame_dig -1
+    bytec_0 // 0x30
+    b>=
+    dup
+    bz BytesLib.asciiDigitToUint_bool_false@3
+    frame_dig -1
+    pushbytes 0x39
+    b<=
+    bz BytesLib.asciiDigitToUint_bool_false@3
+    intc_0 // 1
+
+BytesLib.asciiDigitToUint_bool_merge@4:
+    assert // not an ASCII digit
+    frame_dig 0
+    assert // underflow
+    frame_dig -1
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec_0 // 0x30
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    swap
+    retsub
+
+BytesLib.asciiDigitToUint_bool_false@3:
+    intc_1 // 0
+    b BytesLib.asciiDigitToUint_bool_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M02_BytesLib.sol.BytesLib.concatBytes(a: bytes, b: bytes) -> bytes:
+BytesLib.concatBytes:
+    proto 2 1
+    frame_dig -2
+    frame_dig -1
+    concat
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M02_BytesLib.sol.BytesLibTest.testAsciiDigit[routing]() -> void:
+testAsciiDigit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub BytesLib.asciiDigitToUint
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M02_BytesLib.sol.BytesLibTest.testConcat[routing]() -> void:
+testConcat:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txna ApplicationArgs 2
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    callsub BytesLib.concatBytes
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

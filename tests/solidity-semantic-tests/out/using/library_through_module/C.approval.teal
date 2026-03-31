@@ -1,9 +1,9 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/split_0lrnzcq0/B.C.approval_program() -> uint64:
+// /tmp/multisource_2862bcte/B.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 32 1 0
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -29,22 +29,14 @@ main_after_if_else@2:
     err
 
 
-// /tmp/split_0lrnzcq0/B.L.id(x: bytes) -> bytes:
+// /tmp/multisource_2862bcte/B.sol.L.id(x: bytes) -> bytes:
 L.id:
     proto 1 1
     frame_dig -1
     retsub
 
 
-// /tmp/split_0lrnzcq0/B.L.one_ext(_param0: bytes) -> bytes:
-L.one_ext:
-    proto 1 1
-    intc_1 // 1
-    itob
-    retsub
-
-
-// /tmp/split_0lrnzcq0/B.C.f[routing]() -> void:
+// /tmp/multisource_2862bcte/B.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
     dup
@@ -69,7 +61,7 @@ f:
     return
 
 
-// /tmp/split_0lrnzcq0/B.C.g[routing]() -> void:
+// /tmp/multisource_2862bcte/B.sol.C.g[routing]() -> void:
 g:
     txna ApplicationArgs 1
     dup
@@ -77,7 +69,21 @@ g:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub L.one_ext
+    itxn_begin
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x041be1ee // method "one_ext(uint256)uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
     dup
     len
     intc_0 // 32

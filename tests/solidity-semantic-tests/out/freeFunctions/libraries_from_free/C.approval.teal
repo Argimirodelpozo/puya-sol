@@ -3,10 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/libraries_from_free.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 0 32 1
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -31,13 +31,6 @@ main_f_route@4:
     b f
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/libraries_from_free.sol.L.pub() -> bytes:
-L.pub:
-    pushint 7
-    itob
-    retsub
-
-
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/libraries_from_free.sol.L.inter() -> bytes:
 L.inter:
     pushint 8
@@ -47,7 +40,22 @@ L.inter:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/libraries_from_free.sol.fu() -> bytes, bytes:
 fu:
-    callsub L.pub
+    intc_0 // 0
+    itxn_begin
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0xeea7bc11 // method "pub()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
     callsub L.inter
     retsub
 
@@ -57,17 +65,17 @@ f:
     callsub fu
     dig 1
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     uncover 2
     dig 1
     b|
     dig 2
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
     cover 2
@@ -77,5 +85,5 @@ f:
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return

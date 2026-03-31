@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_multiple_times.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock "a" 0x151f7c75
+    bytecblock "a" 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "a"
@@ -44,9 +44,17 @@ f:
     bytec_0 // "a"
     app_global_get_ex
     assert // check a exists
+    dig 1
     b+
-    pushbytes 0x07
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 1
     b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b+
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     bytec_0 // "a"
     dig 1
     app_global_put
@@ -58,7 +66,7 @@ f:
     intc_0 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -80,7 +88,7 @@ a:
     intc_0 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log

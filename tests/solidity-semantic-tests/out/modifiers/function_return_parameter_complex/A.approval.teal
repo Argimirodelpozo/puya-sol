@@ -61,15 +61,12 @@ f:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_return_parameter_complex.sol.A.shouldFail[routing]() -> void:
 shouldFail:
     txna ApplicationArgs 1
-    dup
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     intc_0 // 0
-    pushbytes 0x14
-    b+
-    intc_0 // 0
+    dupn 2
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
@@ -78,7 +75,6 @@ shouldFail:
     bytec_0 // "x"
     swap
     app_global_put
-    swap
     bytec_1 // 0x
     b==
     assert // a is not zero
@@ -94,12 +90,7 @@ shouldFail:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_return_parameter_complex.sol.A.g[routing]() -> void:
 g:
     intc_0 // 0
-    dup
-    dig 1
-    b*
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    intc_0 // 0
+    dupn 2
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists

@@ -1,0 +1,172 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M04_StructStorage.sol.StructStorageTest.approval_program() -> uint64:
+main:
+    intcblock 0 32 1 256
+    bytecblock "config" 0x00 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "config"
+    pushbytes 0x
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xac5bbcfc 0xa8adfc6d 0x6da23006 0x4281bf5c 0xd15b3b21 // method "setConfig(uint256,bool)void", method "updateThreshold(uint256)void", method "getThreshold()uint256", method "isActive()bool", method "config()(uint256,bool)"
+    txna ApplicationArgs 0
+    match setConfig updateThreshold getThreshold isActive config
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M04_StructStorage.sol.StructStorageTest.setConfig[routing]() -> void:
+setConfig:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    swap
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    uncover 2
+    b|
+    swap
+    concat
+    bytec_0 // "config"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M04_StructStorage.sol.StructStorageTest.updateThreshold[routing]() -> void:
+updateThreshold:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 0
+    bytec_0 // "config"
+    app_global_get_ex
+    assert // check config exists
+    intc_3 // 256
+    getbit
+    bytec_1 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    swap
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    uncover 2
+    b|
+    swap
+    concat
+    bytec_0 // "config"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M04_StructStorage.sol.StructStorageTest.getThreshold[routing]() -> void:
+getThreshold:
+    intc_0 // 0
+    bytec_0 // "config"
+    app_global_get_ex
+    assert // check config exists
+    extract 0 32
+    intc_1 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M04_StructStorage.sol.StructStorageTest.isActive[routing]() -> void:
+isActive:
+    intc_0 // 0
+    bytec_0 // "config"
+    app_global_get_ex
+    assert // check config exists
+    intc_3 // 256
+    getbit
+    bytec_1 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M04_StructStorage.sol.StructStorageTest.config[routing]() -> void:
+config:
+    intc_0 // 0
+    bytec_0 // "config"
+    app_global_get_ex
+    assert // check config exists
+    dup
+    extract 0 32
+    swap
+    intc_3 // 256
+    getbit
+    bytec_1 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    intc_0 // 0
+    getbit
+    intc_1 // 32
+    bzero
+    uncover 2
+    b|
+    bytec_1 // 0x00
+    intc_0 // 0
+    uncover 3
+    setbit
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

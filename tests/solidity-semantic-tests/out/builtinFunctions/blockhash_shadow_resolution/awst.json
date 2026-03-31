@@ -645,7 +645,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "ReinterpretCast",
+                "_type": "SubroutineCallExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blockhash_shadow_resolution.sol",
                   "line": 156,
@@ -660,47 +660,70 @@
                   "immutable": true,
                   "length": 32
                 },
-                "expr": {
-                  "_type": "IntrinsicCall",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blockhash_shadow_resolution.sol",
-                    "line": 156,
-                    "end_line": 168,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
-                  },
-                  "op_code": "block",
-                  "immediates": [
-                    "BlkSeed"
-                  ],
-                  "stack_args": [
-                    {
-                      "_type": "IntegerConstant",
+                "target": {
+                  "_type": "InstanceMethodTarget",
+                  "member_name": "blockhash"
+                },
+                "args": [
+                  {
+                    "name": null,
+                    "value": {
+                      "_type": "ReinterpretCast",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blockhash_shadow_resolution.sol",
-                        "line": 166,
-                        "end_line": 167,
+                        "line": 156,
+                        "end_line": 168,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
                       },
                       "wtype": {
                         "_type": "WType",
-                        "name": "uint64",
+                        "name": "biguint",
                         "immutable": true
                       },
-                      "value": 3,
-                      "teal_alias": null
+                      "expr": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blockhash_shadow_resolution.sol",
+                          "line": 156,
+                          "end_line": 168,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "itob",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blockhash_shadow_resolution.sol",
+                              "line": 166,
+                              "end_line": 167,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 3,
+                            "teal_alias": null
+                          }
+                        ]
+                      }
                     }
-                  ]
-                }
+                  }
+                ]
               }
             }
           ],

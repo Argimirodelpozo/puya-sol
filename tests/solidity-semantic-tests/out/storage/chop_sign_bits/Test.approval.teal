@@ -3,23 +3,34 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/chop_sign_bits.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 0 32 1
-    bytecblock 0xffff "z" "y" "__ctor_pending" 0x8000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    intcblock 0 32 1 3
+    bytecblock 0xffff 0x151f7c75 "z" "y" "__ctor_pending" 0x8000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000 0x010000000000000000000000000000000000000000000000000000000000000000
     pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
+    intc_0 // 0
+    pushint 5
+    -
+    intc_0 // 0
+    pushint 6
+    -
+    swap
+    itob
+    swap
+    itob
+    concat
     callsub _puya_lib.mem.new_slot
     dup
-    pushbytes 0xfffffffffffffffbfffffffffffffffa
+    uncover 2
     stores
-    bytec_2 // "y"
+    bytec_3 // "y"
     swap
     app_global_put
-    bytec_1 // "z"
+    bytec_2 // "z"
     intc_0 // 0
     app_global_put
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     intc_2 // 1
     app_global_put
     intc_2 // 1
@@ -46,10 +57,10 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/chop_sign_bits.sol.Test.__postInit[routing]() -> void:
 __postInit:
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     intc_0 // 0
     app_global_put
     pushbytes "x"
@@ -62,7 +73,29 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/chop_sign_bits.sol.Test.f[routing]() -> void:
 f:
-    pushbytes 0x151f7c750002fffffffffffffffdfffffffffffffffc
+    intc_0 // 0
+    intc_3 // 3
+    -
+    itob
+    pushbytes 0x00000000000000000000000000000000
+    swap
+    replace2 0 // on error: index access is out of bounds
+    intc_0 // 0
+    pushint 4
+    -
+    itob
+    replace2 8 // on error: index access is out of bounds
+    dup
+    len
+    pushint 8
+    /
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
     log
     intc_2 // 1
     return
@@ -70,10 +103,23 @@ f:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/chop_sign_bits.sol.Test.g[routing]() -> void:
 g:
-    bytec_2 // "y"
-    pushbytes 0xfffffffffffffffdfffffffffffffffc
+    intc_0 // 0
+    intc_3 // 3
+    -
+    intc_0 // 0
+    pushint 4
+    -
+    swap
+    itob
+    swap
+    itob
+    concat
+    bytec_3 // "y"
+    dig 1
     app_global_put
-    pushbytes 0x151f7c75fffffffffffffffdfffffffffffffffc
+    bytec_1 // 0x151f7c75
+    swap
+    concat
     log
     intc_2 // 1
     return
@@ -88,25 +134,25 @@ h:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bytec_1 // "z"
+    bytec_2 // "z"
     dig 1
     app_global_put
     itob
     bytec_0 // 0xffff
     b&
-    bytec 4 // 0x8000
+    bytec 5 // 0x8000
     b>=
     bz h_ternary_false@3
     intc_0 // 0
-    bytec_1 // "z"
+    bytec_2 // "z"
     app_global_get_ex
     assert // check z exists
     itob
     bytec_0 // 0xffff
     b&
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
     b+
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 h_ternary_merge@4:
@@ -118,7 +164,7 @@ h_ternary_merge@4:
     intc_1 // 32
     bzero
     b|
-    bytec 7 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -127,7 +173,7 @@ h_ternary_merge@4:
 
 h_ternary_false@3:
     intc_0 // 0
-    bytec_1 // "z"
+    bytec_2 // "z"
     app_global_get_ex
     assert // check z exists
     itob
@@ -170,7 +216,7 @@ x:
     itob
     bytec_0 // 0xffff
     b&
-    bytec 4 // 0x8000
+    bytec 5 // 0x8000
     b>=
     bz x_ternary_false@3
     box_get
@@ -183,9 +229,9 @@ x:
     itob
     bytec_0 // 0xffff
     b&
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
     b+
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 x_ternary_merge@4:
@@ -196,7 +242,7 @@ x_ternary_merge@4:
     assert // overflow
     dig 1
     b|
-    bytec 7 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -237,7 +283,7 @@ y:
     intc_1 // 32
     extract3
     sha256
-    bytec_2 // "y"
+    bytec_3 // "y"
     swap
     concat
     dup
@@ -251,7 +297,7 @@ y:
     itob
     bytec_0 // 0xffff
     b&
-    bytec 4 // 0x8000
+    bytec 5 // 0x8000
     b>=
     bz y_ternary_false@3
     box_get
@@ -264,9 +310,9 @@ y:
     itob
     bytec_0 // 0xffff
     b&
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
     b+
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 y_ternary_merge@4:
@@ -277,7 +323,7 @@ y_ternary_merge@4:
     assert // overflow
     dig 1
     b|
-    bytec 7 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log

@@ -1,0 +1,575 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M09_BN256Test.sol.BN256Test.approval_program() -> uint64:
+main:
+    intcblock 32 1 256 288
+    bytecblock 0x151f7c75 0x01
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xe836bdd4 0x742e6b30 0x16aeaffa // method "ecAdd(uint256,uint256,uint256,uint256)(uint256,uint256)", method "ecMul(uint256,uint256,uint256)(uint256,uint256)", method "pairingCheck2(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)bool"
+    txna ApplicationArgs 0
+    match ecAdd ecMul pairingCheck2
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M09_BN256Test.sol.BN256Test.ecAdd[routing]() -> void:
+ecAdd:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    load 0
+    intc_0 // 32
+    bzero
+    dup
+    uncover 6
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
+    replace2 0
+    dig 1
+    uncover 5
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 32
+    dig 1
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 64
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 96
+    dup
+    extract 0 64
+    dig 1
+    extract 64 64
+    ec_add BN254g1
+    dup
+    extract 0 32
+    uncover 2
+    swap
+    replace2 128
+    swap
+    extract 32 32
+    replace2 160
+    dup
+    extract 128 32
+    dig 1
+    extract 160 32
+    uncover 2
+    store 0
+    swap
+    dig 2
+    b|
+    swap
+    uncover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M09_BN256Test.sol.BN256Test.ecMul[routing]() -> void:
+ecMul:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    load 0
+    intc_0 // 32
+    bzero
+    dup
+    uncover 5
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
+    replace2 0
+    dig 1
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 32
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 64
+    dup
+    extract 0 64
+    dig 1
+    extract 64 32
+    ec_scalar_mul BN254g1
+    dup
+    extract 0 32
+    uncover 2
+    swap
+    replace2 96
+    swap
+    extract 32 32
+    replace2 128
+    dup
+    extract 96 32
+    dig 1
+    extract 128 32
+    uncover 2
+    store 0
+    swap
+    dig 2
+    b|
+    swap
+    uncover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/examples/self_features/contracts/M09_BN256Test.sol.BN256Test.pairingCheck2[routing]() -> void:
+pairingCheck2:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 5
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 6
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 7
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 8
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 9
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 10
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 11
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 12
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    load 0
+    intc_0 // 32
+    bzero
+    dup
+    uncover 14
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
+    replace2 0
+    dig 1
+    uncover 13
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 32
+    dig 1
+    uncover 12
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 64
+    dig 1
+    uncover 11
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 96
+    dig 1
+    uncover 10
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 128
+    dig 1
+    uncover 9
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 160
+    dig 1
+    uncover 8
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 192
+    dig 1
+    uncover 7
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 224
+    dig 1
+    uncover 6
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_2 // 256
+    swap
+    replace3
+    dig 1
+    uncover 5
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_3 // 288
+    swap
+    replace3
+    dig 1
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushint 320
+    swap
+    replace3
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushint 352
+    swap
+    replace3
+    dup
+    extract 0 64
+    dig 1
+    extract 192 64
+    concat
+    dig 1
+    extract 96 32
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 64 32
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 2
+    extract 160 32
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    extract 128 32
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    concat
+    dig 2
+    intc_3 // 288
+    intc_0 // 32
+    extract3
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    intc_2 // 256
+    intc_0 // 32
+    extract3
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 3
+    pushint 352
+    intc_0 // 32
+    extract3
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    pushint 320
+    intc_0 // 32
+    extract3
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    concat
+    concat
+    ec_pairing_check BN254g1
+    pushbytes 0x
+    bytec_1 // 0x01
+    uncover 2
+    select
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushint 384
+    swap
+    replace3
+    dup
+    pushint 384
+    intc_0 // 32
+    extract3
+    swap
+    store 0
+    bytec_1 // 0x01
+    b==
+    pushbytes 0x00
+    pushint 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

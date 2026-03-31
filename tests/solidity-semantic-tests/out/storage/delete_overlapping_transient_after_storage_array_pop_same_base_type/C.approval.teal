@@ -1,0 +1,101 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 2
+    bytecblock "__ctor_pending" "arr" "t" 0x
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "t"
+    bytec_3 // 0x
+    app_global_put
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x99fe9257 0x9939b21d 0xba37d4c3 // method "__postInit()void", method "pushArr()void", method "setAndClear()void", method "getArr()uint256"
+    txna ApplicationArgs 0
+    match __postInit pushArr setAndClear getArr
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_1 // "arr"
+    intc_1 // 0
+    box_create
+    pop
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.pushArr[routing]() -> void:
+pushArr:
+    bytec_1 // "arr"
+    box_get
+    assert // box exists
+    intc_2 // 2
+    intc_1 // 0
+    extract3
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
+    concat // on error: max array length exceeded
+    pop
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.setAndClear[routing]() -> void:
+setAndClear:
+    bytec_2 // "t"
+    bytec_3 // 0x
+    app_global_put
+    bytec_1 // "arr"
+    box_get
+    assert // box exists
+    intc_2 // 2
+    intc_1 // 0
+    extract3
+    dup
+    len
+    pushint 32
+    -
+    intc_1 // 0
+    swap
+    substring3
+    pop
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.getArr[routing]() -> void:
+getArr:
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return

@@ -1,10 +1,9 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/split_0gcj58vq/B.C.approval_program() -> uint64:
+// /tmp/multisource_1psruo72/B.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
-    bytecblock 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
+    intcblock 32 1 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -32,39 +31,36 @@ main_f_route@4:
     b f
 
 
-// /tmp/split_0gcj58vq/B.L.inc(x: bytes) -> bytes:
+// /tmp/multisource_1psruo72/B.sol.L.inc(x: bytes) -> bytes:
 L.inc:
     proto 1 1
     frame_dig -1
-    bytec_0 // 0x01
+    pushbytes 0x01
     b+
     retsub
 
 
-// /tmp/split_0gcj58vq/B.L.dec(x: bytes) -> bytes:
-L.dec:
-    proto 1 1
-    frame_dig -1
-    bytec_0 // 0x01
-    b>=
-    assert // underflow
-    frame_dig -1
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_0 // 0x01
-    b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    retsub
-
-
-// /tmp/split_0gcj58vq/B.C.f[routing]() -> void:
+// /tmp/multisource_1psruo72/B.sol.C.f[routing]() -> void:
 f:
     pushbytes 0x
     callsub L.inc
     callsub L.inc
+    itxn_begin
     dup
-    callsub L.dec
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x63f082fb // method "dec(uint256)uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
     dig 1
     len
     intc_0 // 32

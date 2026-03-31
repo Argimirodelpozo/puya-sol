@@ -32,16 +32,11 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.preincr_u8[routing]() -> void:
 preincr_u8:
     txna ApplicationArgs 1
-    dup
     len
     intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    btoi
-    intc_1 // 1
-    +
-    dup
-    +
+    pushbytes ""
     itob
     bytec_0 // 0x151f7c75
     swap
@@ -54,16 +49,11 @@ preincr_u8:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.postincr_u8[routing]() -> void:
 postincr_u8:
     txna ApplicationArgs 1
-    dup
     len
     intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    btoi
-    intc_1 // 1
-    +
-    dup
-    +
+    pushbytes ""
     itob
     bytec_0 // 0x151f7c75
     swap
@@ -76,16 +66,11 @@ postincr_u8:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.predecr_u8[routing]() -> void:
 predecr_u8:
     txna ApplicationArgs 1
-    dup
     len
     intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    btoi
-    intc_1 // 1
-    -
-    dup
-    +
+    pushbytes ""
     itob
     bytec_0 // 0x151f7c75
     swap
@@ -98,16 +83,11 @@ predecr_u8:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.postdecr_u8[routing]() -> void:
 postdecr_u8:
     txna ApplicationArgs 1
-    dup
     len
     intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    btoi
-    intc_1 // 1
-    -
-    dup
-    +
+    pushbytes ""
     itob
     bytec_0 // 0x151f7c75
     swap
@@ -597,7 +577,8 @@ bitnot_u8:
     assert // invalid number of bytes for arc4.uint64
     btoi
     pushint 18446744073709551615
-    ^
+    swap
+    -
     load 0
     swap
     itob

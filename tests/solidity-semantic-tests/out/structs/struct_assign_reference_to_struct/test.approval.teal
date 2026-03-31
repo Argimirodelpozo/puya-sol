@@ -3,23 +3,23 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_assign_reference_to_struct.sol.test.approval_program() -> uint64:
 main:
-    intcblock 0 1
-    bytecblock "data1" 0x 0x0000000000000000000000000000000000000000000000000000000000000003 "data2" "data3"
+    intcblock 1 0
+    bytecblock "data1" 0x "data2" "data3" 0x0000000000000000000000000000000000000000000000000000000000000003
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "data1"
     bytec_1 // 0x
     app_global_put
-    bytec_3 // "data2"
+    bytec_2 // "data2"
     bytec_1 // 0x
     app_global_put
-    bytec 4 // "data3"
+    bytec_3 // "data3"
     bytec_1 // 0x
     app_global_put
     bytec_0 // "data1"
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -46,31 +46,24 @@ main_assign_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_assign_reference_to_struct.sol.test.assign[routing]() -> void:
 assign:
-    intc_0 // 0
+    intc_1 // 0
+    dup
     bytec_0 // "data1"
     app_global_get_ex
     assert // check data1 exists
-    bytec_3 // "data2"
+    bytec_2 // "data2"
     dig 1
     app_global_put
-    intc_0 // 0
-    bytec_0 // "data1"
-    app_global_get_ex
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
+    swap
     extract 0 32
     swap
     extract 0 32
     pushint 32
     bzero
-    bytec_0 // "data1"
-    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000003
+    bytec_3 // "data3"
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000003
     app_global_put
-    bytec 4 // "data3"
-    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000003
-    app_global_put
-    intc_0 // 0
+    intc_1 // 0
     bytec_0 // "data1"
     app_global_get_ex
     assert // check data1 exists
@@ -82,7 +75,7 @@ assign:
     dig 3
     b|
     concat
-    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000003
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000003
     concat
     swap
     uncover 2
@@ -92,5 +85,5 @@ assign:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return

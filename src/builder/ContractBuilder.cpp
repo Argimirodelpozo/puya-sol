@@ -1,4 +1,5 @@
 #include "builder/ContractBuilder.h"
+#include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
@@ -155,6 +156,27 @@ awst::SourceLocation ContractBuilder::makeLoc(
 	return loc;
 }
 
+std::shared_ptr<awst::Block> ContractBuilder::buildBlock(
+	solidity::frontend::Block const& _block)
+{
+	return sol_ast::buildBlock(m_stmtCtx, *m_exprBuilder, _block);
+}
+
+void ContractBuilder::setFunctionContext(
+	std::vector<std::pair<std::string, awst::WType const*>> const& _params,
+	awst::WType const* _returnType,
+	std::map<std::string, unsigned> const& _bitWidths)
+{
+	m_stmtCtx.functionParams = _params;
+	m_stmtCtx.returnType = _returnType;
+	m_stmtCtx.functionParamBitWidths = _bitWidths;
+}
+
+void ContractBuilder::setPlaceholderBody(std::shared_ptr<awst::Block> _body)
+{
+	m_stmtCtx.placeholderBody = std::move(_body);
+}
+
 std::shared_ptr<awst::Contract> ContractBuilder::build(
 	solidity::frontend::ContractDefinition const& _contract
 )
@@ -216,9 +238,21 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		m_typeMapper, m_storageMapper, m_sourceFile, contractName,
 		m_libraryFunctionIds, m_overloadedNames, m_freeFunctionById
 	);
-	m_stmtBuilder = std::make_unique<StatementBuilder>(
-		*m_exprBuilder, m_typeMapper, m_sourceFile
-	);
+	// Initialize statement context
+	m_stmtCtx = sol_ast::StatementContext{
+		&*m_exprBuilder, &m_typeMapper, m_sourceFile,
+		[this](solidity::frontend::Expression const& e) { return m_exprBuilder->build(e); },
+		[this](solidity::frontend::Statement const& s) {
+			return sol_ast::buildStatement(m_stmtCtx, *m_exprBuilder, s);
+		},
+		[this](solidity::frontend::Block const& b) {
+			return sol_ast::buildBlock(m_stmtCtx, *m_exprBuilder, b);
+		},
+		[this]() { return m_exprBuilder->takePrePendingStatements(); },
+		[this]() { return m_exprBuilder->takePendingStatements(); },
+		{}, nullptr, {}, nullptr, nullptr, nullptr,
+	};
+
 	m_exprBuilder->setTransientStorage(
 		m_transientStorage.hasTransientVars() ? &m_transientStorage : nullptr);
 
@@ -1369,7 +1403,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				std::vector<std::pair<std::string, awst::WType const*>> paramContext;
 				for (auto const& arg: postInit.args)
 					paramContext.emplace_back(arg.name, arg.wtype);
-				m_stmtBuilder->setFunctionContext(paramContext, postInit.returnType);
+				setFunctionContext(paramContext, postInit.returnType);
 			}
 
 			auto postInitBody = std::make_shared<awst::Block>();
@@ -1491,7 +1525,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					}
 				}
 
-				auto baseBody = m_stmtBuilder->buildBlock(baseCtor->body());
+				auto baseBody = buildBlock(baseCtor->body());
 				inlineModifiers(*baseCtor, baseBody);
 				for (auto& stmt: baseBody->body)
 					postInitBody->body.push_back(std::move(stmt));
@@ -1501,7 +1535,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			if (constructor && constructor->body().statements().size() > 0)
 			{
 				m_exprBuilder->setInConstructor(true);
-				auto ctorBody = m_stmtBuilder->buildBlock(constructor->body());
+				auto ctorBody = buildBlock(constructor->body());
 				inlineModifiers(*constructor, ctorBody);
 				m_exprBuilder->setInConstructor(false);
 				for (auto& stmt: ctorBody->body)
@@ -1558,7 +1592,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			}
 
 			// Translate the base constructor body and inline its modifiers
-			auto baseBody = m_stmtBuilder->buildBlock(baseCtor->body());
+			auto baseBody = buildBlock(baseCtor->body());
 			inlineModifiers(*baseCtor, baseBody);
 			for (auto& stmt: baseBody->body)
 				createBlock->body.push_back(std::move(stmt));
@@ -1568,7 +1602,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		if (constructor && constructor->body().statements().size() > 0)
 		{
 			m_exprBuilder->setInConstructor(true);
-			auto ctorBody = m_stmtBuilder->buildBlock(constructor->body());
+			auto ctorBody = buildBlock(constructor->body());
 			inlineModifiers(*constructor, ctorBody);
 			m_exprBuilder->setInConstructor(false);
 			for (auto& stmt: ctorBody->body)
@@ -1912,10 +1946,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				if (intType && intType->numBits() < 64)
 					bitWidths[rp->name()] = intType->numBits();
 			}
-			m_stmtBuilder->setFunctionContext(paramContext, method.returnType, bitWidths);
+			setFunctionContext(paramContext, method.returnType, bitWidths);
 		}
 
-		method.body = m_stmtBuilder->buildBlock(_func.body());
+		method.body = buildBlock(_func.body());
 
 		// Insert zero-initialization for named return variables
 		// Solidity implicitly initializes named returns to their zero values.
@@ -2458,9 +2492,9 @@ void ContractBuilder::inlineModifiers(
 		// Translate the entire modifier body through the statement builder.
 		// The `_;` (PlaceholderStatement) will be replaced with the function body
 		// wherever it appears — including inside loops and conditionals.
-		m_stmtBuilder->setPlaceholderBody(placeholderBody);
-		auto translatedModBody = m_stmtBuilder->buildBlock(modDef->body());
-		m_stmtBuilder->setPlaceholderBody(nullptr);
+		setPlaceholderBody(placeholderBody);
+		auto translatedModBody = buildBlock(modDef->body());
+		setPlaceholderBody(nullptr);
 
 		if (translatedModBody)
 		{
