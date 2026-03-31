@@ -118,9 +118,9 @@ def compile_test(sol_path: Path, out_dir: Path, ensure_budget: dict = None) -> d
             cmd += ["--ensure-budget", f"{func}:{budget}"]
 
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
     except subprocess.TimeoutExpired:
-        raise Exception(f"compilation timed out after 300s")
+        raise Exception(f"compilation timed out after 60s")
 
     if import_dir:
         import shutil

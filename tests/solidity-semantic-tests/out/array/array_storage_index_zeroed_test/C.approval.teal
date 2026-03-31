@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_zeroed_test.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 2 1
-    bytecblock "storageArray" 0x 0x01 "__ctor_pending"
+    bytecblock "storageArray" 0x 0x01 "__ctor_pending" 0x068101
     pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
     store 5
     txn ApplicationID
@@ -60,6 +60,25 @@ test_zeroed_indices:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+
+test_zeroed_indices_while_top@32:
+    pushint 170010
+    global OpcodeBudget
+    >
+    bz test_zeroed_indices_while_top@2
+    itxn_begin
+    pushint 6 // appl
+    itxn_field TypeEnum
+    pushint 5 // DeleteApplication
+    itxn_field OnCompletion
+    bytec 4 // 0x068101
+    itxn_field ApprovalProgram
+    bytec 4 // 0x068101
+    itxn_field ClearStateProgram
+    intc_1 // 0
+    itxn_field Fee
+    itxn_submit
+    b test_zeroed_indices_while_top@32
 
 test_zeroed_indices_while_top@2:
     bytec_0 // "storageArray"

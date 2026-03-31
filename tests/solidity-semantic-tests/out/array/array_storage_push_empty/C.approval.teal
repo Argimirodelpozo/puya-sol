@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_push_empty.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 32 1 8
-    bytecblock "storageArray" "__ctor_pending" 0x
+    bytecblock "storageArray" "__ctor_pending" 0x068101 0x
     pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
     store 5
     txn ApplicationID
@@ -60,6 +60,25 @@ pushEmpty:
     ==
     assert // invalid number of bytes for arc4.uint256
 
+pushEmpty_while_top@9:
+    pushint 170010
+    global OpcodeBudget
+    >
+    bz pushEmpty_while_top@2
+    itxn_begin
+    pushint 6 // appl
+    itxn_field TypeEnum
+    pushint 5 // DeleteApplication
+    itxn_field OnCompletion
+    bytec_2 // 0x068101
+    itxn_field ApprovalProgram
+    bytec_2 // 0x068101
+    itxn_field ClearStateProgram
+    intc_0 // 0
+    itxn_field Fee
+    itxn_submit
+    b pushEmpty_while_top@9
+
 pushEmpty_while_top@2:
     bytec_0 // "storageArray"
     box_len
@@ -91,7 +110,7 @@ pushEmpty_while_top@5:
     bz pushEmpty_after_while@7
     callsub _puya_lib.mem.new_slot
     dup
-    bytec_2 // 0x
+    bytec_3 // 0x
     stores
     bytec_0 // "storageArray"
     box_get
@@ -123,7 +142,7 @@ pushEmpty_while_top@5:
     *
     intc_1 // 32
     extract3 // on error: index access is out of bounds
-    bytec_2 // 0x
+    bytec_3 // 0x
     b==
     assert
     pushbytes 0x01

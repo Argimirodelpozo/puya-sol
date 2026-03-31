@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_push_empty_length_address.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    bytecblock "addressArray" "__ctor_pending"
+    intcblock 32 0 1
+    bytecblock "addressArray" "__ctor_pending" 0x068101
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
-    intc_1 // 1
+    intc_2 // 1
     app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -38,13 +38,13 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
     bytec_0 // "addressArray"
-    intc_2 // 0
+    intc_1 // 0
     box_create
     pop
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
@@ -56,6 +56,25 @@ set_get_length:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+
+set_get_length_while_top@9:
+    pushint 170010
+    global OpcodeBudget
+    >
+    bz set_get_length_while_top@2
+    itxn_begin
+    pushint 6 // appl
+    itxn_field TypeEnum
+    pushint 5 // DeleteApplication
+    itxn_field OnCompletion
+    bytec_2 // 0x068101
+    itxn_field ApprovalProgram
+    bytec_2 // 0x068101
+    itxn_field ClearStateProgram
+    intc_1 // 0
+    itxn_field Fee
+    itxn_submit
+    b set_get_length_while_top@9
 
 set_get_length_while_top@2:
     bytec_0 // "addressArray"
@@ -91,13 +110,13 @@ set_get_length_while_top@5:
     box_get
     assert // box exists
     pushint 2
-    intc_2 // 0
+    intc_1 // 0
     extract3
     dup
     len
     intc_0 // 32
     -
-    intc_2 // 0
+    intc_1 // 0
     swap
     substring3
     pop
@@ -117,5 +136,5 @@ set_get_length_after_while@7:
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return

@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/super_parentheses.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32
+    bytecblock 0x068101
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -52,6 +53,27 @@ f:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/super_parentheses.sol.C.f() -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/super_parentheses.sol.C.f:
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/super_parentheses.sol.C.f_while_top@2:
+    pushint 170010
+    global OpcodeBudget
+    >
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/super_parentheses.sol.C.f_after_while@7
+    itxn_begin
+    pushint 6 // appl
+    itxn_field TypeEnum
+    pushint 5 // DeleteApplication
+    itxn_field OnCompletion
+    bytec_0 // 0x068101
+    itxn_field ApprovalProgram
+    bytec_0 // 0x068101
+    itxn_field ClearStateProgram
+    pushint 0
+    itxn_field Fee
+    itxn_submit
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/super_parentheses.sol.C.f_while_top@2
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/super_parentheses.sol.C.f_after_while@7:
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/super_parentheses.sol.C.f
     pushbytes 0x04
     b|
