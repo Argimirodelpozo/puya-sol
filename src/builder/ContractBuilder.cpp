@@ -1068,22 +1068,8 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 						// Translate the initializer expression (e.g. `= 'Wrapped Ether'`)
 						defaultVal = m_exprBuilder->build(*var->value());
 						if (defaultVal)
-						{
-							// Cast to match the storage type if needed
-							defaultVal = ExpressionBuilder::implicitNumericCast(
-								std::move(defaultVal), wtype, method.sourceLocation
-							);
-							// String values need ReinterpretCast to bytes for global state
-							if (defaultVal->wtype == awst::WType::stringType()
-								&& wtype != awst::WType::stringType())
-							{
-								auto cast = std::make_shared<awst::ReinterpretCast>();
-								cast->sourceLocation = method.sourceLocation;
-								cast->wtype = awst::WType::bytesType();
-								cast->expr = std::move(defaultVal);
-								defaultVal = std::move(cast);
-							}
-						}
+							defaultVal = TypeCoercion::coerceForAssignment(
+								std::move(defaultVal), wtype, method.sourceLocation);
 					}
 					if (!defaultVal)
 					{

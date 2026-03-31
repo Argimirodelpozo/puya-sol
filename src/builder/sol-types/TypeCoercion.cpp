@@ -512,4 +512,118 @@ int TypeCoercion::computeEncodedElementSize(awst::WType const* _type)
 	}
 }
 
+std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
+	std::shared_ptr<awst::Expression> _expr,
+	awst::WType const* _targetType,
+	awst::SourceLocation const& _loc)
+{
+	if (!_expr || !_targetType || _expr->wtype == _targetType)
+		return _expr;
+
+	// Numeric cast (uint64 ↔ biguint)
+	_expr = implicitNumericCast(std::move(_expr), _targetType, _loc);
+	if (_expr->wtype == _targetType)
+		return _expr;
+
+	// IntegerConstant → BytesConstant(bytes[N])
+	if (_targetType->kind() == awst::WTypeKind::Bytes)
+	{
+		auto const* bytesType = dynamic_cast<awst::BytesWType const*>(_targetType);
+		if (bytesType && bytesType->length().has_value())
+		{
+			int N = static_cast<int>(*bytesType->length());
+
+			// IntegerConstant → bytes[N]
+			if (auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(_expr.get()))
+			{
+				// Parse the decimal string to big-endian bytes
+				std::vector<unsigned char> bytes(N, 0);
+				std::string numStr = intConst->value;
+				std::vector<unsigned char> bignum;
+				for (char c : numStr)
+				{
+					int digit = c - '0';
+					int carry = digit;
+					for (auto& b : bignum)
+					{
+						int v = b * 10 + carry;
+						b = static_cast<unsigned char>(v & 0xFF);
+						carry = v >> 8;
+					}
+					while (carry > 0)
+					{
+						bignum.push_back(static_cast<unsigned char>(carry & 0xFF));
+						carry >>= 8;
+					}
+				}
+				// bignum is little-endian; copy to big-endian bytes
+				for (size_t i = 0; i < bignum.size() && i < bytes.size(); ++i)
+					bytes[bytes.size() - 1 - i] = bignum[i];
+
+				auto bc = std::make_shared<awst::BytesConstant>();
+				bc->sourceLocation = _loc;
+				bc->wtype = _targetType;
+				bc->encoding = awst::BytesEncoding::Base16;
+				bc->value = std::move(bytes);
+				return bc;
+			}
+
+			// String → bytes[N] (right-padded)
+			if (auto padded = stringToBytesN(_expr.get(), _targetType, N, _loc))
+				return padded;
+		}
+
+		// String/bytes-compatible → bytes via ReinterpretCast
+		if (_expr->wtype == awst::WType::stringType()
+			|| _expr->wtype->kind() == awst::WTypeKind::Bytes)
+		{
+			auto cast = std::make_shared<awst::ReinterpretCast>();
+			cast->sourceLocation = _loc;
+			cast->wtype = _targetType;
+			cast->expr = std::move(_expr);
+			return cast;
+		}
+	}
+
+	// Account ↔ bytes[32]
+	if (_targetType == awst::WType::accountType()
+		&& (_expr->wtype->kind() == awst::WTypeKind::Bytes
+			|| _expr->wtype == awst::WType::bytesType()))
+	{
+		auto cast = std::make_shared<awst::ReinterpretCast>();
+		cast->sourceLocation = _loc;
+		cast->wtype = _targetType;
+		cast->expr = std::move(_expr);
+		return cast;
+	}
+	if (_expr->wtype == awst::WType::accountType()
+		&& _targetType->kind() == awst::WTypeKind::Bytes)
+	{
+		auto cast = std::make_shared<awst::ReinterpretCast>();
+		cast->sourceLocation = _loc;
+		cast->wtype = _targetType;
+		cast->expr = std::move(_expr);
+		return cast;
+	}
+
+	// uint64 → bool (0/non-0)
+	if (_targetType == awst::WType::boolType()
+		&& _expr->wtype == awst::WType::uint64Type())
+	{
+		auto zero = std::make_shared<awst::IntegerConstant>();
+		zero->sourceLocation = _loc;
+		zero->wtype = awst::WType::uint64Type();
+		zero->value = "0";
+		auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+		cmp->sourceLocation = _loc;
+		cmp->wtype = awst::WType::boolType();
+		cmp->lhs = std::move(_expr);
+		cmp->op = awst::NumericComparison::Ne;
+		cmp->rhs = std::move(zero);
+		return cmp;
+	}
+
+	return _expr;
+}
+
 } // namespace puyasol::builder

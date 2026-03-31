@@ -64,6 +64,16 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
+	/// Coerce an expression's type to match a target type for assignment.
+	/// Handles: IntegerConstant→BytesConstant(bytes[N]), string→bytes,
+	/// uint64/biguint numeric casts, ReinterpretCast for bytes-compatible types.
+	/// Returns the original expression if no coercion needed.
+	static std::shared_ptr<awst::Expression> coerceForAssignment(
+		std::shared_ptr<awst::Expression> _expr,
+		awst::WType const* _targetType,
+		awst::SourceLocation const& _loc
+	);
+
 	// ── ARC4 / ABI ───────────────────────────────────────────────
 
 	/// Canonical ABI type name for selector computation.

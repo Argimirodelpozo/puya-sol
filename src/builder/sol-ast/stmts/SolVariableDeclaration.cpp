@@ -81,32 +81,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				}
 			}
 
-			value = ExpressionBuilder::implicitNumericCast(std::move(value), type, m_loc);
-			// Bytes coercion
-			if (value->wtype != type && type && type->kind() == awst::WTypeKind::Bytes)
-			{
-				auto const* bytesType = dynamic_cast<awst::BytesWType const*>(type);
-				auto const* strConst = dynamic_cast<awst::StringConstant const*>(value.get());
-				if (bytesType && bytesType->length().has_value() && *bytesType->length() > 0 && strConst)
-				{
-					if (auto padded = TypeCoercion::stringToBytesN(
-							value.get(), type, *bytesType->length(), m_loc))
-						value = std::move(padded);
-				}
-				else
-				{
-					bool valueIsCompatible = value->wtype == awst::WType::stringType()
-						|| (value->wtype && value->wtype->kind() == awst::WTypeKind::Bytes);
-					if (valueIsCompatible)
-					{
-						auto cast = std::make_shared<awst::ReinterpretCast>();
-						cast->sourceLocation = m_loc;
-						cast->wtype = type;
-						cast->expr = std::move(value);
-						value = std::move(cast);
-					}
-				}
-			}
+			value = builder::TypeCoercion::coerceForAssignment(std::move(value), type, m_loc);
 		}
 		else
 			value = StorageMapper::makeDefaultValue(type, m_loc);
