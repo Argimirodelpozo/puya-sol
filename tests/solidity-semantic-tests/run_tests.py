@@ -97,8 +97,9 @@ def _split_multi_source(sol_path):
     return tmp_dir / main, all_sources, tmp_dir
 
 
-def compile_test(sol_path: Path, out_dir: Path) -> dict | None:
-    """Compile a .sol file. Returns dict of contract artifacts or None on failure."""
+def compile_test(sol_path: Path, out_dir: Path, ensure_budget: dict = None) -> dict | None:
+    """Compile a .sol file. Returns dict of contract artifacts or None on failure.
+    ensure_budget: dict of func_name → budget, or None."""
     out_dir.mkdir(parents=True, exist_ok=True)
 
     source_path, all_sources, import_dir = _split_multi_source(sol_path)
@@ -112,6 +113,9 @@ def compile_test(sol_path: Path, out_dir: Path) -> dict | None:
     cmd += ["--output-dir", str(out_dir), "--puya-path", str(PUYA)]
     if import_dir:
         cmd += ["--import-path", str(import_dir)]
+    if ensure_budget:
+        for func, budget in ensure_budget.items():
+            cmd += ["--ensure-budget", f"{func}:{budget}"]
 
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
@@ -369,9 +373,11 @@ def _call_with_extra_budget(app, method, args, extra_calls=15):
     helper_id = _get_budget_helper(algod, sender, signer)
 
     # Step 1: Simulate with extra budget to discover resource requirements
+    # Fee must cover: 1 main txn + ensure_budget inner txns + extra_calls dummy txns
+    ensure_fee = getattr(app, '_ensure_budget_fee', 0)
     sim_sp = algod.suggested_params()
     sim_sp.flat_fee = True
-    sim_sp.fee = 1000 * (extra_calls + 1)
+    sim_sp.fee = 1000 * (extra_calls + 1) + ensure_fee
 
     sim_atc = AtomicTransactionComposer()
 
@@ -412,7 +418,7 @@ def _call_with_extra_budget(app, method, args, extra_calls=15):
     # Step 2: Build the real ATC with discovered resources + budget pooling
     sp = algod.suggested_params()
     sp.flat_fee = True
-    sp.fee = 1000 * (extra_calls + 1)
+    sp.fee = 1000 * (extra_calls + 1) + ensure_fee
 
     atc = AtomicTransactionComposer()
     atc.add_method_call(
@@ -703,10 +709,9 @@ def execute_call(app, call, app_spec=None, verbose=False):
                     if pt2.strip() == 'string' and i2 < len(args) and isinstance(args[i2], bytes):
                         args[i2] = args[i2].decode('utf-8', errors='replace')
 
-        # Extra fee to cover potential inner transactions (e.g., this.f() self-calls)
         params = au.AppClientMethodCallParams(
             method=method, args=args if args else None,
-            extra_fee=au.AlgoAmount(micro_algo=3000),  # 3 extra txns worth
+            extra_fee=au.AlgoAmount(micro_algo=3000),  # base: 3 extra txns
         )
 
         if call.expect_failure:
@@ -715,6 +720,37 @@ def execute_call(app, call, app_spec=None, verbose=False):
                 return False, "expected FAILURE but succeeded"
             except Exception:
                 return True, "correctly reverted"
+        elif hasattr(app, '_ensure_budget_fee') and app._ensure_budget_fee > 3000:
+            # ensure_budget needs many inner txns — use direct ATC with high fee
+            # Don't use app.send.call because algokit's simulate can't handle
+            # the inner txns created by ensure_budget without extra_opcode_budget
+            try:
+                from algosdk.atomic_transaction_composer import AtomicTransactionComposer
+                from algosdk.abi import Method as AbiMethod
+                import os as _os
+                _algod = app.algorand.client.algod
+                _sender = app._default_sender
+                _signer = app._default_signer or app.algorand.account.get_signer(_sender)
+                _sp = _algod.suggested_params()
+                _sp.flat_fee = True
+                _sp.fee = 1000 + app._ensure_budget_fee
+                _atc = AtomicTransactionComposer()
+                from algosdk.transaction import BoxReference as AlgoBoxRef
+                _box_refs = [AlgoBoxRef(app_index=0, name=ref[1]) for ref in app._box_refs] if hasattr(app, '_box_refs') and app._box_refs else None
+                _atc.add_method_call(
+                    app_id=app.app_id, method=AbiMethod.from_signature(method),
+                    sender=_sender, sp=_sp, signer=_signer,
+                    method_args=args if args else [],
+                    note=_os.urandom(8),
+                    boxes=_box_refs,
+                )
+                _result = _atc.execute(_algod, wait_rounds=4)
+                class _FakeResult:
+                    pass
+                result = _FakeResult()
+                result.abi_return = _result.abi_results[0].return_value if _result.abi_results else None
+            except Exception as ex:
+                return False, f"exception: {str(ex)[:100]}"
         else:
             try:
                 result = app.send.call(params, send_params=POPULATE)
@@ -980,14 +1016,15 @@ def _compare_values(actual, expected):
     return str(actual) == str(expected)
 
 
-def run_test(test: SemanticTest, localnet, account, verbose=False):
+def run_test(test: SemanticTest, localnet, account, verbose=False, _budget_retry=False):
     """Run a single semantic test. Returns (status, details)."""
     if test.skipped:
         return "SKIP", test.skip_reason
 
-    # Compile
+    # Compile (with optional ensure_budget from retry)
     out_dir = OUT_DIR / test.category / test.name
-    contracts = compile_test(test.source_path, out_dir)
+    ensure_budget = getattr(test, '_ensure_budget', None) if _budget_retry else None
+    contracts = compile_test(test.source_path, out_dir, ensure_budget=ensure_budget)
     if not contracts:
         return "COMPILE_ERROR", "compilation failed"
 
@@ -1021,6 +1058,12 @@ def run_test(test: SemanticTest, localnet, account, verbose=False):
     if not app:
         return "DEPLOY_ERROR", "deployment failed"
 
+    # If ensure_budget was used, set fee hint on app for execute_call
+    if ensure_budget:
+        max_budget = max(ensure_budget.values())
+        # ensure_budget(N) spawns ceil(N/700) inner txns at 1000 microAlgo each
+        app._ensure_budget_fee = ((max_budget + 699) // 700) * 1000
+
     # Execute calls
     passed = 0
     failed = 0
@@ -1043,6 +1086,20 @@ def run_test(test: SemanticTest, localnet, account, verbose=False):
         else:
             failed += 1
             details.append(f"  FAIL: {call.raw_line} — {detail}")
+
+    # If any failure is due to budget, retry with ensure_budget injected at compile time
+    if failed > 0 and not _budget_retry:
+        budget_fails = [d for d in details if "cost budget" in d or "dynamic cost" in d]
+        if budget_fails:
+            # Extract failing method names from the details
+            budget_funcs = {}
+            for d in budget_fails:
+                m = re.match(r'\s*FAIL:\s+(\w+)\(', d)
+                if m:
+                    budget_funcs[m.group(1)] = 100000  # 100K budget (max ~140K with 200 inner txns)
+            if budget_funcs:
+                test._ensure_budget = budget_funcs
+                return run_test(test, localnet, account, verbose, _budget_retry=True)
 
     if failed > 0:
         return "FAIL", f"{passed}p/{failed}f/{skipped}s" + "\n".join([""] + details)

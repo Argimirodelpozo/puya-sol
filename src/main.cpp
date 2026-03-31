@@ -146,6 +146,7 @@ struct Options
 	bool dumpAwst = false;
 	bool noPuya = false;
 	uint64_t opupBudget = 0;
+	std::map<std::string, uint64_t> ensureBudget; // func_name → budget
 	bool splitContracts = false;
 	bool allowMidFunctionSplit = false;
 	bool inlineAll = false;
@@ -170,7 +171,8 @@ void printUsage(char const* _progName)
 		<< "  --log-level <level>    Log level: debug, info, warning, error (default: info)\n"
 		<< "  --dump-awst            Dump AWST JSON to stdout\n"
 		<< "  --no-puya              Skip puya invocation (only generate JSON)\n"
-		<< "  --opup-budget <N>      Inject ensure_budget(N) into public methods (OpUp)\n"
+		<< "  --opup-budget <N>      Inject ensure_budget(N) into ALL public methods (OpUp)\n"
+		<< "  --ensure-budget <f:N>  Inject ensure_budget(N) into function f (repeatable)\n"
 		<< "  --split-contracts      Auto-split oversized contracts into cooperating helpers\n"
 		<< "  --allow-mid-function-split  Allow splitting oversized functions at statement boundaries\n"
 		<< "  --inline-all               Fully inline all subroutine calls before splitting\n"
@@ -209,6 +211,14 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.noPuya = true;
 		else if (arg == "--opup-budget" && i + 1 < _argc)
 			opts.opupBudget = std::stoull(_argv[++i]);
+		else if (arg == "--ensure-budget" && i + 1 < _argc)
+		{
+			// Format: func_name:budget (e.g., "f:20000")
+			std::string spec = _argv[++i];
+			auto colon = spec.find(':');
+			if (colon != std::string::npos)
+				opts.ensureBudget[spec.substr(0, colon)] = std::stoull(spec.substr(colon + 1));
+		}
 		else if (arg == "--split-contracts")
 			opts.splitContracts = true;
 		else if (arg == "--allow-mid-function-split")
@@ -636,7 +646,7 @@ int main(int _argc, char* _argv[])
 	// Build AWST
 	logger.info("Building AWST...");
 	puyasol::builder::AWSTBuilder builder;
-	auto roots = builder.build(compiler, sourceFile, opts.opupBudget);
+	auto roots = builder.build(compiler, sourceFile, opts.opupBudget, opts.ensureBudget);
 
 	if (roots.empty())
 	{

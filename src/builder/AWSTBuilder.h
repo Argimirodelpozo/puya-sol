@@ -25,7 +25,8 @@ public:
 	std::vector<std::shared_ptr<awst::RootNode>> build(
 		solidity::frontend::CompilerStack& _compiler,
 		std::string const& _sourceFile,
-		uint64_t _opupBudget = 0
+		uint64_t _opupBudget = 0,
+		std::map<std::string, uint64_t> const& _ensureBudget = {}
 	);
 
 private:

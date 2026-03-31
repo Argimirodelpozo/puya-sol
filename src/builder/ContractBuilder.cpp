@@ -133,14 +133,16 @@ ContractBuilder::ContractBuilder(
 	std::string const& _sourceFile,
 	LibraryFunctionIdMap const& _libraryFunctionIds,
 	uint64_t _opupBudget,
-	FreeFunctionIdMap const& _freeFunctionById
+	FreeFunctionIdMap const& _freeFunctionById,
+	std::map<std::string, uint64_t> const& _ensureBudget
 )
 	: m_typeMapper(_typeMapper),
 	  m_storageMapper(_storageMapper),
 	  m_sourceFile(_sourceFile),
 	  m_libraryFunctionIds(_libraryFunctionIds),
 	  m_opupBudget(_opupBudget),
-	  m_freeFunctionById(_freeFunctionById)
+	  m_freeFunctionById(_freeFunctionById),
+	  m_ensureBudget(_ensureBudget)
 {
 	Logger::instance().debug("[TRACE] ContractBuilder m_freeFunctionById.size()=" + std::to_string(m_freeFunctionById.size()) + " addr=" + std::to_string((uintptr_t)&m_freeFunctionById));
 }
@@ -2247,13 +2249,20 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// Inline modifiers
 		inlineModifiers(_func, method.body);
 
-		// Inject ensure_budget for opup budget padding on public/external methods
-		if (m_opupBudget > 0 && method.arc4MethodConfig.has_value())
+		// Inject ensure_budget for opup budget padding
+		// Check per-function map first, then global opup budget
+		uint64_t budgetForFunc = 0;
+		if (auto it = m_ensureBudget.find(_func.name()); it != m_ensureBudget.end())
+			budgetForFunc = it->second;
+		else if (m_opupBudget > 0 && method.arc4MethodConfig.has_value())
+			budgetForFunc = m_opupBudget;
+
+		if (budgetForFunc > 0)
 		{
 			auto budgetVal = std::make_shared<awst::IntegerConstant>();
 			budgetVal->sourceLocation = method.sourceLocation;
 			budgetVal->wtype = awst::WType::uint64Type();
-			budgetVal->value = std::to_string(m_opupBudget);
+			budgetVal->value = std::to_string(budgetForFunc);
 
 			auto feeSource = std::make_shared<awst::IntegerConstant>();
 			feeSource->sourceLocation = method.sourceLocation;

@@ -51,7 +51,8 @@ static bool blockAlwaysTerminates(awst::Block const& _block)
 std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 	solidity::frontend::CompilerStack& _compiler,
 	std::string const& _sourceFile,
-	uint64_t _opupBudget
+	uint64_t _opupBudget,
+	std::map<std::string, uint64_t> const& _ensureBudget
 )
 {
 	m_storageMapper = std::make_unique<StorageMapper>(m_typeMapper);
@@ -848,7 +849,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 
 			ContractBuilder translator(
 				m_typeMapper, *m_storageMapper, _sourceFile, m_libraryFunctionIds,
-				_opupBudget, m_freeFunctionById
+				_opupBudget, m_freeFunctionById, _ensureBudget
 			);
 			auto awstContract = translator.build(*contract);
 
