@@ -97,7 +97,12 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::trySolEbDispatch(
 	auto leftBuilder = m_ctx.builderForInstance(leftSolType, _left);
 	if (!leftBuilder) return nullptr;
 
+	// If right operand is a compile-time constant (RationalNumberType),
+	// use the left operand's type for the builder so overflow checks use
+	// the correct bit width (e.g., uint16 + 256 should check uint16 overflow).
 	auto rightBuilder = m_ctx.builderForInstance(rightSolType, _right);
+	if (!rightBuilder && leftSolType)
+		rightBuilder = m_ctx.builderForInstance(leftSolType, _right);
 	if (!rightBuilder) return nullptr;
 
 	// Try comparison operators

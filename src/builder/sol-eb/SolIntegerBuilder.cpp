@@ -4,6 +4,7 @@
 
 #include "builder/sol-eb/SolIntegerBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "Logger.h"
 
 #include <libsolidity/ast/TypeProvider.h>
 
