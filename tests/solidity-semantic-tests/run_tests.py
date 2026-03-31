@@ -68,42 +68,48 @@ def setup_localnet():
 def _split_multi_source(sol_path):
     """Split multi-source test files (==== Source: name ====) into temp files.
 
-    Returns (main_source_path, import_dir) or (sol_path, None) if single-source.
+    Returns (main_source_path, [all_source_paths], import_dir) or (sol_path, [sol_path], None).
     """
     import tempfile
     content = sol_path.read_text()
     if "==== Source:" not in content:
-        return sol_path, None
+        return sol_path, [sol_path], None
 
     parts = re.split(r'^==== Source: (.+?) ====$', content, flags=re.MULTILINE)
     if len(parts) < 3:
-        return sol_path, None
+        return sol_path, [sol_path], None
 
     tmp_dir = Path(tempfile.mkdtemp(prefix="multisource_"))
+    all_sources = []
     last_name = None
     for i in range(1, len(parts), 2):
         name = parts[i].strip()
         body = parts[i + 1] if i + 1 < len(parts) else ""
         if "// ----" in body:
             body = body[:body.index("// ----")]
+        file_name = name if name.endswith(".sol") else name + ".sol"
         (tmp_dir / name).write_text(body)
-        if not name.endswith(".sol"):
-            (tmp_dir / (name + ".sol")).write_text(body)
+        (tmp_dir / file_name).write_text(body)
+        all_sources.append(tmp_dir / file_name)
         last_name = name
 
     main = last_name + ".sol" if not last_name.endswith(".sol") else last_name
-    return tmp_dir / main, tmp_dir
+    return tmp_dir / main, all_sources, tmp_dir
 
 
 def compile_test(sol_path: Path, out_dir: Path) -> dict | None:
     """Compile a .sol file. Returns dict of contract artifacts or None on failure."""
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    source_path, import_dir = _split_multi_source(sol_path)
+    source_path, all_sources, import_dir = _split_multi_source(sol_path)
 
-    cmd = [str(COMPILER), "--source", str(source_path),
-         "--output-dir", str(out_dir),
-         "--puya-path", str(PUYA)]
+    cmd = [str(COMPILER)]
+    # Pass all source files (main first, then auxiliary)
+    cmd += ["--source", str(source_path)]
+    for extra in all_sources:
+        if str(extra) != str(source_path):
+            cmd += ["--source", str(extra)]
+    cmd += ["--output-dir", str(out_dir), "--puya-path", str(PUYA)]
     if import_dir:
         cmd += ["--import-path", str(import_dir)]
 

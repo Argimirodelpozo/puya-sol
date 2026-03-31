@@ -137,7 +137,7 @@ std::string removeInheritedEvents(std::string const& _source, std::set<std::stri
 
 struct Options
 {
-	std::string sourceFile;
+	std::vector<std::string> sourceFiles;
 	std::vector<std::string> importPaths;
 	std::vector<std::string> remappings;
 	std::string outputDir = "out";
@@ -162,7 +162,7 @@ void printUsage(char const* _progName)
 		<< "Usage: " << _progName << " [options]\n"
 		<< "\n"
 		<< "Options:\n"
-		<< "  --source <file>        Solidity source file to compile (required)\n"
+		<< "  --source <file>        Solidity source file (required, repeatable for multi-file)\n"
 		<< "  --import-path <path>   Import path for resolving imports (repeatable)\n"
 		<< "  --remapping <map>      Import remapping: prefix=target (repeatable)\n"
 		<< "  --output-dir <dir>     Output directory (default: out)\n"
@@ -192,7 +192,7 @@ Options parseArgs(int _argc, char* _argv[])
 		std::string arg = _argv[i];
 
 		if (arg == "--source" && i + 1 < _argc)
-			opts.sourceFile = _argv[++i];
+			opts.sourceFiles.push_back(_argv[++i]);
 		else if (arg == "--import-path" && i + 1 < _argc)
 			opts.importPaths.push_back(_argv[++i]);
 		else if (arg == "--remapping" && i + 1 < _argc)
@@ -264,7 +264,7 @@ int main(int _argc, char* _argv[])
 		logger.setOutputLogFile(logPath);
 	}
 
-	if (opts.sourceFile.empty())
+	if (opts.sourceFiles.empty())
 	{
 		std::cerr << "Error: --source is required" << std::endl;
 		printUsage(_argv[0]);
@@ -277,8 +277,8 @@ int main(int _argc, char* _argv[])
 		return 1;
 	}
 
-	// Resolve absolute path
-	fs::path sourceAbsPath = fs::absolute(opts.sourceFile);
+	// Resolve absolute path (first source is the "main" source)
+	fs::path sourceAbsPath = fs::absolute(opts.sourceFiles[0]);
 	std::string sourceFile = sourceAbsPath.string();
 
 	// --split-test mode: parse Source/ExternalSource directives, write split files
@@ -519,8 +519,25 @@ int main(int _argc, char* _argv[])
 	// Set up CompilerStack with pragma-relaxing reader
 	solidity::frontend::CompilerStack compiler(relaxingReader);
 
-	// Set sources using the normalized source unit name
-	compiler.setSources({{sourceUnitName, mainSourceContent}});
+	// Set sources — main source + any additional source files
+	std::map<std::string, std::string> sources;
+	sources[sourceUnitName] = mainSourceContent;
+	for (size_t i = 1; i < opts.sourceFiles.size(); ++i)
+	{
+		fs::path extraPath = fs::absolute(opts.sourceFiles[i]);
+		std::ifstream extraFile(extraPath.string());
+		if (extraFile)
+		{
+			std::string extraContent((std::istreambuf_iterator<char>(extraFile)),
+				std::istreambuf_iterator<char>());
+			extraContent = transformSource(extraContent);
+			std::string extraUnit = fileReader.cliPathToSourceUnitName(extraPath);
+			sources[extraUnit] = extraContent;
+			fileReader.addOrUpdateFile(extraPath, extraContent);
+			logger.info("Additional source: " + extraUnit);
+		}
+	}
+	compiler.setSources(sources);
 
 	// Configure EVM version — use Cancun to support block.chainid, block.basefee, etc.
 	auto evmVer = solidity::langutil::EVMVersion::cancun();
