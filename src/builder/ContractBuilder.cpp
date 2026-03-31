@@ -1110,6 +1110,27 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 						val->value = "0";
 						defaultVal = val;
 					}
+					else if (wtype->kind() == awst::WTypeKind::ReferenceArray)
+					{
+						// Fixed-size array → NewArray with default elements
+						auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(wtype);
+						auto arr = std::make_shared<awst::NewArray>();
+						arr->sourceLocation = method.sourceLocation;
+						arr->wtype = wtype;
+						if (refArr && refArr->arraySize())
+						{
+							for (int i = 0; i < *refArr->arraySize(); ++i)
+								arr->values.push_back(
+									StorageMapper::makeDefaultValue(refArr->elementType(), method.sourceLocation));
+						}
+						defaultVal = arr;
+					}
+					else if (wtype->kind() == awst::WTypeKind::ARC4Struct
+						|| wtype->kind() == awst::WTypeKind::WTuple)
+					{
+						// Struct → use StorageMapper's default
+						defaultVal = StorageMapper::makeDefaultValue(wtype, method.sourceLocation);
+					}
 					else
 					{
 						// bytes or other → empty bytes
