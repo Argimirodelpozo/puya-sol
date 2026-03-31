@@ -4,14 +4,14 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/operators/compound_assign_transient_storage.sol.test.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 "value1" "value2" 0x
+    bytecblock "value1" "value2" 0x
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "value1"
-    bytec_3 // 0x
+    bytec_0 // "value1"
+    bytec_2 // 0x
     app_global_put
-    bytec_2 // "value2"
-    bytec_3 // 0x
+    bytec_1 // "value2"
+    bytec_2 // 0x
     app_global_put
     intc_1 // 1
     return
@@ -53,38 +53,28 @@ f:
     ==
     assert // invalid number of bytes for arc4.uint256
     intc_2 // 0
-    bytec_1 // "value1"
+    bytec_0 // "value1"
     app_global_get_ex
     assert // check value1 exists
     dig 2
     b+
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bytec_1 // "value1"
+    bytec_0 // "value1"
     dig 1
     app_global_put
     swap
     uncover 2
     b*
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     intc_2 // 0
-    bytec_2 // "value2"
+    bytec_1 // "value2"
     app_global_get_ex
     assert // check value2 exists
     swap
     uncover 2
     b+
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     b+
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     pushbytes 0x07
     b+
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bytec_2 // "value2"
+    bytec_1 // "value2"
     dig 1
     app_global_put
     dup

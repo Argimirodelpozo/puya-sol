@@ -34,7 +34,15 @@ main_sum_route@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_fixed_bytes.sol.L.add(a: bytes, b: bytes) -> bytes:
 L.add:
     proto 2 1
-    pushbytes ""
+    frame_dig -2
+    btoi
+    frame_dig -1
+    btoi
+    +
+    dup
+    pushint 65535
+    <=
+    assert // overflow
     itob
     extract 6 2
     retsub

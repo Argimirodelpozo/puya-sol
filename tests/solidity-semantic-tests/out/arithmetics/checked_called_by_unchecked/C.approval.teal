@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/checked_called_by_unchecked.sol.C.approval_program() -> uint64:
 main:
-    intcblock 8 1
-    bytecblock "" 0x151f7c75
+    intcblock 8 1 65535
+    bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -32,18 +32,26 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/checked_called_by_unchecked.sol.C.add[routing]() -> void:
 add:
     txna ApplicationArgs 1
+    dup
     len
     intc_0 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    btoi
     txna ApplicationArgs 2
+    dup
     len
     intc_0 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    bytec_0 // ""
+    btoi
+    +
+    dup
+    intc_2 // 65535
+    <=
+    assert // overflow
     itob
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -54,15 +62,19 @@ add:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/checked_called_by_unchecked.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
+    dup
     len
     intc_0 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    btoi
     txna ApplicationArgs 2
+    dup
     len
     intc_0 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    btoi
     txna ApplicationArgs 3
     dup
     len
@@ -70,12 +82,17 @@ f:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bytec_0 // ""
+    cover 2
+    +
+    dup
+    intc_2 // 65535
+    <=
+    assert // overflow
     +
     pushint 65536
     %
     itob
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log

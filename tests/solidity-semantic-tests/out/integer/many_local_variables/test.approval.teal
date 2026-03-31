@@ -4,7 +4,6 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/many_local_variables.sol.test.approval_program() -> uint64:
 main:
     intcblock 32 1
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -52,28 +51,28 @@ run:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    pushbytes ""
+    pushint 0
+    assert // overflow
+    pushint 273
     itob
     uncover 3
     b+
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
+    dup
+    pushbytes 0xffff
+    b<=
+    assert // overflow
     dig 2
     b+
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     b+
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     pushint 16
     itob
     uncover 2
     b+
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
+    dup
+    pushbytes 0xff
+    b<=
+    assert // overflow
     b+
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     dup
     len
     intc_0 // 32

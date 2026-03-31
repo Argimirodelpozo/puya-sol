@@ -646,11 +646,11 @@
                   "immutable": true
                 },
                 "left": {
-                  "_type": "BigUIntBinaryOperation",
+                  "_type": "VarExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_internal_function_with_multislot_arguments_via_pointer.sol",
                     "line": 279,
-                    "end_line": 284,
+                    "end_line": 280,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
@@ -660,48 +660,14 @@
                     "name": "biguint",
                     "immutable": true
                   },
-                  "left": {
-                    "_type": "VarExpression",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_internal_function_with_multislot_arguments_via_pointer.sol",
-                      "line": 279,
-                      "end_line": 280,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
-                    },
-                    "name": "a"
-                  },
-                  "op": "+",
-                  "right": {
-                    "_type": "VarExpression",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_internal_function_with_multislot_arguments_via_pointer.sol",
-                      "line": 283,
-                      "end_line": 284,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
-                    },
-                    "name": "b"
-                  }
+                  "name": "a"
                 },
-                "op": "%",
+                "op": "+",
                 "right": {
-                  "_type": "IntegerConstant",
+                  "_type": "VarExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_internal_function_with_multislot_arguments_via_pointer.sol",
-                    "line": 279,
+                    "line": 283,
                     "end_line": 284,
                     "comment_lines": 0,
                     "column": null,
@@ -712,8 +678,7 @@
                     "name": "biguint",
                     "immutable": true
                   },
-                  "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
-                  "teal_alias": null
+                  "name": "b"
                 }
               }
             }
@@ -1052,7 +1017,7 @@
                   "immutable": true
                 },
                 "left": {
-                  "_type": "BigUIntBinaryOperation",
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_internal_function_with_multislot_arguments_via_pointer.sol",
                     "line": 705,
@@ -1066,8 +1031,8 @@
                     "name": "biguint",
                     "immutable": true
                   },
-                  "left": {
-                    "_type": "ReinterpretCast",
+                  "expr": {
+                    "_type": "IntrinsicCall",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_internal_function_with_multislot_arguments_via_pointer.sol",
                       "line": 705,
@@ -1077,106 +1042,36 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
                     },
-                    "expr": {
-                      "_type": "IntrinsicCall",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_internal_function_with_multislot_arguments_via_pointer.sol",
-                        "line": 705,
-                        "end_line": 775,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
-                      },
-                      "op_code": "itob",
-                      "immediates": [],
-                      "stack_args": [
-                        {
-                          "_type": "VoidConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_internal_function_with_multislot_arguments_via_pointer.sol",
-                            "line": 705,
-                            "end_line": 746,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "void",
-                            "immutable": true
-                          }
+                    "op_code": "itob",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "VoidConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_internal_function_with_multislot_arguments_via_pointer.sol",
+                          "line": 705,
+                          "end_line": 746,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "void",
+                          "immutable": true
                         }
-                      ]
-                    }
-                  },
-                  "op": "+",
-                  "right": {
-                    "_type": "ReinterpretCast",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_internal_function_with_multislot_arguments_via_pointer.sol",
-                      "line": 705,
-                      "end_line": 775,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
-                    },
-                    "expr": {
-                      "_type": "IntrinsicCall",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_internal_function_with_multislot_arguments_via_pointer.sol",
-                        "line": 705,
-                        "end_line": 775,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
-                      },
-                      "op_code": "itob",
-                      "immediates": [],
-                      "stack_args": [
-                        {
-                          "_type": "VoidConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_internal_function_with_multislot_arguments_via_pointer.sol",
-                            "line": 749,
-                            "end_line": 775,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "void",
-                            "immutable": true
-                          }
-                        }
-                      ]
-                    }
+                      }
+                    ]
                   }
                 },
-                "op": "%",
+                "op": "+",
                 "right": {
-                  "_type": "IntegerConstant",
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_internal_function_with_multislot_arguments_via_pointer.sol",
                     "line": 705,
@@ -1190,8 +1085,43 @@
                     "name": "biguint",
                     "immutable": true
                   },
-                  "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
-                  "teal_alias": null
+                  "expr": {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_internal_function_with_multislot_arguments_via_pointer.sol",
+                      "line": 705,
+                      "end_line": 775,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "op_code": "itob",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "VoidConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/call_internal_function_with_multislot_arguments_via_pointer.sol",
+                          "line": 749,
+                          "end_line": 775,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "void",
+                          "immutable": true
+                        }
+                      }
+                    ]
+                  }
                 }
               }
             }

@@ -44,8 +44,6 @@ f:
     ==
     assert // invalid number of bytes for arc4.uint256
     b+
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     dup
     len
     intc_0 // 32
@@ -65,16 +63,24 @@ f:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/detect_add_overflow.sol.C.g[routing]() -> void:
 g:
     txna ApplicationArgs 1
+    dup
     len
     intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    btoi
     txna ApplicationArgs 2
+    dup
     len
     intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    pushbytes ""
+    btoi
+    +
+    dup
+    pushint 255
+    <=
+    assert // overflow
     itob
     bytec_0 // 0x151f7c75
     swap

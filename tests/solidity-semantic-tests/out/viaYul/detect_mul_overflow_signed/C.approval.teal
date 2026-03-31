@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/detect_mul_overflow_signed.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 8
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -44,8 +44,6 @@ f:
     ==
     assert // invalid number of bytes for arc4.uint256
     b*
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     dup
     len
     intc_0 // 32
@@ -54,7 +52,7 @@ f:
     intc_0 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -88,7 +86,7 @@ g:
     bz g_ternary_false@3
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 g_ternary_merge@4:
@@ -100,7 +98,7 @@ g_ternary_merge@4:
     intc_0 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -126,8 +124,6 @@ h:
     ==
     assert // invalid number of bytes for arc4.uint256
     b*
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     dup
     len
     intc_0 // 32
@@ -136,7 +132,7 @@ h:
     intc_0 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/erc20.sol.ERC20.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock 0x 0x0000000000000000000000000000000000000000000000000000000000000000 "_allowances" 0x151f7c7580 "_totalSupply" "_balances" "__ctor_pending" 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x28918861
+    bytecblock 0x 0x0000000000000000000000000000000000000000000000000000000000000000 "_allowances" 0x151f7c7580 "_totalSupply" "_balances" "__ctor_pending" 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x28918861
     txn ApplicationID
     bnz main_after_if_else@2
     bytec 4 // "_totalSupply"
@@ -41,8 +41,6 @@ FixedMath.add:
     frame_dig -2
     frame_dig -1
     b+
-    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     retsub
 
 
@@ -54,11 +52,11 @@ FixedMath.sub:
     b>=
     assert // underflow
     frame_dig -2
-    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     frame_dig -1
     b-
-    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     retsub
 
@@ -130,7 +128,7 @@ totalSupply:
     intc_0 // 32
     bzero
     b|
-    bytec 8 // 0x151f7c75
+    bytec 7 // 0x151f7c75
     swap
     concat
     log
@@ -162,7 +160,7 @@ balanceOf:
     intc_0 // 32
     bzero
     b|
-    bytec 8 // 0x151f7c75
+    bytec 7 // 0x151f7c75
     swap
     concat
     log
@@ -201,7 +199,7 @@ allowance:
     intc_0 // 32
     bzero
     b|
-    bytec 8 // 0x151f7c75
+    bytec 7 // 0x151f7c75
     swap
     concat
     log

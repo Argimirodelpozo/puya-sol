@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/fixedpoint.sol.TestFixedMath.approval_program() -> uint64:
 main:
     intcblock 32 1
-    bytecblock 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x0de0b6b3a7640000
+    bytecblock 0x151f7c75 0x0de0b6b3a7640000
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -35,8 +35,6 @@ FixedMath.add:
     frame_dig -2
     frame_dig -1
     b+
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     retsub
 
 
@@ -46,8 +44,6 @@ FixedMath.mul:
     frame_dig -2
     frame_dig -1
     b*
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     retsub
 
 
@@ -55,7 +51,7 @@ FixedMath.mul:
 FixedMath.floor:
     proto 1 1
     frame_dig -1
-    bytec_2 // 0x0de0b6b3a7640000
+    bytec_1 // 0x0de0b6b3a7640000
     b/
     retsub
 
@@ -64,10 +60,8 @@ FixedMath.floor:
 FixedMath.toUFixed256x18:
     proto 1 1
     frame_dig -1
-    bytec_2 // 0x0de0b6b3a7640000
+    bytec_1 // 0x0de0b6b3a7640000
     b*
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     retsub
 
 

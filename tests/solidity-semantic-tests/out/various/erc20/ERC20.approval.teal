@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/erc20.sol.ERC20.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock 0x 0x010000000000000000000000000000000000000000000000000000000000000000 "_allowances" 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c7580 "_totalSupply" "_balances" "__ctor_pending" 0x151f7c75 0x28918861
+    bytecblock 0x "_allowances" 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c7580 "_totalSupply" "_balances" "__ctor_pending" 0x151f7c75 0x28918861
     txn ApplicationID
     bnz main_after_if_else@2
     bytec 5 // "_totalSupply"
@@ -56,8 +56,6 @@ __postInit:
     assert // check _totalSupply exists
     dig 1
     b+
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     bytec 5 // "_totalSupply"
     swap
     app_global_put
@@ -73,8 +71,6 @@ __postInit:
     select
     uncover 2
     b+
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     dig 1
     box_del
     pop
@@ -162,7 +158,7 @@ allowance:
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     concat
     sha256
-    bytec_2 // "_allowances"
+    bytec_1 // "_allowances"
     swap
     concat
     box_get
@@ -259,7 +255,7 @@ transferFrom:
     txn Sender
     concat
     sha256
-    bytec_2 // "_allowances"
+    bytec_1 // "_allowances"
     swap
     concat
     box_get
@@ -274,18 +270,18 @@ transferFrom:
     txn Sender
     concat
     sha256
-    bytec_2 // "_allowances"
+    bytec_1 // "_allowances"
     swap
     concat
     box_get
     bytec_0 // 0x
     cover 2
     select
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     uncover 2
     b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     callsub _approve
     bytec 4 // 0x151f7c7580
@@ -313,7 +309,7 @@ increaseAllowance:
     dig 3
     concat
     sha256
-    bytec_2 // "_allowances"
+    bytec_1 // "_allowances"
     swap
     concat
     box_get
@@ -322,8 +318,6 @@ increaseAllowance:
     select
     uncover 2
     b+
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     swap
     cover 2
     callsub _approve
@@ -351,7 +345,7 @@ decreaseAllowance:
     dig 2
     concat
     sha256
-    bytec_2 // "_allowances"
+    bytec_1 // "_allowances"
     swap
     concat
     box_get
@@ -366,18 +360,18 @@ decreaseAllowance:
     dig 3
     concat
     sha256
-    bytec_2 // "_allowances"
+    bytec_1 // "_allowances"
     swap
     concat
     box_get
     bytec_0 // 0x
     cover 2
     select
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     uncover 2
     b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     swap
     cover 2
@@ -409,11 +403,11 @@ _transfer:
     frame_dig -1
     b>=
     assert // underflow
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     frame_dig -1
     b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dig 1
     box_del
@@ -431,8 +425,6 @@ _transfer:
     select
     frame_dig -1
     b+
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     dig 1
     box_del
     pop
@@ -474,7 +466,7 @@ _approve:
     concat
     dup
     sha256
-    bytec_2 // "_allowances"
+    bytec_1 // "_allowances"
     swap
     concat
     dup

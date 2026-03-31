@@ -72,16 +72,24 @@ f:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/detect_sub_overflow.sol.C.g[routing]() -> void:
 g:
     txna ApplicationArgs 1
+    dup
     len
     intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    btoi
     txna ApplicationArgs 2
+    dup
     len
     intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    pushbytes ""
+    btoi
+    -
+    dup
+    pushint 255
+    <=
+    assert // overflow
     itob
     bytec_1 // 0x151f7c75
     swap
