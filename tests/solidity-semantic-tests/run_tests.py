@@ -622,23 +622,6 @@ def execute_call(app, call, app_spec=None, verbose=False):
                 if len(a_bytes) < expected_size:
                     a_bytes = b'\x00' * (expected_size - len(a_bytes)) + a_bytes
                 args.append(list(a_bytes))
-            elif isinstance(a, int):
-                # For SIGNED sub-256-bit types only: truncate two's complement.
-                # parse_value("-1") returns 2^256-1, but int8 param needs 255 (= 2^8-1).
-                # Only truncate for intN (signed), NOT uintN (unsigned).
-                import re as _re3
-                sol_sig_match = _re3.match(r'\w+\(([^)]*)\)', call.method_signature)
-                if sol_sig_match:
-                    sol_params = sol_sig_match.group(1).split(',')
-                    if i < len(sol_params):
-                        sol_pt = sol_params[i].strip()
-                        # Match intN (signed) but NOT uintN (unsigned)
-                        bm = _re3.match(r'int(\d+)$', sol_pt)
-                        if bm:
-                            bits = int(bm.group(1))
-                            if bits < 256 and a >= 2**bits:
-                                a = a % (2 ** bits)
-                args.append(a)
             elif isinstance(a, int) and param_types.get(i) == 'address':
                 # int → address: encode as 32-byte Algorand address
                 from algosdk import encoding
