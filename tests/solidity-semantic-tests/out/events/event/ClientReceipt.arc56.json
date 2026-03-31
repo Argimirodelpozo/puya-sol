@@ -1,0 +1,139 @@
+{
+    "name": "ClientReceipt",
+    "structs": {},
+    "methods": [
+        {
+            "name": "deposit",
+            "args": [
+                {
+                    "type": "byte[32]",
+                    "name": "_id"
+                },
+                {
+                    "type": "bool",
+                    "name": "_manually"
+                }
+            ],
+            "returns": {
+                "type": "void"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "events": [
+                {
+                    "name": "Deposit",
+                    "args": [
+                        {
+                            "type": "uint8[32]",
+                            "name": "_from"
+                        },
+                        {
+                            "type": "uint8[32]",
+                            "name": "_id"
+                        },
+                        {
+                            "type": "uint64",
+                            "name": "_value"
+                        }
+                    ]
+                }
+            ],
+            "recommendations": {}
+        }
+    ],
+    "arcs": [
+        22,
+        28
+    ],
+    "networks": {},
+    "state": {
+        "schema": {
+            "global": {
+                "ints": 0,
+                "bytes": 0
+            },
+            "local": {
+                "ints": 0,
+                "bytes": 0
+            }
+        },
+        "keys": {
+            "global": {},
+            "local": {},
+            "box": {}
+        },
+        "maps": {
+            "global": {},
+            "local": {},
+            "box": {}
+        }
+    },
+    "bareActions": {
+        "create": [],
+        "call": []
+    },
+    "sourceInfo": {
+        "approval": {
+            "sourceInfo": [
+                {
+                    "pc": [
+                        97
+                    ],
+                    "errorMessage": "invalid number of bytes for arc4.bool"
+                },
+                {
+                    "pc": [
+                        89
+                    ],
+                    "errorMessage": "invalid number of bytes for arc4.static_array<arc4.uint8, 32>"
+                }
+            ],
+            "pcOffsetMethod": "none"
+        },
+        "clear": {
+            "sourceInfo": [],
+            "pcOffsetMethod": "none"
+        }
+    },
+    "source": {
+        "approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyAvaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvdGVzdHMvc29saWRpdHktc2VtYW50aWMtdGVzdHMvdGVzdHMvZXZlbnRzL2V2ZW50LnNvbC5DbGllbnRSZWNlaXB0LmFwcHJvdmFsX3Byb2dyYW0oKSAtPiB1aW50NjQ6Cm1haW46CiAgICBpbnRjYmxvY2sgMSAzMgogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGJueiBtYWluX2FmdGVyX2lmX2Vsc2VAMgogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl9hZnRlcl9pZl9lbHNlQDI6CiAgICBwdXNoaW50IDQwOTYKICAgIGJ6ZXJvCiAgICBzdG9yZSAwCiAgICBsb2FkIDAKICAgIHB1c2hieXRlcyAweDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwODAKICAgIHJlcGxhY2UyIDY0CiAgICBzdG9yZSAwCiAgICBwdXNoYnl0ZXMgMHhiNmJiNTVhNyAvLyBtZXRob2QgImRlcG9zaXQoYnl0ZVszMl0sYm9vbCl2b2lkIgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAogICAgbWF0Y2ggbWFpbl9kZXBvc2l0X3JvdXRlQDQKICAgIGVycgoKbWFpbl9kZXBvc2l0X3JvdXRlQDQ6CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgJiYKICAgIGFzc2VydAogICAgYiBkZXBvc2l0CgoKLy8gL2hvbWUvYXJnaS9BbGdvcmFuZEZvdW5kYXRpb24vU2lkZVByb2plY3RzL3B1eWEtc29sL3B1eWEtc29sL3Rlc3RzL3NvbGlkaXR5LXNlbWFudGljLXRlc3RzL3Rlc3RzL2V2ZW50cy9ldmVudC5zb2wuQ2xpZW50UmVjZWlwdC5kZXBvc2l0W3JvdXRpbmddKCkgLT4gdm9pZDoKZGVwb3NpdDoKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDEKICAgIGR1cAogICAgbGVuCiAgICBpbnRjXzEgLy8gMzIKICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIGFyYzQuc3RhdGljX2FycmF5PGFyYzQudWludDgsIDMyPgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMgogICAgZHVwCiAgICBsZW4KICAgIGludGNfMCAvLyAxCiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBhcmM0LmJvb2wKICAgIHB1c2hpbnQgMAogICAgZ2V0Yml0CiAgICBieiBkZXBvc2l0X2Vsc2VfYm9keUAzCiAgICB0eG4gR3JvdXBJbmRleAogICAgaW50Y18wIC8vIDEKICAgIC0KICAgIGd0eG5zIEFtb3VudAogICAgaXRvYgogICAgbG9hZCAwCiAgICBpbnRjXzEgLy8gMzIKICAgIGJ6ZXJvCiAgICB1bmNvdmVyIDIKICAgIGNvbmNhdAogICAgZHVwCiAgICBsZW4KICAgIGludGNfMSAvLyAzMgogICAgLQogICAgaW50Y18xIC8vIDMyCiAgICBleHRyYWN0MwogICAgcmVwbGFjZTIgMAogICAgc3RvcmUgMAoKZGVwb3NpdF9hZnRlcl9pZl9lbHNlQDQ6CiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgpkZXBvc2l0X2Vsc2VfYm9keUAzOgogICAgdHhuIFNlbmRlcgogICAgdHhuIEdyb3VwSW5kZXgKICAgIGludGNfMCAvLyAxCiAgICAtCiAgICBndHhucyBBbW91bnQKICAgIGl0b2IKICAgIHN3YXAKICAgIGRpZyAyCiAgICBjb25jYXQKICAgIHN3YXAKICAgIGNvbmNhdAogICAgcHVzaGJ5dGVzIDB4N2UwODAwNjcgLy8gbWV0aG9kICJEZXBvc2l0KGFkZHJlc3MsYnl0ZVszMl0sdWludDI1NikiCiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgYiBkZXBvc2l0X2FmdGVyX2lmX2Vsc2VANAo=",
+        "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyAvaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvdGVzdHMvc29saWRpdHktc2VtYW50aWMtdGVzdHMvdGVzdHMvZXZlbnRzL2V2ZW50LnNvbC5DbGllbnRSZWNlaXB0LmNsZWFyX3N0YXRlX3Byb2dyYW0oKSAtPiB1aW50NjQ6Cm1haW46CiAgICBwdXNoaW50IDEKICAgIHJldHVybgo="
+    },
+    "byteCode": {
+        "approval": "CiACASAxGEAAAiJDgYAgrzUANACAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAXEA1AIAEtrtVpzYaAI4BAAEAMRkUMRgQREIAADYaAUkVIxJENhoCSRUiEkSBAFNBABoxFiIJOAgWNAAjr08CUEkVIwkjWFwANQAiQzEAMRYiCTgIFkxLAlBMUIAEfggAZ0xQsEL/4w==",
+        "clear": "CoEBQw=="
+    },
+    "compilerInfo": {
+        "compiler": "puya",
+        "compilerVersion": {
+            "major": 5,
+            "minor": 7,
+            "patch": 1
+        }
+    },
+    "events": [
+        {
+            "name": "Deposit",
+            "args": [
+                {
+                    "type": "uint8[32]",
+                    "name": "_from"
+                },
+                {
+                    "type": "uint8[32]",
+                    "name": "_id"
+                },
+                {
+                    "type": "uint64",
+                    "name": "_value"
+                }
+            ]
+        }
+    ],
+    "templateVariables": {}
+}

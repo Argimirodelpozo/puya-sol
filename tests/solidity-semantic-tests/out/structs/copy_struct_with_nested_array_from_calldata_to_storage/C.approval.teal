@@ -3,10 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/copy_struct_with_nested_array_from_calldata_to_storage.sol.C.approval_program() -> uint64:
 main:
-    intcblock 8 0 1 2
+    intcblock 8 0 1
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytess "s" 0x
+    pushbytess "s" 0x0000000000000000000a0000
     app_global_put
     intc_2 // 1
     return
@@ -69,15 +69,16 @@ test:
     pushint 3
     ==
     assert
-    intc_3 // 2
+    pushint 2
     intc_1 // 0
     extract3
     dup
     len
     intc_0 // 8
     /
-    intc_3 // 2
-    ==
+    itob
+    pushbytes 0x02
+    b==
     assert
     dup
     intc_1 // 0

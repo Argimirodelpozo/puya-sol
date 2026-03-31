@@ -1,0 +1,162 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_uint_bytes.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 2 8
+    bytecblock 0xd110edaf 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    bytec_0 // method "removeSignature(byte[])byte[]"
+    pushbytess 0x07a5a31b 0xd27922c6 0x38b8b62f 0x12d76492 // method "g(byte[2],byte[2],byte[2])void", method "h(uint64,uint64)void", method "f()byte[]", method "f2()byte[]"
+    txna ApplicationArgs 0
+    match removeSignature g h f f2
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_uint_bytes.sol.C.removeSignature[routing]() -> void:
+removeSignature:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 6 0
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_uint_bytes.sol.C.g[routing]() -> void:
+g:
+    txna ApplicationArgs 1
+    len
+    intc_2 // 2
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 2>
+    txna ApplicationArgs 2
+    len
+    intc_2 // 2
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 2>
+    txna ApplicationArgs 3
+    len
+    intc_2 // 2
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 2>
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_uint_bytes.sol.C.h[routing]() -> void:
+h:
+    txna ApplicationArgs 1
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    txna ApplicationArgs 2
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_uint_bytes.sol.C.f[routing]() -> void:
+f:
+    itxn_begin
+    global CurrentApplicationAddress
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_0 // method "removeSignature(byte[])byte[]"
+    itxn_field ApplicationArgs
+    pushbytes 0x001007a5a31b000000000000123461621234
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_uint_bytes.sol.C.f2[routing]() -> void:
+f2:
+    itxn_begin
+    global CurrentApplicationAddress
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_0 // method "removeSignature(byte[])byte[]"
+    itxn_field ApplicationArgs
+    pushbytes 0x0014d27922c600000000000012340000000000001234
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

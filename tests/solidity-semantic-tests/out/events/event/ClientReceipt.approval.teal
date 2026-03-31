@@ -1,0 +1,90 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event.sol.ClientReceipt.approval_program() -> uint64:
+main:
+    intcblock 1 32
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0xb6bb55a7 // method "deposit(byte[32],bool)void"
+    txna ApplicationArgs 0
+    match main_deposit_route@4
+    err
+
+main_deposit_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b deposit
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event.sol.ClientReceipt.deposit[routing]() -> void:
+deposit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    pushint 0
+    getbit
+    bz deposit_else_body@3
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    itob
+    load 0
+    intc_1 // 32
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    replace2 0
+    store 0
+
+deposit_after_if_else@4:
+    intc_0 // 1
+    return
+
+deposit_else_body@3:
+    txn Sender
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    itob
+    swap
+    dig 2
+    concat
+    swap
+    concat
+    pushbytes 0x7e080067 // method "Deposit(address,byte[32],uint256)"
+    swap
+    concat
+    log
+    b deposit_after_if_else@4
