@@ -917,7 +917,14 @@ def _compare_values(actual, expected):
                 return True
             return False
     if isinstance(expected, int) and isinstance(actual, str):
-        # String return compared to int (e.g. EVM dynamic encoding offset/length)
+        # Address return: Algorand address string → decode to 32 bytes → int
+        try:
+            addr_bytes = encoding.decode_address(actual)
+            addr_int = int.from_bytes(addr_bytes, 'big')
+            if addr_int == expected:
+                return True
+        except Exception:
+            pass
         return False
     if isinstance(actual, str) and isinstance(expected, str):
         return actual == expected
