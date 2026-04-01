@@ -680,6 +680,16 @@ def execute_call(app, call, app_spec=None, verbose=False):
                 from algosdk import encoding
                 a_bytes = a.to_bytes(32, 'big')
                 args.append(encoding.encode_address(a_bytes))
+            elif isinstance(a, int) and a >= 2**64:
+                # Large two's complement value (e.g., -2 → 2^256-2) for uint64 param.
+                # Truncate to param's bit width for proper signed→unsigned conversion.
+                pt = param_types.get(i, '')
+                import re as _re_trunc
+                uint_match = _re_trunc.match(r'uint(\d+)', pt)
+                if uint_match:
+                    bit_width = int(uint_match.group(1))
+                    a = a % (2 ** bit_width)
+                args.append(a)
             else:
                 args.append(a)
 

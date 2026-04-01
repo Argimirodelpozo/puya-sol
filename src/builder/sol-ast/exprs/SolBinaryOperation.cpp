@@ -262,6 +262,25 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 	_left = ensureBiguint(std::move(_left));
 	_right = ensureBiguint(std::move(_right));
 
+	// Mask operands to N bits — uint64 two's complement values may be larger
+	// than 2^N (e.g., int8(-2) is uint64(2^64-2)). Modular arithmetic requires
+	// operands in [0, 2^N) range.
+	if (bits < 256)
+	{
+		auto maskOp = [&](std::shared_ptr<awst::Expression> val)
+			-> std::shared_ptr<awst::Expression> {
+			auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
+			mod->sourceLocation = m_loc;
+			mod->wtype = awst::WType::biguintType();
+			mod->left = std::move(val);
+			mod->op = awst::BigUIntBinaryOperator::Mod;
+			mod->right = makeBiguintConst(pow2NStr);
+			return mod;
+		};
+		_left = maskOp(std::move(_left));
+		_right = maskOp(std::move(_right));
+	}
+
 	// Step 1: Perform unsigned operation (all in biguint)
 	// For subtraction: compute (a + 2^N - b) instead of (a - b) to avoid negative biguint.
 	std::shared_ptr<awst::Expression> rawResult;
