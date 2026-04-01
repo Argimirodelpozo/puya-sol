@@ -238,15 +238,47 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		e->right = std::move(_operand);
 		return e;
 	}
+	// For uint64 constant negation, produce two's complement biguint
+	if (_operand->wtype == awst::WType::uint64Type())
+	{
+		if (auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(_operand.get()))
+		{
+			solidity::u256 val(intConst->value);
+			if (val > 0)
+			{
+				static const std::string pow256Str =
+					"115792089237316195423570985008687907853269984665640564039457584007913129639936";
+				solidity::u256 pow256(pow256Str);
+				solidity::u256 negVal = pow256 - val;
+				std::ostringstream oss;
+				oss << negVal;
+				auto result = std::make_shared<awst::IntegerConstant>();
+				result->sourceLocation = m_loc;
+				result->wtype = awst::WType::biguintType();
+				result->value = oss.str();
+				return result;
+			}
+		}
+	}
 	auto zero2 = std::make_shared<awst::IntegerConstant>();
 	zero2->sourceLocation = m_loc;
-	zero2->wtype = awst::WType::uint64Type();
+	zero2->wtype = _operand->wtype;
 	zero2->value = "0";
-	auto e = std::make_shared<awst::UInt64BinaryOperation>();
+	if (_operand->wtype == awst::WType::uint64Type())
+	{
+		auto e = std::make_shared<awst::UInt64BinaryOperation>();
+		e->sourceLocation = m_loc;
+		e->wtype = awst::WType::uint64Type();
+		e->left = std::move(zero2);
+		e->op = awst::UInt64BinaryOperator::Sub;
+		e->right = std::move(_operand);
+		return e;
+	}
+	auto e = std::make_shared<awst::BigUIntBinaryOperation>();
 	e->sourceLocation = m_loc;
-	e->wtype = awst::WType::uint64Type();
+	e->wtype = awst::WType::biguintType();
 	e->left = std::move(zero2);
-	e->op = awst::UInt64BinaryOperator::Sub;
+	e->op = awst::BigUIntBinaryOperator::Sub;
 	e->right = std::move(_operand);
 	return e;
 }

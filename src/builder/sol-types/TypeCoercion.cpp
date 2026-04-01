@@ -123,20 +123,28 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint256(
 	auto promoted = implicitNumericCast(
 		std::move(_value), awst::WType::biguintType(), _loc);
 
-	// Mask to N bits: value & (2^N - 1)
-	solidity::u256 maskVal = (solidity::u256(1) << _bits) - 1;
-	auto maskConst = std::make_shared<awst::IntegerConstant>();
-	maskConst->sourceLocation = _loc;
-	maskConst->wtype = awst::WType::biguintType();
-	maskConst->value = maskVal.str();
+	// For 256-bit signed types, the value is already in two's complement form
+	// (from our signed arithmetic wrapping). No sign-extension needed.
+	if (_bits == 256)
+		return promoted;
 
-	auto masked = std::make_shared<awst::BigUIntBinaryOperation>();
-	masked->sourceLocation = _loc;
-	masked->wtype = awst::WType::biguintType();
-	masked->left = promoted;
-	masked->op = awst::BigUIntBinaryOperator::BitAnd;
-	masked->right = std::move(maskConst);
-	promoted = masked;
+	// Mask to N bits: value & (2^N - 1). Skip for 256-bit (already full width).
+	if (_bits < 256)
+	{
+		solidity::u256 maskVal = (solidity::u256(1) << _bits) - 1;
+		auto maskConst = std::make_shared<awst::IntegerConstant>();
+		maskConst->sourceLocation = _loc;
+		maskConst->wtype = awst::WType::biguintType();
+		maskConst->value = maskVal.str();
+
+		auto masked = std::make_shared<awst::BigUIntBinaryOperation>();
+		masked->sourceLocation = _loc;
+		masked->wtype = awst::WType::biguintType();
+		masked->left = promoted;
+		masked->op = awst::BigUIntBinaryOperator::BitAnd;
+		masked->right = std::move(maskConst);
+		promoted = masked;
+	}
 
 	// threshold = 2^(N-1)
 	solidity::u256 threshold = solidity::u256(1) << (_bits - 1);

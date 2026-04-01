@@ -79,10 +79,21 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::tryConstantFold()
 		if (!ratType->isFractional())
 		{
 			auto* resultType = m_ctx.typeMapper.map(m_binOp.annotation().type);
+			auto val = ratType->literalValue(nullptr);
 			auto e = std::make_shared<awst::IntegerConstant>();
 			e->sourceLocation = m_loc;
 			e->wtype = resultType;
-			e->value = ratType->literalValue(nullptr).str();
+			if (val < 0 && resultType == awst::WType::biguintType())
+			{
+				static const solidity::u256 pow256(
+					"115792089237316195423570985008687907853269984665640564039457584007913129639936");
+				solidity::u256 tcVal = pow256 + solidity::u256(val);
+				std::ostringstream oss;
+				oss << tcVal;
+				e->value = oss.str();
+			}
+			else
+				e->value = val.str();
 			return e;
 		}
 	}

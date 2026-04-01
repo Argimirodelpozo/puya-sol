@@ -5,6 +5,8 @@
 #include "builder/sol-types/TypeMapper.h"
 
 #include <libsolidity/ast/AST.h>
+#include <libsolutil/Numeric.h>
+#include <sstream>
 
 namespace puyasol::builder::sol_ast
 {
@@ -45,7 +47,21 @@ std::shared_ptr<awst::Expression> SolLiteral::toAwst()
 		e->sourceLocation = m_loc;
 		e->wtype = mappedType;
 		if (auto const* ratType = dynamic_cast<RationalNumberType const*>(m_solType))
-			e->value = ratType->literalValue(nullptr).str();
+		{
+			auto val = ratType->literalValue(nullptr);
+			if (val < 0 && mappedType == awst::WType::biguintType())
+			{
+				// Negative constant → two's complement for biguint
+				static const solidity::u256 pow256(
+					"115792089237316195423570985008687907853269984665640564039457584007913129639936");
+				solidity::u256 tcVal = pow256 + solidity::u256(val);
+				std::ostringstream oss;
+				oss << tcVal;
+				e->value = oss.str();
+			}
+			else
+				e->value = val.str();
+		}
 		else
 			e->value = m_literal.value();
 		return e;
