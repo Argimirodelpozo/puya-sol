@@ -276,8 +276,12 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
         # Store box refs on the client for use in subsequent calls
         app_client._box_refs = box_refs
         return app_client
-    except Exception:
+    except Exception as e:
+        # Store error on a module-level variable for the caller
+        deploy_contract._last_error = str(e)[:300]
         return None
+
+deploy_contract._last_error = ""
 
 
 SOL_TO_ARC4 = {
@@ -1089,7 +1093,8 @@ def run_test(test: SemanticTest, localnet, account, verbose=False, _budget_retry
     app = deploy_contract(localnet, account, artifacts,
                           ctor_args=ctor_args, fund_amount=ctor_value)
     if not app:
-        return "DEPLOY_ERROR", "deployment failed"
+        err = getattr(deploy_contract, '_last_error', '')
+        return "DEPLOY_ERROR", f"deployment failed: {err[:200]}" if err else "deployment failed"
 
     # On budget retry, set fee hint so execute_call uses enough fee for OpUp inner txns
     if ensure_budget:
