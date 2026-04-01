@@ -1,10 +1,9 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_4cphe097/s3.sol.C.approval_program() -> uint64:
+// /tmp/multisource_4jhhz6bm/s3.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32
-    bytecblock 0x068101
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -32,36 +31,15 @@ main_g_route@4:
     b g
 
 
-// /tmp/multisource_4cphe097/s3.sol.f() -> bytes:
+// /tmp/multisource_4jhhz6bm/s3.sol.f() -> bytes:
 f:
     pushint 1337
     itob
     retsub
 
 
-// /tmp/multisource_4cphe097/s3.sol.C.g[routing]() -> void:
+// /tmp/multisource_4jhhz6bm/s3.sol.C.g[routing]() -> void:
 g:
-
-g_while_top@2:
-    pushint 170010
-    global OpcodeBudget
-    >
-    bz g_after_while@7
-    itxn_begin
-    pushint 6 // appl
-    itxn_field TypeEnum
-    pushint 5 // DeleteApplication
-    itxn_field OnCompletion
-    bytec_0 // 0x068101
-    itxn_field ApprovalProgram
-    bytec_0 // 0x068101
-    itxn_field ClearStateProgram
-    pushint 0
-    itxn_field Fee
-    itxn_submit
-    b g_while_top@2
-
-g_after_while@7:
     callsub f
     dup
     len

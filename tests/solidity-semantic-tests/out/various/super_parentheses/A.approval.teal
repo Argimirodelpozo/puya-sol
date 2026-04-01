@@ -3,7 +3,6 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/super_parentheses.sol.A.approval_program() -> uint64:
 main:
-    bytecblock 0x068101
     txn ApplicationID
     bnz main_after_if_else@2
     pushint 1
@@ -28,32 +27,6 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b f
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/super_parentheses.sol.A.f[routing]() -> void:
-f:
-
-f_while_top@2:
-    pushint 170010
-    global OpcodeBudget
-    >
-    bz f_after_while@7
-    itxn_begin
-    pushint 6 // appl
-    itxn_field TypeEnum
-    pushint 5 // DeleteApplication
-    itxn_field OnCompletion
-    bytec_0 // 0x068101
-    itxn_field ApprovalProgram
-    bytec_0 // 0x068101
-    itxn_field ClearStateProgram
-    pushint 0
-    itxn_field Fee
-    itxn_submit
-    b f_while_top@2
-
-f_after_while@7:
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     log
     pushint 1

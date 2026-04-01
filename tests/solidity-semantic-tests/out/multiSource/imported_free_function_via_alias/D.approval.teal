@@ -1,10 +1,9 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_wwaqklb7/s2.sol.D.approval_program() -> uint64:
+// /tmp/multisource_b0wd6ehr/s2.sol.D.approval_program() -> uint64:
 main:
-    intcblock 1 6 32
-    bytecblock 0x068101
+    intcblock 1 32
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -32,22 +31,33 @@ main_g_route@4:
     b g
 
 
-// /tmp/multisource_wwaqklb7/s2.sol.f_28() -> bytes:
+// /tmp/multisource_b0wd6ehr/s2.sol.f_28() -> bytes:
 f:
-    intc_1 // 6
+    pushint 6
     itob
     retsub
 
 
-// /tmp/multisource_wwaqklb7/s2.sol.D.g[routing]() -> void:
+// /tmp/multisource_b0wd6ehr/s2.sol.f_56() -> bytes:
+/tmp/multisource_b0wd6ehr/s2.sol.f_56:
+    pushint 1337
+    itob
+    retsub
+
+
+// /tmp/multisource_b0wd6ehr/s2.sol.D.g[routing]() -> void:
 g:
-    callsub /tmp/multisource_wwaqklb7/s2.sol.D.g
+    callsub /tmp/multisource_b0wd6ehr/s2.sol.f_56
+    callsub f
+    pushbytes 0x2710
+    b*
+    b+
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -56,34 +66,3 @@ g:
     log
     intc_0 // 1
     return
-
-
-// /tmp/multisource_wwaqklb7/s2.sol.D.g() -> bytes:
-/tmp/multisource_wwaqklb7/s2.sol.D.g:
-
-/tmp/multisource_wwaqklb7/s2.sol.D.g_while_top@2:
-    pushint 170010
-    global OpcodeBudget
-    >
-    bz /tmp/multisource_wwaqklb7/s2.sol.D.g_after_while@7
-    itxn_begin
-    intc_1 // appl
-    itxn_field TypeEnum
-    pushint 5 // DeleteApplication
-    itxn_field OnCompletion
-    bytec_0 // 0x068101
-    itxn_field ApprovalProgram
-    bytec_0 // 0x068101
-    itxn_field ClearStateProgram
-    pushint 0
-    itxn_field Fee
-    itxn_submit
-    b /tmp/multisource_wwaqklb7/s2.sol.D.g_while_top@2
-
-/tmp/multisource_wwaqklb7/s2.sol.D.g_after_while@7:
-    callsub /tmp/multisource_wwaqklb7/s2.sol.D.g
-    callsub f
-    pushbytes 0x2710
-    b*
-    b+
-    retsub
