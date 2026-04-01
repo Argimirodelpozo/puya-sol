@@ -1153,29 +1153,46 @@ def main():
 
     results = {"PASS": 0, "FAIL": 0, "SKIP": 0, "COMPILE_ERROR": 0, "DEPLOY_ERROR": 0}
 
+    # Count total tests upfront for progress reporting
+    all_test_files = []
     for cat in categories:
         cat_dir = TESTS_DIR / cat
         if not cat_dir.exists():
             continue
-
         tests = sorted(cat_dir.glob("*.sol"))
         if args.limit:
             tests = tests[:args.limit]
+        all_test_files.extend((cat, t) for t in tests)
+    total_tests = len(all_test_files)
+    tests_done = 0
 
-        print(f"\n=== {cat} ({len(tests)} tests) ===")
+    current_cat = None
+    for cat, sol_file in all_test_files:
+        if cat != current_cat:
+            current_cat = cat
+            cat_count = sum(1 for c, _ in all_test_files if c == cat)
+            print(f"\n=== {cat} ({cat_count} tests) ===")
 
-        for sol_file in tests:
-            test = parse_test_file(sol_file)
-            try:
-                status, detail = run_test(test, localnet, account, args.verbose)
-            except Exception as e:
-                status, detail = "COMPILE_ERROR", str(e)
-            results[status] += 1
+        test = parse_test_file(sol_file)
+        try:
+            status, detail = run_test(test, localnet, account, args.verbose)
+        except Exception as e:
+            status, detail = "COMPILE_ERROR", str(e)
+        results[status] += 1
+        tests_done += 1
 
-            icon = {"PASS": "✓", "FAIL": "✗", "SKIP": "○",
-                    "COMPILE_ERROR": "⚠", "DEPLOY_ERROR": "⚠"}.get(status, "?")
-            short_detail = detail.split("\n")[0][:60]
-            print(f"  {icon} {test.name}: {short_detail}")
+        icon = {"PASS": "✓", "FAIL": "✗", "SKIP": "○",
+                "COMPILE_ERROR": "⚠", "DEPLOY_ERROR": "⚠"}.get(status, "?")
+        short_detail = detail.split("\n")[0][:60]
+        print(f"  {icon} {test.name}: {short_detail}")
+
+        # Progress report every 50 tests
+        if tests_done % 50 == 0:
+            pct = tests_done * 100 // total_tests
+            p = results["PASS"]
+            f = results["FAIL"]
+            ce = results["COMPILE_ERROR"]
+            print(f"  --- progress: {tests_done}/{total_tests} ({pct}%) | pass:{p} fail:{f} compile_err:{ce} ---", flush=True)
 
     print(f"\n{'='*50}")
     total = sum(results.values())
