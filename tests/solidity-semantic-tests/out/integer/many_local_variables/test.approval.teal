@@ -51,16 +51,10 @@ run:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    pushint 0
-    assert // overflow
     pushint 273
     itob
     uncover 3
     b+
-    dup
-    pushbytes 0xffff
-    b<=
-    assert // overflow
     dig 2
     b+
     b+
@@ -68,10 +62,6 @@ run:
     itob
     uncover 2
     b+
-    dup
-    pushbytes 0xff
-    b<=
-    assert // overflow
     b+
     dup
     len
