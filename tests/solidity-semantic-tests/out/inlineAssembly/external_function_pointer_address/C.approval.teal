@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_address.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 32
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -43,6 +43,17 @@ main_testFunction_route@5:
 testYul:
     pushint 0
     load 0
+    intc_1 // 32
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    swap
     store 0
     bytec_0 // 0x151f7c75
     swap

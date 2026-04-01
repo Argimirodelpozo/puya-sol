@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 0
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x 0x8000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x 0x8000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -32,8 +32,9 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.f[routing]() -> void:
 f:
     intc_2 // 0
-    dupn 2
+    dupn 8
     bytec_1 // ""
+    dupn 2
     txna ApplicationArgs 1
     dupn 2
     len
@@ -56,21 +57,21 @@ f:
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     dig 3
     b-
-    bury 7
+    bury 11
 
 f_ternary_merge@5:
     dig 1
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b>=
     dup
-    bury 5
+    bury 6
     bz f_ternary_false@7
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     dig 2
     b-
 
 f_ternary_merge@8:
-    dig 7
+    dig 11
     swap
     b%
     bytec_1 // 0x
@@ -81,17 +82,17 @@ f_ternary_merge@8:
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     dig 3
     b-
-    bury 6
+    bury 9
 
 f_ternary_merge@12:
-    dig 3
+    dig 4
     bz f_ternary_false@14
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     dig 2
     b-
 
 f_ternary_merge@15:
-    dig 6
+    dig 9
     swap
     b%
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -99,6 +100,67 @@ f_ternary_merge@15:
     b-
 
 f_ternary_merge@23:
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz f_ternary_false@47
+    dup
+    bz f_ternary_false@39
+    dup
+    bz f_ternary_false@27
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 3
+    b-
+    bury 7
+
+f_ternary_merge@28:
+    dig 1
+    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    bury 7
+    bz f_ternary_false@30
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 2
+    b-
+
+f_ternary_merge@31:
+    dig 7
+    swap
+    b%
+    bytec_1 // 0x
+    b==
+    bnz f_ternary_false@39
+    dup
+    bz f_ternary_false@34
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 3
+    b-
+    bury 15
+
+f_ternary_merge@35:
+    dig 5
+    bz f_ternary_false@37
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 2
+    b-
+
+f_ternary_merge@38:
+    dig 15
+    swap
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+
+f_ternary_merge@46:
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+f_ternary_merge@70:
     dup
     len
     intc_1 // 32
@@ -107,12 +169,167 @@ f_ternary_merge@23:
     intc_1 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
+
+f_ternary_false@37:
+    dig 1
+    b f_ternary_merge@38
+
+f_ternary_false@34:
+    dig 2
+    bury 15
+    b f_ternary_merge@35
+
+f_ternary_false@39:
+    dup
+    bz f_ternary_false@41
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 3
+    b-
+    bury 14
+
+f_ternary_merge@42:
+    dig 1
+    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz f_ternary_false@44
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 2
+    b-
+
+f_ternary_merge@45:
+    dig 14
+    swap
+    b%
+    b f_ternary_merge@46
+
+f_ternary_false@44:
+    dig 1
+    b f_ternary_merge@45
+
+f_ternary_false@41:
+    dig 2
+    bury 14
+    b f_ternary_merge@42
+
+f_ternary_false@30:
+    dig 1
+    b f_ternary_merge@31
+
+f_ternary_false@27:
+    dig 2
+    bury 7
+    b f_ternary_merge@28
+
+f_ternary_false@47:
+    dup
+    bz f_ternary_false@62
+    dup
+    bz f_ternary_false@50
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 3
+    b-
+    bury 13
+
+f_ternary_merge@51:
+    dig 1
+    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    bury 5
+    bz f_ternary_false@53
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 2
+    b-
+
+f_ternary_merge@54:
+    dig 13
+    swap
+    b%
+    bytec_1 // 0x
+    b==
+    bnz f_ternary_false@62
+    dup
+    bz f_ternary_false@57
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 3
+    b-
+    bury 12
+
+f_ternary_merge@58:
+    dig 3
+    bz f_ternary_false@60
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 2
+    b-
+
+f_ternary_merge@61:
+    dig 12
+    swap
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+
+f_ternary_merge@69:
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    b f_ternary_merge@70
+
+f_ternary_false@60:
+    dig 1
+    b f_ternary_merge@61
+
+f_ternary_false@57:
+    dig 2
+    bury 12
+    b f_ternary_merge@58
+
+f_ternary_false@62:
+    dup
+    bz f_ternary_false@64
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 3
+    b-
+    bury 10
+
+f_ternary_merge@65:
+    dig 1
+    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz f_ternary_false@67
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 2
+    b-
+
+f_ternary_merge@68:
+    dig 10
+    swap
+    b%
+    b f_ternary_merge@69
+
+f_ternary_false@67:
+    dig 1
+    b f_ternary_merge@68
+
+f_ternary_false@64:
+    dig 2
+    bury 10
+    b f_ternary_merge@65
+
+f_ternary_false@53:
+    dig 1
+    b f_ternary_merge@54
+
+f_ternary_false@50:
+    dig 2
+    bury 13
+    b f_ternary_merge@51
 
 f_ternary_false@14:
     dig 1
@@ -120,7 +337,7 @@ f_ternary_false@14:
 
 f_ternary_false@11:
     dig 2
-    bury 6
+    bury 9
     b f_ternary_merge@12
 
 f_ternary_false@16:
@@ -129,7 +346,7 @@ f_ternary_false@16:
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     dig 3
     b-
-    bury 5
+    bury 8
 
 f_ternary_merge@19:
     dig 1
@@ -141,7 +358,7 @@ f_ternary_merge@19:
     b-
 
 f_ternary_merge@22:
-    dig 5
+    dig 8
     swap
     b%
     b f_ternary_merge@23
@@ -152,7 +369,7 @@ f_ternary_false@21:
 
 f_ternary_false@18:
     dig 2
-    bury 5
+    bury 8
     b f_ternary_merge@19
 
 f_ternary_false@7:
@@ -161,7 +378,7 @@ f_ternary_false@7:
 
 f_ternary_false@4:
     dig 2
-    bury 7
+    bury 11
     b f_ternary_merge@5
 
 
@@ -179,7 +396,7 @@ g:
     assert // invalid number of bytes for arc4.bool
     intc_2 // 0
     getbit
-    bz g_else_body@28
+    bz g_else_body@81
     intc_2 // 0
     intc_0 // 1
     -
@@ -218,7 +435,48 @@ g_ternary_merge@19:
     swap
     b-
 
-g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.g@54:
+g_ternary_merge@27:
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz g_ternary_false@54
+    dig 1
+    bz g_ternary_false@46
+    dig 1
+    bz g_ternary_false@37
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 4
+    b-
+
+g_ternary_merge@38:
+    bytec_1 // 0x
+    swap
+    b/
+    bytec_1 // 0x
+    b==
+    bnz g_ternary_false@46
+    dig 1
+    bz g_ternary_false@44
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 4
+    b-
+
+g_ternary_merge@45:
+    bytec_1 // 0x
+    swap
+    b/
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+
+g_ternary_merge@53:
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.g@160:
     dup
     len
     intc_1 // 32
@@ -227,12 +485,97 @@ g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tes
     intc_1 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
+
+g_ternary_false@44:
+    dig 3
+    b g_ternary_merge@45
+
+g_ternary_false@46:
+    dig 1
+    bz g_ternary_false@51
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 4
+    b-
+
+g_ternary_merge@52:
+    bytec_1 // 0x
+    swap
+    b/
+    b g_ternary_merge@53
+
+g_ternary_false@51:
+    dig 3
+    b g_ternary_merge@52
+
+g_ternary_false@37:
+    dig 3
+    b g_ternary_merge@38
+
+g_ternary_false@54:
+    dig 1
+    bz g_ternary_false@72
+    dig 1
+    bz g_ternary_false@63
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 4
+    b-
+
+g_ternary_merge@64:
+    bytec_1 // 0x
+    swap
+    b/
+    bytec_1 // 0x
+    b==
+    bnz g_ternary_false@72
+    dig 1
+    bz g_ternary_false@70
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 4
+    b-
+
+g_ternary_merge@71:
+    bytec_1 // 0x
+    swap
+    b/
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+
+g_ternary_merge@79:
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    b g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.g@160
+
+g_ternary_false@70:
+    dig 3
+    b g_ternary_merge@71
+
+g_ternary_false@72:
+    dig 1
+    bz g_ternary_false@77
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 4
+    b-
+
+g_ternary_merge@78:
+    bytec_1 // 0x
+    swap
+    b/
+    b g_ternary_merge@79
+
+g_ternary_false@77:
+    dig 3
+    b g_ternary_merge@78
+
+g_ternary_false@63:
+    dig 3
+    b g_ternary_merge@64
 
 g_ternary_false@18:
     dig 3
@@ -249,7 +592,7 @@ g_ternary_merge@26:
     bytec_1 // 0x
     swap
     b/
-    b g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.g@54
+    b g_ternary_merge@27
 
 g_ternary_false@25:
     dig 3
@@ -259,7 +602,7 @@ g_ternary_false@11:
     dig 3
     b g_ternary_merge@12
 
-g_else_body@28:
+g_else_body@81:
     intc_2 // 0
     intc_0 // 1
     -
@@ -270,56 +613,182 @@ g_else_body@28:
     b>=
     dup
     bury 2
-    bz g_ternary_false@46
+    bz g_ternary_false@99
     dup
-    bz g_ternary_false@37
+    bz g_ternary_false@90
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     dig 3
     b-
 
-g_ternary_merge@38:
+g_ternary_merge@91:
     bytec_1 // 0x
     swap
     b/
     bytec_1 // 0x
     b==
-    bnz g_ternary_false@46
+    bnz g_ternary_false@99
     dup
-    bz g_ternary_false@44
+    bz g_ternary_false@97
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     dig 3
     b-
 
-g_ternary_merge@45:
+g_ternary_merge@98:
     bytec_1 // 0x
     swap
     b/
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     swap
     b-
-    b g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.g@54
 
-g_ternary_false@44:
-    dig 2
-    b g_ternary_merge@45
-
-g_ternary_false@46:
+g_ternary_merge@106:
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz g_ternary_false@133
     dup
-    bz g_ternary_false@51
+    bz g_ternary_false@125
+    dup
+    bz g_ternary_false@116
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     dig 3
     b-
 
-g_ternary_merge@52:
+g_ternary_merge@117:
     bytec_1 // 0x
     swap
     b/
-    b g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.g@54
+    bytec_1 // 0x
+    b==
+    bnz g_ternary_false@125
+    dup
+    bz g_ternary_false@123
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 3
+    b-
 
-g_ternary_false@51:
-    dig 2
-    b g_ternary_merge@52
+g_ternary_merge@124:
+    bytec_1 // 0x
+    swap
+    b/
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
 
-g_ternary_false@37:
+g_ternary_merge@132:
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.g@160
+
+g_ternary_false@123:
     dig 2
-    b g_ternary_merge@38
+    b g_ternary_merge@124
+
+g_ternary_false@125:
+    dup
+    bz g_ternary_false@130
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 3
+    b-
+
+g_ternary_merge@131:
+    bytec_1 // 0x
+    swap
+    b/
+    b g_ternary_merge@132
+
+g_ternary_false@130:
+    dig 2
+    b g_ternary_merge@131
+
+g_ternary_false@116:
+    dig 2
+    b g_ternary_merge@117
+
+g_ternary_false@133:
+    dup
+    bz g_ternary_false@151
+    dup
+    bz g_ternary_false@142
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 3
+    b-
+
+g_ternary_merge@143:
+    bytec_1 // 0x
+    swap
+    b/
+    bytec_1 // 0x
+    b==
+    bnz g_ternary_false@151
+    dup
+    bz g_ternary_false@149
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 3
+    b-
+
+g_ternary_merge@150:
+    bytec_1 // 0x
+    swap
+    b/
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+
+g_ternary_merge@158:
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    b g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.g@160
+
+g_ternary_false@149:
+    dig 2
+    b g_ternary_merge@150
+
+g_ternary_false@151:
+    dup
+    bz g_ternary_false@156
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 3
+    b-
+
+g_ternary_merge@157:
+    bytec_1 // 0x
+    swap
+    b/
+    b g_ternary_merge@158
+
+g_ternary_false@156:
+    dig 2
+    b g_ternary_merge@157
+
+g_ternary_false@142:
+    dig 2
+    b g_ternary_merge@143
+
+g_ternary_false@97:
+    dig 2
+    b g_ternary_merge@98
+
+g_ternary_false@99:
+    dup
+    bz g_ternary_false@104
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 3
+    b-
+
+g_ternary_merge@105:
+    bytec_1 // 0x
+    swap
+    b/
+    b g_ternary_merge@106
+
+g_ternary_false@104:
+    dig 2
+    b g_ternary_merge@105
+
+g_ternary_false@90:
+    dig 2
+    b g_ternary_merge@91

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/zero_cost_abstraction_comparison_userdefined.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
-    bytecblock "x" 0x151f7c75
+    intcblock 32 1 0
+    bytecblock "x" 0x8000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
@@ -49,10 +49,25 @@ setX:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/zero_cost_abstraction_comparison_userdefined.sol.C.getX[routing]() -> void:
 getX:
-    pushint 0
+    intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz getX_ternary_false@3
+    intc_2 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+getX_ternary_merge@4:
     dup
     len
     intc_0 // 32
@@ -61,29 +76,82 @@ getX:
     intc_0 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
+getX_ternary_false@3:
+    intc_2 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    b getX_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/zero_cost_abstraction_comparison_userdefined.sol.C.add[routing]() -> void:
 add:
     txna ApplicationArgs 1
-    dup
+    dupn 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
+    cover 2
+    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    swap
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    dup
+    uncover 2
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    !=
+    bnz add_bool_true@3
+    dig 2
+    dig 2
     b+
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    dig 1
+    ==
+    bz add_bool_false@4
+
+add_bool_true@3:
+    intc_1 // 1
+
+add_bool_merge@5:
+    assert // signed arithmetic overflow
+    dig 2
+    dig 2
+    b+
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    dup
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz add_ternary_false@7
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+add_ternary_merge@8:
     dup
     len
     intc_0 // 32
@@ -92,9 +160,16 @@ add:
     intc_0 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
+
+add_ternary_false@7:
+    b add_ternary_merge@8
+
+add_bool_false@4:
+    intc_2 // 0
+    b add_bool_merge@5

@@ -3,13 +3,13 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/immutable_signed.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 2 1 32
+    intcblock 32 0 2 1
     bytecblock 0x6162 0x151f7c75
-    intc_0 // 0
+    intc_1 // 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 0
-    intc_1 // 2
+    intc_1 // 0
+    intc_2 // 2
     -
     pushbytes "a"
     swap
@@ -20,7 +20,7 @@ main:
     pushbytes "f"
     dig 1
     app_global_put
-    intc_2 // 1
+    intc_3 // 1
     return
 
 main_after_if_else@2:
@@ -44,8 +44,8 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/immutable_signed.sol.C.direct[routing]() -> void:
 direct:
-    intc_0 // 0
-    intc_1 // 2
+    intc_1 // 0
+    intc_2 // 2
     -
     itob
     pushbytes 0xffff
@@ -62,10 +62,10 @@ direct:
 direct_ternary_merge@4:
     dup
     len
-    intc_3 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_3 // 32
+    intc_0 // 32
     bzero
     b|
     bytec_0 // 0x6162
@@ -74,7 +74,7 @@ direct_ternary_merge@4:
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return
 
 direct_ternary_false@3:
@@ -83,19 +83,29 @@ direct_ternary_false@3:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/immutable_signed.sol.C.viaasm[routing]() -> void:
 viaasm:
-    intc_0 // 0
-    intc_1 // 2
+    intc_1 // 0
+    intc_2 // 2
     -
     load 0
-    swap
+    intc_0 // 32
+    bzero
+    uncover 2
     itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 32
     swap
     store 0
-    bytec_0 // 0x6162
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000006162
     concat
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return

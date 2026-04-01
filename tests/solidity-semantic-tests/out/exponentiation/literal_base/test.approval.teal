@@ -113,7 +113,18 @@ f_after_if_else@10:
     b f_while_top@7
 
 f_after_while@11:
-    dig 2
+    dig 4
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    dup
+    pushbytes 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz f_ternary_false@13
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+f_ternary_merge@14:
+    dig 3
     dup
     len
     intc_0 // 32
@@ -124,7 +135,7 @@ f_after_while@11:
     swap
     dig 1
     b|
-    dig 6
+    uncover 2
     dup
     len
     intc_0 // 32
@@ -139,3 +150,6 @@ f_after_while@11:
     log
     intc_1 // 1
     return
+
+f_ternary_false@13:
+    b f_ternary_merge@14

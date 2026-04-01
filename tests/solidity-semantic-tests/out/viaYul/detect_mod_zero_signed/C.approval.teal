@@ -99,6 +99,16 @@ f_ternary_merge@15:
     b-
 
 f_ternary_merge@23:
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    dup
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz f_ternary_false@25
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+f_ternary_merge@26:
     dup
     len
     intc_0 // 32
@@ -113,6 +123,9 @@ f_ternary_merge@23:
     log
     intc_1 // 1
     return
+
+f_ternary_false@25:
+    b f_ternary_merge@26
 
 f_ternary_false@14:
     dig 1

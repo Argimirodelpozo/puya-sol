@@ -78,6 +78,16 @@ f_after_if_else@5:
 
 f_after_while@6:
     dig 2
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    dup
+    pushbytes 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz f_ternary_false@8
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+f_ternary_merge@9:
     dup
     len
     intc_0 // 32
@@ -92,3 +102,6 @@ f_after_while@6:
     log
     intc_1 // 1
     return
+
+f_ternary_false@8:
+    b f_ternary_merge@9

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/assembly_access_bytes2_abicoder_v1.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 2
+    intcblock 1 32 2
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -34,7 +34,7 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 2
+    intc_2 // 2
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 2>
     load 0
@@ -52,7 +52,7 @@ g:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 2
+    intc_2 // 2
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 2>
     load 0
@@ -70,10 +70,22 @@ h:
     txna ApplicationArgs 1
     dup
     len
-    pushint 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     load 0
+    intc_1 // 32
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    extract 0 2
+    swap
     store 0
     bytec_0 // 0x151f7c75
     swap

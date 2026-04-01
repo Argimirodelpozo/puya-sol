@@ -4,10 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32 24
-    bytecblock 0xff "x" 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0xf2b65f27
+    bytecblock "x" 0xff 0x0100 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0xf2b65f27
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "x"
+    bytec_0 // "x"
     intc_0 // 0
     app_global_put
     intc_1 // 1
@@ -27,7 +27,7 @@ main_after_if_else@2:
     txn ApplicationID
     assert
     pushbytes 0xcd78b354 // method "f()uint256"
-    bytec 6 // method "g()void"
+    bytec 7 // method "g()void"
     pushbytess 0xafedb2e5 0x7c1072af // method "h()uint256", method "x()uint256"
     txna ApplicationArgs 0
     match f g h x
@@ -39,7 +39,7 @@ f:
     intc_0 // 0
     intc_1 // 1
     -
-    bytec_1 // "x"
+    bytec_0 // "x"
     swap
     app_global_put
     itxn_begin
@@ -60,20 +60,20 @@ f:
     extract 4 0
     btoi
     itob
-    bytec_0 // 0xff
+    bytec_1 // 0xff
     b&
-    bytec_2 // 0x80
+    bytec_3 // 0x80
     b>=
     bz f_ternary_false@4
     itxn LastLog
     extract 4 0
     btoi
     itob
-    bytec_0 // 0xff
+    bytec_1 // 0xff
     b&
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 f_ternary_merge@5:
@@ -85,7 +85,7 @@ f_ternary_merge@5:
     intc_2 // 32
     bzero
     b|
-    bytec 5 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -97,7 +97,7 @@ f_ternary_false@4:
     extract 4 0
     btoi
     itob
-    bytec_0 // 0xff
+    bytec_1 // 0xff
     b&
     b f_ternary_merge@5
 
@@ -105,16 +105,74 @@ f_ternary_false@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.g[routing]() -> void:
 g:
     intc_0 // 0
-    bytec_1 // "x"
+    bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
+    itob
+    bytec_2 // 0x0100
+    b%
+    bytec_3 // 0x80
+    b<
+    bnz g_bool_true@3
+    intc_0 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    itob
+    bytec_2 // 0x0100
+    b%
+    dup
+    bytec_3 // 0x80
+    b<
+    !
+    swap
+    bytec_2 // 0x0100
+    b+
+    pushbytes 0x01
+    b-
+    bytec_2 // 0x0100
+    b%
+    bytec_3 // 0x80
+    b<
+    !
+    ==
+    bz g_bool_false@4
+
+g_bool_true@3:
     intc_1 // 1
+
+g_bool_merge@5:
+    assert // signed arithmetic overflow
+    pushint 8
+    bzero
+    intc_0 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    itob
+    bytec_2 // 0x0100
+    b%
+    bytec_2 // 0x0100
+    b+
+    pushbytes 0x01
+    b-
+    bytec_2 // 0x0100
+    b%
+    concat
+    dup
+    len
+    pushint 8
     -
-    bytec_1 // "x"
+    extract_uint64
+    bytec_0 // "x"
     swap
     app_global_put
     intc_1 // 1
     return
+
+g_bool_false@4:
+    intc_0 // 0
+    b g_bool_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.h[routing]() -> void:
@@ -130,7 +188,7 @@ h:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 6 // method "g()void"
+    bytec 7 // method "g()void"
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
@@ -151,20 +209,20 @@ h:
     extract 4 0
     btoi
     itob
-    bytec_0 // 0xff
+    bytec_1 // 0xff
     b&
-    bytec_2 // 0x80
+    bytec_3 // 0x80
     b>=
     bz h_ternary_false@5
     itxn LastLog
     extract 4 0
     btoi
     itob
-    bytec_0 // 0xff
+    bytec_1 // 0xff
     b&
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 h_ternary_merge@6:
@@ -176,7 +234,7 @@ h_ternary_merge@6:
     intc_2 // 32
     bzero
     b|
-    bytec 5 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -188,7 +246,7 @@ h_ternary_false@5:
     extract 4 0
     btoi
     itob
-    bytec_0 // 0xff
+    bytec_1 // 0xff
     b&
     b h_ternary_merge@6
 
@@ -196,25 +254,25 @@ h_ternary_false@5:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.x[routing]() -> void:
 x:
     intc_0 // 0
-    bytec_1 // "x"
+    bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     itob
-    bytec_0 // 0xff
+    bytec_1 // 0xff
     b&
-    bytec_2 // 0x80
+    bytec_3 // 0x80
     b>=
     bz x_ternary_false@3
     intc_0 // 0
-    bytec_1 // "x"
+    bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     itob
-    bytec_0 // 0xff
+    bytec_1 // 0xff
     b&
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 x_ternary_merge@4:
@@ -226,7 +284,7 @@ x_ternary_merge@4:
     intc_2 // 32
     bzero
     b|
-    bytec 5 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -235,10 +293,10 @@ x_ternary_merge@4:
 
 x_ternary_false@3:
     intc_0 // 0
-    bytec_1 // "x"
+    bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     itob
-    bytec_0 // 0xff
+    bytec_1 // 0xff
     b&
     b x_ternary_merge@4

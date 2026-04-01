@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/scientific_notation.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    bytecblock 0x151f7c75
+    intcblock 1 32 0
+    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x8000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -49,50 +49,104 @@ main_f_route@5:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/scientific_notation.sol.C.i[routing]() -> void:
 i:
-    intc_1 // 0
+    intc_2 // 0
     pushint 20000000000
     -
     itob
-    intc_2 // 32
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    dup
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz i_ternary_false@3
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+i_ternary_merge@4:
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
+
+i_ternary_false@3:
+    b i_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/scientific_notation.sol.C.j[routing]() -> void:
 j:
-    intc_1 // 0
+    intc_2 // 0
     pushint 2
     -
     itob
-    intc_2 // 32
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    dup
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz j_ternary_false@3
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+j_ternary_merge@4:
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
+
+j_ternary_false@3:
+    b j_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/scientific_notation.sol.C.k[routing]() -> void:
 k:
-    intc_1 // 0
+    intc_2 // 0
     pushint 25
     -
     itob
-    intc_2 // 32
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    dup
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz k_ternary_false@3
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+k_ternary_merge@4:
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
+
+k_ternary_false@3:
+    b k_ternary_merge@4

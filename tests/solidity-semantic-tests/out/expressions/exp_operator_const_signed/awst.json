@@ -533,7 +533,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "ReinterpretCast",
+                "_type": "ConditionalExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/exp_operator_const_signed.sol",
                   "line": 57,
@@ -547,8 +547,8 @@
                   "name": "biguint",
                   "immutable": true
                 },
-                "expr": {
-                  "_type": "IntrinsicCall",
+                "condition": {
+                  "_type": "NumericComparisonExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/exp_operator_const_signed.sol",
                     "line": 57,
@@ -558,19 +558,30 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
+                    "_type": "WType",
+                    "name": "bool",
+                    "immutable": true
                   },
-                  "op_code": "itob",
-                  "immediates": [],
-                  "stack_args": [
-                    {
-                      "_type": "IntegerConstant",
+                  "lhs": {
+                    "_type": "BigUIntBinaryOperation",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/exp_operator_const_signed.sol",
+                      "line": 57,
+                      "end_line": 73,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "left": {
+                      "_type": "ReinterpretCast",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/exp_operator_const_signed.sol",
-                        "line": 64,
+                        "line": 57,
                         "end_line": 73,
                         "comment_lines": 0,
                         "column": null,
@@ -578,13 +589,338 @@
                       },
                       "wtype": {
                         "_type": "WType",
-                        "name": "uint64",
+                        "name": "biguint",
                         "immutable": true
                       },
-                      "value": "115792089237316195423570985008687907853269984665640564039457584007913129639928",
+                      "expr": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/exp_operator_const_signed.sol",
+                          "line": 57,
+                          "end_line": 73,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "itob",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/exp_operator_const_signed.sol",
+                              "line": 64,
+                              "end_line": 73,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": "115792089237316195423570985008687907853269984665640564039457584007913129639928",
+                            "teal_alias": null
+                          }
+                        ]
+                      }
+                    },
+                    "op": "&",
+                    "right": {
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/exp_operator_const_signed.sol",
+                        "line": 57,
+                        "end_line": 73,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
                       "teal_alias": null
                     }
-                  ]
+                  },
+                  "operator": ">=",
+                  "rhs": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/exp_operator_const_signed.sol",
+                      "line": 57,
+                      "end_line": 73,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "value": "57896044618658097711785492504343953926634992332820282019728792003956564819968",
+                    "teal_alias": null
+                  }
+                },
+                "true_expr": {
+                  "_type": "BigUIntBinaryOperation",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/exp_operator_const_signed.sol",
+                    "line": 57,
+                    "end_line": 73,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
+                  },
+                  "left": {
+                    "_type": "BigUIntBinaryOperation",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/exp_operator_const_signed.sol",
+                      "line": 57,
+                      "end_line": 73,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "left": {
+                      "_type": "BigUIntBinaryOperation",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/exp_operator_const_signed.sol",
+                        "line": 57,
+                        "end_line": 73,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "left": {
+                        "_type": "ReinterpretCast",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/exp_operator_const_signed.sol",
+                          "line": 57,
+                          "end_line": 73,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "expr": {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/exp_operator_const_signed.sol",
+                            "line": 57,
+                            "end_line": 73,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "op_code": "itob",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/exp_operator_const_signed.sol",
+                                "line": 64,
+                                "end_line": 73,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": "115792089237316195423570985008687907853269984665640564039457584007913129639928",
+                              "teal_alias": null
+                            }
+                          ]
+                        }
+                      },
+                      "op": "&",
+                      "right": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/exp_operator_const_signed.sol",
+                          "line": 57,
+                          "end_line": 73,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                        "teal_alias": null
+                      }
+                    },
+                    "op": "+",
+                    "right": {
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/exp_operator_const_signed.sol",
+                        "line": 57,
+                        "end_line": 73,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "value": 0,
+                      "teal_alias": null
+                    }
+                  },
+                  "op": "%",
+                  "right": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/exp_operator_const_signed.sol",
+                      "line": 57,
+                      "end_line": 73,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
+                    "teal_alias": null
+                  }
+                },
+                "false_expr": {
+                  "_type": "BigUIntBinaryOperation",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/exp_operator_const_signed.sol",
+                    "line": 57,
+                    "end_line": 73,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
+                  },
+                  "left": {
+                    "_type": "ReinterpretCast",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/exp_operator_const_signed.sol",
+                      "line": 57,
+                      "end_line": 73,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "expr": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/exp_operator_const_signed.sol",
+                        "line": 57,
+                        "end_line": 73,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "itob",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/exp_operator_const_signed.sol",
+                            "line": 64,
+                            "end_line": 73,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": "115792089237316195423570985008687907853269984665640564039457584007913129639928",
+                          "teal_alias": null
+                        }
+                      ]
+                    }
+                  },
+                  "op": "&",
+                  "right": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/exp_operator_const_signed.sol",
+                      "line": 57,
+                      "end_line": 73,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                    "teal_alias": null
+                  }
                 }
               }
             }

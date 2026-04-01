@@ -4,13 +4,13 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
-    bytecblock 0x151f7c75 "testArray" 0x 0x01
+    bytecblock 0x151f7c75 "testArray" 0x01 0x 0x0000000000000000000000000000000000000000000000000000000000000000
     pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "testArray"
-    bytec_2 // 0x
+    bytec_3 // 0x
     app_global_put
     intc_1 // 1
     return
@@ -50,7 +50,7 @@ fillArray_while_top@2:
     bury 1
     assert // check testArray exists
     dup
-    bytec_3 // 0x01
+    bytec_2 // 0x01
     b+
     bury 1
     b fillArray_while_top@2
@@ -93,7 +93,7 @@ shrinkArray_while_top@2:
     cover 2
     replace3
     bury 3
-    bytec_3 // 0x01
+    bytec_2 // 0x01
     b+
     bury 1
     b shrinkArray_while_top@2
@@ -225,11 +225,21 @@ getSlot1LastBytes:
     itob
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.getDataSlotContent
     load 0
-    swap
+    intc_0 // 32
+    bzero
+    uncover 2
     pushbytes 0x0000000000000000000000000001000000000000000000000000000000000000
     b*
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 14
     swap
     store 0
     bytec_0 // 0x151f7c75
@@ -300,7 +310,7 @@ getArrayBytes_while_top@2:
     extract_uint64
     callsub _puya_lib.mem.new_slot
     dup
-    bytec_2 // 0x
+    bytec_3 // 0x
     stores
     bytec_1 // "testArray"
     box_get
@@ -331,7 +341,7 @@ getArrayBytes_while_top@2:
     cover 2
     replace3
     bury 3
-    bytec_3 // 0x01
+    bytec_2 // 0x01
     b+
     bury 1
     b getArrayBytes_while_top@2
@@ -368,7 +378,7 @@ getArrayBytes_after_while@5:
     extract3
     replace2 0
     store 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
     retsub
 
 
@@ -400,7 +410,7 @@ getArrayBytes_after_while@5:
     extract3
     replace2 0
     store 0
-    bytec_2 // 0x
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
     retsub
 
 

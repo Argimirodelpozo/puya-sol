@@ -1,7 +1,7 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_w57_tixx/B.sol.A.approval_program() -> uint64:
+// /tmp/multisource_hdk550dj/B.sol.A.approval_program() -> uint64:
 main:
     intcblock 32 1
     bytecblock 0x151f7c75
@@ -29,15 +29,26 @@ main_after_if_else@2:
     err
 
 
-// /tmp/multisource_w57_tixx/B.sol.A.f(i256)[routing]() -> void:
+// /tmp/multisource_hdk550dj/B.sol.A.f(i256)[routing]() -> void:
 f(i256):
     txna ApplicationArgs 1
     dup
     len
-    dup
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    dup
+    pushbytes 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz f(i256)_ternary_false@3
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+f(i256)_ternary_merge@4:
+    dup
+    len
     intc_0 // 32
     <=
     assert // overflow
@@ -51,8 +62,11 @@ f(i256):
     intc_1 // 1
     return
 
+f(i256)_ternary_false@3:
+    b f(i256)_ternary_merge@4
 
-// /tmp/multisource_w57_tixx/B.sol.A.f(addr)[routing]() -> void:
+
+// /tmp/multisource_hdk550dj/B.sol.A.f(addr)[routing]() -> void:
 f(addr):
     txna ApplicationArgs 1
     dup
