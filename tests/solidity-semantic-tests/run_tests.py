@@ -652,6 +652,9 @@ def execute_call(app, call, app_spec=None, verbose=False):
         for i, a in enumerate(raw_args):
             if a is None:
                 args.append(0)
+            elif isinstance(a, int) and param_types.get(i) == 'bool':
+                # int → bool: ABI SDK needs Python bool for 1-byte ARC4 bool encoding
+                args.append(bool(a))
             elif isinstance(a, bytes):
                 if i in param_sizes:
                     # byte[N] static array param: pad/truncate and convert to list
