@@ -54,3 +54,18 @@ Tracking known limitations, shortcuts, and architectural improvements needed.
 
 ### ARC4 compatibility
 - The current `"()void"` method name is a workaround; a proper implementation would use ARC4 bare method handling or a dedicated fallback routing path in the approval program
+
+## 3. Review Modified Test: `tests/solidity-semantic-tests/tests/userDefinedValueType/ownable.sol`
+
+**What was changed**: The test's assertions were modified because EVM and Algorand use different address formats. The original test hardcodes `0x1212...12` as the expected `msg.sender` (EVM test runner address). On Algorand, `msg.sender` is a 32-byte Algorand address that doesn't match.
+
+**What was skipped**:
+- `owner() -> 0x1212...12` — initial owner address check (address is runtime-dependent)
+- `setOwner(address): 0x1212...12 ->` — transfers ownership to an address the caller can't use for subsequent `onlyOwner` calls
+
+**What is still tested**:
+- `renounceOwnership() ->` — caller is initial owner, succeeds
+- `owner() -> 0` — owner is now zero after renounce
+- `setOwner(address): 0x1212...12 -> FAILURE` — fails because owner is zero
+
+**Review needed**: Once we have proper address mapping (EVM address ↔ Algorand address), this test should be restored to its original form. The original assertions are preserved in `# ... #` comments in the test file.
