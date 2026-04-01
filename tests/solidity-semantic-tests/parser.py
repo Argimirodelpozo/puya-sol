@@ -61,16 +61,29 @@ def parse_test_file(path: Path) -> SemanticTest:
     # No parser-level skips — let everything compile or fail honestly
 
     calls = []
+    # Join continuation lines: "// -> result" after a method call line
+    raw_lines = []
     for line in assertion_block.strip().split("\n"):
         line = line.strip()
         if not line.startswith("//"):
             continue
         line = line[2:].strip()
-
-        # Skip gas annotations and empty lines
+        # Skip gas annotations, empty lines, comments
         if line.startswith("gas ") or not line or line.startswith("compileViaYul"):
             continue
+        if line.startswith("# ") or line.startswith("allowNonExisting"):
+            continue
+        raw_lines.append(line)
 
+    # Merge continuation lines: if a line starts with "->", append to previous
+    merged = []
+    for line in raw_lines:
+        if line.startswith("->") and merged:
+            merged[-1] = merged[-1] + " " + line
+        else:
+            merged.append(line)
+
+    for line in merged:
         call = _parse_assertion_line(line)
         if call:
             calls.append(call)
