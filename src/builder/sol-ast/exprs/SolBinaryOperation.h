@@ -36,6 +36,13 @@ private:
 		std::shared_ptr<awst::Expression> _right,
 		solidity::frontend::IntegerType const* _intType);
 
+	/// Handle signed integer exponentiation.
+	/// Computes abs(base)^exp, negates if base negative and exp odd.
+	std::shared_ptr<awst::Expression> buildSignedExp(
+		std::shared_ptr<awst::Expression> _left,
+		std::shared_ptr<awst::Expression> _right,
+		solidity::frontend::IntegerType const* _intType);
+
 	/// Handle signed integer division and modulo.
 	/// Uses absolute values with sign correction.
 	std::shared_ptr<awst::Expression> buildSignedDivMod(
