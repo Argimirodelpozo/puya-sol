@@ -184,6 +184,11 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::toAwst()
 			{
 				return buildSignedArithmetic(op, std::move(left), std::move(right), intType);
 			}
+			if (op == Token::Div || op == Token::AssignDiv
+				|| op == Token::Mod || op == Token::AssignMod)
+			{
+				return buildSignedDivMod(op, std::move(left), std::move(right), intType);
+			}
 		}
 	}
 
@@ -611,6 +616,306 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 	}
 
 	return rawResult;
+}
+
+std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
+	Token _op,
+	std::shared_ptr<awst::Expression> _left,
+	std::shared_ptr<awst::Expression> _right,
+	IntegerType const* _intType)
+{
+	unsigned bits = _intType->numBits();
+	bool isDiv = (_op == Token::Div || _op == Token::AssignDiv);
+
+	std::string pow2NStr, halfNStr;
+	if (bits == 256)
+	{
+		pow2NStr = "115792089237316195423570985008687907853269984665640564039457584007913129639936";
+		halfNStr = "57896044618658097711785492504343953926634992332820282019728792003956564819968";
+	}
+	else
+	{
+		solidity::u256 pow2N = solidity::u256(1) << bits;
+		solidity::u256 halfN = solidity::u256(1) << (bits - 1);
+		std::ostringstream oss1, oss2;
+		oss1 << pow2N; pow2NStr = oss1.str();
+		oss2 << halfN; halfNStr = oss2.str();
+	}
+
+	auto makeBiguintConst = [&](std::string const& val) {
+		auto c = std::make_shared<awst::IntegerConstant>();
+		c->sourceLocation = m_loc;
+		c->wtype = awst::WType::biguintType();
+		c->value = val;
+		return c;
+	};
+
+	// Ensure both operands are biguint
+	auto ensureBiguint = [&](std::shared_ptr<awst::Expression> expr)
+		-> std::shared_ptr<awst::Expression> {
+		if (expr->wtype == awst::WType::biguintType())
+			return expr;
+		auto itob = std::make_shared<awst::IntrinsicCall>();
+		itob->sourceLocation = m_loc;
+		itob->wtype = awst::WType::bytesType();
+		itob->opCode = "itob";
+		itob->stackArgs.push_back(std::move(expr));
+		auto cast = std::make_shared<awst::ReinterpretCast>();
+		cast->sourceLocation = m_loc;
+		cast->wtype = awst::WType::biguintType();
+		cast->expr = std::move(itob);
+		return cast;
+	};
+
+	_left = ensureBiguint(std::move(_left));
+	_right = ensureBiguint(std::move(_right));
+
+	// Mask to N bits
+	if (bits < 256)
+	{
+		auto maskOp = [&](std::shared_ptr<awst::Expression> val) {
+			auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
+			mod->sourceLocation = m_loc;
+			mod->wtype = awst::WType::biguintType();
+			mod->left = std::move(val);
+			mod->op = awst::BigUIntBinaryOperator::Mod;
+			mod->right = makeBiguintConst(pow2NStr);
+			return mod;
+		};
+		_left = maskOp(std::move(_left));
+		_right = maskOp(std::move(_right));
+	}
+
+	// isNeg: val >= half
+	auto isNeg = [&](std::shared_ptr<awst::Expression> const& val)
+		-> std::shared_ptr<awst::Expression> {
+		auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+		cmp->sourceLocation = m_loc;
+		cmp->wtype = awst::WType::boolType();
+		cmp->lhs = val;
+		cmp->op = awst::NumericComparison::Lt;
+		cmp->rhs = makeBiguintConst(halfNStr);
+		auto notExpr = std::make_shared<awst::Not>();
+		notExpr->sourceLocation = m_loc;
+		notExpr->wtype = awst::WType::boolType();
+		notExpr->expr = std::move(cmp);
+		return notExpr;
+	};
+
+	// abs(val) = val < half ? val : (pow2N - val)
+	auto absVal = [&](std::shared_ptr<awst::Expression> const& val) {
+		auto neg = isNeg(val);
+		auto negated = std::make_shared<awst::BigUIntBinaryOperation>();
+		negated->sourceLocation = m_loc;
+		negated->wtype = awst::WType::biguintType();
+		negated->left = makeBiguintConst(pow2NStr);
+		negated->op = awst::BigUIntBinaryOperator::Sub;
+		negated->right = val;
+		auto cond = std::make_shared<awst::ConditionalExpression>();
+		cond->sourceLocation = m_loc;
+		cond->wtype = awst::WType::biguintType();
+		cond->condition = std::move(neg);
+		cond->trueExpr = std::move(negated);
+		cond->falseExpr = val;
+		return cond;
+	};
+
+	// Checked: assert(y != 0)
+	{
+		auto bZero = std::make_shared<awst::NumericComparisonExpression>();
+		bZero->sourceLocation = m_loc;
+		bZero->wtype = awst::WType::boolType();
+		bZero->lhs = _right;
+		bZero->op = awst::NumericComparison::Ne;
+		bZero->rhs = makeBiguintConst("0");
+
+		auto assertExpr = std::make_shared<awst::AssertExpression>();
+		assertExpr->sourceLocation = m_loc;
+		assertExpr->wtype = awst::WType::voidType();
+		assertExpr->condition = std::move(bZero);
+		assertExpr->errorMessage = "division by zero";
+
+		auto assertStmt = std::make_shared<awst::ExpressionStatement>();
+		assertStmt->sourceLocation = m_loc;
+		assertStmt->expr = std::move(assertExpr);
+		m_ctx.prePendingStatements.push_back(std::move(assertStmt));
+	}
+
+	// Checked div: assert NOT (x == minVal && y == -1)
+	// minVal = half (= 2^(N-1)), -1 = pow2N - 1
+	if (isDiv && !m_ctx.inUncheckedBlock)
+	{
+		std::ostringstream minusOneOss;
+		if (bits == 256)
+			minusOneOss << "115792089237316195423570985008687907853269984665640564039457584007913129639935";
+		else
+		{
+			solidity::u256 minusOne = (solidity::u256(1) << bits) - 1;
+			minusOneOss << minusOne;
+		}
+
+		auto xIsMin = std::make_shared<awst::NumericComparisonExpression>();
+		xIsMin->sourceLocation = m_loc;
+		xIsMin->wtype = awst::WType::boolType();
+		xIsMin->lhs = _left;
+		xIsMin->op = awst::NumericComparison::Eq;
+		xIsMin->rhs = makeBiguintConst(halfNStr);
+
+		auto yIsNeg1 = std::make_shared<awst::NumericComparisonExpression>();
+		yIsNeg1->sourceLocation = m_loc;
+		yIsNeg1->wtype = awst::WType::boolType();
+		yIsNeg1->lhs = _right;
+		yIsNeg1->op = awst::NumericComparison::Eq;
+		yIsNeg1->rhs = makeBiguintConst(minusOneOss.str());
+
+		auto bothTrue = std::make_shared<awst::BooleanBinaryOperation>();
+		bothTrue->sourceLocation = m_loc;
+		bothTrue->wtype = awst::WType::boolType();
+		bothTrue->left = std::move(xIsMin);
+		bothTrue->op = awst::BinaryBooleanOperator::And;
+		bothTrue->right = std::move(yIsNeg1);
+
+		auto notBoth = std::make_shared<awst::Not>();
+		notBoth->sourceLocation = m_loc;
+		notBoth->wtype = awst::WType::boolType();
+		notBoth->expr = std::move(bothTrue);
+
+		auto assertExpr = std::make_shared<awst::AssertExpression>();
+		assertExpr->sourceLocation = m_loc;
+		assertExpr->wtype = awst::WType::voidType();
+		assertExpr->condition = std::move(notBoth);
+		assertExpr->errorMessage = "signed division overflow";
+
+		auto assertStmt = std::make_shared<awst::ExpressionStatement>();
+		assertStmt->sourceLocation = m_loc;
+		assertStmt->expr = std::move(assertExpr);
+		m_ctx.prePendingStatements.push_back(std::move(assertStmt));
+	}
+
+	auto absA = absVal(_left);
+	auto absB = absVal(_right);
+
+	// Compute unsigned div/mod on absolute values
+	auto unsignedResult = std::make_shared<awst::BigUIntBinaryOperation>();
+	unsignedResult->sourceLocation = m_loc;
+	unsignedResult->wtype = awst::WType::biguintType();
+	unsignedResult->left = std::move(absA);
+	unsignedResult->op = isDiv ? awst::BigUIntBinaryOperator::FloorDiv
+	                           : awst::BigUIntBinaryOperator::Mod;
+	unsignedResult->right = std::move(absB);
+
+	// Determine result sign:
+	// Division: result negative if signs differ
+	// Modulo: result has sign of dividend (a)
+	std::shared_ptr<awst::Expression> shouldNegate;
+	if (isDiv)
+	{
+		// signs differ: a_neg XOR b_neg  ↔  a_neg != b_neg
+		auto aNeg = isNeg(_left);
+		auto bNeg = isNeg(_right);
+		auto differ = std::make_shared<awst::NumericComparisonExpression>();
+		differ->sourceLocation = m_loc;
+		differ->wtype = awst::WType::boolType();
+		differ->lhs = std::move(aNeg);
+		differ->op = awst::NumericComparison::Ne;
+		differ->rhs = std::move(bNeg);
+		shouldNegate = std::move(differ);
+	}
+	else
+	{
+		// mod: negate if a is negative
+		shouldNegate = isNeg(_left);
+	}
+
+	// Negate: (pow2N - result) mod pow2N
+	auto negResult = std::make_shared<awst::BigUIntBinaryOperation>();
+	negResult->sourceLocation = m_loc;
+	negResult->wtype = awst::WType::biguintType();
+	negResult->left = makeBiguintConst(pow2NStr);
+	negResult->op = awst::BigUIntBinaryOperator::Sub;
+	negResult->right = unsignedResult;
+
+	auto negMod = std::make_shared<awst::BigUIntBinaryOperation>();
+	negMod->sourceLocation = m_loc;
+	negMod->wtype = awst::WType::biguintType();
+	negMod->left = std::move(negResult);
+	negMod->op = awst::BigUIntBinaryOperator::Mod;
+	negMod->right = makeBiguintConst(pow2NStr);
+
+	// Also need result == 0 check: don't negate 0
+	auto resultIsZero = std::make_shared<awst::NumericComparisonExpression>();
+	resultIsZero->sourceLocation = m_loc;
+	resultIsZero->wtype = awst::WType::boolType();
+	resultIsZero->lhs = unsignedResult;
+	resultIsZero->op = awst::NumericComparison::Eq;
+	resultIsZero->rhs = makeBiguintConst("0");
+
+	auto needNeg = std::make_shared<awst::BooleanBinaryOperation>();
+	needNeg->sourceLocation = m_loc;
+	needNeg->wtype = awst::WType::boolType();
+	needNeg->left = std::move(shouldNegate);
+	needNeg->op = awst::BinaryBooleanOperator::And;
+	needNeg->right = std::make_shared<awst::Not>();
+	dynamic_cast<awst::Not*>(needNeg->right.get())->sourceLocation = m_loc;
+	dynamic_cast<awst::Not*>(needNeg->right.get())->wtype = awst::WType::boolType();
+	dynamic_cast<awst::Not*>(needNeg->right.get())->expr = std::move(resultIsZero);
+
+	// shouldNegate && result != 0 ? negated : unsigned
+	auto finalResult = std::make_shared<awst::ConditionalExpression>();
+	finalResult->sourceLocation = m_loc;
+	finalResult->wtype = awst::WType::biguintType();
+	finalResult->condition = std::move(needNeg);
+	finalResult->trueExpr = std::move(negMod);
+	finalResult->falseExpr = std::move(unsignedResult);
+
+	// Convert back to uint64 for ≤64-bit types
+	if (bits <= 64)
+	{
+		auto castBytes = std::make_shared<awst::ReinterpretCast>();
+		castBytes->sourceLocation = m_loc;
+		castBytes->wtype = awst::WType::bytesType();
+		castBytes->expr = std::move(finalResult);
+
+		auto eight = std::make_shared<awst::IntegerConstant>();
+		eight->sourceLocation = m_loc;
+		eight->wtype = awst::WType::uint64Type();
+		eight->value = "8";
+		auto bz = std::make_shared<awst::IntrinsicCall>();
+		bz->sourceLocation = m_loc;
+		bz->wtype = awst::WType::bytesType();
+		bz->opCode = "bzero";
+		bz->stackArgs.push_back(eight);
+		auto cat = std::make_shared<awst::IntrinsicCall>();
+		cat->sourceLocation = m_loc;
+		cat->wtype = awst::WType::bytesType();
+		cat->opCode = "concat";
+		cat->stackArgs.push_back(std::move(bz));
+		cat->stackArgs.push_back(std::move(castBytes));
+		auto lenCall = std::make_shared<awst::IntrinsicCall>();
+		lenCall->sourceLocation = m_loc;
+		lenCall->wtype = awst::WType::uint64Type();
+		lenCall->opCode = "len";
+		lenCall->stackArgs.push_back(cat);
+		auto eight2 = std::make_shared<awst::IntegerConstant>();
+		eight2->sourceLocation = m_loc;
+		eight2->wtype = awst::WType::uint64Type();
+		eight2->value = "8";
+		auto start = std::make_shared<awst::IntrinsicCall>();
+		start->sourceLocation = m_loc;
+		start->wtype = awst::WType::uint64Type();
+		start->opCode = "-";
+		start->stackArgs.push_back(std::move(lenCall));
+		start->stackArgs.push_back(eight2);
+		auto extract = std::make_shared<awst::IntrinsicCall>();
+		extract->sourceLocation = m_loc;
+		extract->wtype = awst::WType::uint64Type();
+		extract->opCode = "extract_uint64";
+		extract->stackArgs.push_back(cat);
+		extract->stackArgs.push_back(std::move(start));
+		return extract;
+	}
+
+	return finalResult;
 }
 
 } // namespace puyasol::builder::sol_ast

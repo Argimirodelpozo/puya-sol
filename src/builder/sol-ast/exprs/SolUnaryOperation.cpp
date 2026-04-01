@@ -8,6 +8,8 @@
 #include "builder/sol-types/TypeMapper.h"
 
 #include <libsolidity/ast/AST.h>
+#include <libsolutil/Numeric.h>
+#include <sstream>
 
 namespace puyasol::builder::sol_ast
 {
@@ -39,6 +41,155 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNot(
 std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 	std::shared_ptr<awst::Expression> _operand)
 {
+	// Check if the operand type is a signed integer
+	auto const* solType = m_unaryOp.subExpression().annotation().type;
+	if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(solType))
+		solType = &udvt->underlyingType();
+	auto const* intType = dynamic_cast<IntegerType const*>(solType);
+
+	if (intType && intType->isSigned())
+	{
+		unsigned bits = intType->numBits();
+		// Signed negation: -x = (2^N - x) mod 2^N
+		// Overflow check: -INT_MIN overflows (x == 2^(N-1))
+		std::string pow2NStr, halfNStr;
+		if (bits == 256)
+		{
+			pow2NStr = "115792089237316195423570985008687907853269984665640564039457584007913129639936";
+			halfNStr = "57896044618658097711785492504343953926634992332820282019728792003956564819968";
+		}
+		else
+		{
+			solidity::u256 pow2N = solidity::u256(1) << bits;
+			solidity::u256 halfN = solidity::u256(1) << (bits - 1);
+			std::ostringstream oss1, oss2;
+			oss1 << pow2N; pow2NStr = oss1.str();
+			oss2 << halfN; halfNStr = oss2.str();
+		}
+
+		auto makeBiguintConst = [&](std::string const& val) {
+			auto c = std::make_shared<awst::IntegerConstant>();
+			c->sourceLocation = m_loc;
+			c->wtype = awst::WType::biguintType();
+			c->value = val;
+			return c;
+		};
+
+		// Ensure operand is biguint
+		auto operand = std::move(_operand);
+		if (operand->wtype == awst::WType::uint64Type())
+		{
+			auto itob = std::make_shared<awst::IntrinsicCall>();
+			itob->sourceLocation = m_loc;
+			itob->wtype = awst::WType::bytesType();
+			itob->opCode = "itob";
+			itob->stackArgs.push_back(std::move(operand));
+			auto cast = std::make_shared<awst::ReinterpretCast>();
+			cast->sourceLocation = m_loc;
+			cast->wtype = awst::WType::biguintType();
+			cast->expr = std::move(itob);
+			operand = std::move(cast);
+		}
+
+		// Mask to N bits first (uint64 two's complement may be wider)
+		if (bits < 256)
+		{
+			auto mask = std::make_shared<awst::BigUIntBinaryOperation>();
+			mask->sourceLocation = m_loc;
+			mask->wtype = awst::WType::biguintType();
+			mask->left = std::move(operand);
+			mask->op = awst::BigUIntBinaryOperator::Mod;
+			mask->right = makeBiguintConst(pow2NStr);
+			operand = std::move(mask);
+		}
+
+		// Checked: assert(x != INT_MIN) i.e. x != 2^(N-1)
+		if (!m_ctx.inUncheckedBlock)
+		{
+			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+			cmp->sourceLocation = m_loc;
+			cmp->wtype = awst::WType::boolType();
+			cmp->lhs = operand;
+			cmp->op = awst::NumericComparison::Ne;
+			cmp->rhs = makeBiguintConst(halfNStr);
+
+			auto assertExpr = std::make_shared<awst::AssertExpression>();
+			assertExpr->sourceLocation = m_loc;
+			assertExpr->wtype = awst::WType::voidType();
+			assertExpr->condition = std::move(cmp);
+			assertExpr->errorMessage = "signed negation overflow";
+
+			auto assertStmt = std::make_shared<awst::ExpressionStatement>();
+			assertStmt->sourceLocation = m_loc;
+			assertStmt->expr = std::move(assertExpr);
+			m_ctx.prePendingStatements.push_back(std::move(assertStmt));
+		}
+
+		// (2^N - x) mod 2^N
+		auto sub = std::make_shared<awst::BigUIntBinaryOperation>();
+		sub->sourceLocation = m_loc;
+		sub->wtype = awst::WType::biguintType();
+		sub->left = makeBiguintConst(pow2NStr);
+		sub->op = awst::BigUIntBinaryOperator::Sub;
+		sub->right = std::move(operand);
+
+		auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
+		mod->sourceLocation = m_loc;
+		mod->wtype = awst::WType::biguintType();
+		mod->left = std::move(sub);
+		mod->op = awst::BigUIntBinaryOperator::Mod;
+		mod->right = makeBiguintConst(pow2NStr);
+
+		// Convert back to uint64 for ≤64-bit types
+		if (bits <= 64)
+		{
+			auto castBytes = std::make_shared<awst::ReinterpretCast>();
+			castBytes->sourceLocation = m_loc;
+			castBytes->wtype = awst::WType::bytesType();
+			castBytes->expr = std::move(mod);
+
+			auto eight = std::make_shared<awst::IntegerConstant>();
+			eight->sourceLocation = m_loc;
+			eight->wtype = awst::WType::uint64Type();
+			eight->value = "8";
+			auto bz = std::make_shared<awst::IntrinsicCall>();
+			bz->sourceLocation = m_loc;
+			bz->wtype = awst::WType::bytesType();
+			bz->opCode = "bzero";
+			bz->stackArgs.push_back(eight);
+			auto cat = std::make_shared<awst::IntrinsicCall>();
+			cat->sourceLocation = m_loc;
+			cat->wtype = awst::WType::bytesType();
+			cat->opCode = "concat";
+			cat->stackArgs.push_back(std::move(bz));
+			cat->stackArgs.push_back(std::move(castBytes));
+			auto lenCall = std::make_shared<awst::IntrinsicCall>();
+			lenCall->sourceLocation = m_loc;
+			lenCall->wtype = awst::WType::uint64Type();
+			lenCall->opCode = "len";
+			lenCall->stackArgs.push_back(cat);
+			auto eight2 = std::make_shared<awst::IntegerConstant>();
+			eight2->sourceLocation = m_loc;
+			eight2->wtype = awst::WType::uint64Type();
+			eight2->value = "8";
+			auto start = std::make_shared<awst::IntrinsicCall>();
+			start->sourceLocation = m_loc;
+			start->wtype = awst::WType::uint64Type();
+			start->opCode = "-";
+			start->stackArgs.push_back(std::move(lenCall));
+			start->stackArgs.push_back(eight2);
+			auto extract = std::make_shared<awst::IntrinsicCall>();
+			extract->sourceLocation = m_loc;
+			extract->wtype = awst::WType::uint64Type();
+			extract->opCode = "extract_uint64";
+			extract->stackArgs.push_back(cat);
+			extract->stackArgs.push_back(std::move(start));
+			return extract;
+		}
+		return mod;
+	}
+
+	// Unsigned negation (original logic)
 	auto zero = std::make_shared<awst::IntegerConstant>();
 	zero->sourceLocation = m_loc;
 	zero->wtype = _operand->wtype;

@@ -35,6 +35,14 @@ private:
 		std::shared_ptr<awst::Expression> _left,
 		std::shared_ptr<awst::Expression> _right,
 		solidity::frontend::IntegerType const* _intType);
+
+	/// Handle signed integer division and modulo.
+	/// Uses absolute values with sign correction.
+	std::shared_ptr<awst::Expression> buildSignedDivMod(
+		solidity::frontend::Token _op,
+		std::shared_ptr<awst::Expression> _left,
+		std::shared_ptr<awst::Expression> _right,
+		solidity::frontend::IntegerType const* _intType);
 };
 
 } // namespace puyasol::builder::sol_ast
