@@ -189,9 +189,9 @@ eb::BuilderContext ExpressionBuilder::makeBuilderContext()
 		/*.prePendingStatements =*/ m_prePendingStatements,
 		/*.paramRemaps =*/ emptyParamRemaps,
 		/*.superTargetNames =*/ m_superTargetNames,
-		/*.storageAliases =*/ emptyStorageAliases,
-		/*.funcPtrTargets =*/ emptyFuncPtrTargets,
-		/*.constantLocals =*/ emptyConstantLocals,
+		/*.storageAliases =*/ m_storageAliases,
+		/*.funcPtrTargets =*/ emptyFuncPtrTargets,  // NOT propagated: ptrs can be deleted/reassigned
+		/*.constantLocals =*/ m_constantLocals,
 		/*.inConstructor =*/ m_inConstructor,
 		/*.inUncheckedBlock =*/ m_inUncheckedBlock,
 		/*.buildExpr =*/ [this](solidity::frontend::Expression const& _expr) {
