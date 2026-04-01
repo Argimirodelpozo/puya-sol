@@ -289,10 +289,24 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleBitNot(
 	auto* resultType = _operand->wtype;
 	if (_operand->wtype == awst::WType::uint64Type())
 	{
+		// Use the correct bit-width mask from the Solidity type
+		unsigned maskBits = 64;
+		auto const* solType = m_unaryOp.subExpression().annotation().type;
+		if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(solType))
+			solType = &udvt->underlyingType();
+		if (auto const* intType = dynamic_cast<IntegerType const*>(solType))
+			maskBits = intType->numBits();
+
+		solidity::u256 mask = (maskBits >= 64)
+			? solidity::u256("18446744073709551615")
+			: (solidity::u256(1) << maskBits) - 1;
+		std::ostringstream oss;
+		oss << mask;
+
 		auto maxVal = std::make_shared<awst::IntegerConstant>();
 		maxVal->sourceLocation = m_loc;
 		maxVal->wtype = awst::WType::uint64Type();
-		maxVal->value = "18446744073709551615";
+		maxVal->value = oss.str();
 		auto xorOp = std::make_shared<awst::UInt64BinaryOperation>();
 		xorOp->sourceLocation = m_loc;
 		xorOp->wtype = awst::WType::uint64Type();

@@ -7,6 +7,8 @@
 #include "Logger.h"
 
 #include <libsolidity/ast/TypeProvider.h>
+#include <libsolutil/Numeric.h>
+#include <sstream>
 
 namespace puyasol::builder::eb
 {
@@ -469,19 +471,27 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			cast->expr = std::move(invert);
 			return wrap(std::move(cast));
 		}
-		// ~x for uint64: max - x
-		auto maxVal = std::make_shared<awst::IntegerConstant>();
-		maxVal->sourceLocation = _loc;
-		maxVal->wtype = awst::WType::uint64Type();
-		maxVal->value = "18446744073709551615"; // 2^64 - 1
+		// ~x for uint64: XOR with bit-width mask (not always 2^64-1)
+		{
+			solidity::u256 mask = (m_bits >= 64)
+				? solidity::u256("18446744073709551615")
+				: (solidity::u256(1) << m_bits) - 1;
+			std::ostringstream oss;
+			oss << mask;
 
-		auto e = std::make_shared<awst::UInt64BinaryOperation>();
-		e->sourceLocation = _loc;
-		e->wtype = awst::WType::uint64Type();
-		e->left = std::move(maxVal);
-		e->op = awst::UInt64BinaryOperator::Sub;
-		e->right = resolve();
-		return wrap(std::move(e));
+			auto maxVal = std::make_shared<awst::IntegerConstant>();
+			maxVal->sourceLocation = _loc;
+			maxVal->wtype = awst::WType::uint64Type();
+			maxVal->value = oss.str();
+
+			auto e = std::make_shared<awst::UInt64BinaryOperation>();
+			e->sourceLocation = _loc;
+			e->wtype = awst::WType::uint64Type();
+			e->left = resolve();
+			e->op = awst::UInt64BinaryOperator::BitXor;
+			e->right = std::move(maxVal);
+			return wrap(std::move(e));
+		}
 	}
 
 	default:
