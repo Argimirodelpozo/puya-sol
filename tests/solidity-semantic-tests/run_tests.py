@@ -644,8 +644,8 @@ def execute_call(app, call, app_spec=None, verbose=False):
                         fallback_method = m
                         break
 
-            if fallback_method or app_spec:
-                # Use the ABI method call with "()void" signature
+            if fallback_method:
+                # Contract has fallback — use the ABI method call with "()void"
                 try:
                     method_sig = "()void"
                     params = au.AppClientMethodCallParams(
@@ -661,8 +661,10 @@ def execute_call(app, call, app_spec=None, verbose=False):
                         return True, "correctly reverted"
                     return False, f"exception: {str(ex)[:200]}"
             else:
-                # No app spec — skip
-                return None, "bare call skipped (no app spec)"
+                # No fallback method — bare call should fail on AVM
+                if call.expect_failure:
+                    return True, "correctly reverted (no fallback)"
+                return False, "bare call failed (no fallback method)"
 
         # Build args
         raw_args = []
