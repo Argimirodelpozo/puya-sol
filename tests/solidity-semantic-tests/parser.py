@@ -104,6 +104,35 @@ def _parse_assertion_line(line: str) -> TestCall | None:
     # Handle value annotations: f(), 1 ether -> ...
     value_wei = 0
 
+    # Bare call: () or (), 1 ether or (): data -> ...
+    bare_match = re.match(
+        r'^\(\)'  # bare ()
+        r'(?:,\s*(\d+)\s+(wei|ether))?'  # optional value
+        r'(?:\s*:\s*(.+?))?'  # optional args after ':'
+        r'(?:\s*->\s*(.*))?$',  # optional expected after '->'
+        line
+    )
+    if bare_match:
+        value_amount = bare_match.group(1)
+        value_unit = bare_match.group(2)
+        args_str = bare_match.group(3)
+        expected_str = bare_match.group(4)
+        if value_amount and value_unit:
+            value_wei = int(value_amount)
+            if value_unit == "ether":
+                value_wei *= 10**18
+        args = [a.strip() for a in _split_values(args_str)] if args_str else []
+        expected = [e.strip() for e in _split_values(expected_str)] if expected_str else [""]
+        expect_failure = any("FAILURE" in e for e in expected)
+        return TestCall(
+            method_signature="()",  # bare call marker
+            args=args,
+            expected=expected,
+            expect_failure=expect_failure,
+            value_wei=value_wei,
+            raw_line=line,
+        )
+
     match = re.match(
         r'^([a-zA-Z_]\w*\([^)]*\))'  # method signature
         r'(?:,\s*(\d+)\s+(wei|ether))?'  # optional value

@@ -632,6 +632,38 @@ def _regroup_args(raw_args, method_sig):
 def execute_call(app, call, app_spec=None, verbose=False):
     """Execute a test call and return (passed, detail)."""
     try:
+        # Bare call: () — send ApplicationCall with no args (triggers fallback/receive)
+        if call.method_signature == "()":
+            # Bare call — invoke the fallback/receive function.
+            # Our compiler emits fallback as ABI method "()void".
+            # Try to find it in the ARC56 spec, otherwise send raw.
+            fallback_method = None
+            if app_spec:
+                for m in app_spec.methods:
+                    if m.name == "" or m.name == "()" or "()void" in str(m):
+                        fallback_method = m
+                        break
+
+            if fallback_method or app_spec:
+                # Use the ABI method call with "()void" signature
+                try:
+                    method_sig = "()void"
+                    params = au.AppClientMethodCallParams(
+                        method=method_sig, args=None,
+                        extra_fee=au.AlgoAmount(micro_algo=3000),
+                    )
+                    app.send.call(params)
+                    if call.expect_failure:
+                        return False, "expected FAILURE but succeeded"
+                    return True, "bare call ok"
+                except Exception as ex:
+                    if call.expect_failure:
+                        return True, "correctly reverted"
+                    return False, f"exception: {str(ex)[:200]}"
+            else:
+                # No app spec — skip
+                return None, "bare call skipped (no app spec)"
+
         # Build args
         raw_args = []
         for arg_str in call.args:
