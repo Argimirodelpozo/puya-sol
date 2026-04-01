@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 8 0 255
-    bytecblock 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0xff 0x80 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0xff 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x0100 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x8000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -139,18 +139,36 @@ preincr_s8:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    intc_1 // 1
-    +
     itob
-    bytec_3 // 0xff
+    bytec 5 // 0x0100
+    b%
+    dup
+    pushbytes 0x7f
+    b!=
+    assert // signed inc/dec overflow
+    intc_2 // 8
+    bzero
+    swap
+    bytec 6 // 0x01
+    b+
+    bytec 5 // 0x0100
+    b%
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    bytec_2 // 0xff
     b&
     dup
-    bytec 4 // 0x80
+    bytec_3 // 0x80
     b>=
     dup
     bz preincr_s8_ternary_false@3
     dig 1
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -160,7 +178,7 @@ preincr_s8_ternary_merge@4:
     dup
     bz preincr_s8_ternary_false@6
     dig 1
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -213,39 +231,57 @@ postincr_s8:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    dup
-    intc_1 // 1
-    +
-    swap
     itob
-    bytec_3 // 0xff
+    dup
+    bytec 5 // 0x0100
+    b%
+    dup
+    pushbytes 0x7f
+    b!=
+    assert // signed inc/dec overflow
+    intc_2 // 8
+    bzero
+    swap
+    bytec 6 // 0x01
+    b+
+    bytec 5 // 0x0100
+    b%
+    concat
+    dup
+    cover 2
+    len
+    intc_2 // 8
+    -
+    swap
+    bytec_2 // 0xff
     b&
     dup
-    bytec 4 // 0x80
+    bytec_3 // 0x80
     b>=
     bz postincr_s8_ternary_false@3
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 2
+    bury 3
 
 postincr_s8_ternary_merge@4:
-    dup
-    itob
-    bytec_3 // 0xff
+    dup2
+    intc_2 // 8
+    extract3
+    bytec_2 // 0xff
     b&
     dup
-    bytec 4 // 0x80
+    bytec_3 // 0x80
     b>=
     bz postincr_s8_ternary_false@6
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 postincr_s8_ternary_merge@7:
-    dig 2
+    dig 3
     dup
     len
     intc_0 // 32
@@ -276,7 +312,7 @@ postincr_s8_ternary_false@6:
     b postincr_s8_ternary_merge@7
 
 postincr_s8_ternary_false@3:
-    bury 2
+    bury 3
     b postincr_s8_ternary_merge@4
 
 
@@ -290,18 +326,36 @@ predecr_s8:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    intc_1 // 1
-    -
     itob
-    bytec_3 // 0xff
+    bytec 5 // 0x0100
+    b%
+    dup
+    bytec_3 // 0x80
+    b!=
+    assert // signed inc/dec overflow
+    intc_2 // 8
+    bzero
+    swap
+    bytec_2 // 0xff
+    b+
+    bytec 5 // 0x0100
+    b%
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    bytec_2 // 0xff
     b&
     dup
-    bytec 4 // 0x80
+    bytec_3 // 0x80
     b>=
     dup
     bz predecr_s8_ternary_false@3
     dig 1
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -311,7 +365,7 @@ predecr_s8_ternary_merge@4:
     dup
     bz predecr_s8_ternary_false@6
     dig 1
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -364,39 +418,57 @@ postdecr_s8:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    itob
     dup
-    intc_1 // 1
+    bytec 5 // 0x0100
+    b%
+    dup
+    bytec_3 // 0x80
+    b!=
+    assert // signed inc/dec overflow
+    intc_2 // 8
+    bzero
+    swap
+    bytec_2 // 0xff
+    b+
+    bytec 5 // 0x0100
+    b%
+    concat
+    dup
+    cover 2
+    len
+    intc_2 // 8
     -
     swap
-    itob
-    bytec_3 // 0xff
+    bytec_2 // 0xff
     b&
     dup
-    bytec 4 // 0x80
+    bytec_3 // 0x80
     b>=
     bz postdecr_s8_ternary_false@3
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 2
+    bury 3
 
 postdecr_s8_ternary_merge@4:
-    dup
-    itob
-    bytec_3 // 0xff
+    dup2
+    intc_2 // 8
+    extract3
+    bytec_2 // 0xff
     b&
     dup
-    bytec 4 // 0x80
+    bytec_3 // 0x80
     b>=
     bz postdecr_s8_ternary_false@6
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 postdecr_s8_ternary_merge@7:
-    dig 2
+    dig 3
     dup
     len
     intc_0 // 32
@@ -427,7 +499,7 @@ postdecr_s8_ternary_false@6:
     b postdecr_s8_ternary_merge@7
 
 postdecr_s8_ternary_false@3:
-    bury 2
+    bury 3
     b postdecr_s8_ternary_merge@4
 
 
@@ -439,7 +511,7 @@ preincr:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec 5 // 0x01
+    bytec 6 // 0x01
     b+
     dup
     b+
@@ -467,7 +539,7 @@ postincr:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec 5 // 0x01
+    bytec 6 // 0x01
     b+
     dup
     b+
@@ -495,7 +567,7 @@ predecr:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec 5 // 0x01
+    bytec 6 // 0x01
     b-
     dup
     b+
@@ -523,7 +595,7 @@ postdecr:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec 5 // 0x01
+    bytec 6 // 0x01
     b-
     dup
     b+
@@ -575,10 +647,10 @@ bitnot:
     ==
     assert // invalid number of bytes for arc4.uint256
     b~
-    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b&
     dup
-    bytec 7 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 8 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b>=
     bz bitnot_ternary_false@3
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -653,12 +725,12 @@ negate:
     ==
     assert // invalid number of bytes for arc4.uint256
     b~
-    bytec 5 // 0x01
+    bytec 6 // 0x01
     b+
-    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b&
     dup
-    bytec 7 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 8 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b>=
     bz negate_ternary_false@3
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -697,13 +769,13 @@ negate_s8:
     swap
     -
     itob
-    bytec_3 // 0xff
+    bytec_2 // 0xff
     b&
     dup
-    bytec 4 // 0x80
+    bytec_3 // 0x80
     b>=
     bz negate_s8_ternary_false@3
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
