@@ -108,13 +108,18 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::trySolEbDispatch(
 	auto* leftSolType = m_binOp.leftExpression().annotation().type;
 	auto* rightSolType = m_binOp.rightExpression().annotation().type;
 
+	// Use the common type for arithmetic so overflow checks use the correct
+	// bit width (e.g., uint8 + uint16 should check uint16 overflow, not uint8).
+	auto const* commonSolType = m_binOp.annotation().commonType;
+
 	auto leftBuilder = m_ctx.builderForInstance(leftSolType, _left);
+	if (!leftBuilder && commonSolType)
+		leftBuilder = m_ctx.builderForInstance(commonSolType, _left);
 	if (!leftBuilder) return nullptr;
 
-	// If right operand is a compile-time constant (RationalNumberType),
-	// use the left operand's type for the builder so overflow checks use
-	// the correct bit width (e.g., uint16 + 256 should check uint16 overflow).
 	auto rightBuilder = m_ctx.builderForInstance(rightSolType, _right);
+	if (!rightBuilder && commonSolType)
+		rightBuilder = m_ctx.builderForInstance(commonSolType, _right);
 	if (!rightBuilder && leftSolType)
 		rightBuilder = m_ctx.builderForInstance(leftSolType, _right);
 	if (!rightBuilder) return nullptr;
@@ -159,7 +164,17 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::trySolEbDispatch(
 	}
 	if (hasBinOp)
 	{
-		auto result = leftBuilder->binary_op(*rightBuilder, builderOp, m_loc);
+		// For arithmetic ops, use a builder based on the common type so overflow
+		// checks use the correct bit width (e.g., uint8 + uint16 → uint16 overflow).
+		auto* arithBuilder = leftBuilder.get();
+		std::unique_ptr<eb::InstanceBuilder> commonBuilder;
+		if (commonSolType && commonSolType != leftSolType)
+		{
+			commonBuilder = m_ctx.builderForInstance(commonSolType, _left);
+			if (commonBuilder)
+				arithBuilder = commonBuilder.get();
+		}
+		auto result = arithBuilder->binary_op(*rightBuilder, builderOp, m_loc);
 		if (result) return result->resolve();
 	}
 
