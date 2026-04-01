@@ -1838,9 +1838,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(retSolType))
 			retSolType = &udvt->underlyingType();
 		auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(retSolType);
-		if (intType && intType->isSigned() && intType->numBits() <= 64)
+		if (intType && intType->isSigned())
 		{
-			method.returnType = awst::WType::biguintType();
+			if (intType->numBits() <= 64)
+				method.returnType = awst::WType::biguintType();
 			signedReturns.push_back({intType->numBits(), 0});
 		}
 	}
@@ -1860,9 +1861,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				retSolType = &udvt->underlyingType();
 			if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(retSolType))
 			{
-				if (intType->isSigned() && intType->numBits() <= 64)
+				if (intType->isSigned())
 				{
-					mappedType = awst::WType::biguintType();
+					if (intType->numBits() <= 64)
+						mappedType = awst::WType::biguintType();
 					signedReturns.push_back({intType->numBits(), ri});
 				}
 			}

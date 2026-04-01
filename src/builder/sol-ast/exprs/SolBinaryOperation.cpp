@@ -443,13 +443,100 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 		}
 		else // mul
 		{
-			// For signed multiplication, use a simpler range check.
-			// The result must be < 2^(N-1) (positive) or >= 2^N - 2^(N-1) (negative).
-			// But this doesn't catch all overflows. Use the division round-trip:
-			// If b != 0: assert(a == result / b) where / is signed division
-			// For simplicity, just assert result < 2^N (already done by mod).
-			// TODO: Proper signed mul overflow detection
-			overflowCond = nullptr;
+			// Signed multiplication overflow detection:
+			// The raw (unwrapped) product is exact in biguint. Compute abs values
+			// of operands, multiply, and check the result fits in signed range.
+			// abs(a) = a < half ? a : pow2N - a
+			auto absVal = [&](std::shared_ptr<awst::Expression> const& val)
+				-> std::shared_ptr<awst::Expression> {
+				auto neg = isNeg(val); // val >= half
+				// pow2N - val
+				auto negated = std::make_shared<awst::BigUIntBinaryOperation>();
+				negated->sourceLocation = m_loc;
+				negated->wtype = awst::WType::biguintType();
+				negated->left = makeBiguintConst(pow2NStr);
+				negated->op = awst::BigUIntBinaryOperator::Sub;
+				negated->right = val;
+				// neg ? (pow2N - val) : val
+				auto cond = std::make_shared<awst::ConditionalExpression>();
+				cond->sourceLocation = m_loc;
+				cond->wtype = awst::WType::biguintType();
+				cond->condition = std::move(neg);
+				cond->trueExpr = std::move(negated);
+				cond->falseExpr = val;
+				return cond;
+			};
+
+			auto absA = absVal(_left);
+			auto absB = absVal(_right);
+
+			// absProduct = absA * absB (exact, no overflow in biguint)
+			auto absProduct = std::make_shared<awst::BigUIntBinaryOperation>();
+			absProduct->sourceLocation = m_loc;
+			absProduct->wtype = awst::WType::biguintType();
+			absProduct->left = std::move(absA);
+			absProduct->op = awst::BigUIntBinaryOperator::Mult;
+			absProduct->right = std::move(absB);
+
+			// Check: absProduct <= half (INT_MAX + 1 for same-sign, INT_MAX for diff-sign)
+			// Conservative: absProduct < pow2N/2 handles most cases.
+			// Special: -1 * MIN_INT and MIN_INT * -1 overflow (absProduct == half).
+			// Same sign → result positive → absProduct must be < half
+			// Different sign → result negative → absProduct must be <= half
+			auto aNeg2 = isNeg(_left);
+			auto bNeg2 = isNeg(_right);
+			auto sameSign = std::make_shared<awst::NumericComparisonExpression>();
+			sameSign->sourceLocation = m_loc;
+			sameSign->wtype = awst::WType::boolType();
+			sameSign->lhs = aNeg2;
+			sameSign->op = awst::NumericComparison::Eq;
+			sameSign->rhs = bNeg2;
+
+			// If same sign: absProduct < half (result must be positive, < INT_MAX+1)
+			auto ltHalf = std::make_shared<awst::NumericComparisonExpression>();
+			ltHalf->sourceLocation = m_loc;
+			ltHalf->wtype = awst::WType::boolType();
+			ltHalf->lhs = absProduct;
+			ltHalf->op = awst::NumericComparison::Lt;
+			ltHalf->rhs = makeBiguintConst(halfNStr);
+
+			// If different sign: absProduct <= half (result must be negative, >= -half)
+			// absProduct <= half  ↔  NOT (absProduct > half)  ↔  NOT (half < absProduct)
+			auto halfLtProd = std::make_shared<awst::NumericComparisonExpression>();
+			halfLtProd->sourceLocation = m_loc;
+			halfLtProd->wtype = awst::WType::boolType();
+			halfLtProd->lhs = makeBiguintConst(halfNStr);
+			halfLtProd->op = awst::NumericComparison::Lt;
+			halfLtProd->rhs = absProduct;
+			auto leHalf = std::make_shared<awst::Not>();
+			leHalf->sourceLocation = m_loc;
+			leHalf->wtype = awst::WType::boolType();
+			leHalf->expr = std::move(halfLtProd);
+
+			// sameSign ? (absProduct < half) : (absProduct <= half)
+			auto rangeCheck = std::make_shared<awst::ConditionalExpression>();
+			rangeCheck->sourceLocation = m_loc;
+			rangeCheck->wtype = awst::WType::boolType();
+			rangeCheck->condition = std::move(sameSign);
+			rangeCheck->trueExpr = std::move(ltHalf);
+			rangeCheck->falseExpr = std::move(leHalf);
+
+			// Also handle b == 0 (no overflow, result is 0)
+			auto bZero = std::make_shared<awst::NumericComparisonExpression>();
+			bZero->sourceLocation = m_loc;
+			bZero->wtype = awst::WType::boolType();
+			bZero->lhs = _right;
+			bZero->op = awst::NumericComparison::Eq;
+			bZero->rhs = makeBiguintConst("0");
+
+			auto noOverflow = std::make_shared<awst::BooleanBinaryOperation>();
+			noOverflow->sourceLocation = m_loc;
+			noOverflow->wtype = awst::WType::boolType();
+			noOverflow->left = std::move(bZero);
+			noOverflow->op = awst::BinaryBooleanOperator::Or;
+			noOverflow->right = std::move(rangeCheck);
+
+			overflowCond = std::move(noOverflow);
 		}
 
 		if (overflowCond)
