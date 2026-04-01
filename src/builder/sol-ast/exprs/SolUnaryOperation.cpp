@@ -284,55 +284,198 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 	static const std::string pow256Minus1 =
 		"115792089237316195423570985008687907853269984665640564039457584007913129639935";
 
+	// Get signed bit width for overflow checks
+	unsigned signedBits = 0;
+	if (isSigned)
+	{
+		if (auto const* it = dynamic_cast<IntegerType const*>(
+				m_unaryOp.subExpression().annotation().type))
+			signedBits = it->numBits();
+	}
+
 	auto makeNewValue = [&](std::shared_ptr<awst::Expression> base)
 		-> std::shared_ptr<awst::Expression>
 	{
-		auto one = std::make_shared<awst::IntegerConstant>();
-		one->sourceLocation = m_loc;
-		one->wtype = base->wtype;
-		one->value = "1";
-
-		if (isBigUInt(base->wtype) && isSigned)
+		if (isSigned && signedBits > 0)
 		{
+			// Signed inc/dec with two's complement wrapping + overflow check
+			std::string pow2NStr2, halfNStr2;
+			if (signedBits == 256)
+			{
+				pow2NStr2 = pow256;
+				halfNStr2 = "57896044618658097711785492504343953926634992332820282019728792003956564819968";
+			}
+			else
+			{
+				solidity::u256 p = solidity::u256(1) << signedBits;
+				solidity::u256 h = solidity::u256(1) << (signedBits - 1);
+				std::ostringstream o1, o2;
+				o1 << p; pow2NStr2 = o1.str();
+				o2 << h; halfNStr2 = o2.str();
+			}
+
+			auto makeBConst = [&](std::string const& v) {
+				auto c = std::make_shared<awst::IntegerConstant>();
+				c->sourceLocation = m_loc;
+				c->wtype = awst::WType::biguintType();
+				c->value = v;
+				return c;
+			};
+
+			// Ensure biguint
+			auto val = std::move(base);
+			if (val->wtype == awst::WType::uint64Type())
+			{
+				auto itob = std::make_shared<awst::IntrinsicCall>();
+				itob->sourceLocation = m_loc;
+				itob->wtype = awst::WType::bytesType();
+				itob->opCode = "itob";
+				itob->stackArgs.push_back(std::move(val));
+				auto cast = std::make_shared<awst::ReinterpretCast>();
+				cast->sourceLocation = m_loc;
+				cast->wtype = awst::WType::biguintType();
+				cast->expr = std::move(itob);
+				val = std::move(cast);
+			}
+
+			// Mask to N bits
+			if (signedBits < 256)
+			{
+				auto mask = std::make_shared<awst::BigUIntBinaryOperation>();
+				mask->sourceLocation = m_loc;
+				mask->wtype = awst::WType::biguintType();
+				mask->left = std::move(val);
+				mask->op = awst::BigUIntBinaryOperator::Mod;
+				mask->right = makeBConst(pow2NStr2);
+				val = std::move(mask);
+			}
+
+			// Checked overflow: inc overflows at MAX (half-1), dec underflows at MIN (half)
+			if (!m_ctx.inUncheckedBlock)
+			{
+				std::string limitStr;
+				if (isInc)
+				{
+					// MAX = half - 1
+					solidity::u256 maxVal = (solidity::u256(1) << (signedBits - 1)) - 1;
+					std::ostringstream oss; oss << maxVal; limitStr = oss.str();
+				}
+				else
+					limitStr = halfNStr2; // MIN = half
+
+				auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+				cmp->sourceLocation = m_loc;
+				cmp->wtype = awst::WType::boolType();
+				cmp->lhs = val;
+				cmp->op = awst::NumericComparison::Ne;
+				cmp->rhs = makeBConst(limitStr);
+
+				auto assertExpr = std::make_shared<awst::AssertExpression>();
+				assertExpr->sourceLocation = m_loc;
+				assertExpr->wtype = awst::WType::voidType();
+				assertExpr->condition = std::move(cmp);
+				assertExpr->errorMessage = "signed inc/dec overflow";
+
+				auto assertStmt = std::make_shared<awst::ExpressionStatement>();
+				assertStmt->sourceLocation = m_loc;
+				assertStmt->expr = std::move(assertExpr);
+				m_ctx.prePendingStatements.push_back(std::move(assertStmt));
+			}
+
+			// Compute: inc → (val + 1) mod 2^N, dec → (val + 2^N - 1) mod 2^N
 			std::shared_ptr<awst::Expression> added;
 			if (isInc)
 			{
 				auto add = std::make_shared<awst::BigUIntBinaryOperation>();
 				add->sourceLocation = m_loc;
 				add->wtype = awst::WType::biguintType();
-				add->left = std::move(base);
+				add->left = std::move(val);
 				add->op = awst::BigUIntBinaryOperator::Add;
-				add->right = std::move(one);
+				add->right = makeBConst("1");
 				added = std::move(add);
 			}
 			else
 			{
-				auto offset = std::make_shared<awst::IntegerConstant>();
-				offset->sourceLocation = m_loc;
-				offset->wtype = awst::WType::biguintType();
-				offset->value = pow256Minus1;
+				// val + (2^N - 1) to avoid negative
+				solidity::u256 decOffset = (signedBits == 256)
+					? solidity::u256(0) // special: use string directly
+					: (solidity::u256(1) << signedBits) - 1;
+				std::string decOffsetStr;
+				if (signedBits == 256)
+					decOffsetStr = pow256Minus1;
+				else
+				{
+					std::ostringstream oss; oss << decOffset; decOffsetStr = oss.str();
+				}
 				auto add = std::make_shared<awst::BigUIntBinaryOperation>();
 				add->sourceLocation = m_loc;
 				add->wtype = awst::WType::biguintType();
-				add->left = std::move(base);
+				add->left = std::move(val);
 				add->op = awst::BigUIntBinaryOperator::Add;
-				add->right = std::move(offset);
+				add->right = makeBConst(decOffsetStr);
 				added = std::move(add);
 			}
-			auto modConst = std::make_shared<awst::IntegerConstant>();
-			modConst->sourceLocation = m_loc;
-			modConst->wtype = awst::WType::biguintType();
-			modConst->value = pow256;
+
 			auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
 			mod->sourceLocation = m_loc;
 			mod->wtype = awst::WType::biguintType();
 			mod->left = std::move(added);
 			mod->op = awst::BigUIntBinaryOperator::Mod;
-			mod->right = std::move(modConst);
+			mod->right = makeBConst(pow2NStr2);
+
+			// Convert back to uint64 for ≤64-bit types
+			if (signedBits <= 64)
+			{
+				auto castBytes = std::make_shared<awst::ReinterpretCast>();
+				castBytes->sourceLocation = m_loc;
+				castBytes->wtype = awst::WType::bytesType();
+				castBytes->expr = std::move(mod);
+				auto eight = std::make_shared<awst::IntegerConstant>();
+				eight->sourceLocation = m_loc;
+				eight->wtype = awst::WType::uint64Type();
+				eight->value = "8";
+				auto bz = std::make_shared<awst::IntrinsicCall>();
+				bz->sourceLocation = m_loc;
+				bz->wtype = awst::WType::bytesType();
+				bz->opCode = "bzero";
+				bz->stackArgs.push_back(eight);
+				auto cat = std::make_shared<awst::IntrinsicCall>();
+				cat->sourceLocation = m_loc;
+				cat->wtype = awst::WType::bytesType();
+				cat->opCode = "concat";
+				cat->stackArgs.push_back(std::move(bz));
+				cat->stackArgs.push_back(std::move(castBytes));
+				auto lenCall = std::make_shared<awst::IntrinsicCall>();
+				lenCall->sourceLocation = m_loc;
+				lenCall->wtype = awst::WType::uint64Type();
+				lenCall->opCode = "len";
+				lenCall->stackArgs.push_back(cat);
+				auto eight2 = std::make_shared<awst::IntegerConstant>();
+				eight2->sourceLocation = m_loc;
+				eight2->wtype = awst::WType::uint64Type();
+				eight2->value = "8";
+				auto start = std::make_shared<awst::IntrinsicCall>();
+				start->sourceLocation = m_loc;
+				start->wtype = awst::WType::uint64Type();
+				start->opCode = "-";
+				start->stackArgs.push_back(std::move(lenCall));
+				start->stackArgs.push_back(eight2);
+				auto extract = std::make_shared<awst::IntrinsicCall>();
+				extract->sourceLocation = m_loc;
+				extract->wtype = awst::WType::uint64Type();
+				extract->opCode = "extract_uint64";
+				extract->stackArgs.push_back(cat);
+				extract->stackArgs.push_back(std::move(start));
+				return extract;
+			}
 			return mod;
 		}
 		else if (isBigUInt(base->wtype))
 		{
+			auto one = std::make_shared<awst::IntegerConstant>();
+			one->sourceLocation = m_loc;
+			one->wtype = awst::WType::biguintType();
+			one->value = "1";
 			auto bin = std::make_shared<awst::BigUIntBinaryOperation>();
 			bin->sourceLocation = m_loc;
 			bin->wtype = awst::WType::biguintType();
@@ -343,6 +486,10 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		}
 		else
 		{
+			auto one = std::make_shared<awst::IntegerConstant>();
+			one->sourceLocation = m_loc;
+			one->wtype = awst::WType::uint64Type();
+			one->value = "1";
 			auto bin = std::make_shared<awst::UInt64BinaryOperation>();
 			bin->sourceLocation = m_loc;
 			bin->wtype = awst::WType::uint64Type();
