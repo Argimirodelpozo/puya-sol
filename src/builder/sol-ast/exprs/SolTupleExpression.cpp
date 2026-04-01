@@ -46,16 +46,52 @@ std::shared_ptr<awst::Expression> SolTupleExpression::toAwst()
 		return buildExpr(*m_tuple.components()[0]);
 
 	// Multi-element tuple
+	// Check if this is a LHS tuple with skipped elements (e.g., (,,a) = f())
+	bool hasNulls = false;
+	for (auto const& comp: m_tuple.components())
+		if (!comp) hasNulls = true;
+
 	auto e = std::make_shared<awst::TupleExpression>();
 	e->sourceLocation = m_loc;
 	std::vector<awst::WType const*> types;
-	for (auto const& comp: m_tuple.components())
+
+	if (hasNulls)
 	{
-		if (comp)
+		// LHS tuple with gaps: preserve original positions using null-like placeholders.
+		// Store the original index in a tag on each item so handleTupleAssignment
+		// can map correctly. We use TupleExpression.items with nulls represented
+		// as VarExpression with empty name (marker for "skip this position").
+		for (size_t i = 0; i < m_tuple.components().size(); ++i)
 		{
-			auto translated = buildExpr(*comp);
-			types.push_back(translated->wtype);
-			e->items.push_back(std::move(translated));
+			auto const& comp = m_tuple.components()[i];
+			if (comp)
+			{
+				auto translated = buildExpr(*comp);
+				types.push_back(translated->wtype);
+				e->items.push_back(std::move(translated));
+			}
+			else
+			{
+				// Null placeholder — mark with empty-name VarExpression
+				auto placeholder = std::make_shared<awst::VarExpression>();
+				placeholder->sourceLocation = m_loc;
+				placeholder->wtype = awst::WType::uint64Type(); // dummy type
+				placeholder->name = ""; // empty = skip marker
+				types.push_back(awst::WType::uint64Type());
+				e->items.push_back(std::move(placeholder));
+			}
+		}
+	}
+	else
+	{
+		for (auto const& comp: m_tuple.components())
+		{
+			if (comp)
+			{
+				auto translated = buildExpr(*comp);
+				types.push_back(translated->wtype);
+				e->items.push_back(std::move(translated));
+			}
 		}
 	}
 	e->wtype = m_ctx.typeMapper.createType<awst::WTuple>(std::move(types), std::nullopt);

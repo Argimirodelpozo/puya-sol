@@ -61,6 +61,12 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 	for (size_t i = 0; i < items.size(); ++i)
 	{
 		auto item = items[i];
+
+		// Skip null placeholders (empty-name VarExpression from tuple gaps like (,,a))
+		if (auto const* varExpr = dynamic_cast<awst::VarExpression const*>(item.get()))
+			if (varExpr->name.empty())
+				continue;
+
 		auto itemExpr = std::make_shared<awst::TupleItemExpression>();
 		itemExpr->sourceLocation = m_loc;
 		itemExpr->wtype = item->wtype;
