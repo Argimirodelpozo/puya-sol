@@ -324,14 +324,23 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 	{
 		auto const* contractType = dynamic_cast<ContractType const*>(baseType);
 
-		// Base internal call: BaseContract.method()
-		if (wasTypeType && contractType && !contractType->isSuper())
+		// Base internal call: BaseContract.method() or super.method()
+		if (wasTypeType && contractType)
 		{
 			auto const* refDecl = _memberAccess.annotation().referencedDeclaration;
 			if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(refDecl))
 			{
 				resolvedFuncDef = funcDef;
 				retType = returnTypeFrom(funcDef);
+
+				// Check if there's a __super_N subroutine for this base function
+				auto superIt = m_ctx.superTargetNames.find(funcDef->id());
+				if (superIt != m_ctx.superTargetNames.end())
+				{
+					auto target = awst::InstanceMethodTarget{superIt->second};
+					return buildSubroutineCall(std::move(target), retType, funcDef, false);
+				}
+
 				auto target = awst::InstanceMethodTarget{
 					eb::CallResolver::resolveMethodName(m_ctx, *funcDef)};
 				return buildSubroutineCall(std::move(target), retType, funcDef, false);

@@ -188,7 +188,7 @@ eb::BuilderContext ExpressionBuilder::makeBuilderContext()
 		/*.pendingStatements =*/ m_pendingStatements,
 		/*.prePendingStatements =*/ m_prePendingStatements,
 		/*.paramRemaps =*/ emptyParamRemaps,
-		/*.superTargetNames =*/ emptySuperTargets,
+		/*.superTargetNames =*/ m_superTargetNames,
 		/*.storageAliases =*/ emptyStorageAliases,
 		/*.funcPtrTargets =*/ emptyFuncPtrTargets,
 		/*.constantLocals =*/ emptyConstantLocals,

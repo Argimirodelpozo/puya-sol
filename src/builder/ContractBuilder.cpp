@@ -93,11 +93,19 @@ public:
 		if (baseType->category() == solidity::frontend::Type::Category::Contract)
 		{
 			auto const* contractType = dynamic_cast<solidity::frontend::ContractType const*>(baseType);
-			if (contractType && contractType->isSuper())
+			if (contractType)
 			{
-				auto const* refDecl = _node.annotation().referencedDeclaration;
-				if (refDecl)
-					superTargetIds.insert(refDecl->id());
+				// Both super.g() and BaseContract.g() need base function subroutines
+				bool isExplicitBase = !contractType->isSuper()
+					&& _node.expression().annotation().type
+					&& _node.expression().annotation().type->category()
+						== solidity::frontend::Type::Category::TypeType;
+				if (contractType->isSuper() || isExplicitBase)
+				{
+					auto const* refDecl = _node.annotation().referencedDeclaration;
+					if (refDecl)
+						superTargetIds.insert(refDecl->id());
+				}
 			}
 		}
 		return true;
