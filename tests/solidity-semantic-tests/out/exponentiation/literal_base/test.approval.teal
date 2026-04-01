@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/exponentiation/literal_base.sol.test.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock 0x01 0x 0x02
+    bytecblock 0x 0x01 0x02 0x010000000000000000000000000000000000000000000000000000000000000000 0x8000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -36,26 +36,27 @@ main_f_route@4:
 f:
     intc_2 // 0
     dupn 2
+    bytec_0 // ""
     txna ApplicationArgs 1
     dupn 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_0 // 0x01
+    bytec_1 // 0x01
     swap
     bytec_2 // 0x02
     swap
 
 f_while_top@2:
     dup
-    bytec_1 // 0x
+    bytec_0 // 0x
     b>
     bz f_after_while@6
     dup
-    bytec_0 // 0x01
+    bytec_1 // 0x01
     b&
-    bytec_1 // 0x
+    bytec_0 // 0x
     b!=
     bz f_after_if_else@5
     dig 2
@@ -75,55 +76,84 @@ f_after_if_else@5:
     b f_while_top@2
 
 f_after_while@6:
-    bytec_0 // 0x01
-    bury 5
+    bytec_1 // 0x01
+    bury 6
     intc_2 // 0
     pushint 2
     -
     itob
+    dup
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    dup
     bury 7
+    bnz f_ternary_false@8
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+    bury 8
+
+f_ternary_merge@9:
     dig 3
+    bury 7
+
+f_while_top@10:
+    dig 6
+    bytec_0 // 0x
+    b>
+    bz f_after_while@14
+    dig 6
+    bytec_1 // 0x01
+    b&
+    bytec_0 // 0x
+    b!=
+    bz f_after_if_else@13
+    dig 5
+    dig 8
+    b*
     bury 6
 
-f_while_top@7:
-    dig 5
-    bytec_1 // 0x
-    b>
-    bz f_after_while@11
-    dig 5
-    bytec_0 // 0x01
-    b&
-    bytec_1 // 0x
-    b!=
-    bz f_after_if_else@10
-    dig 4
-    dig 7
-    b*
-    bury 5
-
-f_after_if_else@10:
-    dig 5
+f_after_if_else@13:
+    dig 6
     bytec_2 // 0x02
     b/
-    bury 6
-    dig 6
+    bury 7
+    dig 7
     dup
     b*
-    bury 7
-    b f_while_top@7
+    bury 8
+    b f_while_top@10
 
-f_after_while@11:
+f_after_while@14:
     dig 4
+    bnz f_ternary_false@18
+    dig 3
+    bytec_2 // 0x02
+    b%
+    bytec_0 // 0x
+    b!=
+    bz f_ternary_false@18
+    dig 5
+    bytec_0 // 0x
+    b==
+    bnz f_ternary_false@18
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 6
+    b-
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+f_ternary_merge@19:
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b&
     dup
-    pushbytes 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b>=
-    bz f_ternary_false@13
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    bz f_ternary_false@21
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
-f_ternary_merge@14:
+f_ternary_merge@22:
     dig 3
     dup
     len
@@ -151,5 +181,13 @@ f_ternary_merge@14:
     intc_1 // 1
     return
 
-f_ternary_false@13:
-    b f_ternary_merge@14
+f_ternary_false@21:
+    b f_ternary_merge@22
+
+f_ternary_false@18:
+    dig 5
+    b f_ternary_merge@19
+
+f_ternary_false@8:
+    bury 8
+    b f_ternary_merge@9
