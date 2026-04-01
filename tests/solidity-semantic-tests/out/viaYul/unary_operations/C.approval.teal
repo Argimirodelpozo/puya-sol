@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 8 0 255
-    bytecblock 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0xff 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x0100 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0xff 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x0100 0x01
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -647,16 +647,6 @@ bitnot:
     ==
     assert // invalid number of bytes for arc4.uint256
     b~
-    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b&
-    dup
-    bytec 8 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b>=
-    bz bitnot_ternary_false@3
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-
-bitnot_ternary_merge@4:
     dup
     len
     intc_0 // 32
@@ -671,9 +661,6 @@ bitnot_ternary_merge@4:
     log
     intc_1 // 1
     return
-
-bitnot_ternary_false@3:
-    b bitnot_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.bitnot_u8[routing]() -> void:
@@ -727,16 +714,6 @@ negate:
     b~
     bytec 6 // 0x01
     b+
-    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b&
-    dup
-    bytec 8 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b>=
-    bz negate_ternary_false@3
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-
-negate_ternary_merge@4:
     dup
     len
     intc_0 // 32
@@ -751,9 +728,6 @@ negate_ternary_merge@4:
     log
     intc_1 // 1
     return
-
-negate_ternary_false@3:
-    b negate_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.negate_s8[routing]() -> void:

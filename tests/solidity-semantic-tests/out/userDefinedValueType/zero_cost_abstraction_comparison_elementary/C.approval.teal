@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/zero_cost_abstraction_comparison_elementary.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock "x" 0x8000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    bytecblock "x" 0x8000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
@@ -53,21 +53,6 @@ getX:
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b&
-    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b>=
-    bz getX_ternary_false@3
-    intc_2 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b&
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-
-getX_ternary_merge@4:
     dup
     len
     intc_0 // 32
@@ -76,21 +61,12 @@ getX_ternary_merge@4:
     intc_0 // 32
     bzero
     b|
-    bytec 4 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
-
-getX_ternary_false@3:
-    intc_2 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b&
-    b getX_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/zero_cost_abstraction_comparison_elementary.sol.C.add[routing]() -> void:
@@ -142,16 +118,6 @@ add_bool_merge@5:
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b&
-    dup
-    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b>=
-    bz add_ternary_false@7
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-
-add_ternary_merge@8:
     dup
     len
     intc_0 // 32
@@ -160,15 +126,12 @@ add_ternary_merge@8:
     intc_0 // 32
     bzero
     b|
-    bytec 4 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
-
-add_ternary_false@7:
-    b add_ternary_merge@8
 
 add_bool_false@4:
     intc_2 // 0

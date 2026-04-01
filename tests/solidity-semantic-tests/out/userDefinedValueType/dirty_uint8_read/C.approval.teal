@@ -3,17 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_uint8_read.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 1
+    intcblock 32 1 0
     bytecblock "x" 0xff 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 0
-    pushint 5
-    -
     bytec_0 // "x"
-    swap
+    pushint 18446744073709551611
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -39,27 +36,27 @@ main_after_if_else@2:
 create_dirty_slot:
     load 0
     store 0
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_uint8_read.sol.C.read_unclean_value[routing]() -> void:
 read_unclean_value:
-    intc_0 // 0
+    intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     load 0
-    intc_1 // 32
+    intc_0 // 32
     bzero
     uncover 2
     itob
     concat
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    intc_0 // 32
     extract3
     extract 0 32
     swap
@@ -68,13 +65,13 @@ read_unclean_value:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_uint8_read.sol.C.x[routing]() -> void:
 x:
-    intc_0 // 0
+    intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
@@ -84,7 +81,7 @@ x:
     pushbytes 0x80
     b>=
     bz x_ternary_false@3
-    intc_0 // 0
+    intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
@@ -99,21 +96,21 @@ x:
 x_ternary_merge@4:
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 x_ternary_false@3:
-    intc_0 // 0
+    intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists

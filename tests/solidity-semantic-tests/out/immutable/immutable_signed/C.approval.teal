@@ -3,22 +3,18 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/immutable_signed.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 2 1
-    intc_0 // 0
+    pushint 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 0
-    intc_2 // 2
-    -
     pushbytes "a"
-    swap
+    pushint 18446744073709551614
     app_global_put
     pushbytess "b" 0x6162
     app_global_put
     pushbytes "f"
     dig 1
     app_global_put
-    intc_3 // 1
+    pushint 1
     return
 
 main_after_if_else@2:
@@ -45,29 +41,9 @@ main_viaasm_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/immutable_signed.sol.C.viaasm[routing]() -> void:
 viaasm:
-    intc_0 // 0
-    intc_2 // 2
-    -
     load 0
-    intc_1 // 32
-    bzero
-    uncover 2
-    itob
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    extract 0 32
-    swap
     store 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000006162
-    concat
-    pushbytes 0x151f7c75
-    swap
-    concat
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000fffffffffffffffe0000000000000000000000000000000000000000000000000000000000006162
     log
-    intc_3 // 1
+    pushint 1
     return

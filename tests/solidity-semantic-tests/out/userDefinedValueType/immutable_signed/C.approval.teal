@@ -3,24 +3,18 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/immutable_signed.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 2 1
-    bytecblock 0x6162 0x151f7c75
-    intc_1 // 0
+    pushint 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 0
-    intc_2 // 2
-    -
     pushbytes "a"
-    swap
+    pushint 18446744073709551614
     app_global_put
-    pushbytes "b"
-    bytec_0 // 0x6162
+    pushbytess "b" 0x6162
     app_global_put
     pushbytes "f"
     dig 1
     app_global_put
-    intc_3 // 1
+    pushint 1
     return
 
 main_after_if_else@2:
@@ -38,74 +32,21 @@ main_after_if_else@2:
     assert
     pushbytess 0x94d7e7b8 0xd9d12b48 // method "direct()(uint256,byte[2])", method "viaasm()(byte[32],byte[32])"
     txna ApplicationArgs 0
-    match direct viaasm
+    match main_direct_route@5 viaasm
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/immutable_signed.sol.C.direct[routing]() -> void:
-direct:
-    intc_1 // 0
-    intc_2 // 2
-    -
-    itob
-    pushbytes 0xffff
-    b&
-    dup
-    pushbytes 0x8000
-    b>=
-    bz direct_ternary_false@3
-    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
-    b+
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-
-direct_ternary_merge@4:
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec_0 // 0x6162
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
+main_direct_route@5:
+    pushbytes 0x151f7c75fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe6162
     log
-    intc_3 // 1
+    pushint 1
     return
-
-direct_ternary_false@3:
-    b direct_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/immutable_signed.sol.C.viaasm[routing]() -> void:
 viaasm:
-    intc_1 // 0
-    intc_2 // 2
-    -
     load 0
-    intc_0 // 32
-    bzero
-    uncover 2
-    itob
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 0 32
-    swap
     store 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000006162
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000fffffffffffffffe0000000000000000000000000000000000000000000000000000000000006162
     log
-    intc_3 // 1
+    pushint 1
     return

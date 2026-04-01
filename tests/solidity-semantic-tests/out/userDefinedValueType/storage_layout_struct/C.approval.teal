@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 8
+    intcblock 1 32 0 8
     bytecblock 0x151f7c75 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x00000000000000000000000000000000 "b" "a" "ra" "rb" "c" "rc" "d" "rd" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -147,7 +147,7 @@ set_a:
     intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    intc_1 // 0
+    intc_2 // 0
     bytec 4 // "a"
     app_global_get_ex
     assert // check a exists
@@ -179,7 +179,7 @@ set_ra:
     intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    intc_1 // 0
+    intc_2 // 0
     bytec 5 // "ra"
     app_global_get_ex
     assert // check ra exists
@@ -211,7 +211,7 @@ set_b:
     intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    intc_1 // 0
+    intc_2 // 0
     bytec_3 // "b"
     app_global_get_ex
     assert // check b exists
@@ -243,7 +243,7 @@ set_rb:
     intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    intc_1 // 0
+    intc_2 // 0
     bytec 6 // "rb"
     app_global_get_ex
     assert // check rb exists
@@ -275,7 +275,7 @@ set_c:
     intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    intc_1 // 0
+    intc_2 // 0
     bytec 7 // "c"
     app_global_get_ex
     assert // check c exists
@@ -307,7 +307,7 @@ set_rc:
     intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    intc_1 // 0
+    intc_2 // 0
     bytec 8 // "rc"
     app_global_get_ex
     assert // check rc exists
@@ -331,24 +331,24 @@ set_d:
     dup
     len
     dup
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     swap
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     uncover 2
     b|
-    intc_1 // 0
+    intc_2 // 0
     bytec 9 // "d"
     app_global_get_ex
     assert // check d exists
@@ -370,24 +370,24 @@ set_rd:
     dup
     len
     dup
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     swap
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     uncover 2
     b|
-    intc_1 // 0
+    intc_2 // 0
     bytec 10 // "rd"
     app_global_get_ex
     assert // check rd exists
@@ -407,7 +407,7 @@ set_rd:
 read_slot:
     txna ApplicationArgs 1
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     load 0
@@ -420,20 +420,16 @@ read_slot:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.read_contents_asm[routing]() -> void:
 read_contents_asm:
-    intc_1 // 0
-    pushint 2
-    -
+    pushint 18446744073709551614
     itob
-    intc_1 // 0
+    intc_2 // 0
     bytec_3 // "b"
     app_global_get_ex
     assert // check b exists
     extract 8 8
     concat
     extract 0 8
-    intc_1 // 0
-    pushint 3
-    -
+    pushint 18446744073709551613
     itob
     concat
     bytec_3 // "b"
@@ -444,16 +440,16 @@ read_contents_asm:
     swap
     extract 8 8
     load 0
-    intc_2 // 32
+    intc_1 // 32
     bzero
     dup
     uncover 4
     concat
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     -
-    intc_2 // 32
+    intc_1 // 32
     extract3
     extract 0 32
     dig 2
@@ -463,9 +459,9 @@ read_contents_asm:
     concat
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     -
-    intc_2 // 32
+    intc_1 // 32
     extract3
     extract 0 32
     uncover 2
@@ -473,9 +469,9 @@ read_contents_asm:
     concat
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     -
-    intc_2 // 32
+    intc_1 // 32
     extract3
     extract 0 32
     uncover 3
@@ -497,7 +493,7 @@ read_contents_asm:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.a[routing]() -> void:
 a:
-    intc_1 // 0
+    intc_2 // 0
     bytec 4 // "a"
     app_global_get_ex
     assert // check a exists
@@ -516,7 +512,7 @@ a:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.ra[routing]() -> void:
 ra:
-    intc_1 // 0
+    intc_2 // 0
     bytec 5 // "ra"
     app_global_get_ex
     assert // check ra exists
@@ -535,7 +531,7 @@ ra:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.b[routing]() -> void:
 b:
-    intc_1 // 0
+    intc_2 // 0
     bytec_3 // "b"
     app_global_get_ex
     assert // check b exists
@@ -554,7 +550,7 @@ b:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.rb[routing]() -> void:
 rb:
-    intc_1 // 0
+    intc_2 // 0
     bytec 6 // "rb"
     app_global_get_ex
     assert // check rb exists
@@ -573,7 +569,7 @@ rb:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.c[routing]() -> void:
 c:
-    intc_1 // 0
+    intc_2 // 0
     bytec 7 // "c"
     app_global_get_ex
     assert // check c exists
@@ -592,7 +588,7 @@ c:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.rc[routing]() -> void:
 rc:
-    intc_1 // 0
+    intc_2 // 0
     bytec 8 // "rc"
     app_global_get_ex
     assert // check rc exists
@@ -611,7 +607,7 @@ rc:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.d[routing]() -> void:
 d:
-    intc_1 // 0
+    intc_2 // 0
     bytec 9 // "d"
     app_global_get_ex
     assert // check d exists
@@ -619,7 +615,7 @@ d:
     extract 0 32
     swap
     extract 32 32
-    intc_2 // 32
+    intc_1 // 32
     bzero
     uncover 2
     b|
@@ -635,7 +631,7 @@ d:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.rd[routing]() -> void:
 rd:
-    intc_1 // 0
+    intc_2 // 0
     bytec 10 // "rd"
     app_global_get_ex
     assert // check rd exists
@@ -643,7 +639,7 @@ rd:
     extract 0 32
     swap
     extract 32 32
-    intc_2 // 32
+    intc_1 // 32
     bzero
     uncover 2
     b|

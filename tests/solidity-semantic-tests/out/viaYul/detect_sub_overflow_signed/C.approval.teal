@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/detect_sub_overflow_signed.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 8 0
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x0100 0x8000000000000000000000000000000000000000000000000000000000000000 0x80 0x151f7c75
+    bytecblock 0x0100 0x010000000000000000000000000000000000000000000000000000000000000000 0x80 0x8000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -46,24 +46,24 @@ f:
     ==
     assert // invalid number of bytes for arc4.uint256
     swap
-    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     dup
     uncover 2
-    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     ==
     bnz f_bool_true@3
     dig 2
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     dig 2
     b-
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     dig 1
@@ -76,22 +76,12 @@ f_bool_true@3:
 f_bool_merge@5:
     assert // signed arithmetic overflow
     dig 2
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     dig 2
     b-
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b&
-    dup
-    bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b>=
-    bz f_ternary_false@7
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-
-f_ternary_merge@8:
     dup
     len
     intc_0 // 32
@@ -106,9 +96,6 @@ f_ternary_merge@8:
     log
     intc_1 // 1
     return
-
-f_ternary_false@7:
-    b f_ternary_merge@8
 
 f_bool_false@4:
     intc_3 // 0
@@ -133,33 +120,33 @@ g:
     btoi
     swap
     itob
-    bytec_1 // 0x0100
+    bytec_0 // 0x0100
     b%
     dup
     cover 2
-    bytec_3 // 0x80
+    bytec_2 // 0x80
     b<
     !
     dup
     uncover 2
     itob
-    bytec_1 // 0x0100
+    bytec_0 // 0x0100
     b%
     dup
     cover 2
-    bytec_3 // 0x80
+    bytec_2 // 0x80
     b<
     !
     ==
     bnz g_bool_true@3
     dig 2
-    bytec_1 // 0x0100
+    bytec_0 // 0x0100
     b+
     dig 1
     b-
-    bytec_1 // 0x0100
+    bytec_0 // 0x0100
     b%
-    bytec_3 // 0x80
+    bytec_2 // 0x80
     b<
     !
     dig 2
@@ -174,11 +161,11 @@ g_bool_merge@5:
     intc_2 // 8
     bzero
     dig 3
-    bytec_1 // 0x0100
+    bytec_0 // 0x0100
     b+
     dig 2
     b-
-    bytec_1 // 0x0100
+    bytec_0 // 0x0100
     b%
     concat
     dup
@@ -190,12 +177,12 @@ g_bool_merge@5:
     pushbytes 0xff
     b&
     dup
-    bytec_3 // 0x80
+    bytec_2 // 0x80
     b>=
     bz g_ternary_false@7
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 g_ternary_merge@8:
