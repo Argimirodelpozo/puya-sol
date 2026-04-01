@@ -41,11 +41,23 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNot(
 std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 	std::shared_ptr<awst::Expression> _operand)
 {
-	// Check if the operand type is a signed integer
+	// Check if the operand or result type is a signed integer.
+	// For constant expressions like (-2), the operand type is RationalNumberType
+	// but the result type is signed IntegerType.
 	auto const* solType = m_unaryOp.subExpression().annotation().type;
 	if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(solType))
 		solType = &udvt->underlyingType();
 	auto const* intType = dynamic_cast<IntegerType const*>(solType);
+	if (!intType || !intType->isSigned())
+	{
+		// Try the result type (for constant expressions)
+		auto const* resultType = m_unaryOp.annotation().type;
+		if (auto const* udvt2 = dynamic_cast<UserDefinedValueType const*>(resultType))
+			resultType = &udvt2->underlyingType();
+		auto const* resultIntType = dynamic_cast<IntegerType const*>(resultType);
+		if (resultIntType && resultIntType->isSigned())
+			intType = resultIntType;
+	}
 
 	if (intType && intType->isSigned())
 	{
@@ -189,13 +201,35 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		return mod;
 	}
 
-	// Unsigned negation (original logic)
-	auto zero = std::make_shared<awst::IntegerConstant>();
-	zero->sourceLocation = m_loc;
-	zero->wtype = _operand->wtype;
-	zero->value = "0";
+	// For biguint constant negation (e.g., (-2) where type is RationalNumberType),
+	// produce two's complement directly: 2^256 - value
 	if (isBigUInt(_operand->wtype))
 	{
+		if (auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(_operand.get()))
+		{
+			solidity::u256 val(intConst->value);
+			if (val > 0 && val < (solidity::u256(1) << 255))
+			{
+				// 2^256 - val (two's complement negation)
+				static const std::string pow256Str =
+					"115792089237316195423570985008687907853269984665640564039457584007913129639936";
+				solidity::u256 pow256(pow256Str);
+				solidity::u256 negVal = pow256 - val;
+				std::ostringstream oss;
+				oss << negVal;
+				auto result = std::make_shared<awst::IntegerConstant>();
+				result->sourceLocation = m_loc;
+				result->wtype = awst::WType::biguintType();
+				result->value = oss.str();
+				return result;
+			}
+		}
+
+		// Non-constant unsigned negation: 0 - x
+		auto zero = std::make_shared<awst::IntegerConstant>();
+		zero->sourceLocation = m_loc;
+		zero->wtype = awst::WType::biguintType();
+		zero->value = "0";
 		auto e = std::make_shared<awst::BigUIntBinaryOperation>();
 		e->sourceLocation = m_loc;
 		e->wtype = awst::WType::biguintType();
@@ -204,10 +238,14 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		e->right = std::move(_operand);
 		return e;
 	}
+	auto zero2 = std::make_shared<awst::IntegerConstant>();
+	zero2->sourceLocation = m_loc;
+	zero2->wtype = awst::WType::uint64Type();
+	zero2->value = "0";
 	auto e = std::make_shared<awst::UInt64BinaryOperation>();
 	e->sourceLocation = m_loc;
 	e->wtype = awst::WType::uint64Type();
-	e->left = std::move(zero);
+	e->left = std::move(zero2);
 	e->op = awst::UInt64BinaryOperator::Sub;
 	e->right = std::move(_operand);
 	return e;
