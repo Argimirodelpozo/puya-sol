@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/create_memory_array_too_large.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock 0x 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -31,7 +31,7 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/create_memory_array_too_large.sol.C.f[routing]() -> void:
 f:
-    bytec_0 // 0x
+    pushbytes 0x
     intc_1 // 0
 
 f_while_top@2:
@@ -40,7 +40,7 @@ f_while_top@2:
     <
     bz f_after_while@4
     dig 1
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     concat // on error: max array length exceeded
     bury 2
     dup
@@ -52,7 +52,7 @@ f_while_top@2:
 f_after_while@4:
     intc_2 // 32
     bzero
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     dig 3
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000002a
     replace2 32 // on error: index access is out of bounds
@@ -62,7 +62,7 @@ f_after_while@4:
     pop
     extract 32 32 // on error: index access is out of bounds
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -72,33 +72,11 @@ f_after_while@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/create_memory_array_too_large.sol.C.g[routing]() -> void:
 g:
-    bytec_0 // 0x
-    intc_1 // 0
-
-g_while_top@2:
-    dup
-    intc_0 // 1
-    <
-    bz g_after_while@4
     intc_1 // 0
     itob
-    dig 2
-    swap
-    concat // on error: max array length exceeded
-    bury 2
     dup
-    intc_0 // 1
-    +
-    bury 1
-    b g_while_top@2
-
-g_after_while@4:
-    intc_1 // 0
-    itob
     pushint 42
     itob
-    dig 3
-    swap
     replace2 16 // on error: index access is out of bounds
     pushint 23
     itob
@@ -110,7 +88,7 @@ g_after_while@4:
     intc_2 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log

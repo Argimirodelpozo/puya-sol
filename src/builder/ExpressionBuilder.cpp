@@ -190,7 +190,7 @@ eb::BuilderContext ExpressionBuilder::makeBuilderContext()
 		/*.paramRemaps =*/ emptyParamRemaps,
 		/*.superTargetNames =*/ m_superTargetNames,
 		/*.storageAliases =*/ m_storageAliases,
-		/*.funcPtrTargets =*/ emptyFuncPtrTargets,  // NOT propagated: ptrs can be deleted/reassigned
+		/*.funcPtrTargets =*/ m_funcPtrTargets,
 		/*.constantLocals =*/ m_constantLocals,
 		/*.inConstructor =*/ m_inConstructor,
 		/*.inUncheckedBlock =*/ m_inUncheckedBlock,

@@ -2244,11 +2244,11 @@
                       "desc": null
                     },
                     "target": {
-                      "_type": "VarExpression",
+                      "_type": "BoxValueExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_reference.sol",
-                        "line": 487,
-                        "end_line": 492,
+                        "line": 471,
+                        "end_line": 477,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
@@ -2278,7 +2278,101 @@
                         "source_location": null,
                         "desc": null
                       },
-                      "name": "inner"
+                      "key": {
+                        "_type": "BoxPrefixedKeyExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_reference.sol",
+                          "line": 471,
+                          "end_line": 477,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "box_key",
+                          "immutable": true
+                        },
+                        "prefix": {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_reference.sol",
+                            "line": 471,
+                            "end_line": 477,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "box_key",
+                            "immutable": true
+                          },
+                          "value": "ZDDW",
+                          "encoding": "utf8"
+                        },
+                        "key": {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_reference.sol",
+                            "line": 471,
+                            "end_line": 477,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "op_code": "sha256",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_reference.sol",
+                                "line": 471,
+                                "end_line": 477,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "itob",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_reference.sol",
+                                    "line": 475,
+                                    "end_line": 476,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "value": 0,
+                                  "teal_alias": null
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      },
+                      "exists_assertion_message": null
                     },
                     "value": {
                       "_type": "NewStruct",
@@ -2333,41 +2427,224 @@
                             "length": null
                           },
                           "base": {
-                            "_type": "VarExpression",
+                            "_type": "StateGet",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_reference.sol",
                               "line": 487,
-                              "end_line": 492,
+                              "end_line": 498,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
                             },
-                            "wtype": {
-                              "_type": "ARC4Struct",
-                              "name": "s2",
-                              "immutable": true,
-                              "fields": {
-                                "z": {
-                                  "_type": "ARC4UIntN",
-                                  "name": "arc4.uint64",
-                                  "immutable": true,
-                                  "n": 64,
-                                  "arc4_alias": null,
-                                  "source_location": null
+                            "field": {
+                              "_type": "BoxValueExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_reference.sol",
+                                "line": 471,
+                                "end_line": 477,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "ARC4Struct",
+                                "name": "s2",
+                                "immutable": true,
+                                "fields": {
+                                  "z": {
+                                    "_type": "ARC4UIntN",
+                                    "name": "arc4.uint64",
+                                    "immutable": true,
+                                    "n": 64,
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "recursive": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  }
                                 },
-                                "recursive": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
+                                "frozen": true,
+                                "arc4_alias": null,
+                                "source_location": null,
+                                "desc": null
+                              },
+                              "key": {
+                                "_type": "BoxPrefixedKeyExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_reference.sol",
+                                  "line": 471,
+                                  "end_line": 477,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "box_key",
+                                  "immutable": true
+                                },
+                                "prefix": {
+                                  "_type": "BytesConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_reference.sol",
+                                    "line": 471,
+                                    "end_line": 477,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "box_key",
+                                    "immutable": true
+                                  },
+                                  "value": "ZDDW",
+                                  "encoding": "utf8"
+                                },
+                                "key": {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_reference.sol",
+                                    "line": 471,
+                                    "end_line": 477,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "sha256",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_reference.sol",
+                                        "line": 471,
+                                        "end_line": 477,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "op_code": "itob",
+                                      "immediates": [],
+                                      "stack_args": [
+                                        {
+                                          "_type": "IntegerConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_reference.sol",
+                                            "line": 475,
+                                            "end_line": 476,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "value": 0,
+                                          "teal_alias": null
+                                        }
+                                      ]
+                                    }
+                                  ]
                                 }
                               },
-                              "frozen": true,
-                              "arc4_alias": null,
-                              "source_location": null,
-                              "desc": null
+                              "exists_assertion_message": null
                             },
-                            "name": "inner"
+                            "default": {
+                              "_type": "NewStruct",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_reference.sol",
+                                "line": 487,
+                                "end_line": 498,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "ARC4Struct",
+                                "name": "s2",
+                                "immutable": true,
+                                "fields": {
+                                  "z": {
+                                    "_type": "ARC4UIntN",
+                                    "name": "arc4.uint64",
+                                    "immutable": true,
+                                    "n": 64,
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "recursive": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  }
+                                },
+                                "frozen": true,
+                                "arc4_alias": null,
+                                "source_location": null,
+                                "desc": null
+                              },
+                              "values": {
+                                "recursive": {
+                                  "_type": "BytesConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_reference.sol",
+                                    "line": 487,
+                                    "end_line": 498,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "value": "",
+                                  "encoding": "base16"
+                                },
+                                "z": {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_reference.sol",
+                                    "line": 487,
+                                    "end_line": 498,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "ARC4UIntN",
+                                    "name": "arc4.uint64",
+                                    "immutable": true,
+                                    "n": 64,
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "value": 0,
+                                  "teal_alias": null
+                                }
+                              }
+                            }
                           },
                           "name": "recursive"
                         },

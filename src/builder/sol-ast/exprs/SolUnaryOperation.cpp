@@ -619,6 +619,14 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 {
 	auto target = buildExpr(m_unaryOp.subExpression());
 
+	// Clear function pointer tracking on delete (e.g., delete y where y is a func ptr)
+	if (auto const* ident = dynamic_cast<Identifier const*>(&m_unaryOp.subExpression()))
+	{
+		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
+				ident->annotation().referencedDeclaration))
+			m_ctx.funcPtrTargets.erase(varDecl->id());
+	}
+
 	if (dynamic_cast<awst::BoxValueExpression const*>(target.get()))
 	{
 		auto stateDelete = std::make_shared<awst::StateDelete>();
