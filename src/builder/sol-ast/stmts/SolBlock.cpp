@@ -143,6 +143,10 @@ std::shared_ptr<awst::Block> SolBlock::toAwstBlock()
 	auto awstBlock = std::make_shared<awst::Block>();
 	awstBlock->sourceLocation = m_loc;
 
+	// Every block creates a scope — mutable context state (funcPtrTargets,
+	// storageAliases, constantLocals) is snapshotted and restored on exit.
+	auto scope = m_exprBuilder.pushScope();
+
 	bool const wasUnchecked = m_exprBuilder.inUncheckedBlock();
 	if (m_block.unchecked())
 		m_exprBuilder.setInUncheckedBlock(true);

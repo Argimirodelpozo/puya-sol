@@ -174,6 +174,37 @@ private:
 public:
 	void setInUncheckedBlock(bool _v) { m_inUncheckedBlock = _v; }
 	bool inUncheckedBlock() const { return m_inUncheckedBlock; }
+
+	/// RAII scope guard that snapshots mutable context state on construction
+	/// and restores it on destruction. Use at scope boundaries (if/else branches,
+	/// for/while bodies, blocks) to prevent mutations from leaking across scopes.
+	class ScopeGuard
+	{
+	public:
+		explicit ScopeGuard(ExpressionBuilder& _eb)
+			: m_eb(_eb),
+			  m_savedFuncPtrTargets(_eb.m_funcPtrTargets),
+			  m_savedStorageAliases(_eb.m_storageAliases),
+			  m_savedConstantLocals(_eb.m_constantLocals)
+		{}
+		~ScopeGuard()
+		{
+			m_eb.m_funcPtrTargets = std::move(m_savedFuncPtrTargets);
+			m_eb.m_storageAliases = std::move(m_savedStorageAliases);
+			m_eb.m_constantLocals = std::move(m_savedConstantLocals);
+		}
+		ScopeGuard(ScopeGuard const&) = delete;
+		ScopeGuard& operator=(ScopeGuard const&) = delete;
+	private:
+		ExpressionBuilder& m_eb;
+		std::map<int64_t, solidity::frontend::FunctionDefinition const*> m_savedFuncPtrTargets;
+		std::map<int64_t, std::shared_ptr<awst::Expression>> m_savedStorageAliases;
+		std::unordered_map<int64_t, unsigned long long> m_savedConstantLocals;
+	};
+
+	/// Create a scope guard that snapshots and restores mutable context state.
+	ScopeGuard pushScope() { return ScopeGuard(*this); }
+
 private:
 
 	/// Map Solidity binary operator token to AWST equivalent.
