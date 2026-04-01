@@ -644,8 +644,10 @@ def execute_call(app, call, app_spec=None, verbose=False):
                         fallback_method = m
                         break
 
-            if fallback_method:
-                # Contract has fallback — use the ABI method call with "()void"
+            has_data = bool(call.args)
+
+            if fallback_method and not has_data:
+                # Bare call with no data → receive/fallback via "()void"
                 try:
                     method_sig = "()void"
                     params = au.AppClientMethodCallParams(
@@ -660,8 +662,29 @@ def execute_call(app, call, app_spec=None, verbose=False):
                     if call.expect_failure:
                         return True, "correctly reverted"
                     return False, f"exception: {str(ex)[:200]}"
+            elif has_data and fallback_method:
+                # Bare call WITH data to contract with ()void → try fallback
+                try:
+                    method_sig = "()void"
+                    params = au.AppClientMethodCallParams(
+                        method=method_sig, args=None,
+                        extra_fee=au.AlgoAmount(micro_algo=3000),
+                    )
+                    app.send.call(params)
+                    if call.expect_failure:
+                        return False, "expected FAILURE but succeeded"
+                    return True, "fallback call ok"
+                except Exception as ex:
+                    if call.expect_failure:
+                        return True, "correctly reverted"
+                    return False, f"exception: {str(ex)[:200]}"
+            elif has_data:
+                # Bare call WITH data but no fallback → should fail
+                if call.expect_failure:
+                    return True, "correctly reverted (no fallback for data)"
+                return False, "bare call with data failed (no fallback)"
             else:
-                # No fallback method — bare call should fail on AVM
+                # No fallback/receive method — bare call should fail on AVM
                 if call.expect_failure:
                     return True, "correctly reverted (no fallback)"
                 return False, "bare call failed (no fallback method)"
