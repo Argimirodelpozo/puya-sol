@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_uint8_read.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock "x" 0xff 0x151f7c75
+    bytecblock 0x78 0xff 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
@@ -35,6 +35,13 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_uint8_read.sol.C.create_dirty_slot[routing]() -> void:
 create_dirty_slot:
     load 0
+    bytec_0 // 0x78
+    app_global_get
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    bytec_0 // 0x78
+    swap
+    app_global_put
     store 0
     intc_1 // 1
     return

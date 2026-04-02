@@ -4,17 +4,17 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_storage_access_inside_function.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32
-    bytecblock "y" "z" 0x 0x151f7c75
+    bytecblock 0x7a "y" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     pushbytes "x"
     intc_0 // 0
     app_global_put
-    bytec_0 // "y"
+    bytec_1 // "y"
     intc_0 // 0
     app_global_put
-    bytec_1 // "z"
-    bytec_2 // 0x
+    bytec_0 // "z"
+    pushbytes 0x
     app_global_put
     intc_1 // 1
     return
@@ -41,13 +41,10 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_storage_access_inside_function.sol.C.f[routing]() -> void:
 f:
     load 0
-    bytec_2 // ""
-    itob
-    swap
+    bytec_0 // 0x7a
+    pushbytes 0x07
+    app_global_put
     store 0
-    pushbytes 0x02
-    b==
-    assert
     pushbytes 0x151f7c7580
     log
     intc_1 // 1
@@ -57,11 +54,11 @@ f:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_storage_access_inside_function.sol.C.y[routing]() -> void:
 y:
     intc_0 // 0
-    bytec_0 // "y"
+    bytec_1 // "y"
     app_global_get_ex
     assert // check y exists
     itob
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -72,7 +69,7 @@ y:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_storage_access_inside_function.sol.C.z[routing]() -> void:
 z:
     intc_0 // 0
-    bytec_1 // "z"
+    bytec_0 // "z"
     app_global_get_ex
     assert // check z exists
     dup
@@ -83,7 +80,7 @@ z:
     intc_2 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log

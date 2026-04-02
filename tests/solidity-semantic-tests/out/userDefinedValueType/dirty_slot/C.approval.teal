@@ -4,13 +4,13 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 8
-    bytecblock 0x151f7c75 "b" "a" "x"
+    bytecblock 0x62 0x151f7c75 0x61 "x" 0xf00e0bbc0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0e0c0ba098076054032001
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_2 // "a"
     pushint 13
     app_global_put
-    bytec_1 // "b"
+    bytec_0 // "b"
     pushbytes 0x0401
     app_global_put
     bytec_3 // "x"
@@ -41,6 +41,9 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol.C.write_a[routing]() -> void:
 write_a:
     load 0
+    bytec_2 // 0x61
+    bytec 4 // 0xf00e0bbc0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0e0c0ba098076054032001
+    app_global_put
     store 0
     intc_0 // 1
     return
@@ -49,6 +52,9 @@ write_a:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol.C.write_b[routing]() -> void:
 write_b:
     load 0
+    bytec_0 // 0x62
+    bytec 4 // 0xf00e0bbc0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0e0c0ba098076054032001
+    app_global_put
     store 0
     intc_0 // 1
     return
@@ -63,7 +69,7 @@ get_b:
     ==
     assert // invalid number of bytes for arc4.uint256
     intc_1 // 0
-    bytec_1 // "b"
+    bytec_0 // "b"
     app_global_get_ex
     assert // check b exists
     intc_2 // 8
@@ -77,7 +83,7 @@ get_b:
     extract_uint64
     intc_0 // 1
     extract3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -92,7 +98,7 @@ a:
     app_global_get_ex
     assert // check a exists
     itob
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -103,10 +109,10 @@ a:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol.C.b[routing]() -> void:
 b:
     intc_1 // 0
-    bytec_1 // "b"
+    bytec_0 // "b"
     app_global_get_ex
     assert // check b exists
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -120,7 +126,7 @@ x:
     bytec_3 // "x"
     app_global_get_ex
     assert // check x exists
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log

@@ -3,32 +3,31 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
-    bytecblock 0x base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) 0x151f7c75 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    intcblock 32 0 1
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     pushbytes "a"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
     pushbytes "b"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
     pushbytes "c"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
     pushbytes "d"
-    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     app_global_put
     pushbytes "e"
-    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     app_global_put
     pushbytes "f"
-    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     app_global_put
-    pushbytes "g"
-    bytec_0 // 0x
+    pushbytess "g" 0x
     app_global_put
-    intc_0 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -52,131 +51,160 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout.sol.C.storage_a[routing]() -> void:
 storage_a:
-    bytec_0 // ""
+    intc_1 // 0
     load 0
-    bytec_0 // ""
-    itob
-    uncover 2
-    itob
-    uncover 2
     store 0
-    intc_1 // 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
     bzero
-    uncover 2
-    dig 1
     b|
-    cover 2
-    b|
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_2 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout.sol.C.storage_b[routing]() -> void:
 storage_b:
-    bytec_0 // ""
+    intc_1 // 0
     load 0
-    bytec_0 // ""
-    itob
-    uncover 2
-    itob
-    uncover 2
     store 0
-    intc_1 // 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
     bzero
-    uncover 2
-    dig 1
     b|
-    cover 2
-    b|
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_2 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout.sol.C.storage_c[routing]() -> void:
 storage_c:
+    intc_1 // 0
     load 0
-    bytec_0 // ""
-    itob
-    swap
     store 0
-    intc_1 // 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
     bzero
     b|
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_2 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout.sol.C.storage_d[routing]() -> void:
 storage_d:
+    intc_1 // 0
     load 0
     store 0
-    bytec_3 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
     log
-    intc_0 // 1
+    intc_2 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout.sol.C.storage_e[routing]() -> void:
 storage_e:
+    intc_1 // 0
     load 0
     store 0
-    bytec_3 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
     log
-    intc_0 // 1
+    intc_2 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout.sol.C.storage_f[routing]() -> void:
 storage_f:
+    intc_1 // 0
     load 0
     store 0
-    bytec_3 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
     log
-    intc_0 // 1
+    intc_2 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout.sol.C.storage_g[routing]() -> void:
 storage_g:
-    intc_2 // 0
-    dup
+    intc_1 // 0
     load 0
     store 0
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
-    swap
-    dig 1
     b|
-    dig 2
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    cover 2
-    b|
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_2 // 1
     return
