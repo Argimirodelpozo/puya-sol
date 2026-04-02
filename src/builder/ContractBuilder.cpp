@@ -2318,7 +2318,14 @@ std::optional<awst::ARC4MethodConfig> ContractBuilder::buildARC4Config(
 	// Public/external functions get ARC4 ABI method configs
 	awst::ARC4ABIMethodConfig config;
 	config.sourceLocation = _loc;
-	config.name = _func.name();
+	// Distinguish fallback from receive: both have empty Solidity names,
+	// but need different ARC4 method names for routing.
+	if (_func.isFallback())
+		config.name = "__fallback";
+	else if (_func.isReceive())
+		config.name = "__receive";
+	else
+		config.name = _func.name();
 	config.allowedCompletionTypes = {0}; // NoOp
 	config.create = 3; // Disallow
 

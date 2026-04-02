@@ -635,23 +635,41 @@ def execute_call(app, call, app_spec=None, verbose=False):
         # Bare call: () — send ApplicationCall with no args (triggers fallback/receive)
         if call.method_signature == "()":
             # Bare call — invoke the fallback/receive function.
-            # Our compiler emits fallback as ABI method "()void".
-            # Try to find it in the ARC56 spec, otherwise send raw.
-            fallback_method = None
+            # Our compiler emits fallback as "__fallback()void" and
+            # receive as "__receive()void".
+            has_fallback = False
+            has_receive = False
             if app_spec:
                 for m in app_spec.methods:
-                    if m.name == "" or m.name == "()" or "()void" in str(m):
-                        fallback_method = m
-                        break
+                    if m.name == "__fallback":
+                        has_fallback = True
+                    elif m.name == "__receive":
+                        has_receive = True
+                    elif m.name == "" or "()void" in str(m):
+                        # Legacy: treat unnamed as fallback
+                        has_fallback = True
 
             has_data = bool(call.args)
 
-            if fallback_method and not has_data:
-                # Bare call with no data → receive/fallback via "()void"
+            # Route: no data → receive (or fallback if no receive)
+            #        with data → fallback only
+            target_method = None
+            if has_data and has_fallback:
+                target_method = "__fallback()void"
+            elif has_data and not has_fallback:
+                # No fallback for data calls — should fail
+                if call.expect_failure:
+                    return True, "correctly reverted (no fallback for data)"
+                return False, "bare call with data failed (no fallback)"
+            elif not has_data and has_receive:
+                target_method = "__receive()void"
+            elif not has_data and has_fallback:
+                target_method = "__fallback()void"
+
+            if target_method:
                 try:
-                    method_sig = "()void"
                     params = au.AppClientMethodCallParams(
-                        method=method_sig, args=None,
+                        method=target_method, args=None,
                         extra_fee=au.AlgoAmount(micro_algo=3000),
                     )
                     app.send.call(params)
@@ -662,27 +680,6 @@ def execute_call(app, call, app_spec=None, verbose=False):
                     if call.expect_failure:
                         return True, "correctly reverted"
                     return False, f"exception: {str(ex)[:200]}"
-            elif has_data and fallback_method:
-                # Bare call WITH data to contract with ()void → try fallback
-                try:
-                    method_sig = "()void"
-                    params = au.AppClientMethodCallParams(
-                        method=method_sig, args=None,
-                        extra_fee=au.AlgoAmount(micro_algo=3000),
-                    )
-                    app.send.call(params)
-                    if call.expect_failure:
-                        return False, "expected FAILURE but succeeded"
-                    return True, "fallback call ok"
-                except Exception as ex:
-                    if call.expect_failure:
-                        return True, "correctly reverted"
-                    return False, f"exception: {str(ex)[:200]}"
-            elif has_data:
-                # Bare call WITH data but no fallback → should fail
-                if call.expect_failure:
-                    return True, "correctly reverted (no fallback for data)"
-                return False, "bare call with data failed (no fallback)"
             else:
                 # No fallback/receive method — bare call should fail on AVM
                 if call.expect_failure:
