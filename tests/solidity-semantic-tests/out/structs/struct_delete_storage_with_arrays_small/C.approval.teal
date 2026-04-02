@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_delete_storage_with_arrays_small.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 2 0
-    bytecblock "s" 0x000000000000000000000000000000000000000000000000000000000000000000220000 0x3fffffffffffffffffffffffffffffffffffff
+    intcblock 1 0 32 2
+    bytecblock "s" 0x000000000000000000000000000000000000000000000000000000000000000000220000
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "s"
@@ -39,19 +39,31 @@ main_f_route@4:
 f:
     load 0
     store 0
-    bytec_2 // 0x3fffffffffffffffffffffffffffffffffffff
-    intc_1 // 32
+    intc_0 // 1
+    itob
+    intc_1 // 0
+    bytec_0 // "s"
+    app_global_get_ex
+    assert // check s exists
+    dup
+    extract 8 24
+    dig 1
+    intc_2 // 32
     extract_uint16
-    bytec_2 // 0x3fffffffffffffffffffffffffffffffffffff
-    swap
-    pushint 19
+    dig 2
+    len
+    uncover 3
+    cover 2
     substring3
-    pushbytes 0x0000000000000001ffffffffffffffffffffff0022
+    cover 2
+    concat
+    pushbytes 0x0022
+    concat
     swap
     concat
     dup
     extract 8 24
-    intc_2 // 2
+    intc_3 // 2
     itob
     dig 1
     swap
@@ -62,13 +74,13 @@ f:
     replace2 8 // on error: index access is out of bounds
     pop
     dup
-    intc_1 // 32
+    intc_2 // 32
     extract_uint16
     dig 1
     len
     substring3
-    intc_2 // 2
-    intc_3 // 0
+    intc_3 // 2
+    intc_1 // 0
     extract3
     dup
     pushint 4
@@ -84,9 +96,7 @@ f:
     app_global_put
     load 0
     store 0
-    intc_3 // 0
-    assert // overflow
-    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000000220000
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return

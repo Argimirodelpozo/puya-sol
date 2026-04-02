@@ -60,7 +60,6 @@ test_zeroed_indices:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_1 // 0
 
 test_zeroed_indices_while_top@32:
     pushint 170010
@@ -88,7 +87,7 @@ test_zeroed_indices_while_top@2:
     intc_0 // 32
     /
     itob
-    dig 2
+    dig 1
     b<
     bz test_zeroed_indices_while_top@5
     bytec_0 // "storageArray"
@@ -108,7 +107,7 @@ test_zeroed_indices_while_top@5:
     intc_0 // 32
     /
     itob
-    dig 2
+    dig 1
     b>
     bz test_zeroed_indices_after_while@7
     bytec_0 // "storageArray"
@@ -131,15 +130,14 @@ test_zeroed_indices_after_while@7:
     intc_1 // 0
     itob
     dup
-    bury 5
-    bury 3
+    bury 4
+    bury 2
 
 test_zeroed_indices_while_top@8:
-    dig 2
-    dig 2
+    dup2
     b<
     bz test_zeroed_indices_after_while@10
-    dig 2
+    dig 1
     dup
     bytec_2 // 0x01
     b+
@@ -185,11 +183,11 @@ test_zeroed_indices_while_top@8:
     bytec_0 // "storageArray"
     swap
     box_put
-    bury 3
+    bury 2
     b test_zeroed_indices_while_top@8
 
 test_zeroed_indices_after_while@10:
-    dig 1
+    dup
     pushbytes 0x03
     b>
     bz test_zeroed_indices_while_top@22
@@ -243,30 +241,20 @@ test_zeroed_indices_while_top@15:
 test_zeroed_indices_after_while@17:
     pushint 3
     itob
-    bury 3
+    bury 2
 
 test_zeroed_indices_while_top@18:
-    dig 2
-    dig 2
+    dup2
     b<
     bz test_zeroed_indices_while_top@22
     load 0
-    intc_0 // 32
-    bzero
-    dig 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
     store 0
-    dig 2
+    dig 1
     bytec_2 // 0x01
     b+
-    bury 3
+    bury 2
     b test_zeroed_indices_while_top@18
 
 test_zeroed_indices_while_top@22:
@@ -302,7 +290,7 @@ test_zeroed_indices_while_top@25:
     intc_0 // 32
     /
     itob
-    dig 2
+    dig 1
     b<
     bz test_zeroed_indices_while_top@28
     bytec_0 // "storageArray"
@@ -316,8 +304,8 @@ test_zeroed_indices_while_top@25:
     b test_zeroed_indices_while_top@25
 
 test_zeroed_indices_while_top@28:
-    dig 3
     dig 2
+    dig 1
     b<
     bz test_zeroed_indices_after_while@30
     callsub _puya_lib.mem.new_slot
@@ -340,7 +328,7 @@ test_zeroed_indices_while_top@28:
     select
     pushint 8
     bzero
-    dig 7
+    dig 6
     dup
     cover 5
     concat
@@ -390,7 +378,7 @@ test_zeroed_indices_while_top@28:
     assert
     bytec_2 // 0x01
     b+
-    bury 4
+    bury 3
     b test_zeroed_indices_while_top@28
 
 test_zeroed_indices_after_while@30:
