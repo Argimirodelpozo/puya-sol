@@ -85,7 +85,34 @@ Tracking known limitations, shortcuts, and architectural improvements needed.
 
 **Impact**: Fixes `function_modifier_multiple_times_local_vars` and potentially other modifier tests (13 total). Also fixes modifier local variable scoping generally.
 
-## 5. C99 Variable Scoping (Unique Variable Names)
+## 5. Storage System Design (EVM Slot Emulation vs AVM-Native)
+
+**Current state**: Ad-hoc storage — simple vars use `app_global_put("name", value)`, mappings/arrays use box storage with `sha256(key + name)`. No slot numbering, no packing, no EVM-compatible layout.
+
+**Problem**: Assembly `sload(N)`/`sstore(N, value)` can't work without slot→name mapping. Packed storage (multiple small types in one 32-byte slot) isn't supported. Mapping element access via `keccak256(key . slot)` doesn't translate.
+
+**Options**:
+
+### Option A: Emulate EVM Layout (in boxes)
+Store a virtual 32-byte-per-slot storage in a single box. `sload(N)` reads 32 bytes at offset `N*32`. Packed types, mappings, arrays all work identically to EVM.
+- **Pros**: All assembly storage tests pass. EVM semantics preserved. Simple sload/sstore.
+- **Cons**: Massive rewrite. All state access goes through box reads/writes with byte manipulation. Inefficient for simple reads. Box size limits (32KB per box, need multi-box for large contracts).
+
+### Option B: AVM-Native with Slot Mapping (current + extensions)
+Keep separate keys per variable. Build compile-time slot→key mapping for assembly access. Handle simple types via `app_global_put/get`. Complex types (packed, mappings) fall back to EVM semantics warning.
+- **Pros**: Efficient for normal Solidity code. Minimal changes. Works for most non-assembly code.
+- **Cons**: Assembly storage tests with packed types, offsets, or raw keccak256 slot computation won't work.
+
+### Option C: Hybrid
+Use AVM-native for normal Solidity access (fast path), but maintain an EVM-compatible slot blob in a box for assembly blocks. At assembly block entry, flush AVM state to the blob. At exit, sync back. Assembly code operates on the blob via sload/sstore.
+- **Pros**: Both worlds — fast normal access, correct assembly access.
+- **Cons**: Sync overhead. Complexity. Potential consistency issues if assembly modifies state that normal code also accesses.
+
+**Recommendation**: Start with Option B (current), extend slot mapping for simple types. Document assembly storage as a known limitation. Consider Option C for contracts that use heavy inline assembly with storage.
+
+**Solidity reference**: `YulUtilFunctions.cpp:2711` (mapping_index_access), `Types.h:79` (StorageOffsets), `IRGeneratorForStatements.cpp:166` (slot/offset suffix handling).
+
+## 6. C99 Variable Scoping (Unique Variable Names)
 
 **Current state**: All local variables use their Solidity name as the AWST VarExpression name. Two variables with the same name in nested scopes (shadowing) produce the same AWST name, causing them to alias.
 
