@@ -165,6 +165,15 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 			if (suffix == "slot")
 			{
 				// z.slot → resolve to the variable name for storage access
+				// Only map simple types (uint, bool, address) — structs/arrays
+				// have different AVM storage layout and can't be raw-accessed.
+				auto const* varType = varDecl->type();
+				bool isSimple = dynamic_cast<IntegerType const*>(varType)
+					|| dynamic_cast<BoolType const*>(varType)
+					|| dynamic_cast<AddressType const*>(varType)
+					|| dynamic_cast<FixedBytesType const*>(varType);
+				if (!isSimple) continue;
+
 				storageSlotVars[yulName] = varDecl->name();
 				// Also register as a constant with a sentinel value so
 				// the AssemblyBuilder can detect it
