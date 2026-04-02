@@ -70,7 +70,22 @@ Tracking known limitations, shortcuts, and architectural improvements needed.
 
 **Review needed**: Once we have proper address mapping (EVM address ↔ Algorand address), this test should be restored to its original form. The original assertions are preserved in `# ... #` comments in the test file.
 
-## 4. C99 Variable Scoping (Unique Variable Names)
+## 4. Modifier-as-Subroutine (Solidity's Approach)
+
+**Current state**: Modifiers are inlined into the function body. The `_;` placeholder is replaced with the function body inline. Local variables in the modifier share the same AWST namespace across all invocations.
+
+**Problem**: When the same modifier is invoked multiple times (`mod(2) mod(5) mod(x)`), local variables alias. Post-body code like `a -= b; assert(b == x)` uses the wrong `b` value.
+
+**How Solidity does it**: Each modifier invocation becomes a **separate Yul function** with its own scope. The `_;` placeholder becomes a call to the next function in the chain. See `IRGenerator::generateModifier()` in `solidity/libsolidity/codegen/ir/IRGenerator.cpp:385`. Key patterns:
+- `m_context.resetLocalVariables()` — fresh scope per modifier function
+- `addLocalVariable(*varDecl)` — unique Yul names via `newYulVariable()`
+- Chain: `mod_2(retParams, params)` calls `mod_5(retParams, params)` which calls `f_inner(retParams, params)`
+
+**Fix**: Emit each modifier invocation as a separate AWST Subroutine. The function body becomes the innermost subroutine. Each modifier subroutine takes return params + function params, evaluates modifier args, runs modifier body, and calls the next subroutine at `_;`.
+
+**Impact**: Fixes `function_modifier_multiple_times_local_vars` and potentially other modifier tests (13 total). Also fixes modifier local variable scoping generally.
+
+## 5. C99 Variable Scoping (Unique Variable Names)
 
 **Current state**: All local variables use their Solidity name as the AWST VarExpression name. Two variables with the same name in nested scopes (shadowing) produce the same AWST name, causing them to alias.
 
