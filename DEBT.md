@@ -22,7 +22,7 @@ Tracking known limitations, shortcuts, and architectural improvements needed.
 
 **Impact**: Correctness for any future context-dependent analysis (constant propagation, alias tracking, liveness). Current ScopeGuard works for simple cases but will silently break for complex control flow patterns (e.g., function pointer reassignment inside nested if/else with early returns).
 
-## 2. Implement Arbitrary Fallback (Not Just Bare Calls)
+## 2. ~~Implement Arbitrary Fallback~~ (PARTIALLY RESOLVED)
 
 **Current state**: The test runner supports `()` bare calls by invoking the `"()void"` ABI method that our compiler emits for Solidity `fallback()` functions.
 
