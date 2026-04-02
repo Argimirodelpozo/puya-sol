@@ -149,8 +149,7 @@ private:
 	awst::SourceLocation makeLoc(solidity::langutil::SourceLocation const& _solLoc);
 
 	/// Modifier parameter remaps: AST declaration ID → (unique name, type).
-	struct ParamRemap { std::string name; awst::WType const* type; };
-	std::map<int64_t, ParamRemap> m_paramRemaps;
+	std::map<int64_t, eb::ParamRemap> m_paramRemaps;
 
 	/// Super call target names: base function AST ID → subroutine name.
 	/// Populated by ContractBuilder for functions called via `super.method()`.
