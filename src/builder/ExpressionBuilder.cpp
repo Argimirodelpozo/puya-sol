@@ -135,12 +135,6 @@ void ExpressionBuilder::removeParamRemap(int64_t _declId)
 	m_paramRemaps.erase(_declId);
 }
 
-std::string ExpressionBuilder::paramRemapName(int64_t _declId) const
-{
-	auto it = m_paramRemaps.find(_declId);
-	return it != m_paramRemaps.end() ? it->second.name : "";
-}
-
 void ExpressionBuilder::addSuperTarget(int64_t _funcId, std::string const& _name)
 {
 	m_superTargetNames[_funcId] = _name;

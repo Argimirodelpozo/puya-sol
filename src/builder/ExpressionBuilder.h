@@ -122,7 +122,6 @@ public:
 	void addParamRemap(int64_t _declId, std::string const& _uniqueName, awst::WType const* _type);
 	/// Remove a previously registered parameter remap.
 	void removeParamRemap(int64_t _declId);
-	std::string paramRemapName(int64_t _declId) const;
 
 	/// Register a super call target: when `super.method()` is translated,
 	/// the base function with AST ID _funcId is targeted as subroutine _name.
