@@ -69,3 +69,17 @@ Tracking known limitations, shortcuts, and architectural improvements needed.
 - `setOwner(address): 0x1212...12 -> FAILURE` — fails because owner is zero
 
 **Review needed**: Once we have proper address mapping (EVM address ↔ Algorand address), this test should be restored to its original form. The original assertions are preserved in `# ... #` comments in the test file.
+
+## 4. C99 Variable Scoping (Unique Variable Names)
+
+**Current state**: All local variables use their Solidity name as the AWST VarExpression name. Two variables with the same name in nested scopes (shadowing) produce the same AWST name, causing them to alias.
+
+**Problem**: `{ x = 3; uint x; x = 4; } return x;` returns 4 instead of 3 because inner and outer `x` share the same AWST name.
+
+**Fix approach**: Use `name_declId` (e.g., `x_42`) for all local variable declarations and references. The AST declaration ID guarantees uniqueness. Requires updating:
+- `SolVariableDeclaration.cpp` — variable declaration names
+- `SolIdentifier.cpp` — variable reference names
+- `ContractBuilder.cpp` — named return parameter synthesis (lines 1989, 2030, 2042, 2438-2439 and more)
+- Any other code that creates VarExpression with raw Solidity names
+
+**Impact**: Fixes `scoping/c99_scoping_activation` and potentially modifier local variable scoping issues.
