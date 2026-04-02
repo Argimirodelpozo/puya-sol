@@ -2531,6 +2531,143 @@ void ContractBuilder::inlineModifiers(
 
 		if (translatedModBody)
 		{
+			// Rename local variables in the modifier body to avoid aliasing
+			// when the same modifier is invoked multiple times (e.g., mod(2) mod(5)).
+			// Collect variable names declared in the modifier body (AssignmentStatement
+			// targets that aren't function params, return vars, or state vars).
+			std::string modSuffix = "__mod" + std::to_string(modCounter);
+
+			// Collect names of function params and return params (don't rename these)
+			std::set<std::string> preserveNames;
+			for (auto const& p: _func.parameters())
+				preserveNames.insert(p->name());
+			for (auto const& rp: _func.returnParameters())
+				if (!rp->name().empty())
+					preserveNames.insert(rp->name());
+			// Also preserve modifier param unique names (__mod_x_N)
+			for (auto declId: remappedDeclIds)
+			{
+				auto it = m_exprBuilder->paramRemapName(declId);
+				if (!it.empty())
+					preserveNames.insert(it);
+			}
+
+			// Find local variable names declared in the modifier body
+			std::set<std::string> localVarNames;
+			std::function<void(std::vector<std::shared_ptr<awst::Statement>> const&)> collectLocals;
+			collectLocals = [&](std::vector<std::shared_ptr<awst::Statement>> const& stmts)
+			{
+				for (auto const& stmt: stmts)
+				{
+					if (auto const* assign = dynamic_cast<awst::AssignmentStatement const*>(stmt.get()))
+					{
+						if (auto const* varTarget = dynamic_cast<awst::VarExpression const*>(assign->target.get()))
+						{
+							if (!preserveNames.count(varTarget->name)
+								&& varTarget->name.find("__mod") == std::string::npos)
+								localVarNames.insert(varTarget->name);
+						}
+					}
+					if (auto const* ifElse = dynamic_cast<awst::IfElse const*>(stmt.get()))
+					{
+						if (ifElse->ifBranch) collectLocals(ifElse->ifBranch->body);
+						if (ifElse->elseBranch) collectLocals(ifElse->elseBranch->body);
+					}
+					if (auto const* block = dynamic_cast<awst::Block const*>(stmt.get()))
+						collectLocals(block->body);
+					if (auto const* loop = dynamic_cast<awst::WhileLoop const*>(stmt.get()))
+						if (loop->loopBody) collectLocals(loop->loopBody->body);
+				}
+			};
+			// Only collect from the modifier's own statements, NOT the placeholder body
+			// (which contains already-renamed vars from previous modifier invocations).
+			// The modifier body's local vars are in translatedModBody, but the placeholder
+			// body is embedded via _;. We identify modifier-own vars by excluding any
+			// variable name that contains "__mod" (already renamed by a previous iteration).
+			collectLocals(translatedModBody->body);
+
+			// Rename all VarExpression references to local vars
+			if (!localVarNames.empty())
+			{
+				std::function<void(std::shared_ptr<awst::Expression>&)> renameExpr;
+				renameExpr = [&](std::shared_ptr<awst::Expression>& expr)
+				{
+					if (!expr) return;
+					if (auto* var = dynamic_cast<awst::VarExpression*>(expr.get()))
+					{
+						if (localVarNames.count(var->name))
+							var->name += modSuffix;
+					}
+					// Recurse into expression children
+					if (auto* binOp = dynamic_cast<awst::BigUIntBinaryOperation*>(expr.get()))
+					{
+						renameExpr(binOp->left);
+						renameExpr(binOp->right);
+					}
+					if (auto* binOp = dynamic_cast<awst::UInt64BinaryOperation*>(expr.get()))
+					{
+						renameExpr(binOp->left);
+						renameExpr(binOp->right);
+					}
+					if (auto* cmp = dynamic_cast<awst::NumericComparisonExpression*>(expr.get()))
+					{
+						renameExpr(cmp->lhs);
+						renameExpr(cmp->rhs);
+					}
+					if (auto* cond = dynamic_cast<awst::ConditionalExpression*>(expr.get()))
+					{
+						renameExpr(cond->condition);
+						renameExpr(cond->trueExpr);
+						renameExpr(cond->falseExpr);
+					}
+					if (auto* call = dynamic_cast<awst::IntrinsicCall*>(expr.get()))
+						for (auto& arg: call->stackArgs) renameExpr(arg);
+					if (auto* cast = dynamic_cast<awst::ReinterpretCast*>(expr.get()))
+						renameExpr(cast->expr);
+					if (auto* assertE = dynamic_cast<awst::AssertExpression*>(expr.get()))
+						renameExpr(assertE->condition);
+					if (auto* notE = dynamic_cast<awst::Not*>(expr.get()))
+						renameExpr(notE->expr);
+					if (auto* single = dynamic_cast<awst::SingleEvaluation*>(expr.get()))
+						renameExpr(single->source);
+					if (auto* enc = dynamic_cast<awst::ARC4Encode*>(expr.get()))
+						renameExpr(enc->value);
+					if (auto* dec = dynamic_cast<awst::ARC4Decode*>(expr.get()))
+						renameExpr(dec->value);
+				};
+
+				std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> renameStmts;
+				renameStmts = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
+				{
+					for (auto& stmt: stmts)
+					{
+						if (auto* assign = dynamic_cast<awst::AssignmentStatement*>(stmt.get()))
+						{
+							renameExpr(assign->target);
+							renameExpr(assign->value);
+						}
+						if (auto* exprStmt = dynamic_cast<awst::ExpressionStatement*>(stmt.get()))
+							renameExpr(exprStmt->expr);
+						if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
+							renameExpr(ret->value);
+						if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
+						{
+							renameExpr(ifElse->condition);
+							if (ifElse->ifBranch) renameStmts(ifElse->ifBranch->body);
+							if (ifElse->elseBranch) renameStmts(ifElse->elseBranch->body);
+						}
+						if (auto* block = dynamic_cast<awst::Block*>(stmt.get()))
+							renameStmts(block->body);
+						if (auto* loop = dynamic_cast<awst::WhileLoop*>(stmt.get()))
+						{
+							renameExpr(loop->condition);
+							if (loop->loopBody) renameStmts(loop->loopBody->body);
+						}
+					}
+				};
+				renameStmts(translatedModBody->body);
+			}
+
 			for (auto& stmt: translatedModBody->body)
 				modBody->body.push_back(std::move(stmt));
 		}
