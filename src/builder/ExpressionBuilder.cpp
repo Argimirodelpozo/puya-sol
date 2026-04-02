@@ -169,14 +169,6 @@ bool ExpressionBuilder::isBigUInt(awst::WType const* _type)
 
 eb::BuilderContext ExpressionBuilder::makeBuilderContext()
 {
-	// Dummy refs for state not yet migrated to BuilderContext types.
-	// TODO: unify ExpressionBuilder::ParamRemap with eb::ParamRemap to pass real refs.
-	static std::map<int64_t, eb::ParamRemap> emptyParamRemaps;
-	static std::unordered_map<int64_t, std::string> emptySuperTargets;
-	static std::map<int64_t, std::shared_ptr<awst::Expression>> emptyStorageAliases;
-	static std::map<int64_t, solidity::frontend::FunctionDefinition const*> emptyFuncPtrTargets;
-	static std::unordered_map<int64_t, unsigned long long> emptyConstantLocals;
-
 	return eb::BuilderContext{
 		/*.typeMapper =*/ m_typeMapper,
 		/*.storageMapper =*/ m_storageMapper,
