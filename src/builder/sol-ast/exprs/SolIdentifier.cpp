@@ -6,6 +6,7 @@
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/VarNaming.h"
 
 #include <libsolidity/ast/AST.h>
 
@@ -154,15 +155,21 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 		}
 	}
 
-	// Regular local variable
+	// Regular local variable — use unique name for C99 scoping
 	auto e = std::make_shared<awst::VarExpression>();
 	e->sourceLocation = m_loc;
-	e->name = name;
 	if (decl)
 	{
 		if (auto const* vd = dynamic_cast<VariableDeclaration const*>(decl))
+		{
+			e->name = uniqueVarName(*vd);
 			e->wtype = m_ctx.typeMapper.map(vd->type());
+		}
+		else
+			e->name = name;
 	}
+	else
+		e->name = name;
 	if (!e->wtype || e->wtype == awst::WType::voidType())
 	{
 		if (m_solType)
