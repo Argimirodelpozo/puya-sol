@@ -54,7 +54,8 @@ public:
 		std::vector<std::pair<std::string, awst::WType const*>> const& _params,
 		awst::WType const* _returnType,
 		std::map<std::string, std::string> const& _constants = {},
-		std::map<std::string, unsigned> const& _paramBitWidths = {}
+		std::map<std::string, unsigned> const& _paramBitWidths = {},
+		std::map<std::string, std::string> const& _storageSlotVars = {}
 	);
 
 	// ── Memory blob constants ──────────────────────────────────────────
@@ -544,8 +545,14 @@ private:
 	std::map<std::string, uint64_t> m_localConstants;
 
 	/// External constants (Solidity constant variables referenced in assembly).
-	/// Maps name -> decimal string value.
+	/// Maps name -> decimal string value. Values starting with "__slot_" are
+	/// storage slot references (see m_storageSlotVars).
 	std::map<std::string, std::string> m_constants;
+
+	/// Storage slot → variable name mapping for sload/sstore translation.
+	/// When sstore is called with a constant whose value starts with "__slot_",
+	/// the actual storage key is the variable name after the prefix.
+	std::map<std::string, std::string> m_storageSlotVars;
 
 	// ── Assembly function support ───────────────────────────────────────
 

@@ -566,11 +566,54 @@ void AssemblyBuilder::handleSstore(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	// sstore(slot, value) — raw EVM persistent storage write.
-	// No direct AVM equivalent. Stub as no-op with warning.
-	Logger::instance().warning("sstore() has no AVM equivalent (EVM raw storage), ignoring", _loc);
-	(void)_args;
-	(void)_out;
+	if (_args.size() != 2)
+	{
+		Logger::instance().error("sstore requires 2 arguments", _loc);
+		return;
+	}
+
+	// Check if the slot argument is a __slot_ marker from buildIdentifier
+	std::string varName;
+	if (auto const* varExpr = dynamic_cast<awst::VarExpression const*>(_args[0].get()))
+	{
+		if (varExpr->name.substr(0, 7) == "__slot_")
+			varName = varExpr->name.substr(7);
+	}
+
+	if (!varName.empty())
+	{
+		// Translate sstore(slot, value) → app_global_put(varName, value)
+		auto key = std::make_shared<awst::BytesConstant>();
+		key->sourceLocation = _loc;
+		key->wtype = awst::WType::bytesType();
+		key->value = std::vector<uint8_t>(varName.begin(), varName.end());
+
+		auto value = _args[1];
+		// Ensure value is bytes for global state
+		if (value->wtype == awst::WType::biguintType())
+		{
+			auto cast = std::make_shared<awst::ReinterpretCast>();
+			cast->sourceLocation = _loc;
+			cast->wtype = awst::WType::bytesType();
+			cast->expr = std::move(value);
+			value = std::move(cast);
+		}
+
+		auto put = std::make_shared<awst::IntrinsicCall>();
+		put->sourceLocation = _loc;
+		put->wtype = awst::WType::voidType();
+		put->opCode = "app_global_put";
+		put->stackArgs.push_back(std::move(key));
+		put->stackArgs.push_back(std::move(value));
+
+		auto stmt = std::make_shared<awst::ExpressionStatement>();
+		stmt->sourceLocation = _loc;
+		stmt->expr = std::move(put);
+		_out.push_back(std::move(stmt));
+		return;
+	}
+
+	Logger::instance().warning("sstore() with unknown slot, ignoring", _loc);
 }
 
 

@@ -19,9 +19,55 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSload(
 		Logger::instance().error("sload requires 1 argument", _loc);
 		return nullptr;
 	}
-	// sload has no AVM equivalent — EVM raw storage slot access.
-	// Return 0 with a warning.
-	Logger::instance().warning("sload() has no AVM equivalent (EVM raw storage), returning 0", _loc);
+	// Check if the slot argument is a __slot_ marker from buildIdentifier
+	std::string varName;
+	if (auto const* varExpr = dynamic_cast<awst::VarExpression const*>(_args[0].get()))
+	{
+		if (varExpr->name.substr(0, 7) == "__slot_")
+			varName = varExpr->name.substr(7);
+	}
+
+	if (!varName.empty())
+	{
+		// Translate sload(slot) → app_global_get_ex(0, varName)
+		auto zero = std::make_shared<awst::IntegerConstant>();
+		zero->sourceLocation = _loc;
+		zero->wtype = awst::WType::uint64Type();
+		zero->value = "0";
+
+		auto key = std::make_shared<awst::BytesConstant>();
+		key->sourceLocation = _loc;
+		key->wtype = awst::WType::bytesType();
+		key->value = std::vector<uint8_t>(varName.begin(), varName.end());
+
+		auto getEx = std::make_shared<awst::IntrinsicCall>();
+		getEx->sourceLocation = _loc;
+		getEx->wtype = awst::WType::biguintType(); // will need cast
+		getEx->opCode = "app_global_get_ex";
+		getEx->stackArgs.push_back(std::move(zero));
+		getEx->stackArgs.push_back(std::move(key));
+
+		// app_global_get_ex returns (value, exists) — need to handle
+		// For simplicity, use app_global_get with assert
+		auto get = std::make_shared<awst::IntrinsicCall>();
+		get->sourceLocation = _loc;
+		get->wtype = awst::WType::bytesType();
+		get->opCode = "app_global_get";
+		auto key2 = std::make_shared<awst::BytesConstant>();
+		key2->sourceLocation = _loc;
+		key2->wtype = awst::WType::bytesType();
+		key2->value = std::vector<uint8_t>(varName.begin(), varName.end());
+		get->stackArgs.push_back(std::move(key2));
+
+		// Cast bytes → biguint
+		auto cast = std::make_shared<awst::ReinterpretCast>();
+		cast->sourceLocation = _loc;
+		cast->wtype = awst::WType::biguintType();
+		cast->expr = std::move(get);
+		return cast;
+	}
+
+	Logger::instance().warning("sload() with unknown slot, returning 0", _loc);
 	auto zero = std::make_shared<awst::IntegerConstant>();
 	zero->sourceLocation = _loc;
 	zero->wtype = awst::WType::biguintType();

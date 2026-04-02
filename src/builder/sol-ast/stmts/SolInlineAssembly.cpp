@@ -143,6 +143,76 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		}
 	}
 
+	// Extract storage slot/offset references (e.g., z.slot, y.offset)
+	// Maps: Yul identifier name → storage variable name (for sload/sstore)
+	std::map<std::string, std::string> storageSlotVars;
+	unsigned nextSlot = 0;
+	unsigned currentSlotOffset = 0;
+	// Compute simple sequential slot layout matching EVM's storage layout.
+	// Walk the contract's state variables to assign slot numbers.
+	if (m_ctx.exprBuilder)
+	{
+		// Build slot→varName and offset maps from external references
+		for (auto const& [yulId, extInfo]: annotation.externalReferences)
+		{
+			if (!extInfo.declaration) continue;
+			auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
+			if (!varDecl || varDecl->isConstant() || !varDecl->isStateVariable()) continue;
+
+			std::string yulName = yulId->name.str();
+			std::string suffix = extInfo.suffix;
+
+			if (suffix == "slot")
+			{
+				// z.slot → resolve to the variable name for storage access
+				storageSlotVars[yulName] = varDecl->name();
+				// Also register as a constant with a sentinel value so
+				// the AssemblyBuilder can detect it
+				// Use the variable name prefixed with __slot_ as the constant value
+				constants[yulName] = "__slot_" + varDecl->name();
+			}
+			else if (suffix == "offset")
+			{
+				// y.offset → byte offset within the storage slot
+				// For EVM: computed from type sizes in packed storage layout
+				// Simplified: count bytes from preceding variables in the same slot
+				// For now, use the annotation's offset if available, or 0
+				unsigned offset = 0;
+				// Walk contract state vars to compute EVM storage offset
+				if (m_ctx.exprBuilder)
+				{
+					unsigned slotBytesUsed = 0;
+					auto const* scope = varDecl->scope();
+					if (auto const* contract = dynamic_cast<ContractDefinition const*>(scope))
+					{
+						for (auto const* sv: contract->stateVariables())
+						{
+							if (sv->isConstant() || sv->immutable()) continue;
+							unsigned varSize = 32; // default
+							if (auto const* intType = dynamic_cast<IntegerType const*>(sv->type()))
+								varSize = intType->numBits() / 8;
+							else if (dynamic_cast<BoolType const*>(sv->type()))
+								varSize = 1;
+							else if (dynamic_cast<AddressType const*>(sv->type()))
+								varSize = 20;
+
+							if (sv == varDecl)
+							{
+								offset = slotBytesUsed;
+								break;
+							}
+
+							slotBytesUsed += varSize;
+							if (slotBytesUsed > 32 || varSize == 32)
+								slotBytesUsed = 0; // new slot
+						}
+					}
+				}
+				constants[yulName] = std::to_string(offset);
+			}
+		}
+	}
+
 	// Build augmented params
 	auto augmentedParams = m_functionParams;
 	std::map<std::string, unsigned> paramBitWidths;
@@ -177,7 +247,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		augmentedParams,
 		m_returnType,
 		constants,
-		paramBitWidths);
+		paramBitWidths,
+		storageSlotVars);
 }
 
 } // namespace puyasol::builder::sol_ast

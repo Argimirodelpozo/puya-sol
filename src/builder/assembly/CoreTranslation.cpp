@@ -133,8 +133,32 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 		std::string suffix = name.substr(dotPos + 1);
 		std::string baseName = name.substr(0, dotPos);
 
-		if (suffix == "offset")
+		if (suffix == "slot")
 		{
+			// Storage slot reference: z.slot → marker for sload/sstore
+			auto it = m_storageSlotVars.find(name);
+			if (it != m_storageSlotVars.end())
+			{
+				// Return a VarExpression with __slot_ prefix as marker
+				auto node = std::make_shared<awst::VarExpression>();
+				node->sourceLocation = loc;
+				node->wtype = awst::WType::biguintType();
+				node->name = "__slot_" + it->second;
+				return node;
+			}
+		}
+		else if (suffix == "offset")
+		{
+			// Check storage offset first (from constants map set by SolInlineAssembly)
+			auto constIt = m_constants.find(name);
+			if (constIt != m_constants.end())
+			{
+				auto node = std::make_shared<awst::IntegerConstant>();
+				node->sourceLocation = loc;
+				node->wtype = awst::WType::biguintType();
+				node->value = constIt->second;
+				return node;
+			}
 			auto it = m_localConstants.find(baseName);
 			if (it != m_localConstants.end())
 			{
