@@ -21,9 +21,9 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x76e0504c 0x856fee35 // method "()void", method "f()(bool,byte[])"
+    pushbytess 0x1bf9882b 0x856fee35 // method "__fallback()void", method "f()(bool,byte[])"
     txna ApplicationArgs 0
-    match main__route@5 main_f_route@6
+    match main___fallback_route@5 main_f_route@6
     err
 
 main_f_route@6:
@@ -32,6 +32,6 @@ main_f_route@6:
     pushint 1
     return
 
-main__route@5:
+main___fallback_route@5:
     pushint 1
     return
