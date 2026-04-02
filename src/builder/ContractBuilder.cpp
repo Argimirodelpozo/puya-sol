@@ -2752,6 +2752,40 @@ void ContractBuilder::buildModifierChain(
 
 		if (translatedBody)
 		{
+			// Fix bare return statements in modifier body: `return;` → `return __retval;`
+			// A modifier's bare `return` means "exit early", returning the current retval.
+			if (!retVarName.empty())
+			{
+				std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> fixReturns;
+				fixReturns = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
+				{
+					for (auto& stmt: stmts)
+					{
+						if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
+						{
+							if (!ret->value)
+							{
+								auto var = std::make_shared<awst::VarExpression>();
+								var->sourceLocation = ret->sourceLocation;
+								var->name = retVarName;
+								var->wtype = _method.returnType;
+								ret->value = std::move(var);
+							}
+						}
+						if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
+						{
+							if (ifElse->ifBranch) fixReturns(ifElse->ifBranch->body);
+							if (ifElse->elseBranch) fixReturns(ifElse->elseBranch->body);
+						}
+						if (auto* block = dynamic_cast<awst::Block*>(stmt.get()))
+							fixReturns(block->body);
+						if (auto* loop = dynamic_cast<awst::WhileLoop*>(stmt.get()))
+							if (loop->loopBody) fixReturns(loop->loopBody->body);
+					}
+				};
+				fixReturns(translatedBody->body);
+			}
+
 			for (auto& stmt: translatedBody->body)
 				modBody->body.push_back(std::move(stmt));
 		}
