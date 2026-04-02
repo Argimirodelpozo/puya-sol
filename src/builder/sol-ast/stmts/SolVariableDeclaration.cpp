@@ -6,7 +6,6 @@
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
-#include "builder/VarNaming.h"
 #include "Logger.h"
 
 namespace puyasol::builder::sol_ast
@@ -37,7 +36,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		auto target = std::make_shared<awst::VarExpression>();
 		target->sourceLocation = m_ctx.makeLoc(decl.location());
 		target->wtype = type;
-		target->name = uniqueVarName(decl);
+		target->name = decl.name();
 
 		std::shared_ptr<awst::Expression> value;
 		if (initialValue)
@@ -158,7 +157,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			auto target = std::make_shared<awst::VarExpression>();
 			target->sourceLocation = m_ctx.makeLoc(decl.location());
 			target->wtype = type;
-			target->name = uniqueVarName(decl);
+			target->name = decl.name();
 
 			auto itemExpr = std::make_shared<awst::TupleItemExpression>();
 			itemExpr->sourceLocation = m_loc;

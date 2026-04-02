@@ -2,7 +2,6 @@
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
-#include "builder/VarNaming.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
@@ -1264,7 +1263,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 				auto target = std::make_shared<awst::VarExpression>();
 				target->sourceLocation = method.sourceLocation;
-				target->name = uniqueVarName(*param);
+				target->name = param->name();
 				target->wtype = paramType;
 
 				auto assignment = std::make_shared<awst::AssignmentStatement>();
@@ -1819,7 +1818,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		if (param->name().empty())
 			arg.name = "_param" + std::to_string(paramIndex);
 		else
-			arg.name = uniqueVarName(*param);
+			arg.name = param->name();
 		arg.sourceLocation = makeLoc(param->location());
 		arg.wtype = m_typeMapper.map(param->type());
 		method.args.push_back(std::move(arg));
@@ -1878,7 +1877,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				}
 			}
 			types.push_back(mappedType);
-			names.push_back(uniqueVarName(*rp));
+			names.push_back(rp->name());
 			if (!rp->name().empty())
 				hasNames = true;
 		}
@@ -1964,7 +1963,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
 						intType = dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
 				if (intType && intType->numBits() < 64)
-					bitWidths[uniqueVarName(*rp)] = intType->numBits();
+					bitWidths[rp->name()] = intType->numBits();
 			}
 			setFunctionContext(paramContext, method.returnType, bitWidths);
 		}
@@ -1987,7 +1986,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				auto target = std::make_shared<awst::VarExpression>();
 				target->sourceLocation = method.sourceLocation;
 				target->wtype = rpType;
-				target->name = uniqueVarName(*rp);
+				target->name = rp->name();
 
 				auto zeroVal = StorageMapper::makeDefaultValue(rpType, method.sourceLocation);
 
@@ -2028,7 +2027,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				{
 					auto var = std::make_shared<awst::VarExpression>();
 					var->sourceLocation = method.sourceLocation;
-					var->name = uniqueVarName(*retParams[0]);
+					var->name = retParams[0]->name();
 					var->wtype = m_typeMapper.map(retParams[0]->type());
 					retStmt->value = std::move(var);
 				}
@@ -2040,7 +2039,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					{
 						auto var = std::make_shared<awst::VarExpression>();
 						var->sourceLocation = method.sourceLocation;
-						var->name = uniqueVarName(*rp);
+						var->name = rp->name();
 						var->wtype = m_typeMapper.map(rp->type());
 						tuple->items.push_back(std::move(var));
 					}
@@ -2437,7 +2436,7 @@ void ContractBuilder::inlineModifiers(
 		std::set<std::string> returnParamNames;
 		for (auto const& retParam: _func.returnParameters())
 			if (!retParam->name().empty())
-				returnParamNames.insert(uniqueVarName(*retParam));
+				returnParamNames.insert(retParam->name());
 
 		// Track which named return vars have already been hoisted (only hoist
 		// the first assignment — the default init — not subsequent assignments
