@@ -140,6 +140,11 @@ void ExpressionBuilder::addSuperTarget(int64_t _funcId, std::string const& _name
 	m_superTargetNames[_funcId] = _name;
 }
 
+void ExpressionBuilder::clearSuperTargets()
+{
+	m_superTargetNames.clear();
+}
+
 void ExpressionBuilder::addStorageAlias(int64_t _declId, std::shared_ptr<awst::Expression> _expr)
 {
 	m_storageAliases[_declId] = std::move(_expr);

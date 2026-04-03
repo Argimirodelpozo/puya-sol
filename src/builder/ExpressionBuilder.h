@@ -126,6 +126,8 @@ public:
 	/// Register a super call target: when `super.method()` is translated,
 	/// the base function with AST ID _funcId is targeted as subroutine _name.
 	void addSuperTarget(int64_t _funcId, std::string const& _name);
+	/// Clear all super target registrations (for per-function MRO-aware resolution).
+	void clearSuperTargets();
 
 	/// Register a storage pointer alias: when `Type storage p = _mapping[key]`,
 	/// later references to `p` resolve to the stored box read expression.
