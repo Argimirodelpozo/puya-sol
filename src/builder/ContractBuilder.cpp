@@ -2203,6 +2203,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		awst::WType const* nativeType;
 		awst::WType const* arc4Type;
 		awst::SourceLocation loc;
+		unsigned maskBits = 0; // >0 for sub-64-bit unsigned types needing input masking
 	};
 	std::vector<ParamDecode> paramDecodes;
 	if (method.arc4MethodConfig.has_value())
@@ -2524,6 +2525,63 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				std::make_move_iterator(decodeStmts.begin()),
 				std::make_move_iterator(decodeStmts.end())
 			);
+		}
+
+		// Mask sub-64-bit unsigned parameters at function entry.
+		// EVM truncates ABI-decoded values to parameter type width;
+		// AVM uint64 preserves the full value, so we must mask explicitly.
+		{
+			std::vector<std::shared_ptr<awst::Statement>> maskStmts;
+			for (size_t pi = 0; pi < _func.parameters().size(); ++pi)
+			{
+				auto const& param = _func.parameters()[pi];
+				auto const* solType = param->annotation().type;
+				if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
+					solType = &udvt->underlyingType();
+				auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(solType);
+				if (!intType || intType->numBits() >= 64 || intType->isSigned())
+					continue;
+
+				unsigned bits = intType->numBits();
+				uint64_t mask = (uint64_t(1) << bits) - 1;
+				auto loc = makeLoc(param->location());
+
+				auto paramVar = std::make_shared<awst::VarExpression>();
+				paramVar->sourceLocation = loc;
+				paramVar->name = param->name();
+				paramVar->wtype = awst::WType::uint64Type();
+
+				auto maskConst = std::make_shared<awst::IntegerConstant>();
+				maskConst->sourceLocation = loc;
+				maskConst->wtype = awst::WType::uint64Type();
+				maskConst->value = std::to_string(mask);
+
+				auto bitAnd = std::make_shared<awst::UInt64BinaryOperation>();
+				bitAnd->sourceLocation = loc;
+				bitAnd->wtype = awst::WType::uint64Type();
+				bitAnd->left = paramVar;
+				bitAnd->op = awst::UInt64BinaryOperator::BitAnd;
+				bitAnd->right = std::move(maskConst);
+
+				auto target = std::make_shared<awst::VarExpression>();
+				target->sourceLocation = loc;
+				target->name = param->name();
+				target->wtype = awst::WType::uint64Type();
+
+				auto assign = std::make_shared<awst::AssignmentStatement>();
+				assign->sourceLocation = loc;
+				assign->target = std::move(target);
+				assign->value = std::move(bitAnd);
+				maskStmts.push_back(std::move(assign));
+			}
+			if (!maskStmts.empty())
+			{
+				method.body->body.insert(
+					method.body->body.begin(),
+					std::make_move_iterator(maskStmts.begin()),
+					std::make_move_iterator(maskStmts.end())
+				);
+			}
 		}
 
 		// Initialize transient storage blob at method entry
