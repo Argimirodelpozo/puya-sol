@@ -404,7 +404,8 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 		// Runtime negation
 		if (m_isBigUInt)
 		{
-			// ~operand + 1 (two's complement)
+			// Two's complement: -x = ~x + 1
+			// Guard: ~0 + 1 = 2^256 overflows 256-bit biguint, so mask with % 2^256
 			auto castToBytes = std::make_shared<awst::ReinterpretCast>();
 			castToBytes->sourceLocation = _loc;
 			castToBytes->wtype = awst::WType::bytesType();
@@ -432,21 +433,69 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			addOne->left = std::move(castBack);
 			addOne->op = awst::BigUIntBinaryOperator::Add;
 			addOne->right = std::move(one);
-			return wrap(std::move(addOne));
-		}
-		// uint64: 0 - operand
-		auto zero = std::make_shared<awst::IntegerConstant>();
-		zero->sourceLocation = _loc;
-		zero->wtype = awst::WType::uint64Type();
-		zero->value = "0";
 
-		auto e = std::make_shared<awst::UInt64BinaryOperation>();
-		e->sourceLocation = _loc;
-		e->wtype = awst::WType::uint64Type();
-		e->left = std::move(zero);
-		e->op = awst::UInt64BinaryOperator::Sub;
-		e->right = std::move(operand);
-		return wrap(std::move(e));
+			// Mod 2^256 to handle -0 overflow (2^256 wraps to 0)
+			static const std::string pow256 =
+				"115792089237316195423570985008687907853269984665640564039457584007913129639936";
+			auto modConst = std::make_shared<awst::IntegerConstant>();
+			modConst->sourceLocation = _loc;
+			modConst->wtype = awst::WType::biguintType();
+			modConst->value = pow256;
+
+			auto wrapped = std::make_shared<awst::BigUIntBinaryOperation>();
+			wrapped->sourceLocation = _loc;
+			wrapped->wtype = awst::WType::biguintType();
+			wrapped->left = std::move(addOne);
+			wrapped->op = awst::BigUIntBinaryOperator::Mod;
+			wrapped->right = std::move(modConst);
+
+			return wrap(std::move(wrapped));
+		}
+		// uint64: two's complement negation via 2^64 - operand
+		// (0 - operand would underflow in uint64 for positive operands)
+		{
+			// Promote to biguint: itob → ReinterpretCast
+			auto itob = std::make_shared<awst::IntrinsicCall>();
+			itob->sourceLocation = _loc;
+			itob->wtype = awst::WType::bytesType();
+			itob->opCode = "itob";
+			itob->stackArgs.push_back(std::move(operand));
+
+			auto castBiguint = std::make_shared<awst::ReinterpretCast>();
+			castBiguint->sourceLocation = _loc;
+			castBiguint->wtype = awst::WType::biguintType();
+			castBiguint->expr = std::move(itob);
+
+			// 2^64 - x
+			auto pow2_64 = std::make_shared<awst::IntegerConstant>();
+			pow2_64->sourceLocation = _loc;
+			pow2_64->wtype = awst::WType::biguintType();
+			pow2_64->value = "18446744073709551616"; // 2^64
+
+			auto sub = std::make_shared<awst::BigUIntBinaryOperation>();
+			sub->sourceLocation = _loc;
+			sub->wtype = awst::WType::biguintType();
+			sub->left = std::move(pow2_64);
+			sub->op = awst::BigUIntBinaryOperator::Sub;
+			sub->right = std::move(castBiguint);
+
+			// mod 2^64 to wrap
+			auto pow2_64_2 = std::make_shared<awst::IntegerConstant>();
+			pow2_64_2->sourceLocation = _loc;
+			pow2_64_2->wtype = awst::WType::biguintType();
+			pow2_64_2->value = "18446744073709551616";
+
+			auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
+			mod->sourceLocation = _loc;
+			mod->wtype = awst::WType::biguintType();
+			mod->left = std::move(sub);
+			mod->op = awst::BigUIntBinaryOperator::Mod;
+			mod->right = std::move(pow2_64_2);
+
+			// Back to uint64: safe extract
+			auto result = TypeCoercion::implicitNumericCast(std::move(mod), awst::WType::uint64Type(), _loc);
+			return wrap(std::move(result));
+		}
 	}
 
 	case BuilderUnaryOp::BitInvert:

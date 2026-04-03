@@ -137,20 +137,84 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 		}
 
-		// (2^N - x) mod 2^N
-		auto sub = std::make_shared<awst::BigUIntBinaryOperation>();
-		sub->sourceLocation = m_loc;
-		sub->wtype = awst::WType::biguintType();
-		sub->left = makeBiguintConst(pow2NStr);
-		sub->op = awst::BigUIntBinaryOperator::Sub;
-		sub->right = std::move(operand);
+		// -x = (2^N - x) mod 2^N
+		// For 256-bit: 2^256 - 0 would overflow, so use if/else via temp variable
+		std::shared_ptr<awst::Expression> negated;
+		if (bits == 256)
+		{
+			// Emit: __neg_tmp = 0; if (x != 0) { __neg_tmp = (2^256 - x) % 2^256; }
+			// Then use __neg_tmp as the result.
+			std::string tmpName = "__neg_tmp_" + std::to_string(m_unaryOp.id());
 
-		auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
-		mod->sourceLocation = m_loc;
-		mod->wtype = awst::WType::biguintType();
-		mod->left = std::move(sub);
-		mod->op = awst::BigUIntBinaryOperator::Mod;
-		mod->right = makeBiguintConst(pow2NStr);
+			// __neg_tmp = 0
+			auto tmpVar = std::make_shared<awst::VarExpression>();
+			tmpVar->sourceLocation = m_loc;
+			tmpVar->name = tmpName;
+			tmpVar->wtype = awst::WType::biguintType();
+
+			auto initStmt = std::make_shared<awst::AssignmentStatement>();
+			initStmt->sourceLocation = m_loc;
+			initStmt->target = tmpVar;
+			initStmt->value = makeBiguintConst("0");
+			m_ctx.prePendingStatements.push_back(std::move(initStmt));
+
+			// if (x != 0) { __neg_tmp = (2^256 - x) % 2^256; }
+			auto isNonZero = std::make_shared<awst::NumericComparisonExpression>();
+			isNonZero->sourceLocation = m_loc;
+			isNonZero->wtype = awst::WType::boolType();
+			isNonZero->lhs = operand;
+			isNonZero->op = awst::NumericComparison::Ne;
+			isNonZero->rhs = makeBiguintConst("0");
+
+			auto sub = std::make_shared<awst::BigUIntBinaryOperation>();
+			sub->sourceLocation = m_loc;
+			sub->wtype = awst::WType::biguintType();
+			sub->left = makeBiguintConst(pow2NStr);
+			sub->op = awst::BigUIntBinaryOperator::Sub;
+			sub->right = operand;
+
+			auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
+			mod->sourceLocation = m_loc;
+			mod->wtype = awst::WType::biguintType();
+			mod->left = std::move(sub);
+			mod->op = awst::BigUIntBinaryOperator::Mod;
+			mod->right = makeBiguintConst(pow2NStr);
+
+			auto assignTmp = std::make_shared<awst::AssignmentStatement>();
+			assignTmp->sourceLocation = m_loc;
+			assignTmp->target = tmpVar;
+			assignTmp->value = std::move(mod);
+
+			auto ifBody = std::make_shared<awst::Block>();
+			ifBody->sourceLocation = m_loc;
+			ifBody->body.push_back(std::move(assignTmp));
+
+			auto ifElse = std::make_shared<awst::IfElse>();
+			ifElse->sourceLocation = m_loc;
+			ifElse->condition = std::move(isNonZero);
+			ifElse->ifBranch = std::move(ifBody);
+			m_ctx.prePendingStatements.push_back(std::move(ifElse));
+
+			negated = tmpVar;
+		}
+		else
+		{
+			auto sub = std::make_shared<awst::BigUIntBinaryOperation>();
+			sub->sourceLocation = m_loc;
+			sub->wtype = awst::WType::biguintType();
+			sub->left = makeBiguintConst(pow2NStr);
+			sub->op = awst::BigUIntBinaryOperator::Sub;
+			sub->right = std::move(operand);
+
+			auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
+			mod->sourceLocation = m_loc;
+			mod->wtype = awst::WType::biguintType();
+			mod->left = std::move(sub);
+			mod->op = awst::BigUIntBinaryOperator::Mod;
+			mod->right = makeBiguintConst(pow2NStr);
+
+			negated = std::move(mod);
+		}
 
 		// Convert back to uint64 for ≤64-bit types
 		if (bits <= 64)
@@ -158,7 +222,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			auto castBytes = std::make_shared<awst::ReinterpretCast>();
 			castBytes->sourceLocation = m_loc;
 			castBytes->wtype = awst::WType::bytesType();
-			castBytes->expr = std::move(mod);
+			castBytes->expr = std::move(negated);
 
 			auto eight = std::make_shared<awst::IntegerConstant>();
 			eight->sourceLocation = m_loc;
@@ -198,7 +262,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			extract->stackArgs.push_back(std::move(start));
 			return extract;
 		}
-		return mod;
+		return negated;
 	}
 
 	// For biguint constant negation (e.g., (-2) where type is RationalNumberType),

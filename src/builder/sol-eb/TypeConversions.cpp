@@ -78,19 +78,9 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToInteger(
 	// uint64 → biguint promotion
 	if (!targetIsBigUInt && srcWType == awst::WType::biguintType())
 	{
-		// biguint → uint64: ReinterpretCast to bytes, btoi
-		auto toBytes = std::make_shared<awst::ReinterpretCast>();
-		toBytes->sourceLocation = _loc;
-		toBytes->wtype = awst::WType::bytesType();
-		toBytes->expr = std::move(_arg);
-
-		auto btoi = std::make_shared<awst::IntrinsicCall>();
-		btoi->sourceLocation = _loc;
-		btoi->wtype = awst::WType::uint64Type();
-		btoi->opCode = "btoi";
-		btoi->stackArgs.push_back(std::move(toBytes));
-
-		return std::make_unique<SolIntegerBuilder>(_ctx, targetInt, std::move(btoi));
+		// biguint → uint64: use safe extraction (btoi fails on >8 bytes)
+		auto result = TypeCoercion::implicitNumericCast(std::move(_arg), awst::WType::uint64Type(), _loc);
+		return std::make_unique<SolIntegerBuilder>(_ctx, targetInt, std::move(result));
 	}
 
 	if (targetIsBigUInt && srcWType == awst::WType::uint64Type())
