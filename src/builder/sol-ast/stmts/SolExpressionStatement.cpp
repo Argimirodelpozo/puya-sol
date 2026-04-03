@@ -180,6 +180,41 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 					tupleExpr->wtype = m_ctx.typeMapper->createType<awst::WTuple>(
 						std::move(expectedTypes), std::nullopt);
 				}
+				else if (stmt->value->wtype
+					&& stmt->value->wtype->kind() == awst::WTypeKind::WTuple)
+				{
+					// Non-tuple-literal returning a tuple (e.g., conditional expression).
+					// Coerce branches of conditional expressions element-by-element.
+					auto* condExpr = dynamic_cast<awst::ConditionalExpression*>(stmt->value.get());
+					if (condExpr)
+					{
+						std::vector<awst::WType const*> expectedTypes;
+						for (size_t i = 0; i < retParams.size(); ++i)
+							expectedTypes.push_back(m_ctx.typeMapper->map(retParams[i]->type()));
+						auto* expectedTupleType = m_ctx.typeMapper->createType<awst::WTuple>(
+							std::vector<awst::WType const*>(expectedTypes), std::nullopt);
+
+						// Coerce true branch
+						auto* trueTuple = dynamic_cast<awst::TupleExpression*>(condExpr->trueExpr.get());
+						if (trueTuple && trueTuple->items.size() == retParams.size())
+						{
+							for (size_t i = 0; i < retParams.size(); ++i)
+								trueTuple->items[i] = ExpressionBuilder::implicitNumericCast(
+									std::move(trueTuple->items[i]), expectedTypes[i], m_loc);
+							trueTuple->wtype = expectedTupleType;
+						}
+						// Coerce false branch
+						auto* falseTuple = dynamic_cast<awst::TupleExpression*>(condExpr->falseExpr.get());
+						if (falseTuple && falseTuple->items.size() == retParams.size())
+						{
+							for (size_t i = 0; i < retParams.size(); ++i)
+								falseTuple->items[i] = ExpressionBuilder::implicitNumericCast(
+									std::move(falseTuple->items[i]), expectedTypes[i], m_loc);
+							falseTuple->wtype = expectedTupleType;
+						}
+						condExpr->wtype = expectedTupleType;
+					}
+				}
 			}
 		}
 	}
