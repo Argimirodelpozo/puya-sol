@@ -4,6 +4,7 @@
 #include "builder/sol-ast/stmts/SolInlineAssembly.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/storage/StorageLayout.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/Types.h>
@@ -143,81 +144,60 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		}
 	}
 
-	// Extract storage slot/offset references (e.g., z.slot, y.offset)
-	// Maps: Yul identifier name → storage variable name (for sload/sstore)
+	// Extract storage slot/offset references using StorageLayout.
+	// Computes EVM-compatible (slot, offset) pairs for state variables.
 	std::map<std::string, std::string> storageSlotVars;
-	unsigned nextSlot = 0;
-	unsigned currentSlotOffset = 0;
-	// Compute simple sequential slot layout matching EVM's storage layout.
-	// Walk the contract's state variables to assign slot numbers.
-	if (m_ctx.exprBuilder)
 	{
-		// Build slot→varName and offset maps from external references
+		// Find the contract from any state variable reference
+		ContractDefinition const* contractDef = nullptr;
 		for (auto const& [yulId, extInfo]: annotation.externalReferences)
 		{
 			if (!extInfo.declaration) continue;
 			auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
-			if (!varDecl || varDecl->isConstant() || !varDecl->isStateVariable()) continue;
-
-			std::string yulName = yulId->name.str();
-			std::string suffix = extInfo.suffix;
-
-			if (suffix == "slot")
+			if (varDecl && varDecl->isStateVariable() && !varDecl->isConstant())
 			{
-				// z.slot → resolve to the variable name for storage access
-				// Only map simple types (uint, bool, address) — structs/arrays
-				// have different AVM storage layout and can't be raw-accessed.
-				auto const* varType = varDecl->type();
-				bool isSimple = dynamic_cast<IntegerType const*>(varType)
-					|| dynamic_cast<BoolType const*>(varType)
-					|| dynamic_cast<AddressType const*>(varType)
-					|| dynamic_cast<FixedBytesType const*>(varType);
-				if (!isSimple) continue;
-
-				storageSlotVars[yulName] = varDecl->name();
-				// Also register as a constant with a sentinel value so
-				// the AssemblyBuilder can detect it
-				// Use the variable name prefixed with __slot_ as the constant value
-				constants[yulName] = "__slot_" + varDecl->name();
+				contractDef = dynamic_cast<ContractDefinition const*>(varDecl->scope());
+				break;
 			}
-			else if (suffix == "offset")
+		}
+
+		if (contractDef && m_ctx.typeMapper)
+		{
+			StorageLayout layout;
+			layout.computeLayout(*contractDef, *m_ctx.typeMapper);
+
+			for (auto const& [yulId, extInfo]: annotation.externalReferences)
 			{
-				// y.offset → byte offset within the storage slot
-				// For EVM: computed from type sizes in packed storage layout
-				// Simplified: count bytes from preceding variables in the same slot
-				// For now, use the annotation's offset if available, or 0
-				unsigned offset = 0;
-				// Walk contract state vars to compute EVM storage offset
-				if (m_ctx.exprBuilder)
+				if (!extInfo.declaration) continue;
+				auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
+				if (!varDecl || varDecl->isConstant() || !varDecl->isStateVariable()) continue;
+
+				std::string yulName = yulId->name.str();
+				std::string suffix = extInfo.suffix;
+
+				auto const* varInfo = layout.getVarInfo(varDecl->name());
+				if (!varInfo) continue;
+
+				if (suffix == "slot")
 				{
-					unsigned slotBytesUsed = 0;
-					auto const* scope = varDecl->scope();
-					if (auto const* contract = dynamic_cast<ContractDefinition const*>(scope))
-					{
-						for (auto const* sv: contract->stateVariables())
-						{
-							if (sv->isConstant() || sv->immutable()) continue;
-							unsigned varSize = 32; // default
-							if (auto const* intType = dynamic_cast<IntegerType const*>(sv->type()))
-								varSize = intType->numBits() / 8;
-							else if (dynamic_cast<BoolType const*>(sv->type()))
-								varSize = 1;
-							else if (dynamic_cast<AddressType const*>(sv->type()))
-								varSize = 20;
+					// Only map simple types — structs/arrays have different AVM
+					// storage layout and raw sstore would corrupt their state.
+					auto const* varType = varDecl->type();
+					bool isSimple = dynamic_cast<IntegerType const*>(varType)
+						|| dynamic_cast<BoolType const*>(varType)
+						|| dynamic_cast<AddressType const*>(varType)
+						|| dynamic_cast<FixedBytesType const*>(varType);
+					if (!isSimple) continue;
 
-							if (sv == varDecl)
-							{
-								offset = slotBytesUsed;
-								break;
-							}
-
-							slotBytesUsed += varSize;
-							if (slotBytesUsed > 32 || varSize == 32)
-								slotBytesUsed = 0; // new slot
-						}
-					}
+					// z.slot → slot number as constant, plus slot→varName mapping
+					constants[yulName] = std::to_string(varInfo->slot);
+					storageSlotVars[yulName] = varDecl->name();
 				}
-				constants[yulName] = std::to_string(offset);
+				else if (suffix == "offset")
+				{
+					// y.offset → byte offset within the 32-byte slot
+					constants[yulName] = std::to_string(varInfo->byteOffset);
+				}
 			}
 		}
 	}

@@ -135,11 +135,21 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 
 		if (suffix == "slot")
 		{
-			// Storage slot reference: z.slot → marker for sload/sstore
+			// Storage slot reference: z.slot → numeric slot constant
+			// First check constants (set by StorageLayout in SolInlineAssembly)
+			auto cIt = m_constants.find(name);
+			if (cIt != m_constants.end())
+			{
+				auto node = std::make_shared<awst::IntegerConstant>();
+				node->sourceLocation = loc;
+				node->wtype = awst::WType::biguintType();
+				node->value = cIt->second;
+				return node;
+			}
+			// Fallback: check storageSlotVars for __slot_ marker
 			auto it = m_storageSlotVars.find(name);
 			if (it != m_storageSlotVars.end())
 			{
-				// Return a VarExpression with __slot_ prefix as marker
 				auto node = std::make_shared<awst::VarExpression>();
 				node->sourceLocation = loc;
 				node->wtype = awst::WType::biguintType();

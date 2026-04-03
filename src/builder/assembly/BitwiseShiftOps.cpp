@@ -2,6 +2,7 @@
 /// Bitwise and shift operations: shl, shr, div, byte, signextend, buildPowerOf2.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/storage/StorageLayout.h"
 #include "Logger.h"
 
 #include <sstream>
@@ -19,9 +20,21 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSload(
 		Logger::instance().error("sload requires 1 argument", _loc);
 		return nullptr;
 	}
-	// Check if the slot argument is a __slot_ marker from buildIdentifier
+	// Resolve the slot argument to a storage variable name.
 	std::string varName;
-	if (auto const* varExpr = dynamic_cast<awst::VarExpression const*>(_args[0].get()))
+	if (auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(_args[0].get()))
+	{
+		for (auto const& [slotRef, name]: m_storageSlotVars)
+		{
+			auto cIt = m_constants.find(slotRef);
+			if (cIt != m_constants.end() && cIt->second == intConst->value)
+			{
+				varName = name;
+				break;
+			}
+		}
+	}
+	else if (auto const* varExpr = dynamic_cast<awst::VarExpression const*>(_args[0].get()))
 	{
 		if (varExpr->name.substr(0, 7) == "__slot_")
 			varName = varExpr->name.substr(7);
