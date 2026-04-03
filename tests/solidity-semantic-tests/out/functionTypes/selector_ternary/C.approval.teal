@@ -39,11 +39,24 @@ main_f_route@5:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary.sol.C.h[routing]() -> void:
 h:
     txna ApplicationArgs 1
+    dup
     len
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
+    pushint 0
+    getbit
+    bz h_ternary_false@3
+    pushbytes 0x26121ff0
+
+h_ternary_merge@4:
     pushbytes 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
+
+h_ternary_false@3:
+    pushbytes 0xe2179b8e
+    b h_ternary_merge@4

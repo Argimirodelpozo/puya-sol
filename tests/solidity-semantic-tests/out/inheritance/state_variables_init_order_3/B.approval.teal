@@ -7,6 +7,8 @@ main:
     bytecblock 0x151f7c75 "a" "b" 0x "c" "b_a" "b_b" "b_c"
     txn ApplicationID
     bnz main_after_if_else@2
+    pushint 17
+    itob
     pushint 42
     itob
     bytec_1 // "a"
@@ -18,8 +20,6 @@ main:
     bytec 4 // "c"
     bytec_3 // 0x
     app_global_put
-    pushint 17
-    itob
     intc_1 // 0
     bytec_1 // "a"
     app_global_get_ex
