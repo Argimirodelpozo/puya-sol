@@ -401,6 +401,76 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			}
 			catch (...) {} // fall through
 		}
+		// Signed overflow check: -INT_MIN overflows
+		if (m_signed && !m_ctx.inUncheckedBlock)
+		{
+			// INT_MIN = 2^(N-1) in two's complement unsigned representation
+			std::string halfNStr;
+			if (m_bits == 256)
+				halfNStr = "57896044618658097711785492504343953926634992332820282019728792003956564819968";
+			else
+			{
+				solidity::u256 halfN = solidity::u256(1) << (m_bits - 1);
+				std::ostringstream oss;
+				oss << halfN;
+				halfNStr = oss.str();
+			}
+
+			// Promote operand to biguint for comparison if needed
+			std::shared_ptr<awst::Expression> cmpOperand = operand;
+			if (!m_isBigUInt)
+			{
+				// Mask to N bits first (uint64 may hold wider two's complement)
+				auto maskConst = std::make_shared<awst::IntegerConstant>();
+				maskConst->sourceLocation = _loc;
+				maskConst->wtype = awst::WType::uint64Type();
+				maskConst->value = std::to_string((uint64_t(1) << m_bits) - 1);
+
+				auto masked = std::make_shared<awst::UInt64BinaryOperation>();
+				masked->sourceLocation = _loc;
+				masked->wtype = awst::WType::uint64Type();
+				masked->left = operand;
+				masked->op = awst::UInt64BinaryOperator::BitAnd;
+				masked->right = std::move(maskConst);
+
+				// Promote to biguint for comparison
+				auto itob = std::make_shared<awst::IntrinsicCall>();
+				itob->sourceLocation = _loc;
+				itob->wtype = awst::WType::bytesType();
+				itob->opCode = "itob";
+				itob->stackArgs.push_back(std::move(masked));
+
+				auto cast = std::make_shared<awst::ReinterpretCast>();
+				cast->sourceLocation = _loc;
+				cast->wtype = awst::WType::biguintType();
+				cast->expr = std::move(itob);
+				cmpOperand = std::move(cast);
+			}
+
+			auto halfConst = std::make_shared<awst::IntegerConstant>();
+			halfConst->sourceLocation = _loc;
+			halfConst->wtype = awst::WType::biguintType();
+			halfConst->value = halfNStr;
+
+			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+			cmp->sourceLocation = _loc;
+			cmp->wtype = awst::WType::boolType();
+			cmp->lhs = std::move(cmpOperand);
+			cmp->op = awst::NumericComparison::Ne;
+			cmp->rhs = std::move(halfConst);
+
+			auto assertExpr = std::make_shared<awst::AssertExpression>();
+			assertExpr->sourceLocation = _loc;
+			assertExpr->wtype = awst::WType::voidType();
+			assertExpr->condition = std::move(cmp);
+			assertExpr->errorMessage = "signed negation overflow";
+
+			auto assertStmt = std::make_shared<awst::ExpressionStatement>();
+			assertStmt->sourceLocation = _loc;
+			assertStmt->expr = std::move(assertExpr);
+			m_ctx.prePendingStatements.push_back(std::move(assertStmt));
+		}
+
 		// Runtime negation
 		if (m_isBigUInt)
 		{
