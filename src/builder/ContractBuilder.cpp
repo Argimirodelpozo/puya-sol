@@ -1755,6 +1755,106 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		}
 		else
 		{
+		// Pre-evaluate constructor arguments in dependency order.
+		// In viaIR, all ctor args are evaluated before any state var init or ctor body.
+		// For transitive args (D→C→A), C's params must be assigned first so that
+		// A's args (from C's modifier) see C's param values, not D's raw values.
+		//
+		// Phase 1: Assign direct ctor params (from D's modifiers/specifiers) into createBlock
+		// Phase 2: Build pre-evaluated expressions for ALL base args
+		std::map<solidity::frontend::ContractDefinition const*,
+			std::vector<std::shared_ptr<awst::Expression>>> preEvaluatedArgs;
+		{
+			// Identify which args come directly from the main contract vs transitive
+			std::set<solidity::frontend::ContractDefinition const*> directBases;
+			if (constructor)
+			{
+				for (auto const& mod: constructor->modifiers())
+				{
+					auto const* ref = mod->name().annotation().referencedDeclaration;
+					if (auto const* bc = dynamic_cast<solidity::frontend::ContractDefinition const*>(ref))
+						directBases.insert(bc);
+				}
+			}
+			for (auto const& baseSpec: _contract.baseContracts())
+			{
+				auto const* ref = baseSpec->name().annotation().referencedDeclaration;
+				if (auto const* bc = dynamic_cast<solidity::frontend::ContractDefinition const*>(ref))
+					directBases.insert(bc);
+			}
+
+			// Phase 1: Assign direct base ctor params into createBlock
+			// (so transitive args can reference them)
+			for (auto const* directBase: directBases)
+			{
+				auto argIt = explicitBaseArgs.find(directBase);
+				if (argIt == explicitBaseArgs.end() || !argIt->second || argIt->second->empty())
+					continue;
+				auto const* baseCtor = directBase->constructor();
+				if (!baseCtor)
+					continue;
+
+				auto const& args = *(argIt->second);
+				auto const& params = baseCtor->parameters();
+				for (size_t i = 0; i < args.size() && i < params.size(); ++i)
+				{
+					auto argExpr = m_exprBuilder->build(*args[i]);
+					if (!argExpr)
+						continue;
+					auto* targetType = m_typeMapper.map(params[i]->type());
+					argExpr = ExpressionBuilder::implicitNumericCast(
+						std::move(argExpr), targetType, makeLoc(args[i]->location()));
+
+					auto target = std::make_shared<awst::VarExpression>();
+					target->sourceLocation = makeLoc(args[i]->location());
+					target->name = params[i]->name();
+					target->wtype = targetType;
+
+					auto assignment = std::make_shared<awst::AssignmentStatement>();
+					assignment->sourceLocation = target->sourceLocation;
+					assignment->target = target;
+					assignment->value = std::move(argExpr);
+					createBlock->body.push_back(std::move(assignment));
+				}
+			}
+
+			// Phase 2: Pre-evaluate ALL base ctor args (including transitive)
+			auto const& lin = _contract.annotation().linearizedBaseContracts;
+			for (auto it = lin.rbegin(); it != lin.rend(); ++it)
+			{
+				auto const* base = *it;
+				if (base == &_contract)
+					continue;
+
+				auto argIt = explicitBaseArgs.find(base);
+				if (argIt == explicitBaseArgs.end() || !argIt->second || argIt->second->empty())
+					continue;
+				auto const* baseCtor = base->constructor();
+				if (!baseCtor)
+					continue;
+
+				// Skip direct bases — their params already assigned in Phase 1
+				if (directBases.count(base))
+					continue;
+
+				auto const& args = *(argIt->second);
+				auto const& params = baseCtor->parameters();
+				std::vector<std::shared_ptr<awst::Expression>> evaluated;
+				for (size_t i = 0; i < args.size() && i < params.size(); ++i)
+				{
+					auto argExpr = m_exprBuilder->build(*args[i]);
+					if (argExpr)
+					{
+						auto* targetType = m_typeMapper.map(params[i]->type());
+						argExpr = ExpressionBuilder::implicitNumericCast(
+							std::move(argExpr), targetType, makeLoc(args[i]->location()));
+					}
+					evaluated.push_back(std::move(argExpr));
+				}
+				preEvaluatedArgs[base] = std::move(evaluated);
+			}
+		}
+
 		// Interleave state variable initialization with constructor bodies.
 		// For each base class in C3 linearization order (most-base first):
 		//   1. Initialize that base's state variables (explicit initializers or zero)
@@ -1779,32 +1879,28 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			if (baseCtor->body().statements().empty())
 				continue;
 
-			// Generate parameter assignments from explicit base constructor arguments
-			auto argIt = explicitBaseArgs.find(base);
-			if (argIt != explicitBaseArgs.end() && argIt->second && !argIt->second->empty())
+			// Generate parameter assignments from pre-evaluated constructor arguments.
+			// Direct base params were already assigned in Phase 1.
+			// Transitive base params use pre-evaluated expressions.
+			auto preIt = preEvaluatedArgs.find(base);
+			if (preIt != preEvaluatedArgs.end())
 			{
-				auto const& args = *(argIt->second);
+				auto const& evaledArgs = preIt->second;
 				auto const& params = baseCtor->parameters();
-				for (size_t i = 0; i < args.size() && i < params.size(); ++i)
+				for (size_t i = 0; i < evaledArgs.size() && i < params.size(); ++i)
 				{
-					auto argExpr = m_exprBuilder->build(*args[i]);
-					if (!argExpr)
+					if (!evaledArgs[i])
 						continue;
 
 					auto target = std::make_shared<awst::VarExpression>();
-					target->sourceLocation = makeLoc(args[i]->location());
+					target->sourceLocation = method.sourceLocation;
 					target->name = params[i]->name();
 					target->wtype = m_typeMapper.map(params[i]->type());
 
-					// Cast argument to parameter type if needed
-					argExpr = ExpressionBuilder::implicitNumericCast(
-						std::move(argExpr), target->wtype, target->sourceLocation
-					);
-
 					auto assignment = std::make_shared<awst::AssignmentStatement>();
-					assignment->sourceLocation = target->sourceLocation;
+					assignment->sourceLocation = method.sourceLocation;
 					assignment->target = target;
-					assignment->value = std::move(argExpr);
+					assignment->value = evaledArgs[i];
 					createBlock->body.push_back(std::move(assignment));
 				}
 			}
