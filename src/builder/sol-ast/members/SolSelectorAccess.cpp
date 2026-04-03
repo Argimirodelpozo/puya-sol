@@ -88,6 +88,42 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 	auto const* baseType = baseExpr.annotation().type;
 	std::string sig;
 
+	// Handle ternary base: (cond ? f : g).selector
+	// Must evaluate the condition to preserve side effects (e.g., z = true).
+	// Unwrap TupleExpression if present (from parentheses).
+	Expression const* unwrapped = &baseExpr;
+	if (auto const* tuple = dynamic_cast<TupleExpression const*>(unwrapped))
+		if (tuple->components().size() == 1 && tuple->components()[0])
+			unwrapped = tuple->components()[0].get();
+	if (auto const* cond = dynamic_cast<Conditional const*>(unwrapped))
+	{
+		std::string trueSig = resolveSignature(cond->trueExpression());
+		std::string falseSig = resolveSignature(cond->falseExpression());
+
+		if (!trueSig.empty())
+		{
+			// Build condition to execute side effects (assignment expressions, etc.)
+			auto condition = buildExpr(cond->condition());
+			auto condStmt = std::make_shared<awst::ExpressionStatement>();
+			condStmt->sourceLocation = m_loc;
+			condStmt->expr = std::move(condition);
+			m_ctx.prePendingStatements.push_back(std::move(condStmt));
+
+			if (trueSig == falseSig)
+				return makeSelectorExpr(trueSig);
+
+			// Different selectors — build ternary
+			auto ternCond = buildExpr(cond->condition());
+			auto ternary = std::make_shared<awst::ConditionalExpression>();
+			ternary->sourceLocation = m_loc;
+			ternary->wtype = awst::WType::bytesType();
+			ternary->condition = std::move(ternCond);
+			ternary->trueExpr = makeSelectorExpr(trueSig);
+			ternary->falseExpr = makeSelectorExpr(falseSig.empty() ? trueSig : falseSig);
+			return ternary;
+		}
+	}
+
 	FunctionType const* funcType = nullptr;
 	if (auto const* ft = dynamic_cast<FunctionType const*>(baseType))
 		funcType = ft;
