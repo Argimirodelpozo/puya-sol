@@ -262,13 +262,30 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
         if any(m.name == "__postInit" for m in app_spec.methods):
             from algosdk.transaction import BoxReference as AlgoBoxRef
             try:
-                app_client.send.call(
-                    au.AppClientMethodCallParams(
-                        method="__postInit",
-                        args=[],
-                        box_references=[AlgoBoxRef(app_index=0, name=ref[1]) for ref in box_refs] if box_refs else None,
-                    )
+                # Use populate_app_call_resources to auto-discover box refs via simulate
+                from algosdk.atomic_transaction_composer import AtomicTransactionComposer, TransactionWithSigner
+                from algosdk.abi import Method
+                import os as _os
+                _algod = algod
+                _sender = account.address
+                _signer = app_client._default_signer or localnet.account.get_signer(_sender)
+                _sp = _algod.suggested_params()
+                _sp.flat_fee = True
+                _sp.fee = 4000
+                _atc = AtomicTransactionComposer()
+                _postinit_method = Method.from_signature("__postInit()void")
+                _atc.add_method_call(
+                    app_id=app_id, method=_postinit_method, sender=_sender,
+                    sp=_sp, signer=_signer, method_args=[],
+                    boxes=[AlgoBoxRef(app_index=0, name=ref[1]) for ref in box_refs] if box_refs else None,
+                    note=_os.urandom(8),
                 )
+                # Auto-populate resources from simulate
+                try:
+                    _atc = au.populate_app_call_resources(_atc, _algod)
+                except Exception:
+                    pass  # Fall back to static box refs
+                _atc.execute(_algod, wait_rounds=4)
             except Exception as e:
                 import sys
                 print(f"  [warn] __postInit failed: {str(e)[:100]}", file=sys.stderr)
