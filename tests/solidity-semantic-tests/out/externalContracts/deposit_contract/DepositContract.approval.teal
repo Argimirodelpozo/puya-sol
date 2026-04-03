@@ -244,11 +244,18 @@ get_deposit_root_after_while@7:
     -
     intc_0 // 32
     extract3
+    intc_2 // 8
+    bzero
     intc_1 // 0
     bytec_1 // "deposit_count"
     app_global_get_ex
     assert // check deposit_count exists
-    btoi
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
     callsub to_little_endian_64
     concat
     bytec 10 // 0x000000000000000000000000000000000000000000000000
@@ -264,11 +271,18 @@ get_deposit_root_after_while@7:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/deposit_contract.sol.DepositContract.get_deposit_count[routing]() -> void:
 get_deposit_count:
+    intc_2 // 8
+    bzero
     intc_1 // 0
     bytec_1 // "deposit_count"
     app_global_get_ex
     assert // check deposit_count exists
-    btoi
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
     callsub to_little_endian_64
     dup
     len
@@ -382,7 +396,18 @@ deposit:
     pushbytes 0xffffffffffffffff
     b<=
     assert // DepositContract: deposit value too high
-    btoi
+    intc_2 // 8
+    bzero
+    dup
+    cover 12
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
     callsub to_little_endian_64
     dup
     len
@@ -394,7 +419,14 @@ deposit:
     bytec_1 // "deposit_count"
     app_global_get_ex
     assert // check deposit_count exists
-    btoi
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
     callsub to_little_endian_64
     dup
     len
@@ -593,7 +625,7 @@ deposit_after_while@6:
     bytec_0 // 0x01
     b+
     dup
-    bury 8
+    bury 9
     bytec_1 // "deposit_count"
     swap
     app_global_put
@@ -603,7 +635,7 @@ deposit_while_top@7:
     bytec 5 // 0x20
     b<
     assert
-    dig 6
+    dig 7
     bytec_0 // 0x01
     b&
     bytec_0 // 0x01
@@ -613,8 +645,7 @@ deposit_while_top@7:
     bytec_2 // "branch"
     app_global_get_ex
     assert // check branch exists
-    intc_2 // 8
-    bzero
+    dig 7
     dig 7
     concat
     dup
@@ -637,8 +668,7 @@ deposit_after_if_else@10:
     bytec_2 // "branch"
     app_global_get_ex
     assert // check branch exists
-    intc_2 // 8
-    bzero
+    dig 7
     dig 7
     dup
     cover 3
@@ -674,10 +704,10 @@ deposit_after_if_else@10:
     concat
     sha256
     bury 5
-    dig 7
+    dig 8
     bytec 6 // 0x02
     b/
-    bury 8
+    bury 9
     bytec_0 // 0x01
     b+
     bury 6

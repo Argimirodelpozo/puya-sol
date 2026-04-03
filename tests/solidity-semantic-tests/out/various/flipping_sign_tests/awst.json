@@ -578,7 +578,7 @@
                       "immutable": true
                     },
                     "left": {
-                      "_type": "ReinterpretCast",
+                      "_type": "BigUIntBinaryOperation",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/flipping_sign_tests.sol",
                         "line": 112,
@@ -592,8 +592,8 @@
                         "name": "biguint",
                         "immutable": true
                       },
-                      "expr": {
-                        "_type": "BytesUnaryOperation",
+                      "left": {
+                        "_type": "ReinterpretCast",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/flipping_sign_tests.sol",
                           "line": 112,
@@ -603,14 +603,12 @@
                           "end_column": null
                         },
                         "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
                         },
-                        "op": "~",
                         "expr": {
-                          "_type": "ReinterpretCast",
+                          "_type": "BytesUnaryOperation",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/flipping_sign_tests.sol",
                             "line": 112,
@@ -625,27 +623,64 @@
                             "immutable": true,
                             "length": null
                           },
+                          "op": "~",
                           "expr": {
-                            "_type": "VarExpression",
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/flipping_sign_tests.sol",
-                              "line": 113,
+                              "line": 112,
                               "end_line": 114,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "WType",
-                              "name": "biguint",
-                              "immutable": true
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
                             },
-                            "name": "x"
+                            "expr": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/flipping_sign_tests.sol",
+                                "line": 113,
+                                "end_line": 114,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "biguint",
+                                "immutable": true
+                              },
+                              "name": "x"
+                            }
                           }
                         }
+                      },
+                      "op": "+",
+                      "right": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/flipping_sign_tests.sol",
+                          "line": 112,
+                          "end_line": 114,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "value": 1,
+                        "teal_alias": null
                       }
                     },
-                    "op": "+",
+                    "op": "%",
                     "right": {
                       "_type": "IntegerConstant",
                       "source_location": {
@@ -661,7 +696,7 @@
                         "name": "biguint",
                         "immutable": true
                       },
-                      "value": 1,
+                      "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
                       "teal_alias": null
                     }
                   },

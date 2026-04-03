@@ -74,7 +74,8 @@ shrinkArray_while_top@2:
     bz shrinkArray_after_while@4
     intc_3 // 8
     bzero
-    dig 1
+    dup
+    dig 2
     dup
     cover 2
     concat
@@ -86,7 +87,14 @@ shrinkArray_while_top@2:
     dig 1
     pushbytes 0x02
     b+
-    btoi
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
     pushint 255
     &
     itob
