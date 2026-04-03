@@ -3,14 +3,16 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/state_variable_under_contract_name.sol.Scope.approval_program() -> uint64:
 main:
+    intcblock 1 32
+    bytecblock "stateVar"
     txn ApplicationID
     bnz main_after_if_else@2
     pushint 42
     itob
-    pushbytes "stateVar"
+    bytec_0 // "stateVar"
     swap
     app_global_put
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -32,7 +34,26 @@ main_getStateVar_route@4:
     txn ApplicationID
     &&
     assert
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    b getStateVar
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/state_variable_under_contract_name.sol.Scope.getStateVar[routing]() -> void:
+getStateVar:
+    pushint 0
+    bytec_0 // "stateVar"
+    app_global_get_ex
+    assert // check stateVar exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
-    pushint 1
+    intc_0 // 1
     return
