@@ -2,6 +2,7 @@
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/storage/StorageLayout.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
@@ -881,6 +882,10 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		method.arc4MethodConfig.reset();
 		contract->methods.push_back(std::move(method));
 	}
+
+	// Generate __storage_read/__storage_write dispatch subroutines
+	// for assembly sload/sstore support
+	buildStorageDispatch(_contract, contract.get(), contractName);
 
 	return contract;
 }
@@ -2869,6 +2874,286 @@ void ContractBuilder::buildModifierChain(
 	}
 
 	_method.body = entryBody;
+}
+
+void ContractBuilder::buildStorageDispatch(
+	solidity::frontend::ContractDefinition const& _contract,
+	awst::Contract* _contractNode,
+	std::string const& _contractName
+)
+{
+	StorageLayout layout;
+	layout.computeLayout(_contract, m_typeMapper);
+
+	if (layout.totalSlots() == 0)
+		return;
+
+	std::string cref = m_sourceFile + "." + _contractName;
+	awst::SourceLocation loc;
+	loc.file = m_sourceFile;
+
+	auto makeUint64 = [&](std::string const& val) {
+		auto c = std::make_shared<awst::IntegerConstant>();
+		c->sourceLocation = loc;
+		c->wtype = awst::WType::uint64Type();
+		c->value = val;
+		return c;
+	};
+
+	auto makeBytes = [&](std::string const& s) {
+		auto c = std::make_shared<awst::BytesConstant>();
+		c->sourceLocation = loc;
+		c->wtype = awst::WType::bytesType();
+		c->encoding = awst::BytesEncoding::Utf8;
+		c->value = std::vector<uint8_t>(s.begin(), s.end());
+		return c;
+	};
+
+	// ── __storage_read(slot: uint64) -> biguint ──
+	{
+		awst::ContractMethod readSub;
+		readSub.sourceLocation = loc;
+		readSub.cref = cref;
+		readSub.memberName = "__storage_read";
+		readSub.returnType = awst::WType::biguintType();
+		readSub.arc4MethodConfig = std::nullopt;
+		readSub.pure = false;
+
+		awst::SubroutineArgument slotArg;
+		slotArg.name = "__slot";
+		slotArg.wtype = awst::WType::uint64Type();
+		slotArg.sourceLocation = loc;
+		readSub.args.push_back(slotArg);
+
+		auto body = std::make_shared<awst::Block>();
+		body->sourceLocation = loc;
+
+		// Build if/else chain for known slots
+		// Start from innermost (default case) and wrap outward
+		// Default: return biguint(0) (unknown slot)
+		auto defaultBlock = std::make_shared<awst::Block>();
+		defaultBlock->sourceLocation = loc;
+		{
+			auto ret = std::make_shared<awst::ReturnStatement>();
+			ret->sourceLocation = loc;
+			auto zero = std::make_shared<awst::IntegerConstant>();
+			zero->sourceLocation = loc;
+			zero->wtype = awst::WType::biguintType();
+			zero->value = "0";
+			ret->value = std::move(zero);
+			defaultBlock->body.push_back(std::move(ret));
+		}
+
+		std::shared_ptr<awst::Statement> current;
+		// Wrap default in a ReturnStatement block
+		{
+			auto exprStmt = std::make_shared<awst::ExpressionStatement>();
+			exprStmt->sourceLocation = loc;
+			// Just use the default block directly
+		}
+		// Build the chain bottom-up
+		std::shared_ptr<awst::Block> elseBlock = defaultBlock;
+
+		for (auto const& sv: layout.variables())
+		{
+			if (sv.isFullSlot && !sv.wtype) continue;
+
+			// Condition: __slot == slotNumber
+			auto slotVar = std::make_shared<awst::VarExpression>();
+			slotVar->sourceLocation = loc;
+			slotVar->wtype = awst::WType::uint64Type();
+			slotVar->name = "__slot";
+
+			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+			cmp->sourceLocation = loc;
+			cmp->wtype = awst::WType::boolType();
+			cmp->lhs = slotVar;
+			cmp->op = awst::NumericComparison::Eq;
+			cmp->rhs = makeUint64(std::to_string(sv.slot));
+
+			// If branch: return app_global_get(varName) as biguint
+			auto ifBlock = std::make_shared<awst::Block>();
+			ifBlock->sourceLocation = loc;
+			{
+				auto get = std::make_shared<awst::IntrinsicCall>();
+				get->sourceLocation = loc;
+				get->wtype = awst::WType::bytesType();
+				get->opCode = "app_global_get";
+				get->stackArgs.push_back(makeBytes(sv.name));
+
+				// Pad to 32 bytes: concat(bzero(32), value), take last 32
+				auto bz = std::make_shared<awst::IntrinsicCall>();
+				bz->sourceLocation = loc;
+				bz->wtype = awst::WType::bytesType();
+				bz->opCode = "bzero";
+				bz->stackArgs.push_back(makeUint64("32"));
+
+				auto cat = std::make_shared<awst::IntrinsicCall>();
+				cat->sourceLocation = loc;
+				cat->wtype = awst::WType::bytesType();
+				cat->opCode = "concat";
+				cat->stackArgs.push_back(std::move(bz));
+				cat->stackArgs.push_back(std::move(get));
+
+				// Extract last 32 bytes
+				auto lenCall = std::make_shared<awst::IntrinsicCall>();
+				lenCall->sourceLocation = loc;
+				lenCall->wtype = awst::WType::uint64Type();
+				lenCall->opCode = "len";
+				lenCall->stackArgs.push_back(cat);
+
+				auto sub = std::make_shared<awst::UInt64BinaryOperation>();
+				sub->sourceLocation = loc;
+				sub->wtype = awst::WType::uint64Type();
+				sub->left = std::move(lenCall);
+				sub->op = awst::UInt64BinaryOperator::Sub;
+				sub->right = makeUint64("32");
+
+				auto extract = std::make_shared<awst::IntrinsicCall>();
+				extract->sourceLocation = loc;
+				extract->wtype = awst::WType::bytesType();
+				extract->opCode = "extract3";
+				extract->stackArgs.push_back(cat);
+				extract->stackArgs.push_back(std::move(sub));
+				extract->stackArgs.push_back(makeUint64("32"));
+
+				auto cast = std::make_shared<awst::ReinterpretCast>();
+				cast->sourceLocation = loc;
+				cast->wtype = awst::WType::biguintType();
+				cast->expr = std::move(extract);
+
+				auto ret = std::make_shared<awst::ReturnStatement>();
+				ret->sourceLocation = loc;
+				ret->value = std::move(cast);
+				ifBlock->body.push_back(std::move(ret));
+			}
+
+			auto ifElse = std::make_shared<awst::IfElse>();
+			ifElse->sourceLocation = loc;
+			ifElse->condition = std::move(cmp);
+			ifElse->ifBranch = std::move(ifBlock);
+			ifElse->elseBranch = std::move(elseBlock);
+
+			auto newElse = std::make_shared<awst::Block>();
+			newElse->sourceLocation = loc;
+			newElse->body.push_back(std::move(ifElse));
+			elseBlock = std::move(newElse);
+		}
+
+		// The outermost block is the body
+		for (auto& stmt: elseBlock->body)
+			body->body.push_back(std::move(stmt));
+
+		readSub.body = body;
+		_contractNode->methods.push_back(std::move(readSub));
+	}
+
+	// ── __storage_write(slot: uint64, value: biguint) -> void ──
+	{
+		awst::ContractMethod writeSub;
+		writeSub.sourceLocation = loc;
+		writeSub.cref = cref;
+		writeSub.memberName = "__storage_write";
+		writeSub.returnType = awst::WType::voidType();
+		writeSub.arc4MethodConfig = std::nullopt;
+		writeSub.pure = false;
+
+		awst::SubroutineArgument slotArg;
+		slotArg.name = "__slot";
+		slotArg.wtype = awst::WType::uint64Type();
+		slotArg.sourceLocation = loc;
+		writeSub.args.push_back(slotArg);
+
+		awst::SubroutineArgument valArg;
+		valArg.name = "__value";
+		valArg.wtype = awst::WType::biguintType();
+		valArg.sourceLocation = loc;
+		writeSub.args.push_back(valArg);
+
+		auto body = std::make_shared<awst::Block>();
+		body->sourceLocation = loc;
+
+		// Build if/else chain for known slots
+		auto defaultBlock = std::make_shared<awst::Block>();
+		defaultBlock->sourceLocation = loc;
+		// Default: no-op (unknown slot, silently ignore)
+		{
+			auto ret = std::make_shared<awst::ReturnStatement>();
+			ret->sourceLocation = loc;
+			defaultBlock->body.push_back(std::move(ret));
+		}
+
+		std::shared_ptr<awst::Block> elseBlock = defaultBlock;
+
+		for (auto const& sv: layout.variables())
+		{
+			if (sv.isFullSlot && !sv.wtype) continue;
+
+			auto slotVar = std::make_shared<awst::VarExpression>();
+			slotVar->sourceLocation = loc;
+			slotVar->wtype = awst::WType::uint64Type();
+			slotVar->name = "__slot";
+
+			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+			cmp->sourceLocation = loc;
+			cmp->wtype = awst::WType::boolType();
+			cmp->lhs = slotVar;
+			cmp->op = awst::NumericComparison::Eq;
+			cmp->rhs = makeUint64(std::to_string(sv.slot));
+
+			auto ifBlock = std::make_shared<awst::Block>();
+			ifBlock->sourceLocation = loc;
+			{
+				// app_global_put(varName, value_as_bytes)
+				auto valueVar = std::make_shared<awst::VarExpression>();
+				valueVar->sourceLocation = loc;
+				valueVar->wtype = awst::WType::biguintType();
+				valueVar->name = "__value";
+
+				auto cast = std::make_shared<awst::ReinterpretCast>();
+				cast->sourceLocation = loc;
+				cast->wtype = awst::WType::bytesType();
+				cast->expr = std::move(valueVar);
+
+				auto put = std::make_shared<awst::IntrinsicCall>();
+				put->sourceLocation = loc;
+				put->wtype = awst::WType::voidType();
+				put->opCode = "app_global_put";
+				put->stackArgs.push_back(makeBytes(sv.name));
+				put->stackArgs.push_back(std::move(cast));
+
+				auto stmt = std::make_shared<awst::ExpressionStatement>();
+				stmt->sourceLocation = loc;
+				stmt->expr = std::move(put);
+				ifBlock->body.push_back(std::move(stmt));
+
+				auto ret = std::make_shared<awst::ReturnStatement>();
+				ret->sourceLocation = loc;
+				ifBlock->body.push_back(std::move(ret));
+			}
+
+			auto ifElse = std::make_shared<awst::IfElse>();
+			ifElse->sourceLocation = loc;
+			ifElse->condition = std::move(cmp);
+			ifElse->ifBranch = std::move(ifBlock);
+			ifElse->elseBranch = std::move(elseBlock);
+
+			auto newElse = std::make_shared<awst::Block>();
+			newElse->sourceLocation = loc;
+			newElse->body.push_back(std::move(ifElse));
+			elseBlock = std::move(newElse);
+		}
+
+		for (auto& stmt: elseBlock->body)
+			body->body.push_back(std::move(stmt));
+
+		writeSub.body = body;
+		_contractNode->methods.push_back(std::move(writeSub));
+	}
+
+	Logger::instance().debug(
+		"Generated __storage_read/__storage_write dispatch for "
+		+ std::to_string(layout.totalSlots()) + " slots", loc);
 }
 
 } // namespace puyasol::builder
