@@ -76,8 +76,10 @@ private:
 class SuperCallCollector: public solidity::frontend::ASTConstVisitor
 {
 public:
-	/// Set of AST IDs of base function definitions referenced by super calls.
+	/// AST IDs of base functions referenced by super.f() calls (MRO-dependent).
 	std::set<int64_t> superTargetIds;
+	/// AST IDs of base functions referenced by explicit Base.f() calls (fixed target).
+	std::set<int64_t> explicitBaseTargetIds;
 
 	bool visit(solidity::frontend::MemberAccess const& _node) override
 	{
@@ -96,16 +98,23 @@ public:
 			auto const* contractType = dynamic_cast<solidity::frontend::ContractType const*>(baseType);
 			if (contractType)
 			{
-				// Both super.g() and BaseContract.g() need base function subroutines
-				bool isExplicitBase = !contractType->isSuper()
-					&& _node.expression().annotation().type
-					&& _node.expression().annotation().type->category()
-						== solidity::frontend::Type::Category::TypeType;
-				if (contractType->isSuper() || isExplicitBase)
+				auto const* refDecl = _node.annotation().referencedDeclaration;
+				if (!refDecl)
+					return true;
+
+				if (contractType->isSuper())
 				{
-					auto const* refDecl = _node.annotation().referencedDeclaration;
-					if (refDecl)
-						superTargetIds.insert(refDecl->id());
+					// super.f() — MRO-dependent resolution
+					superTargetIds.insert(refDecl->id());
+				}
+				else
+				{
+					// Explicit Base.f() — always calls the specific base version
+					bool isExplicitBase = _node.expression().annotation().type
+						&& _node.expression().annotation().type->category()
+							== solidity::frontend::Type::Category::TypeType;
+					if (isExplicitBase)
+						explicitBaseTargetIds.insert(refDecl->id());
 				}
 			}
 		}
@@ -379,12 +388,102 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		}
 	}
 
-	// Helper: set up super target overrides before translating a function
+	// Fallback: super calls not handled by MRO chains (e.g., g() calling super.f()
+	// where g and f are different function names). Use original AST-ID-based resolution.
+	std::unordered_map<int64_t, solidity::frontend::FunctionDefinition const*> fallbackSuperFuncs;
+	{
+		SuperCallCollector globalCollector;
+		for (auto const* base: mro)
+			for (auto const* func: base->definedFunctions())
+				if (!func->isConstructor() && func->isImplemented())
+					func->body().accept(globalCollector);
+
+		// Collect all super target IDs already handled by MRO chain
+		std::set<int64_t> handledSuperIds;
+		for (auto const& [callerId, overrides]: perFuncSuperOverrides)
+			for (auto const& [targetId, name]: overrides)
+				handledSuperIds.insert(targetId);
+
+		for (int64_t id: globalCollector.superTargetIds)
+		{
+			if (handledSuperIds.count(id))
+				continue; // Already handled by MRO chain
+
+			// Find the target function by AST ID (original resolution)
+			for (auto const* base: mro)
+			{
+				for (auto const* func: base->definedFunctions())
+				{
+					if (func->id() == id && func->isImplemented())
+					{
+						fallbackSuperFuncs[id] = func;
+						std::string name = func->name();
+						if (m_overloadedNames.count(name))
+							name += "_" + std::to_string(func->parameters().size());
+						std::string superName = name + "__super_" + std::to_string(id);
+						m_exprBuilder->addSuperTarget(id, superName);
+					}
+				}
+			}
+		}
+	}
+
+	// Handle explicit base class calls (Base.f() — NOT super.f()).
+	// These always resolve to the specific base function, regardless of MRO.
+	// Collect from ALL functions in the hierarchy.
+	std::unordered_map<int64_t, solidity::frontend::FunctionDefinition const*> explicitBaseTargetFuncs;
+	{
+		SuperCallCollector globalCollector;
+		for (auto const* base: mro)
+			for (auto const* func: base->definedFunctions())
+				if (!func->isConstructor() && func->isImplemented())
+					func->body().accept(globalCollector);
+
+		for (int64_t id: globalCollector.explicitBaseTargetIds)
+		{
+			for (auto const* base: mro)
+			{
+				for (auto const* func: base->definedFunctions())
+				{
+					if (func->id() == id && func->isImplemented())
+					{
+						explicitBaseTargetFuncs[id] = func;
+						std::string name = func->name();
+						if (m_overloadedNames.count(name))
+							name += "(" + std::to_string(func->parameters().size()) + ")";
+						std::string superName = name + "__super_" + std::to_string(id);
+						// Register globally — explicit base calls don't need per-function context
+						m_exprBuilder->addSuperTarget(id, superName);
+					}
+				}
+			}
+		}
+	}
+
+	// Helper: set up super target overrides before translating a function.
+	// Adds MRO-dependent super targets, then re-adds explicit base + fallback targets.
 	auto setupSuperOverrides = [&](int64_t funcAstId) {
+		// MRO-dependent overrides for this specific function
 		auto it = perFuncSuperOverrides.find(funcAstId);
 		if (it != perFuncSuperOverrides.end())
 			for (auto const& [targetId, superName]: it->second)
 				m_exprBuilder->addSuperTarget(targetId, superName);
+		// Re-register fallback super targets (cross-function super calls)
+		for (auto const& [id, func]: fallbackSuperFuncs)
+		{
+			std::string name = func->name();
+			if (m_overloadedNames.count(name))
+				name += "_" + std::to_string(func->parameters().size());
+			m_exprBuilder->addSuperTarget(id, name + "__super_" + std::to_string(id));
+		}
+		// Re-register explicit base targets (they're fixed, not MRO-dependent)
+		for (auto const& [id, func]: explicitBaseTargetFuncs)
+		{
+			std::string name = func->name();
+			if (m_overloadedNames.count(name))
+				name += "(" + std::to_string(func->parameters().size()) + ")";
+			m_exprBuilder->addSuperTarget(id, name + "__super_" + std::to_string(id));
+		}
 	};
 
 	// Helper: clear super targets (to avoid cross-contamination between functions)
@@ -916,8 +1015,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// Clear super overrides before emitting super subroutines
 	clearSuperOverrides();
 
-	// Emit base functions that are called via super as separate subroutines
-	// Key is now the caller's func AST ID, not the target's
+	// Emit MRO-dependent super subroutines (keyed by caller func AST ID)
 	for (auto const& [callerFuncId, targetFunc]: superTargetFuncs)
 	{
 		std::string name = targetFunc->name();
@@ -925,9 +1023,35 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 			name += "(" + std::to_string(targetFunc->parameters().size()) + ")";
 		std::string superName = name + "__super_" + std::to_string(callerFuncId);
 		// Set up super targets for the target function too (it may chain further)
+		clearSuperOverrides();
 		setupSuperOverrides(targetFunc->id());
 		auto method = buildFunction(*targetFunc, contractName, superName);
-		// Super base functions should never be ABI-routable
+		method.arc4MethodConfig.reset();
+		contract->methods.push_back(std::move(method));
+	}
+
+	// Emit fallback super subroutines (cross-function super calls)
+	for (auto const& [targetId, func]: fallbackSuperFuncs)
+	{
+		std::string name = func->name();
+		if (m_overloadedNames.count(name))
+			name += "_" + std::to_string(func->parameters().size());
+		std::string superName = name + "__super_" + std::to_string(targetId);
+		clearSuperOverrides();
+		auto method = buildFunction(*func, contractName, superName);
+		method.arc4MethodConfig.reset();
+		contract->methods.push_back(std::move(method));
+	}
+
+	// Emit explicit base class call subroutines (keyed by target func AST ID)
+	for (auto const& [targetId, func]: explicitBaseTargetFuncs)
+	{
+		std::string name = func->name();
+		if (m_overloadedNames.count(name))
+			name += "(" + std::to_string(func->parameters().size()) + ")";
+		std::string superName = name + "__super_" + std::to_string(targetId);
+		clearSuperOverrides();
+		auto method = buildFunction(*func, contractName, superName);
 		method.arc4MethodConfig.reset();
 		contract->methods.push_back(std::move(method));
 	}
