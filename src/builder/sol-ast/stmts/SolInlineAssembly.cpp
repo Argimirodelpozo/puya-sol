@@ -180,14 +180,6 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 
 				if (suffix == "slot")
 				{
-					// Only map simple types — structs/arrays have different AVM
-					// storage layout and raw sstore would corrupt their state.
-					auto const* varType = varDecl->type();
-					bool isSimple = dynamic_cast<IntegerType const*>(varType)
-						|| dynamic_cast<BoolType const*>(varType)
-						|| dynamic_cast<AddressType const*>(varType)
-						|| dynamic_cast<FixedBytesType const*>(varType);
-					if (!isSimple) continue;
 
 					// z.slot → slot number as constant, plus slot→varName mapping
 					constants[yulName] = std::to_string(varInfo->slot);

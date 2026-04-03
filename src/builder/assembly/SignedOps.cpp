@@ -573,62 +573,34 @@ void AssemblyBuilder::handleSstore(
 		return;
 	}
 
-	// Resolve the slot argument to a storage variable name.
-	// The slot constant maps back to a variable name via m_storageSlotVars.
-	std::string varName;
-	if (auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(_args[0].get()))
-	{
-		// Look up which variable this slot constant came from
-		for (auto const& [slotRef, name]: m_storageSlotVars)
-		{
-			auto cIt = m_constants.find(slotRef);
-			if (cIt != m_constants.end() && cIt->second == intConst->value)
-			{
-				varName = name;
-				break;
-			}
-		}
-	}
-	else if (auto const* varExpr = dynamic_cast<awst::VarExpression const*>(_args[0].get()))
-	{
-		if (varExpr->name.substr(0, 7) == "__slot_")
-			varName = varExpr->name.substr(7);
-	}
+	// Convert slot arg to uint64 for __storage_write(slot, value)
+	auto slotArg = _args[0];
+	if (slotArg->wtype == awst::WType::biguintType())
+		slotArg = safeBtoi(std::move(slotArg), _loc);
 
-	if (!varName.empty())
-	{
-		// Translate sstore(slot, value) → app_global_put(varName, value)
-		auto key = std::make_shared<awst::BytesConstant>();
-		key->sourceLocation = _loc;
-		key->wtype = awst::WType::bytesType();
-		key->value = std::vector<uint8_t>(varName.begin(), varName.end());
+	// Ensure value is biguint
+	auto valueArg = ensureBiguint(_args[1], _loc);
 
-		auto value = _args[1];
-		// Ensure value is bytes for global state
-		if (value->wtype == awst::WType::biguintType())
-		{
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = _loc;
-			cast->wtype = awst::WType::bytesType();
-			cast->expr = std::move(value);
-			value = std::move(cast);
-		}
+	// Call __storage_write(slot, value)
+	auto call = std::make_shared<awst::SubroutineCallExpression>();
+	call->sourceLocation = _loc;
+	call->wtype = awst::WType::voidType();
+	call->target = awst::InstanceMethodTarget{"__storage_write"};
 
-		auto put = std::make_shared<awst::IntrinsicCall>();
-		put->sourceLocation = _loc;
-		put->wtype = awst::WType::voidType();
-		put->opCode = "app_global_put";
-		put->stackArgs.push_back(std::move(key));
-		put->stackArgs.push_back(std::move(value));
+	awst::CallArg slotCA;
+	slotCA.name = "__slot";
+	slotCA.value = std::move(slotArg);
+	call->args.push_back(std::move(slotCA));
 
-		auto stmt = std::make_shared<awst::ExpressionStatement>();
-		stmt->sourceLocation = _loc;
-		stmt->expr = std::move(put);
-		_out.push_back(std::move(stmt));
-		return;
-	}
+	awst::CallArg valCA;
+	valCA.name = "__value";
+	valCA.value = std::move(valueArg);
+	call->args.push_back(std::move(valCA));
 
-	Logger::instance().warning("sstore() with unknown slot, ignoring", _loc);
+	auto stmt = std::make_shared<awst::ExpressionStatement>();
+	stmt->sourceLocation = _loc;
+	stmt->expr = std::move(call);
+	_out.push_back(std::move(stmt));
 }
 
 

@@ -2956,7 +2956,7 @@ void ContractBuilder::buildStorageDispatch(
 
 		for (auto const& sv: layout.variables())
 		{
-			if (sv.isFullSlot && !sv.wtype) continue;
+			if (!sv.wtype || sv.wtype == awst::WType::voidType()) continue;
 
 			// Condition: __slot == slotNumber
 			auto slotVar = std::make_shared<awst::VarExpression>();
@@ -3087,7 +3087,7 @@ void ContractBuilder::buildStorageDispatch(
 
 		for (auto const& sv: layout.variables())
 		{
-			if (sv.isFullSlot && !sv.wtype) continue;
+			if (!sv.wtype || sv.wtype == awst::WType::voidType()) continue;
 
 			auto slotVar = std::make_shared<awst::VarExpression>();
 			slotVar->sourceLocation = loc;
@@ -3104,7 +3104,8 @@ void ContractBuilder::buildStorageDispatch(
 			auto ifBlock = std::make_shared<awst::Block>();
 			ifBlock->sourceLocation = loc;
 			{
-				// app_global_put(varName, value_as_bytes)
+				// app_global_put(varName, pad32(value_as_bytes))
+				// Pad to 32 bytes to match EVM slot semantics
 				auto valueVar = std::make_shared<awst::VarExpression>();
 				valueVar->sourceLocation = loc;
 				valueVar->wtype = awst::WType::biguintType();
@@ -3115,12 +3116,47 @@ void ContractBuilder::buildStorageDispatch(
 				cast->wtype = awst::WType::bytesType();
 				cast->expr = std::move(valueVar);
 
+				// concat(bzero(32), bytes) → take last 32 bytes
+				auto bz = std::make_shared<awst::IntrinsicCall>();
+				bz->sourceLocation = loc;
+				bz->wtype = awst::WType::bytesType();
+				bz->opCode = "bzero";
+				bz->stackArgs.push_back(makeUint64("32"));
+
+				auto cat = std::make_shared<awst::IntrinsicCall>();
+				cat->sourceLocation = loc;
+				cat->wtype = awst::WType::bytesType();
+				cat->opCode = "concat";
+				cat->stackArgs.push_back(std::move(bz));
+				cat->stackArgs.push_back(std::move(cast));
+
+				auto lenCall = std::make_shared<awst::IntrinsicCall>();
+				lenCall->sourceLocation = loc;
+				lenCall->wtype = awst::WType::uint64Type();
+				lenCall->opCode = "len";
+				lenCall->stackArgs.push_back(cat);
+
+				auto sub32 = std::make_shared<awst::UInt64BinaryOperation>();
+				sub32->sourceLocation = loc;
+				sub32->wtype = awst::WType::uint64Type();
+				sub32->left = std::move(lenCall);
+				sub32->op = awst::UInt64BinaryOperator::Sub;
+				sub32->right = makeUint64("32");
+
+				auto extract = std::make_shared<awst::IntrinsicCall>();
+				extract->sourceLocation = loc;
+				extract->wtype = awst::WType::bytesType();
+				extract->opCode = "extract3";
+				extract->stackArgs.push_back(cat);
+				extract->stackArgs.push_back(std::move(sub32));
+				extract->stackArgs.push_back(makeUint64("32"));
+
 				auto put = std::make_shared<awst::IntrinsicCall>();
 				put->sourceLocation = loc;
 				put->wtype = awst::WType::voidType();
 				put->opCode = "app_global_put";
 				put->stackArgs.push_back(makeBytes(sv.name));
-				put->stackArgs.push_back(std::move(cast));
+				put->stackArgs.push_back(std::move(extract));
 
 				auto stmt = std::make_shared<awst::ExpressionStatement>();
 				stmt->sourceLocation = loc;
