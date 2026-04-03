@@ -215,7 +215,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 	if (m_ctx.inUncheckedBlock && !m_signed && m_bits < 64)
 	{
 		bool needsWrap = (_op == BuilderBinaryOp::Add || _op == BuilderBinaryOp::Sub
-			|| _op == BuilderBinaryOp::Mult);
+			|| _op == BuilderBinaryOp::Mult || _op == BuilderBinaryOp::Pow);
 		if (needsWrap)
 		{
 			uint64_t modVal = uint64_t(1) << m_bits;

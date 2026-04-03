@@ -44,7 +44,17 @@ std::shared_ptr<awst::Expression> SolTypeConversion::toAwst()
 			m_ctx, m_call.annotation().type, targetType,
 			argExpr, m_loc);
 		if (converted)
-			return converted->resolve();
+		{
+			auto result = converted->resolve();
+			// Apply narrowing mask for unsigned types when registry returns as-is.
+			// uint32→uint16 (both uint64) needs truncation to target width.
+			// Skip for signed types — masking strips sign extension.
+			auto const* targetIntType = dynamic_cast<solidity::frontend::IntegerType const*>(
+				m_call.annotation().type);
+			if (!targetIntType || !targetIntType->isSigned())
+				result = applyNarrowingMask(std::move(result), targetType);
+			return result;
+		}
 	}
 
 	// address(0) special constant
