@@ -4,10 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_storage_access_local_var.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock "__ctor_pending" "a" 0x151f7c75
+    bytecblock "a" "__ctor_pending" 0x 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -34,13 +34,13 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_storage_access_local_var.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    bytec_1 // "a"
+    bytec_0 // "a"
     intc_2 // 0
     box_create
     pop
@@ -51,8 +51,16 @@ __postInit:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_storage_access_local_var.sol.C.f[routing]() -> void:
 f:
     load 0
+    bytec_2 // ""
+    bnz f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_storage_access_local_var.sol.C.__storage_write@4
+    bytec_0 // "a"
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
+    app_global_put
+
+f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_storage_access_local_var.sol.C.__storage_write@4:
+    dup
     store 0
-    bytec_1 // "a"
+    bytec_0 // "a"
     box_len
     pop
     intc_0 // 32
@@ -61,7 +69,7 @@ f:
     intc_0 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -89,11 +97,11 @@ a:
     intc_0 // 32
     extract3
     sha256
-    bytec_1 // "a"
+    bytec_0 // "a"
     swap
     concat
     box_get
-    pushbytes 0x
+    bytec_2 // 0x
     cover 2
     select
     dup
@@ -102,7 +110,7 @@ a:
     <=
     assert // overflow
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log

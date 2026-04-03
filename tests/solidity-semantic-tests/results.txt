@@ -234,6 +234,7 @@ ERR  inline_array_with_value_call_option
 ERR  inline_assembly_direct_load
 ERR  inline_assembly_direct_store
 ERR  inline_assembly_recursion
+ERR  inline_assembly_storage_access_via_pointer
 ERR  int
 ERR  internal_function_pointer
 ERR  internal_library_function_attached_to_contract
@@ -423,6 +424,7 @@ ERR  transient_state_variable_slot_offset
 ERR  transient_storage_creation
 ERR  transient_storage_low_level_calls
 ERR  transient_storage_reset_between_creation_runtime
+ERR  transient_storage_sanity_checks
 ERR  transient_storage_selfdestruct
 ERR  try_catch_library_call
 ERR  tuple_assign_multi_slot_grow
@@ -934,7 +936,6 @@ PASS inline_assembly_read_and_write_stack
 PASS inline_assembly_storage_access
 PASS inline_assembly_storage_access_inside_function
 FAIL inline_assembly_storage_access_local_var
-FAIL inline_assembly_storage_access_via_pointer
 PASS inline_assembly_switch
 FAIL inline_assembly_transient_storage_access_inside_function
 PASS inline_assembly_write_to_stack
@@ -1205,7 +1206,7 @@ FAIL state_variables_init_order_3
 FAIL static_memory_array_allocation
 FAIL storage_array_ref
 FAIL storage_calldata_refs
-FAIL storage_layout
+PASS storage_layout
 FAIL storage_layout_struct
 FAIL storage_signed
 PASS storage_string_as_mapping_key_without_variable
@@ -1230,7 +1231,7 @@ PASS struct_copy_via_local
 PASS struct_delete_member
 PASS struct_delete_storage
 PASS struct_delete_storage_small
-PASS struct_delete_storage_with_arrays_small
+FAIL struct_delete_storage_with_arrays_small
 PASS struct_delete_struct_in_mapping
 PASS struct_memory_to_storage
 PASS struct_named_constructor
@@ -1264,7 +1265,6 @@ PASS transient_state_variable_value_type
 FAIL transient_storage_multiple_calls_different_transactions
 FAIL transient_storage_multiple_transactions
 PASS transient_storage_reentrancy_lock
-FAIL transient_storage_sanity_checks
 FAIL transient_storage_simple_reentrancy_lock
 PASS transient_storage_state_variable
 PASS transient_storage_state_variable_abstract_contract

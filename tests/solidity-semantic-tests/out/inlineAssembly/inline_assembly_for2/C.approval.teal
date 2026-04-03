@@ -4,11 +4,11 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_for2.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 1
-    bytecblock 0x "st"
+    bytecblock "st" 0x 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "st"
-    bytec_0 // 0x
+    bytec_0 // "st"
+    bytec_1 // 0x
     app_global_put
     intc_2 // 1
     return
@@ -45,13 +45,13 @@ f:
     assert // invalid number of bytes for arc4.uint256
     intc_1 // 0
     swap
-    bytec_0 // 0x
+    bytec_1 // 0x
     cover 2
-    bytec_0 // 0x
+    bytec_1 // 0x
     cover 2
     intc_1 // 0
     itob
-    bytec_1 // "st"
+    bytec_0 // "st"
     swap
     app_global_put
     load 0
@@ -62,12 +62,39 @@ f_while_top@2:
     dig 1
     b==
     bz f_after_while@4
+    intc_0 // 32
+    bzero
+    bytec_0 // "st"
+    app_global_get
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x02
+    b+
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // "st"
+    swap
+    app_global_put
     pushbytes 0x01
-    bytec_0 // 0x
+    bytec_1 // 0x
     dig 4
     pushbytes 0x03
     b+
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bury 5
     dig 2
@@ -79,7 +106,7 @@ f_after_while@4:
     dig 1
     store 0
     intc_1 // 0
-    bytec_1 // "st"
+    bytec_0 // "st"
     app_global_get_ex
     assert // check st exists
     dig 4

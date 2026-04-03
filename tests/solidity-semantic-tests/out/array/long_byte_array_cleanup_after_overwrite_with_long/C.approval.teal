@@ -4,12 +4,12 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
-    bytecblock 0x151f7c75 "testArray" 0x01 0x 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytecblock "testArray" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000 0x 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
     pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "testArray"
+    bytec_0 // "testArray"
     bytec_3 // 0x
     app_global_put
     intc_1 // 1
@@ -45,12 +45,12 @@ fillArray_while_top@2:
     b<
     bz fillArray_after_while@4
     intc_2 // 0
-    bytec_1 // "testArray"
+    bytec_0 // "testArray"
     app_global_get_ex
     bury 1
     assert // check testArray exists
     dup
-    bytec_2 // 0x01
+    bytec 4 // 0x01
     b+
     bury 1
     b fillArray_while_top@2
@@ -93,13 +93,13 @@ shrinkArray_while_top@2:
     cover 2
     replace3
     bury 3
-    bytec_2 // 0x01
+    bytec 4 // 0x01
     b+
     bury 1
     b shrinkArray_while_top@2
 
 shrinkArray_after_while@4:
-    bytec_1 // "testArray"
+    bytec_0 // "testArray"
     dig 2
     dup
     cover 2
@@ -109,7 +109,7 @@ shrinkArray_after_while@4:
     intc_0 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -119,18 +119,11 @@ shrinkArray_after_while@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.canaryValue[routing]() -> void:
 canaryValue:
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.canaryValue
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec_0 // 0x151f7c75
-    swap
-    concat
+    load 0
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
@@ -147,7 +140,7 @@ arrayLength:
     intc_0 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -164,7 +157,7 @@ getDataSlotContent:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.getDataSlotContent
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -183,25 +176,20 @@ checkSlots:
     pushint 2
     itob
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.getDataSlotContent
-    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.canaryValue
+    load 0
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 0
+    store 0
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength
-    uncover 4
-    uncover 4
-    concat
+    uncover 3
     uncover 3
     concat
-    dig 2
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
+    uncover 2
+    concat
     intc_0 // 32
     bzero
-    uncover 3
-    dig 1
-    b|
-    uncover 2
     swap
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
     dig 2
     len
@@ -211,7 +199,7 @@ checkSlots:
     cover 2
     b|
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -230,7 +218,7 @@ getSlot1LastBytes:
     uncover 2
     pushbytes 0x0000000000000000000000000001000000000000000000000000000000000000
     b*
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     concat
     dup
@@ -242,7 +230,7 @@ getSlot1LastBytes:
     extract 0 14
     swap
     store 0
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -290,7 +278,7 @@ getArrayBytes_while_top@2:
     dup
     bury 7
     intc_2 // 0
-    bytec_1 // "testArray"
+    bytec_0 // "testArray"
     app_global_get_ex
     assert // check testArray exists
     len
@@ -312,7 +300,7 @@ getArrayBytes_while_top@2:
     dup
     bytec_3 // 0x
     stores
-    bytec_1 // "testArray"
+    bytec_0 // "testArray"
     box_get
     swap
     pushint 2
@@ -341,7 +329,7 @@ getArrayBytes_while_top@2:
     cover 2
     replace3
     bury 3
-    bytec_2 // 0x01
+    bytec 4 // 0x01
     b+
     bury 1
     b getArrayBytes_while_top@2
@@ -354,7 +342,7 @@ getArrayBytes_after_while@5:
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -362,30 +350,10 @@ getArrayBytes_after_while@5:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.canaryValue() -> bytes:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.canaryValue:
-    intc_2 // 0
-    load 0
-    intc_0 // 32
-    bzero
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    replace2 0
-    store 0
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    retsub
-
-
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength() -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength:
     intc_2 // 0
-    bytec_1 // "testArray"
+    bytec_0 // "testArray"
     app_global_get_ex
     assert // check testArray exists
     len
@@ -396,11 +364,59 @@ getArrayBytes_after_while@5:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.getDataSlotContent(index: bytes) -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.getDataSlotContent:
     proto 1 1
-    intc_2 // 0
     load 0
+    intc_3 // 8
+    bzero
     intc_0 // 32
     bzero
     uncover 2
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 0
+    dup
+    extract 0 32
+    keccak256
+    frame_dig -1
+    b+
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    callsub __storage_read
+    dig 3
+    swap
+    concat
+    swap
+    callsub __storage_read
+    uncover 3
+    swap
+    concat
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 32
+    swap
+    store 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.__storage_read(__slot: uint64) -> bytes:
+__storage_read:
+    proto 1 1
+    frame_dig -1
+    bnz __storage_read_else_body@2
+    intc_0 // 32
+    bzero
+    bytec_0 // "testArray"
+    app_global_get
     concat
     dup
     len
@@ -408,9 +424,10 @@ getArrayBytes_after_while@5:
     -
     intc_0 // 32
     extract3
-    replace2 0
-    store 0
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    retsub
+
+__storage_read_else_body@2:
+    bytec_3 // 0x
     retsub
 
 
