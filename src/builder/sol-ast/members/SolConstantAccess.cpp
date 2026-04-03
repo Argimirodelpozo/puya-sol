@@ -4,6 +4,7 @@
 
 #include "builder/sol-ast/members/SolConstantAccess.h"
 
+#include "builder/storage/StorageMapper.h"
 #include <libsolidity/ast/AST.h>
 
 namespace puyasol::builder::sol_ast
@@ -29,6 +30,17 @@ std::shared_ptr<awst::Expression> SolConstantAccess::toAwst()
 	{
 		if (varDecl->isConstant() && varDecl->value())
 			return buildExpr(*varDecl->value());
+
+		// Non-constant state variable: Contract.stateVar → read from storage
+		if (varDecl->isStateVariable() && !varDecl->isConstant())
+		{
+			auto* wtype = m_ctx.typeMapper.map(varDecl->type());
+			std::string name = varDecl->name();
+			auto kind = builder::StorageMapper::shouldUseBoxStorage(*varDecl)
+				? awst::AppStorageKind::Box
+				: awst::AppStorageKind::AppGlobal;
+			return m_ctx.storageMapper.createStateRead(name, wtype, kind, m_loc);
+		}
 	}
 
 	// Contract member name (e.g., token.transfer in abi.encodeCall context)

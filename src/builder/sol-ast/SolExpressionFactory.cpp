@@ -199,7 +199,7 @@ std::unique_ptr<SolMemberAccess> SolExpressionFactory::createMemberAccess(
 	if (member == "selector")
 		return std::make_unique<SolSelectorAccess>(m_ctx, _node);
 
-	// 4. Event member access + constant inlining + contract member name
+	// 4. Event member access + constant inlining + state variable via contract name
 	if (auto const* refDecl = _node.annotation().referencedDeclaration)
 	{
 		if (dynamic_cast<EventDefinition const*>(refDecl))
@@ -207,6 +207,9 @@ std::unique_ptr<SolMemberAccess> SolExpressionFactory::createMemberAccess(
 		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(refDecl))
 		{
 			if (varDecl->isConstant() && varDecl->value())
+				return std::make_unique<SolConstantAccess>(m_ctx, _node);
+			// Non-constant state variable via Contract.stateVar
+			if (varDecl->isStateVariable())
 				return std::make_unique<SolConstantAccess>(m_ctx, _node);
 		}
 	}
