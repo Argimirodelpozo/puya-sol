@@ -1873,7 +1873,7 @@
                 "name": "x"
               },
               "value": {
-                "_type": "IntrinsicCall",
+                "_type": "UInt64BinaryOperation",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_memory_uint32.sol",
                   "line": 184,
@@ -1887,85 +1887,120 @@
                   "name": "uint64",
                   "immutable": true
                 },
-                "op_code": "btoi",
-                "immediates": [],
-                "stack_args": [
-                  {
-                    "_type": "ReinterpretCast",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_memory_uint32.sol",
-                      "line": 184,
-                      "end_line": 196,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "BytesWType",
-                      "name": "bytes",
-                      "immutable": true,
-                      "length": null
-                    },
-                    "expr": {
-                      "_type": "IndexExpression",
+                "left": {
+                  "_type": "IntrinsicCall",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_memory_uint32.sol",
+                    "line": 184,
+                    "end_line": 196,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "uint64",
+                    "immutable": true
+                  },
+                  "op_code": "btoi",
+                  "immediates": [],
+                  "stack_args": [
+                    {
+                      "_type": "ReinterpretCast",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_memory_uint32.sol",
-                        "line": 191,
-                        "end_line": 195,
+                        "line": 184,
+                        "end_line": 196,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
                       },
-                      "base": {
-                        "_type": "VarExpression",
+                      "expr": {
+                        "_type": "IndexExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_memory_uint32.sol",
                           "line": 191,
-                          "end_line": 192,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "ReferenceArray",
-                          "name": "array<biguint, 1>",
-                          "immutable": true,
-                          "element_type": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "array_size": 1,
-                          "source_location": null
-                        },
-                        "name": "m"
-                      },
-                      "index": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_memory_uint32.sol",
-                          "line": 193,
-                          "end_line": 194,
+                          "end_line": 195,
                           "comment_lines": 0,
                           "column": null,
                           "end_column": null
                         },
                         "wtype": {
                           "_type": "WType",
-                          "name": "uint64",
+                          "name": "biguint",
                           "immutable": true
                         },
-                        "value": 0,
-                        "teal_alias": null
+                        "base": {
+                          "_type": "VarExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_memory_uint32.sol",
+                            "line": 191,
+                            "end_line": 192,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "ReferenceArray",
+                            "name": "array<biguint, 1>",
+                            "immutable": true,
+                            "element_type": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "array_size": 1,
+                            "source_location": null
+                          },
+                          "name": "m"
+                        },
+                        "index": {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_memory_uint32.sol",
+                            "line": 193,
+                            "end_line": 194,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 0,
+                          "teal_alias": null
+                        }
                       }
                     }
-                  }
-                ]
+                  ]
+                },
+                "op": "&",
+                "right": {
+                  "_type": "IntegerConstant",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_memory_uint32.sol",
+                    "line": 184,
+                    "end_line": 196,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "uint64",
+                    "immutable": true
+                  },
+                  "value": 4294967295,
+                  "teal_alias": null
+                }
               }
             },
             {

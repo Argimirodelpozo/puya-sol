@@ -18,14 +18,20 @@ main:
     bytec 4 // "c"
     bytec_3 // 0x
     app_global_put
+    pushint 17
+    itob
     intc_1 // 0
     bytec_1 // "a"
     app_global_get_ex
     assert // check a exists
-    pushbytes 0x03
-    b*
-    bytec 4 // "c"
+    bytec_2 // "b"
     swap
+    app_global_put
+    bytec_1 // "a"
+    swap
+    app_global_put
+    bytec 4 // "c"
+    pushbytes 0x33
     app_global_put
     pushint 23
     itob
@@ -48,18 +54,10 @@ main:
     bytec 7 // "b_c"
     bytec_3 // 0x
     app_global_put
-    pushint 17
-    itob
     intc_1 // 0
     bytec_1 // "a"
     app_global_get_ex
     assert // check a exists
-    bytec_2 // "b"
-    swap
-    app_global_put
-    bytec_1 // "a"
-    dig 1
-    app_global_put
     bytec 5 // "b_a"
     swap
     app_global_put

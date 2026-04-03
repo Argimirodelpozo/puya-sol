@@ -4,27 +4,24 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_with_params_diamond_inheritance.sol.D.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock "i" 0x "k" "j" 0x151f7c75
+    bytecblock "i" "k" 0x151f7c75 0x
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "i"
-    bytec_1 // 0x
-    app_global_put
-    bytec_2 // "k"
-    bytec_1 // 0x
-    app_global_put
-    bytec_3 // "j"
-    bytec_1 // 0x
-    app_global_put
     txna ApplicationArgs 0
     txna ApplicationArgs 1
     bytec_0 // "i"
+    bytec_3 // 0x
+    app_global_put
+    bytec_1 // "k"
+    bytec_3 // 0x
+    app_global_put
+    bytec_0 // "i"
     dig 2
     app_global_put
-    bytec_2 // "k"
+    bytec_1 // "k"
     swap
     app_global_put
-    bytec_3 // "j"
+    pushbytes "j"
     swap
     app_global_put
     intc_1 // 1
@@ -52,7 +49,7 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_with_params_diamond_inheritance.sol.D.j[routing]() -> void:
 j:
     intc_2 // 0
-    bytec_3 // "j"
+    pushbytes "j"
     app_global_get_ex
     assert // check j exists
     dup
@@ -63,7 +60,7 @@ j:
     intc_0 // 32
     bzero
     b|
-    bytec 4 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -85,7 +82,7 @@ i:
     intc_0 // 32
     bzero
     b|
-    bytec 4 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -96,7 +93,7 @@ i:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_with_params_diamond_inheritance.sol.D.k[routing]() -> void:
 k:
     intc_2 // 0
-    bytec_2 // "k"
+    bytec_1 // "k"
     app_global_get_ex
     assert // check k exists
     dup
@@ -107,7 +104,7 @@ k:
     intc_0 // 32
     bzero
     b|
-    bytec 4 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log

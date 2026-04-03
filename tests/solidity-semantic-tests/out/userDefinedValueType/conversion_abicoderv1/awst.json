@@ -505,7 +505,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "IntrinsicCall",
+                "_type": "UInt64BinaryOperation",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/conversion_abicoderv1.sol",
                   "line": 183,
@@ -519,44 +519,79 @@
                   "name": "uint64",
                   "immutable": true
                 },
-                "op_code": "btoi",
-                "immediates": [],
-                "stack_args": [
-                  {
-                    "_type": "ReinterpretCast",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/conversion_abicoderv1.sol",
-                      "line": 183,
-                      "end_line": 191,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "BytesWType",
-                      "name": "bytes",
-                      "immutable": true,
-                      "length": null
-                    },
-                    "expr": {
-                      "_type": "VarExpression",
+                "left": {
+                  "_type": "IntrinsicCall",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/conversion_abicoderv1.sol",
+                    "line": 183,
+                    "end_line": 191,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "uint64",
+                    "immutable": true
+                  },
+                  "op_code": "btoi",
+                  "immediates": [],
+                  "stack_args": [
+                    {
+                      "_type": "ReinterpretCast",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/conversion_abicoderv1.sol",
-                        "line": 189,
-                        "end_line": 190,
+                        "line": 183,
+                        "end_line": 191,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
                       },
-                      "name": "a"
+                      "expr": {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/conversion_abicoderv1.sol",
+                          "line": 189,
+                          "end_line": 190,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "name": "a"
+                      }
                     }
-                  }
-                ]
+                  ]
+                },
+                "op": "&",
+                "right": {
+                  "_type": "IntegerConstant",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/conversion_abicoderv1.sol",
+                    "line": 183,
+                    "end_line": 191,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "uint64",
+                    "immutable": true
+                  },
+                  "value": 255,
+                  "teal_alias": null
+                }
               }
             }
           ],
@@ -2074,11 +2109,11 @@
                 "end_column": null
               },
               "value": {
-                "_type": "VarExpression",
+                "_type": "UInt64BinaryOperation",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/conversion_abicoderv1.sol",
-                  "line": 830,
-                  "end_line": 831,
+                  "line": 808,
+                  "end_line": 833,
                   "comment_lines": 0,
                   "column": null,
                   "end_column": null
@@ -2088,7 +2123,42 @@
                   "name": "uint64",
                   "immutable": true
                 },
-                "name": "a"
+                "left": {
+                  "_type": "VarExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/conversion_abicoderv1.sol",
+                    "line": 830,
+                    "end_line": 831,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "uint64",
+                    "immutable": true
+                  },
+                  "name": "a"
+                },
+                "op": "&",
+                "right": {
+                  "_type": "IntegerConstant",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/conversion_abicoderv1.sol",
+                    "line": 808,
+                    "end_line": 833,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "uint64",
+                    "immutable": true
+                  },
+                  "value": 255,
+                  "teal_alias": null
+                }
               }
             }
           ],

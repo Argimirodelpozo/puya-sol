@@ -552,11 +552,11 @@
                 "end_column": null
               },
               "value": {
-                "_type": "IntrinsicCall",
+                "_type": "UInt64BinaryOperation",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/convert_fixed_bytes_to_uint_smaller_size.sol",
-                  "line": 101,
-                  "end_line": 110,
+                  "line": 94,
+                  "end_line": 111,
                   "comment_lines": 0,
                   "column": null,
                   "end_column": null
@@ -566,11 +566,23 @@
                   "name": "uint64",
                   "immutable": true
                 },
-                "op_code": "btoi",
-                "immediates": [],
-                "stack_args": [
-                  {
-                    "_type": "ReinterpretCast",
+                "left": {
+                  "_type": "UInt64BinaryOperation",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/convert_fixed_bytes_to_uint_smaller_size.sol",
+                    "line": 101,
+                    "end_line": 110,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "uint64",
+                    "immutable": true
+                  },
+                  "left": {
+                    "_type": "IntrinsicCall",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/convert_fixed_bytes_to_uint_smaller_size.sol",
                       "line": 101,
@@ -580,31 +592,89 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "BytesWType",
-                      "name": "bytes",
-                      "immutable": true,
-                      "length": null
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
                     },
-                    "expr": {
-                      "_type": "VarExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/convert_fixed_bytes_to_uint_smaller_size.sol",
-                        "line": 108,
-                        "end_line": 109,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "BytesWType",
-                        "name": "bytes[4]",
-                        "immutable": true,
-                        "length": 4
-                      },
-                      "name": "s"
-                    }
+                    "op_code": "btoi",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "ReinterpretCast",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/convert_fixed_bytes_to_uint_smaller_size.sol",
+                          "line": 101,
+                          "end_line": 110,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "expr": {
+                          "_type": "VarExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/convert_fixed_bytes_to_uint_smaller_size.sol",
+                            "line": 108,
+                            "end_line": 109,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes[4]",
+                            "immutable": true,
+                            "length": 4
+                          },
+                          "name": "s"
+                        }
+                      }
+                    ]
+                  },
+                  "op": "&",
+                  "right": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/convert_fixed_bytes_to_uint_smaller_size.sol",
+                      "line": 101,
+                      "end_line": 110,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 4294967295,
+                    "teal_alias": null
                   }
-                ]
+                },
+                "op": "&",
+                "right": {
+                  "_type": "IntegerConstant",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/convert_fixed_bytes_to_uint_smaller_size.sol",
+                    "line": 94,
+                    "end_line": 111,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "uint64",
+                    "immutable": true
+                  },
+                  "value": 65535,
+                  "teal_alias": null
+                }
               }
             }
           ],

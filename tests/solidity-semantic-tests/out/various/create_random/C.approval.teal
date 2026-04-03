@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/create_random.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1
-    bytecblock 0x151f7c75
+    bytecblock 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffff
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -64,6 +64,8 @@ testCalc:
     keccak256
     btoi
     itob
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
     dig 1
     swap
     concat
@@ -89,6 +91,8 @@ testCalc:
     keccak256
     btoi
     itob
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
     uncover 2
     swap
     concat

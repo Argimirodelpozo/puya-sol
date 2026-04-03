@@ -1046,126 +1046,124 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		auto createBlock = std::make_shared<awst::Block>();
 		createBlock->sourceLocation = method.sourceLocation;
 
-		// Zero-initialize all global state variables (matching EVM implicit zero storage)
-		// This must happen before any constructor code runs, because constructors may
-		// read state set by base classes (e.g. _transferOwnership reads _owner).
+		// Helper: emit state variable initialization statements for one contract's state vars.
+		// Initializes global state variables with explicit initializers or zero/default values.
+		// Tracks already-initialized variable names via the 'initialized' set to handle overrides.
+		std::set<std::string> stateVarInitialized;
+		auto emitStateVarInit = [&](solidity::frontend::ContractDefinition const& base,
+			std::vector<std::shared_ptr<awst::Statement>>& targetBody)
 		{
-			auto const& linearized = _contract.annotation().linearizedBaseContracts;
-			std::set<std::string> initialized;
-			for (auto it = linearized.rbegin(); it != linearized.rend(); ++it)
+			for (auto const* var: base.stateVariables())
 			{
-				for (auto const* var: (*it)->stateVariables())
+				if (var->isConstant())
+					continue;
+				if (stateVarInitialized.count(var->name()))
+					continue;
+				stateVarInitialized.insert(var->name());
+
+				auto kind = StorageMapper::shouldUseBoxStorage(*var)
+					? awst::AppStorageKind::Box
+					: awst::AppStorageKind::AppGlobal;
+
+				// Only zero-initialize global state (not box storage)
+				if (kind != awst::AppStorageKind::AppGlobal)
+					continue;
+
+				auto* wtype = m_typeMapper.map(var->type());
+
+				// Build key
+				auto key = std::make_shared<awst::BytesConstant>();
+				key->sourceLocation = method.sourceLocation;
+				key->wtype = awst::WType::bytesType();
+				key->encoding = awst::BytesEncoding::Utf8;
+				std::string keyStr = var->name();
+				key->value = std::vector<uint8_t>(keyStr.begin(), keyStr.end());
+
+				// Build initial value: use explicit initializer if present,
+				// otherwise default to zero/empty.
+				std::shared_ptr<awst::Expression> defaultVal;
+				if (var->value())
 				{
-					if (var->isConstant())
-						continue;
-					if (initialized.count(var->name()))
-						continue;
-					initialized.insert(var->name());
-
-					auto kind = StorageMapper::shouldUseBoxStorage(*var)
-						? awst::AppStorageKind::Box
-						: awst::AppStorageKind::AppGlobal;
-
-					// Only zero-initialize global state (not box storage)
-					if (kind != awst::AppStorageKind::AppGlobal)
-						continue;
-
-					auto* wtype = m_typeMapper.map(var->type());
-
-					// Build key
-					auto key = std::make_shared<awst::BytesConstant>();
-					key->sourceLocation = method.sourceLocation;
-					key->wtype = awst::WType::bytesType();
-					key->encoding = awst::BytesEncoding::Utf8;
-					std::string keyStr = var->name();
-					key->value = std::vector<uint8_t>(keyStr.begin(), keyStr.end());
-
-					// Build initial value: use explicit initializer if present,
-					// otherwise default to zero/empty.
-					std::shared_ptr<awst::Expression> defaultVal;
-					if (var->value())
-					{
-						// Translate the initializer expression (e.g. `= 'Wrapped Ether'`)
-						defaultVal = m_exprBuilder->build(*var->value());
-						if (defaultVal)
-							defaultVal = TypeCoercion::coerceForAssignment(
-								std::move(defaultVal), wtype, method.sourceLocation);
-					}
-					if (!defaultVal)
-					{
-					if (wtype == awst::WType::accountType())
-					{
-						auto addr = std::make_shared<awst::AddressConstant>();
-						addr->sourceLocation = method.sourceLocation;
-						addr->wtype = awst::WType::accountType();
-						addr->value = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ";
-						defaultVal = addr;
-					}
-					else if (wtype == awst::WType::biguintType())
-					{
-						auto val = std::make_shared<awst::IntegerConstant>();
-						val->sourceLocation = method.sourceLocation;
-						val->wtype = awst::WType::biguintType();
-						val->value = "0";
-						defaultVal = val;
-					}
-					else if (wtype == awst::WType::boolType()
-						|| wtype == awst::WType::uint64Type())
-					{
-						auto val = std::make_shared<awst::IntegerConstant>();
-						val->sourceLocation = method.sourceLocation;
-						val->wtype = awst::WType::uint64Type();
-						val->value = "0";
-						defaultVal = val;
-					}
-					else if (wtype->kind() == awst::WTypeKind::ReferenceArray)
-					{
-						// Fixed-size array → NewArray with default elements
-						auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(wtype);
-						auto arr = std::make_shared<awst::NewArray>();
-						arr->sourceLocation = method.sourceLocation;
-						arr->wtype = wtype;
-						if (refArr && refArr->arraySize())
-						{
-							for (int i = 0; i < *refArr->arraySize(); ++i)
-								arr->values.push_back(
-									StorageMapper::makeDefaultValue(refArr->elementType(), method.sourceLocation));
-						}
-						defaultVal = arr;
-					}
-					else if (wtype->kind() == awst::WTypeKind::ARC4Struct
-						|| wtype->kind() == awst::WTypeKind::WTuple)
-					{
-						// Struct → use StorageMapper's default
-						defaultVal = StorageMapper::makeDefaultValue(wtype, method.sourceLocation);
-					}
-					else
-					{
-						// bytes or other → empty bytes
-						auto val = std::make_shared<awst::BytesConstant>();
-						val->sourceLocation = method.sourceLocation;
-						val->wtype = awst::WType::bytesType();
-						val->encoding = awst::BytesEncoding::Base16;
-						val->value = {};
-						defaultVal = val;
-					}
-					} // end if (!defaultVal)
-
-					// app_global_put(key, defaultVal)
-					auto put = std::make_shared<awst::IntrinsicCall>();
-					put->sourceLocation = method.sourceLocation;
-					put->opCode = "app_global_put";
-					put->wtype = awst::WType::voidType();
-					put->stackArgs.push_back(key);
-					put->stackArgs.push_back(defaultVal);
-
-					auto stmt = std::make_shared<awst::ExpressionStatement>();
-					stmt->sourceLocation = method.sourceLocation;
-					stmt->expr = put;
-					createBlock->body.push_back(stmt);
+					// Translate the initializer expression (e.g. `= 'Wrapped Ether'`)
+					defaultVal = m_exprBuilder->build(*var->value());
+					if (defaultVal)
+						defaultVal = TypeCoercion::coerceForAssignment(
+							std::move(defaultVal), wtype, method.sourceLocation);
 				}
+				if (!defaultVal)
+				{
+				if (wtype == awst::WType::accountType())
+				{
+					auto addr = std::make_shared<awst::AddressConstant>();
+					addr->sourceLocation = method.sourceLocation;
+					addr->wtype = awst::WType::accountType();
+					addr->value = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ";
+					defaultVal = addr;
+				}
+				else if (wtype == awst::WType::biguintType())
+				{
+					auto val = std::make_shared<awst::IntegerConstant>();
+					val->sourceLocation = method.sourceLocation;
+					val->wtype = awst::WType::biguintType();
+					val->value = "0";
+					defaultVal = val;
+				}
+				else if (wtype == awst::WType::boolType()
+					|| wtype == awst::WType::uint64Type())
+				{
+					auto val = std::make_shared<awst::IntegerConstant>();
+					val->sourceLocation = method.sourceLocation;
+					val->wtype = awst::WType::uint64Type();
+					val->value = "0";
+					defaultVal = val;
+				}
+				else if (wtype->kind() == awst::WTypeKind::ReferenceArray)
+				{
+					// Fixed-size array → NewArray with default elements
+					auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(wtype);
+					auto arr = std::make_shared<awst::NewArray>();
+					arr->sourceLocation = method.sourceLocation;
+					arr->wtype = wtype;
+					if (refArr && refArr->arraySize())
+					{
+						for (int i = 0; i < *refArr->arraySize(); ++i)
+							arr->values.push_back(
+								StorageMapper::makeDefaultValue(refArr->elementType(), method.sourceLocation));
+					}
+					defaultVal = arr;
+				}
+				else if (wtype->kind() == awst::WTypeKind::ARC4Struct
+					|| wtype->kind() == awst::WTypeKind::WTuple)
+				{
+					// Struct → use StorageMapper's default
+					defaultVal = StorageMapper::makeDefaultValue(wtype, method.sourceLocation);
+				}
+				else
+				{
+					// bytes or other → empty bytes
+					auto val = std::make_shared<awst::BytesConstant>();
+					val->sourceLocation = method.sourceLocation;
+					val->wtype = awst::WType::bytesType();
+					val->encoding = awst::BytesEncoding::Base16;
+					val->value = {};
+					defaultVal = val;
+				}
+				} // end if (!defaultVal)
+
+				// app_global_put(key, defaultVal)
+				auto put = std::make_shared<awst::IntrinsicCall>();
+				put->sourceLocation = method.sourceLocation;
+				put->opCode = "app_global_put";
+				put->wtype = awst::WType::voidType();
+				put->stackArgs.push_back(key);
+				put->stackArgs.push_back(defaultVal);
+
+				auto stmt = std::make_shared<awst::ExpressionStatement>();
+				stmt->sourceLocation = method.sourceLocation;
+				stmt->expr = put;
+				targetBody.push_back(stmt);
 			}
-		}
+		};
 
 		// Initialize length counters for dynamic array state variables stored in boxes
 		{
@@ -1353,6 +1351,14 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 		if (needsPostInit)
 		{
+			// For postInit path, initialize all state vars upfront in create block.
+			// (Interleaving with ctor bodies isn't possible since ctors run in __postInit.)
+			{
+				auto const& linearized = _contract.annotation().linearizedBaseContracts;
+				for (auto it = linearized.rbegin(); it != linearized.rend(); ++it)
+					emitStateVarInit(**it, createBlock->body);
+			}
+
 			// Constructor writes to box storage — defer constructor body to __postInit().
 			// Set __ctor_pending = 1 in create block.
 			auto pendingKey = std::make_shared<awst::BytesConstant>();
@@ -1576,14 +1582,24 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		}
 		else
 		{
-		// Inline base constructor bodies in linearization order (most-base-first)
+		// Interleave state variable initialization with constructor bodies.
+		// For each base class in C3 linearization order (most-base first):
+		//   1. Initialize that base's state variables (explicit initializers or zero)
+		//   2. Inline that base's constructor body (with argument assignments)
+		// This matches Solidity's viaIR semantics: a derived class's state variable
+		// initializer (e.g. `uint y = f()`) can see state set by base constructors.
 		auto const& linearized = _contract.annotation().linearizedBaseContracts;
 		for (auto it = linearized.rbegin(); it != linearized.rend(); ++it)
 		{
 			auto const* base = *it;
+
+			// 1. Initialize this base's state variables
+			emitStateVarInit(*base, createBlock->body);
+
 			if (base == &_contract)
 				continue; // Main contract ctor handled separately below
 
+			// 2. Inline this base's constructor body
 			auto const* baseCtor = base->constructor();
 			if (!baseCtor || !baseCtor->isImplemented())
 				continue;

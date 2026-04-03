@@ -7,15 +7,16 @@ main:
     bytecblock "i" "k" 0x 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
+    txna ApplicationArgs 0
+    txna ApplicationArgs 1
     bytec_0 // "i"
     bytec_2 // 0x
     app_global_put
     bytec_1 // "k"
     bytec_2 // 0x
     app_global_put
-    txna ApplicationArgs 1
     bytec_0 // "i"
-    txna ApplicationArgs 0
+    uncover 2
     app_global_put
     bytec_1 // "k"
     swap
