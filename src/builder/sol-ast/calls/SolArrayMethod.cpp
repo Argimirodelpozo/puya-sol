@@ -30,16 +30,10 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
 				ident->annotation().referencedDeclaration))
 		{
+			// bytes/string state variable: push = read + concat + write
+			// Must come BEFORE generic box array handler since bytes in box
+			// needs concat-based push, not element-by-element box array ops.
 			if (varDecl->isStateVariable()
-				&& builder::StorageMapper::shouldUseBoxStorage(*varDecl)
-				&& dynamic_cast<ArrayType const*>(varDecl->type()))
-			{
-				return handleBoxArray(memberName, baseExpr, *varDecl);
-			}
-
-			// bytes state variable in global state: push = read + concat + write
-			if (varDecl->isStateVariable()
-				&& !builder::StorageMapper::shouldUseBoxStorage(*varDecl)
 				&& varDecl->type()->category() == Type::Category::Array)
 			{
 				auto const* arrType = dynamic_cast<ArrayType const*>(varDecl->type());
@@ -47,11 +41,13 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				{
 					std::string varName = varDecl->name();
 					auto loc = m_loc;
+					auto kind = builder::StorageMapper::shouldUseBoxStorage(*varDecl)
+						? awst::AppStorageKind::Box
+						: awst::AppStorageKind::AppGlobal;
 
-					// Read current value: app_global_get(varName)
+					// Read current value
 					auto readVal = m_ctx.storageMapper.createStateRead(
-						varName, awst::WType::bytesType(),
-						awst::AppStorageKind::AppGlobal, loc);
+						varName, awst::WType::bytesType(), kind, loc);
 
 					// Build the push value
 					std::shared_ptr<awst::Expression> pushVal;
@@ -62,7 +58,6 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					}
 					else
 					{
-						// push() with no args = append zero byte
 						auto zero = std::make_shared<awst::BytesConstant>();
 						zero->sourceLocation = loc;
 						zero->wtype = awst::WType::bytesType();
@@ -79,17 +74,19 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					cat->stackArgs.push_back(std::move(readVal));
 					cat->stackArgs.push_back(std::move(pushVal));
 
-					// Write back: app_global_put(varName, concat_result)
+					// Write back via storage mapper
 					auto key = std::make_shared<awst::BytesConstant>();
 					key->sourceLocation = loc;
 					key->wtype = awst::WType::bytesType();
 					key->encoding = awst::BytesEncoding::Utf8;
 					key->value = std::vector<uint8_t>(varName.begin(), varName.end());
 
+					std::string writeOp = (kind == awst::AppStorageKind::Box)
+						? "box_put" : "app_global_put";
 					auto put = std::make_shared<awst::IntrinsicCall>();
 					put->sourceLocation = loc;
 					put->wtype = awst::WType::voidType();
-					put->opCode = "app_global_put";
+					put->opCode = writeOp;
 					put->stackArgs.push_back(std::move(key));
 					put->stackArgs.push_back(std::move(cat));
 
@@ -98,12 +95,19 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					stmt->expr = std::move(put);
 					m_ctx.pendingStatements.push_back(std::move(stmt));
 
-					// Return void
 					auto vc = std::make_shared<awst::VoidConstant>();
 					vc->sourceLocation = loc;
 					vc->wtype = awst::WType::voidType();
 					return vc;
 				}
+			}
+
+			// Generic box-stored dynamic array (non-bytes)
+			if (varDecl->isStateVariable()
+				&& builder::StorageMapper::shouldUseBoxStorage(*varDecl)
+				&& dynamic_cast<ArrayType const*>(varDecl->type()))
+			{
+				return handleBoxArray(memberName, baseExpr, *varDecl);
 			}
 		}
 	}

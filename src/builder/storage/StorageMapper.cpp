@@ -61,12 +61,28 @@ bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration 
 	if (type->category() == solidity::frontend::Type::Category::Mapping)
 		return true;
 
-	// Dynamic arrays use box storage (but not string/bytes — those fit in global state)
+	// Dynamic arrays and dynamic bytes use box storage.
+	// String state vars stay in global state (typically short: names, symbols, URIs).
 	if (auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(type))
 	{
-		if (arrType->isDynamicallySized() && !arrType->isString() && !arrType->isByteArrayOrString())
+		if (arrType->isDynamicallySized() && !arrType->isString())
 			return true;
 	}
+
+	// Large values don't fit in AVM global state — promote to box storage.
+	// AVM limit: 128 bytes total for key + value. Key = variable name (UTF-8).
+	// Large values don't fit in AVM global state (128 bytes for key+value).
+	// Use storageSizeUpperBound() (slot count) × 32 for accurate multi-slot sizing.
+	try
+	{
+		auto slotsUpperBound = type->storageSizeUpperBound();
+		unsigned estimatedBytes = static_cast<unsigned>(slotsUpperBound) * 32;
+		unsigned keyBytes = static_cast<unsigned>(_var.name().size());
+		unsigned maxValueBytes = (128 > keyBytes) ? (128 - keyBytes) : 0;
+		if (estimatedBytes > maxValueBytes)
+			return true;
+	}
+	catch (...) {}
 
 	return false;
 }
