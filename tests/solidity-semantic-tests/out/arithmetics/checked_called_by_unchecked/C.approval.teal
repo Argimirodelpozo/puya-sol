@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/checked_called_by_unchecked.sol.C.approval_program() -> uint64:
 main:
-    intcblock 8 1 65535
+    intcblock 65535 8 1
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -34,28 +34,24 @@ add:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    +
-    dup
-    intc_2 // 65535
-    <=
-    assert // overflow
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/checked_called_by_unchecked.sol.C.add
     itob
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
@@ -64,30 +60,35 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     txna ApplicationArgs 3
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    uncover 2
+    intc_0 // 65535
+    &
+    uncover 2
+    intc_0 // 65535
+    &
+    uncover 2
+    intc_0 // 65535
+    &
     cover 2
-    +
-    dup
-    intc_2 // 65535
-    <=
-    assert // overflow
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/checked_called_by_unchecked.sol.C.add
     +
     pushint 65536
     %
@@ -96,5 +97,26 @@ f:
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/checked_called_by_unchecked.sol.C.add(a: uint64, b: uint64) -> uint64:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/checked_called_by_unchecked.sol.C.add:
+    proto 2 1
+    frame_dig -2
+    intc_0 // 65535
+    &
+    frame_bury -2
+    frame_dig -1
+    intc_0 // 65535
+    &
+    frame_bury -1
+    frame_dig -2
+    frame_dig -1
+    +
+    dup
+    intc_0 // 65535
+    <=
+    assert // overflow
+    retsub

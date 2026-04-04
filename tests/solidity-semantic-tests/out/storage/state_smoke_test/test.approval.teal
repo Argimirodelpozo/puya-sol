@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/state_smoke_test.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 32 8 0
+    intcblock 1 32 8 255
     bytecblock "value1" "value2" 0x
     txn ApplicationID
     bnz main_after_if_else@2
@@ -44,8 +44,10 @@ get:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    intc_3 // 255
+    &
     bnz get_else_body@3
-    intc_3 // 0
+    pushint 0
     bytec_0 // "value1"
     app_global_get_ex
     assert // check value1 exists
@@ -67,7 +69,7 @@ get_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/t
     return
 
 get_else_body@3:
-    intc_3 // 0
+    pushint 0
     bytec_1 // "value2"
     app_global_get_ex
     assert // check value2 exists
@@ -90,6 +92,8 @@ set:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    intc_3 // 255
+    &
     bnz set_else_body@3
     bytec_0 // "value1"
     swap

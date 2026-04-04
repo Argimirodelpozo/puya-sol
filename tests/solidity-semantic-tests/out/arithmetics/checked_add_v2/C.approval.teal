@@ -3,10 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/checked_add_v2.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 8
+    intcblock 65535 1 8
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -36,20 +36,26 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    swap
+    intc_0 // 65535
+    &
+    swap
+    intc_0 // 65535
+    &
     +
     dup
-    pushint 65535
+    intc_0 // 65535
     <=
     assert // overflow
     itob
@@ -57,5 +63,5 @@ f:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return

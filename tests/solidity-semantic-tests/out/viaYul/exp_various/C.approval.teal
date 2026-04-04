@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_various.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 8
+    intcblock 32 1 255 8
     bytecblock 0x151f7c75 0x01 0x
     txn ApplicationID
     bnz main_after_if_else@2
@@ -34,24 +34,30 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     txna ApplicationArgs 2
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    swap
+    intc_2 // 255
+    &
+    swap
+    intc_2 // 255
+    &
     dup
     bnz f_ternary_false@3
     intc_1 // 1
 
 f_ternary_merge@4:
     dup
-    pushint 255
+    intc_2 // 255
     <=
     assert // overflow
     itob
