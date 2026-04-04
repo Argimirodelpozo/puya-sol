@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/mapping_enum_key_getter.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 8 255
+    intcblock 1 8 255 2
     bytecblock "table"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -52,7 +52,7 @@ set:
     intc_2 // 255
     &
     dig 1
-    pushint 2
+    intc_3 // 2
     <=
     assert // ABI enum validation
     swap
@@ -77,6 +77,10 @@ table:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    dup
+    intc_3 // 2
+    <=
+    assert // enum validation
     itob
     sha256
     bytec_0 // "table"

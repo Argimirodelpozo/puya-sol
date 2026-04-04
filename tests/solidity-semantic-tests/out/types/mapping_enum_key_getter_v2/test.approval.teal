@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_getter_v2.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 8 0 255
+    intcblock 1 8 2 0
     bytecblock "table" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -46,13 +46,13 @@ set:
     assert // invalid number of bytes for arc4.uint64
     btoi
     dup
-    intc_3 // 255
+    pushint 255
     <=
     assert // ABI validation
-    intc_3 // 255
+    pushint 255
     &
     dig 1
-    pushint 2
+    intc_2 // 2
     <=
     assert // ABI enum validation
     swap
@@ -78,7 +78,7 @@ get:
     assert // invalid number of bytes for arc4.uint64
     btoi
     dup
-    pushint 2
+    intc_2 // 2
     <=
     assert // ABI enum validation
     itxn_begin
@@ -88,9 +88,9 @@ get:
     extract_uint64
     pushint 6
     itxn_field TypeEnum
-    intc_2 // 0
+    intc_3 // 0
     itxn_field OnCompletion
-    intc_2 // 0
+    intc_3 // 0
     itxn_field Fee
     itxn_field ApplicationID
     pushbytes 0xdf212945 // method "table()byte[]"
@@ -118,6 +118,10 @@ table:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    dup
+    intc_2 // 2
+    <=
+    assert // enum validation
     itob
     sha256
     bytec_0 // "table"
@@ -126,7 +130,7 @@ table:
     box_get
     swap
     btoi
-    intc_2 // 0
+    intc_3 // 0
     swap
     uncover 2
     select
