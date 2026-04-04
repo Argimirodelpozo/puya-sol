@@ -39,6 +39,10 @@ f:
     assert // invalid number of bytes for arc4.bool
     intc_2 // 0
     getbit
+    dup
+    intc_1 // 1
+    <=
+    assert // ABI bool validation
     intc_3 // 23
     itob
     swap
@@ -74,6 +78,10 @@ g:
     assert // invalid number of bytes for arc4.bool
     intc_2 // 0
     getbit
+    dup
+    intc_1 // 1
+    <=
+    assert // ABI bool validation
     bz g_else_body@3
     pushint 42
     itob
@@ -110,6 +118,10 @@ h:
     assert // invalid number of bytes for arc4.bool
     intc_2 // 0
     getbit
+    dup
+    intc_1 // 1
+    <=
+    assert // ABI bool validation
     bz h_after_if_else@3
     pushint 42
     itob
@@ -146,6 +158,10 @@ i:
     assert // invalid number of bytes for arc4.bool
     intc_2 // 0
     getbit
+    dup
+    intc_1 // 1
+    <=
+    assert // ABI bool validation
     bz i_else_body@3
     pushint 42
     itob

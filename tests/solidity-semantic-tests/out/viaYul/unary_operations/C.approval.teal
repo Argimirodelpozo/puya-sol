@@ -649,6 +649,10 @@ not:
     assert // invalid number of bytes for arc4.bool
     pushint 0
     getbit
+    dup
+    intc_2 // 1
+    <=
+    assert // ABI bool validation
     !
     pushbytes 0x00
     pushint 0

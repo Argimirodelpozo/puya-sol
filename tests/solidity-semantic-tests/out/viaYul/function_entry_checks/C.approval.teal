@@ -75,10 +75,16 @@ i:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_entry_checks.sol.C.j[routing]() -> void:
 j:
     txna ApplicationArgs 1
+    dup
     len
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
+    pushint 0
+    getbit
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
     pushbytes 0x151f7c7500
     log
     intc_0 // 1

@@ -46,6 +46,10 @@ h:
     assert // invalid number of bytes for arc4.bool
     pushint 0
     getbit
+    dup
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
     bz h_ternary_false@3
     pushbytes 0x26121ff0
 

@@ -47,6 +47,10 @@ deposit:
     assert // invalid number of bytes for arc4.bool
     pushint 0
     getbit
+    dup
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
     bz deposit_else_body@3
     txn GroupIndex
     intc_0 // 1

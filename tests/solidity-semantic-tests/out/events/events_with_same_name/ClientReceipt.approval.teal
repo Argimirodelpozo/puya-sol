@@ -102,6 +102,12 @@ deposit(addr,b):
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
+    dup
+    pushint 0
+    getbit
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
     concat
     pushbytes 0x1a400015 // method "Deposit(address,bool)"
     swap

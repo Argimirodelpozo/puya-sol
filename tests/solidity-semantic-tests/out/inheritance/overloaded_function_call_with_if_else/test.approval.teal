@@ -93,6 +93,10 @@ g:
     assert // invalid number of bytes for arc4.bool
     pushint 0
     getbit
+    dup
+    intc_1 // 1
+    <=
+    assert // ABI bool validation
     bz g_else_body@3
     pushint 3
     itob

@@ -41,6 +41,10 @@ f:
     assert // invalid number of bytes for arc4.bool
     pushint 0
     getbit
+    dup
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
     bz f_ternary_false@3
     intc_0 // 1
     itob

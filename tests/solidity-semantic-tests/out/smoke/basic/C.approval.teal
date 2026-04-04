@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/basic.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
+    intcblock 1 32 0
     bytecblock 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -31,29 +31,29 @@ main_after_if_else@2:
 main_g_route@8:
     pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_d_route@5:
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/basic.sol.C.e[routing]() -> void:
 e:
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
     itob
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -63,13 +63,13 @@ f:
     dup
     len
     dup
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     dup
@@ -78,7 +78,7 @@ f:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -87,13 +87,13 @@ h:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     swap
@@ -105,17 +105,17 @@ h:
     b%
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -124,11 +124,15 @@ i:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 1
+    intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
     intc_2 // 0
     getbit
+    dup
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
     !
     pushbytes 0x00
     intc_2 // 0
@@ -138,7 +142,7 @@ i:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -147,7 +151,7 @@ j:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     dup
@@ -156,7 +160,7 @@ j:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -165,14 +169,14 @@ k:
     txna ApplicationArgs 0
     len
     itob
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -181,22 +185,22 @@ l:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     pushbytes 0x07
     b*
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return

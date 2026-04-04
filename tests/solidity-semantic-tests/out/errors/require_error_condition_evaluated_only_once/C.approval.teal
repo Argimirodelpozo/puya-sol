@@ -3,16 +3,16 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/require_error_condition_evaluated_only_once.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 32
+    intcblock 1 0 32
     bytecblock "counter"
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 0
+    intc_1 // 0
     itob
     bytec_0 // "counter"
     swap
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -36,7 +36,7 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/require_error_condition_evaluated_only_once.sol.C.getCounter[routing]() -> void:
 getCounter:
-    intc_0 // 0
+    intc_1 // 0
     bytec_0 // "counter"
     app_global_get_ex
     assert // check counter exists
@@ -52,7 +52,7 @@ getCounter:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -61,12 +61,16 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 1
+    intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    intc_0 // 0
+    intc_1 // 0
     getbit
-    intc_0 // 0
+    dup
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
+    intc_1 // 0
     bytec_0 // "counter"
     app_global_get_ex
     assert // check counter exists
@@ -76,5 +80,5 @@ f:
     swap
     app_global_put
     assert // CustomError
-    intc_1 // 1
+    intc_0 // 1
     return

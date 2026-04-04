@@ -51,6 +51,10 @@ set:
     assert // ABI validation
     intc_3 // 255
     &
+    dig 1
+    pushint 2
+    <=
+    assert // ABI enum validation
     swap
     itob
     sha256
@@ -73,6 +77,10 @@ get:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    dup
+    pushint 2
+    <=
+    assert // ABI enum validation
     itxn_begin
     itob
     global CurrentApplicationAddress

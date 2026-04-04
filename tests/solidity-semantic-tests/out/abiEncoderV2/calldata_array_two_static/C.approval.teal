@@ -52,6 +52,10 @@ f:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
+    dup
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
     bz f_else_body@3
     dig 1
     dup
@@ -108,6 +112,10 @@ g:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
+    dup
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
     uncover 2
     itxn_begin
     swap
