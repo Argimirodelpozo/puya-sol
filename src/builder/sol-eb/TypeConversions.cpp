@@ -385,10 +385,70 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 		return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType, std::move(cast));
 	}
 
-	// Bytes/FixedBytes → reinterpret
-	if (srcWType == awst::WType::bytesType()
-		|| (srcWType && srcWType->kind() == awst::WTypeKind::Bytes))
+	// FixedBytes[M] → FixedBytes[N]: pad or truncate
+	if (srcWType && srcWType->kind() == awst::WTypeKind::Bytes)
 	{
+		auto const* srcBytes = dynamic_cast<awst::BytesWType const*>(srcWType);
+		int srcLen = srcBytes && srcBytes->length() ? *srcBytes->length() : 0;
+		int tgtLen = static_cast<int>(fbType->numBytes());
+
+		if (srcLen > 0 && tgtLen > 0 && srcLen != tgtLen)
+		{
+			// Convert to raw bytes first
+			auto toBytes = std::make_shared<awst::ReinterpretCast>();
+			toBytes->sourceLocation = _loc;
+			toBytes->wtype = awst::WType::bytesType();
+			toBytes->expr = std::move(_arg);
+
+			std::shared_ptr<awst::Expression> result;
+			if (tgtLen > srcLen)
+			{
+				// Right-pad: concat(input, bzero(N-M))
+				auto padSize = std::make_shared<awst::IntegerConstant>();
+				padSize->sourceLocation = _loc;
+				padSize->wtype = awst::WType::uint64Type();
+				padSize->value = std::to_string(tgtLen - srcLen);
+				auto pad = std::make_shared<awst::IntrinsicCall>();
+				pad->sourceLocation = _loc;
+				pad->wtype = awst::WType::bytesType();
+				pad->opCode = "bzero";
+				pad->stackArgs.push_back(std::move(padSize));
+				auto cat = std::make_shared<awst::IntrinsicCall>();
+				cat->sourceLocation = _loc;
+				cat->wtype = awst::WType::bytesType();
+				cat->opCode = "concat";
+				cat->stackArgs.push_back(std::move(toBytes));
+				cat->stackArgs.push_back(std::move(pad));
+				result = std::move(cat);
+			}
+			else
+			{
+				// Left-truncate: extract(0, N)
+				auto zero = std::make_shared<awst::IntegerConstant>();
+				zero->sourceLocation = _loc;
+				zero->wtype = awst::WType::uint64Type();
+				zero->value = "0";
+				auto len = std::make_shared<awst::IntegerConstant>();
+				len->sourceLocation = _loc;
+				len->wtype = awst::WType::uint64Type();
+				len->value = std::to_string(tgtLen);
+				auto extract = std::make_shared<awst::IntrinsicCall>();
+				extract->sourceLocation = _loc;
+				extract->wtype = awst::WType::bytesType();
+				extract->opCode = "extract3";
+				extract->stackArgs.push_back(std::move(toBytes));
+				extract->stackArgs.push_back(std::move(zero));
+				extract->stackArgs.push_back(std::move(len));
+				result = std::move(extract);
+			}
+			auto cast = std::make_shared<awst::ReinterpretCast>();
+			cast->sourceLocation = _loc;
+			cast->wtype = _targetWType;
+			cast->expr = std::move(result);
+			return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType, std::move(cast));
+		}
+
+		// Same size or unsized → reinterpret
 		auto cast = std::make_shared<awst::ReinterpretCast>();
 		cast->sourceLocation = _loc;
 		cast->wtype = _targetWType;
