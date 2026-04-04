@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_expression_side_effect.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
-    bytecblock "x" 0x151f7c75
+    intcblock 1 42
+    bytecblock "x"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
@@ -34,21 +34,12 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_expression_side_effect.sol.C.f[routing]() -> void:
 f:
-    pushint 0
+    intc_1 // 42
+    itob
     bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    b|
-    bytec_1 // 0x151f7c75
     swap
-    concat
+    app_global_put
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
     log
     intc_0 // 1
     return
@@ -56,12 +47,12 @@ f:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_expression_side_effect.sol.C.h[routing]() -> void:
 h:
-    pushint 42
+    intc_1 // 42
     itob
     bytec_0 // "x"
     swap
     app_global_put
-    bytec_1 // 0x151f7c75
+    pushbytes 0x151f7c75
     global CurrentApplicationAddress
     concat
     log
