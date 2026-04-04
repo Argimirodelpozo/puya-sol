@@ -1993,7 +1993,7 @@
                   "name": "loc"
                 },
                 "value": {
-                  "_type": "TupleItemExpression",
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
                     "line": 400,
@@ -2007,65 +2007,31 @@
                     "name": "biguint",
                     "immutable": true
                   },
-                  "base": {
-                    "_type": "TupleExpression",
+                  "expr": {
+                    "_type": "IntrinsicCall",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                      "line": 434,
+                      "line": 400,
                       "end_line": 462,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "WTuple",
-                      "name": "tuple",
+                      "_type": "BytesWType",
+                      "name": "bytes",
                       "immutable": true,
-                      "types": [
-                        {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        {
-                          "_type": "ReferenceArray",
-                          "name": "array<biguint>",
-                          "immutable": true,
-                          "element_type": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "array_size": null,
-                          "source_location": null
-                        },
-                        {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        }
-                      ],
-                      "names": null,
-                      "source_location": null
+                      "length": null
                     },
-                    "items": [
+                    "op_code": "itob",
+                    "immediates": [],
+                    "stack_args": [
                       {
-                        "_type": "IntegerConstant",
+                        "_type": "TupleItemExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 435,
-                          "end_line": 436,
+                          "line": 400,
+                          "end_line": 462,
                           "comment_lines": 0,
                           "column": null,
                           "end_column": null
@@ -2075,94 +2041,165 @@
                           "name": "uint64",
                           "immutable": true
                         },
-                        "value": 8,
-                        "teal_alias": null
-                      },
-                      {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 438,
-                          "end_line": 439,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 4,
-                        "teal_alias": null
-                      },
-                      {
-                        "_type": "SubroutineCallExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 441,
-                          "end_line": 455,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "ReferenceArray",
-                          "name": "array<biguint>",
-                          "immutable": true,
-                          "element_type": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
+                        "base": {
+                          "_type": "TupleExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                            "line": 434,
+                            "end_line": 462,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "array_size": null,
-                          "source_location": null
+                          "wtype": {
+                            "_type": "WTuple",
+                            "name": "tuple",
+                            "immutable": true,
+                            "types": [
+                              {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              {
+                                "_type": "ReferenceArray",
+                                "name": "array<biguint>",
+                                "immutable": true,
+                                "element_type": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "array_size": null,
+                                "source_location": null
+                              },
+                              {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              }
+                            ],
+                            "names": null,
+                            "source_location": null
+                          },
+                          "items": [
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                                "line": 435,
+                                "end_line": 436,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 8,
+                              "teal_alias": null
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                                "line": 438,
+                                "end_line": 439,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 4,
+                              "teal_alias": null
+                            },
+                            {
+                              "_type": "SubroutineCallExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                                "line": 441,
+                                "end_line": 455,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "ReferenceArray",
+                                "name": "array<biguint>",
+                                "immutable": true,
+                                "element_type": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "array_size": null,
+                                "source_location": null
+                              },
+                              "target": {
+                                "_type": "InstanceMethodTarget",
+                                "member_name": "returnsArray"
+                              },
+                              "args": []
+                            },
+                            {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                                "line": 457,
+                                "end_line": 458,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "name": "s"
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                                "line": 460,
+                                "end_line": 461,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 2,
+                              "teal_alias": null
+                            }
+                          ]
                         },
-                        "target": {
-                          "_type": "InstanceMethodTarget",
-                          "member_name": "returnsArray"
-                        },
-                        "args": []
-                      },
-                      {
-                        "_type": "VarExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 457,
-                          "end_line": 458,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        "name": "s"
-                      },
-                      {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 460,
-                          "end_line": 461,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 2,
-                        "teal_alias": null
+                        "index": 0
                       }
                     ]
-                  },
-                  "index": 0
+                  }
                 }
               }
             },
@@ -2227,7 +2264,7 @@
                   "exists_assertion_message": "check x exists"
                 },
                 "value": {
-                  "_type": "TupleItemExpression",
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
                     "line": 400,
@@ -2241,65 +2278,31 @@
                     "name": "biguint",
                     "immutable": true
                   },
-                  "base": {
-                    "_type": "TupleExpression",
+                  "expr": {
+                    "_type": "IntrinsicCall",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                      "line": 434,
+                      "line": 400,
                       "end_line": 462,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "WTuple",
-                      "name": "tuple",
+                      "_type": "BytesWType",
+                      "name": "bytes",
                       "immutable": true,
-                      "types": [
-                        {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        {
-                          "_type": "ReferenceArray",
-                          "name": "array<biguint>",
-                          "immutable": true,
-                          "element_type": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "array_size": null,
-                          "source_location": null
-                        },
-                        {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        }
-                      ],
-                      "names": null,
-                      "source_location": null
+                      "length": null
                     },
-                    "items": [
+                    "op_code": "itob",
+                    "immediates": [],
+                    "stack_args": [
                       {
-                        "_type": "IntegerConstant",
+                        "_type": "TupleItemExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 435,
-                          "end_line": 436,
+                          "line": 400,
+                          "end_line": 462,
                           "comment_lines": 0,
                           "column": null,
                           "end_column": null
@@ -2309,94 +2312,165 @@
                           "name": "uint64",
                           "immutable": true
                         },
-                        "value": 8,
-                        "teal_alias": null
-                      },
-                      {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 438,
-                          "end_line": 439,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 4,
-                        "teal_alias": null
-                      },
-                      {
-                        "_type": "SubroutineCallExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 441,
-                          "end_line": 455,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "ReferenceArray",
-                          "name": "array<biguint>",
-                          "immutable": true,
-                          "element_type": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
+                        "base": {
+                          "_type": "TupleExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                            "line": 434,
+                            "end_line": 462,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
                           },
-                          "array_size": null,
-                          "source_location": null
+                          "wtype": {
+                            "_type": "WTuple",
+                            "name": "tuple",
+                            "immutable": true,
+                            "types": [
+                              {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              {
+                                "_type": "ReferenceArray",
+                                "name": "array<biguint>",
+                                "immutable": true,
+                                "element_type": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "array_size": null,
+                                "source_location": null
+                              },
+                              {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              }
+                            ],
+                            "names": null,
+                            "source_location": null
+                          },
+                          "items": [
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                                "line": 435,
+                                "end_line": 436,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 8,
+                              "teal_alias": null
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                                "line": 438,
+                                "end_line": 439,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 4,
+                              "teal_alias": null
+                            },
+                            {
+                              "_type": "SubroutineCallExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                                "line": 441,
+                                "end_line": 455,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "ReferenceArray",
+                                "name": "array<biguint>",
+                                "immutable": true,
+                                "element_type": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "array_size": null,
+                                "source_location": null
+                              },
+                              "target": {
+                                "_type": "InstanceMethodTarget",
+                                "member_name": "returnsArray"
+                              },
+                              "args": []
+                            },
+                            {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                                "line": 457,
+                                "end_line": 458,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "name": "s"
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                                "line": 460,
+                                "end_line": 461,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 2,
+                              "teal_alias": null
+                            }
+                          ]
                         },
-                        "target": {
-                          "_type": "InstanceMethodTarget",
-                          "member_name": "returnsArray"
-                        },
-                        "args": []
-                      },
-                      {
-                        "_type": "VarExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 457,
-                          "end_line": 458,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        "name": "s"
-                      },
-                      {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 460,
-                          "end_line": 461,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 2,
-                        "teal_alias": null
+                        "index": 1
                       }
                     ]
-                  },
-                  "index": 1
+                  }
                 }
               }
             },
@@ -2985,7 +3059,7 @@
                   }
                 },
                 "value": {
-                  "_type": "TupleItemExpression",
+                  "_type": "ARC4Encode",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
                     "line": 400,
@@ -3002,162 +3076,179 @@
                     "arc4_alias": null,
                     "source_location": null
                   },
-                  "base": {
-                    "_type": "TupleExpression",
+                  "value": {
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                      "line": 434,
+                      "line": 400,
                       "end_line": 462,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "WTuple",
-                      "name": "tuple",
-                      "immutable": true,
-                      "types": [
-                        {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        {
-                          "_type": "ReferenceArray",
-                          "name": "array<biguint>",
-                          "immutable": true,
-                          "element_type": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "array_size": null,
-                          "source_location": null
-                        },
-                        {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        }
-                      ],
-                      "names": null,
-                      "source_location": null
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
                     },
-                    "items": [
-                      {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 435,
-                          "end_line": 436,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 8,
-                        "teal_alias": null
+                    "base": {
+                      "_type": "TupleExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                        "line": 434,
+                        "end_line": 462,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
                       },
-                      {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 438,
-                          "end_line": 439,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 4,
-                        "teal_alias": null
-                      },
-                      {
-                        "_type": "SubroutineCallExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 441,
-                          "end_line": 455,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "ReferenceArray",
-                          "name": "array<biguint>",
-                          "immutable": true,
-                          "element_type": {
+                      "wtype": {
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
                             "_type": "WType",
-                            "name": "biguint",
+                            "name": "uint64",
                             "immutable": true
                           },
-                          "array_size": null,
-                          "source_location": null
-                        },
-                        "target": {
-                          "_type": "InstanceMethodTarget",
-                          "member_name": "returnsArray"
-                        },
-                        "args": []
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "ReferenceArray",
+                            "name": "array<biguint>",
+                            "immutable": true,
+                            "element_type": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "array_size": null,
+                            "source_location": null
+                          },
+                          {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      {
-                        "_type": "VarExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 457,
-                          "end_line": 458,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
+                      "items": [
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                            "line": 435,
+                            "end_line": 436,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 8,
+                          "teal_alias": null
                         },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                            "line": 438,
+                            "end_line": 439,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 4,
+                          "teal_alias": null
                         },
-                        "name": "s"
-                      },
-                      {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 460,
-                          "end_line": 461,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
+                        {
+                          "_type": "SubroutineCallExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                            "line": 441,
+                            "end_line": 455,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "ReferenceArray",
+                            "name": "array<biguint>",
+                            "immutable": true,
+                            "element_type": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "array_size": null,
+                            "source_location": null
+                          },
+                          "target": {
+                            "_type": "InstanceMethodTarget",
+                            "member_name": "returnsArray"
+                          },
+                          "args": []
                         },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
+                        {
+                          "_type": "VarExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                            "line": 457,
+                            "end_line": 458,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "name": "s"
                         },
-                        "value": 2,
-                        "teal_alias": null
-                      }
-                    ]
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                            "line": 460,
+                            "end_line": 461,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 2,
+                          "teal_alias": null
+                        }
+                      ]
+                    },
+                    "index": 4
                   },
-                  "index": 4
+                  "error_message": null
                 }
               }
             },
@@ -5484,7 +5575,7 @@
                   "name": "loc"
                 },
                 "value": {
-                  "_type": "TupleItemExpression",
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
                     "line": 764,
@@ -5498,73 +5589,31 @@
                     "name": "biguint",
                     "immutable": true
                   },
-                  "base": {
-                    "_type": "TupleExpression",
+                  "expr": {
+                    "_type": "IntrinsicCall",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                      "line": 782,
+                      "line": 764,
                       "end_line": 796,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "WTuple",
-                      "name": "tuple",
+                      "_type": "BytesWType",
+                      "name": "bytes",
                       "immutable": true,
-                      "types": [
-                        {
-                          "_type": "ReferenceArray",
-                          "name": "array<biguint>",
-                          "immutable": true,
-                          "element_type": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "array_size": null,
-                          "source_location": null
-                        },
-                        {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        }
-                      ],
-                      "names": null,
-                      "source_location": null
+                      "length": null
                     },
-                    "items": [
+                    "op_code": "itob",
+                    "immediates": [],
+                    "stack_args": [
                       {
-                        "_type": "VarExpression",
+                        "_type": "TupleItemExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 783,
-                          "end_line": 792,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "ReferenceArray",
-                          "name": "array<biguint>",
-                          "immutable": true,
-                          "element_type": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "array_size": null,
-                          "source_location": null
-                        },
-                        "name": "arrayData"
-                      },
-                      {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 794,
-                          "end_line": 795,
+                          "line": 764,
+                          "end_line": 796,
                           "comment_lines": 0,
                           "column": null,
                           "end_column": null
@@ -5574,12 +5623,91 @@
                           "name": "uint64",
                           "immutable": true
                         },
-                        "value": 3,
-                        "teal_alias": null
+                        "base": {
+                          "_type": "TupleExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                            "line": 782,
+                            "end_line": 796,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WTuple",
+                            "name": "tuple",
+                            "immutable": true,
+                            "types": [
+                              {
+                                "_type": "ReferenceArray",
+                                "name": "array<biguint>",
+                                "immutable": true,
+                                "element_type": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "array_size": null,
+                                "source_location": null
+                              },
+                              {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              }
+                            ],
+                            "names": null,
+                            "source_location": null
+                          },
+                          "items": [
+                            {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                                "line": 783,
+                                "end_line": 792,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "ReferenceArray",
+                                "name": "array<biguint>",
+                                "immutable": true,
+                                "element_type": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "array_size": null,
+                                "source_location": null
+                              },
+                              "name": "arrayData"
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                                "line": 794,
+                                "end_line": 795,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 3,
+                              "teal_alias": null
+                            }
+                          ]
+                        },
+                        "index": 1
                       }
                     ]
-                  },
-                  "index": 1
+                  }
                 }
               }
             },
@@ -6315,7 +6443,7 @@
                   "exists_assertion_message": "check x exists"
                 },
                 "value": {
-                  "_type": "TupleItemExpression",
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
                     "line": 929,
@@ -6329,58 +6457,31 @@
                     "name": "biguint",
                     "immutable": true
                   },
-                  "base": {
-                    "_type": "TupleExpression",
+                  "expr": {
+                    "_type": "IntrinsicCall",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                      "line": 955,
+                      "line": 929,
                       "end_line": 984,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "WTuple",
-                      "name": "tuple",
+                      "_type": "BytesWType",
+                      "name": "bytes",
                       "immutable": true,
-                      "types": [
-                        {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        }
-                      ],
-                      "names": null,
-                      "source_location": null
+                      "length": null
                     },
-                    "items": [
+                    "op_code": "itob",
+                    "immediates": [],
+                    "stack_args": [
                       {
-                        "_type": "IntegerConstant",
+                        "_type": "TupleItemExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 956,
-                          "end_line": 959,
+                          "line": 929,
+                          "end_line": 984,
                           "comment_lines": 0,
                           "column": null,
                           "end_column": null
@@ -6390,84 +6491,148 @@
                           "name": "uint64",
                           "immutable": true
                         },
-                        "value": 456,
-                        "teal_alias": null
-                      },
-                      {
-                        "_type": "VarExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 961,
-                          "end_line": 962,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
+                        "base": {
+                          "_type": "TupleExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                            "line": 955,
+                            "end_line": 984,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WTuple",
+                            "name": "tuple",
+                            "immutable": true,
+                            "types": [
+                              {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              }
+                            ],
+                            "names": null,
+                            "source_location": null
+                          },
+                          "items": [
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                                "line": 956,
+                                "end_line": 959,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 456,
+                              "teal_alias": null
+                            },
+                            {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                                "line": 961,
+                                "end_line": 962,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "name": "s"
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                                "line": 964,
+                                "end_line": 967,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 789,
+                              "teal_alias": null
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                                "line": 969,
+                                "end_line": 975,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 101112,
+                              "teal_alias": null
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                                "line": 977,
+                                "end_line": 983,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 131415,
+                              "teal_alias": null
+                            }
+                          ]
                         },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        "name": "s"
-                      },
-                      {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 964,
-                          "end_line": 967,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 789,
-                        "teal_alias": null
-                      },
-                      {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 969,
-                          "end_line": 975,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 101112,
-                        "teal_alias": null
-                      },
-                      {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 977,
-                          "end_line": 983,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 131415,
-                        "teal_alias": null
+                        "index": 0
                       }
                     ]
-                  },
-                  "index": 0
+                  }
                 }
               }
             },
@@ -6784,7 +6949,7 @@
                   }
                 },
                 "value": {
-                  "_type": "TupleItemExpression",
+                  "_type": "ARC4Encode",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
                     "line": 929,
@@ -6801,145 +6966,162 @@
                     "arc4_alias": null,
                     "source_location": null
                   },
-                  "base": {
-                    "_type": "TupleExpression",
+                  "value": {
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                      "line": 955,
+                      "line": 929,
                       "end_line": 984,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "WTuple",
-                      "name": "tuple",
-                      "immutable": true,
-                      "types": [
-                        {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        }
-                      ],
-                      "names": null,
-                      "source_location": null
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
                     },
-                    "items": [
-                      {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 956,
-                          "end_line": 959,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 456,
-                        "teal_alias": null
+                    "base": {
+                      "_type": "TupleExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                        "line": 955,
+                        "end_line": 984,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
                       },
-                      {
-                        "_type": "VarExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 961,
-                          "end_line": 962,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        "name": "s"
+                      "wtype": {
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          }
+                        ],
+                        "names": null,
+                        "source_location": null
                       },
-                      {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 964,
-                          "end_line": 967,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
+                      "items": [
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                            "line": 956,
+                            "end_line": 959,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 456,
+                          "teal_alias": null
                         },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
+                        {
+                          "_type": "VarExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                            "line": 961,
+                            "end_line": 962,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "name": "s"
                         },
-                        "value": 789,
-                        "teal_alias": null
-                      },
-                      {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 969,
-                          "end_line": 975,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                            "line": 964,
+                            "end_line": 967,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 789,
+                          "teal_alias": null
                         },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                            "line": 969,
+                            "end_line": 975,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 101112,
+                          "teal_alias": null
                         },
-                        "value": 101112,
-                        "teal_alias": null
-                      },
-                      {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
-                          "line": 977,
-                          "end_line": 983,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 131415,
-                        "teal_alias": null
-                      }
-                    ]
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol",
+                            "line": 977,
+                            "end_line": 983,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 131415,
+                          "teal_alias": null
+                        }
+                      ]
+                    },
+                    "index": 2
                   },
-                  "index": 2
+                  "error_message": null
                 }
               }
             },

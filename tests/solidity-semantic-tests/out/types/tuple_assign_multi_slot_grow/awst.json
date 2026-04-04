@@ -824,7 +824,7 @@
                   "name": "a"
                 },
                 "value": {
-                  "_type": "TupleItemExpression",
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/tuple_assign_multi_slot_grow.sol",
                     "line": 121,
@@ -839,136 +839,152 @@
                     "immutable": true,
                     "length": null
                   },
-                  "base": {
-                    "_type": "TupleExpression",
+                  "expr": {
+                    "_type": "TupleItemExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/tuple_assign_multi_slot_grow.sol",
-                      "line": 135,
+                      "line": 121,
                       "end_line": 152,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "WTuple",
-                      "name": "tuple",
-                      "immutable": true,
-                      "types": [
-                        {
-                          "_type": "WType",
-                          "name": "string",
-                          "immutable": true
-                        },
-                        {
-                          "_type": "WTuple",
-                          "name": "tuple",
-                          "immutable": true,
-                          "types": [
-                            {
-                              "_type": "WType",
-                              "name": "string",
-                              "immutable": true
-                            },
-                            {
-                              "_type": "WType",
-                              "name": "string",
-                              "immutable": true
-                            }
-                          ],
-                          "names": null,
-                          "source_location": null
-                        }
-                      ],
-                      "names": null,
-                      "source_location": null
+                      "_type": "WType",
+                      "name": "string",
+                      "immutable": true
                     },
-                    "items": [
-                      {
-                        "_type": "StringConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/tuple_assign_multi_slot_grow.sol",
-                          "line": 136,
-                          "end_line": 139,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "string",
-                          "immutable": true
-                        },
-                        "value": "0"
+                    "base": {
+                      "_type": "TupleExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/tuple_assign_multi_slot_grow.sol",
+                        "line": 135,
+                        "end_line": 152,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
                       },
-                      {
-                        "_type": "TupleExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/tuple_assign_multi_slot_grow.sol",
-                          "line": 141,
-                          "end_line": 151,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WTuple",
-                          "name": "tuple",
-                          "immutable": true,
-                          "types": [
-                            {
-                              "_type": "WType",
-                              "name": "string",
-                              "immutable": true
-                            },
-                            {
-                              "_type": "WType",
-                              "name": "string",
-                              "immutable": true
-                            }
-                          ],
-                          "names": null,
-                          "source_location": null
-                        },
-                        "items": [
+                      "wtype": {
+                        "_type": "WTuple",
+                        "name": "tuple",
+                        "immutable": true,
+                        "types": [
                           {
-                            "_type": "StringConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/tuple_assign_multi_slot_grow.sol",
-                              "line": 142,
-                              "end_line": 145,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "string",
-                              "immutable": true
-                            },
-                            "value": "1"
+                            "_type": "WType",
+                            "name": "string",
+                            "immutable": true
                           },
                           {
-                            "_type": "StringConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/tuple_assign_multi_slot_grow.sol",
-                              "line": 147,
-                              "end_line": 150,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "string",
-                              "immutable": true
-                            },
-                            "value": "2"
+                            "_type": "WTuple",
+                            "name": "tuple",
+                            "immutable": true,
+                            "types": [
+                              {
+                                "_type": "WType",
+                                "name": "string",
+                                "immutable": true
+                              },
+                              {
+                                "_type": "WType",
+                                "name": "string",
+                                "immutable": true
+                              }
+                            ],
+                            "names": null,
+                            "source_location": null
                           }
-                        ]
-                      }
-                    ]
-                  },
-                  "index": 0
+                        ],
+                        "names": null,
+                        "source_location": null
+                      },
+                      "items": [
+                        {
+                          "_type": "StringConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/tuple_assign_multi_slot_grow.sol",
+                            "line": 136,
+                            "end_line": 139,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "string",
+                            "immutable": true
+                          },
+                          "value": "0"
+                        },
+                        {
+                          "_type": "TupleExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/tuple_assign_multi_slot_grow.sol",
+                            "line": 141,
+                            "end_line": 151,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WTuple",
+                            "name": "tuple",
+                            "immutable": true,
+                            "types": [
+                              {
+                                "_type": "WType",
+                                "name": "string",
+                                "immutable": true
+                              },
+                              {
+                                "_type": "WType",
+                                "name": "string",
+                                "immutable": true
+                              }
+                            ],
+                            "names": null,
+                            "source_location": null
+                          },
+                          "items": [
+                            {
+                              "_type": "StringConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/tuple_assign_multi_slot_grow.sol",
+                                "line": 142,
+                                "end_line": 145,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "string",
+                                "immutable": true
+                              },
+                              "value": "1"
+                            },
+                            {
+                              "_type": "StringConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/tuple_assign_multi_slot_grow.sol",
+                                "line": 147,
+                                "end_line": 150,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "string",
+                                "immutable": true
+                              },
+                              "value": "2"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    "index": 0
+                  }
                 }
               }
             },
@@ -1099,16 +1115,14 @@
                     "immutable": true,
                     "types": [
                       {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
+                        "_type": "WType",
+                        "name": "string",
+                        "immutable": true
                       },
                       {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
+                        "_type": "WType",
+                        "name": "string",
+                        "immutable": true
                       }
                     ],
                     "names": null,
