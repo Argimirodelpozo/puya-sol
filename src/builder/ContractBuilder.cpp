@@ -2712,25 +2712,17 @@ void ContractBuilder::inlineModifiers(
 		if (!modDef)
 			continue;
 
-		// Resolve modifier overrides: walk the linearized base contracts
-		// (most-derived first) to find the most-derived definition of this modifier.
-		// e.g. if A defines `mod virtual` and C overrides `mod override`,
-		// we want C's version when building contract C.
-		if (m_currentContract)
+		// Resolve virtual overrides — but NOT for explicit base modifier calls (A.m).
 		{
-			std::string modName = modDef->name();
-			for (auto const* base: m_currentContract->annotation().linearizedBaseContracts)
+			bool isExplicit = modInvocation->name().path().size() > 1;
+			if (m_currentContract && !isExplicit)
 			{
-				for (auto const* mod: base->functionModifiers())
-				{
-					if (mod->name() == modName)
-					{
-						modDef = mod;
-						goto modResolved;
-					}
-				}
+				std::string modName = modDef->name();
+				for (auto const* base: m_currentContract->annotation().linearizedBaseContracts)
+					for (auto const* mod: base->functionModifiers())
+						if (mod->name() == modName) { modDef = mod; goto modResolved; }
+				modResolved:;
 			}
-			modResolved:;
 		}
 
 		// Translate modifier body, replacing `_` (PlaceholderStatement) with the original body
@@ -2956,18 +2948,25 @@ void ContractBuilder::buildModifierChain(
 			continue;
 		}
 
-		// Resolve virtual overrides
-		if (m_currentContract)
+		// Resolve virtual overrides — but NOT for explicit base modifier calls (A.m).
+		// Detect explicit base: the IdentifierPath has >1 component for A.m.
+		// For inherited functions, the referencedDeclaration points to the base
+		// modifier, but we still want the most-derived override.
+		bool isExplicitBaseModifier = false;
+		{
+			// Check the IdentifierPath: "A.m" has path ["A", "m"], "m" has path ["m"]
+			auto const& path = modInvocation->name().path();
+			if (path.size() > 1)
+				isExplicitBaseModifier = true;
+		}
+
+		if (m_currentContract && !isExplicitBaseModifier)
 		{
 			std::string modName = modDef->name();
 			for (auto const* base: m_currentContract->annotation().linearizedBaseContracts)
-			{
 				for (auto const* mod: base->functionModifiers())
-				{
-					if (mod->name() == modName) { modDef = mod; goto resolved; }
-				}
-			}
-			resolved:;
+					if (mod->name() == modName) { modDef = mod; goto foundMostDerived; }
+			foundMostDerived:;
 		}
 
 		std::string modSubName = baseName + "__mod" + std::to_string(i) + "_" + std::to_string(chainId);
