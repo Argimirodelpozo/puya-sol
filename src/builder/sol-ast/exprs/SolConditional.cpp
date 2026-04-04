@@ -19,7 +19,22 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 {
 	auto e = std::make_shared<awst::ConditionalExpression>();
 	e->sourceLocation = m_loc;
+
+	// Build condition. If it has side effects (AssignmentExpression),
+	// emit the side effect as a statement so it executes even if the
+	// enclosing expression is discarded (e.g., (flag=true ? a : b).selector).
 	e->condition = buildExpr(m_conditional.condition());
+	if (auto* assignExpr = dynamic_cast<awst::AssignmentExpression*>(e->condition.get()))
+	{
+		// Emit: flag = true; (as statement)
+		auto stmt = std::make_shared<awst::ExpressionStatement>();
+		stmt->sourceLocation = m_loc;
+		stmt->expr = e->condition; // shared_ptr copy — both stmt and condition reference it
+		m_ctx.prePendingStatements.push_back(std::move(stmt));
+		// The ConditionalExpression condition still holds the AssignmentExpression,
+		// which evaluates to the assigned value (the condition result).
+	}
+
 	e->trueExpr = buildExpr(m_conditional.trueExpression());
 	e->falseExpr = buildExpr(m_conditional.falseExpression());
 	e->wtype = m_ctx.typeMapper.map(m_conditional.annotation().type);
