@@ -24,7 +24,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 	std::string memberName = memberAccess->memberName();
 	auto const& baseExpr = memberAccess->expression();
 
-	// Check if this is a box-stored dynamic array state variable
+	// Check if this is a state variable array
 	if (auto const* ident = dynamic_cast<Identifier const*>(&baseExpr))
 	{
 		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
@@ -35,6 +35,75 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				&& dynamic_cast<ArrayType const*>(varDecl->type()))
 			{
 				return handleBoxArray(memberName, baseExpr, *varDecl);
+			}
+
+			// bytes state variable in global state: push = read + concat + write
+			if (varDecl->isStateVariable()
+				&& !builder::StorageMapper::shouldUseBoxStorage(*varDecl)
+				&& varDecl->type()->category() == Type::Category::Array)
+			{
+				auto const* arrType = dynamic_cast<ArrayType const*>(varDecl->type());
+				if (arrType && arrType->isByteArrayOrString() && memberName == "push")
+				{
+					std::string varName = varDecl->name();
+					auto loc = m_loc;
+
+					// Read current value: app_global_get(varName)
+					auto readVal = m_ctx.storageMapper.createStateRead(
+						varName, awst::WType::bytesType(),
+						awst::AppStorageKind::AppGlobal, loc);
+
+					// Build the push value
+					std::shared_ptr<awst::Expression> pushVal;
+					if (!m_call.arguments().empty())
+					{
+						pushVal = buildExpr(*m_call.arguments()[0]);
+						pushVal = builder::TypeCoercion::stringToBytes(std::move(pushVal), loc);
+					}
+					else
+					{
+						// push() with no args = append zero byte
+						auto zero = std::make_shared<awst::BytesConstant>();
+						zero->sourceLocation = loc;
+						zero->wtype = awst::WType::bytesType();
+						zero->encoding = awst::BytesEncoding::Base16;
+						zero->value = {0};
+						pushVal = std::move(zero);
+					}
+
+					// concat(current, pushVal)
+					auto cat = std::make_shared<awst::IntrinsicCall>();
+					cat->sourceLocation = loc;
+					cat->wtype = awst::WType::bytesType();
+					cat->opCode = "concat";
+					cat->stackArgs.push_back(std::move(readVal));
+					cat->stackArgs.push_back(std::move(pushVal));
+
+					// Write back: app_global_put(varName, concat_result)
+					auto key = std::make_shared<awst::BytesConstant>();
+					key->sourceLocation = loc;
+					key->wtype = awst::WType::bytesType();
+					key->encoding = awst::BytesEncoding::Utf8;
+					key->value = std::vector<uint8_t>(varName.begin(), varName.end());
+
+					auto put = std::make_shared<awst::IntrinsicCall>();
+					put->sourceLocation = loc;
+					put->wtype = awst::WType::voidType();
+					put->opCode = "app_global_put";
+					put->stackArgs.push_back(std::move(key));
+					put->stackArgs.push_back(std::move(cat));
+
+					auto stmt = std::make_shared<awst::ExpressionStatement>();
+					stmt->sourceLocation = loc;
+					stmt->expr = std::move(put);
+					m_ctx.pendingStatements.push_back(std::move(stmt));
+
+					// Return void
+					auto vc = std::make_shared<awst::VoidConstant>();
+					vc->sourceLocation = loc;
+					vc->wtype = awst::WType::voidType();
+					return vc;
+				}
 			}
 		}
 	}
