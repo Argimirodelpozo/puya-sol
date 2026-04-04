@@ -200,7 +200,26 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 		ternary->condition = std::move(cond);
 		ternary->trueExpr = std::move(one);
 		ternary->falseExpr = e;
-		return wrap(emitOverflowCheck(std::move(ternary), _op, _loc));
+		std::shared_ptr<awst::Expression> powResult = std::move(ternary);
+
+		// Apply unchecked sub-type wrapping for Pow (can't fall through to general wrapping)
+		if (m_ctx.inUncheckedBlock && !m_signed && m_bits < 64)
+		{
+			uint64_t modVal = uint64_t(1) << m_bits;
+			auto modConst = std::make_shared<awst::IntegerConstant>();
+			modConst->sourceLocation = _loc;
+			modConst->wtype = awst::WType::uint64Type();
+			modConst->value = std::to_string(modVal);
+			auto masked = std::make_shared<awst::UInt64BinaryOperation>();
+			masked->sourceLocation = _loc;
+			masked->wtype = awst::WType::uint64Type();
+			masked->left = std::move(powResult);
+			masked->op = awst::UInt64BinaryOperator::Mod;
+			masked->right = std::move(modConst);
+			powResult = std::move(masked);
+		}
+
+		return wrap(emitOverflowCheck(std::move(powResult), _op, _loc));
 	}
 	case BuilderBinaryOp::LShift: e->op = awst::UInt64BinaryOperator::LShift; break;
 	case BuilderBinaryOp::RShift: e->op = awst::UInt64BinaryOperator::RShift; break;
