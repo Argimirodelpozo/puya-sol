@@ -972,6 +972,56 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				readExpr = signExtendToUint256(std::move(readExpr), signedGetterBits, loc);
 			}
 
+			// ABI v2 validation for getter params (enum keys in mappings)
+			bool getterV2 = true;
+			{
+				auto const& ann = _contract.sourceUnit().annotation();
+				if (ann.useABICoderV2.set())
+					getterV2 = *ann.useABICoderV2;
+			}
+			if (getterV2)
+			{
+				for (size_t pi = 0; pi < solParamTypes.size(); ++pi)
+				{
+					auto const* pt = solParamTypes[pi];
+					// Enum validation
+					if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(pt))
+					{
+						unsigned memberCount = enumType->numberOfMembers();
+						std::string pname = (pi < solParamNames.size() && !solParamNames[pi].empty())
+							? solParamNames[pi] : "key" + std::to_string(pi);
+
+						auto pv = std::make_shared<awst::VarExpression>();
+						pv->sourceLocation = loc;
+						pv->name = pname;
+						pv->wtype = awst::WType::uint64Type();
+
+						auto mv = std::make_shared<awst::IntegerConstant>();
+						mv->sourceLocation = loc;
+						mv->wtype = awst::WType::uint64Type();
+						mv->value = std::to_string(memberCount - 1);
+
+						auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+						cmp->sourceLocation = loc;
+						cmp->wtype = awst::WType::boolType();
+						cmp->lhs = pv;
+						cmp->op = awst::NumericComparison::Lte;
+						cmp->rhs = std::move(mv);
+
+						auto ae = std::make_shared<awst::AssertExpression>();
+						ae->sourceLocation = loc;
+						ae->wtype = awst::WType::voidType();
+						ae->condition = std::move(cmp);
+						ae->errorMessage = "enum validation";
+
+						auto as = std::make_shared<awst::ExpressionStatement>();
+						as->sourceLocation = loc;
+						as->expr = std::move(ae);
+						body->body.push_back(std::move(as));
+					}
+				}
+			}
+
 			auto ret = std::make_shared<awst::ReturnStatement>();
 			ret->sourceLocation = loc;
 			ret->value = std::move(readExpr);
