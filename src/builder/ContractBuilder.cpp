@@ -2577,6 +2577,46 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				uint64_t mask = (uint64_t(1) << bits) - 1;
 				auto loc = makeLoc(param->location());
 
+				// ABI v2: assert param fits in type (revert on overflow)
+				// ABI v1: silently truncate (mask only)
+				bool useV2 = true; // default in 0.8+
+				if (m_currentContract)
+				{
+					auto const& ann = m_currentContract->sourceUnit().annotation();
+					if (ann.useABICoderV2.set())
+						useV2 = *ann.useABICoderV2;
+				}
+				if (useV2)
+				{
+					auto paramCheck = std::make_shared<awst::VarExpression>();
+					paramCheck->sourceLocation = loc;
+					paramCheck->name = param->name();
+					paramCheck->wtype = awst::WType::uint64Type();
+
+					auto maxVal = std::make_shared<awst::IntegerConstant>();
+					maxVal->sourceLocation = loc;
+					maxVal->wtype = awst::WType::uint64Type();
+					maxVal->value = std::to_string(mask);
+
+					auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+					cmp->sourceLocation = loc;
+					cmp->wtype = awst::WType::boolType();
+					cmp->lhs = paramCheck;
+					cmp->op = awst::NumericComparison::Lte;
+					cmp->rhs = std::move(maxVal);
+
+					auto assertExpr = std::make_shared<awst::AssertExpression>();
+					assertExpr->sourceLocation = loc;
+					assertExpr->wtype = awst::WType::voidType();
+					assertExpr->condition = std::move(cmp);
+					assertExpr->errorMessage = "ABI validation";
+
+					auto assertStmt = std::make_shared<awst::ExpressionStatement>();
+					assertStmt->sourceLocation = loc;
+					assertStmt->expr = std::move(assertExpr);
+					maskStmts.push_back(std::move(assertStmt));
+				}
+
 				auto paramVar = std::make_shared<awst::VarExpression>();
 				paramVar->sourceLocation = loc;
 				paramVar->name = param->name();
