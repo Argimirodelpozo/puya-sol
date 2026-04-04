@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/enum_with_256_members.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 8 255
+    intcblock 1 255 8
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -40,11 +40,15 @@ intToEnum:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    intc_2 // 255
+    dup
+    intc_1 // 255
+    <=
+    assert // ABI validation
+    intc_1 // 255
     &
     dup
     pushint 256
@@ -64,11 +68,11 @@ enumToInt:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    intc_2 // 255
+    intc_1 // 255
     &
     itob
     bytec_0 // 0x151f7c75

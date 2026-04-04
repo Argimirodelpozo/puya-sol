@@ -39,6 +39,10 @@ uintToBytes:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    dup
+    pushint 4294967295
+    <=
+    assert // ABI validation
     pushint 65535
     &
     itob

@@ -33,17 +33,26 @@ main_f_route@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_return_parameter.sol.B.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
+    dup
     len
     pushint 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    btoi
     pushint 0
 
 f_while_top@2:
     dup
     pushbytes "1234567"
     ==
-    bnz f_while_top@2
+    bz f_after_while@4
+    dig 1
+    pushint 255
+    <=
+    assert // ABI validation
+    b f_while_top@2
+
+f_after_while@4:
     pushbytes 0x151f7c7500000000000000
     log
     pushint 1

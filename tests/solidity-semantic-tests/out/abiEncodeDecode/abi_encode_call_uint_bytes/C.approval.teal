@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_uint_bytes.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 8
+    intcblock 1 0 2 65535
     bytecblock 0xd110edaf 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -82,14 +82,24 @@ g:
 h:
     txna ApplicationArgs 1
     len
-    intc_3 // 8
+    pushint 8
     ==
     assert // invalid number of bytes for arc4.uint64
     txna ApplicationArgs 2
     len
-    intc_3 // 8
+    pushint 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    pushbytes ""
+    dup
+    intc_3 // 65535
+    <=
+    assert // ABI validation
+    intc_3 // 65535
+    &
+    intc_3 // 65535
+    <=
+    assert // ABI validation
     intc_0 // 1
     return
 

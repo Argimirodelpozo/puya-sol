@@ -34,10 +34,15 @@ main_testFunction_route@5:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_selector_assignment.sol.C.testYul[routing]() -> void:
 testYul:
     txna ApplicationArgs 1
+    dup
     len
     pushint 8
     ==
     assert // invalid number of bytes for arc4.uint64
+    btoi
+    pushint 4294967295
+    <=
+    assert // ABI validation
     load 0
     store 0
     pushbytes 0x151f7c750000000000000000

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/packing_unpacking_types.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 8 4294967295 32
+    intcblock 1 4294967295 8 32
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -44,19 +44,23 @@ run:
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     txna ApplicationArgs 3
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     cover 2
-    intc_2 // 4294967295
+    dup
+    intc_1 // 4294967295
+    <=
+    assert // ABI validation
+    intc_1 // 4294967295
     &
     swap
     pushbytes 0x
@@ -71,7 +75,7 @@ run_after_if_else@3:
     pushbytes 0x0100000000
     b*
     dig 2
-    intc_2 // 4294967295
+    intc_1 // 4294967295
     ^
     itob
     b|

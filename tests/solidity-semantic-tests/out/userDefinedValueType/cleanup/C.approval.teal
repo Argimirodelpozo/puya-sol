@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 8 511
+    intcblock 0 1 8 511 255
     bytecblock 0x151f7c75 "a" "c" "b"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -90,7 +90,11 @@ f:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    pushint 255
+    dup
+    intc 4 // 255
+    <=
+    assert // ABI validation
+    intc 4 // 255
     &
     itob
     bytec_0 // 0x151f7c75
@@ -110,7 +114,7 @@ mem:
     pushbytes 0x00000000000000000000000000000000
     swap
     replace2 0 // on error: index access is out of bounds
-    pushint 255
+    intc 4 // 255
     itob
     callsub wrap
     itob

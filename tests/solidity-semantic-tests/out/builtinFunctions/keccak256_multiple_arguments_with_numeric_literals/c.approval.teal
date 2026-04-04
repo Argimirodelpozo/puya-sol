@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/keccak256_multiple_arguments_with_numeric_literals.sol.c.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 32 1 65535
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -46,7 +46,11 @@ foo:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    pushint 65535
+    dup
+    intc_2 // 65535
+    <=
+    assert // ABI validation
+    intc_2 // 65535
     &
     intc_0 // 32
     bzero

@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_simple.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 8 255
+    intcblock 255 1 8
     bytecblock "table"
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -34,11 +34,15 @@ get:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    intc_2 // 255
+    dup
+    intc_0 // 255
+    <=
+    assert // ABI validation
+    intc_0 // 255
     &
     itob
     sha256
@@ -57,7 +61,7 @@ get:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
@@ -66,22 +70,30 @@ set:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    dig 1
+    intc_0 // 255
+    <=
+    assert // ABI validation
     swap
-    intc_2 // 255
+    intc_0 // 255
     &
+    dig 1
+    intc_0 // 255
+    <=
+    assert // ABI validation
     swap
-    intc_2 // 255
+    intc_0 // 255
     &
     swap
     itob
@@ -92,5 +104,5 @@ set:
     swap
     itob
     box_put
-    intc_0 // 1
+    intc_1 // 1
     return
