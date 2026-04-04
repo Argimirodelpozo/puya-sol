@@ -69,7 +69,12 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 
 		auto itemExpr = std::make_shared<awst::TupleItemExpression>();
 		itemExpr->sourceLocation = m_loc;
-		itemExpr->wtype = item->wtype;
+		// Use the VALUE tuple's element type (not the target's type)
+		auto const* valueTuple = dynamic_cast<awst::WTuple const*>(_value->wtype);
+		if (valueTuple && i < valueTuple->types().size())
+			itemExpr->wtype = valueTuple->types()[i];
+		else
+			itemExpr->wtype = item->wtype;
 		itemExpr->base = _value;
 		itemExpr->index = static_cast<int>(i);
 
@@ -80,6 +85,29 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 			assignTarget = sg->field;
 
 		std::shared_ptr<awst::Expression> assignValue = std::move(itemExpr);
+		// Coerce string↔bytes via ReinterpretCast
+		if (assignTarget->wtype != assignValue->wtype)
+		{
+			bool srcIsStringOrBytes = assignValue->wtype == awst::WType::stringType()
+				|| assignValue->wtype == awst::WType::bytesType()
+				|| (assignValue->wtype && assignValue->wtype->kind() == awst::WTypeKind::Bytes);
+			bool tgtIsStringOrBytes = assignTarget->wtype == awst::WType::stringType()
+				|| assignTarget->wtype == awst::WType::bytesType()
+				|| (assignTarget->wtype && assignTarget->wtype->kind() == awst::WTypeKind::Bytes);
+			if (srcIsStringOrBytes && tgtIsStringOrBytes)
+			{
+				auto cast = std::make_shared<awst::ReinterpretCast>();
+				cast->sourceLocation = m_loc;
+				cast->wtype = assignTarget->wtype;
+				cast->expr = std::move(assignValue);
+				assignValue = std::move(cast);
+			}
+			else
+			{
+				assignValue = builder::TypeCoercion::implicitNumericCast(
+					std::move(assignValue), assignTarget->wtype, m_loc);
+			}
+		}
 		if (assignTarget->wtype != assignValue->wtype)
 		{
 			bool targetIsArc4 = false;
