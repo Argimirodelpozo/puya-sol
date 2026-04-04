@@ -352,7 +352,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// Key: caller function AST ID → (super subroutine name, target FunctionDefinition)
 	std::unordered_map<int64_t, solidity::frontend::FunctionDefinition const*> superTargetFuncs;
 	// Map: caller func AST ID → list of (superCallTargetId → superSubName) overrides
-	std::map<int64_t, std::vector<std::pair<int64_t, std::string>>> perFuncSuperOverrides;
+	m_perFuncSuperOverrides.clear();
 
 	for (auto const& [fname, chain]: mroChains)
 	{
@@ -380,7 +380,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				std::string superName = name + "__super_" + std::to_string(callerId);
 
 				// Record the override for this caller
-				perFuncSuperOverrides[callerId].push_back({superCallTargetId, superName});
+				m_perFuncSuperOverrides[callerId].push_back({superCallTargetId, superName});
 
 				// Record the target function for this super subroutine
 				superTargetFuncs[callerId] = mroTarget;
@@ -390,17 +390,17 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 
 	// Fallback: super calls not handled by MRO chains (e.g., g() calling super.f()
 	// where g and f are different function names). Use original AST-ID-based resolution.
-	std::unordered_map<int64_t, solidity::frontend::FunctionDefinition const*> fallbackSuperFuncs;
+	m_fallbackSuperFuncs.clear();
 	{
 		SuperCallCollector globalCollector;
 		for (auto const* base: mro)
 			for (auto const* func: base->definedFunctions())
-				if (!func->isConstructor() && func->isImplemented())
+				if (func->isImplemented())
 					func->body().accept(globalCollector);
 
 		// Collect all super target IDs already handled by MRO chain
 		std::set<int64_t> handledSuperIds;
-		for (auto const& [callerId, overrides]: perFuncSuperOverrides)
+		for (auto const& [callerId, overrides]: m_perFuncSuperOverrides)
 			for (auto const& [targetId, name]: overrides)
 				handledSuperIds.insert(targetId);
 
@@ -416,7 +416,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				{
 					if (func->id() == id && func->isImplemented())
 					{
-						fallbackSuperFuncs[id] = func;
+						m_fallbackSuperFuncs[id] = func;
 						std::string name = func->name();
 						if (m_overloadedNames.count(name))
 							name += "_" + std::to_string(func->parameters().size());
@@ -436,7 +436,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		SuperCallCollector globalCollector;
 		for (auto const* base: mro)
 			for (auto const* func: base->definedFunctions())
-				if (!func->isConstructor() && func->isImplemented())
+				if (func->isImplemented())
 					func->body().accept(globalCollector);
 
 		for (int64_t id: globalCollector.explicitBaseTargetIds)
@@ -464,12 +464,12 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// Adds MRO-dependent super targets, then re-adds explicit base + fallback targets.
 	auto setupSuperOverrides = [&](int64_t funcAstId) {
 		// MRO-dependent overrides for this specific function
-		auto it = perFuncSuperOverrides.find(funcAstId);
-		if (it != perFuncSuperOverrides.end())
+		auto it = m_perFuncSuperOverrides.find(funcAstId);
+		if (it != m_perFuncSuperOverrides.end())
 			for (auto const& [targetId, superName]: it->second)
 				m_exprBuilder->addSuperTarget(targetId, superName);
 		// Re-register fallback super targets (cross-function super calls)
-		for (auto const& [id, func]: fallbackSuperFuncs)
+		for (auto const& [id, func]: m_fallbackSuperFuncs)
 		{
 			std::string name = func->name();
 			if (m_overloadedNames.count(name))
@@ -490,6 +490,11 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	auto clearSuperOverrides = [&]() {
 		m_exprBuilder->clearSuperTargets();
 	};
+
+	// Snapshot all super target registrations for use by constructor body.
+	// The constructor is built in buildApprovalProgram() after clearSuperTargets()
+	// has been called for each function, so we save the full map here.
+	m_allSuperTargetNames = m_exprBuilder->superTargetNames();
 
 	// Translate all defined functions in this contract
 	// Use "name(paramCount)" for overloaded functions to disambiguate
@@ -1031,7 +1036,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	}
 
 	// Emit fallback super subroutines (cross-function super calls)
-	for (auto const& [targetId, func]: fallbackSuperFuncs)
+	for (auto const& [targetId, func]: m_fallbackSuperFuncs)
 	{
 		std::string name = func->name();
 		if (m_overloadedNames.count(name))
@@ -1929,10 +1934,22 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		// Include main contract constructor body if present
 		if (constructor && constructor->body().statements().size() > 0)
 		{
+			// Restore super targets for constructor body (needed for super.f() calls).
+			for (auto const& [id, name]: m_allSuperTargetNames)
+				m_exprBuilder->addSuperTarget(id, name);
+			// Also set up MRO overrides for the constructor specifically
+			if (constructor)
+			{
+				auto pfit = m_perFuncSuperOverrides.find(constructor->id());
+				if (pfit != m_perFuncSuperOverrides.end())
+					for (auto const& [targetId, superName]: pfit->second)
+						m_exprBuilder->addSuperTarget(targetId, superName);
+			}
 			m_exprBuilder->setInConstructor(true);
 			auto ctorBody = buildBlock(constructor->body());
 			inlineModifiers(*constructor, ctorBody);
 			m_exprBuilder->setInConstructor(false);
+			m_exprBuilder->clearSuperTargets();
 			for (auto& stmt: ctorBody->body)
 				createBlock->body.push_back(std::move(stmt));
 		}

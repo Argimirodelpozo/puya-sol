@@ -128,6 +128,8 @@ public:
 	void addSuperTarget(int64_t _funcId, std::string const& _name);
 	/// Clear all super target registrations (for per-function MRO-aware resolution).
 	void clearSuperTargets();
+	/// Get current super target names map (for snapshotting).
+	std::unordered_map<int64_t, std::string> const& superTargetNames() const { return m_superTargetNames; }
 
 	/// Register a storage pointer alias: when `Type storage p = _mapping[key]`,
 	/// later references to `p` resolve to the stored box read expression.
