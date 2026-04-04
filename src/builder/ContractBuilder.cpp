@@ -1818,12 +1818,18 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				}
 			}
 
-			// Phase 2: Pre-evaluate ALL base ctor args (including transitive)
+			// Phase 2: Pre-evaluate transitive base ctor args in reverse-MRO order
+			// (most-derived first), so intermediate params are assigned before
+			// deeper transitive args reference them.
+			// E.g., Final→Derived→Base1→Base: assign Base1.k first (from Derived.i),
+			// then evaluate Base.j (from Base1.k).
 			auto const& lin = _contract.annotation().linearizedBaseContracts;
-			for (auto it = lin.rbegin(); it != lin.rend(); ++it)
+			for (auto it = lin.begin(); it != lin.end(); ++it)
 			{
 				auto const* base = *it;
 				if (base == &_contract)
+					continue;
+				if (directBases.count(base))
 					continue;
 
 				auto argIt = explicitBaseArgs.find(base);
@@ -1833,25 +1839,33 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				if (!baseCtor)
 					continue;
 
-				// Skip direct bases — their params already assigned in Phase 1
-				if (directBases.count(base))
-					continue;
-
 				auto const& args = *(argIt->second);
 				auto const& params = baseCtor->parameters();
-				std::vector<std::shared_ptr<awst::Expression>> evaluated;
+
+				// Assign these params into createBlock NOW (so deeper transitives can see them)
 				for (size_t i = 0; i < args.size() && i < params.size(); ++i)
 				{
 					auto argExpr = m_exprBuilder->build(*args[i]);
-					if (argExpr)
-					{
-						auto* targetType = m_typeMapper.map(params[i]->type());
-						argExpr = ExpressionBuilder::implicitNumericCast(
-							std::move(argExpr), targetType, makeLoc(args[i]->location()));
-					}
-					evaluated.push_back(std::move(argExpr));
+					if (!argExpr)
+						continue;
+					auto* targetType = m_typeMapper.map(params[i]->type());
+					argExpr = ExpressionBuilder::implicitNumericCast(
+						std::move(argExpr), targetType, makeLoc(args[i]->location()));
+
+					auto target = std::make_shared<awst::VarExpression>();
+					target->sourceLocation = makeLoc(args[i]->location());
+					target->name = params[i]->name();
+					target->wtype = targetType;
+
+					auto assignment = std::make_shared<awst::AssignmentStatement>();
+					assignment->sourceLocation = target->sourceLocation;
+					assignment->target = target;
+					assignment->value = std::move(argExpr);
+					createBlock->body.push_back(std::move(assignment));
 				}
-				preEvaluatedArgs[base] = std::move(evaluated);
+
+				// Mark these params as pre-evaluated (empty vector = already assigned)
+				preEvaluatedArgs[base] = {};
 			}
 		}
 
