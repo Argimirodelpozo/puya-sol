@@ -4,9 +4,12 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/bytes_to_fixed_bytes_simple.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 2
-    bytecblock 0x151f7c75 0x
+    bytecblock 0x151f7c75 "__ctor_pending" "s" "sLong"
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
     intc_0 // 1
     return
 
@@ -23,10 +26,36 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x3df2a041 0xa88d7e51 0x3f74b247 0x1b3d8002 0xbc8a635a // method "fromMemory(byte[])byte[16]", method "fromCalldata(byte[])byte[16]", method "fromStorage()byte[16]", method "fromStorageLong()byte[32]", method "fromSlice(byte[])byte[8]"
+    pushbytess 0xbacc49e3 0x3df2a041 0xa88d7e51 0x3f74b247 0x1b3d8002 0xbc8a635a // method "__postInit()void", method "fromMemory(byte[])byte[16]", method "fromCalldata(byte[])byte[16]", method "fromStorage()byte[16]", method "fromStorageLong()byte[32]", method "fromSlice(byte[])byte[8]"
     txna ApplicationArgs 0
-    match fromMemory fromCalldata fromStorage fromStorageLong fromSlice
+    match __postInit fromMemory fromCalldata fromStorage fromStorageLong fromSlice
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/bytes_to_fixed_bytes_simple.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_2 // "s"
+    pushint 16
+    box_create
+    pop
+    bytec_2 // "s"
+    pushbytes "abcdefghabcdefgh"
+    box_put
+    bytec_3 // "sLong"
+    pushint 32
+    box_create
+    pop
+    bytec_3 // "sLong"
+    pushbytes "abcdefghabcdefghabcdefghabcdefgh"
+    box_put
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/bytes_to_fixed_bytes_simple.sol.C.fromMemory[routing]() -> void:
@@ -73,9 +102,9 @@ fromCalldata:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/bytes_to_fixed_bytes_simple.sol.C.fromStorage[routing]() -> void:
 fromStorage:
-    pushbytes "s"
+    bytec_2 // "s"
     box_get
-    bytec_1 // 0x
+    pushbytes 0x
     cover 2
     select
     bytec_0 // 0x151f7c75
@@ -88,9 +117,9 @@ fromStorage:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/bytes_to_fixed_bytes_simple.sol.C.fromStorageLong[routing]() -> void:
 fromStorageLong:
-    pushbytes "sLong"
+    bytec_3 // "sLong"
     box_get
-    bytec_1 // 0x
+    pushbytes 0x
     cover 2
     select
     bytec_0 // 0x151f7c75

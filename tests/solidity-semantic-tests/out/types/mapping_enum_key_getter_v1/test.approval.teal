@@ -3,10 +3,13 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_getter_v1.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 8 0
-    bytecblock "table" 0x151f7c75
+    intcblock 1 0 8
+    bytecblock "__ctor_pending" "table" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
     intc_0 // 1
     return
 
@@ -23,10 +26,26 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xced1bdc6 0xb4369c36 0x43ea1406 // method "set(uint64,uint64)void", method "get(uint64)uint64", method "table(uint64)uint64"
+    pushbytess 0xbacc49e3 0xced1bdc6 0xb4369c36 0x43ea1406 // method "__postInit()void", method "set(uint64,uint64)void", method "get(uint64)uint64", method "table(uint64)uint64"
     txna ApplicationArgs 0
-    match set get table
+    match __postInit set get table
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_getter_v1.sol.test.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_1 // "table"
+    intc_1 // 0
+    box_create
+    pop
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_getter_v1.sol.test.set[routing]() -> void:
@@ -34,14 +53,14 @@ set:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
@@ -50,7 +69,7 @@ set:
     swap
     itob
     sha256
-    bytec_0 // "table"
+    bytec_1 // "table"
     swap
     concat
     swap
@@ -65,7 +84,7 @@ get:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
@@ -76,9 +95,9 @@ get:
     extract_uint64
     pushint 6
     itxn_field TypeEnum
-    intc_2 // 0
+    intc_1 // 0
     itxn_field OnCompletion
-    intc_2 // 0
+    intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationID
     pushbytes 0xdf212945 // method "table()byte[]"
@@ -89,7 +108,7 @@ get:
     extract 4 0
     btoi
     itob
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -102,24 +121,24 @@ table:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     itob
     sha256
-    bytec_0 // "table"
+    bytec_1 // "table"
     swap
     concat
     box_get
     swap
     btoi
-    intc_2 // 0
+    intc_1 // 0
     swap
     uncover 2
     select
     itob
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log

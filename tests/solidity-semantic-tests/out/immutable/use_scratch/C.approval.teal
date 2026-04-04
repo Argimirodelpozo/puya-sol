@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/use_scratch.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock "x" 0x "y" "__ctor_pending" 0x151f7c75
+    bytecblock "x" 0x "y" "__ctor_pending" "m" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
@@ -52,6 +52,10 @@ __postInit:
     bytec_3 // "__ctor_pending"
     intc_2 // 0
     app_global_put
+    bytec 4 // "m"
+    intc_2 // 0
+    box_create
+    pop
     pushint 42
     itob
     bytec_0 // "x"
@@ -75,7 +79,7 @@ __postInit:
     intc_0 // 32
     extract3
     sha256
-    pushbytes "m"
+    bytec 4 // "m"
     swap
     concat
     dup
@@ -117,7 +121,7 @@ f:
     cover 2
     b|
     concat
-    bytec 4 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
@@ -145,7 +149,7 @@ m:
     intc_0 // 32
     extract3
     sha256
-    pushbytes "m"
+    bytec 4 // "m"
     swap
     concat
     box_get
@@ -158,7 +162,7 @@ m:
     <=
     assert // overflow
     b|
-    bytec 4 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log

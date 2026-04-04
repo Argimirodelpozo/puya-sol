@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_unpacker.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
-    bytecblock "m_x" "__ctor_pending" "m_s" 0x 0x151f7c75
+    intcblock 1 0 32
+    bytecblock "m_s" "m_x" "__ctor_pending" 0x 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "m_x"
+    bytec_1 // "m_x"
     bytec_3 // 0x
     app_global_put
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -40,12 +40,12 @@ __postInit:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -54,19 +54,23 @@ __postInit:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_1 // "__ctor_pending"
-    intc_2 // 0
+    bytec_2 // "__ctor_pending"
+    intc_1 // 0
     app_global_put
-    bytec_0 // "m_x"
+    bytec_0 // "m_s"
+    intc_1 // 0
+    box_create
+    pop
+    bytec_1 // "m_x"
     uncover 2
     app_global_put
-    bytec_2 // "m_s"
+    bytec_0 // "m_s"
     box_del
     pop
-    bytec_2 // "m_s"
+    bytec_0 // "m_s"
     swap
     box_put
     intc_0 // 1
@@ -75,16 +79,16 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_unpacker.sol.Test.m_x[routing]() -> void:
 m_x:
-    intc_2 // 0
-    bytec_0 // "m_x"
+    intc_1 // 0
+    bytec_1 // "m_x"
     app_global_get_ex
     assert // check m_x exists
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     bytec 4 // 0x151f7c75
@@ -97,7 +101,7 @@ m_x:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_unpacker.sol.Test.m_s[routing]() -> void:
 m_s:
-    bytec_2 // "m_s"
+    bytec_0 // "m_s"
     box_get
     bytec_3 // 0x
     cover 2

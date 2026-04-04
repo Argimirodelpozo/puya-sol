@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/complex_accessors.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    bytecblock 0x151f7c75 "__ctor_pending" 0x746f5f75696e745f6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf 0x746f5f6d756c7469706c655f6d61705c81b5d4d259ebc3b87024e3c2c7f4452419ff22698d0b4d3001709241cd1e9d
+    intcblock 32 0 1
+    bytecblock 0x151f7c75 "__ctor_pending" "to_string_map" "to_bool_map" "to_uint_map" "to_multiple_map" 0x746f5f75696e745f6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf 0x746f5f6d756c7469706c655f6d61705c81b5d4d259ebc3b87024e3c2c7f4452419ff22698d0b4d3001709241cd1e9d
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
-    intc_1 // 1
+    intc_2 // 1
     app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -38,32 +38,48 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
+    bytec_2 // "to_string_map"
+    intc_1 // 0
+    box_create
+    pop
+    bytec_3 // "to_bool_map"
+    intc_1 // 0
+    box_create
+    pop
+    bytec 4 // "to_uint_map"
+    intc_1 // 0
+    box_create
+    pop
+    bytec 5 // "to_multiple_map"
+    intc_1 // 0
+    box_create
+    pop
     pushbytess 0x746f5f737472696e675f6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf 0x32340000
     box_put
-    intc_2 // 0
+    intc_1 // 0
     itob
     pushbytes 0x746f5f626f6f6c5f6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
     swap
     box_put
     pushint 12
     itob
-    bytec_2 // 0x746f5f75696e745f6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
+    bytec 6 // 0x746f5f75696e745f6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
     box_del
     pop
-    bytec_2 // 0x746f5f75696e745f6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
+    bytec 6 // 0x746f5f75696e745f6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
     swap
     box_put
     pushint 31
     itob
-    bytec_3 // 0x746f5f6d756c7469706c655f6d61705c81b5d4d259ebc3b87024e3c2c7f4452419ff22698d0b4d3001709241cd1e9d
+    bytec 7 // 0x746f5f6d756c7469706c655f6d61705c81b5d4d259ebc3b87024e3c2c7f4452419ff22698d0b4d3001709241cd1e9d
     box_del
     pop
-    bytec_3 // 0x746f5f6d756c7469706c655f6d61705c81b5d4d259ebc3b87024e3c2c7f4452419ff22698d0b4d3001709241cd1e9d
+    bytec 7 // 0x746f5f6d756c7469706c655f6d61705c81b5d4d259ebc3b87024e3c2c7f4452419ff22698d0b4d3001709241cd1e9d
     swap
     box_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
@@ -86,7 +102,7 @@ to_string_map:
     intc_0 // 32
     extract3
     sha256
-    pushbytes "to_string_map"
+    bytec_2 // "to_string_map"
     swap
     concat
     box_get
@@ -97,7 +113,7 @@ to_string_map:
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
@@ -120,25 +136,25 @@ to_bool_map:
     intc_0 // 32
     extract3
     sha256
-    pushbytes "to_bool_map"
+    bytec_3 // "to_bool_map"
     swap
     concat
     box_get
     swap
     btoi
-    intc_2 // 0
+    intc_1 // 0
     swap
     uncover 2
     select
     pushbytes 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
@@ -162,7 +178,7 @@ to_uint_map:
     intc_0 // 32
     extract3
     sha256
-    pushbytes "to_uint_map"
+    bytec 4 // "to_uint_map"
     swap
     concat
     box_get
@@ -179,7 +195,7 @@ to_uint_map:
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
@@ -219,7 +235,7 @@ to_multiple_map:
     extract3
     concat
     sha256
-    pushbytes "to_multiple_map"
+    bytec 5 // "to_multiple_map"
     swap
     concat
     box_get
@@ -236,5 +252,5 @@ to_multiple_map:
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return

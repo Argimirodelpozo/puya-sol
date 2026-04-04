@@ -4,9 +4,12 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_return.sol.test.approval_program() -> uint64:
 main:
     intcblock 0 1
-    bytecblock 0x61af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc 0x61cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50 0x61cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70 0x62af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc 0x62cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50 0x62cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70 0x151f7c75
+    bytecblock "__ctor_pending" 0x61af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc 0x61cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50 0x61cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70 0x62af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc 0x62cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50 0x62cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
     intc_1 // 1
     return
 
@@ -23,10 +26,30 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x54d05d97 0xbc153c76 // method "g()(uint64,uint64,uint64,uint64,uint64,uint64)", method "h()(uint64,uint64,uint64,uint64,uint64,uint64)"
+    pushbytess 0xbacc49e3 0x54d05d97 0xbc153c76 // method "__postInit()void", method "g()(uint64,uint64,uint64,uint64,uint64,uint64)", method "h()(uint64,uint64,uint64,uint64,uint64,uint64)"
     txna ApplicationArgs 0
-    match g h
+    match __postInit g h
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_return.sol.test.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    pushbytes "a"
+    intc_0 // 0
+    box_create
+    pop
+    pushbytes "b"
+    intc_0 // 0
+    box_create
+    pop
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_return.sol.test.g[routing]() -> void:
@@ -36,7 +59,7 @@ g:
     pushbytes 0x6d6170cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
     swap
     box_put
-    bytec_0 // 0x61af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
+    bytec_1 // 0x61af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
     box_get
     swap
     btoi
@@ -44,7 +67,7 @@ g:
     swap
     uncover 2
     select
-    bytec_1 // 0x61cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
+    bytec_2 // 0x61cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
     box_get
     swap
     btoi
@@ -52,7 +75,7 @@ g:
     swap
     uncover 2
     select
-    bytec_2 // 0x61cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
+    bytec_3 // 0x61cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
     box_get
     swap
     btoi
@@ -60,7 +83,7 @@ g:
     swap
     uncover 2
     select
-    bytec_3 // 0x62af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
+    bytec 4 // 0x62af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
     box_get
     swap
     btoi
@@ -68,7 +91,7 @@ g:
     swap
     uncover 2
     select
-    bytec 4 // 0x62cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
+    bytec 5 // 0x62cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
     box_get
     swap
     btoi
@@ -76,7 +99,7 @@ g:
     swap
     uncover 2
     select
-    bytec 5 // 0x62cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
+    bytec 6 // 0x62cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
     box_get
     swap
     btoi
@@ -101,7 +124,7 @@ g:
     swap
     itob
     concat
-    bytec 6 // 0x151f7c75
+    bytec 7 // 0x151f7c75
     swap
     concat
     log
@@ -121,7 +144,7 @@ h:
     pushbytes 0x6dcd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
     swap
     box_put
-    bytec_0 // 0x61af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
+    bytec_1 // 0x61af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
     box_get
     swap
     btoi
@@ -129,7 +152,7 @@ h:
     swap
     uncover 2
     select
-    bytec_1 // 0x61cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
+    bytec_2 // 0x61cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
     box_get
     swap
     btoi
@@ -137,7 +160,7 @@ h:
     swap
     uncover 2
     select
-    bytec_2 // 0x61cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
+    bytec_3 // 0x61cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
     box_get
     swap
     btoi
@@ -145,7 +168,7 @@ h:
     swap
     uncover 2
     select
-    bytec_3 // 0x62af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
+    bytec 4 // 0x62af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc
     box_get
     swap
     btoi
@@ -153,7 +176,7 @@ h:
     swap
     uncover 2
     select
-    bytec 4 // 0x62cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
+    bytec 5 // 0x62cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
     box_get
     swap
     btoi
@@ -161,7 +184,7 @@ h:
     swap
     uncover 2
     select
-    bytec 5 // 0x62cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
+    bytec 6 // 0x62cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
     box_get
     swap
     btoi
@@ -186,7 +209,7 @@ h:
     swap
     itob
     concat
-    bytec 6 // 0x151f7c75
+    bytec 7 // 0x151f7c75
     swap
     concat
     log

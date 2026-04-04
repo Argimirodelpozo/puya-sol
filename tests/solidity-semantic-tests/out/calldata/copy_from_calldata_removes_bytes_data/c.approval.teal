@@ -3,10 +3,13 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.approval_program() -> uint64:
 main:
-    intcblock 1
-    bytecblock "data"
+    intcblock 1 0
+    bytecblock "data" "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
     intc_0 // 1
     return
 
@@ -23,14 +26,30 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x22656f1d 0xc96cbcc1 0x70a62364 0x1bf9882b // method "set()bool", method "checkIfDataIsEmpty()bool", method "sendMessage()(bool,byte[])", method "__fallback()void"
+    pushbytess 0xbacc49e3 0x22656f1d 0xc96cbcc1 0x70a62364 0x1bf9882b // method "__postInit()void", method "set()bool", method "checkIfDataIsEmpty()bool", method "sendMessage()(bool,byte[])", method "__fallback()void"
     txna ApplicationArgs 0
-    match set checkIfDataIsEmpty main_sendMessage_route@7 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.[routing]
+    match __postInit set checkIfDataIsEmpty main_sendMessage_route@8 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.[routing]
     err
 
-main_sendMessage_route@7:
+main_sendMessage_route@8:
     pushbytes 0x151f7c758000030000
     log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.__postInit[routing]() -> void:
+__postInit:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_0 // "data"
+    intc_1 // 0
+    box_create
+    pop
     intc_0 // 1
     return
 
@@ -59,7 +78,7 @@ checkIfDataIsEmpty:
     pushbytes 0x
     b==
     pushbytes 0x00
-    pushint 0
+    intc_1 // 0
     uncover 2
     setbit
     pushbytes 0x151f7c75

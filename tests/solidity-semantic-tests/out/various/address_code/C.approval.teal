@@ -4,10 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 24 32
-    bytecblock 0x151f7c75 "__ctor_pending" "initCode" 0x
+    bytecblock "initCode" 0x151f7c75 "__ctor_pending" 0x
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -34,12 +34,16 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_1 // 0
     app_global_put
+    bytec_0 // "initCode"
+    intc_1 // 0
+    box_create
+    pop
     global CurrentApplicationAddress
     intc_2 // 24
     extract_uint64
@@ -55,10 +59,10 @@ __postInit:
     extract_uint64
     app_params_get AppApprovalProgram
     pop
-    bytec_2 // "initCode"
+    bytec_0 // "initCode"
     box_del
     pop
-    bytec_2 // "initCode"
+    bytec_0 // "initCode"
     swap
     box_put
     intc_0 // 1
@@ -80,7 +84,7 @@ f:
     intc_1 // 0
     uncover 2
     setbit
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -98,7 +102,7 @@ g:
     intc_3 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -116,7 +120,7 @@ h:
     intc_3 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -126,7 +130,7 @@ h:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol.C.initCode[routing]() -> void:
 initCode:
-    bytec_2 // "initCode"
+    bytec_0 // "initCode"
     box_get
     bytec_3 // 0x
     cover 2
@@ -137,7 +141,7 @@ initCode:
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log

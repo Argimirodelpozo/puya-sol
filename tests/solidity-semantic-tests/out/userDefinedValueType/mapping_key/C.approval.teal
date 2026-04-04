@@ -3,10 +3,13 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/mapping_key.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
-    bytecblock "m"
+    intcblock 32 1 0
+    bytecblock "m" "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
     intc_1 // 1
     return
 
@@ -23,10 +26,26 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x76a2115c 0x043cd6f0 0x8338d04b // method "set(uint256,uint256)void", method "set_unwrapped(uint256,uint256)void", method "m(uint256)uint256"
+    pushbytess 0xbacc49e3 0x76a2115c 0x043cd6f0 0x8338d04b // method "__postInit()void", method "set(uint256,uint256)void", method "set_unwrapped(uint256,uint256)void", method "m(uint256)uint256"
     txna ApplicationArgs 0
-    match set set_unwrapped m
+    match __postInit set set_unwrapped m
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/mapping_key.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_0 // "m"
+    intc_2 // 0
+    box_create
+    pop
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/mapping_key.sol.C.set[routing]() -> void:

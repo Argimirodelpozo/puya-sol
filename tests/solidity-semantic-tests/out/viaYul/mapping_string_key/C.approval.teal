@@ -3,9 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/mapping_string_key.sol.C.approval_program() -> uint64:
 main:
+    intcblock 1 0
+    bytecblock "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -16,25 +21,38 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x1c663589 // method "set(string)void"
-    txna ApplicationArgs 0
-    match main_set_route@4
-    err
-
-main_set_route@4:
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
-    b set
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x1c663589 // method "__postInit()void", method "set(string)void"
+    txna ApplicationArgs 0
+    match __postInit set
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/mapping_string_key.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    pushbytes "map"
+    intc_1 // 0
+    box_create
+    pop
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/mapping_string_key.sol.C.set[routing]() -> void:
 set:
     txna ApplicationArgs 1
     dup
-    pushint 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -42,5 +60,5 @@ set:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    pushint 1
+    intc_0 // 1
     return

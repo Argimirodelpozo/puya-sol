@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/create_calldata.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
-    bytecblock "__ctor_pending" "s" 0x
+    intcblock 1 0
+    bytecblock "s" "__ctor_pending" 0x
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -39,17 +39,21 @@ __postInit:
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_0 // "__ctor_pending"
-    pushint 0
+    bytec_1 // "__ctor_pending"
+    intc_1 // 0
     app_global_put
+    bytec_0 // "s"
+    intc_1 // 0
+    box_create
+    pop
     txna ApplicationArgs 0
-    bytec_1 // "s"
+    bytec_0 // "s"
     box_del
     pop
-    bytec_1 // "s"
+    bytec_0 // "s"
     swap
     box_put
     txna ApplicationArgs 0
@@ -64,7 +68,7 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/create_calldata.sol.C.s[routing]() -> void:
 s:
-    bytec_1 // "s"
+    bytec_0 // "s"
     box_get
     bytec_2 // 0x
     cover 2

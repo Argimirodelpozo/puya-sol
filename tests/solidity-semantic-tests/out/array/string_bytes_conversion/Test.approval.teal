@@ -4,11 +4,14 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_bytes_conversion.sol.Test.approval_program() -> uint64:
 main:
     intcblock 1 0 32 8
-    bytecblock "s" "b" 0x151f7c75
+    bytecblock "s" "__ctor_pending" "b" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "s"
     pushbytes 0x
+    app_global_put
+    bytec_1 // "__ctor_pending"
+    intc_0 // 1
     app_global_put
     intc_0 // 1
     return
@@ -26,10 +29,26 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x404428e8 0x0568fbe7 // method "f(string,uint256)byte[1]", method "l()uint256"
+    pushbytess 0xbacc49e3 0x404428e8 0x0568fbe7 // method "__postInit()void", method "f(string,uint256)byte[1]", method "l()uint256"
     txna ApplicationArgs 0
-    match f l
+    match __postInit f l
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_bytes_conversion.sol.Test.__postInit[routing]() -> void:
+__postInit:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_2 // "b"
+    intc_1 // 0
+    box_create
+    pop
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_bytes_conversion.sol.Test.f[routing]() -> void:
@@ -51,10 +70,10 @@ f:
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_1 // "b"
+    bytec_2 // "b"
     box_del
     pop
-    bytec_1 // "b"
+    bytec_2 // "b"
     dig 2
     box_put
     bytec_0 // "s"
@@ -71,7 +90,7 @@ f:
     extract_uint64
     intc_0 // 1
     extract3
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -90,7 +109,7 @@ l:
     intc_2 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log

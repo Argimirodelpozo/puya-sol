@@ -3,10 +3,13 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding_mapping_to_dynamic_struct.sol.X.approval_program() -> uint64:
 main:
-    intcblock 32 1
-    bytecblock 0x746573740a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf 0x000000000000000000000000000000000000000000000000000000000000000000220000
+    intcblock 32 1 0
+    bytecblock 0x746573740a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf "__ctor_pending" "test" 0x000000000000000000000000000000000000000000000000000000000000000000220000
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
     intc_1 // 1
     return
 
@@ -23,17 +26,33 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x0f76205a 0xd419061b // method "set()void", method "test(uint256)(uint256,string)"
+    pushbytess 0xbacc49e3 0x0f76205a 0xd419061b // method "__postInit()void", method "set()void", method "test(uint256)(uint256,string)"
     txna ApplicationArgs 0
-    match set test
+    match __postInit set test
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding_mapping_to_dynamic_struct.sol.X.__postInit[routing]() -> void:
+__postInit:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_2 // "test"
+    intc_2 // 0
+    box_create
+    pop
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding_mapping_to_dynamic_struct.sol.X.set[routing]() -> void:
 set:
     bytec_0 // 0x746573740a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
     box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000220000
+    bytec_3 // 0x000000000000000000000000000000000000000000000000000000000000000000220000
     cover 2
     select
     dup
@@ -84,11 +103,11 @@ test:
     intc_0 // 32
     extract3
     sha256
-    pushbytes "test"
+    bytec_2 // "test"
     swap
     concat
     box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000220000
+    bytec_3 // 0x000000000000000000000000000000000000000000000000000000000000000000220000
     cover 2
     select
     dup

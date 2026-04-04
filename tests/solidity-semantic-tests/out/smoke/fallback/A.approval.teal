@@ -3,15 +3,18 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
-    bytecblock "data" 0x "balance" "externalData" 0x151f7c75
+    intcblock 1 0 32
+    bytecblock "data" "externalData" 0x "balance" "__ctor_pending" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "data"
-    bytec_1 // 0x
+    bytec_2 // 0x
     app_global_put
-    bytec_2 // "balance"
-    bytec_1 // 0x
+    bytec_3 // "balance"
+    bytec_2 // 0x
+    app_global_put
+    bytec 4 // "__ctor_pending"
+    intc_0 // 1
     app_global_put
     intc_0 // 1
     return
@@ -29,15 +32,31 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x1bf9882b 0xd93a53a3 0x76d8a28f 0xf1b614b7 // method "__fallback()void", method "data()uint256", method "balance()uint256", method "externalData()byte[]"
+    pushbytess 0xbacc49e3 0x1bf9882b 0xd93a53a3 0x76d8a28f 0xf1b614b7 // method "__postInit()void", method "__fallback()void", method "data()uint256", method "balance()uint256", method "externalData()byte[]"
     txna ApplicationArgs 0
-    match /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.[routing] data balance externalData
+    match __postInit /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.[routing] data balance externalData
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.__postInit[routing]() -> void:
+__postInit:
+    bytec 4 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 4 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_1 // "externalData"
+    intc_1 // 0
+    box_create
+    pop
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.[routing]() -> void:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.[routing]:
-    intc_2 // 0
+    intc_1 // 0
     bytec_0 // "data"
     app_global_get_ex
     assert // check data exists
@@ -51,14 +70,14 @@ main_after_if_else@2:
     -
     gtxns Amount
     itob
-    bytec_2 // "balance"
+    bytec_3 // "balance"
     swap
     app_global_put
     txna ApplicationArgs 0
-    bytec_3 // "externalData"
+    bytec_1 // "externalData"
     box_del
     pop
-    bytec_3 // "externalData"
+    bytec_1 // "externalData"
     swap
     box_put
     intc_0 // 1
@@ -67,19 +86,19 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.data[routing]() -> void:
 data:
-    intc_2 // 0
+    intc_1 // 0
     bytec_0 // "data"
     app_global_get_ex
     assert // check data exists
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
-    bytec 4 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
@@ -89,19 +108,19 @@ data:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.balance[routing]() -> void:
 balance:
-    intc_2 // 0
-    bytec_2 // "balance"
+    intc_1 // 0
+    bytec_3 // "balance"
     app_global_get_ex
     assert // check balance exists
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
-    bytec 4 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
@@ -111,9 +130,9 @@ balance:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.externalData[routing]() -> void:
 externalData:
-    bytec_3 // "externalData"
+    bytec_1 // "externalData"
     box_get
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     dup
@@ -122,7 +141,7 @@ externalData:
     extract 6 2
     swap
     concat
-    bytec 4 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log

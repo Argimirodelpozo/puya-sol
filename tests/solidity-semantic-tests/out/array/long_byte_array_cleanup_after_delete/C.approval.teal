@@ -3,10 +3,13 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 8
-    bytecblock "testArray" 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x 0x0000000000000000000000000000000000000000000000000000000000000000
+    intcblock 32 1 8 0
+    bytecblock "testArray" "__ctor_pending" 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
     intc_1 // 1
     return
 
@@ -23,10 +26,26 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x4fa0465e 0xa3e4ca32 0xc81142a1 0x2bbf0199 0x58d0419e 0xc67bf355 // method "getArrayDataAreaSlot()uint256", method "getCanarySlot()uint256", method "checkSlots()(uint256,uint256,uint256,uint256,uint256)", method "fillArray()void", method "deleteArray()void", method "canaryValue()uint256"
+    pushbytess 0xbacc49e3 0x4fa0465e 0xa3e4ca32 0xc81142a1 0x2bbf0199 0x58d0419e 0xc67bf355 // method "__postInit()void", method "getArrayDataAreaSlot()uint256", method "getCanarySlot()uint256", method "checkSlots()(uint256,uint256,uint256,uint256,uint256)", method "fillArray()void", method "deleteArray()void", method "canaryValue()uint256"
     txna ApplicationArgs 0
-    match getArrayDataAreaSlot getCanarySlot checkSlots fillArray deleteArray canaryValue
+    match __postInit getArrayDataAreaSlot getCanarySlot checkSlots fillArray deleteArray canaryValue
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_3 // 0
+    app_global_put
+    bytec_0 // "testArray"
+    intc_3 // 0
+    box_create
+    pop
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.getArrayDataAreaSlot[routing]() -> void:
@@ -40,7 +59,7 @@ getArrayDataAreaSlot:
     intc_0 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -61,7 +80,7 @@ getCanarySlot:
     intc_0 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -87,7 +106,7 @@ checkSlots:
     dig 3
     pushbytes 0x01
     b+
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dig 2
     swap
@@ -101,7 +120,7 @@ checkSlots:
     dig 4
     pushbytes 0x02
     b+
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dig 3
     swap
@@ -115,7 +134,7 @@ checkSlots:
     uncover 5
     pushbytes 0x03
     b+
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     uncover 4
     swap
@@ -172,7 +191,7 @@ checkSlots:
     cover 2
     b|
     concat
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -182,7 +201,7 @@ checkSlots:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.fillArray[routing]() -> void:
 fillArray:
-    pushint 0
+    intc_3 // 0
     itob
 
 fillArray_while_top@2:
@@ -192,7 +211,7 @@ fillArray_while_top@2:
     bz fillArray_after_while@4
     bytec_0 // "testArray"
     box_get
-    bytec_3 // 0x
+    pushbytes 0x
     cover 2
     select
     intc_2 // 8
@@ -214,6 +233,9 @@ fillArray_while_top@2:
     extract 7 1
     concat
     bytec_0 // "testArray"
+    box_del
+    pop
+    bytec_0 // "testArray"
     swap
     box_put
     b fillArray_while_top@2
@@ -229,7 +251,7 @@ deleteArray:
     box_del
     pop
     bytec_0 // "testArray"
-    bytec_3 // 0x
+    pushbytes 0x
     box_put
     intc_1 // 1
     return
@@ -283,5 +305,5 @@ __storage_read:
     retsub
 
 __storage_read_else_body@2:
-    bytec_3 // 0x
+    pushbytes 0x
     retsub

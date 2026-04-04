@@ -3,10 +3,13 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_v1.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 8
-    bytecblock "table"
+    intcblock 1 0 8
+    bytecblock "__ctor_pending" "table"
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
     intc_0 // 1
     return
 
@@ -23,10 +26,26 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xb4369c36 0xced1bdc6 // method "get(uint64)uint64", method "set(uint64,uint64)void"
+    pushbytess 0xbacc49e3 0xb4369c36 0xced1bdc6 // method "__postInit()void", method "get(uint64)uint64", method "set(uint64,uint64)void"
     txna ApplicationArgs 0
-    match get set
+    match __postInit get set
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_v1.sol.test.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_1 // "table"
+    intc_1 // 0
+    box_create
+    pop
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_v1.sol.test.get[routing]() -> void:
@@ -34,19 +53,19 @@ get:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     itob
     sha256
-    bytec_0 // "table"
+    bytec_1 // "table"
     swap
     concat
     box_get
     swap
     btoi
-    pushint 0
+    intc_1 // 0
     swap
     uncover 2
     select
@@ -64,14 +83,14 @@ set:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
@@ -80,7 +99,7 @@ set:
     swap
     itob
     sha256
-    bytec_0 // "table"
+    bytec_1 // "table"
     swap
     concat
     swap

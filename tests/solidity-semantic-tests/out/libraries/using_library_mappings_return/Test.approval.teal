@@ -3,10 +3,13 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_library_mappings_return.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 32 1
-    bytecblock 0x 0x6d6170af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc 0x6d6170cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
+    intcblock 32 1 0
+    bytecblock 0x 0x6d6170af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc 0x6d6170cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70 "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec_3 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
     intc_1 // 1
     return
 
@@ -18,18 +21,31 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x8fb5753f // method "f()(uint256,uint256,uint256,uint256,uint256,uint256)"
-    txna ApplicationArgs 0
-    match main_f_route@4
-    err
-
-main_f_route@4:
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
-    b f
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x8fb5753f // method "__postInit()void", method "f()(uint256,uint256,uint256,uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match __postInit f
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_library_mappings_return.sol.Test.__postInit[routing]() -> void:
+__postInit:
+    bytec_3 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_3 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    pushbytes "m"
+    intc_2 // 0
+    box_create
+    pop
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_library_mappings_return.sol.Test.f[routing]() -> void:

@@ -3,10 +3,13 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/memory_types_initialisation.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1
-    bytecblock 0x151f7c750000 0x646174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    intcblock 1 0
+    bytecblock "__ctor_pending" 0x151f7c750000 0x646174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
     intc_0 // 1
     return
 
@@ -23,10 +26,26 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x0e824f33 0xd2a687cf 0x5f4972d3 0x4cc359fa // method "stat()uint256[5]", method "dyn()uint256[]", method "nested()uint256[3][]", method "nestedStat()uint256[3][7]"
+    pushbytess 0xbacc49e3 0x0e824f33 0xd2a687cf 0x5f4972d3 0x4cc359fa // method "__postInit()void", method "stat()uint256[5]", method "dyn()uint256[]", method "nested()uint256[3][]", method "nestedStat()uint256[3][7]"
     txna ApplicationArgs 0
-    match stat dyn nested nestedStat
+    match __postInit stat dyn nested nestedStat
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/memory_types_initialisation.sol.Test.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    pushbytes "data"
+    intc_1 // 0
+    box_create
+    pop
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/memory_types_initialisation.sol.Test.stat[routing]() -> void:
@@ -44,7 +63,7 @@ stat:
 dyn:
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/memory_types_initialisation.sol.Test.stat
     pop
-    bytec_0 // 0x151f7c750000
+    bytec_1 // 0x151f7c750000
     log
     intc_0 // 1
     return
@@ -54,7 +73,7 @@ dyn:
 nested:
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/memory_types_initialisation.sol.Test.stat
     pop
-    bytec_0 // 0x151f7c750000
+    bytec_1 // 0x151f7c750000
     log
     intc_0 // 1
     return
@@ -74,10 +93,10 @@ nestedStat:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/memory_types_initialisation.sol.Test.stat:
     pushint 3
     itob
-    bytec_1 // 0x646174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    bytec_2 // 0x646174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
     box_del
     pop
-    bytec_1 // 0x646174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
+    bytec_2 // 0x646174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
     swap
     box_put
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000

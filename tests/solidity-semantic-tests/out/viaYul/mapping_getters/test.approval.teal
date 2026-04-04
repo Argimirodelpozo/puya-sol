@@ -3,10 +3,13 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/mapping_getters.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 1
-    bytecblock "m1" "m2" 0x 0x151f7c75
+    intcblock 32 1 0
+    bytecblock "__ctor_pending" "m1" "m2" 0x 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
     intc_1 // 1
     return
 
@@ -23,10 +26,30 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x76a2115c 0xfa6f9035 0x249cf2cf 0x47cd50d7 // method "set(uint256,uint256)void", method "set(uint256,uint256,uint256)void", method "m1(uint256)uint256", method "m2(uint256,uint256)uint256"
+    pushbytess 0xbacc49e3 0x76a2115c 0xfa6f9035 0x249cf2cf 0x47cd50d7 // method "__postInit()void", method "set(uint256,uint256)void", method "set(uint256,uint256,uint256)void", method "m1(uint256)uint256", method "m2(uint256,uint256)uint256"
     txna ApplicationArgs 0
-    match set(u256,u256) set(u256,u256,u256) m1 m2
+    match __postInit set(u256,u256) set(u256,u256,u256) m1 m2
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/mapping_getters.sol.test.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_1 // "m1"
+    intc_2 // 0
+    box_create
+    pop
+    bytec_2 // "m2"
+    intc_2 // 0
+    box_create
+    pop
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/mapping_getters.sol.test.set(u256,u256)[routing]() -> void:
@@ -54,7 +77,7 @@ set(u256,u256):
     intc_0 // 32
     extract3
     sha256
-    bytec_0 // "m1"
+    bytec_1 // "m1"
     swap
     concat
     dup
@@ -108,7 +131,7 @@ set(u256,u256,u256):
     extract3
     concat
     sha256
-    bytec_1 // "m2"
+    bytec_2 // "m2"
     swap
     concat
     dup
@@ -140,11 +163,11 @@ m1:
     intc_0 // 32
     extract3
     sha256
-    bytec_0 // "m1"
+    bytec_1 // "m1"
     swap
     concat
     box_get
-    bytec_2 // 0x
+    bytec_3 // 0x
     cover 2
     select
     dup
@@ -153,7 +176,7 @@ m1:
     <=
     assert // overflow
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -197,11 +220,11 @@ m2:
     extract3
     concat
     sha256
-    bytec_1 // "m2"
+    bytec_2 // "m2"
     swap
     concat
     box_get
-    bytec_2 // 0x
+    bytec_3 // 0x
     cover 2
     select
     dup
@@ -210,7 +233,7 @@ m2:
     <=
     assert // overflow
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log

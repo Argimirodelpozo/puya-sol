@@ -3,10 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_decode_v2_storage.sol.C.approval_program() -> uint64:
 main:
-    bytecblock "data"
+    intcblock 1 0
+    bytecblock "__ctor_pending" "data"
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -17,29 +21,42 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x4d8f49fa // method "f()(uint256,uint256[])"
-    txna ApplicationArgs 0
-    match main_f_route@4
-    err
-
-main_f_route@4:
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
-    b f
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x4d8f49fa // method "__postInit()void", method "f()(uint256,uint256[])"
+    txna ApplicationArgs 0
+    match __postInit f
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_decode_v2_storage.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_1 // "data"
+    intc_1 // 0
+    box_create
+    pop
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_decode_v2_storage.sol.C.f[routing]() -> void:
 f:
-    bytec_0 // "data"
+    bytec_1 // "data"
     box_del
     pop
-    bytec_0 // "data"
+    bytec_1 // "data"
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000800220003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     box_put
     pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000800220003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
-    pushint 1
+    intc_0 // 1
     return

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 4 2
-    bytecblock 0x151f7c75 "uninitializedString" 0x "emptyString" "nonEmptyString" "emptyBytes" 0x0004 "nonEmptyString2" 0x151f7c750000
+    bytecblock 0x151f7c75 "uninitializedString" 0x "emptyString" "nonEmptyString" "emptyBytes" "__ctor_pending" 0x0004 "nonEmptyString2" "uninitializedBytes" 0x151f7c750000
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "uninitializedString"
@@ -16,8 +16,11 @@ main:
     bytec 4 // "nonEmptyString"
     pushbytes "This is a non empty string"
     app_global_put
-    bytec 7 // "nonEmptyString2"
+    bytec 8 // "nonEmptyString2"
     pushbytes "Another string"
+    app_global_put
+    bytec 6 // "__ctor_pending"
+    intc_0 // 1
     app_global_put
     intc_0 // 1
     return
@@ -35,19 +38,39 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x36b8a41c 0xf3d2904e 0x348621cf 0x5d16f89f 0xbe732f06 0x96ebd7d3 0x99969863 0x05d4c0a3 0x39e2f415 0x7a37d769 0x97d26e57 0xe861f374 0xf4efc58b 0x74ee17b8 0x1c663589 0x6139ec78 // method "f()string", method "g()(string,string)", method "h()(string,string)", method "i()(string,string)", method "j(string)string", method "k()string", method "l(string)byte[]", method "m()string", method "n()void", method "o()void", method "p()void", method "q()byte[]", method "r()byte[]", method "s()byte[]", method "set(string)void", method "get()string"
+    pushbytess 0xbacc49e3 0x36b8a41c 0xf3d2904e 0x348621cf 0x5d16f89f 0xbe732f06 0x96ebd7d3 0x99969863 0x05d4c0a3 0x39e2f415 0x7a37d769 0x97d26e57 0xe861f374 0xf4efc58b 0x74ee17b8 0x1c663589 0x6139ec78 // method "__postInit()void", method "f()string", method "g()(string,string)", method "h()(string,string)", method "i()(string,string)", method "j(string)string", method "k()string", method "l(string)byte[]", method "m()string", method "n()void", method "o()void", method "p()void", method "q()byte[]", method "r()byte[]", method "s()byte[]", method "set(string)void", method "get()string"
     txna ApplicationArgs 0
-    match f g h i j k l m main_n_route@13 o main_p_route@15 q r s set get
+    match __postInit f g h i j k l m main_n_route@14 o main_p_route@16 q r s set get
     err
 
-main_p_route@15:
+main_p_route@16:
     pushbytes 0x9ddaae2900020000
     log
     intc_0 // 1
     return
 
-main_n_route@13:
+main_n_route@14:
     err // EmptyError
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec 6 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 6 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec 9 // "uninitializedBytes"
+    intc_1 // 0
+    box_create
+    pop
+    bytec 5 // "emptyBytes"
+    intc_1 // 0
+    box_create
+    pop
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.f[routing]() -> void:
@@ -99,7 +122,7 @@ g:
     swap
     itob
     extract 6 2
-    bytec 6 // 0x0004
+    bytec 7 // 0x0004
     swap
     concat
     uncover 2
@@ -143,7 +166,7 @@ h:
     swap
     itob
     extract 6 2
-    bytec 6 // 0x0004
+    bytec 7 // 0x0004
     swap
     concat
     uncover 2
@@ -187,7 +210,7 @@ i:
     swap
     itob
     extract 6 2
-    bytec 6 // 0x0004
+    bytec 7 // 0x0004
     swap
     concat
     uncover 2
@@ -224,10 +247,10 @@ j:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.k[routing]() -> void:
 k:
-    bytec 7 // "nonEmptyString2"
+    bytec 8 // "nonEmptyString2"
     bytec_2 // ""
     app_global_put
-    bytec 8 // 0x151f7c750000
+    bytec 10 // 0x151f7c750000
     log
     intc_0 // 1
     return
@@ -302,7 +325,7 @@ o:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.q[routing]() -> void:
 q:
-    pushbytes "uninitializedBytes"
+    bytec 9 // "uninitializedBytes"
     box_get
     bytec_2 // 0x
     cover 2
@@ -329,7 +352,7 @@ r:
     bytec 5 // "emptyBytes"
     bytec_2 // ""
     box_put
-    bytec 8 // 0x151f7c750000
+    bytec 10 // 0x151f7c750000
     log
     intc_0 // 1
     return

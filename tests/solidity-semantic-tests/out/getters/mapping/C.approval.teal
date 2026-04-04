@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
-    bytecblock "__ctor_pending" 0x78d6ba9329f8932c12192b37849f772104d20048f76434a3290512d9d814e4116f
+    intcblock 32 1 0
+    bytecblock "__ctor_pending" "x" 0x78d6ba9329f8932c12192b37849f772104d20048f76434a3290512d9d814e4116f
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
@@ -38,14 +38,18 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    pushint 0
+    intc_2 // 0
     app_global_put
+    bytec_1 // "x"
+    intc_2 // 0
+    box_create
+    pop
     pushint 3
     itob
-    bytec_1 // 0x78d6ba9329f8932c12192b37849f772104d20048f76434a3290512d9d814e4116f
+    bytec_2 // 0x78d6ba9329f8932c12192b37849f772104d20048f76434a3290512d9d814e4116f
     box_del
     pop
-    bytec_1 // 0x78d6ba9329f8932c12192b37849f772104d20048f76434a3290512d9d814e4116f
+    bytec_2 // 0x78d6ba9329f8932c12192b37849f772104d20048f76434a3290512d9d814e4116f
     swap
     box_put
     intc_1 // 1
@@ -88,7 +92,7 @@ x:
     extract3
     concat
     sha256
-    pushbytes "x"
+    bytec_1 // "x"
     swap
     concat
     box_get

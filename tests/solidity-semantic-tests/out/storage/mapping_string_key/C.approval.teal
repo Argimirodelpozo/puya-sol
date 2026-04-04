@@ -3,11 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_string_key.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
-    bytecblock 0x6d5f6e616d65546f5265636f7264992a93455c71fedd36ac9bbc439952c041cf61445958472af479269b8d873513 "m_nameToRecord" 0x 0x151f7c75
+    intcblock 1 32 0 2
+    bytecblock "__ctor_pending" "m_nameToRecord" 0x6d5f6e616d65546f5265636f7264992a93455c71fedd36ac9bbc439952c041cf61445958472af479269b8d873513 0x 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -23,10 +26,26 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x538298f7 0x9990960a 0xcc0c123f 0x25bad250 // method "set(string,uint256)void", method "get(string)uint256", method "setFixed(uint256)void", method "getFixed()uint256"
+    pushbytess 0xbacc49e3 0x538298f7 0x9990960a 0xcc0c123f 0x25bad250 // method "__postInit()void", method "set(string,uint256)void", method "get(string)uint256", method "setFixed(uint256)void", method "getFixed()uint256"
     txna ApplicationArgs 0
-    match set get setFixed getFixed
+    match __postInit set get setFixed getFixed
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_string_key.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_1 // "m_nameToRecord"
+    intc_2 // 0
+    box_create
+    pop
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_string_key.sol.C.set[routing]() -> void:
@@ -45,7 +64,7 @@ set:
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     swap
@@ -58,7 +77,7 @@ set:
     pop
     swap
     box_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -80,22 +99,22 @@ get:
     swap
     concat
     box_get
-    bytec_2 // 0x
+    bytec_3 // 0x
     cover 2
     select
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -104,37 +123,37 @@ setFixed:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_0 // 0x6d5f6e616d65546f5265636f7264992a93455c71fedd36ac9bbc439952c041cf61445958472af479269b8d873513
+    bytec_2 // 0x6d5f6e616d65546f5265636f7264992a93455c71fedd36ac9bbc439952c041cf61445958472af479269b8d873513
     box_del
     pop
-    bytec_0 // 0x6d5f6e616d65546f5265636f7264992a93455c71fedd36ac9bbc439952c041cf61445958472af479269b8d873513
+    bytec_2 // 0x6d5f6e616d65546f5265636f7264992a93455c71fedd36ac9bbc439952c041cf61445958472af479269b8d873513
     swap
     box_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_string_key.sol.C.getFixed[routing]() -> void:
 getFixed:
-    bytec_0 // 0x6d5f6e616d65546f5265636f7264992a93455c71fedd36ac9bbc439952c041cf61445958472af479269b8d873513
+    bytec_2 // 0x6d5f6e616d65546f5265636f7264992a93455c71fedd36ac9bbc439952c041cf61445958472af479269b8d873513
     box_get
-    bytec_2 // 0x
+    bytec_3 // 0x
     cover 2
     select
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return

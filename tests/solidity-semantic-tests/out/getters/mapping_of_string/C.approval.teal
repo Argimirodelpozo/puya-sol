@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32 2
-    bytecblock 0x000000000000000000000000000000000000000000000000 "__ctor_pending"
+    bytecblock 0x000000000000000000000000000000000000000000000000 "__ctor_pending" "x"
     pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
     store 5
     txn ApplicationID
@@ -42,6 +42,10 @@ __postInit:
     bytec_1 // "__ctor_pending"
     intc_1 // 0
     app_global_put
+    bytec_2 // "x"
+    intc_1 // 0
+    box_create
+    pop
     callsub _puya_lib.mem.new_slot
     dup
     bytec_0 // 0x000000000000000000000000000000000000000000000000
@@ -151,7 +155,7 @@ x:
     extract3
     concat
     sha256
-    pushbytes "x"
+    bytec_2 // "x"
     swap
     concat
     box_get

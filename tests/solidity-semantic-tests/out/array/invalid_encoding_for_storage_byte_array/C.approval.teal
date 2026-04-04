@@ -4,11 +4,14 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32 2
-    bytecblock "x" "y" 0x 0x151f7c75 "1234567890123456789012345678901234567" "abc"
+    bytecblock "x" "y" 0x 0x151f7c75 "__ctor_pending" "abc" "1234567890123456789012345678901234567"
     pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec 4 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
     intc_0 // 1
     return
 
@@ -25,10 +28,33 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x21a3e3ca 0xf7ec315e 0x63e41659 0x1f069c3d 0x4da6f8b5 0x5c30c8bb 0xf85c660f 0x6cfd3705 0x8f734345 0x805b3959 0xa76588a9 0xd2e5768f 0x4ddc30fd 0x4e2d5148 0x8f76f318 0x0bdce004 0xa5224bde // method "invalidateXShort()void", method "invalidateXLong()void", method "abiEncode()byte[]", method "abiEncodePacked()byte[]", method "copyToMemory()byte[]", method "indexAccess()byte[1]", method "assignTo()void", method "assignToLong()void", method "copyToStorage()void", method "copyFromStorageShort()void", method "copyFromStorageLong()void", method "arrayPop()void", method "arrayPush()void", method "arrayPushEmpty()void", method "del()void", method "x()byte[]", method "y()byte[]"
+    pushbytess 0xbacc49e3 0x21a3e3ca 0xf7ec315e 0x63e41659 0x1f069c3d 0x4da6f8b5 0x5c30c8bb 0xf85c660f 0x6cfd3705 0x8f734345 0x805b3959 0xa76588a9 0xd2e5768f 0x4ddc30fd 0x4e2d5148 0x8f76f318 0x0bdce004 0xa5224bde // method "__postInit()void", method "invalidateXShort()void", method "invalidateXLong()void", method "abiEncode()byte[]", method "abiEncodePacked()byte[]", method "copyToMemory()byte[]", method "indexAccess()byte[1]", method "assignTo()void", method "assignToLong()void", method "copyToStorage()void", method "copyFromStorageShort()void", method "copyFromStorageLong()void", method "arrayPop()void", method "arrayPush()void", method "arrayPushEmpty()void", method "del()void", method "x()byte[]", method "y()byte[]"
     txna ApplicationArgs 0
-    match invalidateXShort invalidateXLong abiEncode abiEncodePacked copyToMemory indexAccess assignTo assignToLong copyToStorage copyFromStorageShort copyFromStorageLong arrayPop arrayPush arrayPushEmpty del x y
+    match __postInit invalidateXShort invalidateXLong abiEncode abiEncodePacked copyToMemory indexAccess assignTo assignToLong copyToStorage copyFromStorageShort copyFromStorageLong arrayPop arrayPush arrayPushEmpty del x y
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec 4 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 4 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_0 // "x"
+    pushint 3
+    box_create
+    pop
+    bytec_0 // "x"
+    bytec 5 // "abc"
+    box_put
+    bytec_1 // "y"
+    intc_1 // 0
+    box_create
+    pop
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.invalidateXShort[routing]() -> void:
@@ -174,7 +200,7 @@ assignToLong:
     box_del
     pop
     bytec_0 // "x"
-    bytec 4 // "1234567890123456789012345678901234567"
+    bytec 6 // "1234567890123456789012345678901234567"
     box_put
     intc_0 // 1
     return
@@ -221,13 +247,13 @@ copyFromStorageLong:
     box_del
     pop
     bytec_1 // "y"
-    bytec 4 // "1234567890123456789012345678901234567"
+    bytec 6 // "1234567890123456789012345678901234567"
     box_put
     bytec_0 // "x"
     box_del
     pop
     bytec_0 // "x"
-    bytec 4 // "1234567890123456789012345678901234567"
+    bytec 6 // "1234567890123456789012345678901234567"
     box_put
     intc_0 // 1
     return
@@ -263,6 +289,9 @@ arrayPush:
     pushbytes 0x74
     concat
     bytec_0 // "x"
+    box_del
+    pop
+    bytec_0 // "x"
     swap
     box_put
     intc_0 // 1
@@ -278,6 +307,9 @@ arrayPushEmpty:
     select
     pushbytes 0x00
     concat
+    bytec_0 // "x"
+    box_del
+    pop
     bytec_0 // "x"
     swap
     box_put

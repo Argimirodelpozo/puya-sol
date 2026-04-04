@@ -4,10 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/erc20.sol.ERC20.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock 0x "_allowances" 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c7580 "_totalSupply" "_balances" "__ctor_pending" 0x151f7c75 0x28918861
+    bytecblock 0x "_allowances" 0x010000000000000000000000000000000000000000000000000000000000000000 "_balances" 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c7580 "_totalSupply" "__ctor_pending" 0x151f7c75 0x28918861
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 5 // "_totalSupply"
+    bytec 6 // "_totalSupply"
     bytec_0 // 0x
     app_global_put
     bytec 7 // "__ctor_pending"
@@ -43,25 +43,33 @@ __postInit:
     bytec 7 // "__ctor_pending"
     intc_2 // 0
     app_global_put
+    bytec_3 // "_balances"
+    intc_2 // 0
+    box_create
+    pop
+    bytec_1 // "_allowances"
+    intc_2 // 0
+    box_create
+    pop
     txn Sender
     pushint 20
     itob
     dig 1
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
     assert // ERC20: mint to the zero address
     intc_2 // 0
-    bytec 5 // "_totalSupply"
+    bytec 6 // "_totalSupply"
     app_global_get_ex
     assert // check _totalSupply exists
     dig 1
     b+
-    bytec 5 // "_totalSupply"
+    bytec 6 // "_totalSupply"
     swap
     app_global_put
     dig 1
     sha256
-    bytec 6 // "_balances"
+    bytec_3 // "_balances"
     swap
     concat
     dup
@@ -75,7 +83,7 @@ __postInit:
     box_del
     pop
     box_put
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
     swap
     concat
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000014
@@ -91,7 +99,7 @@ __postInit:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/erc20.sol.ERC20.totalSupply[routing]() -> void:
 totalSupply:
     intc_2 // 0
-    bytec 5 // "_totalSupply"
+    bytec 6 // "_totalSupply"
     app_global_get_ex
     assert // check _totalSupply exists
     dup
@@ -119,7 +127,7 @@ balanceOf:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     sha256
-    bytec 6 // "_balances"
+    bytec_3 // "_balances"
     swap
     concat
     box_get
@@ -198,7 +206,7 @@ transfer:
     txn Sender
     cover 2
     callsub _transfer
-    bytec 4 // 0x151f7c7580
+    bytec 5 // 0x151f7c7580
     log
     intc_1 // 1
     return
@@ -221,7 +229,7 @@ approve:
     txn Sender
     cover 2
     callsub _approve
-    bytec 4 // 0x151f7c7580
+    bytec 5 // 0x151f7c7580
     log
     intc_1 // 1
     return
@@ -284,7 +292,7 @@ transferFrom:
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     callsub _approve
-    bytec 4 // 0x151f7c7580
+    bytec 5 // 0x151f7c7580
     log
     intc_1 // 1
     return
@@ -321,7 +329,7 @@ increaseAllowance:
     swap
     cover 2
     callsub _approve
-    bytec 4 // 0x151f7c7580
+    bytec 5 // 0x151f7c7580
     log
     intc_1 // 1
     return
@@ -376,7 +384,7 @@ decreaseAllowance:
     swap
     cover 2
     callsub _approve
-    bytec 4 // 0x151f7c7580
+    bytec 5 // 0x151f7c7580
     log
     intc_1 // 1
     return
@@ -386,12 +394,12 @@ decreaseAllowance:
 _transfer:
     proto 3 0
     frame_dig -2
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
     assert // ERC20: transfer to the zero address
     frame_dig -3
     sha256
-    bytec 6 // "_balances"
+    bytec_3 // "_balances"
     swap
     concat
     dup
@@ -415,7 +423,7 @@ _transfer:
     box_put
     frame_dig -2
     sha256
-    bytec 6 // "_balances"
+    bytec_3 // "_balances"
     swap
     concat
     dup
@@ -454,11 +462,11 @@ _transfer:
 _approve:
     proto 3 0
     frame_dig -3
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
     assert // ERC20: approve from the zero address
     frame_dig -2
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
     assert // ERC20: approve to the zero address
     frame_dig -3

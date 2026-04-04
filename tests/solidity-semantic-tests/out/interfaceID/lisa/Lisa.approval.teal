@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/lisa.sol.Lisa.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "__ctor_pending"
+    bytecblock "__ctor_pending" "supportedInterfaces"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
@@ -52,6 +52,10 @@ __postInit:
     bytec_0 // "__ctor_pending"
     intc_1 // 0
     app_global_put
+    bytec_1 // "supportedInterfaces"
+    intc_1 // 0
+    box_create
+    pop
     intc_0 // 1
     itob
     pushbytes 0x737570706f72746564496e746572666163657316b061ba4fe22ca3625396a2540313c9ec0d04ae32005fa73413bc91dc62859c
@@ -73,7 +77,7 @@ supportsInterface:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
     sha256
-    pushbytes "supportedInterfaces"
+    bytec_1 // "supportedInterfaces"
     swap
     concat
     box_get

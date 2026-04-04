@@ -3,10 +3,13 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_mapping.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
-    bytecblock 0x 0x6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf 0x6d6170aa796dee6b6abca795103a49a9715b499482dcf870f9237b2a7b03a3c93fd310
+    intcblock 32 1 0
+    bytecblock "__ctor_pending" 0x "map" 0x6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf 0x6d6170aa796dee6b6abca795103a49a9715b499482dcf870f9237b2a7b03a3c93fd310
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
     intc_1 // 1
     return
 
@@ -18,18 +21,15 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x61df8e5d // method "mapValue(uint256)uint256"
-    txna ApplicationArgs 0
-    match main_mapValue_route@4
-    err
-
-main_mapValue_route@4:
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
-    b mapValue
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x61df8e5d // method "__postInit()void", method "mapValue(uint256)uint256"
+    txna ApplicationArgs 0
+    match __postInit mapValue
+    err
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_mapping.sol.L.at(a: bytes, i: bytes) -> bytes:
@@ -50,10 +50,26 @@ L.at:
     swap
     concat
     box_get
-    bytec_0 // 0x
+    bytec_1 // 0x
     cover 2
     select
     retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_mapping.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_2 // "map"
+    intc_2 // 0
+    box_create
+    pop
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_mapping.sol.C.mapValue[routing]() -> void:
@@ -66,23 +82,23 @@ mapValue:
     assert // invalid number of bytes for arc4.uint256
     pushint 36
     itob
-    bytec_1 // 0x6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
+    bytec_3 // 0x6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
     box_del
     pop
-    bytec_1 // 0x6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
+    bytec_3 // 0x6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
     swap
     box_put
     pushint 102
     itob
-    bytec_2 // 0x6d6170aa796dee6b6abca795103a49a9715b499482dcf870f9237b2a7b03a3c93fd310
+    bytec 4 // 0x6d6170aa796dee6b6abca795103a49a9715b499482dcf870f9237b2a7b03a3c93fd310
     box_del
     pop
-    bytec_2 // 0x6d6170aa796dee6b6abca795103a49a9715b499482dcf870f9237b2a7b03a3c93fd310
+    bytec 4 // 0x6d6170aa796dee6b6abca795103a49a9715b499482dcf870f9237b2a7b03a3c93fd310
     swap
     box_put
-    pushbytes "map"
+    bytec_2 // "map"
     box_get
-    bytec_0 // 0x
+    bytec_1 // 0x
     cover 2
     select
     swap

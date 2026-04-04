@@ -4,18 +4,18 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/string_and_bytes.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0x151f7c75 "a" 0x "b" "__ctor_pending" "c"
+    bytecblock "c" 0x151f7c75 "a" 0x "b" "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "a"
-    bytec_2 // 0x
+    bytec_2 // "a"
+    bytec_3 // 0x
     app_global_put
-    bytec_3 // "b"
-    bytec_2 // 0x
+    bytec 4 // "b"
+    bytec_3 // 0x
     app_global_put
     pushbytess "d" "abcd"
     app_global_put
-    bytec 4 // "__ctor_pending"
+    bytec 5 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -42,22 +42,26 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/string_and_bytes.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec 4 // "__ctor_pending"
+    bytec 5 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec 4 // "__ctor_pending"
+    bytec 5 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    bytec_1 // "a"
+    bytec_0 // "c"
+    intc_1 // 0
+    box_create
+    pop
+    bytec_2 // "a"
     pushbytes "hello world"
     app_global_put
-    bytec_3 // "b"
+    bytec 4 // "b"
     pushbytes 0x41424344
     app_global_put
-    bytec 5 // "c"
+    bytec_0 // "c"
     box_del
     pop
-    bytec 5 // "c"
+    bytec_0 // "c"
     pushbytes 0xff077fff
     box_put
     intc_0 // 1
@@ -67,7 +71,7 @@ __postInit:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/string_and_bytes.sol.C.a[routing]() -> void:
 a:
     intc_1 // 0
-    bytec_1 // "a"
+    bytec_2 // "a"
     app_global_get_ex
     assert // check a exists
     dup
@@ -76,7 +80,7 @@ a:
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -87,7 +91,7 @@ a:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/string_and_bytes.sol.C.b[routing]() -> void:
 b:
     intc_1 // 0
-    bytec_3 // "b"
+    bytec 4 // "b"
     app_global_get_ex
     assert // check b exists
     dup
@@ -96,7 +100,7 @@ b:
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -106,9 +110,9 @@ b:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/string_and_bytes.sol.C.c[routing]() -> void:
 c:
-    bytec 5 // "c"
+    bytec_0 // "c"
     box_get
-    bytec_2 // 0x
+    bytec_3 // 0x
     cover 2
     select
     dup
@@ -117,7 +121,7 @@ c:
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -137,7 +141,7 @@ d:
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log

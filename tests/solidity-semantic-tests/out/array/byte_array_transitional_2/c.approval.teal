@@ -4,11 +4,14 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol.c.approval_program() -> uint64:
 main:
     intcblock 0 1 2 32
-    bytecblock "data" 0x
+    bytecblock "data" 0x "__ctor_pending" 0x068101
     pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec_2 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
     intc_1 // 1
     return
 
@@ -20,24 +23,61 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xc95a9d21 // method "test()uint256"
-    txna ApplicationArgs 0
-    match main_test_route@4
-    err
-
-main_test_route@4:
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
-    b test
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xc95a9d21 // method "__postInit()void", method "test()uint256"
+    txna ApplicationArgs 0
+    match __postInit test
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol.c.__postInit[routing]() -> void:
+__postInit:
+    bytec_2 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_2 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "data"
+    intc_0 // 0
+    box_create
+    pop
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol.c.test[routing]() -> void:
 test:
     intc_0 // 0
-    dupn 2
+    dup
+    bytec_1 // ""
+
+test_while_top@17:
+    pushint 170010
+    global OpcodeBudget
+    >
+    bz test_after_while@22
+    itxn_begin
+    pushint 6 // appl
+    itxn_field TypeEnum
+    pushint 5 // DeleteApplication
+    itxn_field OnCompletion
+    bytec_3 // 0x068101
+    itxn_field ApprovalProgram
+    bytec_3 // 0x068101
+    itxn_field ClearStateProgram
+    intc_0 // 0
+    itxn_field Fee
+    itxn_submit
+    b test_while_top@17
+
+test_after_while@22:
+    intc_0 // 0
+    bury 1
 
 test_while_top@2:
     dup
@@ -55,6 +95,9 @@ test_while_top@2:
     itob
     extract 7 1
     concat
+    bytec_0 // "data"
+    box_del
+    pop
     bytec_0 // "data"
     swap
     box_put

@@ -4,10 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/deployedCodeExclusion/library_function.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "__ctor_pending" "data"
+    bytecblock "data" "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -40,17 +40,21 @@ L.longdata:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/deployedCodeExclusion/library_function.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 0
     app_global_put
+    bytec_0 // "data"
+    intc_1 // 0
+    box_create
+    pop
     callsub L.longdata
-    bytec_1 // "data"
+    bytec_0 // "data"
     box_del
     pop
-    bytec_1 // "data"
+    bytec_0 // "data"
     swap
     box_put
     intc_0 // 1
@@ -61,7 +65,7 @@ __postInit:
 test:
     load 0
     store 0
-    bytec_1 // "data"
+    bytec_0 // "data"
     box_len
     pop
     itob

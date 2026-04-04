@@ -4,9 +4,12 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol.Test.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock 0x 0x151f7c75
+    bytecblock 0x 0x151f7c75 "__ctor_pending" "a"
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec_2 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
     intc_1 // 1
     return
 
@@ -23,10 +26,30 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x745a7a03 0x3f5fb4b8 0x98589de4 0x2d15e970 // method "set(bool,uint256,uint256)uint256", method "get(bool,uint256)uint256", method "get_a(uint256)uint256", method "get_b(uint256)uint256"
+    pushbytess 0xbacc49e3 0x745a7a03 0x3f5fb4b8 0x98589de4 0x2d15e970 // method "__postInit()void", method "set(bool,uint256,uint256)uint256", method "get(bool,uint256)uint256", method "get_a(uint256)uint256", method "get_b(uint256)uint256"
     txna ApplicationArgs 0
-    match set get get_a get_b
+    match __postInit set get get_a get_b
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol.Test.__postInit[routing]() -> void:
+__postInit:
+    bytec_2 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_2 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_3 // "a"
+    intc_2 // 0
+    box_create
+    pop
+    pushbytes "b"
+    intc_2 // 0
+    box_create
+    pop
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_returns_in_library.sol.Test.set[routing]() -> void:
@@ -168,7 +191,7 @@ get_a:
     intc_0 // 32
     extract3
     sha256
-    pushbytes "a"
+    bytec_3 // "a"
     swap
     concat
     box_get

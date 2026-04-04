@@ -3,18 +3,13 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_abstract_constructor_param.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
-    bytecblock 0x6d96de8fc8c256fa1e1556d41af431cace7dca68707c78dd88c3acab8b17164c47
+    intcblock 32 1 0
+    bytecblock "__ctor_pending" "m" 0x6d96de8fc8c256fa1e1556d41af431cace7dca68707c78dd88c3acab8b17164c47
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 20
-    itob
-    bytec_0 // 0x6d96de8fc8c256fa1e1556d41af431cace7dca68707c78dd88c3acab8b17164c47
-    box_del
-    pop
-    bytec_0 // 0x6d96de8fc8c256fa1e1556d41af431cace7dca68707c78dd88c3acab8b17164c47
-    swap
-    box_put
+    bytec_0 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
     intc_1 // 1
     return
 
@@ -26,18 +21,39 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x8338d04b // method "m(uint256)uint256"
-    txna ApplicationArgs 0
-    match main_m_route@4
-    err
-
-main_m_route@4:
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
-    b m
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x8338d04b // method "__postInit()void", method "m(uint256)uint256"
+    txna ApplicationArgs 0
+    match __postInit m
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_abstract_constructor_param.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_1 // "m"
+    intc_2 // 0
+    box_create
+    pop
+    pushint 20
+    itob
+    bytec_2 // 0x6d96de8fc8c256fa1e1556d41af431cace7dca68707c78dd88c3acab8b17164c47
+    box_del
+    pop
+    bytec_2 // 0x6d96de8fc8c256fa1e1556d41af431cace7dca68707c78dd88c3acab8b17164c47
+    swap
+    box_put
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_abstract_constructor_param.sol.C.m[routing]() -> void:
@@ -60,7 +76,7 @@ m:
     intc_0 // 32
     extract3
     sha256
-    pushbytes "m"
+    bytec_1 // "m"
     swap
     concat
     box_get

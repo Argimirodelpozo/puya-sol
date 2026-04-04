@@ -3,10 +3,13 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_argument_to_storage.sol.A.approval_program() -> uint64:
 main:
-    intcblock 1
-    bytecblock "x"
+    intcblock 1 0
+    bytecblock "x" "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
     intc_0 // 1
     return
 
@@ -23,14 +26,30 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x9509a93a 0x856fee35 0x0bdce004 // method "__fallback(byte[])byte[]", method "f()(bool,byte[])", method "x()byte[]"
+    pushbytess 0xbacc49e3 0x9509a93a 0x856fee35 0x0bdce004 // method "__postInit()void", method "__fallback(byte[])byte[]", method "f()(bool,byte[])", method "x()byte[]"
     txna ApplicationArgs 0
-    match /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_argument_to_storage.sol.A.[routing] main_f_route@6 x
+    match __postInit /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_argument_to_storage.sol.A.[routing] main_f_route@7 x
     err
 
-main_f_route@6:
+main_f_route@7:
     pushbytes 0x151f7c758000030000
     log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_argument_to_storage.sol.A.__postInit[routing]() -> void:
+__postInit:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_0 // "x"
+    intc_1 // 0
+    box_create
+    pop
     intc_0 // 1
     return
 
@@ -39,7 +58,7 @@ main_f_route@6:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_argument_to_storage.sol.A.[routing]:
     txna ApplicationArgs 1
     dup
-    pushint 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +

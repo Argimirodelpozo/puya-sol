@@ -3,10 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/keccak256_with_bytes.sol.c.approval_program() -> uint64:
 main:
-    bytecblock "data"
+    intcblock 1 0
+    bytecblock "data" "__ctor_pending" 0x6f
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    bytec_1 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -17,18 +21,31 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xe159b9db // method "foo()bool"
-    txna ApplicationArgs 0
-    match main_foo_route@4
-    err
-
-main_foo_route@4:
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
-    b foo
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xe159b9db // method "__postInit()void", method "foo()bool"
+    txna ApplicationArgs 0
+    match __postInit foo
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/keccak256_with_bytes.sol.c.__postInit[routing]() -> void:
+__postInit:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_0 // "data"
+    intc_1 // 0
+    box_create
+    pop
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/keccak256_with_bytes.sol.c.foo[routing]() -> void:
@@ -38,8 +55,27 @@ foo:
     pushbytes 0x
     cover 2
     select
-    pushbytes 0x666f6f
+    pushbytes 0x66
     concat
+    bytec_0 // "data"
+    box_del
+    pop
+    bytec_0 // "data"
+    dig 1
+    box_put
+    bytec_2 // 0x6f
+    concat
+    bytec_0 // "data"
+    box_del
+    pop
+    bytec_0 // "data"
+    dig 1
+    box_put
+    bytec_2 // 0x6f
+    concat
+    bytec_0 // "data"
+    box_del
+    pop
     bytec_0 // "data"
     dig 1
     box_put
@@ -47,12 +83,12 @@ foo:
     pushbytes 0x41b1a0649752af1b28b3dc29a1556eee781e4a4c3a1f7f53f90fa834de098c4d
     ==
     pushbytes 0x00
-    pushint 0
+    intc_1 // 0
     uncover 2
     setbit
     pushbytes 0x151f7c75
     swap
     concat
     log
-    pushint 1
+    intc_0 // 1
     return

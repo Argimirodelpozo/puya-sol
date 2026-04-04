@@ -3,11 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/iterated_keccak256_with_bytes.sol.c.approval_program() -> uint64:
 main:
-    intcblock 32 1
-    bytecblock "data"
+    intcblock 1 32 0
+    bytecblock "data" "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    bytec_1 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -18,18 +21,31 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xb08efba2 // method "foo()byte[32]"
-    txna ApplicationArgs 0
-    match main_foo_route@4
-    err
-
-main_foo_route@4:
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
-    b foo
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xb08efba2 // method "__postInit()void", method "foo()byte[32]"
+    txna ApplicationArgs 0
+    match __postInit foo
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/iterated_keccak256_with_bytes.sol.c.__postInit[routing]() -> void:
+__postInit:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_0 // "data"
+    intc_2 // 0
+    box_create
+    pop
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/iterated_keccak256_with_bytes.sol.c.foo[routing]() -> void:
@@ -39,21 +55,40 @@ foo:
     pushbytes 0x
     cover 2
     select
-    pushbytes 0x78797a
+    pushbytes 0x78
     concat
+    bytec_0 // "data"
+    box_del
+    pop
     bytec_0 // "data"
     dig 1
     box_put
-    intc_0 // 32
+    pushbytes 0x79
+    concat
+    bytec_0 // "data"
+    box_del
+    pop
+    bytec_0 // "data"
+    dig 1
+    box_put
+    pushbytes 0x7a
+    concat
+    bytec_0 // "data"
+    box_del
+    pop
+    bytec_0 // "data"
+    dig 1
+    box_put
+    intc_1 // 32
     bzero
     swap
     keccak256
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     pushbytes "b"
     swap
@@ -65,5 +100,5 @@ foo:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
