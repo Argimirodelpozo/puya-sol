@@ -3,16 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_containing_bytes_copy_and_delete.sol.c.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 8
-    bytecblock "data1" 0x0000000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000000000 0x0042 0x151f7c7580 "data2"
+    intcblock 32 1 8
+    bytecblock "data1" 0x0000000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000000000 0x0042 0x151f7c7580
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "data1"
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000000000
-    app_global_put
-    bytec 4 // "data2"
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000000000
-    app_global_put
     intc_1 // 1
     return
 
@@ -46,7 +40,7 @@ set:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    intc_2 // 0
+    pushint 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -70,10 +64,11 @@ set:
     uncover 4
     dig 1
     b|
-    intc_2 // 0
     bytec_0 // "data1"
-    app_global_get_ex
-    assert // check data1 exists
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     dup
     extract 34 32
     dig 1
@@ -91,6 +86,12 @@ set:
     concat
     swap
     concat
+    bytec_0 // "data1"
+    box_del
+    pop
+    bytec_0 // "data1"
+    dig 1
+    box_put
     dup
     extract 0 32
     uncover 3
@@ -115,6 +116,12 @@ set:
     concat
     swap
     concat
+    bytec_0 // "data1"
+    box_del
+    pop
+    bytec_0 // "data1"
+    dig 1
+    box_put
     dup
     extract 0 32
     swap
@@ -127,8 +134,11 @@ set:
     swap
     concat
     bytec_0 // "data1"
+    box_del
+    pop
+    bytec_0 // "data1"
     swap
-    app_global_put
+    box_put
     bytec_3 // 0x151f7c7580
     log
     intc_1 // 1
@@ -137,13 +147,17 @@ set:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_containing_bytes_copy_and_delete.sol.c.copy[routing]() -> void:
 copy:
-    intc_2 // 0
-    bytec 4 // "data2"
-    app_global_get_ex
-    assert // check data2 exists
+    pushbytes "data2"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_0 // "data1"
+    box_del
+    pop
     bytec_0 // "data1"
     swap
-    app_global_put
+    box_put
     bytec_3 // 0x151f7c7580
     log
     intc_1 // 1
@@ -152,14 +166,12 @@ copy:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_containing_bytes_copy_and_delete.sol.c.del[routing]() -> void:
 del:
-    intc_2 // 0
     bytec_0 // "data1"
-    app_global_get_ex
-    bury 1
-    assert // check data1 exists
+    box_del
+    pop
     bytec_0 // "data1"
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000000000
-    app_global_put
+    box_put
     bytec_3 // 0x151f7c7580
     log
     intc_1 // 1
@@ -174,10 +186,11 @@ test:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_2 // 0
     bytec_0 // "data1"
-    app_global_get_ex
-    assert // check data1 exists
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000004200000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     dup
     intc_0 // 32
     extract_uint16
@@ -185,13 +198,13 @@ test:
     len
     substring3
     extract 2 0
-    intc_3 // 8
+    intc_2 // 8
     bzero
     uncover 2
     concat
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     -
     extract_uint64
     intc_1 // 1

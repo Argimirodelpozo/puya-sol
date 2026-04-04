@@ -3,13 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_argument_to_storage.sol.A.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1
     bytecblock "x"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "x"
-    pushbytes 0x
-    app_global_put
     intc_0 // 1
     return
 
@@ -42,7 +39,7 @@ main_f_route@6:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_argument_to_storage.sol.A.[routing]:
     txna ApplicationArgs 1
     dup
-    intc_1 // 0
+    pushint 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -52,8 +49,11 @@ main_f_route@6:
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
     bytec_0 // "x"
+    box_del
+    pop
+    bytec_0 // "x"
     swap
-    app_global_put
+    box_put
     pushbytes 0x151f7c750000
     log
     intc_0 // 1
@@ -62,10 +62,11 @@ main_f_route@6:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_argument_to_storage.sol.A.x[routing]() -> void:
 x:
-    intc_1 // 0
     bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
+    box_get
+    pushbytes 0x
+    cover 2
+    select
     dup
     len
     itob

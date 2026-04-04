@@ -7,9 +7,6 @@ main:
     bytecblock "data"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "data"
-    pushbytes 0x
-    app_global_put
     intc_1 // 1
     return
 
@@ -37,10 +34,16 @@ main_foo_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/iterated_keccak256_with_bytes.sol.c.foo[routing]() -> void:
 foo:
-    pushint 0
     bytec_0 // "data"
-    app_global_get_ex
-    assert // check data exists
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    pushbytes 0x78797a
+    concat
+    bytec_0 // "data"
+    dig 1
+    box_put
     intc_0 // 32
     bzero
     swap

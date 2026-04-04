@@ -4,12 +4,9 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/bytes_to_fixed_bytes_cleanup.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 2 8
-    bytecblock 0x151f7c75 "s"
+    bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "s"
-    pushbytes "abcdefghabcdefghabcdefghabcdefg"
-    app_global_put
     intc_0 // 1
     return
 
@@ -89,10 +86,11 @@ fromCalldata:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/bytes_to_fixed_bytes_cleanup.sol.C.fromStorage[routing]() -> void:
 fromStorage:
-    intc_1 // 0
-    bytec_1 // "s"
-    app_global_get_ex
-    assert // check s exists
+    pushbytes "s"
+    box_get
+    pushbytes 0x
+    cover 2
+    select
     bytec_0 // 0x151f7c75
     swap
     concat

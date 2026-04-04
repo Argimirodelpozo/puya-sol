@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
+    intcblock 1 32 0
     bytecblock "data" 0x "balance" "externalData" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -11,9 +11,6 @@ main:
     bytec_1 // 0x
     app_global_put
     bytec_2 // "balance"
-    bytec_1 // 0x
-    app_global_put
-    bytec_3 // "externalData"
     bytec_1 // 0x
     app_global_put
     intc_0 // 1
@@ -40,7 +37,7 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.[routing]() -> void:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.[routing]:
-    intc_1 // 0
+    intc_2 // 0
     bytec_0 // "data"
     app_global_get_ex
     assert // check data exists
@@ -57,25 +54,29 @@ main_after_if_else@2:
     bytec_2 // "balance"
     swap
     app_global_put
-    bytec_3 // "externalData"
     txna ApplicationArgs 0
-    app_global_put
+    bytec_3 // "externalData"
+    box_del
+    pop
+    bytec_3 // "externalData"
+    swap
+    box_put
     intc_0 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.data[routing]() -> void:
 data:
-    intc_1 // 0
+    intc_2 // 0
     bytec_0 // "data"
     app_global_get_ex
     assert // check data exists
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     bytec 4 // 0x151f7c75
@@ -88,16 +89,16 @@ data:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.balance[routing]() -> void:
 balance:
-    intc_1 // 0
+    intc_2 // 0
     bytec_2 // "balance"
     app_global_get_ex
     assert // check balance exists
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     bytec 4 // 0x151f7c75
@@ -110,10 +111,11 @@ balance:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/fallback.sol.A.externalData[routing]() -> void:
 externalData:
-    intc_1 // 0
     bytec_3 // "externalData"
-    app_global_get_ex
-    assert // check externalData exists
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     itob

@@ -3,13 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 8 0
-    bytecblock "testArray" 0x 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000000
+    intcblock 32 1 8
+    bytecblock "testArray" 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x 0x0000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "testArray"
-    bytec_1 // 0x
-    app_global_put
     intc_1 // 1
     return
 
@@ -43,7 +40,7 @@ getArrayDataAreaSlot:
     intc_0 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -64,7 +61,7 @@ getCanarySlot:
     intc_0 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -90,7 +87,7 @@ checkSlots:
     dig 3
     pushbytes 0x01
     b+
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dig 2
     swap
@@ -104,7 +101,7 @@ checkSlots:
     dig 4
     pushbytes 0x02
     b+
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dig 3
     swap
@@ -118,7 +115,7 @@ checkSlots:
     uncover 5
     pushbytes 0x03
     b+
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     uncover 4
     swap
@@ -131,11 +128,9 @@ checkSlots:
     callsub __storage_read
     uncover 4
     store 0
-    intc_3 // 0
     bytec_0 // "testArray"
-    app_global_get_ex
-    assert // check testArray exists
-    len
+    box_len
+    pop
     itob
     dig 4
     len
@@ -177,7 +172,7 @@ checkSlots:
     cover 2
     b|
     concat
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -187,7 +182,7 @@ checkSlots:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.fillArray[routing]() -> void:
 fillArray:
-    intc_3 // 0
+    pushint 0
     itob
 
 fillArray_while_top@2:
@@ -195,15 +190,32 @@ fillArray_while_top@2:
     pushbytes 0x60
     b<
     bz fillArray_after_while@4
-    intc_3 // 0
     bytec_0 // "testArray"
-    app_global_get_ex
-    bury 1
-    assert // check testArray exists
-    dup
+    box_get
+    bytec_3 // 0x
+    cover 2
+    select
+    intc_2 // 8
+    bzero
+    dig 2
     pushbytes 0x01
     b+
-    bury 1
+    dup
+    bury 4
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    pushint 255
+    &
+    itob
+    extract 7 1
+    concat
+    bytec_0 // "testArray"
+    swap
+    box_put
     b fillArray_while_top@2
 
 fillArray_after_while@4:
@@ -213,14 +225,12 @@ fillArray_after_while@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.deleteArray[routing]() -> void:
 deleteArray:
-    intc_3 // 0
     bytec_0 // "testArray"
-    app_global_get_ex
-    bury 1
-    assert // check testArray exists
+    box_del
+    pop
     bytec_0 // "testArray"
-    bytec_1 // 0x
-    app_global_put
+    bytec_3 // 0x
+    box_put
     intc_1 // 1
     return
 
@@ -273,5 +283,5 @@ __storage_read:
     retsub
 
 __storage_read_else_body@2:
-    bytec_1 // 0x
+    bytec_3 // 0x
     retsub

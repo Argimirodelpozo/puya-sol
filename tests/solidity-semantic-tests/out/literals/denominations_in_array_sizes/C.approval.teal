@@ -1,0 +1,183 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/denominations_in_array_sizes.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 32 1
+    bytecblock "__ctor_pending" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "a" "d" 0x0000000000000000000000000000000000000000000000000000000000000002
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
+    store 5
+    txn ApplicationID
+    bnz main_after_if_else@2
+    callsub _puya_lib.mem.new_slot
+    dup
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    stores
+    bytec_2 // "a"
+    swap
+    app_global_put
+    callsub _puya_lib.mem.new_slot
+    dup
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    stores
+    bytec_3 // "d"
+    swap
+    app_global_put
+    bytec_0 // "__ctor_pending"
+    intc_2 // 1
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xffda74e6 // method "__postInit()void", method "lengths()(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match __postInit lengths
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/denominations_in_array_sizes.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    pushbytes "b"
+    intc_0 // 0
+    box_create
+    pop
+    pushbytes "c"
+    intc_0 // 0
+    box_create
+    pop
+    pushbytes "e"
+    intc_0 // 0
+    box_create
+    pop
+    pushbytes "f"
+    intc_0 // 0
+    box_create
+    pop
+    pushbytes "g"
+    intc_0 // 0
+    box_create
+    pop
+    pushbytes "h"
+    intc_0 // 0
+    box_create
+    pop
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/denominations_in_array_sizes.sol.C.lengths[routing]() -> void:
+lengths:
+    intc_0 // 0
+    bytec_2 // "a"
+    app_global_get_ex
+    bury 1
+    assert // check a exists
+    pushbytes "b"
+    box_len
+    pop
+    intc_1 // 32
+    /
+    itob
+    pushbytes "c"
+    box_len
+    pop
+    intc_1 // 32
+    /
+    itob
+    intc_0 // 0
+    bytec_3 // "d"
+    app_global_get_ex
+    bury 1
+    assert // check d exists
+    pushbytes "e"
+    box_len
+    pop
+    intc_1 // 32
+    /
+    itob
+    pushbytes "f"
+    box_len
+    pop
+    intc_1 // 32
+    /
+    itob
+    pushbytes "g"
+    box_len
+    pop
+    intc_1 // 32
+    /
+    itob
+    pushbytes "h"
+    box_len
+    pop
+    intc_1 // 32
+    /
+    itob
+    intc_1 // 32
+    bzero
+    uncover 6
+    dig 1
+    b|
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    swap
+    concat
+    uncover 6
+    dig 2
+    b|
+    concat
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    concat
+    uncover 5
+    dig 2
+    b|
+    concat
+    uncover 4
+    dig 2
+    b|
+    concat
+    uncover 3
+    dig 2
+    b|
+    concat
+    cover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// _puya_lib.mem.new_slot() -> uint64:
+_puya_lib.mem.new_slot:
+    load 5
+    bitlen
+    load 5
+    pushint 256
+    dig 2
+    -
+    intc_0 // 0
+    setbit // on error: no available slots
+    store 5
+    retsub

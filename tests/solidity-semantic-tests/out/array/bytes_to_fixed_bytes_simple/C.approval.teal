@@ -4,15 +4,9 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/bytes_to_fixed_bytes_simple.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 2
-    bytecblock 0x151f7c75 "s" "sLong"
+    bytecblock 0x151f7c75 0x
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "s"
-    pushbytes "abcdefghabcdefgh"
-    app_global_put
-    bytec_2 // "sLong"
-    pushbytes "abcdefghabcdefghabcdefghabcdefgh"
-    app_global_put
     intc_0 // 1
     return
 
@@ -79,10 +73,11 @@ fromCalldata:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/bytes_to_fixed_bytes_simple.sol.C.fromStorage[routing]() -> void:
 fromStorage:
-    intc_1 // 0
-    bytec_1 // "s"
-    app_global_get_ex
-    assert // check s exists
+    pushbytes "s"
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -93,10 +88,11 @@ fromStorage:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/bytes_to_fixed_bytes_simple.sol.C.fromStorageLong[routing]() -> void:
 fromStorageLong:
-    intc_1 // 0
-    bytec_2 // "sLong"
-    app_global_get_ex
-    assert // check sLong exists
+    pushbytes "sLong"
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
     bytec_0 // 0x151f7c75
     swap
     concat

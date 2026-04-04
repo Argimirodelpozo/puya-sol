@@ -3,18 +3,12 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_out_of_bounds_array_access.sol.c.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 8
-    bytecblock "data"
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
-    store 5
+    intcblock 32 1 8 0
+    bytecblock "__ctor_pending" "data" "" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    callsub _puya_lib.mem.new_slot
-    dup
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    stores
-    bytec_0 // "data"
-    swap
+    bytec_0 // "__ctor_pending"
+    intc_1 // 1
     app_global_put
     intc_1 // 1
     return
@@ -32,10 +26,26 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x68547044 0x96f3d936 0x54411274 // method "set(uint256,uint256)bool", method "get(uint256)uint256", method "length()uint256"
+    pushbytess 0xbacc49e3 0x68547044 0x96f3d936 0x54411274 // method "__postInit()void", method "set(uint256,uint256)bool", method "get(uint256)uint256", method "length()uint256"
     txna ApplicationArgs 0
-    match set get length
+    match __postInit set get length
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_out_of_bounds_array_access.sol.c.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_3 // 0
+    app_global_put
+    bytec_1 // "data"
+    intc_3 // 0
+    box_create
+    pop
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_out_of_bounds_array_access.sol.c.set[routing]() -> void:
@@ -53,35 +63,33 @@ set:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_2 // 0
-    bytec_0 // "data"
-    app_global_get_ex
-    assert // check data exists
-    intc_3 // 8
+    bytec_2 // ""
+    cover 2
+    intc_2 // 8
     bzero
     uncover 4
     concat
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     -
     extract_uint64
-    uncover 2
+    swap
     intc_0 // 32
     <=
     assert // overflow
     intc_0 // 32
     bzero
-    uncover 3
+    uncover 2
     b|
-    swap
+    dig 2
+    loads
+    uncover 2
     intc_0 // 32
     *
-    swap
+    uncover 2
     replace3 // on error: index access is out of bounds
-    bytec_0 // "data"
-    swap
-    app_global_put
+    stores
     pushbytes 0x151f7c7580
     log
     intc_1 // 1
@@ -96,19 +104,20 @@ get:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_2 // 0
-    bytec_0 // "data"
-    app_global_get_ex
-    assert // check data exists
-    intc_3 // 8
+    bytec_2 // ""
+    swap
+    intc_2 // 8
     bzero
-    uncover 2
+    swap
     concat
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     -
     extract_uint64
+    swap
+    loads
+    swap
     intc_0 // 32
     *
     intc_0 // 32
@@ -121,7 +130,7 @@ get:
     intc_0 // 32
     bzero
     b|
-    pushbytes 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -131,26 +140,18 @@ get:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_out_of_bounds_array_access.sol.c.length[routing]() -> void:
 length:
-    intc_2 // 0
-    bytec_0 // "data"
-    app_global_get_ex
-    bury 1
-    assert // check data exists
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000004
+    bytec_1 // "data"
+    box_len
+    pop
+    intc_0 // 32
+    /
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
     log
     intc_1 // 1
     return
-
-
-// _puya_lib.mem.new_slot() -> uint64:
-_puya_lib.mem.new_slot:
-    load 5
-    bitlen
-    load 5
-    pushint 256
-    dig 2
-    -
-    intc_2 // 0
-    setbit // on error: no available slots
-    store 5
-    retsub

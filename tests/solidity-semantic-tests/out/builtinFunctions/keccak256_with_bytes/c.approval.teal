@@ -3,14 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/keccak256_with_bytes.sol.c.approval_program() -> uint64:
 main:
-    intcblock 1 0
     bytecblock "data"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "data"
-    pushbytes 0x
-    app_global_put
-    intc_0 // 1
+    pushint 1
     return
 
 main_after_if_else@2:
@@ -37,20 +33,26 @@ main_foo_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/keccak256_with_bytes.sol.c.foo[routing]() -> void:
 foo:
-    intc_1 // 0
     bytec_0 // "data"
-    app_global_get_ex
-    assert // check data exists
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    pushbytes 0x666f6f
+    concat
+    bytec_0 // "data"
+    dig 1
+    box_put
     keccak256
     pushbytes 0x41b1a0649752af1b28b3dc29a1556eee781e4a4c3a1f7f53f90fa834de098c4d
     ==
     pushbytes 0x00
-    intc_1 // 0
+    pushint 0
     uncover 2
     setbit
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    pushint 1
     return

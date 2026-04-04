@@ -3,23 +3,15 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_unpacker.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    bytecblock "m_x" "m_s" 0x 0x151f7c75
+    intcblock 1 32 0
+    bytecblock "m_x" "__ctor_pending" "m_s" 0x 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    txna ApplicationArgs 0
-    txna ApplicationArgs 1
     bytec_0 // "m_x"
-    bytec_2 // 0x
+    bytec_3 // 0x
     app_global_put
-    bytec_1 // "m_s"
-    bytec_2 // 0x
-    app_global_put
-    bytec_0 // "m_x"
-    uncover 2
-    app_global_put
-    bytec_1 // "m_s"
-    swap
+    bytec_1 // "__ctor_pending"
+    intc_0 // 1
     app_global_put
     intc_0 // 1
     return
@@ -37,27 +29,65 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xce7531ad 0xa28ecb34 // method "m_x()uint256", method "m_s()byte[]"
+    pushbytess 0x0510532b 0xce7531ad 0xa28ecb34 // method "__postInit(uint256,byte[])void", method "m_x()uint256", method "m_s()byte[]"
     txna ApplicationArgs 0
-    match m_x m_s
+    match __postInit m_x m_s
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_unpacker.sol.Test.__postInit[routing]() -> void:
+__postInit:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_0 // "m_x"
+    uncover 2
+    app_global_put
+    bytec_2 // "m_s"
+    box_del
+    pop
+    bytec_2 // "m_s"
+    swap
+    box_put
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_unpacker.sol.Test.m_x[routing]() -> void:
 m_x:
-    intc_1 // 0
+    intc_2 // 0
     bytec_0 // "m_x"
     app_global_get_ex
     assert // check m_x exists
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -67,17 +97,18 @@ m_x:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_unpacker.sol.Test.m_s[routing]() -> void:
 m_s:
-    intc_1 // 0
-    bytec_1 // "m_s"
-    app_global_get_ex
-    assert // check m_s exists
+    bytec_2 // "m_s"
+    box_get
+    bytec_3 // 0x
+    cover 2
+    select
     dup
     len
     itob
     extract 6 2
     swap
     concat
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log

@@ -6,9 +6,6 @@ main:
     bytecblock "savedData"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "savedData"
-    pushbytes 0x
-    app_global_put
     pushint 1
     return
 
@@ -36,9 +33,13 @@ main_save_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/store_bytes.sol.C.save[routing]() -> void:
 save:
-    bytec_0 // "savedData"
     txna ApplicationArgs 0
-    app_global_put
+    bytec_0 // "savedData"
+    box_del
+    pop
+    bytec_0 // "savedData"
+    swap
+    box_put
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000018
     log
     pushint 1

@@ -5,8 +5,6 @@
 main:
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytess "x" 0x
-    app_global_put
     pushint 1
     return
 
@@ -46,7 +44,10 @@ set:
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
     pushbytes "x"
+    box_del
+    pop
+    pushbytes "x"
     swap
-    app_global_put
+    box_put
     pushint 1
     return

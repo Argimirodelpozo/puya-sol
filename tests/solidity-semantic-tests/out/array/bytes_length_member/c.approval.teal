@@ -6,9 +6,6 @@ main:
     bytecblock "data"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "data"
-    pushbytes 0x
-    app_global_put
     pushint 1
     return
 
@@ -33,9 +30,13 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/bytes_length_member.sol.c.set[routing]() -> void:
 set:
-    bytec_0 // "data"
     txna ApplicationArgs 0
-    app_global_put
+    bytec_0 // "data"
+    box_del
+    pop
+    bytec_0 // "data"
+    swap
+    box_put
     pushbytes 0x151f7c7580
     log
     pushint 1
@@ -44,11 +45,9 @@ set:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/bytes_length_member.sol.c.getLength[routing]() -> void:
 getLength:
-    pushint 0
     bytec_0 // "data"
-    app_global_get_ex
-    assert // check data exists
-    len
+    box_len
+    pop
     itob
     pushint 32
     bzero

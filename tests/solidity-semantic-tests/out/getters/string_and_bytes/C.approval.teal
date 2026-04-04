@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/string_and_bytes.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0x151f7c75 "a" 0x "b" "c"
+    bytecblock 0x151f7c75 "a" 0x "b" "__ctor_pending" "c"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "a"
@@ -13,19 +13,10 @@ main:
     bytec_3 // "b"
     bytec_2 // 0x
     app_global_put
-    bytec 4 // "c"
-    bytec_2 // 0x
-    app_global_put
     pushbytess "d" "abcd"
     app_global_put
-    bytec_1 // "a"
-    pushbytes "hello world"
-    app_global_put
-    bytec_3 // "b"
-    pushbytes 0x41424344
-    app_global_put
-    bytec 4 // "c"
-    pushbytes 0xff077fff
+    bytec 4 // "__ctor_pending"
+    intc_0 // 1
     app_global_put
     intc_0 // 1
     return
@@ -43,10 +34,34 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x87a1fe97 0x04f1eb1f 0x5ca8b74d 0xd3c2139f // method "a()string", method "b()string", method "c()byte[]", method "d()string"
+    pushbytess 0xbacc49e3 0x87a1fe97 0x04f1eb1f 0x5ca8b74d 0xd3c2139f // method "__postInit()void", method "a()string", method "b()string", method "c()byte[]", method "d()string"
     txna ApplicationArgs 0
-    match a b c d
+    match __postInit a b c d
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/string_and_bytes.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec 4 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 4 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_1 // "a"
+    pushbytes "hello world"
+    app_global_put
+    bytec_3 // "b"
+    pushbytes 0x41424344
+    app_global_put
+    bytec 5 // "c"
+    box_del
+    pop
+    bytec 5 // "c"
+    pushbytes 0xff077fff
+    box_put
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/string_and_bytes.sol.C.a[routing]() -> void:
@@ -91,10 +106,11 @@ b:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/string_and_bytes.sol.C.c[routing]() -> void:
 c:
-    intc_1 // 0
-    bytec 4 // "c"
-    app_global_get_ex
-    assert // check c exists
+    bytec 5 // "c"
+    box_get
+    bytec_2 // 0x
+    cover 2
+    select
     dup
     len
     itob

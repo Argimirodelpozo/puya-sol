@@ -4,13 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata_to_storage.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 0 2
-    bytecblock 0x151f7c75 "s" "__ctor_pending" "small"
+    bytecblock 0x151f7c75 "__ctor_pending" "small" "l"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "s"
-    pushbytes 0x0000000000000000000000000000000000000000000000000000
-    app_global_put
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -37,17 +34,17 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata_to_storage.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    bytec_3 // "small"
+    bytec_2 // "small"
     intc_2 // 0
     box_create
     pop
-    pushbytes "l"
+    bytec_3 // "l"
     intc_2 // 0
     box_create
     pop
@@ -63,9 +60,9 @@ f:
     pushint 26
     ==
     assert // invalid number of bytes for S
-    bytec_1 // "s"
+    pushbytes "s"
     swap
-    app_global_put
+    box_put
     intc_0 // 1
     return
 
@@ -134,10 +131,11 @@ h:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata_to_storage.sol.C.s[routing]() -> void:
 s:
-    intc_2 // 0
-    bytec_1 // "s"
-    app_global_get_ex
-    assert // check s exists
+    pushbytes "s"
+    box_get
+    pushbytes 0x0000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     dup
     extract 0 8
     dig 1
@@ -180,7 +178,7 @@ small:
     intc_1 // 32
     extract3
     sha256
-    bytec_3 // "small"
+    bytec_2 // "small"
     swap
     concat
     box_get
@@ -218,7 +216,7 @@ l:
     intc_1 // 32
     extract3
     sha256
-    pushbytes "l"
+    bytec_3 // "l"
     swap
     concat
     box_get

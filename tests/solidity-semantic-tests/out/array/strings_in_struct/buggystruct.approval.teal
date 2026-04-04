@@ -3,12 +3,12 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 96
-    bytecblock "bug" 0x151f7c75
+    intcblock 1 32 96
+    bytecblock "bug" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000620000 0x151f7c75 "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "bug"
-    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000014000000000000000000000000000000000000000000000000000000000000001e006200096173646667686a6b6c
+    bytec_3 // "__ctor_pending"
+    intc_0 // 1
     app_global_put
     intc_0 // 1
     return
@@ -26,23 +26,42 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xb34655fa 0x561ed45e 0x7b6ea079 0x2942dd81 0x77a3ca95 // method "getFirst()uint256", method "getSecond()uint256", method "getThird()uint256", method "getLast()string", method "bug()(uint256,uint256,uint256,string)"
+    pushbytess 0xbacc49e3 0xb34655fa 0x561ed45e 0x7b6ea079 0x2942dd81 0x77a3ca95 // method "__postInit()void", method "getFirst()uint256", method "getSecond()uint256", method "getThird()uint256", method "getLast()string", method "bug()(uint256,uint256,uint256,string)"
     txna ApplicationArgs 0
-    match getFirst getSecond getThird getLast bug
+    match __postInit getFirst getSecond getThird getLast bug
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.__postInit[routing]() -> void:
+__postInit:
+    bytec_3 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_3 // "__ctor_pending"
+    pushint 0
+    app_global_put
+    bytec_0 // "bug"
+    box_del
+    pop
+    bytec_0 // "bug"
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000014000000000000000000000000000000000000000000000000000000000000001e006200096173646667686a6b6c
+    box_put
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.getFirst[routing]() -> void:
 getFirst:
-    intc_1 // 0
     bytec_0 // "bug"
-    app_global_get_ex
-    assert // check bug exists
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000620000
+    cover 2
+    select
     extract 0 32
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -52,15 +71,16 @@ getFirst:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.getSecond[routing]() -> void:
 getSecond:
-    intc_1 // 0
     bytec_0 // "bug"
-    app_global_get_ex
-    assert // check bug exists
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000620000
+    cover 2
+    select
     extract 32 32
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -70,15 +90,16 @@ getSecond:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.getThird[routing]() -> void:
 getThird:
-    intc_1 // 0
     bytec_0 // "bug"
-    app_global_get_ex
-    assert // check bug exists
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000620000
+    cover 2
+    select
     extract 64 32
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -88,17 +109,18 @@ getThird:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.getLast[routing]() -> void:
 getLast:
-    intc_1 // 0
     bytec_0 // "bug"
-    app_global_get_ex
-    assert // check bug exists
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000620000
+    cover 2
+    select
     dup
-    intc_3 // 96
+    intc_2 // 96
     extract_uint16
     dig 1
     len
     substring3
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -108,10 +130,11 @@ getLast:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.bug[routing]() -> void:
 bug:
-    intc_1 // 0
     bytec_0 // "bug"
-    app_global_get_ex
-    assert // check bug exists
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000620000
+    cover 2
+    select
     dup
     extract 0 32
     dig 1
@@ -119,7 +142,7 @@ bug:
     dig 2
     extract 64 32
     dig 3
-    intc_3 // 96
+    intc_2 // 96
     extract_uint16
     dig 4
     len
@@ -127,7 +150,7 @@ bug:
     cover 2
     substring3
     extract 2 0
-    intc_2 // 32
+    intc_1 // 32
     bzero
     uncover 4
     dig 1
@@ -151,7 +174,7 @@ bug:
     concat
     swap
     concat
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log

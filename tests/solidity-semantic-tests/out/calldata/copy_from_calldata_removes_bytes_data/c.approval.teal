@@ -3,13 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "data" 0x
+    intcblock 1
+    bytecblock "data"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "data"
-    bytec_1 // 0x
-    app_global_put
     intc_0 // 1
     return
 
@@ -40,9 +37,13 @@ main_sendMessage_route@7:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.set[routing]() -> void:
 set:
-    bytec_0 // "data"
     txna ApplicationArgs 0
-    app_global_put
+    bytec_0 // "data"
+    box_del
+    pop
+    bytec_0 // "data"
+    swap
+    box_put
     pushbytes 0x151f7c7580
     log
     intc_0 // 1
@@ -51,16 +52,14 @@ set:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.checkIfDataIsEmpty[routing]() -> void:
 checkIfDataIsEmpty:
-    intc_1 // 0
     bytec_0 // "data"
-    app_global_get_ex
-    assert // check data exists
-    len
+    box_len
+    pop
     itob
-    bytec_1 // 0x
+    pushbytes 0x
     b==
     pushbytes 0x00
-    intc_1 // 0
+    pushint 0
     uncover 2
     setbit
     pushbytes 0x151f7c75
@@ -73,8 +72,12 @@ checkIfDataIsEmpty:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.[routing]() -> void:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.[routing]:
-    bytec_0 // "data"
     txna ApplicationArgs 0
-    app_global_put
+    bytec_0 // "data"
+    box_del
+    pop
+    bytec_0 // "data"
+    swap
+    box_put
     intc_0 // 1
     return

@@ -5,8 +5,6 @@
 main:
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytess "x" 0x
-    app_global_put
     pushint 1
     return
 
@@ -34,10 +32,16 @@ main_deposit_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_really_lots_of_data_from_storage.sol.ClientReceipt.deposit[routing]() -> void:
 deposit:
-    pushint 0
     pushbytes "x"
-    app_global_get_ex
-    assert // check x exists
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    pushbytes 0x414243
+    concat
+    pushbytes "x"
+    dig 1
+    box_put
     dup
     len
     itob

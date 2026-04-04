@@ -4,17 +4,11 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_read_write.sol.Test.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "data"
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
-    store 5
+    bytecblock "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
-    callsub _puya_lib.mem.new_slot
-    dup
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    stores
-    bytec_0 // "data"
-    swap
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
     app_global_put
     intc_0 // 1
     return
@@ -32,10 +26,26 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x327cf618 0x9804a8ae 0x74dc582b // method "testInit()(uint64,uint64,uint256,uint64,bool)", method "testCopyRead()(uint64,uint64,uint256,uint64)", method "testAssign()(uint64,uint64,uint256,uint64)"
+    pushbytess 0xbacc49e3 0x327cf618 0x9804a8ae 0x74dc582b // method "__postInit()void", method "testInit()(uint64,uint64,uint256,uint64,bool)", method "testCopyRead()(uint64,uint64,uint256,uint64)", method "testAssign()(uint64,uint64,uint256,uint64)"
     txna ApplicationArgs 0
-    match testInit testCopyRead testAssign
+    match __postInit testInit testCopyRead testAssign
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_read_write.sol.Test.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    pushbytes "data"
+    intc_1 // 0
+    box_create
+    pop
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_read_write.sol.Test.testInit[routing]() -> void:
@@ -48,10 +58,9 @@ testInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_read_write.sol.Test.testCopyRead[routing]() -> void:
 testCopyRead:
-    intc_1 // 0
-    bytec_0 // "data"
-    app_global_get_ex
-    assert // check data exists
+    pushbytes ""
+    dup
+    loads
     dup
     extract 128 64 // on error: index access is out of bounds
     dup
@@ -105,25 +114,26 @@ testCopyRead:
     uncover 2
     swap
     replace2 128 // on error: index access is out of bounds
-    bytec_0 // "data"
+    dig 2
     dig 1
-    app_global_put
+    stores
     extract 128 64 // on error: index access is out of bounds
-    dup
     extract 48 16
     pushint 4
     itob
-    dig 1
-    swap
     replace2 8 // on error: index access is out of bounds
     pop
-    dig 1
+    swap
+    loads
+    extract 128 64 // on error: index access is out of bounds
+    dup
     extract 0 8
-    dig 2
+    dig 1
     extract 8 8
-    uncover 3
+    dig 2
     extract 16 32
     uncover 3
+    extract 48 16
     extract 8 8 // on error: index access is out of bounds
     uncover 3
     uncover 3
@@ -148,17 +158,3 @@ testAssign:
     log
     intc_0 // 1
     return
-
-
-// _puya_lib.mem.new_slot() -> uint64:
-_puya_lib.mem.new_slot:
-    load 5
-    bitlen
-    load 5
-    pushint 256
-    dig 2
-    -
-    intc_1 // 0
-    setbit // on error: no available slots
-    store 5
-    retsub

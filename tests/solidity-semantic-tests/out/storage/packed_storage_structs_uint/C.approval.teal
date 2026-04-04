@@ -3,13 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 8 1 2 43981 56491
-    bytecblock "data" 0x1234567890
+    intcblock 8 0 1 2 43981 56491
+    bytecblock "data" 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x1234567890
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "data"
-    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    app_global_put
     intc_2 // 1
     return
 
@@ -37,14 +34,15 @@ main_test_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.test[routing]() -> void:
 test:
-    intc_0 // 0
+    intc_1 // 0
     intc_3 // 2
     itob
     dup
-    intc_0 // 0
     bytec_0 // "data"
-    app_global_get_ex
-    assert // check data exists
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     dup
     extract 8 8
     swap
@@ -55,8 +53,8 @@ test:
     concat
     bytec_0 // "data"
     dig 1
-    app_global_put
-    intc_0 // 0
+    box_put
+    intc_1 // 0
     extract_uint64
     intc_3 // 2
     !=
@@ -80,10 +78,11 @@ test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     return
 
 test_after_if_else@3:
-    intc_0 // 0
     bytec_0 // "data"
-    app_global_get_ex
-    assert // check data exists
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     dup
     extract 0 8
     intc 4 // 43981
@@ -96,8 +95,8 @@ test_after_if_else@3:
     concat
     bytec_0 // "data"
     dig 1
-    app_global_put
-    intc_1 // 8
+    box_put
+    intc_0 // 8
     extract_uint64
     intc 4 // 43981
     !=
@@ -107,10 +106,11 @@ test_after_if_else@3:
     b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.test@20
 
 test_after_if_else@5:
-    intc_0 // 0
     bytec_0 // "data"
-    app_global_get_ex
-    assert // check data exists
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     dup
     extract 0 8
     swap
@@ -120,9 +120,9 @@ test_after_if_else@5:
     concat
     bytec_0 // "data"
     dig 1
-    app_global_put
+    box_put
     extract 16 32
-    bytec_1 // 0x1234567890
+    bytec_2 // 0x1234567890
     b!=
     bz test_after_if_else@7
     pushint 4
@@ -130,11 +130,12 @@ test_after_if_else@5:
     b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.test@20
 
 test_after_if_else@7:
-    intc_0 // 0
     bytec_0 // "data"
-    app_global_get_ex
-    assert // check data exists
-    intc_0 // 0
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_1 // 0
     extract_uint64
     intc_3 // 2
     !=
@@ -144,14 +145,15 @@ test_after_if_else@7:
     b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.test@20
 
 test_after_if_else@9:
-    intc_1 // 8
+    intc_0 // 8
     itob
     dup
     bury 3
-    intc_0 // 0
     bytec_0 // "data"
-    app_global_get_ex
-    assert // check data exists
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     dup
     extract 8 8
     swap
@@ -162,10 +164,10 @@ test_after_if_else@9:
     concat
     bytec_0 // "data"
     dig 1
-    app_global_put
-    intc_0 // 0
+    box_put
+    intc_1 // 0
     extract_uint64
-    intc_1 // 8
+    intc_0 // 8
     !=
     bz test_after_if_else@11
     pushint 6
@@ -173,11 +175,12 @@ test_after_if_else@9:
     b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.test@20
 
 test_after_if_else@11:
-    intc_0 // 0
     bytec_0 // "data"
-    app_global_get_ex
-    assert // check data exists
-    intc_1 // 8
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_0 // 8
     extract_uint64
     intc 4 // 43981
     !=
@@ -187,10 +190,11 @@ test_after_if_else@11:
     b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.test@20
 
 test_after_if_else@13:
-    intc_0 // 0
     bytec_0 // "data"
-    app_global_get_ex
-    assert // check data exists
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     dup
     extract 0 8
     intc 5 // 56491
@@ -203,8 +207,8 @@ test_after_if_else@13:
     concat
     bytec_0 // "data"
     dig 1
-    app_global_put
-    intc_1 // 8
+    box_put
+    intc_0 // 8
     extract_uint64
     intc 5 // 56491
     !=
@@ -213,12 +217,13 @@ test_after_if_else@13:
     b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.test@20
 
 test_after_if_else@15:
-    intc_0 // 0
     bytec_0 // "data"
-    app_global_get_ex
-    assert // check data exists
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     extract 16 32
-    bytec_1 // 0x1234567890
+    bytec_2 // 0x1234567890
     b!=
     bz test_after_if_else@17
     pushint 9
@@ -226,10 +231,11 @@ test_after_if_else@15:
     b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_uint.sol.C.test@20
 
 test_after_if_else@17:
-    intc_0 // 0
     bytec_0 // "data"
-    app_global_get_ex
-    assert // check data exists
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     dup
     extract 0 8
     swap
@@ -239,7 +245,7 @@ test_after_if_else@17:
     concat
     bytec_0 // "data"
     dig 1
-    app_global_put
+    box_put
     extract 16 32
     pushbytes 0x9876543210
     b!=
