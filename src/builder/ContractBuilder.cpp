@@ -2645,6 +2645,96 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				assign->value = std::move(bitAnd);
 				maskStmts.push_back(std::move(assign));
 			}
+			// ABI v2 validation for bool params: assert value <= 1
+			bool useV2ForBool = true;
+			if (m_currentContract)
+			{
+				auto const& ann = m_currentContract->sourceUnit().annotation();
+				if (ann.useABICoderV2.set())
+					useV2ForBool = *ann.useABICoderV2;
+			}
+			if (useV2ForBool)
+			{
+				for (size_t pi = 0; pi < _func.parameters().size(); ++pi)
+				{
+					auto const& param = _func.parameters()[pi];
+					auto const* solType = param->annotation().type;
+					if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
+						solType = &udvt->underlyingType();
+					if (!dynamic_cast<solidity::frontend::BoolType const*>(solType))
+						continue;
+					auto loc = makeLoc(param->location());
+
+					auto paramVar = std::make_shared<awst::VarExpression>();
+					paramVar->sourceLocation = loc;
+					paramVar->name = param->name();
+					paramVar->wtype = awst::WType::uint64Type();
+
+					auto one = std::make_shared<awst::IntegerConstant>();
+					one->sourceLocation = loc;
+					one->wtype = awst::WType::uint64Type();
+					one->value = "1";
+
+					auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+					cmp->sourceLocation = loc;
+					cmp->wtype = awst::WType::boolType();
+					cmp->lhs = paramVar;
+					cmp->op = awst::NumericComparison::Lte;
+					cmp->rhs = std::move(one);
+
+					auto assertExpr = std::make_shared<awst::AssertExpression>();
+					assertExpr->sourceLocation = loc;
+					assertExpr->wtype = awst::WType::voidType();
+					assertExpr->condition = std::move(cmp);
+					assertExpr->errorMessage = "ABI bool validation";
+
+					auto assertStmt = std::make_shared<awst::ExpressionStatement>();
+					assertStmt->sourceLocation = loc;
+					assertStmt->expr = std::move(assertExpr);
+					maskStmts.push_back(std::move(assertStmt));
+				}
+
+				// ABI v2 validation for enum params: assert value < member count
+				for (size_t pi = 0; pi < _func.parameters().size(); ++pi)
+				{
+					auto const& param = _func.parameters()[pi];
+					auto const* solType = param->annotation().type;
+					auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(solType);
+					if (!enumType)
+						continue;
+					auto loc = makeLoc(param->location());
+					unsigned memberCount = enumType->numberOfMembers();
+
+					auto paramVar = std::make_shared<awst::VarExpression>();
+					paramVar->sourceLocation = loc;
+					paramVar->name = param->name();
+					paramVar->wtype = awst::WType::uint64Type();
+
+					auto maxVal = std::make_shared<awst::IntegerConstant>();
+					maxVal->sourceLocation = loc;
+					maxVal->wtype = awst::WType::uint64Type();
+					maxVal->value = std::to_string(memberCount - 1);
+
+					auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+					cmp->sourceLocation = loc;
+					cmp->wtype = awst::WType::boolType();
+					cmp->lhs = paramVar;
+					cmp->op = awst::NumericComparison::Lte;
+					cmp->rhs = std::move(maxVal);
+
+					auto assertExpr = std::make_shared<awst::AssertExpression>();
+					assertExpr->sourceLocation = loc;
+					assertExpr->wtype = awst::WType::voidType();
+					assertExpr->condition = std::move(cmp);
+					assertExpr->errorMessage = "ABI enum validation";
+
+					auto assertStmt = std::make_shared<awst::ExpressionStatement>();
+					assertStmt->sourceLocation = loc;
+					assertStmt->expr = std::move(assertExpr);
+					maskStmts.push_back(std::move(assertStmt));
+				}
+			}
+
 			if (!maskStmts.empty())
 			{
 				method.body->body.insert(
