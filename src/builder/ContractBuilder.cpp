@@ -2577,36 +2577,6 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				uint64_t mask = (uint64_t(1) << bits) - 1;
 				auto loc = makeLoc(param->location());
 
-				// ABI v2 validation: assert param fits in declared type
-				auto paramCheck = std::make_shared<awst::VarExpression>();
-				paramCheck->sourceLocation = loc;
-				paramCheck->name = param->name();
-				paramCheck->wtype = awst::WType::uint64Type();
-
-				auto maxVal = std::make_shared<awst::IntegerConstant>();
-				maxVal->sourceLocation = loc;
-				maxVal->wtype = awst::WType::uint64Type();
-				maxVal->value = std::to_string(mask);
-
-				auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-				cmp->sourceLocation = loc;
-				cmp->wtype = awst::WType::boolType();
-				cmp->lhs = paramCheck;
-				cmp->op = awst::NumericComparison::Lte;
-				cmp->rhs = std::move(maxVal);
-
-				auto assertExpr = std::make_shared<awst::AssertExpression>();
-				assertExpr->sourceLocation = loc;
-				assertExpr->wtype = awst::WType::voidType();
-				assertExpr->condition = std::move(cmp);
-				assertExpr->errorMessage = "ABI input validation: value out of range";
-
-				auto assertStmt = std::make_shared<awst::ExpressionStatement>();
-				assertStmt->sourceLocation = loc;
-				assertStmt->expr = std::move(assertExpr);
-				maskStmts.push_back(std::move(assertStmt));
-
-				// Then mask (for safety, in case validation is bypassed)
 				auto paramVar = std::make_shared<awst::VarExpression>();
 				paramVar->sourceLocation = loc;
 				paramVar->name = param->name();
