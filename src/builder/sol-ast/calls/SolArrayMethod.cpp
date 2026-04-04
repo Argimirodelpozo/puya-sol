@@ -74,26 +74,77 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					cat->stackArgs.push_back(std::move(readVal));
 					cat->stackArgs.push_back(std::move(pushVal));
 
-					// Write back via storage mapper
-					auto key = std::make_shared<awst::BytesConstant>();
-					key->sourceLocation = loc;
-					key->wtype = awst::WType::bytesType();
-					key->encoding = awst::BytesEncoding::Utf8;
-					key->value = std::vector<uint8_t>(varName.begin(), varName.end());
+					if (kind == awst::AppStorageKind::Box)
+					{
+						// Box: store concat in temp, box_del, box_put(key, temp)
+						// box_put requires exact size match, so we delete+recreate
+						static int tmpCounter = 0;
+						std::string tmpName = "__bytes_push_tmp_" + std::to_string(tmpCounter++);
 
-					std::string writeOp = (kind == awst::AppStorageKind::Box)
-						? "box_put" : "app_global_put";
-					auto put = std::make_shared<awst::IntrinsicCall>();
-					put->sourceLocation = loc;
-					put->wtype = awst::WType::voidType();
-					put->opCode = writeOp;
-					put->stackArgs.push_back(std::move(key));
-					put->stackArgs.push_back(std::move(cat));
+						auto tmpTarget = std::make_shared<awst::VarExpression>();
+						tmpTarget->sourceLocation = loc;
+						tmpTarget->name = tmpName;
+						tmpTarget->wtype = awst::WType::bytesType();
 
-					auto stmt = std::make_shared<awst::ExpressionStatement>();
-					stmt->sourceLocation = loc;
-					stmt->expr = std::move(put);
-					m_ctx.pendingStatements.push_back(std::move(stmt));
+						auto assignTmp = std::make_shared<awst::AssignmentStatement>();
+						assignTmp->sourceLocation = loc;
+						assignTmp->target = tmpTarget;
+						assignTmp->value = std::move(cat);
+						m_ctx.pendingStatements.push_back(std::move(assignTmp));
+
+						auto delKey = std::make_shared<awst::BytesConstant>();
+						delKey->sourceLocation = loc;
+						delKey->wtype = awst::WType::bytesType();
+						delKey->encoding = awst::BytesEncoding::Utf8;
+						delKey->value = std::vector<uint8_t>(varName.begin(), varName.end());
+						auto del = std::make_shared<awst::IntrinsicCall>();
+						del->sourceLocation = loc;
+						del->wtype = awst::WType::boolType();
+						del->opCode = "box_del";
+						del->stackArgs.push_back(std::move(delKey));
+						auto delStmt = std::make_shared<awst::ExpressionStatement>();
+						delStmt->sourceLocation = loc;
+						delStmt->expr = std::move(del);
+						m_ctx.pendingStatements.push_back(std::move(delStmt));
+
+						auto putKey = std::make_shared<awst::BytesConstant>();
+						putKey->sourceLocation = loc;
+						putKey->wtype = awst::WType::bytesType();
+						putKey->encoding = awst::BytesEncoding::Utf8;
+						putKey->value = std::vector<uint8_t>(varName.begin(), varName.end());
+						auto tmpRead = std::make_shared<awst::VarExpression>();
+						tmpRead->sourceLocation = loc;
+						tmpRead->name = tmpName;
+						tmpRead->wtype = awst::WType::bytesType();
+						auto put = std::make_shared<awst::IntrinsicCall>();
+						put->sourceLocation = loc;
+						put->wtype = awst::WType::voidType();
+						put->opCode = "box_put";
+						put->stackArgs.push_back(std::move(putKey));
+						put->stackArgs.push_back(std::move(tmpRead));
+						auto putStmt = std::make_shared<awst::ExpressionStatement>();
+						putStmt->sourceLocation = loc;
+						putStmt->expr = std::move(put);
+						m_ctx.pendingStatements.push_back(std::move(putStmt));
+					}
+					else
+					{
+						auto key = std::make_shared<awst::BytesConstant>();
+						key->sourceLocation = loc;
+						key->wtype = awst::WType::bytesType();
+						key->encoding = awst::BytesEncoding::Utf8;
+						key->value = std::vector<uint8_t>(varName.begin(), varName.end());
+						auto put = std::make_shared<awst::IntrinsicCall>();
+						put->sourceLocation = loc;
+						put->wtype = awst::WType::voidType();
+						put->opCode = "app_global_put";
+						put->stackArgs.push_back(std::move(key));
+						put->stackArgs.push_back(std::move(cat));
+						auto stmt = std::make_shared<awst::ExpressionStatement>();
+						stmt->sourceLocation = loc;
+						stmt->expr = std::move(put);
+						m_ctx.pendingStatements.push_back(std::move(stmt));
+					}
 
 					auto vc = std::make_shared<awst::VoidConstant>();
 					vc->sourceLocation = loc;

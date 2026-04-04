@@ -1415,7 +1415,14 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 						continue;
 
 					auto* wtype = m_typeMapper.map(var->type());
-					if (!wtype || wtype->kind() != awst::WTypeKind::ReferenceArray)
+					if (!wtype)
+						continue;
+					// Collect ReferenceArrays AND dynamic bytes for box creation
+					bool isBoxType = wtype->kind() == awst::WTypeKind::ReferenceArray
+						|| wtype == awst::WType::bytesType()
+						|| (wtype->kind() == awst::WTypeKind::Bytes
+							&& !dynamic_cast<awst::BytesWType const*>(wtype)->length().has_value());
+					if (!isBoxType)
 						continue;
 
 					lengthInitialized.insert(var->name());
@@ -1727,10 +1734,39 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				boxKey->encoding = awst::BytesEncoding::Utf8;
 				boxKey->value = std::vector<uint8_t>(varName.begin(), varName.end());
 
+				// Compute box size: check for bytes vars with string literal initializers
+				unsigned boxSizeVal = 0;
+				std::shared_ptr<awst::Expression> boxInitVal;
+				{
+					auto const& lin = _contract.annotation().linearizedBaseContracts;
+					for (auto const* base: lin)
+						for (auto const* var: base->stateVariables())
+							if (var->name() == varName && !var->isConstant() && var->value())
+							{
+								auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(var->type());
+								if (arrType && arrType->isByteArrayOrString())
+								{
+									if (auto const* lit = dynamic_cast<solidity::frontend::Literal const*>(var->value().get()))
+										boxSizeVal = static_cast<unsigned>(lit->value().size());
+									if (boxSizeVal > 0)
+									{
+										boxInitVal = m_exprBuilder->build(*var->value());
+										if (boxInitVal && boxInitVal->wtype == awst::WType::stringType())
+										{
+											auto cast = std::make_shared<awst::ReinterpretCast>();
+											cast->sourceLocation = method.sourceLocation;
+											cast->wtype = awst::WType::bytesType();
+											cast->expr = std::move(boxInitVal);
+											boxInitVal = std::move(cast);
+										}
+									}
+								}
+							}
+				}
 				auto boxSize = std::make_shared<awst::IntegerConstant>();
 				boxSize->sourceLocation = method.sourceLocation;
 				boxSize->wtype = awst::WType::uint64Type();
-				boxSize->value = "0";
+				boxSize->value = std::to_string(boxSizeVal);
 
 				auto boxCreate = std::make_shared<awst::IntrinsicCall>();
 				boxCreate->sourceLocation = method.sourceLocation;
@@ -1743,6 +1779,26 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				boxStmt->sourceLocation = method.sourceLocation;
 				boxStmt->expr = std::move(boxCreate);
 				postInitBody->body.push_back(std::move(boxStmt));
+
+				// Write initial value for bytes vars with initializers
+				if (boxInitVal)
+				{
+					auto putKey = std::make_shared<awst::BytesConstant>();
+					putKey->sourceLocation = method.sourceLocation;
+					putKey->wtype = awst::WType::bytesType();
+					putKey->encoding = awst::BytesEncoding::Utf8;
+					putKey->value = std::vector<uint8_t>(varName.begin(), varName.end());
+					auto put = std::make_shared<awst::IntrinsicCall>();
+					put->sourceLocation = method.sourceLocation;
+					put->opCode = "box_put";
+					put->wtype = awst::WType::voidType();
+					put->stackArgs.push_back(std::move(putKey));
+					put->stackArgs.push_back(std::move(boxInitVal));
+					auto putStmt = std::make_shared<awst::ExpressionStatement>();
+					putStmt->sourceLocation = method.sourceLocation;
+					putStmt->expr = std::move(put);
+					postInitBody->body.push_back(std::move(putStmt));
+				}
 			}
 
 			// Inline base constructor bodies into __postInit
