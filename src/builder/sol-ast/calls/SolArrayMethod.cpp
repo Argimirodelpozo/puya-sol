@@ -375,6 +375,11 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMemoryArray(
 		else
 		{
 			// array.push(val) — ArrayExtend
+			// Promote element to match array element type (e.g., uint64 → biguint)
+			auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(baseWtype);
+			if (refArr && val->wtype != refArr->elementType())
+				val = builder::TypeCoercion::implicitNumericCast(
+					std::move(val), refArr->elementType(), m_loc);
 			auto singleArr = std::make_shared<awst::NewArray>();
 			singleArr->sourceLocation = m_loc;
 			singleArr->wtype = baseWtype;
