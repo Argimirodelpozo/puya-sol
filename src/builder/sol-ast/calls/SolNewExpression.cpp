@@ -57,7 +57,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 		if (auto const* ratType = dynamic_cast<RationalNumberType const*>(argType))
 		{
 			auto val = ratType->literalValue(nullptr);
-			if (val > 0)
+			if (val > 0 && val <= 0xFFFF) // Reasonable compile-time array limit
 				n = static_cast<unsigned long long>(val);
 		}
 		// Try tracked constant locals

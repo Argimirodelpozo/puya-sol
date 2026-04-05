@@ -54,12 +54,12 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 
 			value = m_ctx.buildExpr(*initialValue);
 
-			// Track constant locals
+			// Track constant locals (only if value fits in unsigned long long)
 			if (auto const* ratType = dynamic_cast<RationalNumberType const*>(
 					initialValue->annotation().type))
 			{
 				auto val = ratType->literalValue(nullptr);
-				if (val > 0)
+				if (val > 0 && val <= std::numeric_limits<unsigned long long>::max())
 					m_exprBuilder.trackConstantLocal(decl.id(), static_cast<unsigned long long>(val));
 			}
 
@@ -80,18 +80,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 							target->wtype = type;
 						}
 					}
-					else if (type && type->kind() == awst::WTypeKind::ARC4DynamicArray)
-					{
-						auto const* dynArr = dynamic_cast<awst::ARC4DynamicArray const*>(type);
-						if (dynArr)
-						{
-							int n = static_cast<int>(newArr->values.size());
-							type = m_ctx.typeMapper->createType<awst::ARC4StaticArray>(
-								dynArr->elementType(), n);
-							newArr->wtype = type;
-							target->wtype = type;
-						}
-					}
+					// Note: don't upgrade ARC4DynamicArray→ARC4StaticArray here.
+					// Subsequent references to the variable use TypeMapper which
+					// returns ARC4DynamicArray, causing type mismatches.
 				}
 			}
 

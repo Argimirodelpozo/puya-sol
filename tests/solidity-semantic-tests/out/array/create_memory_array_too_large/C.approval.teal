@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/create_memory_array_too_large.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 0 32
+    bytecblock 0x0000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -24,19 +25,13 @@ main_after_if_else@2:
     assert
     pushbytess 0xcd78b354 0x4b2c0376 // method "f()uint256", method "g()uint256"
     txna ApplicationArgs 0
-    match f main_g_route@6
+    match f g
     err
-
-main_g_route@6:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/create_memory_array_too_large.sol.C.f[routing]() -> void:
 f:
-    pushbytes 0x0000
+    bytec_0 // 0x0000
     intc_1 // 0
 
 f_while_top@2:
@@ -63,14 +58,60 @@ f_while_top@2:
     b f_while_top@2
 
 f_after_while@4:
-    pushint 32
+    intc_2 // 32
     bzero
     dig 2
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000002a
     replace2 34 // on error: index access is out of bounds
     extract 34 32
     b|
-    pushbytes 0x151f7c75
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/create_memory_array_too_large.sol.C.g[routing]() -> void:
+g:
+    bytec_0 // 0x0000
+    intc_1 // 0
+
+g_while_top@2:
+    dup
+    intc_0 // 1
+    <
+    bz g_after_while@4
+    dig 1
+    dup
+    intc_1 // 0
+    extract_uint16
+    intc_0 // 1
+    +
+    itob
+    extract 6 0
+    replace2 0
+    pushbytes 0x0000000000000000
+    concat
+    bury 2
+    dup
+    intc_0 // 1
+    +
+    bury 1
+    b g_while_top@2
+
+g_after_while@4:
+    pushint 42
+    itob
+    dig 2
+    swap
+    replace2 18 // on error: index access is out of bounds
+    extract 18 8
+    intc_2 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
