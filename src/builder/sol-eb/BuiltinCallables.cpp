@@ -3,6 +3,7 @@
 
 #include "builder/sol-eb/BuiltinCallables.h"
 #include "builder/sol-eb/SolIntegerBuilder.h"
+#include "builder/sol-types/TypeMapper.h"
 
 namespace puyasol::builder::eb
 {
@@ -27,6 +28,7 @@ BuiltinCallableRegistry::BuiltinCallableRegistry()
 	registerHandler("addmod", &handleAddmod);
 	registerHandler("gasleft", &handleGasleft);
 	registerHandler("selfdestruct", &handleSelfdestruct);
+	registerHandler("ecrecover", &handleEcrecover);
 }
 
 void BuiltinCallableRegistry::registerHandler(std::string _name, CallHandler _handler)
@@ -271,6 +273,185 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleGasleft(
 	e->opCode = "global";
 	e->immediates = {std::string("OpcodeBudget")};
 	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(e));
+}
+
+std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
+	BuilderContext& _ctx,
+	std::vector<std::shared_ptr<awst::Expression>>& _args,
+	awst::SourceLocation const& _loc)
+{
+	// ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) → address
+	if (_args.size() != 4) return nullptr;
+
+	auto msgHash = std::move(_args[0]);
+	auto v = std::move(_args[1]);
+	auto r = std::move(_args[2]);
+	auto s = std::move(_args[3]);
+
+	// Ensure args are bytes for ecdsa_pk_recover
+	// hash, r, s should be bytes32 → bytes
+	auto toBytes = [&](std::shared_ptr<awst::Expression> expr) -> std::shared_ptr<awst::Expression> {
+		if (expr->wtype != awst::WType::bytesType())
+		{
+			auto cast = std::make_shared<awst::ReinterpretCast>();
+			cast->sourceLocation = _loc;
+			cast->wtype = awst::WType::bytesType();
+			cast->expr = std::move(expr);
+			return cast;
+		}
+		return expr;
+	};
+	msgHash = toBytes(std::move(msgHash));
+	r = toBytes(std::move(r));
+	s = toBytes(std::move(s));
+
+	// v is uint8 (27 or 28) → recovery_id = v - 27
+	std::shared_ptr<awst::Expression> recoveryId;
+	if (v->wtype == awst::WType::uint64Type() || v->wtype == awst::WType::boolType())
+	{
+		auto twentySeven = std::make_shared<awst::IntegerConstant>();
+		twentySeven->sourceLocation = _loc;
+		twentySeven->wtype = awst::WType::uint64Type();
+		twentySeven->value = "27";
+		auto sub = std::make_shared<awst::UInt64BinaryOperation>();
+		sub->sourceLocation = _loc;
+		sub->wtype = awst::WType::uint64Type();
+		sub->left = std::move(v);
+		sub->right = std::move(twentySeven);
+		sub->op = awst::UInt64BinaryOperator::Sub;
+		recoveryId = std::move(sub);
+	}
+	else
+	{
+		// biguint v → bytes → btoi, then subtract 27
+		auto vBytes = std::make_shared<awst::ReinterpretCast>();
+		vBytes->sourceLocation = _loc;
+		vBytes->wtype = awst::WType::bytesType();
+		vBytes->expr = std::move(v);
+		auto btoi = std::make_shared<awst::IntrinsicCall>();
+		btoi->sourceLocation = _loc;
+		btoi->wtype = awst::WType::uint64Type();
+		btoi->opCode = "btoi";
+		btoi->stackArgs.push_back(std::move(vBytes));
+		auto twentySeven = std::make_shared<awst::IntegerConstant>();
+		twentySeven->sourceLocation = _loc;
+		twentySeven->wtype = awst::WType::uint64Type();
+		twentySeven->value = "27";
+		auto sub = std::make_shared<awst::UInt64BinaryOperation>();
+		sub->sourceLocation = _loc;
+		sub->wtype = awst::WType::uint64Type();
+		sub->left = std::move(btoi);
+		sub->right = std::move(twentySeven);
+		sub->op = awst::UInt64BinaryOperator::Sub;
+		recoveryId = std::move(sub);
+	}
+
+	// ecdsa_pk_recover Secp256k1 → (pubkey_x: bytes, pubkey_y: bytes)
+	auto tupleType = _ctx.typeMapper.createType<awst::WTuple>(
+		std::vector<awst::WType const*>{awst::WType::bytesType(), awst::WType::bytesType()}
+	);
+
+	auto ecdsaRecover = std::make_shared<awst::IntrinsicCall>();
+	ecdsaRecover->sourceLocation = _loc;
+	ecdsaRecover->wtype = tupleType;
+	ecdsaRecover->opCode = "ecdsa_pk_recover";
+	ecdsaRecover->immediates.push_back("Secp256k1");
+	ecdsaRecover->stackArgs.push_back(std::move(msgHash));
+	ecdsaRecover->stackArgs.push_back(std::move(recoveryId));
+	ecdsaRecover->stackArgs.push_back(std::move(r));
+	ecdsaRecover->stackArgs.push_back(std::move(s));
+
+	// Store result in temp var
+	std::string tmpName = "__ecrecover_result";
+	auto tmpTarget = std::make_shared<awst::VarExpression>();
+	tmpTarget->sourceLocation = _loc;
+	tmpTarget->name = tmpName;
+	tmpTarget->wtype = tupleType;
+
+	auto assignTuple = std::make_shared<awst::AssignmentStatement>();
+	assignTuple->sourceLocation = _loc;
+	assignTuple->target = tmpTarget;
+	assignTuple->value = std::move(ecdsaRecover);
+	_ctx.prePendingStatements.push_back(std::move(assignTuple));
+
+	// Extract pubkey_x and pubkey_y
+	auto tupleRead0 = std::make_shared<awst::VarExpression>();
+	tupleRead0->sourceLocation = _loc;
+	tupleRead0->name = tmpName;
+	tupleRead0->wtype = tupleType;
+	auto pubkeyX = std::make_shared<awst::TupleItemExpression>();
+	pubkeyX->sourceLocation = _loc;
+	pubkeyX->wtype = awst::WType::bytesType();
+	pubkeyX->base = std::move(tupleRead0);
+	pubkeyX->index = 0;
+
+	auto tupleRead1 = std::make_shared<awst::VarExpression>();
+	tupleRead1->sourceLocation = _loc;
+	tupleRead1->name = tmpName;
+	tupleRead1->wtype = tupleType;
+	auto pubkeyY = std::make_shared<awst::TupleItemExpression>();
+	pubkeyY->sourceLocation = _loc;
+	pubkeyY->wtype = awst::WType::bytesType();
+	pubkeyY->base = std::move(tupleRead1);
+	pubkeyY->index = 1;
+
+	// concat(pubkey_x, pubkey_y) → 64 bytes
+	auto pubkeyConcat = std::make_shared<awst::IntrinsicCall>();
+	pubkeyConcat->sourceLocation = _loc;
+	pubkeyConcat->wtype = awst::WType::bytesType();
+	pubkeyConcat->opCode = "concat";
+	pubkeyConcat->stackArgs.push_back(std::move(pubkeyX));
+	pubkeyConcat->stackArgs.push_back(std::move(pubkeyY));
+
+	// keccak256(pubkey) → 32 bytes
+	auto hash = std::make_shared<awst::IntrinsicCall>();
+	hash->sourceLocation = _loc;
+	hash->wtype = awst::WType::bytesType();
+	hash->opCode = "keccak256";
+	hash->stackArgs.push_back(std::move(pubkeyConcat));
+
+	// extract3(hash, 12, 20) → last 20 bytes = Ethereum address
+	auto off12 = std::make_shared<awst::IntegerConstant>();
+	off12->sourceLocation = _loc;
+	off12->wtype = awst::WType::uint64Type();
+	off12->value = "12";
+	auto len20 = std::make_shared<awst::IntegerConstant>();
+	len20->sourceLocation = _loc;
+	len20->wtype = awst::WType::uint64Type();
+	len20->value = "20";
+	auto addr20 = std::make_shared<awst::IntrinsicCall>();
+	addr20->sourceLocation = _loc;
+	addr20->wtype = awst::WType::bytesType();
+	addr20->opCode = "extract3";
+	addr20->stackArgs.push_back(std::move(hash));
+	addr20->stackArgs.push_back(std::move(off12));
+	addr20->stackArgs.push_back(std::move(len20));
+
+	// Left-pad to 32 bytes: concat(bzero(12), addr20) → bytes32 form
+	auto pad12 = std::make_shared<awst::IntrinsicCall>();
+	pad12->sourceLocation = _loc;
+	pad12->wtype = awst::WType::bytesType();
+	pad12->opCode = "bzero";
+	auto twelve = std::make_shared<awst::IntegerConstant>();
+	twelve->sourceLocation = _loc;
+	twelve->wtype = awst::WType::uint64Type();
+	twelve->value = "12";
+	pad12->stackArgs.push_back(std::move(twelve));
+
+	auto paddedAddr = std::make_shared<awst::IntrinsicCall>();
+	paddedAddr->sourceLocation = _loc;
+	paddedAddr->wtype = awst::WType::bytesType();
+	paddedAddr->opCode = "concat";
+	paddedAddr->stackArgs.push_back(std::move(pad12));
+	paddedAddr->stackArgs.push_back(std::move(addr20));
+
+	// Cast to account type (address return type)
+	auto addrCast = std::make_shared<awst::ReinterpretCast>();
+	addrCast->sourceLocation = _loc;
+	addrCast->wtype = awst::WType::accountType();
+	addrCast->expr = std::move(paddedAddr);
+
+	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(addrCast));
 }
 
 } // namespace puyasol::builder::eb

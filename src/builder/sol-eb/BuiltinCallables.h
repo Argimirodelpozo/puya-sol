@@ -68,6 +68,11 @@ private:
 		std::vector<std::shared_ptr<awst::Expression>>& _args,
 		awst::SourceLocation const& _loc);
 
+	static std::unique_ptr<InstanceBuilder> handleEcrecover(
+		BuilderContext& _ctx,
+		std::vector<std::shared_ptr<awst::Expression>>& _args,
+		awst::SourceLocation const& _loc);
+
 	/// Promote uint64 to biguint.
 	static std::shared_ptr<awst::Expression> promoteToBigUInt(
 		std::shared_ptr<awst::Expression> _expr,

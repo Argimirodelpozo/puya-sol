@@ -299,6 +299,12 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 		if (fname == fieldName) { arc4FieldType = ftype; break; }
 	if (arc4FieldType && _value->wtype != arc4FieldType)
 	{
+		// Coerce value to native type before ARC4 encoding
+		// e.g., IntegerConstant(uint64, "2") → BytesConstant(bytes[1]) for bytes1 fields
+		auto* nativeType = m_ctx.typeMapper.map(m_assignment.leftHandSide().annotation().type);
+		if (nativeType && _value->wtype != nativeType)
+			_value = builder::TypeCoercion::coerceForAssignment(std::move(_value), nativeType, m_loc);
+
 		auto encode = std::make_shared<awst::ARC4Encode>();
 		encode->sourceLocation = m_loc;
 		encode->wtype = arc4FieldType;
@@ -335,6 +341,23 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 		auto const* outerStructType = dynamic_cast<awst::ARC4Struct const*>(outerField->base->wtype);
 		if (!outerStructType) break;
 		auto outerBase = outerField->base;
+		// Unwrap StateGet for assignment targets (StateGet is not an Lvalue)
+		auto outerWriteBase = outerBase;
+		if (auto const* sg = dynamic_cast<awst::StateGet const*>(outerBase.get()))
+			outerWriteBase = sg->field;
+		// Wrap in StateGet for reads if needed
+		auto outerReadBase = outerBase;
+		if (dynamic_cast<awst::BoxValueExpression const*>(outerWriteBase.get())
+			&& !dynamic_cast<awst::StateGet const*>(outerBase.get()))
+		{
+			auto sg = std::make_shared<awst::StateGet>();
+			sg->sourceLocation = m_loc;
+			sg->wtype = outerWriteBase->wtype;
+			sg->field = outerWriteBase;
+			sg->defaultValue = builder::StorageMapper::makeDefaultValue(outerWriteBase->wtype, m_loc);
+			outerReadBase = sg;
+		}
+
 		std::string outerFieldName = outerField->name;
 		awst::WType const* outerFieldWtype = nullptr;
 		for (auto const& [fn, ft]: outerStructType->fields())
@@ -352,13 +375,13 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 			{
 				auto f = std::make_shared<awst::FieldExpression>();
 				f->sourceLocation = m_loc;
-				f->base = outerBase;
+				f->base = outerReadBase; // Use StateGet-wrapped for reads
 				f->name = fn;
 				f->wtype = ft;
 				outerNewStruct->values[fn] = std::move(f);
 			}
 		}
-		assignTarget2 = std::move(outerBase);
+		assignTarget2 = std::move(outerWriteBase); // Use unwrapped for target
 		assignValue2 = std::move(outerNewStruct);
 	}
 

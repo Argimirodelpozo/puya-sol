@@ -259,7 +259,8 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
         )
 
         # Call __postInit if it exists (constructor body that writes to boxes)
-        if any(m.name == "__postInit" for m in app_spec.methods):
+        _postinit_spec = next((m for m in app_spec.methods if m.name == "__postInit"), None)
+        if _postinit_spec:
             from algosdk.transaction import BoxReference as AlgoBoxRef
             try:
                 # Use populate_app_call_resources to auto-discover box refs via simulate
@@ -273,10 +274,32 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
                 _sp.flat_fee = True
                 _sp.fee = 4000
                 _atc = AtomicTransactionComposer()
-                _postinit_method = Method.from_signature("__postInit()void")
+                _postinit_method = _postinit_spec.to_abi_method()
+                # If __postInit has params, pack the constructor args per ABI types
+                _postinit_args = []
+                if _postinit_method.args and ctor_args:
+                    from algosdk import abi as _abi
+                    flat_vals = [parse_value(a) for a in ctor_args]
+                    flat_idx = 0
+                    for arg_spec in _postinit_method.args:
+                        arg_type = _abi.ABIType.from_string(str(arg_spec.type))
+                        if isinstance(arg_type, _abi.ArrayStaticType):
+                            n = arg_type.static_length
+                            arr_vals = flat_vals[flat_idx:flat_idx + n]
+                            _postinit_args.append(arr_vals)
+                            flat_idx += n
+                        elif isinstance(arg_type, _abi.ArrayDynamicType):
+                            # Dynamic arrays consume remaining args (or until next type matches)
+                            remaining = flat_vals[flat_idx:]
+                            _postinit_args.append(remaining)
+                            flat_idx = len(flat_vals)
+                        else:
+                            if flat_idx < len(flat_vals):
+                                _postinit_args.append(flat_vals[flat_idx])
+                                flat_idx += 1
                 _atc.add_method_call(
                     app_id=app_id, method=_postinit_method, sender=_sender,
-                    sp=_sp, signer=_signer, method_args=[],
+                    sp=_sp, signer=_signer, method_args=_postinit_args,
                     boxes=[AlgoBoxRef(app_index=0, name=ref[1]) for ref in box_refs] if box_refs else None,
                     note=_os.urandom(8),
                 )
@@ -646,7 +669,7 @@ def _regroup_args(raw_args, method_sig):
     return result
 
 
-def execute_call(app, call, app_spec=None, verbose=False):
+def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
     """Execute a test call and return (passed, detail)."""
     try:
         # Bare call: () — send ApplicationCall with no args (triggers fallback/receive)
@@ -728,6 +751,9 @@ def execute_call(app, call, app_spec=None, verbose=False):
             if a is None:
                 args.append(0)
             elif isinstance(a, int) and param_types.get(i) == 'bool':
+                # ABI v2: values > 1 are invalid bools — reject them
+                if not uses_v1 and (a > 1 or a < 0):
+                    raise ValueError(f"ABI v2: invalid bool value {a}")
                 # int → bool: ABI SDK needs Python bool for 1-byte ARC4 bool encoding
                 args.append(bool(a))
             elif isinstance(a, bytes):
@@ -1183,7 +1209,8 @@ def run_test(test: SemanticTest, localnet, account, verbose=False, _budget_retry
         # Skip constructor calls — handled during deployment
         if call.method_name == "constructor":
             continue
-        ok, detail = execute_call(app, call, app_spec, verbose)
+        uses_v1 = "pragma abicoder v1" in test.source_code or "pragma abicoder               v1" in test.source_code
+        ok, detail = execute_call(app, call, app_spec, verbose, uses_v1=uses_v1)
         if ok is None:
             skipped += 1
             if verbose:

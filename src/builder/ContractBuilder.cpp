@@ -1500,6 +1500,53 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					cast->expr = std::move(readArg);
 					paramVal = std::move(cast);
 				}
+				else if (paramType->kind() == awst::WTypeKind::ReferenceArray)
+				{
+					// Array params: ReinterpretCast to ARC4 type, then ARC4Decode
+					auto const* arc4Type = m_typeMapper.mapToARC4Type(paramType);
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = method.sourceLocation;
+					cast->wtype = arc4Type;
+					cast->expr = std::move(readArg);
+
+					auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(paramType);
+					if (refArr && !refArr->arraySize().has_value())
+					{
+						auto convert = std::make_shared<awst::ConvertArray>();
+						convert->sourceLocation = method.sourceLocation;
+						convert->wtype = paramType;
+						convert->expr = std::move(cast);
+						paramVal = std::move(convert);
+					}
+					else
+					{
+						auto decode = std::make_shared<awst::ARC4Decode>();
+						decode->sourceLocation = method.sourceLocation;
+						decode->wtype = paramType;
+						decode->value = std::move(cast);
+						paramVal = std::move(decode);
+					}
+				}
+				else if (paramType->kind() == awst::WTypeKind::Bytes
+					&& dynamic_cast<awst::BytesWType const*>(paramType)
+					&& dynamic_cast<awst::BytesWType const*>(paramType)->length().has_value())
+				{
+					// bytes[N] params: ReinterpretCast from raw bytes
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = method.sourceLocation;
+					cast->wtype = paramType;
+					cast->expr = std::move(readArg);
+					paramVal = std::move(cast);
+				}
+				else if (dynamic_cast<awst::ARC4Struct const*>(paramType))
+				{
+					// Struct params: ReinterpretCast raw bytes to ARC4 struct type
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = method.sourceLocation;
+					cast->wtype = paramType;
+					cast->expr = std::move(readArg);
+					paramVal = std::move(cast);
+				}
 				else
 				{
 					// bytes, etc. → use raw bytes directly
@@ -2676,11 +2723,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
 					solType = &udvt->underlyingType();
 				auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(solType);
-				if (!intType || intType->numBits() >= 64 || intType->isSigned())
+				if (!intType || intType->numBits() >= 64)
 					continue;
 
 				unsigned bits = intType->numBits();
-				uint64_t mask = (uint64_t(1) << bits) - 1;
 				auto loc = makeLoc(param->location());
 
 				// ABI v2: assert param fits in type (revert on overflow)
@@ -2692,6 +2738,72 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					if (ann.useABICoderV2.set())
 						useV2 = *ann.useABICoderV2;
 				}
+
+				if (intType->isSigned())
+				{
+					// Signed sub-64-bit types: validate range but don't mask
+					// Valid: value <= maxPos || value >= minNeg
+					// maxPos = 2^(n-1) - 1, minNeg = 2^64 - 2^(n-1)
+					if (useV2)
+					{
+						uint64_t maxPos = (uint64_t(1) << (bits - 1)) - 1;
+						uint64_t minNeg = ~((uint64_t(1) << (bits - 1)) - 1); // 2^64 - 2^(n-1)
+
+						auto paramCheck1 = std::make_shared<awst::VarExpression>();
+						paramCheck1->sourceLocation = loc;
+						paramCheck1->name = param->name();
+						paramCheck1->wtype = awst::WType::uint64Type();
+						auto maxPosConst = std::make_shared<awst::IntegerConstant>();
+						maxPosConst->sourceLocation = loc;
+						maxPosConst->wtype = awst::WType::uint64Type();
+						maxPosConst->value = std::to_string(maxPos);
+						auto cmpPos = std::make_shared<awst::NumericComparisonExpression>();
+						cmpPos->sourceLocation = loc;
+						cmpPos->wtype = awst::WType::boolType();
+						cmpPos->lhs = paramCheck1;
+						cmpPos->op = awst::NumericComparison::Lte;
+						cmpPos->rhs = std::move(maxPosConst);
+
+						auto paramCheck2 = std::make_shared<awst::VarExpression>();
+						paramCheck2->sourceLocation = loc;
+						paramCheck2->name = param->name();
+						paramCheck2->wtype = awst::WType::uint64Type();
+						auto minNegConst = std::make_shared<awst::IntegerConstant>();
+						minNegConst->sourceLocation = loc;
+						minNegConst->wtype = awst::WType::uint64Type();
+						minNegConst->value = std::to_string(minNeg);
+						auto cmpNeg = std::make_shared<awst::NumericComparisonExpression>();
+						cmpNeg->sourceLocation = loc;
+						cmpNeg->wtype = awst::WType::boolType();
+						cmpNeg->lhs = paramCheck2;
+						cmpNeg->op = awst::NumericComparison::Gte;
+						cmpNeg->rhs = std::move(minNegConst);
+
+						// OR the two conditions
+						auto orExpr = std::make_shared<awst::BooleanBinaryOperation>();
+						orExpr->sourceLocation = loc;
+						orExpr->wtype = awst::WType::boolType();
+						orExpr->left = std::move(cmpPos);
+						orExpr->right = std::move(cmpNeg);
+						orExpr->op = awst::BinaryBooleanOperator::Or;
+
+						auto assertExpr = std::make_shared<awst::AssertExpression>();
+						assertExpr->sourceLocation = loc;
+						assertExpr->wtype = awst::WType::voidType();
+						assertExpr->condition = std::move(orExpr);
+						assertExpr->errorMessage = "ABI validation";
+
+						auto assertStmt = std::make_shared<awst::ExpressionStatement>();
+						assertStmt->sourceLocation = loc;
+						assertStmt->expr = std::move(assertExpr);
+						maskStmts.push_back(std::move(assertStmt));
+					}
+					// No masking for signed types
+					continue;
+				}
+
+				uint64_t mask = (uint64_t(1) << bits) - 1;
+
 				if (useV2)
 				{
 					auto paramCheck = std::make_shared<awst::VarExpression>();
