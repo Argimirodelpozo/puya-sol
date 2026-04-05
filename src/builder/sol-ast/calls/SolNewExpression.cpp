@@ -180,7 +180,9 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 	if (resultType && resultType->kind() == awst::WTypeKind::ReferenceArray)
 		return handleNewArray();
 
-	// new Contract(...) — not yet supported (needs two-pass compilation)
+	// new Contract(...) — deploy child contract via inner app creation transaction.
+	// Uses minimal stub programs since we can't embed the child's compiled bytecode
+	// at this stage. The created app won't be functional but the address is valid.
 	auto const& funcExpr = funcExpression();
 	if (auto const* newExpr = dynamic_cast<NewExpression const*>(&funcExpr))
 	{
@@ -188,10 +190,190 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			newExpr->typeName().annotation().type);
 		if (contractType)
 		{
-			Logger::instance().error(
+			Logger::instance().warning(
 				"'new " + contractType->contractDefinition().name() + "()' "
-				"(inner contract deployment) is not yet supported. "
-				"Requires two-pass compilation to embed child contract bytecode.", m_loc);
+				"deployed as stub inner app (no child bytecode embedding yet).", m_loc);
+
+			// Build inner appl create transaction
+			static awst::WInnerTransactionFields s_applFieldsType(6); // appl
+			auto create = std::make_shared<awst::CreateInnerTransaction>();
+			create->sourceLocation = m_loc;
+			create->wtype = &s_applFieldsType;
+
+			// TypeEnum = 6 (appl)
+			auto typeVal = std::make_shared<awst::IntegerConstant>();
+			typeVal->sourceLocation = m_loc;
+			typeVal->wtype = awst::WType::uint64Type();
+			typeVal->value = "6";
+			create->fields["TypeEnum"] = std::move(typeVal);
+
+			// Fee = 0 (pooled)
+			auto feeVal = std::make_shared<awst::IntegerConstant>();
+			feeVal->sourceLocation = m_loc;
+			feeVal->wtype = awst::WType::uint64Type();
+			feeVal->value = "0";
+			create->fields["Fee"] = std::move(feeVal);
+
+			// OnCompletion = 0 (NoOp) — implicit for create
+
+			// Minimal approval program: #pragma version 10; int 1 (0x0a8101)
+			auto approvalProg = std::make_shared<awst::BytesConstant>();
+			approvalProg->sourceLocation = m_loc;
+			approvalProg->wtype = awst::WType::bytesType();
+			approvalProg->encoding = awst::BytesEncoding::Base16;
+			approvalProg->value = {0x0a, 0x81, 0x01};
+			create->fields["ApprovalProgram"] = std::move(approvalProg);
+
+			// Minimal clear program: same
+			auto clearProg = std::make_shared<awst::BytesConstant>();
+			clearProg->sourceLocation = m_loc;
+			clearProg->wtype = awst::WType::bytesType();
+			clearProg->encoding = awst::BytesEncoding::Base16;
+			clearProg->value = {0x0a, 0x81, 0x01};
+			create->fields["ClearStateProgram"] = std::move(clearProg);
+
+			// Submit the inner transaction
+			static awst::WInnerTransaction s_applTxnType(6);
+			auto submit = std::make_shared<awst::SubmitInnerTransaction>();
+			submit->sourceLocation = m_loc;
+			submit->wtype = &s_applTxnType;
+			submit->itxns.push_back(std::move(create));
+
+			auto submitStmt = std::make_shared<awst::ExpressionStatement>();
+			submitStmt->sourceLocation = m_loc;
+			submitStmt->expr = std::move(submit);
+			m_ctx.prePendingStatements.push_back(std::move(submitStmt));
+
+			// Read CreatedApplicationID via itxn intrinsic
+			auto createdAppId = std::make_shared<awst::IntrinsicCall>();
+			createdAppId->sourceLocation = m_loc;
+			createdAppId->wtype = awst::WType::uint64Type();
+			createdAppId->opCode = "itxn";
+			createdAppId->immediates = {std::string("CreatedApplicationID")};
+
+			// Fund the newly created app with minimum balance (200000 microAlgos)
+			{
+				// Get created app's address for the payment
+				auto fundAppId = std::make_shared<awst::IntrinsicCall>();
+				fundAppId->sourceLocation = m_loc;
+				fundAppId->wtype = awst::WType::uint64Type();
+				fundAppId->opCode = "itxn";
+				fundAppId->immediates = {std::string("CreatedApplicationID")};
+
+				auto* fundTupleType = new awst::WTuple(
+					{awst::WType::bytesType(), awst::WType::boolType()});
+				auto fundAppParams = std::make_shared<awst::IntrinsicCall>();
+				fundAppParams->sourceLocation = m_loc;
+				fundAppParams->wtype = fundTupleType;
+				fundAppParams->opCode = "app_params_get";
+				fundAppParams->immediates = {std::string("AppAddress")};
+				fundAppParams->stackArgs.push_back(std::move(fundAppId));
+
+				std::string fundTmpName = "__fund_app_result";
+				auto fundTmpTarget = std::make_shared<awst::VarExpression>();
+				fundTmpTarget->sourceLocation = m_loc;
+				fundTmpTarget->name = fundTmpName;
+				fundTmpTarget->wtype = fundTupleType;
+				auto fundAssign = std::make_shared<awst::AssignmentStatement>();
+				fundAssign->sourceLocation = m_loc;
+				fundAssign->target = fundTmpTarget;
+				fundAssign->value = std::move(fundAppParams);
+				m_ctx.prePendingStatements.push_back(std::move(fundAssign));
+
+				auto fundTupleRead = std::make_shared<awst::VarExpression>();
+				fundTupleRead->sourceLocation = m_loc;
+				fundTupleRead->name = fundTmpName;
+				fundTupleRead->wtype = fundTupleType;
+				auto fundAddrBytes = std::make_shared<awst::TupleItemExpression>();
+				fundAddrBytes->sourceLocation = m_loc;
+				fundAddrBytes->wtype = awst::WType::bytesType();
+				fundAddrBytes->base = std::move(fundTupleRead);
+				fundAddrBytes->index = 0;
+				auto fundAddr = std::make_shared<awst::ReinterpretCast>();
+				fundAddr->sourceLocation = m_loc;
+				fundAddr->wtype = awst::WType::accountType();
+				fundAddr->expr = std::move(fundAddrBytes);
+
+				static awst::WInnerTransactionFields s_fundFieldsType(1);
+				auto fundCreate = std::make_shared<awst::CreateInnerTransaction>();
+				fundCreate->sourceLocation = m_loc;
+				fundCreate->wtype = &s_fundFieldsType;
+
+				auto fundTypeVal = std::make_shared<awst::IntegerConstant>();
+				fundTypeVal->sourceLocation = m_loc;
+				fundTypeVal->wtype = awst::WType::uint64Type();
+				fundTypeVal->value = "1"; // pay
+				fundCreate->fields["TypeEnum"] = std::move(fundTypeVal);
+
+				auto fundFee = std::make_shared<awst::IntegerConstant>();
+				fundFee->sourceLocation = m_loc;
+				fundFee->wtype = awst::WType::uint64Type();
+				fundFee->value = "0";
+				fundCreate->fields["Fee"] = std::move(fundFee);
+
+				fundCreate->fields["Receiver"] = std::move(fundAddr);
+
+				auto fundAmount = std::make_shared<awst::IntegerConstant>();
+				fundAmount->sourceLocation = m_loc;
+				fundAmount->wtype = awst::WType::uint64Type();
+				fundAmount->value = "200000"; // min balance
+				fundCreate->fields["Amount"] = std::move(fundAmount);
+
+				static awst::WInnerTransaction s_fundTxnType(1);
+				auto fundSubmit = std::make_shared<awst::SubmitInnerTransaction>();
+				fundSubmit->sourceLocation = m_loc;
+				fundSubmit->wtype = &s_fundTxnType;
+				fundSubmit->itxns.push_back(std::move(fundCreate));
+
+				auto fundStmt = std::make_shared<awst::ExpressionStatement>();
+				fundStmt->sourceLocation = m_loc;
+				fundStmt->expr = std::move(fundSubmit);
+				m_ctx.prePendingStatements.push_back(std::move(fundStmt));
+			}
+
+			// Get the app's address: app_params_get AppAddress
+			// Returns (bytes, bool) tuple
+			auto tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
+				std::vector<awst::WType const*>{awst::WType::bytesType(), awst::WType::boolType()}
+			);
+			auto appParams = std::make_shared<awst::IntrinsicCall>();
+			appParams->sourceLocation = m_loc;
+			appParams->wtype = tupleType;
+			appParams->opCode = "app_params_get";
+			appParams->immediates = {std::string("AppAddress")};
+			appParams->stackArgs.push_back(std::move(createdAppId));
+
+			// Store tuple result
+			std::string tmpName = "__new_app_result";
+			auto tmpTarget = std::make_shared<awst::VarExpression>();
+			tmpTarget->sourceLocation = m_loc;
+			tmpTarget->name = tmpName;
+			tmpTarget->wtype = tupleType;
+
+			auto assignTuple = std::make_shared<awst::AssignmentStatement>();
+			assignTuple->sourceLocation = m_loc;
+			assignTuple->target = tmpTarget;
+			assignTuple->value = std::move(appParams);
+			m_ctx.prePendingStatements.push_back(std::move(assignTuple));
+
+			// Extract address bytes (index 0) and cast to account
+			auto tupleRead = std::make_shared<awst::VarExpression>();
+			tupleRead->sourceLocation = m_loc;
+			tupleRead->name = tmpName;
+			tupleRead->wtype = tupleType;
+
+			auto addrBytes = std::make_shared<awst::TupleItemExpression>();
+			addrBytes->sourceLocation = m_loc;
+			addrBytes->wtype = awst::WType::bytesType();
+			addrBytes->base = std::move(tupleRead);
+			addrBytes->index = 0;
+
+			auto addrCast = std::make_shared<awst::ReinterpretCast>();
+			addrCast->sourceLocation = m_loc;
+			addrCast->wtype = awst::WType::accountType();
+			addrCast->expr = std::move(addrBytes);
+
+			return addrCast;
 		}
 	}
 

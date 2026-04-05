@@ -153,8 +153,8 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 		return std::make_unique<SolExternalCall>(m_ctx, _node);
 
 	case Kind::Creation:
-		// Contract creation — not applicable on Algorand
-		return nullptr;
+		// Contract creation via new Contract(args) — deploy stub inner app
+		return std::make_unique<SolNewExpression>(m_ctx, _node);
 
 	// ── Misc ──
 	case Kind::SetGas:

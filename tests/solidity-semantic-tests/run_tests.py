@@ -244,7 +244,7 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
         # Fund: min balance + box storage + constructor value
         # Box storage costs 2500 + 400*size per box
         box_cost = sum(2500 + 400 * 1024 for _ in box_refs)  # assume 1KB per box
-        min_balance = 100_000 + 28500 * 16 + 50000 * 16 + box_cost
+        min_balance = 100_000 + 28500 * 16 + 50000 * 16 + box_cost + 5_000_000  # extra for inner app creation (up to ~20 child apps)
         total_fund = min_balance + fund_amount
         sp2 = algod.suggested_params()
         pay = PaymentTxn(account.address, sp2, app_addr, total_fund)
@@ -828,7 +828,7 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
 
         params = au.AppClientMethodCallParams(
             method=method, args=args if args else None,
-            extra_fee=au.AlgoAmount(micro_algo=3000),  # base: 3 extra txns
+            extra_fee=au.AlgoAmount(micro_algo=30000),  # covers up to ~30 inner txns (app creation + funding)
         )
 
         if call.expect_failure:
