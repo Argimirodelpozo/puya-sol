@@ -498,8 +498,8 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 				target->wtype, m_loc);
 	}
 
-	// Type coercion
-	value = builder::TypeCoercion::implicitNumericCast(std::move(value), target->wtype, m_loc);
+	// Type coercion (handles int→bytes[N], string→bytes, numeric casts)
+	value = builder::TypeCoercion::coerceForAssignment(std::move(value), target->wtype, m_loc);
 	if (value->wtype != target->wtype && target->wtype
 		&& target->wtype->kind() == awst::WTypeKind::Bytes)
 	{
