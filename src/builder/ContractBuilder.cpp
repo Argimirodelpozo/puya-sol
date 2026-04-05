@@ -1483,12 +1483,43 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				else if (paramType == awst::WType::uint64Type()
 					|| paramType == awst::WType::boolType())
 				{
-					// ARC4 uint64 is 8-byte big-endian → btoi to native uint64
+					// Constructor args come as 32-byte big-endian (EVM ABI encoding).
+					// Extract last 8 bytes, then btoi to native uint64/bool.
+					auto len = std::make_shared<awst::IntrinsicCall>();
+					len->sourceLocation = method.sourceLocation;
+					len->opCode = "len";
+					len->wtype = awst::WType::uint64Type();
+					len->stackArgs.push_back(readArg);
+
+					auto eight = std::make_shared<awst::IntegerConstant>();
+					eight->sourceLocation = method.sourceLocation;
+					eight->wtype = awst::WType::uint64Type();
+					eight->value = "8";
+
+					auto offset = std::make_shared<awst::UInt64BinaryOperation>();
+					offset->sourceLocation = method.sourceLocation;
+					offset->wtype = awst::WType::uint64Type();
+					offset->left = std::move(len);
+					offset->op = awst::UInt64BinaryOperator::Sub;
+					offset->right = eight;
+
+					auto extract = std::make_shared<awst::IntrinsicCall>();
+					extract->sourceLocation = method.sourceLocation;
+					extract->opCode = "extract3";
+					extract->wtype = awst::WType::bytesType();
+					extract->stackArgs.push_back(std::move(readArg));
+					extract->stackArgs.push_back(std::move(offset));
+					auto eight2 = std::make_shared<awst::IntegerConstant>();
+					eight2->sourceLocation = method.sourceLocation;
+					eight2->wtype = awst::WType::uint64Type();
+					eight2->value = "8";
+					extract->stackArgs.push_back(std::move(eight2));
+
 					auto btoi = std::make_shared<awst::IntrinsicCall>();
 					btoi->sourceLocation = method.sourceLocation;
 					btoi->opCode = "btoi";
-					btoi->wtype = awst::WType::uint64Type();
-					btoi->stackArgs.push_back(std::move(readArg));
+					btoi->wtype = paramType; // match target type (uint64 or bool)
+					btoi->stackArgs.push_back(std::move(extract));
 					paramVal = std::move(btoi);
 				}
 				else if (paramType == awst::WType::stringType())
