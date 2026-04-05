@@ -2345,6 +2345,12 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		size_t index; // which return param (for tuples)
 	};
 	std::vector<SignedReturnInfo> signedReturns;
+	// Track unsigned sub-word return params for cleanup masking
+	struct UnsignedMaskInfo {
+		unsigned bits;
+		size_t index;
+	};
+	std::vector<UnsignedMaskInfo> unsignedMasks;
 
 	if (returnParams.empty())
 		method.returnType = awst::WType::voidType();
@@ -2363,6 +2369,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			if (intType->numBits() <= 64)
 				method.returnType = awst::WType::biguintType();
 			signedReturns.push_back({intType->numBits(), 0});
+		}
+		else if (intType && !intType->isSigned() && intType->numBits() < 64)
+		{
+			unsignedMasks.push_back({intType->numBits(), 0});
 		}
 	}
 	else
@@ -2386,6 +2396,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					if (intType->numBits() <= 64)
 						mappedType = awst::WType::biguintType();
 					signedReturns.push_back({intType->numBits(), ri});
+				}
+				else if (!intType->isSigned() && intType->numBits() < 64)
+				{
+					unsignedMasks.push_back({intType->numBits(), ri});
 				}
 			}
 			types.push_back(mappedType);
@@ -2654,6 +2668,65 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				}
 			};
 			walk(method.body->body);
+		}
+
+		// Mask unsigned sub-word return values to their declared bit width.
+		// EVM implicitly cleans values on ABI encoding; AVM preserves full uint64.
+		if (!unsignedMasks.empty() && method.arc4MethodConfig.has_value())
+		{
+			auto maskValue = [&](std::shared_ptr<awst::Expression> val,
+				unsigned bits, awst::SourceLocation const& loc)
+				-> std::shared_ptr<awst::Expression>
+			{
+				uint64_t mask = (uint64_t(1) << bits) - 1;
+				auto maskConst = std::make_shared<awst::IntegerConstant>();
+				maskConst->sourceLocation = loc;
+				maskConst->wtype = awst::WType::uint64Type();
+				maskConst->value = std::to_string(mask);
+				auto bitAnd = std::make_shared<awst::UInt64BinaryOperation>();
+				bitAnd->sourceLocation = loc;
+				bitAnd->wtype = awst::WType::uint64Type();
+				bitAnd->left = std::move(val);
+				bitAnd->op = awst::UInt64BinaryOperator::BitAnd;
+				bitAnd->right = std::move(maskConst);
+				return bitAnd;
+			};
+
+			std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> walkMask;
+			walkMask = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
+			{
+				for (auto& stmt: stmts)
+				{
+					if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
+					{
+						if (!ret->value) continue;
+						auto srcLoc = ret->value->sourceLocation;
+						if (unsignedMasks.size() == 1 && unsignedMasks[0].index == 0
+							&& returnParams.size() == 1)
+						{
+							ret->value = maskValue(std::move(ret->value),
+								unsignedMasks[0].bits, srcLoc);
+						}
+						else if (auto* tuple = dynamic_cast<awst::TupleExpression*>(ret->value.get()))
+						{
+							for (auto const& um: unsignedMasks)
+							{
+								if (um.index < tuple->items.size())
+									tuple->items[um.index] = maskValue(
+										std::move(tuple->items[um.index]), um.bits, srcLoc);
+							}
+						}
+					}
+					else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
+					{
+						if (ifElse->ifBranch) walkMask(ifElse->ifBranch->body);
+						if (ifElse->elseBranch) walkMask(ifElse->elseBranch->body);
+					}
+					else if (auto* block = dynamic_cast<awst::Block*>(stmt.get()))
+						walkMask(block->body);
+				}
+			};
+			walkMask(method.body->body);
 		}
 
 		// Skip ARC4 decode for functions with inline assembly blocks.
