@@ -21,9 +21,13 @@ std::shared_ptr<awst::Expression> SolTupleExpression::toAwst()
 	if (m_tuple.isInlineArray())
 	{
 		auto* wtype = m_ctx.typeMapper.map(m_tuple.annotation().type);
-		auto* elementType = awst::WType::uint64Type();
+		awst::WType const* elementType = awst::WType::uint64Type();
 		if (auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(wtype))
 			elementType = refArr->elementType();
+		else if (auto const* arc4Static = dynamic_cast<awst::ARC4StaticArray const*>(wtype))
+			elementType = arc4Static->elementType();
+		else if (auto const* arc4Dyn = dynamic_cast<awst::ARC4DynamicArray const*>(wtype))
+			elementType = arc4Dyn->elementType();
 
 		auto e = std::make_shared<awst::NewArray>();
 		e->sourceLocation = m_loc;
@@ -33,8 +37,33 @@ std::shared_ptr<awst::Expression> SolTupleExpression::toAwst()
 			if (comp)
 			{
 				auto val = buildExpr(*comp);
-				val = builder::TypeCoercion::implicitNumericCast(
-					std::move(val), elementType, m_loc);
+				// For ARC4 element types, cast to native equivalent first, then encode
+				if (val->wtype != elementType)
+				{
+					// Determine the native type that this ARC4 element expects
+					awst::WType const* nativeTarget = elementType;
+					if (auto const* arc4uint = dynamic_cast<awst::ARC4UIntN const*>(elementType))
+						nativeTarget = arc4uint->n() <= 64
+							? awst::WType::uint64Type()
+							: awst::WType::biguintType();
+					else if (elementType == awst::WType::arc4BoolType())
+						nativeTarget = awst::WType::boolType();
+
+					// Cast to native type first (e.g. biguint → uint64)
+					if (val->wtype != nativeTarget)
+						val = builder::TypeCoercion::implicitNumericCast(
+							std::move(val), nativeTarget, m_loc);
+
+					// ARC4Encode if still not matching element type (native → ARC4)
+					if (val->wtype != elementType)
+					{
+						auto encode = std::make_shared<awst::ARC4Encode>();
+						encode->sourceLocation = m_loc;
+						encode->wtype = elementType;
+						encode->value = std::move(val);
+						val = std::move(encode);
+					}
+				}
 				e->values.push_back(std::move(val));
 			}
 		}

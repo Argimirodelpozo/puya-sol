@@ -41,16 +41,15 @@ createEvent:
     ==
     assert // invalid number of bytes for arc4.uint256
     intc_0 // 32
-    bzero
-    swap
-    intc_0 // 32
     <=
     assert // overflow
+    intc_0 // 32
+    bzero
     dup2
     b|
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     swap
-    replace2 0 // on error: index access is out of bounds
+    replace2 2 // on error: index access is out of bounds
     dig 2
     pushbytes 0x01
     b+
@@ -61,7 +60,7 @@ createEvent:
     assert // overflow
     dig 2
     b|
-    replace2 32 // on error: index access is out of bounds
+    replace2 34 // on error: index access is out of bounds
     uncover 2
     pushbytes 0x02
     b+
@@ -72,15 +71,7 @@ createEvent:
     assert // overflow
     uncover 2
     b|
-    replace2 64 // on error: index access is out of bounds
-    dup
-    len
-    intc_0 // 32
-    /
-    itob
-    extract 6 2
-    swap
-    concat
+    replace2 66 // on error: index access is out of bounds
     pushbytes 0xa41861880002
     swap
     concat

@@ -66,17 +66,31 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			// Upgrade dynamic array to fixed-size when N is known
 			if (auto* newArr = dynamic_cast<awst::NewArray*>(value.get()))
 			{
-				if (!newArr->values.empty()
-					&& type && type->kind() == awst::WTypeKind::ReferenceArray)
+				if (!newArr->values.empty())
 				{
-					auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(type);
-					if (refArr && !refArr->arraySize())
+					if (type && type->kind() == awst::WTypeKind::ReferenceArray)
 					{
-						int n = static_cast<int>(newArr->values.size());
-						type = m_ctx.typeMapper->createType<awst::ReferenceArray>(
-							refArr->elementType(), true, n);
-						newArr->wtype = type;
-						target->wtype = type;
+						auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(type);
+						if (refArr && !refArr->arraySize())
+						{
+							int n = static_cast<int>(newArr->values.size());
+							type = m_ctx.typeMapper->createType<awst::ReferenceArray>(
+								refArr->elementType(), true, n);
+							newArr->wtype = type;
+							target->wtype = type;
+						}
+					}
+					else if (type && type->kind() == awst::WTypeKind::ARC4DynamicArray)
+					{
+						auto const* dynArr = dynamic_cast<awst::ARC4DynamicArray const*>(type);
+						if (dynArr)
+						{
+							int n = static_cast<int>(newArr->values.size());
+							type = m_ctx.typeMapper->createType<awst::ARC4StaticArray>(
+								dynArr->elementType(), n);
+							newArr->wtype = type;
+							target->wtype = type;
+						}
 					}
 				}
 			}

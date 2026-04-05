@@ -1,0 +1,175 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.approval_program() -> uint64:
+main:
+    intcblock 0 1 24 6
+    bytecblock "c" 0x0000000000000000000000000000000000000000000000000000000000000000 "account1" "account2" 0xb30e2ea6 0x151f7c75 0x0a8101
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "account1"
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_3 // "account2"
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    bytec_0 // "c"
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytes 0x739b0889 // method "deploy()void"
+    bytec 4 // method "terminate(address)void"
+    pushbytess 0xcf19aed1 0x082c5ced 0xd7fc866d // method "test_deploy_and_terminate_twice()void", method "exists()bool", method "c()address"
+    txna ApplicationArgs 0
+    match deploy terminate test_deploy_and_terminate_twice exists c
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.deploy[routing]() -> void:
+deploy:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.deploy
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.terminate[routing]() -> void:
+terminate:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.terminate
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.test_deploy_and_terminate_twice[routing]() -> void:
+test_deploy_and_terminate_twice:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.deploy
+    intc_0 // 0
+    bytec_2 // "account1"
+    app_global_get_ex
+    assert // check account1 exists
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.terminate
+    intc_0 // 0
+    bytec_3 // "account2"
+    app_global_get_ex
+    assert // check account2 exists
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.terminate
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.exists[routing]() -> void:
+exists:
+    intc_0 // 0
+    bytec_0 // "c"
+    app_global_get_ex
+    assert // check c exists
+    intc_2 // 24
+    extract_uint64
+    app_params_get AppApprovalProgram
+    pop
+    len
+    itob
+    pushbytes 0x
+    b!=
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.c[routing]() -> void:
+c:
+    intc_0 // 0
+    bytec_0 // "c"
+    app_global_get_ex
+    assert // check c exists
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.deploy() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.deploy:
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field Fee
+    bytec 6 // 0x0a8101
+    itxn_field ClearStateProgram
+    bytec 6 // 0x0a8101
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    pushint 200000
+    itxn_field Amount
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    bytec_0 // "c"
+    swap
+    app_global_put
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.terminate(_beneficiary: bytes) -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.terminate:
+    proto 1 0
+    itxn_begin
+    intc_0 // 0
+    bytec_0 // "c"
+    app_global_get_ex
+    assert // check c exists
+    intc_2 // 24
+    extract_uint64
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 4 // method "terminate(address)void"
+    itxn_field ApplicationArgs
+    frame_dig -1
+    itxn_field ApplicationArgs
+    itxn_submit
+    retsub

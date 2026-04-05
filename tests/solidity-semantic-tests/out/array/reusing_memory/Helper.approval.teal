@@ -1,0 +1,57 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/reusing_memory.sol.Helper.approval_program() -> uint64:
+main:
+    intcblock 1 32
+    bytecblock "flag"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "flag"
+    txna ApplicationArgs 0
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0x6d9cea81 // method "flag()uint256"
+    txna ApplicationArgs 0
+    match main_flag_route@4
+    err
+
+main_flag_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b flag
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/reusing_memory.sol.Helper.flag[routing]() -> void:
+flag:
+    pushint 0
+    bytec_0 // "flag"
+    app_global_get_ex
+    assert // check flag exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

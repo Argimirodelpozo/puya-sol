@@ -4,17 +4,14 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_copy_via_local.sol.c.approval_program() -> uint64:
 main:
     intcblock 0 1
-    bytecblock "data1" "data2" "__ctor_pending" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytecblock "data1" "data2" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "data1"
-    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     bytec_1 // "data2"
-    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    app_global_put
-    bytec_2 // "__ctor_pending"
-    intc_1 // 1
+    bytec_2 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     intc_1 // 1
     return
@@ -27,31 +24,18 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xbacc49e3 0xf59e3cc4 // method "__postInit()void", method "test()bool"
+    pushbytes 0xf59e3cc4 // method "test()bool"
     txna ApplicationArgs 0
-    match __postInit test
+    match main_test_route@4
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_copy_via_local.sol.c.__postInit[routing]() -> void:
-__postInit:
-    bytec_2 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_2 // "__ctor_pending"
-    intc_0 // 0
-    app_global_put
-    pushbytes "r"
-    intc_0 // 0
-    box_create
-    pop
-    intc_1 // 1
-    return
+main_test_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b test
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_copy_via_local.sol.c.test[routing]() -> void:

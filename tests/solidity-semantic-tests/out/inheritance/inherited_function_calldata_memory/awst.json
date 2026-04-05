@@ -462,7 +462,7 @@
         "args": [
           {
             "_type": "SubroutineArgument",
-            "name": "__arc4_a",
+            "name": "a",
             "source_location": {
               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
               "line": 28,
@@ -474,7 +474,7 @@
             "wtype": {
               "_type": "ARC4DynamicArray",
               "name": "arc4.dynamic_array<arc4.uint256>",
-              "immutable": true,
+              "immutable": false,
               "element_type": {
                 "_type": "ARC4UIntN",
                 "name": "arc4.uint256",
@@ -505,91 +505,6 @@
           },
           "body": [
             {
-              "_type": "AssignmentStatement",
-              "source_location": {
-                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
-                "line": 28,
-                "end_line": 48,
-                "comment_lines": 0,
-                "column": null,
-                "end_column": null
-              },
-              "target": {
-                "_type": "VarExpression",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
-                  "line": 28,
-                  "end_line": 48,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<biguint>",
-                  "immutable": true,
-                  "element_type": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
-                  },
-                  "array_size": null,
-                  "source_location": null
-                },
-                "name": "a"
-              },
-              "value": {
-                "_type": "ConvertArray",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
-                  "line": 28,
-                  "end_line": 48,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<biguint>",
-                  "immutable": true,
-                  "element_type": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
-                  },
-                  "array_size": null,
-                  "source_location": null
-                },
-                "expr": {
-                  "_type": "VarExpression",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
-                    "line": 28,
-                    "end_line": 48,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "ARC4DynamicArray",
-                    "name": "arc4.dynamic_array<arc4.uint256>",
-                    "immutable": true,
-                    "element_type": {
-                      "_type": "ARC4UIntN",
-                      "name": "arc4.uint256",
-                      "immutable": true,
-                      "n": 256,
-                      "arc4_alias": null,
-                      "source_location": null
-                    },
-                    "arc4_alias": null,
-                    "source_location": null
-                  },
-                  "name": "__arc4_a"
-                }
-              }
-            },
-            {
               "_type": "ReturnStatement",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
@@ -600,7 +515,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "IndexExpression",
+                "_type": "ARC4Decode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
                   "line": 102,
@@ -614,48 +529,71 @@
                   "name": "biguint",
                   "immutable": true
                 },
-                "base": {
-                  "_type": "VarExpression",
+                "value": {
+                  "_type": "IndexExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
                     "line": 102,
-                    "end_line": 103,
+                    "end_line": 106,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "ReferenceArray",
-                    "name": "array<biguint>",
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
                     "immutable": true,
-                    "element_type": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
-                    },
-                    "array_size": null,
+                    "n": 256,
+                    "arc4_alias": null,
                     "source_location": null
                   },
-                  "name": "a"
+                  "base": {
+                    "_type": "VarExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
+                      "line": 102,
+                      "end_line": 103,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "ARC4DynamicArray",
+                      "name": "arc4.dynamic_array<arc4.uint256>",
+                      "immutable": false,
+                      "element_type": {
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint256",
+                        "immutable": true,
+                        "n": 256,
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "name": "a"
+                  },
+                  "index": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
+                      "line": 104,
+                      "end_line": 105,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 0,
+                    "teal_alias": null
+                  }
                 },
-                "index": {
-                  "_type": "IntegerConstant",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
-                    "line": 104,
-                    "end_line": 105,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "WType",
-                    "name": "uint64",
-                    "immutable": true
-                  },
-                  "value": 0,
-                  "teal_alias": null
-                }
+                "error_message": null
               }
             }
           ],
@@ -1169,7 +1107,7 @@
         "args": [
           {
             "_type": "SubroutineArgument",
-            "name": "__arc4_a",
+            "name": "a",
             "source_location": {
               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
               "line": 151,
@@ -1181,7 +1119,7 @@
             "wtype": {
               "_type": "ARC4DynamicArray",
               "name": "arc4.dynamic_array<arc4.uint256>",
-              "immutable": true,
+              "immutable": false,
               "element_type": {
                 "_type": "ARC4UIntN",
                 "name": "arc4.uint256",
@@ -1212,91 +1150,6 @@
           },
           "body": [
             {
-              "_type": "AssignmentStatement",
-              "source_location": {
-                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
-                "line": 151,
-                "end_line": 169,
-                "comment_lines": 0,
-                "column": null,
-                "end_column": null
-              },
-              "target": {
-                "_type": "VarExpression",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
-                  "line": 151,
-                  "end_line": 169,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<biguint>",
-                  "immutable": true,
-                  "element_type": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
-                  },
-                  "array_size": null,
-                  "source_location": null
-                },
-                "name": "a"
-              },
-              "value": {
-                "_type": "ConvertArray",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
-                  "line": 151,
-                  "end_line": 169,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<biguint>",
-                  "immutable": true,
-                  "element_type": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
-                  },
-                  "array_size": null,
-                  "source_location": null
-                },
-                "expr": {
-                  "_type": "VarExpression",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
-                    "line": 151,
-                    "end_line": 169,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "ARC4DynamicArray",
-                    "name": "arc4.dynamic_array<arc4.uint256>",
-                    "immutable": true,
-                    "element_type": {
-                      "_type": "ARC4UIntN",
-                      "name": "arc4.uint256",
-                      "immutable": true,
-                      "n": 256,
-                      "arc4_alias": null,
-                      "source_location": null
-                    },
-                    "arc4_alias": null,
-                    "source_location": null
-                  },
-                  "name": "__arc4_a"
-                }
-              }
-            },
-            {
               "_type": "ReturnStatement",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
@@ -1307,7 +1160,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "IndexExpression",
+                "_type": "ARC4Decode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
                   "line": 222,
@@ -1321,48 +1174,71 @@
                   "name": "biguint",
                   "immutable": true
                 },
-                "base": {
-                  "_type": "VarExpression",
+                "value": {
+                  "_type": "IndexExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
                     "line": 222,
-                    "end_line": 223,
+                    "end_line": 226,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "ReferenceArray",
-                    "name": "array<biguint>",
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
                     "immutable": true,
-                    "element_type": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
-                    },
-                    "array_size": null,
+                    "n": 256,
+                    "arc4_alias": null,
                     "source_location": null
                   },
-                  "name": "a"
+                  "base": {
+                    "_type": "VarExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
+                      "line": 222,
+                      "end_line": 223,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "ARC4DynamicArray",
+                      "name": "arc4.dynamic_array<arc4.uint256>",
+                      "immutable": false,
+                      "element_type": {
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint256",
+                        "immutable": true,
+                        "n": 256,
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "name": "a"
+                  },
+                  "index": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
+                      "line": 224,
+                      "end_line": 225,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 1,
+                    "teal_alias": null
+                  }
                 },
-                "index": {
-                  "_type": "IntegerConstant",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
-                    "line": 224,
-                    "end_line": 225,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "WType",
-                    "name": "uint64",
-                    "immutable": true
-                  },
-                  "value": 1,
-                  "teal_alias": null
-                }
+                "error_message": null
               }
             }
           ],
@@ -1447,15 +1323,19 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<biguint, 2>",
-                  "immutable": true,
+                  "_type": "ARC4StaticArray",
+                  "name": "arc4.static_array<arc4.uint256, 2>",
+                  "immutable": false,
                   "element_type": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
                   "array_size": 2,
+                  "arc4_alias": null,
                   "source_location": null
                 },
                 "name": "m"
@@ -1471,15 +1351,19 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<biguint, 2>",
-                  "immutable": true,
+                  "_type": "ARC4StaticArray",
+                  "name": "arc4.static_array<arc4.uint256, 2>",
+                  "immutable": false,
                   "element_type": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
                   "array_size": 2,
+                  "arc4_alias": null,
                   "source_location": null
                 },
                 "values": [
@@ -1494,9 +1378,12 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint256",
+                      "immutable": true,
+                      "n": 256,
+                      "arc4_alias": null,
+                      "source_location": null
                     },
                     "value": 0,
                     "teal_alias": null
@@ -1512,9 +1399,12 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint256",
+                      "immutable": true,
+                      "n": 256,
+                      "arc4_alias": null,
+                      "source_location": null
                     },
                     "value": 0,
                     "teal_alias": null
@@ -1543,9 +1433,12 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
                 "target": {
                   "_type": "IndexExpression",
@@ -1558,9 +1451,12 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
                   "base": {
                     "_type": "VarExpression",
@@ -1573,15 +1469,18 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "ReferenceArray",
-                      "name": "array<biguint>",
-                      "immutable": true,
+                      "_type": "ARC4DynamicArray",
+                      "name": "arc4.dynamic_array<arc4.uint256>",
+                      "immutable": false,
                       "element_type": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint256",
+                        "immutable": true,
+                        "n": 256,
+                        "arc4_alias": null,
+                        "source_location": null
                       },
-                      "array_size": null,
+                      "arc4_alias": null,
                       "source_location": null
                     },
                     "name": "m"
@@ -1606,7 +1505,7 @@
                   }
                 },
                 "value": {
-                  "_type": "ReinterpretCast",
+                  "_type": "ARC4Encode",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
                     "line": 334,
@@ -1616,12 +1515,15 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
-                  "expr": {
-                    "_type": "IntrinsicCall",
+                  "value": {
+                    "_type": "ReinterpretCast",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
                       "line": 334,
@@ -1631,34 +1533,51 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "BytesWType",
-                      "name": "bytes",
-                      "immutable": true,
-                      "length": null
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
                     },
-                    "op_code": "itob",
-                    "immediates": [],
-                    "stack_args": [
-                      {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
-                          "line": 341,
-                          "end_line": 343,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 42,
-                        "teal_alias": null
-                      }
-                    ]
-                  }
+                    "expr": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
+                        "line": 334,
+                        "end_line": 343,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "itob",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
+                            "line": 341,
+                            "end_line": 343,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 42,
+                          "teal_alias": null
+                        }
+                      ]
+                    }
+                  },
+                  "error_message": null
                 }
               }
             },
@@ -1683,9 +1602,12 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
                 "target": {
                   "_type": "IndexExpression",
@@ -1698,9 +1620,12 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
                   "base": {
                     "_type": "VarExpression",
@@ -1713,15 +1638,18 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "ReferenceArray",
-                      "name": "array<biguint>",
-                      "immutable": true,
+                      "_type": "ARC4DynamicArray",
+                      "name": "arc4.dynamic_array<arc4.uint256>",
+                      "immutable": false,
                       "element_type": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint256",
+                        "immutable": true,
+                        "n": 256,
+                        "arc4_alias": null,
+                        "source_location": null
                       },
-                      "array_size": null,
+                      "arc4_alias": null,
                       "source_location": null
                     },
                     "name": "m"
@@ -1746,7 +1674,7 @@
                   }
                 },
                 "value": {
-                  "_type": "ReinterpretCast",
+                  "_type": "ARC4Encode",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
                     "line": 353,
@@ -1756,12 +1684,15 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
-                  "expr": {
-                    "_type": "IntrinsicCall",
+                  "value": {
+                    "_type": "ReinterpretCast",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
                       "line": 353,
@@ -1771,34 +1702,51 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "BytesWType",
-                      "name": "bytes",
-                      "immutable": true,
-                      "length": null
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
                     },
-                    "op_code": "itob",
-                    "immediates": [],
-                    "stack_args": [
-                      {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
-                          "line": 360,
-                          "end_line": 362,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 23,
-                        "teal_alias": null
-                      }
-                    ]
-                  }
+                    "expr": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
+                        "line": 353,
+                        "end_line": 362,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "itob",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
+                            "line": 360,
+                            "end_line": 362,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 23,
+                          "teal_alias": null
+                        }
+                      ]
+                    }
+                  },
+                  "error_message": null
                 }
               }
             },
@@ -1924,11 +1872,11 @@
                               "length": null
                             },
                             "expr": {
-                              "_type": "ARC4Encode",
+                              "_type": "VarExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
-                                "line": 379,
-                                "end_line": 391,
+                                "line": 389,
+                                "end_line": 390,
                                 "comment_lines": 0,
                                 "column": null,
                                 "end_column": null
@@ -1936,7 +1884,7 @@
                               "wtype": {
                                 "_type": "ARC4DynamicArray",
                                 "name": "arc4.dynamic_array<arc4.uint256>",
-                                "immutable": true,
+                                "immutable": false,
                                 "element_type": {
                                   "_type": "ARC4UIntN",
                                   "name": "arc4.uint256",
@@ -1948,31 +1896,7 @@
                                 "arc4_alias": null,
                                 "source_location": null
                               },
-                              "value": {
-                                "_type": "VarExpression",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/inherited_function_calldata_memory.sol",
-                                  "line": 389,
-                                  "end_line": 390,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "ReferenceArray",
-                                  "name": "array<biguint>",
-                                  "immutable": true,
-                                  "element_type": {
-                                    "_type": "WType",
-                                    "name": "biguint",
-                                    "immutable": true
-                                  },
-                                  "array_size": null,
-                                  "source_location": null
-                                },
-                                "name": "m"
-                              },
-                              "error_message": null
+                              "name": "m"
                             }
                           }
                         ]

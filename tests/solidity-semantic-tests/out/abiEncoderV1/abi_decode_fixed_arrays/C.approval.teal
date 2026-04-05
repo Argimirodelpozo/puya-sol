@@ -63,21 +63,20 @@ f:
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    uncover 4
     intc_0 // 8
     bzero
     dup
-    uncover 5
+    uncover 4
     concat
     dup
     len
     intc_0 // 8
     -
     extract_uint64
-    uncover 2
-    swap
     intc_0 // 8
     *
+    uncover 5
+    swap
     intc_0 // 8
     extract3 // on error: index access is out of bounds
     dig 1
@@ -88,12 +87,6 @@ f:
     intc_0 // 8
     -
     extract_uint64
-    intc_3 // 16
-    *
-    uncover 4
-    swap
-    intc_3 // 16
-    extract3 // on error: index access is out of bounds
     uncover 2
     uncover 3
     concat
@@ -102,6 +95,14 @@ f:
     intc_0 // 8
     -
     extract_uint64
+    swap
+    intc_3 // 16
+    *
+    uncover 3
+    swap
+    intc_3 // 16
+    extract3 // on error: index access is out of bounds
+    swap
     intc_0 // 8
     *
     intc_0 // 8

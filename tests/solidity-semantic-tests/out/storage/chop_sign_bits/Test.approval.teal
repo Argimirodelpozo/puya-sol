@@ -4,22 +4,16 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/chop_sign_bits.sol.Test.approval_program() -> uint64:
 main:
     intcblock 0 32 1
-    bytecblock 0xffff "z" "y" "__ctor_pending" 0x8000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
-    store 5
+    bytecblock 0xffff "z" "x" "y" "__ctor_pending" 0x8000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    callsub _puya_lib.mem.new_slot
-    dup
+    bytec_3 // "y"
     pushbytes 0xfffffffffffffffbfffffffffffffffa
-    stores
-    bytec_2 // "y"
-    swap
     app_global_put
     bytec_1 // "z"
     intc_0 // 0
     app_global_put
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     intc_2 // 1
     app_global_put
     intc_2 // 1
@@ -46,13 +40,13 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/chop_sign_bits.sol.Test.__postInit[routing]() -> void:
 __postInit:
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     intc_0 // 0
     app_global_put
-    pushbytes "x"
+    bytec_2 // "x"
     intc_0 // 0
     box_create
     pop
@@ -62,7 +56,13 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/chop_sign_bits.sol.Test.f[routing]() -> void:
 f:
-    pushbytes 0x151f7c750002fffffffffffffffdfffffffffffffffc
+    bytec_2 // "x"
+    box_del
+    pop
+    bytec_2 // "x"
+    pushbytes 0x0000fffffffffffffffdfffffffffffffffc
+    box_put
+    pushbytes 0x151f7c750000fffffffffffffffdfffffffffffffffc
     log
     intc_2 // 1
     return
@@ -70,7 +70,7 @@ f:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/chop_sign_bits.sol.Test.g[routing]() -> void:
 g:
-    bytec_2 // "y"
+    bytec_3 // "y"
     pushbytes 0xfffffffffffffffdfffffffffffffffc
     app_global_put
     pushbytes 0x151f7c75fffffffffffffffdfffffffffffffffc
@@ -110,7 +110,7 @@ h_bool_merge@5:
     itob
     bytec_0 // 0xffff
     b&
-    bytec 4 // 0x8000
+    bytec 5 // 0x8000
     b>=
     bz h_ternary_false@7
     intc_0 // 0
@@ -120,9 +120,9 @@ h_bool_merge@5:
     itob
     bytec_0 // 0xffff
     b&
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
     b+
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 h_ternary_merge@8:
@@ -134,7 +134,7 @@ h_ternary_merge@8:
     intc_1 // 32
     bzero
     b|
-    bytec 7 // 0x151f7c75
+    bytec 8 // 0x151f7c75
     swap
     concat
     log
@@ -176,7 +176,7 @@ x:
     intc_1 // 32
     extract3
     sha256
-    pushbytes "x"
+    bytec_2 // "x"
     swap
     concat
     dup
@@ -190,7 +190,7 @@ x:
     itob
     bytec_0 // 0xffff
     b&
-    bytec 4 // 0x8000
+    bytec 5 // 0x8000
     b>=
     bz x_ternary_false@3
     box_get
@@ -203,9 +203,9 @@ x:
     itob
     bytec_0 // 0xffff
     b&
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
     b+
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 x_ternary_merge@4:
@@ -216,7 +216,7 @@ x_ternary_merge@4:
     assert // overflow
     dig 1
     b|
-    bytec 7 // 0x151f7c75
+    bytec 8 // 0x151f7c75
     swap
     concat
     log
@@ -257,7 +257,7 @@ y:
     intc_1 // 32
     extract3
     sha256
-    bytec_2 // "y"
+    bytec_3 // "y"
     swap
     concat
     dup
@@ -271,7 +271,7 @@ y:
     itob
     bytec_0 // 0xffff
     b&
-    bytec 4 // 0x8000
+    bytec 5 // 0x8000
     b>=
     bz y_ternary_false@3
     box_get
@@ -284,9 +284,9 @@ y:
     itob
     bytec_0 // 0xffff
     b&
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
     b+
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 y_ternary_merge@4:
@@ -297,7 +297,7 @@ y_ternary_merge@4:
     assert // overflow
     dig 1
     b|
-    bytec 7 // 0x151f7c75
+    bytec 8 // 0x151f7c75
     swap
     concat
     log
@@ -316,17 +316,3 @@ y_ternary_false@3:
     bytec_0 // 0xffff
     b&
     b y_ternary_merge@4
-
-
-// _puya_lib.mem.new_slot() -> uint64:
-_puya_lib.mem.new_slot:
-    load 5
-    bitlen
-    load 5
-    pushint 256
-    dig 2
-    -
-    intc_0 // 0
-    setbit // on error: no available slots
-    store 5
-    retsub

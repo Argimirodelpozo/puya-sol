@@ -640,7 +640,7 @@
                   "immutable": true
                 },
                 "left": {
-                  "_type": "ConditionalExpression",
+                  "_type": "UInt64BinaryOperation",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/exp_cleanup_smaller_base.sol",
                     "line": 237,
@@ -654,8 +654,8 @@
                     "name": "uint64",
                     "immutable": true
                   },
-                  "condition": {
-                    "_type": "NumericComparisonExpression",
+                  "left": {
+                    "_type": "ConditionalExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/exp_cleanup_smaller_base.sol",
                       "line": 237,
@@ -666,14 +666,14 @@
                     },
                     "wtype": {
                       "_type": "WType",
-                      "name": "bool",
+                      "name": "uint64",
                       "immutable": true
                     },
-                    "lhs": {
-                      "_type": "VarExpression",
+                    "condition": {
+                      "_type": "NumericComparisonExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/exp_cleanup_smaller_base.sol",
-                        "line": 240,
+                        "line": 237,
                         "end_line": 241,
                         "comment_lines": 0,
                         "column": null,
@@ -681,13 +681,47 @@
                       },
                       "wtype": {
                         "_type": "WType",
-                        "name": "uint64",
+                        "name": "bool",
                         "immutable": true
                       },
-                      "name": "e"
+                      "lhs": {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/exp_cleanup_smaller_base.sol",
+                          "line": 240,
+                          "end_line": 241,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "name": "e"
+                      },
+                      "operator": "==",
+                      "rhs": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/exp_cleanup_smaller_base.sol",
+                          "line": 237,
+                          "end_line": 241,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 0,
+                        "teal_alias": null
+                      }
                     },
-                    "operator": "==",
-                    "rhs": {
+                    "true_expr": {
                       "_type": "IntegerConstant",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/exp_cleanup_smaller_base.sol",
@@ -702,11 +736,63 @@
                         "name": "uint64",
                         "immutable": true
                       },
-                      "value": 0,
+                      "value": 1,
                       "teal_alias": null
+                    },
+                    "false_expr": {
+                      "_type": "UInt64BinaryOperation",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/exp_cleanup_smaller_base.sol",
+                        "line": 237,
+                        "end_line": 241,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "left": {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/exp_cleanup_smaller_base.sol",
+                          "line": 237,
+                          "end_line": 238,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "name": "b"
+                      },
+                      "op": "**",
+                      "right": {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/exp_cleanup_smaller_base.sol",
+                          "line": 240,
+                          "end_line": 241,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "name": "e"
+                      }
                     }
                   },
-                  "true_expr": {
+                  "op": "%",
+                  "right": {
                     "_type": "IntegerConstant",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/exp_cleanup_smaller_base.sol",
@@ -721,62 +807,11 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "value": 1,
+                    "value": 256,
                     "teal_alias": null
-                  },
-                  "false_expr": {
-                    "_type": "UInt64BinaryOperation",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/exp_cleanup_smaller_base.sol",
-                      "line": 237,
-                      "end_line": 241,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "uint64",
-                      "immutable": true
-                    },
-                    "left": {
-                      "_type": "VarExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/exp_cleanup_smaller_base.sol",
-                        "line": 237,
-                        "end_line": 238,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "name": "b"
-                    },
-                    "op": "**",
-                    "right": {
-                      "_type": "VarExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/exp_cleanup_smaller_base.sol",
-                        "line": 240,
-                        "end_line": 241,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "name": "e"
-                    }
                   }
                 },
-                "op": "%",
+                "op": "&",
                 "right": {
                   "_type": "IntegerConstant",
                   "source_location": {
@@ -792,7 +827,7 @@
                     "name": "uint64",
                     "immutable": true
                   },
-                  "value": 256,
+                  "value": 65535,
                   "teal_alias": null
                 }
               }

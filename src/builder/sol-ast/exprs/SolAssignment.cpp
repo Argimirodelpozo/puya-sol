@@ -564,6 +564,34 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 		target = decodeExpr->value;
 	if (auto const* sg = dynamic_cast<awst::StateGet const*>(target.get()))
 		target = sg->field;
+	// Recursively unwrap StateGet from nested base chains
+	// (e.g. data[i] or data[i].x where data is box-backed state)
+	{
+		std::shared_ptr<awst::Expression>* basePtr = nullptr;
+		if (auto* indexExpr = dynamic_cast<awst::IndexExpression*>(target.get()))
+			basePtr = &indexExpr->base;
+		else if (auto* fieldExpr = dynamic_cast<awst::FieldExpression*>(target.get()))
+			basePtr = &fieldExpr->base;
+		while (basePtr)
+		{
+			if (auto const* baseSG = dynamic_cast<awst::StateGet const*>(basePtr->get()))
+			{
+				*basePtr = baseSG->field;
+				break;
+			}
+			if (auto const* baseDecode = dynamic_cast<awst::ARC4Decode const*>(basePtr->get()))
+			{
+				*basePtr = baseDecode->value;
+				// Continue checking the unwrapped expression
+			}
+			if (auto* innerIndex = dynamic_cast<awst::IndexExpression*>(basePtr->get()))
+				basePtr = &innerIndex->base;
+			else if (auto* innerField = dynamic_cast<awst::FieldExpression*>(basePtr->get()))
+				basePtr = &innerField->base;
+			else
+				break;
+		}
+	}
 
 	// ARC4 encode if needed
 	if (value->wtype != target->wtype)

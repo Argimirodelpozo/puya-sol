@@ -1,0 +1,93 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/evm_exceptions_in_constructor_call_fail.sol.B.approval_program() -> uint64:
+main:
+    intcblock 1 0 32
+    bytecblock "test" 0x0a8101
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    itob
+    bytec_0 // "test"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x547065be 0xc95a9d21 // method "testIt()void", method "test()uint256"
+    txna ApplicationArgs 0
+    match testIt test
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/evm_exceptions_in_constructor_call_fail.sol.B.testIt[routing]() -> void:
+testIt:
+    itxn_begin
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field Fee
+    bytec_1 // 0x0a8101
+    itxn_field ClearStateProgram
+    bytec_1 // 0x0a8101
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_0 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_1 // 0
+    itxn_field Fee
+    pushint 200000
+    itxn_field Amount
+    itxn_submit
+    intc_1 // 0
+    bytec_0 // "test"
+    app_global_get_ex
+    assert // check test exists
+    pushbytes 0x01
+    b+
+    bytec_0 // "test"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/evm_exceptions_in_constructor_call_fail.sol.B.test[routing]() -> void:
+test:
+    intc_1 // 0
+    bytec_0 // "test"
+    app_global_get_ex
+    assert // check test exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

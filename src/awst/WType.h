@@ -160,7 +160,7 @@ public:
 				  ? "arc4.dynamic_array<" + _elementType->name() + ">"
 				  : _arc4Alias,
 			  WTypeKind::ARC4DynamicArray,
-			  _elementType->immutable()
+			  false // ARC4 arrays are mutable (matching puya Python default)
 		  ),
 		  m_elementType(_elementType),
 		  m_arc4Alias(std::move(_arc4Alias))
@@ -184,7 +184,7 @@ public:
 			  "arc4.static_array<" + _elementType->name() + ", "
 				  + std::to_string(_arraySize) + ">",
 			  WTypeKind::ARC4StaticArray,
-			  _elementType->immutable()
+			  false // ARC4 arrays are mutable (matching puya Python default)
 		  ),
 		  m_elementType(_elementType),
 		  m_arraySize(_arraySize)

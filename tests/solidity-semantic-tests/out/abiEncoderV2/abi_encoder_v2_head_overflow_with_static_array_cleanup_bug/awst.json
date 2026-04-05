@@ -491,12 +491,12 @@
             "wtype": {
               "_type": "ARC4Struct",
               "name": "T",
-              "immutable": true,
+              "immutable": false,
               "fields": {
                 "x": {
                   "_type": "ARC4DynamicArray",
                   "name": "byte[]",
-                  "immutable": true,
+                  "immutable": false,
                   "element_type": {
                     "_type": "ARC4UIntN",
                     "name": "arc4.uint8",
@@ -511,7 +511,7 @@
                 "y": {
                   "_type": "ARC4StaticArray",
                   "name": "arc4.static_array<arc4.uint256, 3>",
-                  "immutable": true,
+                  "immutable": false,
                   "element_type": {
                     "_type": "ARC4UIntN",
                     "name": "arc4.uint256",
@@ -533,7 +533,7 @@
           },
           {
             "_type": "SubroutineArgument",
-            "name": "__arc4_c",
+            "name": "c",
             "source_location": {
               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/abi_encoder_v2_head_overflow_with_static_array_cleanup_bug.sol",
               "line": 113,
@@ -545,11 +545,11 @@
             "wtype": {
               "_type": "ARC4StaticArray",
               "name": "arc4.static_array<arc4.static_array<arc4.uint8, 32>, 2>",
-              "immutable": true,
+              "immutable": false,
               "element_type": {
                 "_type": "ARC4StaticArray",
                 "name": "arc4.static_array<arc4.uint8, 32>",
-                "immutable": true,
+                "immutable": false,
                 "element_type": {
                   "_type": "ARC4UIntN",
                   "name": "arc4.uint8",
@@ -581,12 +581,12 @@
             {
               "_type": "ARC4Struct",
               "name": "T",
-              "immutable": true,
+              "immutable": false,
               "fields": {
                 "x": {
                   "_type": "ARC4DynamicArray",
                   "name": "byte[]",
-                  "immutable": true,
+                  "immutable": false,
                   "element_type": {
                     "_type": "ARC4UIntN",
                     "name": "arc4.uint8",
@@ -601,7 +601,7 @@
                 "y": {
                   "_type": "ARC4StaticArray",
                   "name": "arc4.static_array<arc4.uint256, 3>",
-                  "immutable": true,
+                  "immutable": false,
                   "element_type": {
                     "_type": "ARC4UIntN",
                     "name": "arc4.uint256",
@@ -621,16 +621,27 @@
               "desc": null
             },
             {
-              "_type": "ReferenceArray",
-              "name": "array<bytes[32], 2>",
-              "immutable": true,
+              "_type": "ARC4StaticArray",
+              "name": "arc4.static_array<arc4.static_array<arc4.uint8, 32>, 2>",
+              "immutable": false,
               "element_type": {
-                "_type": "BytesWType",
-                "name": "bytes[32]",
-                "immutable": true,
-                "length": 32
+                "_type": "ARC4StaticArray",
+                "name": "arc4.static_array<arc4.uint8, 32>",
+                "immutable": false,
+                "element_type": {
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint8",
+                  "immutable": true,
+                  "n": 8,
+                  "arc4_alias": null,
+                  "source_location": null
+                },
+                "array_size": 32,
+                "arc4_alias": null,
+                "source_location": null
               },
               "array_size": 2,
+              "arc4_alias": null,
               "source_location": null
             }
           ],
@@ -730,103 +741,6 @@
               }
             },
             {
-              "_type": "AssignmentStatement",
-              "source_location": {
-                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/abi_encoder_v2_head_overflow_with_static_array_cleanup_bug.sol",
-                "line": 113,
-                "end_line": 134,
-                "comment_lines": 0,
-                "column": null,
-                "end_column": null
-              },
-              "target": {
-                "_type": "VarExpression",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/abi_encoder_v2_head_overflow_with_static_array_cleanup_bug.sol",
-                  "line": 113,
-                  "end_line": 134,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<bytes[32], 2>",
-                  "immutable": true,
-                  "element_type": {
-                    "_type": "BytesWType",
-                    "name": "bytes[32]",
-                    "immutable": true,
-                    "length": 32
-                  },
-                  "array_size": 2,
-                  "source_location": null
-                },
-                "name": "c"
-              },
-              "value": {
-                "_type": "ARC4Decode",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/abi_encoder_v2_head_overflow_with_static_array_cleanup_bug.sol",
-                  "line": 113,
-                  "end_line": 134,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<bytes[32], 2>",
-                  "immutable": true,
-                  "element_type": {
-                    "_type": "BytesWType",
-                    "name": "bytes[32]",
-                    "immutable": true,
-                    "length": 32
-                  },
-                  "array_size": 2,
-                  "source_location": null
-                },
-                "value": {
-                  "_type": "VarExpression",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/abi_encoder_v2_head_overflow_with_static_array_cleanup_bug.sol",
-                    "line": 113,
-                    "end_line": 134,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "ARC4StaticArray",
-                    "name": "arc4.static_array<arc4.static_array<arc4.uint8, 32>, 2>",
-                    "immutable": true,
-                    "element_type": {
-                      "_type": "ARC4StaticArray",
-                      "name": "arc4.static_array<arc4.uint8, 32>",
-                      "immutable": true,
-                      "element_type": {
-                        "_type": "ARC4UIntN",
-                        "name": "arc4.uint8",
-                        "immutable": true,
-                        "n": 8,
-                        "arc4_alias": null,
-                        "source_location": null
-                      },
-                      "array_size": 32,
-                      "arc4_alias": null,
-                      "source_location": null
-                    },
-                    "array_size": 2,
-                    "arc4_alias": null,
-                    "source_location": null
-                  },
-                  "name": "__arc4_c"
-                },
-                "error_message": null
-              }
-            },
-            {
               "_type": "ReturnStatement",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/abi_encoder_v2_head_overflow_with_static_array_cleanup_bug.sol",
@@ -859,12 +773,12 @@
                     {
                       "_type": "ARC4Struct",
                       "name": "T",
-                      "immutable": true,
+                      "immutable": false,
                       "fields": {
                         "x": {
                           "_type": "ARC4DynamicArray",
                           "name": "byte[]",
-                          "immutable": true,
+                          "immutable": false,
                           "element_type": {
                             "_type": "ARC4UIntN",
                             "name": "arc4.uint8",
@@ -879,7 +793,7 @@
                         "y": {
                           "_type": "ARC4StaticArray",
                           "name": "arc4.static_array<arc4.uint256, 3>",
-                          "immutable": true,
+                          "immutable": false,
                           "element_type": {
                             "_type": "ARC4UIntN",
                             "name": "arc4.uint256",
@@ -899,16 +813,27 @@
                       "desc": null
                     },
                     {
-                      "_type": "ReferenceArray",
-                      "name": "array<bytes[32], 2>",
-                      "immutable": true,
+                      "_type": "ARC4StaticArray",
+                      "name": "arc4.static_array<arc4.static_array<arc4.uint8, 32>, 2>",
+                      "immutable": false,
                       "element_type": {
-                        "_type": "BytesWType",
-                        "name": "bytes[32]",
-                        "immutable": true,
-                        "length": 32
+                        "_type": "ARC4StaticArray",
+                        "name": "arc4.static_array<arc4.uint8, 32>",
+                        "immutable": false,
+                        "element_type": {
+                          "_type": "ARC4UIntN",
+                          "name": "arc4.uint8",
+                          "immutable": true,
+                          "n": 8,
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "array_size": 32,
+                        "arc4_alias": null,
+                        "source_location": null
                       },
                       "array_size": 2,
+                      "arc4_alias": null,
                       "source_location": null
                     }
                   ],
@@ -946,12 +871,12 @@
                     "wtype": {
                       "_type": "ARC4Struct",
                       "name": "T",
-                      "immutable": true,
+                      "immutable": false,
                       "fields": {
                         "x": {
                           "_type": "ARC4DynamicArray",
                           "name": "byte[]",
-                          "immutable": true,
+                          "immutable": false,
                           "element_type": {
                             "_type": "ARC4UIntN",
                             "name": "arc4.uint8",
@@ -966,7 +891,7 @@
                         "y": {
                           "_type": "ARC4StaticArray",
                           "name": "arc4.static_array<arc4.uint256, 3>",
-                          "immutable": true,
+                          "immutable": false,
                           "element_type": {
                             "_type": "ARC4UIntN",
                             "name": "arc4.uint256",
@@ -998,16 +923,27 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "ReferenceArray",
-                      "name": "array<bytes[32], 2>",
-                      "immutable": true,
+                      "_type": "ARC4StaticArray",
+                      "name": "arc4.static_array<arc4.static_array<arc4.uint8, 32>, 2>",
+                      "immutable": false,
                       "element_type": {
-                        "_type": "BytesWType",
-                        "name": "bytes[32]",
-                        "immutable": true,
-                        "length": 32
+                        "_type": "ARC4StaticArray",
+                        "name": "arc4.static_array<arc4.uint8, 32>",
+                        "immutable": false,
+                        "element_type": {
+                          "_type": "ARC4UIntN",
+                          "name": "arc4.uint8",
+                          "immutable": true,
+                          "n": 8,
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "array_size": 32,
+                        "arc4_alias": null,
+                        "source_location": null
                       },
                       "array_size": 2,
+                      "arc4_alias": null,
                       "source_location": null
                     },
                     "name": "c"

@@ -472,10 +472,26 @@
               "end_column": null
             },
             "wtype": {
-              "_type": "BytesWType",
-              "name": "bytes",
-              "immutable": true,
-              "length": null
+              "_type": "ARC4DynamicArray",
+              "name": "arc4.dynamic_array<byte[]>",
+              "immutable": false,
+              "element_type": {
+                "_type": "ARC4DynamicArray",
+                "name": "byte[]",
+                "immutable": false,
+                "element_type": {
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint8",
+                  "immutable": true,
+                  "n": 8,
+                  "arc4_alias": null,
+                  "source_location": null
+                },
+                "arc4_alias": "byte[]",
+                "source_location": null
+              },
+              "arc4_alias": null,
+              "source_location": null
             }
           }
         ],
@@ -589,7 +605,7 @@
                       "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "IntrinsicCall",
+                          "_type": "ArrayLength",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
                             "line": 165,
@@ -603,28 +619,40 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "op_code": "len",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "VarExpression",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
-                                "line": 165,
-                                "end_line": 166,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
+                          "array": {
+                            "_type": "VarExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
+                              "line": 165,
+                              "end_line": 166,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "ARC4DynamicArray",
+                              "name": "arc4.dynamic_array<byte[]>",
+                              "immutable": false,
+                              "element_type": {
+                                "_type": "ARC4DynamicArray",
+                                "name": "byte[]",
+                                "immutable": false,
+                                "element_type": {
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint8",
+                                  "immutable": true,
+                                  "n": 8,
+                                  "arc4_alias": null,
+                                  "source_location": null
+                                },
+                                "arc4_alias": "byte[]",
+                                "source_location": null
                               },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "name": "s"
-                            }
-                          ]
+                              "arc4_alias": null,
+                              "source_location": null
+                            },
+                            "name": "s"
+                          }
                         }
                       ]
                     }
@@ -806,10 +834,26 @@
               "end_column": null
             },
             "wtype": {
-              "_type": "BytesWType",
-              "name": "bytes",
-              "immutable": true,
-              "length": null
+              "_type": "ARC4DynamicArray",
+              "name": "arc4.dynamic_array<byte[]>",
+              "immutable": false,
+              "element_type": {
+                "_type": "ARC4DynamicArray",
+                "name": "byte[]",
+                "immutable": false,
+                "element_type": {
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint8",
+                  "immutable": true,
+                  "n": 8,
+                  "arc4_alias": null,
+                  "source_location": null
+                },
+                "arc4_alias": "byte[]",
+                "source_location": null
+              },
+              "arc4_alias": null,
+              "source_location": null
             }
           }
         ],
@@ -950,15 +994,15 @@
                                 "column": null,
                                 "end_column": null
                               },
-                              "value": "f(byte[])(uint256,uint256,uint256)"
+                              "value": "f(byte[][])(uint256,uint256,uint256)"
                             }
                           },
                           {
-                            "_type": "VarExpression",
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
-                              "line": 358,
-                              "end_line": 359,
+                              "line": 351,
+                              "end_line": 360,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
@@ -969,7 +1013,40 @@
                               "immutable": true,
                               "length": null
                             },
-                            "name": "s"
+                            "expr": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
+                                "line": 358,
+                                "end_line": 359,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "ARC4DynamicArray",
+                                "name": "arc4.dynamic_array<byte[]>",
+                                "immutable": false,
+                                "element_type": {
+                                  "_type": "ARC4DynamicArray",
+                                  "name": "byte[]",
+                                  "immutable": false,
+                                  "element_type": {
+                                    "_type": "ARC4UIntN",
+                                    "name": "arc4.uint8",
+                                    "immutable": true,
+                                    "n": 8,
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "arc4_alias": "byte[]",
+                                  "source_location": null
+                                },
+                                "arc4_alias": null,
+                                "source_location": null
+                              },
+                              "name": "s"
+                            }
                           }
                         ]
                       },
@@ -2170,15 +2247,32 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "BytesWType",
-                  "name": "bytes",
-                  "immutable": true,
-                  "length": null
+                  "_type": "ARC4StaticArray",
+                  "name": "arc4.static_array<byte[], 3>",
+                  "immutable": false,
+                  "element_type": {
+                    "_type": "ARC4DynamicArray",
+                    "name": "byte[]",
+                    "immutable": false,
+                    "element_type": {
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint8",
+                      "immutable": true,
+                      "n": 8,
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "arc4_alias": "byte[]",
+                    "source_location": null
+                  },
+                  "array_size": 3,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
                 "name": "a"
               },
               "value": {
-                "_type": "IntrinsicCall",
+                "_type": "NewArray",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
                   "line": 711,
@@ -2188,31 +2282,112 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "BytesWType",
-                  "name": "bytes",
-                  "immutable": true,
-                  "length": null
+                  "_type": "ARC4StaticArray",
+                  "name": "arc4.static_array<byte[], 3>",
+                  "immutable": false,
+                  "element_type": {
+                    "_type": "ARC4DynamicArray",
+                    "name": "byte[]",
+                    "immutable": false,
+                    "element_type": {
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint8",
+                      "immutable": true,
+                      "n": 8,
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "arc4_alias": "byte[]",
+                    "source_location": null
+                  },
+                  "array_size": 3,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "op_code": "bzero",
-                "immediates": [],
-                "stack_args": [
+                "values": [
                   {
-                    "_type": "IntegerConstant",
+                    "_type": "BytesConstant",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
-                      "line": 752,
-                      "end_line": 753,
+                      "line": 711,
+                      "end_line": 754,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "WType",
-                      "name": "uint64",
-                      "immutable": true
+                      "_type": "ARC4DynamicArray",
+                      "name": "byte[]",
+                      "immutable": false,
+                      "element_type": {
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint8",
+                        "immutable": true,
+                        "n": 8,
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "arc4_alias": "byte[]",
+                      "source_location": null
                     },
-                    "value": 3,
-                    "teal_alias": null
+                    "value": "000",
+                    "encoding": "base16"
+                  },
+                  {
+                    "_type": "BytesConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
+                      "line": 711,
+                      "end_line": 754,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "ARC4DynamicArray",
+                      "name": "byte[]",
+                      "immutable": false,
+                      "element_type": {
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint8",
+                        "immutable": true,
+                        "n": 8,
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "arc4_alias": "byte[]",
+                      "source_location": null
+                    },
+                    "value": "000",
+                    "encoding": "base16"
+                  },
+                  {
+                    "_type": "BytesConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
+                      "line": 711,
+                      "end_line": 754,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "ARC4DynamicArray",
+                      "name": "byte[]",
+                      "immutable": false,
+                      "element_type": {
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint8",
+                        "immutable": true,
+                        "n": 8,
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "arc4_alias": "byte[]",
+                      "source_location": null
+                    },
+                    "value": "000",
+                    "encoding": "base16"
                   }
                 ]
               }
@@ -2238,31 +2413,100 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "BytesWType",
-                  "name": "bytes",
-                  "immutable": true,
-                  "length": null
+                  "_type": "ARC4DynamicArray",
+                  "name": "byte[]",
+                  "immutable": false,
+                  "element_type": {
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint8",
+                    "immutable": true,
+                    "n": 8,
+                    "arc4_alias": null,
+                    "source_location": null
+                  },
+                  "arc4_alias": "byte[]",
+                  "source_location": null
                 },
                 "target": {
-                  "_type": "VarExpression",
+                  "_type": "IndexExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
                     "line": 764,
-                    "end_line": 765,
+                    "end_line": 768,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
+                    "_type": "ARC4DynamicArray",
+                    "name": "byte[]",
+                    "immutable": false,
+                    "element_type": {
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint8",
+                      "immutable": true,
+                      "n": 8,
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "arc4_alias": "byte[]",
+                    "source_location": null
                   },
-                  "name": "a"
+                  "base": {
+                    "_type": "VarExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
+                      "line": 764,
+                      "end_line": 765,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "ARC4DynamicArray",
+                      "name": "arc4.dynamic_array<byte[]>",
+                      "immutable": false,
+                      "element_type": {
+                        "_type": "ARC4DynamicArray",
+                        "name": "byte[]",
+                        "immutable": false,
+                        "element_type": {
+                          "_type": "ARC4UIntN",
+                          "name": "arc4.uint8",
+                          "immutable": true,
+                          "n": 8,
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "arc4_alias": "byte[]",
+                        "source_location": null
+                      },
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "name": "a"
+                  },
+                  "index": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
+                      "line": 766,
+                      "end_line": 767,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 0,
+                    "teal_alias": null
+                  }
                 },
                 "value": {
-                  "_type": "IntrinsicCall",
+                  "_type": "ARC4Encode",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
                     "line": 764,
@@ -2272,70 +2516,40 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
+                    "_type": "ARC4DynamicArray",
+                    "name": "byte[]",
+                    "immutable": false,
+                    "element_type": {
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint8",
+                      "immutable": true,
+                      "n": 8,
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "arc4_alias": "byte[]",
+                    "source_location": null
                   },
-                  "op_code": "replace3",
-                  "immediates": [],
-                  "stack_args": [
-                    {
-                      "_type": "VarExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
-                        "line": 764,
-                        "end_line": 765,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
-                      },
-                      "name": "a"
+                  "value": {
+                    "_type": "BytesConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
+                      "line": 771,
+                      "end_line": 783,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
                     },
-                    {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
-                        "line": 766,
-                        "end_line": 767,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
                     },
-                    {
-                      "_type": "BytesConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
-                        "line": 771,
-                        "end_line": 783,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
-                      },
-                      "value": "XJvGBWpXh",
-                      "encoding": "utf8"
-                    }
-                  ]
+                    "value": "XJvGBWpXh",
+                    "encoding": "utf8"
+                  },
+                  "error_message": null
                 }
               }
             },
@@ -2360,31 +2574,100 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "BytesWType",
-                  "name": "bytes",
-                  "immutable": true,
-                  "length": null
+                  "_type": "ARC4DynamicArray",
+                  "name": "byte[]",
+                  "immutable": false,
+                  "element_type": {
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint8",
+                    "immutable": true,
+                    "n": 8,
+                    "arc4_alias": null,
+                    "source_location": null
+                  },
+                  "arc4_alias": "byte[]",
+                  "source_location": null
                 },
                 "target": {
-                  "_type": "VarExpression",
+                  "_type": "IndexExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
                     "line": 793,
-                    "end_line": 794,
+                    "end_line": 797,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
+                    "_type": "ARC4DynamicArray",
+                    "name": "byte[]",
+                    "immutable": false,
+                    "element_type": {
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint8",
+                      "immutable": true,
+                      "n": 8,
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "arc4_alias": "byte[]",
+                    "source_location": null
                   },
-                  "name": "a"
+                  "base": {
+                    "_type": "VarExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
+                      "line": 793,
+                      "end_line": 794,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "ARC4DynamicArray",
+                      "name": "arc4.dynamic_array<byte[]>",
+                      "immutable": false,
+                      "element_type": {
+                        "_type": "ARC4DynamicArray",
+                        "name": "byte[]",
+                        "immutable": false,
+                        "element_type": {
+                          "_type": "ARC4UIntN",
+                          "name": "arc4.uint8",
+                          "immutable": true,
+                          "n": 8,
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "arc4_alias": "byte[]",
+                        "source_location": null
+                      },
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "name": "a"
+                  },
+                  "index": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
+                      "line": 795,
+                      "end_line": 796,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 1,
+                    "teal_alias": null
+                  }
                 },
                 "value": {
-                  "_type": "IntrinsicCall",
+                  "_type": "ARC4Encode",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
                     "line": 793,
@@ -2394,70 +2677,40 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
+                    "_type": "ARC4DynamicArray",
+                    "name": "byte[]",
+                    "immutable": false,
+                    "element_type": {
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint8",
+                      "immutable": true,
+                      "n": 8,
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "arc4_alias": "byte[]",
+                    "source_location": null
                   },
-                  "op_code": "replace3",
-                  "immediates": [],
-                  "stack_args": [
-                    {
-                      "_type": "VarExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
-                        "line": 793,
-                        "end_line": 794,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
-                      },
-                      "name": "a"
+                  "value": {
+                    "_type": "BytesConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
+                      "line": 800,
+                      "end_line": 812,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
                     },
-                    {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
-                        "line": 795,
-                        "end_line": 796,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 1,
-                      "teal_alias": null
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
                     },
-                    {
-                      "_type": "BytesConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
-                        "line": 800,
-                        "end_line": 812,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
-                      },
-                      "value": "XJvGBWpXk",
-                      "encoding": "utf8"
-                    }
-                  ]
+                    "value": "XJvGBWpXk",
+                    "encoding": "utf8"
+                  },
+                  "error_message": null
                 }
               }
             },
@@ -2482,31 +2735,100 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "BytesWType",
-                  "name": "bytes",
-                  "immutable": true,
-                  "length": null
+                  "_type": "ARC4DynamicArray",
+                  "name": "byte[]",
+                  "immutable": false,
+                  "element_type": {
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint8",
+                    "immutable": true,
+                    "n": 8,
+                    "arc4_alias": null,
+                    "source_location": null
+                  },
+                  "arc4_alias": "byte[]",
+                  "source_location": null
                 },
                 "target": {
-                  "_type": "VarExpression",
+                  "_type": "IndexExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
                     "line": 822,
-                    "end_line": 823,
+                    "end_line": 826,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
+                    "_type": "ARC4DynamicArray",
+                    "name": "byte[]",
+                    "immutable": false,
+                    "element_type": {
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint8",
+                      "immutable": true,
+                      "n": 8,
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "arc4_alias": "byte[]",
+                    "source_location": null
                   },
-                  "name": "a"
+                  "base": {
+                    "_type": "VarExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
+                      "line": 822,
+                      "end_line": 823,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "ARC4DynamicArray",
+                      "name": "arc4.dynamic_array<byte[]>",
+                      "immutable": false,
+                      "element_type": {
+                        "_type": "ARC4DynamicArray",
+                        "name": "byte[]",
+                        "immutable": false,
+                        "element_type": {
+                          "_type": "ARC4UIntN",
+                          "name": "arc4.uint8",
+                          "immutable": true,
+                          "n": 8,
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "arc4_alias": "byte[]",
+                        "source_location": null
+                      },
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "name": "a"
+                  },
+                  "index": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
+                      "line": 824,
+                      "end_line": 825,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 2,
+                    "teal_alias": null
+                  }
                 },
                 "value": {
-                  "_type": "IntrinsicCall",
+                  "_type": "ARC4Encode",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
                     "line": 822,
@@ -2516,70 +2838,40 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
+                    "_type": "ARC4DynamicArray",
+                    "name": "byte[]",
+                    "immutable": false,
+                    "element_type": {
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint8",
+                      "immutable": true,
+                      "n": 8,
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "arc4_alias": "byte[]",
+                    "source_location": null
                   },
-                  "op_code": "replace3",
-                  "immediates": [],
-                  "stack_args": [
-                    {
-                      "_type": "VarExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
-                        "line": 822,
-                        "end_line": 823,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
-                      },
-                      "name": "a"
+                  "value": {
+                    "_type": "BytesConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
+                      "line": 829,
+                      "end_line": 841,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
                     },
-                    {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
-                        "line": 824,
-                        "end_line": 825,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 2,
-                      "teal_alias": null
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
                     },
-                    {
-                      "_type": "BytesConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
-                        "line": 829,
-                        "end_line": 841,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
-                      },
-                      "value": "XJvGBWpXn",
-                      "encoding": "utf8"
-                    }
-                  ]
+                    "value": "XJvGBWpXn",
+                    "encoding": "utf8"
+                  },
+                  "error_message": null
                 }
               }
             },
@@ -2685,15 +2977,15 @@
                                 "column": null,
                                 "end_column": null
                               },
-                              "value": "f_reenc(byte[])(uint256,uint256,uint256)"
+                              "value": "f_reenc(byte[][])(uint256,uint256,uint256)"
                             }
                           },
                           {
-                            "_type": "VarExpression",
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
-                              "line": 879,
-                              "end_line": 880,
+                              "line": 866,
+                              "end_line": 881,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
@@ -2704,7 +2996,40 @@
                               "immutable": true,
                               "length": null
                             },
-                            "name": "a"
+                            "expr": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
+                                "line": 879,
+                                "end_line": 880,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "ARC4DynamicArray",
+                                "name": "arc4.dynamic_array<byte[]>",
+                                "immutable": false,
+                                "element_type": {
+                                  "_type": "ARC4DynamicArray",
+                                  "name": "byte[]",
+                                  "immutable": false,
+                                  "element_type": {
+                                    "_type": "ARC4UIntN",
+                                    "name": "arc4.uint8",
+                                    "immutable": true,
+                                    "n": 8,
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "arc4_alias": "byte[]",
+                                  "source_location": null
+                                },
+                                "arc4_alias": null,
+                                "source_location": null
+                              },
+                              "name": "a"
+                            }
                           }
                         ]
                       },
@@ -2967,15 +3292,15 @@
                                 "column": null,
                                 "end_column": null
                               },
-                              "value": "f(byte[])(uint256,uint256,uint256)"
+                              "value": "f(byte[][])(uint256,uint256,uint256)"
                             }
                           },
                           {
-                            "_type": "VarExpression",
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
-                              "line": 891,
-                              "end_line": 892,
+                              "line": 884,
+                              "end_line": 893,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
@@ -2986,7 +3311,40 @@
                               "immutable": true,
                               "length": null
                             },
-                            "name": "a"
+                            "expr": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_function_types.sol",
+                                "line": 891,
+                                "end_line": 892,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "ARC4DynamicArray",
+                                "name": "arc4.dynamic_array<byte[]>",
+                                "immutable": false,
+                                "element_type": {
+                                  "_type": "ARC4DynamicArray",
+                                  "name": "byte[]",
+                                  "immutable": false,
+                                  "element_type": {
+                                    "_type": "ARC4UIntN",
+                                    "name": "arc4.uint8",
+                                    "immutable": true,
+                                    "n": 8,
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "arc4_alias": "byte[]",
+                                  "source_location": null
+                                },
+                                "arc4_alias": null,
+                                "source_location": null
+                              },
+                              "name": "a"
+                            }
                           }
                         ]
                       },

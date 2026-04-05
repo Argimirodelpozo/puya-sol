@@ -769,9 +769,12 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "uint64",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint64",
+                  "immutable": true,
+                  "n": 64,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
                 "target": {
                   "_type": "IndexExpression",
@@ -784,12 +787,15 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "uint64",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint64",
+                    "immutable": true,
+                    "n": 64,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
                   "base": {
-                    "_type": "StateGet",
+                    "_type": "BoxValueExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
                       "line": 83,
@@ -798,8 +804,24 @@
                       "column": null,
                       "end_column": null
                     },
-                    "field": {
-                      "_type": "BoxValueExpression",
+                    "wtype": {
+                      "_type": "ARC4StaticArray",
+                      "name": "arc4.static_array<arc4.uint64, 3>",
+                      "immutable": false,
+                      "element_type": {
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint64",
+                        "immutable": true,
+                        "n": 64,
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "array_size": 3,
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "key": {
+                      "_type": "BoxPrefixedKeyExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
                         "line": 83,
@@ -809,19 +831,12 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "ReferenceArray",
-                        "name": "array<uint64, 3>",
-                        "immutable": true,
-                        "element_type": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "array_size": 3,
-                        "source_location": null
+                        "_type": "WType",
+                        "name": "box_key",
+                        "immutable": true
                       },
-                      "key": {
-                        "_type": "BoxPrefixedKeyExpression",
+                      "prefix": {
+                        "_type": "BytesConstant",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
                           "line": 83,
@@ -835,161 +850,66 @@
                           "name": "box_key",
                           "immutable": true
                         },
-                        "prefix": {
-                          "_type": "BytesConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                            "line": 83,
-                            "end_line": 91,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "box_key",
-                            "immutable": true
-                          },
-                          "value": "cm",
-                          "encoding": "utf8"
+                        "value": "cm",
+                        "encoding": "utf8"
+                      },
+                      "key": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
+                          "line": 83,
+                          "end_line": 91,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
                         },
-                        "key": {
-                          "_type": "IntrinsicCall",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                            "line": 83,
-                            "end_line": 91,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "op_code": "sha256",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "ReinterpretCast",
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "sha256",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "ReinterpretCast",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
+                              "line": 83,
+                              "end_line": 91,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "expr": {
+                              "_type": "StringConstant",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                                "line": 83,
-                                "end_line": 91,
+                                "line": 85,
+                                "end_line": 90,
                                 "comment_lines": 0,
                                 "column": null,
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
+                                "_type": "WType",
+                                "name": "string",
+                                "immutable": true
                               },
-                              "expr": {
-                                "_type": "StringConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                                  "line": 85,
-                                  "end_line": 90,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "string",
-                                  "immutable": true
-                                },
-                                "value": "abc"
-                              }
+                              "value": "abc"
                             }
-                          ]
-                        }
-                      },
-                      "exists_assertion_message": null
+                          }
+                        ]
+                      }
                     },
-                    "default": {
-                      "_type": "NewArray",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                        "line": 83,
-                        "end_line": 91,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "ReferenceArray",
-                        "name": "array<uint64, 3>",
-                        "immutable": true,
-                        "element_type": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "array_size": 3,
-                        "source_location": null
-                      },
-                      "values": [
-                        {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                            "line": 83,
-                            "end_line": 91,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 0,
-                          "teal_alias": null
-                        },
-                        {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                            "line": 83,
-                            "end_line": 91,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 0,
-                          "teal_alias": null
-                        },
-                        {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                            "line": 83,
-                            "end_line": 91,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 0,
-                          "teal_alias": null
-                        }
-                      ]
-                    }
+                    "exists_assertion_message": null
                   },
                   "index": {
                     "_type": "IntegerConstant",
@@ -1011,22 +931,42 @@
                   }
                 },
                 "value": {
-                  "_type": "IntegerConstant",
+                  "_type": "ARC4Encode",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                    "line": 97,
+                    "line": 83,
                     "end_line": 98,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "uint64",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint64",
+                    "immutable": true,
+                    "n": 64,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
-                  "value": 1,
-                  "teal_alias": null
+                  "value": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
+                      "line": 97,
+                      "end_line": 98,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 1,
+                    "teal_alias": null
+                  },
+                  "error_message": null
                 }
               }
             },
@@ -1051,9 +991,12 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "uint64",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint64",
+                  "immutable": true,
+                  "n": 64,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
                 "target": {
                   "_type": "IndexExpression",
@@ -1066,12 +1009,15 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "uint64",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint64",
+                    "immutable": true,
+                    "n": 64,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
                   "base": {
-                    "_type": "StateGet",
+                    "_type": "BoxValueExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
                       "line": 108,
@@ -1080,8 +1026,24 @@
                       "column": null,
                       "end_column": null
                     },
-                    "field": {
-                      "_type": "BoxValueExpression",
+                    "wtype": {
+                      "_type": "ARC4StaticArray",
+                      "name": "arc4.static_array<arc4.uint64, 3>",
+                      "immutable": false,
+                      "element_type": {
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint64",
+                        "immutable": true,
+                        "n": 64,
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "array_size": 3,
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "key": {
+                      "_type": "BoxPrefixedKeyExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
                         "line": 108,
@@ -1091,19 +1053,12 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "ReferenceArray",
-                        "name": "array<uint64, 3>",
-                        "immutable": true,
-                        "element_type": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "array_size": 3,
-                        "source_location": null
+                        "_type": "WType",
+                        "name": "box_key",
+                        "immutable": true
                       },
-                      "key": {
-                        "_type": "BoxPrefixedKeyExpression",
+                      "prefix": {
+                        "_type": "BytesConstant",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
                           "line": 108,
@@ -1117,161 +1072,66 @@
                           "name": "box_key",
                           "immutable": true
                         },
-                        "prefix": {
-                          "_type": "BytesConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                            "line": 108,
-                            "end_line": 116,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "box_key",
-                            "immutable": true
-                          },
-                          "value": "cm",
-                          "encoding": "utf8"
+                        "value": "cm",
+                        "encoding": "utf8"
+                      },
+                      "key": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
+                          "line": 108,
+                          "end_line": 116,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
                         },
-                        "key": {
-                          "_type": "IntrinsicCall",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                            "line": 108,
-                            "end_line": 116,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "op_code": "sha256",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "ReinterpretCast",
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "sha256",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "ReinterpretCast",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
+                              "line": 108,
+                              "end_line": 116,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "expr": {
+                              "_type": "StringConstant",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                                "line": 108,
-                                "end_line": 116,
+                                "line": 110,
+                                "end_line": 115,
                                 "comment_lines": 0,
                                 "column": null,
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
+                                "_type": "WType",
+                                "name": "string",
+                                "immutable": true
                               },
-                              "expr": {
-                                "_type": "StringConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                                  "line": 110,
-                                  "end_line": 115,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "string",
-                                  "immutable": true
-                                },
-                                "value": "abc"
-                              }
+                              "value": "abc"
                             }
-                          ]
-                        }
-                      },
-                      "exists_assertion_message": null
+                          }
+                        ]
+                      }
                     },
-                    "default": {
-                      "_type": "NewArray",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                        "line": 108,
-                        "end_line": 116,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "ReferenceArray",
-                        "name": "array<uint64, 3>",
-                        "immutable": true,
-                        "element_type": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "array_size": 3,
-                        "source_location": null
-                      },
-                      "values": [
-                        {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                            "line": 108,
-                            "end_line": 116,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 0,
-                          "teal_alias": null
-                        },
-                        {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                            "line": 108,
-                            "end_line": 116,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 0,
-                          "teal_alias": null
-                        },
-                        {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                            "line": 108,
-                            "end_line": 116,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 0,
-                          "teal_alias": null
-                        }
-                      ]
-                    }
+                    "exists_assertion_message": null
                   },
                   "index": {
                     "_type": "IntegerConstant",
@@ -1293,22 +1153,42 @@
                   }
                 },
                 "value": {
-                  "_type": "IntegerConstant",
+                  "_type": "ARC4Encode",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                    "line": 122,
+                    "line": 108,
                     "end_line": 123,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "uint64",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint64",
+                    "immutable": true,
+                    "n": 64,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
-                  "value": 3,
-                  "teal_alias": null
+                  "value": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
+                      "line": 122,
+                      "end_line": 123,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 3,
+                    "teal_alias": null
+                  },
+                  "error_message": null
                 }
               }
             },
@@ -1333,9 +1213,12 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "uint64",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint64",
+                  "immutable": true,
+                  "n": 64,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
                 "target": {
                   "_type": "IndexExpression",
@@ -1348,12 +1231,15 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "uint64",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint64",
+                    "immutable": true,
+                    "n": 64,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
                   "base": {
-                    "_type": "StateGet",
+                    "_type": "BoxValueExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
                       "line": 133,
@@ -1362,8 +1248,24 @@
                       "column": null,
                       "end_column": null
                     },
-                    "field": {
-                      "_type": "BoxValueExpression",
+                    "wtype": {
+                      "_type": "ARC4StaticArray",
+                      "name": "arc4.static_array<arc4.uint64, 3>",
+                      "immutable": false,
+                      "element_type": {
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint64",
+                        "immutable": true,
+                        "n": 64,
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "array_size": 3,
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "key": {
+                      "_type": "BoxPrefixedKeyExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
                         "line": 133,
@@ -1373,19 +1275,12 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "ReferenceArray",
-                        "name": "array<uint64, 3>",
-                        "immutable": true,
-                        "element_type": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "array_size": 3,
-                        "source_location": null
+                        "_type": "WType",
+                        "name": "box_key",
+                        "immutable": true
                       },
-                      "key": {
-                        "_type": "BoxPrefixedKeyExpression",
+                      "prefix": {
+                        "_type": "BytesConstant",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
                           "line": 133,
@@ -1399,161 +1294,66 @@
                           "name": "box_key",
                           "immutable": true
                         },
-                        "prefix": {
-                          "_type": "BytesConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                            "line": 133,
-                            "end_line": 141,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "box_key",
-                            "immutable": true
-                          },
-                          "value": "cm",
-                          "encoding": "utf8"
+                        "value": "cm",
+                        "encoding": "utf8"
+                      },
+                      "key": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
+                          "line": 133,
+                          "end_line": 141,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
                         },
-                        "key": {
-                          "_type": "IntrinsicCall",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                            "line": 133,
-                            "end_line": 141,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "op_code": "sha256",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "ReinterpretCast",
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "sha256",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "ReinterpretCast",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
+                              "line": 133,
+                              "end_line": 141,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "expr": {
+                              "_type": "StringConstant",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                                "line": 133,
-                                "end_line": 141,
+                                "line": 135,
+                                "end_line": 140,
                                 "comment_lines": 0,
                                 "column": null,
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
+                                "_type": "WType",
+                                "name": "string",
+                                "immutable": true
                               },
-                              "expr": {
-                                "_type": "StringConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                                  "line": 135,
-                                  "end_line": 140,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "string",
-                                  "immutable": true
-                                },
-                                "value": "abc"
-                              }
+                              "value": "abc"
                             }
-                          ]
-                        }
-                      },
-                      "exists_assertion_message": null
+                          }
+                        ]
+                      }
                     },
-                    "default": {
-                      "_type": "NewArray",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                        "line": 133,
-                        "end_line": 141,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "ReferenceArray",
-                        "name": "array<uint64, 3>",
-                        "immutable": true,
-                        "element_type": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "array_size": 3,
-                        "source_location": null
-                      },
-                      "values": [
-                        {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                            "line": 133,
-                            "end_line": 141,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 0,
-                          "teal_alias": null
-                        },
-                        {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                            "line": 133,
-                            "end_line": 141,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 0,
-                          "teal_alias": null
-                        },
-                        {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                            "line": 133,
-                            "end_line": 141,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 0,
-                          "teal_alias": null
-                        }
-                      ]
-                    }
+                    "exists_assertion_message": null
                   },
                   "index": {
                     "_type": "IntegerConstant",
@@ -1575,22 +1375,42 @@
                   }
                 },
                 "value": {
-                  "_type": "IntegerConstant",
+                  "_type": "ARC4Encode",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                    "line": 147,
+                    "line": 133,
                     "end_line": 148,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "uint64",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint64",
+                    "immutable": true,
+                    "n": 64,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
-                  "value": 2,
-                  "teal_alias": null
+                  "value": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
+                      "line": 147,
+                      "end_line": 148,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 2,
+                    "teal_alias": null
+                  },
+                  "error_message": null
                 }
               }
             },
@@ -1615,9 +1435,12 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "uint64",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint64",
+                  "immutable": true,
+                  "n": 64,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
                 "target": {
                   "_type": "IndexExpression",
@@ -1630,12 +1453,15 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "uint64",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint64",
+                    "immutable": true,
+                    "n": 64,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
                   "base": {
-                    "_type": "StateGet",
+                    "_type": "BoxValueExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
                       "line": 158,
@@ -1644,8 +1470,24 @@
                       "column": null,
                       "end_column": null
                     },
-                    "field": {
-                      "_type": "BoxValueExpression",
+                    "wtype": {
+                      "_type": "ARC4StaticArray",
+                      "name": "arc4.static_array<arc4.uint64, 3>",
+                      "immutable": false,
+                      "element_type": {
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint64",
+                        "immutable": true,
+                        "n": 64,
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "array_size": 3,
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "key": {
+                      "_type": "BoxPrefixedKeyExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
                         "line": 158,
@@ -1655,19 +1497,12 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "ReferenceArray",
-                        "name": "array<uint64, 3>",
-                        "immutable": true,
-                        "element_type": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "array_size": 3,
-                        "source_location": null
+                        "_type": "WType",
+                        "name": "box_key",
+                        "immutable": true
                       },
-                      "key": {
-                        "_type": "BoxPrefixedKeyExpression",
+                      "prefix": {
+                        "_type": "BytesConstant",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
                           "line": 158,
@@ -1681,161 +1516,66 @@
                           "name": "box_key",
                           "immutable": true
                         },
-                        "prefix": {
-                          "_type": "BytesConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                            "line": 158,
-                            "end_line": 166,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "box_key",
-                            "immutable": true
-                          },
-                          "value": "cm",
-                          "encoding": "utf8"
+                        "value": "cm",
+                        "encoding": "utf8"
+                      },
+                      "key": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
+                          "line": 158,
+                          "end_line": 166,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
                         },
-                        "key": {
-                          "_type": "IntrinsicCall",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                            "line": 158,
-                            "end_line": 166,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "op_code": "sha256",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "ReinterpretCast",
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "sha256",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "ReinterpretCast",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
+                              "line": 158,
+                              "end_line": 166,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "expr": {
+                              "_type": "StringConstant",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                                "line": 158,
-                                "end_line": 166,
+                                "line": 160,
+                                "end_line": 165,
                                 "comment_lines": 0,
                                 "column": null,
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
+                                "_type": "WType",
+                                "name": "string",
+                                "immutable": true
                               },
-                              "expr": {
-                                "_type": "StringConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                                  "line": 160,
-                                  "end_line": 165,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "string",
-                                  "immutable": true
-                                },
-                                "value": "def"
-                              }
+                              "value": "def"
                             }
-                          ]
-                        }
-                      },
-                      "exists_assertion_message": null
+                          }
+                        ]
+                      }
                     },
-                    "default": {
-                      "_type": "NewArray",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                        "line": 158,
-                        "end_line": 166,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "ReferenceArray",
-                        "name": "array<uint64, 3>",
-                        "immutable": true,
-                        "element_type": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "array_size": 3,
-                        "source_location": null
-                      },
-                      "values": [
-                        {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                            "line": 158,
-                            "end_line": 166,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 0,
-                          "teal_alias": null
-                        },
-                        {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                            "line": 158,
-                            "end_line": 166,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 0,
-                          "teal_alias": null
-                        },
-                        {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                            "line": 158,
-                            "end_line": 166,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 0,
-                          "teal_alias": null
-                        }
-                      ]
-                    }
+                    "exists_assertion_message": null
                   },
                   "index": {
                     "_type": "IntegerConstant",
@@ -1857,22 +1597,42 @@
                   }
                 },
                 "value": {
-                  "_type": "IntegerConstant",
+                  "_type": "ARC4Encode",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
-                    "line": 172,
+                    "line": 158,
                     "end_line": 173,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "uint64",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint64",
+                    "immutable": true,
+                    "n": 64,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
-                  "value": 9,
-                  "teal_alias": null
+                  "value": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol",
+                      "line": 172,
+                      "end_line": 173,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 9,
+                    "teal_alias": null
+                  },
+                  "error_message": null
                 }
               }
             }
@@ -3501,15 +3261,19 @@
         },
         "member_name": "x",
         "storage_wtype": {
-          "_type": "ReferenceArray",
-          "name": "array<uint64, 3>",
-          "immutable": true,
+          "_type": "ARC4StaticArray",
+          "name": "arc4.static_array<arc4.uint64, 3>",
+          "immutable": false,
           "element_type": {
-            "_type": "WType",
-            "name": "uint64",
-            "immutable": true
+            "_type": "ARC4UIntN",
+            "name": "arc4.uint64",
+            "immutable": true,
+            "n": 64,
+            "arc4_alias": null,
+            "source_location": null
           },
           "array_size": 3,
+          "arc4_alias": null,
           "source_location": null
         },
         "key": {

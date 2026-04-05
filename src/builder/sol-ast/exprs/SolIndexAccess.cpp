@@ -26,8 +26,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 		m_indexAccess.baseExpression().annotation().type);
 	auto* rawElemType = m_ctx.typeMapper.map(arrType->baseType());
 	auto* elemType = m_ctx.typeMapper.mapToARC4Type(rawElemType);
-	auto* arrWType = m_ctx.typeMapper.createType<awst::ReferenceArray>(
-		elemType, false, std::nullopt);
+	auto* arrWType = m_ctx.typeMapper.map(arrType);
 
 	std::string arrayVarName;
 	if (auto const* ident = dynamic_cast<Identifier const*>(&m_indexAccess.baseExpression()))
@@ -48,14 +47,12 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	std::shared_ptr<awst::Expression> baseExprForRead = boxExpr;
 	if (!m_indexAccess.annotation().willBeWrittenTo)
 	{
-		auto emptyArr = std::make_shared<awst::NewArray>();
-		emptyArr->sourceLocation = m_loc;
-		emptyArr->wtype = arrWType;
+		auto defaultVal = builder::TypeCoercion::makeDefaultValue(arrWType, m_loc);
 		auto sg = std::make_shared<awst::StateGet>();
 		sg->sourceLocation = m_loc;
 		sg->wtype = arrWType;
 		sg->field = boxExpr;
-		sg->defaultValue = emptyArr;
+		sg->defaultValue = defaultVal;
 		baseExprForRead = sg;
 	}
 
@@ -71,11 +68,17 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	if (m_indexAccess.annotation().willBeWrittenTo)
 		return indexExpr;
 
-	auto decode = std::make_shared<awst::ARC4Decode>();
-	decode->sourceLocation = m_loc;
-	decode->wtype = rawElemType;
-	decode->value = std::move(indexExpr);
-	return decode;
+	// Only ARC4Decode if element needs decoding to native type
+	bool needsDecode = rawElemType != elemType && rawElemType->name() != elemType->name();
+	if (needsDecode)
+	{
+		auto decode = std::make_shared<awst::ARC4Decode>();
+		decode->sourceLocation = m_loc;
+		decode->wtype = rawElemType;
+		decode->value = std::move(indexExpr);
+		return decode;
+	}
+	return indexExpr;
 }
 
 std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
@@ -333,6 +336,16 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 		auto const* refArr = static_cast<awst::ReferenceArray const*>(base->wtype);
 		actualElemType = const_cast<awst::WType*>(refArr->elementType());
 	}
+	else if (base->wtype && base->wtype->kind() == awst::WTypeKind::ARC4StaticArray)
+	{
+		auto const* arc4Arr = static_cast<awst::ARC4StaticArray const*>(base->wtype);
+		actualElemType = const_cast<awst::WType*>(arc4Arr->elementType());
+	}
+	else if (base->wtype && base->wtype->kind() == awst::WTypeKind::ARC4DynamicArray)
+	{
+		auto const* arc4Arr = static_cast<awst::ARC4DynamicArray const*>(base->wtype);
+		actualElemType = const_cast<awst::WType*>(arc4Arr->elementType());
+	}
 
 	auto e = std::make_shared<awst::IndexExpression>();
 	e->sourceLocation = m_loc;
@@ -340,14 +353,38 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 	e->index = std::move(index);
 	e->wtype = actualElemType;
 
-	if (actualElemType != expectedType
-		&& actualElemType->kind() == awst::WTypeKind::ARC4StaticArray)
+	// Decode ARC4 element to native type if needed (for rvalue usage)
+	// Only decode when element is ARC4 and expected type is native (not ARC4)
+	if (actualElemType->name() != expectedType->name())
 	{
-		auto decode = std::make_shared<awst::ARC4Decode>();
-		decode->sourceLocation = m_loc;
-		decode->wtype = expectedType;
-		decode->value = std::move(e);
-		return decode;
+		bool elemIsArc4 = false;
+		switch (actualElemType->kind())
+		{
+		case awst::WTypeKind::ARC4UIntN:
+		case awst::WTypeKind::ARC4StaticArray:
+		case awst::WTypeKind::ARC4DynamicArray:
+			elemIsArc4 = true; break;
+		default: break;
+		}
+		bool expectedIsNative = true;
+		switch (expectedType->kind())
+		{
+		case awst::WTypeKind::ARC4UIntN:
+		case awst::WTypeKind::ARC4StaticArray:
+		case awst::WTypeKind::ARC4DynamicArray:
+		case awst::WTypeKind::ARC4Struct:
+		case awst::WTypeKind::ARC4Tuple:
+			expectedIsNative = false; break;
+		default: break;
+		}
+		if (elemIsArc4 && expectedIsNative)
+		{
+			auto decode = std::make_shared<awst::ARC4Decode>();
+			decode->sourceLocation = m_loc;
+			decode->wtype = expectedType;
+			decode->value = std::move(e);
+			return decode;
+		}
 	}
 	return e;
 }

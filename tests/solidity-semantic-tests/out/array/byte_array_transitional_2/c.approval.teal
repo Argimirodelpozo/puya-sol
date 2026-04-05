@@ -4,12 +4,12 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol.c.approval_program() -> uint64:
 main:
     intcblock 0 1 2 32
-    bytecblock "data" 0x "__ctor_pending" 0x068101
+    bytecblock "data" "__ctor_pending" 0x
     pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
     store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -36,10 +36,10 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol.c.__postInit[routing]() -> void:
 __postInit:
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_0 // 0
     app_global_put
     bytec_0 // "data"
@@ -53,31 +53,7 @@ __postInit:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol.c.test[routing]() -> void:
 test:
     intc_0 // 0
-    dup
-    bytec_1 // ""
-
-test_while_top@17:
-    pushint 170010
-    global OpcodeBudget
-    >
-    bz test_after_while@22
-    itxn_begin
-    pushint 6 // appl
-    itxn_field TypeEnum
-    pushint 5 // DeleteApplication
-    itxn_field OnCompletion
-    bytec_3 // 0x068101
-    itxn_field ApprovalProgram
-    bytec_3 // 0x068101
-    itxn_field ClearStateProgram
-    intc_0 // 0
-    itxn_field Fee
-    itxn_submit
-    b test_while_top@17
-
-test_after_while@22:
-    intc_0 // 0
-    bury 1
+    dupn 2
 
 test_while_top@2:
     dup
@@ -86,7 +62,7 @@ test_while_top@2:
     bz test_after_while@4
     bytec_0 // "data"
     box_get
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     dig 1
@@ -123,7 +99,7 @@ test_while_top@5:
     bz test_after_while@9
     callsub _puya_lib.mem.new_slot
     dup
-    bytec_1 // 0x
+    bytec_2 // 0x
     stores
     bytec_0 // "data"
     box_get
@@ -201,7 +177,7 @@ test_while_top@10:
     bz test_after_while@14
     callsub _puya_lib.mem.new_slot
     dup
-    bytec_1 // 0x
+    bytec_2 // 0x
     stores
     bytec_0 // "data"
     box_get

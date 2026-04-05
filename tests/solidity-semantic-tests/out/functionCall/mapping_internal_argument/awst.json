@@ -2681,7 +2681,7 @@
                 },
                 "items": [
                   {
-                    "_type": "VarExpression",
+                    "_type": "UInt64BinaryOperation",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
                       "line": 282,
@@ -2695,10 +2695,45 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "name": "old_a"
+                    "left": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
+                        "line": 282,
+                        "end_line": 479,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "name": "old_a"
+                    },
+                    "op": "&",
+                    "right": {
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
+                        "line": 282,
+                        "end_line": 479,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "value": 255,
+                      "teal_alias": null
+                    }
                   },
                   {
-                    "_type": "VarExpression",
+                    "_type": "UInt64BinaryOperation",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
                       "line": 282,
@@ -2712,7 +2747,42 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "name": "old_b"
+                    "left": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
+                        "line": 282,
+                        "end_line": 479,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "name": "old_b"
+                    },
+                    "op": "&",
+                    "right": {
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
+                        "line": 282,
+                        "end_line": 479,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "value": 255,
+                      "teal_alias": null
+                    }
                   }
                 ]
               }
@@ -3012,17 +3082,22 @@
                 },
                 "items": [
                   {
-                    "_type": "StateGet",
+                    "_type": "UInt64BinaryOperation",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
-                      "line": 556,
-                      "end_line": 562,
+                      "line": 555,
+                      "end_line": 571,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
-                    "field": {
-                      "_type": "BoxValueExpression",
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "left": {
+                      "_type": "StateGet",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
                         "line": 556,
@@ -3031,13 +3106,8 @@
                         "column": null,
                         "end_column": null
                       },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "key": {
-                        "_type": "BoxPrefixedKeyExpression",
+                      "field": {
+                        "_type": "BoxValueExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
                           "line": 556,
@@ -3048,11 +3118,11 @@
                         },
                         "wtype": {
                           "_type": "WType",
-                          "name": "box_key",
+                          "name": "uint64",
                           "immutable": true
                         },
-                        "prefix": {
-                          "_type": "BytesConstant",
+                        "key": {
+                          "_type": "BoxPrefixedKeyExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
                             "line": 556,
@@ -3066,77 +3136,112 @@
                             "name": "box_key",
                             "immutable": true
                           },
-                          "value": "VE",
-                          "encoding": "utf8"
+                          "prefix": {
+                            "_type": "BytesConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
+                              "line": 556,
+                              "end_line": 562,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "box_key",
+                              "immutable": true
+                            },
+                            "value": "VE",
+                            "encoding": "utf8"
+                          },
+                          "key": {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
+                              "line": 556,
+                              "end_line": 562,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "sha256",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
+                                  "line": 556,
+                                  "end_line": 562,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "itob",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
+                                      "line": 558,
+                                      "end_line": 561,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "name": "key"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
                         },
-                        "key": {
-                          "_type": "IntrinsicCall",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
-                            "line": 556,
-                            "end_line": 562,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "op_code": "sha256",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "IntrinsicCall",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
-                                "line": 556,
-                                "end_line": 562,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "op_code": "itob",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "VarExpression",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
-                                    "line": 558,
-                                    "end_line": 561,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "name": "key"
-                                }
-                              ]
-                            }
-                          ]
-                        }
+                        "exists_assertion_message": null
                       },
-                      "exists_assertion_message": null
+                      "default": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
+                          "line": 556,
+                          "end_line": 562,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 0,
+                        "teal_alias": null
+                      }
                     },
-                    "default": {
+                    "op": "&",
+                    "right": {
                       "_type": "IntegerConstant",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
-                        "line": 556,
-                        "end_line": 562,
+                        "line": 555,
+                        "end_line": 571,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
@@ -3146,22 +3251,27 @@
                         "name": "uint64",
                         "immutable": true
                       },
-                      "value": 0,
+                      "value": 255,
                       "teal_alias": null
                     }
                   },
                   {
-                    "_type": "StateGet",
+                    "_type": "UInt64BinaryOperation",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
-                      "line": 564,
-                      "end_line": 570,
+                      "line": 555,
+                      "end_line": 571,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
-                    "field": {
-                      "_type": "BoxValueExpression",
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "left": {
+                      "_type": "StateGet",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
                         "line": 564,
@@ -3170,13 +3280,8 @@
                         "column": null,
                         "end_column": null
                       },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "key": {
-                        "_type": "BoxPrefixedKeyExpression",
+                      "field": {
+                        "_type": "BoxValueExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
                           "line": 564,
@@ -3187,11 +3292,11 @@
                         },
                         "wtype": {
                           "_type": "WType",
-                          "name": "box_key",
+                          "name": "uint64",
                           "immutable": true
                         },
-                        "prefix": {
-                          "_type": "BytesConstant",
+                        "key": {
+                          "_type": "BoxPrefixedKeyExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
                             "line": 564,
@@ -3205,77 +3310,112 @@
                             "name": "box_key",
                             "immutable": true
                           },
-                          "value": "Vg",
-                          "encoding": "utf8"
+                          "prefix": {
+                            "_type": "BytesConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
+                              "line": 564,
+                              "end_line": 570,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "box_key",
+                              "immutable": true
+                            },
+                            "value": "Vg",
+                            "encoding": "utf8"
+                          },
+                          "key": {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
+                              "line": 564,
+                              "end_line": 570,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "sha256",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
+                                  "line": 564,
+                                  "end_line": 570,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "itob",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
+                                      "line": 566,
+                                      "end_line": 569,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "name": "key"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
                         },
-                        "key": {
-                          "_type": "IntrinsicCall",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
-                            "line": 564,
-                            "end_line": 570,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "op_code": "sha256",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "IntrinsicCall",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
-                                "line": 564,
-                                "end_line": 570,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "op_code": "itob",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "VarExpression",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
-                                    "line": 566,
-                                    "end_line": 569,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "name": "key"
-                                }
-                              ]
-                            }
-                          ]
-                        }
+                        "exists_assertion_message": null
                       },
-                      "exists_assertion_message": null
+                      "default": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
+                          "line": 564,
+                          "end_line": 570,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 0,
+                        "teal_alias": null
+                      }
                     },
-                    "default": {
+                    "op": "&",
+                    "right": {
                       "_type": "IntegerConstant",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/mapping_internal_argument.sol",
-                        "line": 564,
-                        "end_line": 570,
+                        "line": 555,
+                        "end_line": 571,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
@@ -3285,7 +3425,7 @@
                         "name": "uint64",
                         "immutable": true
                       },
-                      "value": 0,
+                      "value": 255,
                       "teal_alias": null
                     }
                   }

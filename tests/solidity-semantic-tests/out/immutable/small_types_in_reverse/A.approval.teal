@@ -5,8 +5,6 @@
 main:
     intcblock 0 1 32 4660
     bytecblock "b" "c" 0x151f7c75 "a" "x"
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
-    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_3 // "a"
@@ -18,12 +16,8 @@ main:
     bytec_1 // "c"
     intc_0 // 0
     app_global_put
-    callsub _puya_lib.mem.new_slot
-    dup
-    pushbytes 0x000000000000000000000000000000000000000000000000
-    stores
     bytec 4 // "x"
-    swap
+    pushbytes 0x000000000000000000000000000000000000000000000000
     app_global_put
     bytec_1 // "c"
     pushint 65535
@@ -34,21 +28,21 @@ main:
     bytec_3 // "a"
     intc_3 // 4660
     app_global_put
+    intc_3 // 4660
+    itob
     intc_0 // 0
     bytec_0 // "b"
     app_global_get_ex
     assert // check b exists
+    itob
     intc_0 // 0
     bytec_1 // "c"
     app_global_get_ex
     assert // check c exists
-    intc_3 // 4660
     itob
-    uncover 2
-    itob
+    cover 2
     concat
     swap
-    itob
     concat
     bytec 4 // "x"
     swap
@@ -156,17 +150,3 @@ x:
     log
     intc_1 // 1
     return
-
-
-// _puya_lib.mem.new_slot() -> uint64:
-_puya_lib.mem.new_slot:
-    load 5
-    bitlen
-    load 5
-    pushint 256
-    dig 2
-    -
-    intc_0 // 0
-    setbit // on error: no available slots
-    store 5
-    retsub

@@ -1,0 +1,143 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/nested_calldata_storage.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1 2 0
+    bytecblock "tmp_i" 0x
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "tmp_i"
+    bytec_1 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xaae54cad 0xe2228fb6 // method "i(uint256[][2])void", method "tmp_i(uint256,uint256)uint256"
+    txna ApplicationArgs 0
+    match i tmp_i
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/nested_calldata_storage.sol.C.i[routing]() -> void:
+i:
+    txna ApplicationArgs 1
+    pushint 4
+    intc_3 // 0
+
+i_for_header@1:
+    dup
+    intc_2 // 2
+    <
+    bz i_after_for@4
+    dupn 2
+    intc_2 // 2
+    *
+    dig 4
+    dup
+    uncover 2
+    extract_uint16 // on error: invalid array encoding
+    dup
+    dig 5
+    dup
+    cover 4
+    ==
+    assert // invalid tail pointer for (len+uint256[])[2]
+    dig 1
+    len
+    substring3
+    intc_3 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    intc_2 // 2
+    +
+    +
+    bury 3
+    intc_1 // 1
+    +
+    bury 1
+    b i_for_header@1
+
+i_after_for@4:
+    dig 2
+    dup
+    len
+    dig 3
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.dynamic_array<arc4.uint256>, 2>
+    bytec_0 // "tmp_i"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/nested_calldata_storage.sol.C.tmp_i[routing]() -> void:
+tmp_i:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    sha256
+    bytec_0 // "tmp_i"
+    swap
+    concat
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

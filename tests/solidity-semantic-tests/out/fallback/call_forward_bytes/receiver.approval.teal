@@ -1,0 +1,88 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    bytecblock "received"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "received"
+    pushbytes 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x3bd31555 0x1bf9882b 0xc473430e // method "recv(uint256)void", method "__fallback()void", method "received()uint256"
+    txna ApplicationArgs 0
+    match recv /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.[routing] received
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.recv[routing]() -> void:
+recv:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_2 // 0
+    bytec_0 // "received"
+    app_global_get_ex
+    assert // check received exists
+    swap
+    pushbytes 0x01
+    b+
+    b+
+    bytec_0 // "received"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.[routing]() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.[routing]:
+    pushint 128
+    itob
+    bytec_0 // "received"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.received[routing]() -> void:
+received:
+    intc_2 // 0
+    bytec_0 // "received"
+    app_global_get_ex
+    assert // check received exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

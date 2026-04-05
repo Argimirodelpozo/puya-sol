@@ -4,9 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_push_empty.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 32 1 8
-    bytecblock "storageArray" "__ctor_pending" 0x068101 0x
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
-    store 5
+    bytecblock "storageArray" "__ctor_pending" 0x068101
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
@@ -108,21 +106,10 @@ pushEmpty_while_top@5:
     dup2
     b<
     bz pushEmpty_after_while@7
-    callsub _puya_lib.mem.new_slot
-    dup
-    bytec_3 // 0x
-    stores
     bytec_0 // "storageArray"
     box_get
-    swap
-    pushint 2
-    intc_0 // 0
-    extract3
-    callsub _puya_lib.mem.new_slot
-    dup
-    uncover 2
-    stores
-    swap
+    pushbytes 0x0000
+    cover 2
     select
     intc_3 // 8
     bzero
@@ -136,13 +123,13 @@ pushEmpty_while_top@5:
     -
     extract_uint64
     swap
-    loads
+    extract 2 0
     swap
     intc_1 // 32
     *
     intc_1 // 32
     extract3 // on error: index access is out of bounds
-    bytec_3 // 0x
+    pushbytes 0x
     b==
     assert
     pushbytes 0x01
@@ -153,17 +140,3 @@ pushEmpty_while_top@5:
 pushEmpty_after_while@7:
     intc_2 // 1
     return
-
-
-// _puya_lib.mem.new_slot() -> uint64:
-_puya_lib.mem.new_slot:
-    load 5
-    bitlen
-    load 5
-    pushint 256
-    dig 2
-    -
-    intc_0 // 0
-    setbit // on error: no available slots
-    store 5
-    retsub

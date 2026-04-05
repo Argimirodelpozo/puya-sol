@@ -28,11 +28,17 @@ main_after_if_else@2:
     assert
     pushbytess 0x329c8739 0x3f35ad11 0x035ca5a9 0x63f240f0 0x6be4a9d9 // method "f0()byte[]", method "f1()byte[]", method "f1s()byte[]", method "f2()(byte[],uint256[])", method "f4()byte[]"
     txna ApplicationArgs 0
-    match main_f0_route@5 main_f1_route@6 f1s f2 main_f4_route@9
+    match main_f0_route@5 main_f1_route@6 f1s main_f2_route@8 main_f4_route@9
     err
 
 main_f4_route@9:
     pushbytes 0x151f7c7500963aeb8825ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000001234567002a000000000000123400264c6f72656d20697073756d20646f6c6f722073697420657468657265756d2e2e2e2e2e2e2e2e0000000000000000000000000000000000000000000000000000000000000003
+    log
+    intc_0 // 1
+    return
+
+main_f2_route@8:
+    pushbytes 0x151f7c750004008c0086973153f80000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
@@ -56,14 +62,6 @@ f1s:
     pushbytes "f(uint256)"
     app_global_put
     bytec_1 // 0x151f7c750007eba78c31616263
-    log
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_with_signaturev2.sol.C.f2[routing]() -> void:
-f2:
-    pushbytes 0x151f7c750004008c0086973153f80004fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return

@@ -44,23 +44,19 @@ c:
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
+    dup
     intc_2 // 32
     *
     pushint 2
     +
-    dig 1
+    dig 2
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
-    dup
-    extract 2 0
     uncover 2
     pushbytes 0x05
     b==
     assert
-    len
-    intc_2 // 32
-    /
     itob
     pushbytes 0x02
     b==

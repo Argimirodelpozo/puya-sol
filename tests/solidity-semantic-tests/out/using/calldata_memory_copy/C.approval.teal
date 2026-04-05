@@ -4,8 +4,6 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 1 8
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
-    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     intc_2 // 1
@@ -33,19 +31,17 @@ main_f_route@4:
     b f
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol.sum(arr: uint64) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol.sum(arr: bytes) -> bytes, bytes:
 sum:
-    proto 1 1
+    proto 1 2
     pushbytes 0x
     intc_1 // 0
     itob
 
 sum_while_top@1:
     frame_dig -1
-    loads
-    len
-    intc_0 // 32
-    /
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
     itob
     frame_dig 1
     b>
@@ -62,7 +58,7 @@ sum_while_top@1:
     -
     extract_uint64
     frame_dig -1
-    loads
+    extract 2 0
     swap
     intc_0 // 32
     *
@@ -77,6 +73,10 @@ sum_while_top@1:
     b sum_while_top@1
 
 sum_after_while@3:
+    frame_dig 0
+    frame_dig -1
+    uncover 3
+    uncover 3
     retsub
 
 
@@ -94,12 +94,8 @@ f:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
-    extract 2 0
-    callsub _puya_lib.mem.new_slot
-    dup
-    uncover 2
-    stores
     callsub sum
+    pop
     dup
     len
     intc_0 // 32
@@ -114,17 +110,3 @@ f:
     log
     intc_2 // 1
     return
-
-
-// _puya_lib.mem.new_slot() -> uint64:
-_puya_lib.mem.new_slot:
-    load 5
-    bitlen
-    load 5
-    pushint 256
-    dig 2
-    -
-    intc_1 // 0
-    setbit // on error: no available slots
-    store 5
-    retsub

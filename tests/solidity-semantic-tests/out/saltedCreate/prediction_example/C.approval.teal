@@ -1,0 +1,140 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/saltedCreate/prediction_example.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock 0xffffffffffffffffffffffffffffffffffffffff 0x0a8101
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0x69525170 // method "createDSalted(byte[32],uint256)void"
+    txna ApplicationArgs 0
+    match main_createDSalted_route@4
+    err
+
+main_createDSalted_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b createDSalted
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/saltedCreate/prediction_example.sol.C.createDSalted[routing]() -> void:
+createDSalted:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    global CurrentApplicationAddress
+    dig 1
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    dig 1
+    concat
+    dig 2
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    keccak256
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    dig 1
+    concat
+    keccak256
+    btoi
+    itob
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
+    dig 3
+    swap
+    concat
+    global CurrentApplicationAddress
+    uncover 3
+    concat
+    uncover 2
+    concat
+    keccak256
+    btoi
+    itob
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
+    uncover 2
+    swap
+    concat
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    itxn_begin
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field Fee
+    bytec_1 // 0x0a8101
+    itxn_field ClearStateProgram
+    bytec_1 // 0x0a8101
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_2 // 0
+    itxn_field Fee
+    pushint 200000
+    itxn_field Amount
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    ==
+    assert // Address mismatch.
+    intc_1 // 1
+    return

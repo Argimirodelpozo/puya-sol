@@ -1814,17 +1814,22 @@
                 },
                 "items": [
                   {
-                    "_type": "StateGet",
+                    "_type": "UInt64BinaryOperation",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
-                      "line": 290,
-                      "end_line": 295,
+                      "line": 289,
+                      "end_line": 317,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
-                    "field": {
-                      "_type": "BoxValueExpression",
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "left": {
+                      "_type": "StateGet",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
                         "line": 290,
@@ -1833,13 +1838,8 @@
                         "column": null,
                         "end_column": null
                       },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "key": {
-                        "_type": "BoxPrefixedKeyExpression",
+                      "field": {
+                        "_type": "BoxValueExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
                           "line": 290,
@@ -1850,11 +1850,11 @@
                         },
                         "wtype": {
                           "_type": "WType",
-                          "name": "box_key",
+                          "name": "uint64",
                           "immutable": true
                         },
-                        "prefix": {
-                          "_type": "BytesConstant",
+                        "key": {
+                          "_type": "BoxPrefixedKeyExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
                             "line": 290,
@@ -1868,78 +1868,113 @@
                             "name": "box_key",
                             "immutable": true
                           },
-                          "value": "Z7~",
-                          "encoding": "utf8"
+                          "prefix": {
+                            "_type": "BytesConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
+                              "line": 290,
+                              "end_line": 295,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "box_key",
+                              "immutable": true
+                            },
+                            "value": "Z7~",
+                            "encoding": "utf8"
+                          },
+                          "key": {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
+                              "line": 290,
+                              "end_line": 295,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "sha256",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
+                                  "line": 290,
+                                  "end_line": 295,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "itob",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
+                                      "line": 293,
+                                      "end_line": 294,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 1,
+                                    "teal_alias": null
+                                  }
+                                ]
+                              }
+                            ]
+                          }
                         },
-                        "key": {
-                          "_type": "IntrinsicCall",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
-                            "line": 290,
-                            "end_line": 295,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "op_code": "sha256",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "IntrinsicCall",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
-                                "line": 290,
-                                "end_line": 295,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "op_code": "itob",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "IntegerConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
-                                    "line": 293,
-                                    "end_line": 294,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "value": 1,
-                                  "teal_alias": null
-                                }
-                              ]
-                            }
-                          ]
-                        }
+                        "exists_assertion_message": null
                       },
-                      "exists_assertion_message": null
+                      "default": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
+                          "line": 290,
+                          "end_line": 295,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 0,
+                        "teal_alias": null
+                      }
                     },
-                    "default": {
+                    "op": "&",
+                    "right": {
                       "_type": "IntegerConstant",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
-                        "line": 290,
-                        "end_line": 295,
+                        "line": 289,
+                        "end_line": 317,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
@@ -1949,22 +1984,27 @@
                         "name": "uint64",
                         "immutable": true
                       },
-                      "value": 0,
+                      "value": 255,
                       "teal_alias": null
                     }
                   },
                   {
-                    "_type": "StateGet",
+                    "_type": "UInt64BinaryOperation",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
-                      "line": 297,
-                      "end_line": 302,
+                      "line": 289,
+                      "end_line": 317,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
-                    "field": {
-                      "_type": "BoxValueExpression",
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "left": {
+                      "_type": "StateGet",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
                         "line": 297,
@@ -1973,13 +2013,8 @@
                         "column": null,
                         "end_column": null
                       },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "key": {
-                        "_type": "BoxPrefixedKeyExpression",
+                      "field": {
+                        "_type": "BoxValueExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
                           "line": 297,
@@ -1990,11 +2025,11 @@
                         },
                         "wtype": {
                           "_type": "WType",
-                          "name": "box_key",
+                          "name": "uint64",
                           "immutable": true
                         },
-                        "prefix": {
-                          "_type": "BytesConstant",
+                        "key": {
+                          "_type": "BoxPrefixedKeyExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
                             "line": 297,
@@ -2008,78 +2043,113 @@
                             "name": "box_key",
                             "immutable": true
                           },
-                          "value": "Z7~",
-                          "encoding": "utf8"
+                          "prefix": {
+                            "_type": "BytesConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
+                              "line": 297,
+                              "end_line": 302,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "box_key",
+                              "immutable": true
+                            },
+                            "value": "Z7~",
+                            "encoding": "utf8"
+                          },
+                          "key": {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
+                              "line": 297,
+                              "end_line": 302,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "sha256",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
+                                  "line": 297,
+                                  "end_line": 302,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "itob",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
+                                      "line": 300,
+                                      "end_line": 301,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 2,
+                                    "teal_alias": null
+                                  }
+                                ]
+                              }
+                            ]
+                          }
                         },
-                        "key": {
-                          "_type": "IntrinsicCall",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
-                            "line": 297,
-                            "end_line": 302,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "op_code": "sha256",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "IntrinsicCall",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
-                                "line": 297,
-                                "end_line": 302,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "op_code": "itob",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "IntegerConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
-                                    "line": 300,
-                                    "end_line": 301,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "value": 2,
-                                  "teal_alias": null
-                                }
-                              ]
-                            }
-                          ]
-                        }
+                        "exists_assertion_message": null
                       },
-                      "exists_assertion_message": null
+                      "default": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
+                          "line": 297,
+                          "end_line": 302,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 0,
+                        "teal_alias": null
+                      }
                     },
-                    "default": {
+                    "op": "&",
+                    "right": {
                       "_type": "IntegerConstant",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
-                        "line": 297,
-                        "end_line": 302,
+                        "line": 289,
+                        "end_line": 317,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
@@ -2089,22 +2159,27 @@
                         "name": "uint64",
                         "immutable": true
                       },
-                      "value": 0,
+                      "value": 255,
                       "teal_alias": null
                     }
                   },
                   {
-                    "_type": "StateGet",
+                    "_type": "UInt64BinaryOperation",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
-                      "line": 304,
-                      "end_line": 309,
+                      "line": 289,
+                      "end_line": 317,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
-                    "field": {
-                      "_type": "BoxValueExpression",
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "left": {
+                      "_type": "StateGet",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
                         "line": 304,
@@ -2113,13 +2188,8 @@
                         "column": null,
                         "end_column": null
                       },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "key": {
-                        "_type": "BoxPrefixedKeyExpression",
+                      "field": {
+                        "_type": "BoxValueExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
                           "line": 304,
@@ -2130,11 +2200,11 @@
                         },
                         "wtype": {
                           "_type": "WType",
-                          "name": "box_key",
+                          "name": "uint64",
                           "immutable": true
                         },
-                        "prefix": {
-                          "_type": "BytesConstant",
+                        "key": {
+                          "_type": "BoxPrefixedKeyExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
                             "line": 304,
@@ -2148,78 +2218,113 @@
                             "name": "box_key",
                             "immutable": true
                           },
-                          "value": "Z88",
-                          "encoding": "utf8"
+                          "prefix": {
+                            "_type": "BytesConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
+                              "line": 304,
+                              "end_line": 309,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "box_key",
+                              "immutable": true
+                            },
+                            "value": "Z88",
+                            "encoding": "utf8"
+                          },
+                          "key": {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
+                              "line": 304,
+                              "end_line": 309,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "sha256",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
+                                  "line": 304,
+                                  "end_line": 309,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "itob",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
+                                      "line": 307,
+                                      "end_line": 308,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 1,
+                                    "teal_alias": null
+                                  }
+                                ]
+                              }
+                            ]
+                          }
                         },
-                        "key": {
-                          "_type": "IntrinsicCall",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
-                            "line": 304,
-                            "end_line": 309,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "op_code": "sha256",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "IntrinsicCall",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
-                                "line": 304,
-                                "end_line": 309,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "op_code": "itob",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "IntegerConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
-                                    "line": 307,
-                                    "end_line": 308,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "value": 1,
-                                  "teal_alias": null
-                                }
-                              ]
-                            }
-                          ]
-                        }
+                        "exists_assertion_message": null
                       },
-                      "exists_assertion_message": null
+                      "default": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
+                          "line": 304,
+                          "end_line": 309,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 0,
+                        "teal_alias": null
+                      }
                     },
-                    "default": {
+                    "op": "&",
+                    "right": {
                       "_type": "IntegerConstant",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
-                        "line": 304,
-                        "end_line": 309,
+                        "line": 289,
+                        "end_line": 317,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
@@ -2229,22 +2334,27 @@
                         "name": "uint64",
                         "immutable": true
                       },
-                      "value": 0,
+                      "value": 255,
                       "teal_alias": null
                     }
                   },
                   {
-                    "_type": "StateGet",
+                    "_type": "UInt64BinaryOperation",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
-                      "line": 311,
-                      "end_line": 316,
+                      "line": 289,
+                      "end_line": 317,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
-                    "field": {
-                      "_type": "BoxValueExpression",
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "left": {
+                      "_type": "StateGet",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
                         "line": 311,
@@ -2253,13 +2363,8 @@
                         "column": null,
                         "end_column": null
                       },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "key": {
-                        "_type": "BoxPrefixedKeyExpression",
+                      "field": {
+                        "_type": "BoxValueExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
                           "line": 311,
@@ -2270,11 +2375,11 @@
                         },
                         "wtype": {
                           "_type": "WType",
-                          "name": "box_key",
+                          "name": "uint64",
                           "immutable": true
                         },
-                        "prefix": {
-                          "_type": "BytesConstant",
+                        "key": {
+                          "_type": "BoxPrefixedKeyExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
                             "line": 311,
@@ -2288,78 +2393,113 @@
                             "name": "box_key",
                             "immutable": true
                           },
-                          "value": "Z88",
-                          "encoding": "utf8"
+                          "prefix": {
+                            "_type": "BytesConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
+                              "line": 311,
+                              "end_line": 316,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "box_key",
+                              "immutable": true
+                            },
+                            "value": "Z88",
+                            "encoding": "utf8"
+                          },
+                          "key": {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
+                              "line": 311,
+                              "end_line": 316,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "sha256",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
+                                  "line": 311,
+                                  "end_line": 316,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "itob",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
+                                      "line": 314,
+                                      "end_line": 315,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 2,
+                                    "teal_alias": null
+                                  }
+                                ]
+                              }
+                            ]
+                          }
                         },
-                        "key": {
-                          "_type": "IntrinsicCall",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
-                            "line": 311,
-                            "end_line": 316,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "op_code": "sha256",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "IntrinsicCall",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
-                                "line": 311,
-                                "end_line": 316,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "op_code": "itob",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "IntegerConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
-                                    "line": 314,
-                                    "end_line": 315,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "value": 2,
-                                  "teal_alias": null
-                                }
-                              ]
-                            }
-                          ]
-                        }
+                        "exists_assertion_message": null
                       },
-                      "exists_assertion_message": null
+                      "default": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
+                          "line": 311,
+                          "end_line": 316,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 0,
+                        "teal_alias": null
+                      }
                     },
-                    "default": {
+                    "op": "&",
+                    "right": {
                       "_type": "IntegerConstant",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol",
-                        "line": 311,
-                        "end_line": 316,
+                        "line": 289,
+                        "end_line": 317,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
@@ -2369,7 +2509,7 @@
                         "name": "uint64",
                         "immutable": true
                       },
-                      "value": 0,
+                      "value": 255,
                       "teal_alias": null
                     }
                   }

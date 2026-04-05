@@ -1,0 +1,397 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 2 32 1
+    bytecblock "arrayData" "y" "data" 0x "x" "__ctor_pending" 0x151f7c75 0x00010000000000000000000000000000000000000000000000000000000000000004
+    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
+    store 5
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 7
+    itob
+    bytec 4 // "x"
+    swap
+    app_global_put
+    bytec 5 // "__ctor_pending"
+    intc_3 // 1
+    app_global_put
+    intc_3 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x34d579df 0x4e631e90 // method "__postInit()void", method "returnsArray()uint256[]", method "f(byte[])uint256"
+    txna ApplicationArgs 0
+    match __postInit returnsArray f
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec 5 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 5 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_2 // "data"
+    intc_0 // 0
+    box_create
+    pop
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray[routing]() -> void:
+returnsArray:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    dupn 2
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray
+    pop
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray
+    pop
+    pushint 8
+    itob
+    swap
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray
+    pop
+    pushint 4
+    itob
+    dup
+    cover 2
+    bytec 4 // "x"
+    swap
+    app_global_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray
+    bytec_1 // "y"
+    box_del
+    pop
+    bytec_1 // "y"
+    swap
+    box_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray
+    pop
+    bytec_2 // "data"
+    box_del
+    pop
+    bytec_2 // "data"
+    swap
+    box_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray
+    pop
+    intc_1 // 2
+    itob
+    intc_2 // 32
+    bzero
+    bytec_0 // "arrayData"
+    box_get
+    assert // box exists
+    intc_1 // 2
+    intc_0 // 0
+    extract3
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    replace2 96 // on error: index access is out of bounds
+    dup
+    len
+    intc_2 // 32
+    /
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // "arrayData"
+    box_del
+    pop
+    bytec_0 // "arrayData"
+    swap
+    box_put
+    intc_0 // 0
+    bytec 4 // "x"
+    app_global_get_ex
+    assert // check x exists
+    pushbytes 0x04
+    b!=
+    bz f_after_if_else@5
+    dig 1
+
+f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@26:
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+f_after_if_else@5:
+    bytec_1 // "y"
+    box_len
+    pop
+    intc_2 // 32
+    /
+    itob
+    pushbytes 0x09
+    b!=
+    bz f_after_if_else@7
+    pushint 3
+    itob
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@26
+
+f_after_if_else@7:
+    callsub _puya_lib.mem.new_slot
+    dup
+    bytec_3 // 0x
+    stores
+    bytec_1 // "y"
+    box_get
+    swap
+    intc_1 // 2
+    intc_0 // 0
+    extract3
+    callsub _puya_lib.mem.new_slot
+    dup
+    uncover 2
+    stores
+    swap
+    select
+    loads
+    extract 64 32 // on error: index access is out of bounds
+    pushbytes 0x05
+    b!=
+    bz f_after_if_else@9
+    dig 2
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@26
+
+f_after_if_else@9:
+    callsub _puya_lib.mem.new_slot
+    dup
+    bytec_3 // 0x
+    stores
+    bytec_1 // "y"
+    box_get
+    swap
+    intc_1 // 2
+    intc_0 // 0
+    extract3
+    callsub _puya_lib.mem.new_slot
+    dup
+    uncover 2
+    stores
+    swap
+    select
+    loads
+    extract 224 32 // on error: index access is out of bounds
+    pushbytes 0x04
+    b!=
+    bz f_after_if_else@11
+    pushint 5
+    itob
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@26
+
+f_after_if_else@11:
+    bytec_2 // "data"
+    box_len
+    pop
+    itob
+    dig 5
+    len
+    itob
+    b!=
+    bz f_after_if_else@13
+    pushint 6
+    itob
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@26
+
+f_after_if_else@13:
+    callsub _puya_lib.mem.new_slot
+    dup
+    bytec_3 // 0x
+    stores
+    bytec_2 // "data"
+    box_get
+    swap
+    intc_1 // 2
+    intc_0 // 0
+    extract3
+    callsub _puya_lib.mem.new_slot
+    dup
+    uncover 2
+    stores
+    swap
+    select
+    loads
+    extract 3 1 // on error: index access is out of bounds
+    dig 6
+    extract 5 1
+    !=
+    bz f_after_if_else@15
+    pushint 7
+    itob
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@26
+
+f_after_if_else@15:
+    callsub _puya_lib.mem.new_slot
+    dup
+    bytec_3 // 0x
+    stores
+    bytec_0 // "arrayData"
+    box_get
+    swap
+    intc_1 // 2
+    intc_0 // 0
+    extract3
+    callsub _puya_lib.mem.new_slot
+    dup
+    uncover 2
+    stores
+    swap
+    select
+    loads
+    extract 96 32 // on error: index access is out of bounds
+    pushbytes 0x02
+    b!=
+    bz f_after_if_else@17
+    dig 3
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@26
+
+f_after_if_else@17:
+    bytec_0 // "arrayData"
+    box_get
+    pushbytes 0x0000
+    cover 2
+    select
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    bytec_0 // "arrayData"
+    box_len
+    pop
+    intc_2 // 32
+    /
+    itob
+    b!=
+    bz f_after_if_else@21
+    pushint 10
+    itob
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@26
+
+f_after_if_else@21:
+    pushint 456
+    itob
+    bytec 4 // "x"
+    swap
+    app_global_put
+    bytec_1 // "y"
+    box_get
+    assert // box exists
+    intc_1 // 2
+    intc_0 // 0
+    extract3
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000315
+    replace2 64 // on error: index access is out of bounds
+    dup
+    len
+    intc_2 // 32
+    /
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_1 // "y"
+    box_del
+    pop
+    bytec_1 // "y"
+    dig 1
+    box_put
+    intc_1 // 2
+    intc_0 // 0
+    extract3
+    extract 64 32 // on error: index access is out of bounds
+    pushbytes 0x0315
+    b!=
+    bz f_after_if_else@25
+    pushint 11
+    itob
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@26
+
+f_after_if_else@25:
+    bytec_3 // 0x
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@26
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray() -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray:
+    bytec_0 // "arrayData"
+    box_del
+    pop
+    bytec_0 // "arrayData"
+    pushbytes 0x0009000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    box_put
+    bytec_0 // "arrayData"
+    box_del
+    pop
+    bytec_0 // "arrayData"
+    pushbytes 0x00010000000000000000000000000000000000000000000000000000000000000005
+    box_put
+    bytec_0 // "arrayData"
+    box_del
+    pop
+    bytec_0 // "arrayData"
+    bytec 7 // 0x00010000000000000000000000000000000000000000000000000000000000000004
+    box_put
+    bytec 7 // 0x00010000000000000000000000000000000000000000000000000000000000000004
+    retsub
+
+
+// _puya_lib.mem.new_slot() -> uint64:
+_puya_lib.mem.new_slot:
+    load 5
+    bitlen
+    load 5
+    pushint 256
+    dig 2
+    -
+    intc_0 // 0
+    setbit // on error: no available slots
+    store 5
+    retsub

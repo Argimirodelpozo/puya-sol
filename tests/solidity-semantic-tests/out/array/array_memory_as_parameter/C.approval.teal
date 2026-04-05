@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 8 0 1
+    intcblock 32 0 8 1
     bytecblock 0x01 0x151f7c75
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
-    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     intc_3 // 1
@@ -33,7 +31,7 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.test[routing]() -> void:
 test:
-    intc_2 // 0
+    intc_1 // 0
     dupn 2
     txna ApplicationArgs 1
     dup
@@ -47,22 +45,21 @@ test:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub _puya_lib.mem.new_slot
-    dup
-    pushbytes 0x
-    stores
-    intc_2 // 0
+    intc_1 // 0
+    itob
+    pushbytes 0x0000
+    intc_1 // 0
 
 test_while_top@2:
-    intc_1 // 8
+    intc_2 // 8
     bzero
     dup
-    bury 6
-    dig 4
+    bury 7
+    dig 5
     concat
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     -
     extract_uint64
     dig 1
@@ -70,10 +67,16 @@ test_while_top@2:
     bz test_after_while@4
     dig 1
     dup
-    loads
+    intc_1 // 0
+    extract_uint16
+    intc_3 // 1
+    +
+    itob
+    extract 6 0
+    replace2 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
-    concat // on error: max array length exceeded
-    stores
+    concat
+    bury 2
     dup
     intc_3 // 1
     +
@@ -82,35 +85,31 @@ test_while_top@2:
 
 test_after_while@4:
     dig 1
-    dig 3
+    dig 4
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver
-    bury 6
-    intc_2 // 0
-    itob
+    bury 9
     bury 7
 
 test_while_top@5:
-    dig 1
-    loads
-    len
-    intc_0 // 32
-    /
-    itob
     dig 7
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    dig 3
     b>
     bz test_after_while@7
-    dig 4
-    dig 7
+    dig 5
+    dig 3
     dup
     cover 2
     concat
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     -
     extract_uint64
-    dig 3
-    loads
+    dig 9
+    extract 2 0
     swap
     intc_0 // 32
     *
@@ -120,13 +119,13 @@ test_while_top@5:
     bytec_0 // 0x01
     b+
     dup
-    bury 9
+    bury 5
     b==
     assert
     b test_while_top@5
 
 test_after_while@7:
-    dig 5
+    dig 6
     dup
     len
     intc_0 // 32
@@ -147,7 +146,7 @@ test_after_while@7:
 receiver:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
@@ -164,6 +163,7 @@ receiver:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver
+    pop
     dup
     len
     intc_0 // 32
@@ -180,93 +180,71 @@ receiver:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver(__arc4_array: bytes, idx: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver(array: bytes, idx: bytes) -> bytes, bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver:
-    proto 2 1
-    frame_dig -2
-    extract 2 0
-    callsub _puya_lib.mem.new_slot
-    dup
-    uncover 2
-    stores
-    intc_2 // 0
+    proto 2 2
+    intc_1 // 0
     itob
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver_while_top@1:
-    frame_dig 0
-    loads
-    len
-    intc_0 // 32
-    /
+    frame_dig -2
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
     itob
-    frame_dig 1
+    frame_dig 0
     b>
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver_after_while@3
-    frame_dig 1
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver_after_while@5
+    frame_dig 0
     dup
     bytec_0 // 0x01
     b+
-    intc_1 // 8
-    bzero
-    uncover 2
-    concat
     dup
-    len
-    intc_1 // 8
-    -
-    extract_uint64
-    dig 1
     len
     intc_0 // 32
     <=
     assert // overflow
     intc_0 // 32
     bzero
-    dig 2
+    dig 1
     b|
-    frame_dig 0
-    dup
-    cover 2
-    loads
+    intc_2 // 8
+    bzero
     uncover 3
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
     intc_0 // 32
     *
+    pushint 2
+    +
+    frame_dig -2
+    swap
     uncover 2
     replace3 // on error: index access is out of bounds
-    stores
-    frame_bury 1
+    frame_bury -2
+    frame_bury 0
     b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver_while_top@1
 
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver_after_while@3:
-    intc_1 // 8
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_as_parameter.sol.C.receiver_after_while@5:
+    intc_2 // 8
     bzero
     frame_dig -1
     concat
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     -
     extract_uint64
-    frame_dig 0
-    loads
+    frame_dig -2
+    extract 2 0
     swap
     intc_0 // 32
     *
     intc_0 // 32
     extract3 // on error: index access is out of bounds
-    frame_bury 0
-    retsub
-
-
-// _puya_lib.mem.new_slot() -> uint64:
-_puya_lib.mem.new_slot:
-    load 5
-    bitlen
-    load 5
-    pushint 256
-    dig 2
-    -
-    intc_2 // 0
-    setbit // on error: no available slots
-    store 5
+    frame_dig -2
+    uncover 2
     retsub

@@ -165,7 +165,7 @@
                         "encoding": "utf8"
                       },
                       {
-                        "_type": "NewArray",
+                        "_type": "BytesConstant",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
                           "line": 1,
@@ -175,73 +175,23 @@
                           "end_column": null
                         },
                         "wtype": {
-                          "_type": "ReferenceArray",
-                          "name": "array<biguint, 3>",
-                          "immutable": true,
+                          "_type": "ARC4StaticArray",
+                          "name": "arc4.static_array<arc4.uint256, 3>",
+                          "immutable": false,
                           "element_type": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint256",
+                            "immutable": true,
+                            "n": 256,
+                            "arc4_alias": null,
+                            "source_location": null
                           },
                           "array_size": 3,
+                          "arc4_alias": null,
                           "source_location": null
                         },
-                        "values": [
-                          {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
-                              "line": 1,
-                              "end_line": 291,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "biguint",
-                              "immutable": true
-                            },
-                            "value": 0,
-                            "teal_alias": null
-                          },
-                          {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
-                              "line": 1,
-                              "end_line": 291,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "biguint",
-                              "immutable": true
-                            },
-                            "value": 0,
-                            "teal_alias": null
-                          },
-                          {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
-                              "line": 1,
-                              "end_line": 291,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "biguint",
-                              "immutable": true
-                            },
-                            "value": 0,
-                            "teal_alias": null
-                          }
-                        ]
+                        "value": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                        "encoding": "base16"
                       }
                     ]
                   }
@@ -701,7 +651,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "IndexExpression",
+                "_type": "ARC4Decode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
                   "line": 141,
@@ -715,50 +665,8 @@
                   "name": "biguint",
                   "immutable": true
                 },
-                "base": {
-                  "_type": "AppStateExpression",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
-                    "line": 141,
-                    "end_line": 144,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "ReferenceArray",
-                    "name": "array<biguint, 3>",
-                    "immutable": true,
-                    "element_type": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
-                    },
-                    "array_size": 3,
-                    "source_location": null
-                  },
-                  "key": {
-                    "_type": "BytesConstant",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
-                      "line": 141,
-                      "end_line": 144,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "state_key",
-                      "immutable": true
-                    },
-                    "value": "VRCW",
-                    "encoding": "utf8"
-                  },
-                  "exists_assertion_message": "check arr exists"
-                },
-                "index": {
-                  "_type": "IntrinsicCall",
+                "value": {
+                  "_type": "IndexExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
                     "line": 141,
@@ -768,142 +676,97 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "uint64",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
-                  "op_code": "btoi",
-                  "immediates": [],
-                  "stack_args": [
-                    {
-                      "_type": "IntrinsicCall",
+                  "base": {
+                    "_type": "AppStateExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
+                      "line": 141,
+                      "end_line": 144,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "ARC4StaticArray",
+                      "name": "arc4.static_array<arc4.uint256, 3>",
+                      "immutable": false,
+                      "element_type": {
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint256",
+                        "immutable": true,
+                        "n": 256,
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "array_size": 3,
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "key": {
+                      "_type": "BytesConstant",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
                         "line": 141,
-                        "end_line": 147,
+                        "end_line": 144,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
+                        "_type": "WType",
+                        "name": "state_key",
+                        "immutable": true
                       },
-                      "op_code": "extract3",
-                      "immediates": [],
-                      "stack_args": [
-                        {
-                          "_type": "IntrinsicCall",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
-                            "line": 141,
-                            "end_line": 147,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "op_code": "concat",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "IntrinsicCall",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
-                                "line": 141,
-                                "end_line": 147,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "op_code": "bzero",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "IntegerConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
-                                    "line": 141,
-                                    "end_line": 147,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "value": 8,
-                                  "teal_alias": null
-                                }
-                              ]
-                            },
-                            {
-                              "_type": "ReinterpretCast",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
-                                "line": 141,
-                                "end_line": 147,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "expr": {
-                                "_type": "VarExpression",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
-                                  "line": 145,
-                                  "end_line": 146,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "biguint",
-                                  "immutable": true
-                                },
-                                "name": "i"
-                              }
-                            }
-                          ]
+                      "value": "VRCW",
+                      "encoding": "utf8"
+                    },
+                    "exists_assertion_message": "check arr exists"
+                  },
+                  "index": {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
+                      "line": 141,
+                      "end_line": 147,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "op_code": "btoi",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
+                          "line": 141,
+                          "end_line": 147,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
                         },
-                        {
-                          "_type": "UInt64BinaryOperation",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
-                            "line": 141,
-                            "end_line": 147,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "left": {
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "extract3",
+                        "immediates": [],
+                        "stack_args": [
+                          {
                             "_type": "IntrinsicCall",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
@@ -914,11 +777,12 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
                             },
-                            "op_code": "len",
+                            "op_code": "concat",
                             "immediates": [],
                             "stack_args": [
                               {
@@ -937,11 +801,11 @@
                                   "immutable": true,
                                   "length": null
                                 },
-                                "op_code": "concat",
+                                "op_code": "bzero",
                                 "immediates": [],
                                 "stack_args": [
                                   {
-                                    "_type": "IntrinsicCall",
+                                    "_type": "IntegerConstant",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
                                       "line": 141,
@@ -951,74 +815,201 @@
                                       "end_column": null
                                     },
                                     "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
                                     },
-                                    "op_code": "bzero",
-                                    "immediates": [],
-                                    "stack_args": [
-                                      {
-                                        "_type": "IntegerConstant",
+                                    "value": 8,
+                                    "teal_alias": null
+                                  }
+                                ]
+                              },
+                              {
+                                "_type": "ReinterpretCast",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
+                                  "line": 141,
+                                  "end_line": 147,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "expr": {
+                                  "_type": "VarExpression",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
+                                    "line": 145,
+                                    "end_line": 146,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "biguint",
+                                    "immutable": true
+                                  },
+                                  "name": "i"
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            "_type": "UInt64BinaryOperation",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
+                              "line": 141,
+                              "end_line": 147,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "left": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
+                                "line": 141,
+                                "end_line": 147,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "op_code": "len",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
+                                    "line": 141,
+                                    "end_line": 147,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "concat",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
+                                        "line": 141,
+                                        "end_line": 147,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "op_code": "bzero",
+                                      "immediates": [],
+                                      "stack_args": [
+                                        {
+                                          "_type": "IntegerConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
+                                            "line": 141,
+                                            "end_line": 147,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "value": 8,
+                                          "teal_alias": null
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "_type": "ReinterpretCast",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
+                                        "line": 141,
+                                        "end_line": 147,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "expr": {
+                                        "_type": "VarExpression",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
-                                          "line": 141,
-                                          "end_line": 147,
+                                          "line": 145,
+                                          "end_line": 146,
                                           "comment_lines": 0,
                                           "column": null,
                                           "end_column": null
                                         },
                                         "wtype": {
                                           "_type": "WType",
-                                          "name": "uint64",
+                                          "name": "biguint",
                                           "immutable": true
                                         },
-                                        "value": 8,
-                                        "teal_alias": null
+                                        "name": "i"
                                       }
-                                    ]
-                                  },
-                                  {
-                                    "_type": "ReinterpretCast",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
-                                      "line": 141,
-                                      "end_line": 147,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "expr": {
-                                      "_type": "VarExpression",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
-                                        "line": 145,
-                                        "end_line": 146,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "biguint",
-                                        "immutable": true
-                                      },
-                                      "name": "i"
                                     }
-                                  }
-                                ]
-                              }
-                            ]
+                                  ]
+                                }
+                              ]
+                            },
+                            "op": "-",
+                            "right": {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
+                                "line": 141,
+                                "end_line": 147,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 8,
+                              "teal_alias": null
+                            }
                           },
-                          "op": "-",
-                          "right": {
+                          {
                             "_type": "IntegerConstant",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
@@ -1036,29 +1027,12 @@
                             "value": 8,
                             "teal_alias": null
                           }
-                        },
-                        {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/evm_exceptions_out_of_band_access.sol",
-                            "line": 141,
-                            "end_line": 147,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 8,
-                          "teal_alias": null
-                        }
-                      ]
-                    }
-                  ]
-                }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "error_message": null
               }
             }
           ],
@@ -3657,15 +3631,19 @@
         },
         "member_name": "arr",
         "storage_wtype": {
-          "_type": "ReferenceArray",
-          "name": "array<biguint, 3>",
-          "immutable": true,
+          "_type": "ARC4StaticArray",
+          "name": "arc4.static_array<arc4.uint256, 3>",
+          "immutable": false,
           "element_type": {
-            "_type": "WType",
-            "name": "biguint",
-            "immutable": true
+            "_type": "ARC4UIntN",
+            "name": "arc4.uint256",
+            "immutable": true,
+            "n": 256,
+            "arc4_alias": null,
+            "source_location": null
           },
           "array_size": 3,
+          "arc4_alias": null,
           "source_location": null
         },
         "key": {

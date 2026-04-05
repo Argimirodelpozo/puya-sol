@@ -109,28 +109,24 @@ callMeMaybe:
     uncover 6
     dig 6
     substring3
-    intc_2 // 2
-    intc_0 // 0
-    extract3
     dup
-    len
-    intc_3 // 32
-    /
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
     itob
     pushbytes 0x03
     b==
     assert
     dup
-    extract 0 32 // on error: index access is out of bounds
+    extract 2 32
     pushbytes 0x
     b==
     assert
     dup
-    extract 32 32 // on error: index access is out of bounds
+    extract 34 32
     pushbytes 0x01
     b==
     assert
-    extract 64 32 // on error: index access is out of bounds
+    extract 66 32
     pushbytes 0x02
     b==
     assert
@@ -187,7 +183,7 @@ callExternal:
     itxn_field ApplicationID
     pushbytes 0xc1d06ec1 // method "callMeMaybe(struct Struct,int256,string)void"
     itxn_field ApplicationArgs
-    pushbytes 0x002e00000000000000000000000000000000000000000000000000000000000000060090009c00000000000000010003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a5374727563744e616d65000431323334
+    pushbytes 0x002e00000000000000000000000000000000000000000000000000000000000000060090009c00000000000000010003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002000a5374727563744e616d65000431323334
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     pushbytes "TestName"

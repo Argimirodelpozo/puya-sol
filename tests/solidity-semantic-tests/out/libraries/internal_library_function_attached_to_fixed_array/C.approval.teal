@@ -4,8 +4,6 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_fixed_array.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 8
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
-    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -33,9 +31,9 @@ main_secondItem_route@4:
     b secondItem
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_fixed_array.sol.L.at(a: uint64, i: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_fixed_array.sol.L.at(a: bytes, i: bytes) -> bytes, bytes:
 L.at:
-    proto 2 1
+    proto 2 2
     intc_2 // 8
     bzero
     frame_dig -1
@@ -45,13 +43,13 @@ L.at:
     intc_2 // 8
     -
     extract_uint64
-    frame_dig -2
-    loads
-    swap
     intc_0 // 32
     *
+    frame_dig -2
+    swap
     intc_0 // 32
     extract3 // on error: index access is out of bounds
+    frame_dig -2
     retsub
 
 
@@ -59,13 +57,12 @@ L.at:
 secondItem:
     intc_0 // 32
     bzero
-    callsub _puya_lib.mem.new_slot
-    dup
-    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000022
-    stores
     intc_1 // 1
     itob
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000022
+    swap
     callsub L.at
+    pop
     dup
     len
     intc_0 // 32
@@ -78,17 +75,3 @@ secondItem:
     log
     intc_1 // 1
     return
-
-
-// _puya_lib.mem.new_slot() -> uint64:
-_puya_lib.mem.new_slot:
-    load 5
-    bitlen
-    load 5
-    pushint 256
-    dig 2
-    -
-    pushint 0
-    setbit // on error: no available slots
-    store 5
-    retsub

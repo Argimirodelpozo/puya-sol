@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_storage_layout.sol.c.approval_program() -> uint64:
 main:
     intcblock 0 32 1
-    bytecblock "data" 0x "__ctor_pending" 0x151f7c75 0x068101
+    bytecblock "data" 0x "__ctor_pending" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_2 // "__ctor_pending"
@@ -166,35 +166,12 @@ test_long_after_while@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_storage_layout.sol.c.test_pop[routing]() -> void:
 test_pop:
-    bytec_1 // ""
-
-test_pop_while_top@6:
-    pushint 170010
-    global OpcodeBudget
-    >
-    bz test_pop_after_while@11
-    itxn_begin
-    pushint 6 // appl
-    itxn_field TypeEnum
-    pushint 5 // DeleteApplication
-    itxn_field OnCompletion
-    bytec 4 // 0x068101
-    itxn_field ApprovalProgram
-    bytec 4 // 0x068101
-    itxn_field ClearStateProgram
-    intc_0 // 0
-    itxn_field Fee
-    itxn_submit
-    b test_pop_while_top@6
-
-test_pop_after_while@11:
     load 0
     intc_0 // 0
     bytec_1 // 0x
     callsub __storage_write
     store 0
     intc_0 // 0
-    bury 1
 
 test_pop_while_top@2:
     dup

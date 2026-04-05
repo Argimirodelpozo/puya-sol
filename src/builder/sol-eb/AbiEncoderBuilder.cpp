@@ -287,6 +287,16 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgAsARC4Bytes(
 			return cast;
 		}
 	}
+	// ARC4 arrays are already encoded — just ReinterpretCast to bytes
+	if (wtype && (wtype->kind() == awst::WTypeKind::ARC4StaticArray
+		|| wtype->kind() == awst::WTypeKind::ARC4DynamicArray))
+	{
+		auto cast = std::make_shared<awst::ReinterpretCast>();
+		cast->sourceLocation = _loc;
+		cast->wtype = awst::WType::bytesType();
+		cast->expr = std::move(_argExpr);
+		return cast;
+	}
 
 	auto cast = std::make_shared<awst::ReinterpretCast>();
 	cast->sourceLocation = _loc;

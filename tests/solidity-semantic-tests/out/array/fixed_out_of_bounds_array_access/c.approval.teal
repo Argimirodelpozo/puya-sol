@@ -3,13 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_out_of_bounds_array_access.sol.c.approval_program() -> uint64:
 main:
-    intcblock 32 1 8 0
-    bytecblock "__ctor_pending" "data" "" 0x151f7c75
+    intcblock 32 1 8
+    bytecblock "data" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
-    intc_1 // 1
-    app_global_put
     intc_1 // 1
     return
 
@@ -26,26 +23,10 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x68547044 0x96f3d936 0x54411274 // method "__postInit()void", method "set(uint256,uint256)bool", method "get(uint256)uint256", method "length()uint256"
+    pushbytess 0x68547044 0x96f3d936 0x54411274 // method "set(uint256,uint256)bool", method "get(uint256)uint256", method "length()uint256"
     txna ApplicationArgs 0
-    match __postInit set get length
+    match set get length
     err
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_out_of_bounds_array_access.sol.c.__postInit[routing]() -> void:
-__postInit:
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_0 // "__ctor_pending"
-    intc_3 // 0
-    app_global_put
-    bytec_1 // "data"
-    intc_3 // 0
-    box_create
-    pop
-    intc_1 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_out_of_bounds_array_access.sol.c.set[routing]() -> void:
@@ -63,33 +44,27 @@ set:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_2 // ""
-    cover 2
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
     intc_2 // 8
     bzero
-    uncover 4
+    uncover 2
     concat
     dup
     len
     intc_2 // 8
     -
     extract_uint64
-    swap
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    uncover 2
-    b|
-    dig 2
-    loads
-    uncover 2
     intc_0 // 32
     *
+    bytec_0 // "data"
+    swap
     uncover 2
-    replace3 // on error: index access is out of bounds
-    stores
+    box_replace // on error: index out of bounds
     pushbytes 0x151f7c7580
     log
     intc_1 // 1
@@ -104,20 +79,20 @@ get:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_2 // ""
-    swap
+    bytec_0 // "data"
+    box_get
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_2 // 8
     bzero
-    swap
+    uncover 2
     concat
     dup
     len
     intc_2 // 8
     -
     extract_uint64
-    swap
-    loads
-    swap
     intc_0 // 32
     *
     intc_0 // 32
@@ -130,7 +105,7 @@ get:
     intc_0 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -140,7 +115,7 @@ get:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_out_of_bounds_array_access.sol.c.length[routing]() -> void:
 length:
-    bytec_1 // "data"
+    bytec_0 // "data"
     box_len
     pop
     intc_0 // 32
@@ -149,7 +124,7 @@ length:
     intc_0 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log

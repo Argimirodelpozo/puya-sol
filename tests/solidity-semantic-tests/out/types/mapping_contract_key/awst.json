@@ -884,7 +884,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "StateGet",
+                "_type": "UInt64BinaryOperation",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key.sol",
                   "line": 126,
@@ -893,8 +893,13 @@
                   "column": null,
                   "end_column": null
                 },
-                "field": {
-                  "_type": "BoxValueExpression",
+                "wtype": {
+                  "_type": "WType",
+                  "name": "uint64",
+                  "immutable": true
+                },
+                "left": {
+                  "_type": "StateGet",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key.sol",
                     "line": 126,
@@ -903,13 +908,8 @@
                     "column": null,
                     "end_column": null
                   },
-                  "wtype": {
-                    "_type": "WType",
-                    "name": "uint64",
-                    "immutable": true
-                  },
-                  "key": {
-                    "_type": "BoxPrefixedKeyExpression",
+                  "field": {
+                    "_type": "BoxValueExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key.sol",
                       "line": 126,
@@ -920,11 +920,11 @@
                     },
                     "wtype": {
                       "_type": "WType",
-                      "name": "box_key",
+                      "name": "uint64",
                       "immutable": true
                     },
-                    "prefix": {
-                      "_type": "BytesConstant",
+                    "key": {
+                      "_type": "BoxPrefixedKeyExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key.sol",
                         "line": 126,
@@ -938,68 +938,103 @@
                         "name": "box_key",
                         "immutable": true
                       },
-                      "value": "bYWs_Wd",
-                      "encoding": "utf8"
-                    },
-                    "key": {
-                      "_type": "IntrinsicCall",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key.sol",
-                        "line": 126,
-                        "end_line": 134,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
+                      "prefix": {
+                        "_type": "BytesConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key.sol",
+                          "line": 126,
+                          "end_line": 134,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "box_key",
+                          "immutable": true
+                        },
+                        "value": "bYWs_Wd",
+                        "encoding": "utf8"
                       },
-                      "wtype": {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
-                      },
-                      "op_code": "sha256",
-                      "immediates": [],
-                      "stack_args": [
-                        {
-                          "_type": "ReinterpretCast",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key.sol",
-                            "line": 126,
-                            "end_line": 134,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "expr": {
-                            "_type": "VarExpression",
+                      "key": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key.sol",
+                          "line": 126,
+                          "end_line": 134,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "sha256",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key.sol",
-                              "line": 132,
-                              "end_line": 133,
+                              "line": 126,
+                              "end_line": 134,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "WType",
-                              "name": "account",
-                              "immutable": true
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
                             },
-                            "name": "k"
+                            "expr": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key.sol",
+                                "line": 132,
+                                "end_line": 133,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "account",
+                                "immutable": true
+                              },
+                              "name": "k"
+                            }
                           }
-                        }
-                      ]
-                    }
+                        ]
+                      }
+                    },
+                    "exists_assertion_message": null
                   },
-                  "exists_assertion_message": null
+                  "default": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key.sol",
+                      "line": 126,
+                      "end_line": 134,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 0,
+                    "teal_alias": null
+                  }
                 },
-                "default": {
+                "op": "&",
+                "right": {
                   "_type": "IntegerConstant",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key.sol",
@@ -1014,7 +1049,7 @@
                     "name": "uint64",
                     "immutable": true
                   },
-                  "value": 0,
+                  "value": 255,
                   "teal_alias": null
                 }
               }

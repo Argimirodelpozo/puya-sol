@@ -24,15 +24,18 @@
           "end_column": null
         },
         "wtype": {
-          "_type": "ReferenceArray",
-          "name": "array<biguint>",
-          "immutable": true,
+          "_type": "ARC4DynamicArray",
+          "name": "arc4.dynamic_array<arc4.uint256>",
+          "immutable": false,
           "element_type": {
-            "_type": "WType",
-            "name": "biguint",
-            "immutable": true
+            "_type": "ARC4UIntN",
+            "name": "arc4.uint256",
+            "immutable": true,
+            "n": 256,
+            "arc4_alias": null,
+            "source_location": null
           },
-          "array_size": null,
+          "arc4_alias": null,
           "source_location": null
         }
       }
@@ -296,15 +299,18 @@
                             "end_column": null
                           },
                           "wtype": {
-                            "_type": "ReferenceArray",
-                            "name": "array<biguint>",
-                            "immutable": true,
+                            "_type": "ARC4DynamicArray",
+                            "name": "arc4.dynamic_array<arc4.uint256>",
+                            "immutable": false,
                             "element_type": {
-                              "_type": "WType",
-                              "name": "biguint",
-                              "immutable": true
+                              "_type": "ARC4UIntN",
+                              "name": "arc4.uint256",
+                              "immutable": true,
+                              "n": 256,
+                              "arc4_alias": null,
+                              "source_location": null
                             },
-                            "array_size": null,
+                            "arc4_alias": null,
                             "source_location": null
                           },
                           "name": "arr"
@@ -401,7 +407,7 @@
                         },
                         "op": "+",
                         "right": {
-                          "_type": "IndexExpression",
+                          "_type": "ARC4Decode",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
                             "line": 228,
@@ -415,32 +421,8 @@
                             "name": "biguint",
                             "immutable": true
                           },
-                          "base": {
-                            "_type": "VarExpression",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
-                              "line": 228,
-                              "end_line": 231,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "ReferenceArray",
-                              "name": "array<biguint>",
-                              "immutable": true,
-                              "element_type": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "array_size": null,
-                              "source_location": null
-                            },
-                            "name": "arr"
-                          },
-                          "index": {
-                            "_type": "IntrinsicCall",
+                          "value": {
+                            "_type": "IndexExpression",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
                               "line": 228,
@@ -450,142 +432,78 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
+                              "_type": "ARC4UIntN",
+                              "name": "arc4.uint256",
+                              "immutable": true,
+                              "n": 256,
+                              "arc4_alias": null,
+                              "source_location": null
                             },
-                            "op_code": "btoi",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
-                                  "line": 228,
-                                  "end_line": 234,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
+                            "base": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
+                                "line": 228,
+                                "end_line": 231,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "ARC4DynamicArray",
+                                "name": "arc4.dynamic_array<arc4.uint256>",
+                                "immutable": false,
+                                "element_type": {
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint256",
                                   "immutable": true,
-                                  "length": null
+                                  "n": 256,
+                                  "arc4_alias": null,
+                                  "source_location": null
                                 },
-                                "op_code": "extract3",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
-                                      "line": 228,
-                                      "end_line": 234,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "op_code": "concat",
-                                    "immediates": [],
-                                    "stack_args": [
-                                      {
-                                        "_type": "IntrinsicCall",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
-                                          "line": 228,
-                                          "end_line": 234,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "BytesWType",
-                                          "name": "bytes",
-                                          "immutable": true,
-                                          "length": null
-                                        },
-                                        "op_code": "bzero",
-                                        "immediates": [],
-                                        "stack_args": [
-                                          {
-                                            "_type": "IntegerConstant",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
-                                              "line": 228,
-                                              "end_line": 234,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "WType",
-                                              "name": "uint64",
-                                              "immutable": true
-                                            },
-                                            "value": 8,
-                                            "teal_alias": null
-                                          }
-                                        ]
-                                      },
-                                      {
-                                        "_type": "ReinterpretCast",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
-                                          "line": 228,
-                                          "end_line": 234,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "BytesWType",
-                                          "name": "bytes",
-                                          "immutable": true,
-                                          "length": null
-                                        },
-                                        "expr": {
-                                          "_type": "VarExpression",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
-                                            "line": 232,
-                                            "end_line": 233,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "biguint",
-                                            "immutable": true
-                                          },
-                                          "name": "i"
-                                        }
-                                      }
-                                    ]
+                                "arc4_alias": null,
+                                "source_location": null
+                              },
+                              "name": "arr"
+                            },
+                            "index": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
+                                "line": 228,
+                                "end_line": 234,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "op_code": "btoi",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
+                                    "line": 228,
+                                    "end_line": 234,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
                                   },
-                                  {
-                                    "_type": "UInt64BinaryOperation",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
-                                      "line": 228,
-                                      "end_line": 234,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "left": {
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "extract3",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
                                       "_type": "IntrinsicCall",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
@@ -596,11 +514,12 @@
                                         "end_column": null
                                       },
                                       "wtype": {
-                                        "_type": "WType",
-                                        "name": "uint64",
-                                        "immutable": true
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
                                       },
-                                      "op_code": "len",
+                                      "op_code": "concat",
                                       "immediates": [],
                                       "stack_args": [
                                         {
@@ -619,11 +538,11 @@
                                             "immutable": true,
                                             "length": null
                                           },
-                                          "op_code": "concat",
+                                          "op_code": "bzero",
                                           "immediates": [],
                                           "stack_args": [
                                             {
-                                              "_type": "IntrinsicCall",
+                                              "_type": "IntegerConstant",
                                               "source_location": {
                                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
                                                 "line": 228,
@@ -633,74 +552,201 @@
                                                 "end_column": null
                                               },
                                               "wtype": {
-                                                "_type": "BytesWType",
-                                                "name": "bytes",
-                                                "immutable": true,
-                                                "length": null
+                                                "_type": "WType",
+                                                "name": "uint64",
+                                                "immutable": true
                                               },
-                                              "op_code": "bzero",
-                                              "immediates": [],
-                                              "stack_args": [
-                                                {
-                                                  "_type": "IntegerConstant",
+                                              "value": 8,
+                                              "teal_alias": null
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "_type": "ReinterpretCast",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
+                                            "line": 228,
+                                            "end_line": 234,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "BytesWType",
+                                            "name": "bytes",
+                                            "immutable": true,
+                                            "length": null
+                                          },
+                                          "expr": {
+                                            "_type": "VarExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
+                                              "line": 232,
+                                              "end_line": 233,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "biguint",
+                                              "immutable": true
+                                            },
+                                            "name": "i"
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "_type": "UInt64BinaryOperation",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
+                                        "line": 228,
+                                        "end_line": 234,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "left": {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
+                                          "line": 228,
+                                          "end_line": 234,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "op_code": "len",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
+                                              "line": 228,
+                                              "end_line": 234,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "op_code": "concat",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
+                                                "_type": "IntrinsicCall",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
+                                                  "line": 228,
+                                                  "end_line": 234,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "op_code": "bzero",
+                                                "immediates": [],
+                                                "stack_args": [
+                                                  {
+                                                    "_type": "IntegerConstant",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
+                                                      "line": 228,
+                                                      "end_line": 234,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "WType",
+                                                      "name": "uint64",
+                                                      "immutable": true
+                                                    },
+                                                    "value": 8,
+                                                    "teal_alias": null
+                                                  }
+                                                ]
+                                              },
+                                              {
+                                                "_type": "ReinterpretCast",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
+                                                  "line": 228,
+                                                  "end_line": 234,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "expr": {
+                                                  "_type": "VarExpression",
                                                   "source_location": {
                                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
-                                                    "line": 228,
-                                                    "end_line": 234,
+                                                    "line": 232,
+                                                    "end_line": 233,
                                                     "comment_lines": 0,
                                                     "column": null,
                                                     "end_column": null
                                                   },
                                                   "wtype": {
                                                     "_type": "WType",
-                                                    "name": "uint64",
+                                                    "name": "biguint",
                                                     "immutable": true
                                                   },
-                                                  "value": 8,
-                                                  "teal_alias": null
+                                                  "name": "i"
                                                 }
-                                              ]
-                                            },
-                                            {
-                                              "_type": "ReinterpretCast",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
-                                                "line": 228,
-                                                "end_line": 234,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "BytesWType",
-                                                "name": "bytes",
-                                                "immutable": true,
-                                                "length": null
-                                              },
-                                              "expr": {
-                                                "_type": "VarExpression",
-                                                "source_location": {
-                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
-                                                  "line": 232,
-                                                  "end_line": 233,
-                                                  "comment_lines": 0,
-                                                  "column": null,
-                                                  "end_column": null
-                                                },
-                                                "wtype": {
-                                                  "_type": "WType",
-                                                  "name": "biguint",
-                                                  "immutable": true
-                                                },
-                                                "name": "i"
                                               }
-                                            }
-                                          ]
-                                        }
-                                      ]
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      "op": "-",
+                                      "right": {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
+                                          "line": 228,
+                                          "end_line": 234,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "value": 8,
+                                        "teal_alias": null
+                                      }
                                     },
-                                    "op": "-",
-                                    "right": {
+                                    {
                                       "_type": "IntegerConstant",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
@@ -718,29 +764,12 @@
                                       "value": 8,
                                       "teal_alias": null
                                     }
-                                  },
-                                  {
-                                    "_type": "IntegerConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
-                                      "line": 228,
-                                      "end_line": 234,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "value": 8,
-                                    "teal_alias": null
-                                  }
-                                ]
-                              }
-                            ]
-                          }
+                                  ]
+                                }
+                              ]
+                            }
+                          },
+                          "error_message": null
                         }
                       }
                     }
@@ -1414,7 +1443,7 @@
         "args": [
           {
             "_type": "SubroutineArgument",
-            "name": "__arc4_arr",
+            "name": "arr",
             "source_location": {
               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
               "line": 29,
@@ -1426,7 +1455,7 @@
             "wtype": {
               "_type": "ARC4DynamicArray",
               "name": "arc4.dynamic_array<arc4.uint256>",
-              "immutable": true,
+              "immutable": false,
               "element_type": {
                 "_type": "ARC4UIntN",
                 "name": "arc4.uint256",
@@ -1456,91 +1485,6 @@
             "end_column": null
           },
           "body": [
-            {
-              "_type": "AssignmentStatement",
-              "source_location": {
-                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
-                "line": 29,
-                "end_line": 48,
-                "comment_lines": 0,
-                "column": null,
-                "end_column": null
-              },
-              "target": {
-                "_type": "VarExpression",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
-                  "line": 29,
-                  "end_line": 48,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<biguint>",
-                  "immutable": true,
-                  "element_type": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
-                  },
-                  "array_size": null,
-                  "source_location": null
-                },
-                "name": "arr"
-              },
-              "value": {
-                "_type": "ConvertArray",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
-                  "line": 29,
-                  "end_line": 48,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<biguint>",
-                  "immutable": true,
-                  "element_type": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
-                  },
-                  "array_size": null,
-                  "source_location": null
-                },
-                "expr": {
-                  "_type": "VarExpression",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/calldata_memory_copy.sol",
-                    "line": 29,
-                    "end_line": 48,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "ARC4DynamicArray",
-                    "name": "arc4.dynamic_array<arc4.uint256>",
-                    "immutable": true,
-                    "element_type": {
-                      "_type": "ARC4UIntN",
-                      "name": "arc4.uint256",
-                      "immutable": true,
-                      "n": 256,
-                      "arc4_alias": null,
-                      "source_location": null
-                    },
-                    "arc4_alias": null,
-                    "source_location": null
-                  },
-                  "name": "__arc4_arr"
-                }
-              }
-            },
             {
               "_type": "ReturnStatement",
               "source_location": {
@@ -1584,15 +1528,18 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "ReferenceArray",
-                        "name": "array<biguint>",
-                        "immutable": true,
+                        "_type": "ARC4DynamicArray",
+                        "name": "arc4.dynamic_array<arc4.uint256>",
+                        "immutable": false,
                         "element_type": {
-                          "_type": "WType",
-                          "name": "biguint",
-                          "immutable": true
+                          "_type": "ARC4UIntN",
+                          "name": "arc4.uint256",
+                          "immutable": true,
+                          "n": 256,
+                          "arc4_alias": null,
+                          "source_location": null
                         },
-                        "array_size": null,
+                        "arc4_alias": null,
                         "source_location": null
                       },
                       "name": "arr"

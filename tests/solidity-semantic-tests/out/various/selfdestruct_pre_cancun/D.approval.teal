@@ -1,0 +1,271 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.approval_program() -> uint64:
+main:
+    intcblock 1 0 6 200000
+    bytecblock "c" 0x0a8101 0x 0x5ff16da4 0x151f7c75 0x0de0b6b3a7640000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "c"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb87ad40c 0x32f85fc9 // method "deploy_create()void", method "deploy_create2()void"
+    bytec_3 // method "terminate()void"
+    pushbytess 0xeb24ed0c 0x03163795 0x6974599f 0xa25cf4b6 0x082c5ced 0xd7fc866d // method "test_create_and_terminate()void", method "test_create2_and_terminate()void", method "test_balance_after_create()void", method "test_balance_after_selfdestruct()void", method "exists()bool", method "c()address"
+    txna ApplicationArgs 0
+    match deploy_create deploy_create2 terminate test_create_and_terminate test_create2_and_terminate test_balance_after_create test_balance_after_selfdestruct exists c
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.deploy_create[routing]() -> void:
+deploy_create:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.deploy_create
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.deploy_create2[routing]() -> void:
+deploy_create2:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.deploy_create2
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.terminate[routing]() -> void:
+terminate:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.terminate
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.test_create_and_terminate[routing]() -> void:
+test_create_and_terminate:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.deploy_create
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.exists
+    assert
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.test_balance_after_create
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.terminate
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.test_balance_after_selfdestruct
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.test_create2_and_terminate[routing]() -> void:
+test_create2_and_terminate:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.deploy_create2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.exists
+    assert
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.test_balance_after_create
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.terminate
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.test_balance_after_selfdestruct
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.test_balance_after_create[routing]() -> void:
+test_balance_after_create:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.test_balance_after_create
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.test_balance_after_selfdestruct[routing]() -> void:
+test_balance_after_selfdestruct:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.test_balance_after_selfdestruct
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.exists[routing]() -> void:
+exists:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.exists
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.c[routing]() -> void:
+c:
+    intc_1 // 0
+    bytec_0 // "c"
+    app_global_get_ex
+    assert // check c exists
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.deploy_create() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.deploy_create:
+    itxn_begin
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field Fee
+    bytec_1 // 0x0a8101
+    itxn_field ClearStateProgram
+    bytec_1 // 0x0a8101
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_0 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_1 // 0
+    itxn_field Fee
+    intc_3 // 200000
+    itxn_field Amount
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    bytec_0 // "c"
+    swap
+    app_global_put
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.deploy_create2() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.deploy_create2:
+    itxn_begin
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field Fee
+    bytec_1 // 0x0a8101
+    itxn_field ClearStateProgram
+    bytec_1 // 0x0a8101
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_0 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_1 // 0
+    itxn_field Fee
+    intc_3 // 200000
+    itxn_field Amount
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    bytec_0 // "c"
+    swap
+    app_global_put
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.terminate() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.terminate:
+    itxn_begin
+    intc_1 // 0
+    bytec_0 // "c"
+    app_global_get_ex
+    assert // check c exists
+    pushint 24
+    extract_uint64
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_3 // method "terminate()void"
+    itxn_field ApplicationArgs
+    itxn_submit
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.test_balance_after_create() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.test_balance_after_create:
+    global CurrentApplicationAddress
+    acct_params_get AcctBalance
+    pop
+    itob
+    bytec_2 // 0x
+    b==
+    assert
+    intc_1 // 0
+    bytec_0 // "c"
+    app_global_get_ex
+    assert // check c exists
+    acct_params_get AcctBalance
+    pop
+    itob
+    bytec 5 // 0x0de0b6b3a7640000
+    b==
+    assert
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.test_balance_after_selfdestruct() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.test_balance_after_selfdestruct:
+    global CurrentApplicationAddress
+    acct_params_get AcctBalance
+    pop
+    itob
+    bytec 5 // 0x0de0b6b3a7640000
+    b==
+    assert
+    intc_1 // 0
+    bytec_0 // "c"
+    app_global_get_ex
+    assert // check c exists
+    acct_params_get AcctBalance
+    pop
+    itob
+    bytec_2 // 0x
+    b==
+    assert
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.exists() -> uint64:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.exists:
+    intc_1 // 0
+    bytec_0 // "c"
+    app_global_get_ex
+    assert // check c exists
+    pushint 24
+    extract_uint64
+    app_params_get AppApprovalProgram
+    pop
+    len
+    itob
+    bytec_2 // 0x
+    b!=
+    retsub

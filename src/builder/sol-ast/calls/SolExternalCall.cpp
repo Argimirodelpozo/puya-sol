@@ -227,12 +227,6 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 			rcast->expr = std::move(encode);
 			return rcast;
 		}
-		// Fallback
-		auto rcast = std::make_shared<awst::ReinterpretCast>();
-		rcast->sourceLocation = m_loc;
-		rcast->wtype = awst::WType::bytesType();
-		rcast->expr = std::move(_argExpr);
-		return rcast;
 	}
 	else if (_argExpr->wtype->kind() == awst::WTypeKind::ARC4StaticArray
 		|| _argExpr->wtype->kind() == awst::WTypeKind::ARC4DynamicArray

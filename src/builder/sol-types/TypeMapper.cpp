@@ -65,43 +65,20 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 				result = awst::WType::bytesType();
 			else
 			{
-				awst::WType const* elemType = map(arrType->baseType());
-				// For arrays of addresses, use bytes[32] instead of account.
-				// AVM `account` is a reference type that can't be used in ARC4 arrays.
-				if (elemType == awst::WType::accountType())
-					elemType = createType<awst::BytesWType>(32);
+				// Map element type to ARC4 for array storage.
+				// Using ARC4 arrays (not ReferenceArray) enables:
+				// - Nested dynamic arrays (ARC4 of ARC4)
+				// - Atomic state storage (no per-element box decomposition)
+				// - No type mismatch between storage and memory forms
+				awst::WType const* arc4ElemType = mapToARC4Type(map(arrType->baseType()));
 				if (!arrType->isDynamicallySized())
 				{
-					// Static array (e.g. bool[3]) — preserve size
 					int len = static_cast<int>(arrType->length());
-					// For nested static arrays (e.g. uint[8][28]), use ARC4 encoding
-					// for the inner array as element type, since puya's ReferenceArray
-					// requires immutable elements and ReferenceArray itself is mutable.
-					// ARC4StaticArray IS immutable, so it can be a ReferenceArray element.
-					auto const* innerArr = dynamic_cast<awst::ReferenceArray const*>(elemType);
-					if (innerArr && innerArr->arraySize())
-					{
-						// Use ARC4 representation of the inner array as the element type
-						auto const* arc4ElemType = mapToARC4Type(innerArr->elementType());
-						elemType = createType<awst::ARC4StaticArray>(arc4ElemType, *innerArr->arraySize());
-					}
-					result = createType<awst::ReferenceArray>(elemType, true, len);
+					result = createType<awst::ARC4StaticArray>(arc4ElemType, len);
 				}
 				else
 				{
-					// Dynamic array
-					// Puya only supports reference arrays with fixed-size elements.
-					// biguint (uint256) is fixed-size (32 bytes) in AVM, so treat it as fixed.
-					bool isFixed = elemType
-						&& elemType != awst::WType::stringType()
-						&& elemType != awst::WType::bytesType();
-					if (isFixed)
-						result = createType<awst::ReferenceArray>(elemType, true);
-					else
-					{
-						Logger::instance().warning("array of dynamic-size elements not supported, using bytes");
-						result = awst::WType::bytesType();
-					}
+					result = createType<awst::ARC4DynamicArray>(arc4ElemType);
 				}
 			}
 		}

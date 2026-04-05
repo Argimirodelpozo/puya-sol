@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 2 32
+    intcblock 0 1 2 24
     bytecblock 0x151f7c75 0x10483691 0xecad3854 0xf614e4ad
     txn ApplicationID
     bnz main_after_if_else@2
@@ -40,17 +40,16 @@ f:
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 32
+    pushint 32
     *
     intc_2 // 2
     +
     dig 1
     len
+    dup
+    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
-    extract 2 0
-    dup
-    len
     itob
     extract 6 2
     swap
@@ -69,7 +68,7 @@ g:
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 32
+    pushint 32
     *
     intc_2 // 2
     +
@@ -77,18 +76,9 @@ g:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
-    extract 2 0
     itxn_begin
-    dup
-    len
-    intc_3 // 32
-    /
-    itob
-    extract 6 2
-    swap
-    concat
     global CurrentApplicationAddress
-    pushint 24
+    intc_3 // 24
     extract_uint64
     pushint 6
     itxn_field TypeEnum
@@ -129,11 +119,10 @@ h:
     +
     dig 1
     len
+    dup
+    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint64>
-    extract 2 0
-    dup
-    len
     itob
     extract 6 2
     swap
@@ -160,18 +149,9 @@ i:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint64>
-    extract 2 0
     itxn_begin
-    dup
-    len
-    pushint 8
-    /
-    itob
-    extract 6 2
-    swap
-    concat
     global CurrentApplicationAddress
-    pushint 24
+    intc_3 // 24
     extract_uint64
     pushint 6
     itxn_field TypeEnum
@@ -241,7 +221,7 @@ k:
     swap
     concat
     global CurrentApplicationAddress
-    pushint 24
+    intc_3 // 24
     extract_uint64
     pushint 6
     itxn_field TypeEnum

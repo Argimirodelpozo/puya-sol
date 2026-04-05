@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_pop_zero_length.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "__ctor_pending" "storageArray"
+    intcblock 1 0 32 2
+    bytecblock "storageArray" "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -34,13 +34,13 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_pop_zero_length.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    bytec_1 // "storageArray"
+    bytec_0 // "storageArray"
     intc_1 // 0
     box_create
     pop
@@ -50,19 +50,36 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_pop_zero_length.sol.C.popEmpty[routing]() -> void:
 popEmpty:
-    bytec_1 // "storageArray"
-    box_get
-    assert // box exists
-    pushint 2
+    bytec_0 // "storageArray"
     intc_1 // 0
-    extract3
-    dup
-    len
-    pushint 32
+    intc_3 // 2
+    box_extract
+    btoi
+    intc_0 // 1
     -
+    dup
+    itob
+    extract 6 2
+    bytec_0 // "storageArray"
     intc_1 // 0
+    uncover 2
+    box_replace
+    intc_2 // 32
+    *
+    intc_3 // 2
+    +
+    bytec_0 // "storageArray"
     swap
-    substring3
+    intc_2 // 32
+    pushbytes 0x
+    box_splice
+    bytec_0 // "storageArray"
+    box_len
     pop
+    intc_2 // 32
+    -
+    bytec_0 // "storageArray"
+    swap
+    box_resize
     intc_0 // 1
     return

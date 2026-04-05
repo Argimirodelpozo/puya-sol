@@ -1,0 +1,107 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_nested_array_static_reencode.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 2
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xfa87b2e1 0xe2ac8407 0xb9aa188f // method "f(uint256[3][])void", method "f(uint256[][3])void", method "f(uint256[2][2])void"
+    txna ApplicationArgs 0
+    match f(6) f(21) f(37)
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_nested_array_static_reencode.sol.C.f(6)[routing]() -> void:
+f(6):
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 96
+    *
+    intc_2 // 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint256, 3>>
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_nested_array_static_reencode.sol.C.f(21)[routing]() -> void:
+f(21):
+    txna ApplicationArgs 1
+    pushint 6
+    intc_1 // 0
+
+f(21)_for_header@1:
+    dup
+    pushint 3
+    <
+    bz f(21)_after_for@4
+    dupn 2
+    intc_2 // 2
+    *
+    dig 4
+    dup
+    uncover 2
+    extract_uint16 // on error: invalid array encoding
+    dup
+    dig 5
+    dup
+    cover 4
+    ==
+    assert // invalid tail pointer for (len+uint256[])[3]
+    dig 1
+    len
+    substring3
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 32
+    *
+    intc_2 // 2
+    +
+    +
+    bury 3
+    intc_0 // 1
+    +
+    bury 1
+    b f(21)_for_header@1
+
+f(21)_after_for@4:
+    dig 2
+    len
+    dig 2
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.dynamic_array<arc4.uint256>, 3>
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_nested_array_static_reencode.sol.C.f(37)[routing]() -> void:
+f(37):
+    txna ApplicationArgs 1
+    len
+    pushint 128
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.static_array<arc4.uint256, 2>, 2>
+    intc_0 // 1
+    return

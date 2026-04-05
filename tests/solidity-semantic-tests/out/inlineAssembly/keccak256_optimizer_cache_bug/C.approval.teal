@@ -3,16 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak256_optimizer_cache_bug.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 8 32
-    bytecblock "__ctor_pending" "data" 0x 0x7b
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
-    store 5
+    intcblock 1 0 8 32
+    bytecblock "__ctor_pending" "data" 0x7b
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
-    intc_1 // 1
+    intc_0 // 1
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -40,13 +38,13 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_0 // 0
+    intc_1 // 0
     app_global_put
     bytec_1 // "data"
-    intc_0 // 0
+    intc_1 // 0
     box_create
     pop
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -55,7 +53,7 @@ val:
     load 0
     intc_2 // 8
     bzero
-    intc_0 // 0
+    intc_1 // 0
     pushbytes 0x02
     callsub __storage_write
     swap
@@ -89,50 +87,25 @@ val:
     intc_2 // 8
     -
     extract_uint64
-    bytec_3 // 0x7b
+    bytec_2 // 0x7b
     callsub __storage_write
     store 0
-    callsub _puya_lib.mem.new_slot
-    dup
-    bytec_2 // 0x
-    stores
     bytec_1 // "data"
     box_get
-    swap
-    pushint 2
-    intc_0 // 0
-    extract3
-    callsub _puya_lib.mem.new_slot
-    dup
-    dig 2
-    stores
-    uncover 3
-    swap
-    dig 3
+    pushbytes 0x0000
+    cover 2
     select
-    loads
-    extract 32 32 // on error: index access is out of bounds
-    bytec_3 // 0x7b
+    extract 34 32
+    dup
+    bytec_2 // 0x7b
     b!=
     assert
-    callsub _puya_lib.mem.new_slot
-    dup
-    bytec_2 // 0x
-    stores
-    callsub _puya_lib.mem.new_slot
-    dup
-    uncover 3
-    stores
-    uncover 2
-    select
-    loads
-    extract 32 32 // on error: index access is out of bounds
-    bytec_2 // 0x
+    pushbytes 0x
     b==
     assert
     pushbytes 0x151f7c7580
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -157,18 +130,4 @@ __storage_write:
     retsub
 
 __storage_write_else_body@2:
-    retsub
-
-
-// _puya_lib.mem.new_slot() -> uint64:
-_puya_lib.mem.new_slot:
-    load 5
-    bitlen
-    load 5
-    pushint 256
-    dig 2
-    -
-    intc_0 // 0
-    setbit // on error: no available slots
-    store 5
     retsub

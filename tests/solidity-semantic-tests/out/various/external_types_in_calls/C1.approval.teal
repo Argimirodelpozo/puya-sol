@@ -1,0 +1,48 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/external_types_in_calls.sol.C1.approval_program() -> uint64:
+main:
+    bytecblock "bla"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "bla"
+    txna ApplicationArgs 0
+    app_global_put
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0xd9420734 // method "bla()address"
+    txna ApplicationArgs 0
+    match main_bla_route@4
+    err
+
+main_bla_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b bla
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/external_types_in_calls.sol.C1.bla[routing]() -> void:
+bla:
+    pushint 0
+    bytec_0 // "bla"
+    app_global_get_ex
+    assert // check bla exists
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return

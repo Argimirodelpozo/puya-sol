@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/dynamic_out_of_bounds_array_access.sol.c.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 8
+    intcblock 32 1 8 0
     bytecblock "data" "__ctor_pending" 0x151f7c75
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
-    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
@@ -40,10 +38,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_2 // 0
+    intc_3 // 0
     app_global_put
     bytec_0 // "data"
-    intc_2 // 0
+    intc_3 // 0
     box_create
     pop
     intc_1 // 1
@@ -118,39 +116,23 @@ set:
     intc_0 // 32
     bzero
     b|
-    bytec_0 // "data"
-    box_get
-    assert // box exists
-    pushint 2
-    intc_2 // 0
-    extract3
-    intc_3 // 8
+    intc_2 // 8
     bzero
-    uncover 3
+    uncover 2
     concat
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     -
     extract_uint64
     intc_0 // 32
     *
+    pushint 2
+    +
+    bytec_0 // "data"
+    swap
     uncover 2
-    replace3 // on error: index access is out of bounds
-    dup
-    len
-    intc_0 // 32
-    /
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_0 // "data"
-    box_del
-    pop
-    bytec_0 // "data"
-    swap
-    box_put
+    box_replace // on error: index out of bounds
     pushbytes 0x151f7c7580
     log
     intc_1 // 1
@@ -165,33 +147,22 @@ get:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub _puya_lib.mem.new_slot
-    dup
-    pushbytes 0x
-    stores
     bytec_0 // "data"
     box_get
-    swap
-    pushint 2
-    intc_2 // 0
-    extract3
-    callsub _puya_lib.mem.new_slot
-    dup
-    uncover 2
-    stores
-    swap
+    pushbytes 0x0000
+    cover 2
     select
-    intc_3 // 8
+    intc_2 // 8
     bzero
     uncover 2
     concat
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     -
     extract_uint64
     swap
-    loads
+    extract 2 0
     swap
     intc_0 // 32
     *
@@ -230,17 +201,3 @@ length:
     log
     intc_1 // 1
     return
-
-
-// _puya_lib.mem.new_slot() -> uint64:
-_puya_lib.mem.new_slot:
-    load 5
-    bitlen
-    load 5
-    pushint 256
-    dig 2
-    -
-    intc_2 // 0
-    setbit // on error: no available slots
-    store 5
-    retsub

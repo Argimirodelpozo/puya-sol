@@ -1,0 +1,74 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/send_zero_ether.sol.Main.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock 0x0a8101
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0x7134a6bd // method "s()bool"
+    txna ApplicationArgs 0
+    match main_s_route@4
+    err
+
+main_s_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b s
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/send_zero_ether.sol.Main.s[routing]() -> void:
+s:
+    itxn_begin
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field Fee
+    bytec_0 // 0x0a8101
+    itxn_field ClearStateProgram
+    bytec_0 // 0x0a8101
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_0 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_1 // 0
+    itxn_field Fee
+    pushint 200000
+    itxn_field Amount
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_0 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_1 // 0
+    itxn_field Fee
+    intc_1 // 0
+    itxn_field Amount
+    itxn_submit
+    pushbytes 0x151f7c7580
+    log
+    intc_0 // 1
+    return

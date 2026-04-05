@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_calldata_struct.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 2
+    intcblock 0 1
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -40,7 +40,7 @@ f:
     intc_0 // 0
     extract_uint16 // on error: invalid tuple encoding
     dup
-    intc_2 // 2
+    pushint 2
     ==
     assert // invalid tail pointer at index 0 of ((len+uint64[]))
     uncover 2
@@ -57,10 +57,7 @@ f:
     uncover 2
     ==
     assert // invalid number of bytes for S
-    intc_2 // 2
-    intc_0 // 0
-    extract3
-    extract 0 8 // on error: index access is out of bounds
+    extract 2 8
     load 0
     store 0
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80

@@ -1,0 +1,99 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary_function_pointer_from_function_call.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock "a" 0x0a8101 0x151f7c75
+    intc_1 // 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "a"
+    dig 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x3cd4690e 0x5f67db17 // method "getContract()address", method "test(bool)byte[4]"
+    txna ApplicationArgs 0
+    match getContract test
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary_function_pointer_from_function_call.sol.C.getContract[routing]() -> void:
+getContract:
+    itxn_begin
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field Fee
+    bytec_1 // 0x0a8101
+    itxn_field ClearStateProgram
+    bytec_1 // 0x0a8101
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_0 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_1 // 0
+    itxn_field Fee
+    pushint 200000
+    itxn_field Amount
+    itxn_submit
+    intc_1 // 0
+    bytec_0 // "a"
+    app_global_get_ex
+    assert // check a exists
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary_function_pointer_from_function_call.sol.C.test[routing]() -> void:
+test:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    dup
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
+    bz test_ternary_false@3
+    pushbytes 0x26121ff0
+
+test_ternary_merge@4:
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+test_ternary_false@3:
+    pushbytes 0xe2179b8e
+    b test_ternary_merge@4

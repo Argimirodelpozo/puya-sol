@@ -3,12 +3,12 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/copy_struct_with_nested_array_from_calldata_to_storage.sol.C.approval_program() -> uint64:
 main:
-    intcblock 8 0 1
+    intcblock 1 8 10 0
     txn ApplicationID
     bnz main_after_if_else@2
     pushbytess "s" 0x0000000000000000000a0000
     app_global_put
-    intc_2 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -39,10 +39,10 @@ test:
     dup
     len
     dig 1
-    intc_0 // 8
+    intc_1 // 8
     extract_uint16 // on error: invalid tuple encoding
     dup
-    pushint 10
+    intc_2 // 10
     ==
     assert // invalid tail pointer at index 1 of (uint64[1],(len+uint64[]))
     dig 2
@@ -50,46 +50,40 @@ test:
     dig 2
     substring3
     dup
-    intc_1 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
-    intc_0 // 8
+    dup
+    intc_1 // 8
     *
     pushint 12
     +
-    uncover 2
+    uncover 3
     ==
     assert // invalid number of bytes for S
     pushbytes "s"
-    dig 2
+    dig 3
     app_global_put
-    swap
+    uncover 2
     extract 0 8
-    intc_1 // 0
+    intc_3 // 0
     extract_uint64
     pushint 3
     ==
     assert
-    pushint 2
-    intc_1 // 0
-    extract3
-    dup
-    len
-    intc_0 // 8
-    /
     itob
     pushbytes 0x02
     b==
     assert
     dup
-    intc_1 // 0
+    pushint 2
     extract_uint64
     pushint 7
     ==
     assert
-    intc_0 // 8
+    intc_2 // 10
     extract_uint64
     pushint 11
     ==
     assert
-    intc_2 // 1
+    intc_0 // 1
     return

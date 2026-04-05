@@ -1,0 +1,90 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_emit_from_other_contract.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 6
+    bytecblock 0x0a8101 "d"
+    txn ApplicationID
+    bnz main_after_if_else@4
+    itxn_begin
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field Fee
+    bytec_0 // 0x0a8101
+    itxn_field ClearStateProgram
+    bytec_0 // 0x0a8101
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    pushint 200000
+    itxn_field Amount
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    bytec_1 // "d"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@4:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0xc7d12872 // method "deposit(byte[32])void"
+    txna ApplicationArgs 0
+    match main_deposit_route@6
+    err
+
+main_deposit_route@6:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b deposit
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_emit_from_other_contract.sol.C.deposit[routing]() -> void:
+deposit:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    itxn_begin
+    intc_0 // 0
+    bytec_1 // "d"
+    app_global_get_ex
+    assert // check d exists
+    pushint 24
+    extract_uint64
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x1e0b5e0f // method "deposit(uint8[32])void"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_1 // 1
+    return

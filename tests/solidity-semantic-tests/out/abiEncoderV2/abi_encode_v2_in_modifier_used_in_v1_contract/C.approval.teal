@@ -1,0 +1,143 @@
+#pragma version 10
+#pragma typetrack false
+
+// /tmp/multisource_ycizg0su/B.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 6 1 32
+    bytecblock 0x290efb48 "y" "x" 0x0a8101
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 10
+    itob
+    bytec_2 // "x"
+    dig 1
+    app_global_put
+    bytec_1 // "y"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0x619fed17 // method "test()(uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_test_route@4
+    err
+
+main_test_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b test
+
+
+// /tmp/multisource_ycizg0su/B.sol.C.test[routing]() -> void:
+test:
+    itxn_begin
+    intc_1 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field Fee
+    bytec_3 // 0x0a8101
+    itxn_field ClearStateProgram
+    bytec_3 // 0x0a8101
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_2 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    pushint 200000
+    itxn_field Amount
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    pushint 24
+    extract_uint64
+    intc_1 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec_0 // method "get()(uint256)"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn_begin
+    intc_1 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec_0 // method "get()(uint256)"
+    itxn_field ApplicationArgs
+    itxn_submit
+    bytec_2 // "x"
+    pushbytes 0x
+    app_global_put
+    intc_0 // 0
+    bytec_1 // "y"
+    app_global_get_ex
+    assert // check y exists
+    itxn_begin
+    intc_1 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dig 1
+    itxn_field ApplicationID
+    bytec_0 // method "get()(uint256)"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn_begin
+    intc_1 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    swap
+    itxn_field ApplicationID
+    bytec_0 // method "get()(uint256)"
+    itxn_field ApplicationArgs
+    itxn_submit
+    bytec_1 // "y"
+    pushbytes 0x
+    app_global_put
+    intc_3 // 32
+    bzero
+    dig 1
+    len
+    intc_3 // 32
+    <=
+    assert // overflow
+    b|
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

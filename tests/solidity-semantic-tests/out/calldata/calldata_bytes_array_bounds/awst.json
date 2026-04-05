@@ -472,10 +472,26 @@
               "end_column": null
             },
             "wtype": {
-              "_type": "BytesWType",
-              "name": "bytes",
-              "immutable": true,
-              "length": null
+              "_type": "ARC4DynamicArray",
+              "name": "arc4.dynamic_array<byte[]>",
+              "immutable": false,
+              "element_type": {
+                "_type": "ARC4DynamicArray",
+                "name": "byte[]",
+                "immutable": false,
+                "element_type": {
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint8",
+                  "immutable": true,
+                  "n": 8,
+                  "arc4_alias": null,
+                  "source_location": null
+                },
+                "arc4_alias": "byte[]",
+                "source_location": null
+              },
+              "arc4_alias": null,
+              "source_location": null
             }
           },
           {
@@ -622,7 +638,7 @@
                                 "length": 1
                               },
                               "base": {
-                                "_type": "IndexExpression",
+                                "_type": "ARC4Decode",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_bytes_array_bounds.sol",
                                   "line": 140,
@@ -637,42 +653,85 @@
                                   "immutable": true,
                                   "length": null
                                 },
-                                "base": {
-                                  "_type": "VarExpression",
+                                "value": {
+                                  "_type": "IndexExpression",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_bytes_array_bounds.sol",
                                     "line": 140,
-                                    "end_line": 141,
+                                    "end_line": 144,
                                     "comment_lines": 0,
                                     "column": null,
                                     "end_column": null
                                   },
                                   "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
+                                    "_type": "ARC4DynamicArray",
+                                    "name": "byte[]",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint8",
+                                      "immutable": true,
+                                      "n": 8,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "arc4_alias": "byte[]",
+                                    "source_location": null
                                   },
-                                  "name": "a"
+                                  "base": {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_bytes_array_bounds.sol",
+                                      "line": 140,
+                                      "end_line": 141,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "ARC4DynamicArray",
+                                      "name": "arc4.dynamic_array<byte[]>",
+                                      "immutable": false,
+                                      "element_type": {
+                                        "_type": "ARC4DynamicArray",
+                                        "name": "byte[]",
+                                        "immutable": false,
+                                        "element_type": {
+                                          "_type": "ARC4UIntN",
+                                          "name": "arc4.uint8",
+                                          "immutable": true,
+                                          "n": 8,
+                                          "arc4_alias": null,
+                                          "source_location": null
+                                        },
+                                        "arc4_alias": "byte[]",
+                                        "source_location": null
+                                      },
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "name": "a"
+                                  },
+                                  "index": {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_bytes_array_bounds.sol",
+                                      "line": 142,
+                                      "end_line": 143,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 0,
+                                    "teal_alias": null
+                                  }
                                 },
-                                "index": {
-                                  "_type": "IntegerConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_bytes_array_bounds.sol",
-                                    "line": 142,
-                                    "end_line": 143,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "value": 0,
-                                  "teal_alias": null
-                                }
+                                "error_message": null
                               },
                               "index": {
                                 "_type": "IntrinsicCall",

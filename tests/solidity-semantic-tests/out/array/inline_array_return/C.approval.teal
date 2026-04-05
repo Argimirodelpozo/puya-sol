@@ -1,0 +1,68 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/inline_array_return.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock "__ctor_pending" "tester" 0x151f7c7500000000000000010000000000000002000000000000000300000000000000040000000000000005
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x0db13e33 0x493ab179 // method "__postInit()void", method "f()uint64[5]", method "test()(uint64,uint64,uint64,uint64,uint64)"
+    txna ApplicationArgs 0
+    match __postInit main_f_route@6 test
+    err
+
+main_f_route@6:
+    bytec_2 // 0x151f7c7500000000000000010000000000000002000000000000000300000000000000040000000000000005
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/inline_array_return.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_1 // "tester"
+    intc_1 // 0
+    box_create
+    pop
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/inline_array_return.sol.C.test[routing]() -> void:
+test:
+    bytec_1 // "tester"
+    box_del
+    pop
+    bytec_1 // "tester"
+    pushbytes 0x000500000000000000010000000000000002000000000000000300000000000000040000000000000005
+    box_put
+    bytec_2 // 0x151f7c7500000000000000010000000000000002000000000000000300000000000000040000000000000005
+    log
+    intc_0 // 1
+    return

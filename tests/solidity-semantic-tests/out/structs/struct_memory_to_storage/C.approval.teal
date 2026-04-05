@@ -3,14 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_memory_to_storage.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
-    intc_0 // 1
-    app_global_put
-    intc_0 // 1
+    pushint 1
     return
 
 main_after_if_else@2:
@@ -21,31 +16,18 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xbacc49e3 0x1ce05503 // method "__postInit()void", method "f()(uint64,uint256,uint256)"
+    pushbytes 0x1ce05503 // method "f()(uint64,uint256,uint256)"
     txna ApplicationArgs 0
-    match __postInit f
+    match main_f_route@4
     err
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_memory_to_storage.sol.C.__postInit[routing]() -> void:
-__postInit:
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_0 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
-    pushbytes "r"
-    intc_1 // 0
-    box_create
-    pop
-    intc_0 // 1
-    return
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_memory_to_storage.sol.C.f[routing]() -> void:
@@ -54,5 +36,5 @@ f:
     box_put
     pushbytes 0x151f7c75000000000000002a00000000000000000000000000000000000000000000000000000000000000170000000000000000000000000000000000000000000000000000000000000022
     log
-    intc_0 // 1
+    pushint 1
     return

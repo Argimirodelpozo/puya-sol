@@ -3,10 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_static_calldata_uint_array_and_dynamic_array.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 1 32
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -37,7 +37,7 @@ f:
     dup
     pushint 0
     extract_uint16 // on error: invalid array length header
-    intc_0 // 32
+    intc_1 // 32
     *
     pushint 2
     +
@@ -48,21 +48,11 @@ f:
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 1>
-    swap
-    extract 2 0
-    dup
-    len
-    intc_0 // 32
-    /
-    itob
-    extract 6 2
-    swap
-    concat
     pushbytes 0x0022
-    uncover 2
+    swap
     concat
     swap
     concat
@@ -70,5 +60,5 @@ f:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return

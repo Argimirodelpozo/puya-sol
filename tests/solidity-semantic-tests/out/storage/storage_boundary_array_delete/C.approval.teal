@@ -1,0 +1,95 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_delete.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 32 8
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x2bbf0199 0x963090af 0x3e40144f // method "fillArray()void", method "clearArray()void", method "x()uint256[10]"
+    txna ApplicationArgs 0
+    match fillArray main_clearArray_route@6 x
+    err
+
+main_clearArray_route@6:
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_delete.sol.C.fillArray[routing]() -> void:
+fillArray:
+    load 0
+    store 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    intc_0 // 1
+    itob
+
+fillArray_while_top@2:
+    dup
+    pushbytes 0x0a
+    b<
+    bz fillArray_after_while@4
+    dupn 2
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    dig 1
+    b|
+    intc_2 // 8
+    bzero
+    dig 2
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    dig 4
+    dup
+    cover 2
+    pushints 0 320
+    extract3 // on error: index access is out of bounds
+    swap
+    intc_1 // 32
+    *
+    uncover 3
+    replace3 // on error: index access is out of bounds
+    replace2 0 // on error: index access is out of bounds
+    bury 3
+    pushbytes 0x01
+    b+
+    bury 1
+    b fillArray_while_top@2
+
+fillArray_after_while@4:
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_delete.sol.C.x[routing]() -> void:
+x:
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return

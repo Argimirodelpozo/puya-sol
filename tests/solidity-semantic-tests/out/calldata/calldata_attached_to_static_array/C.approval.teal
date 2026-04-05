@@ -4,8 +4,6 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_attached_to_static_array.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
-    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -33,15 +31,14 @@ main_test_route@4:
     b test
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_attached_to_static_array.sol.L.reverse(_a: uint64) -> bytes, bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_attached_to_static_array.sol.L.reverse(_a: bytes) -> bytes, bytes, bytes:
 L.reverse:
-    proto 1 2
+    proto 1 3
     frame_dig -1
-    loads
-    dup
     extract 32 32 // on error: index access is out of bounds
-    swap
+    frame_dig -1
     extract 0 32 // on error: index access is out of bounds
+    frame_dig -1
     retsub
 
 
@@ -63,19 +60,17 @@ test:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub _puya_lib.mem.new_slot
-    dup
-    uncover 2
-    stores
     callsub L.reverse
-    dig 1
+    pop
+    swap
+    dup
     len
     intc_0 // 32
     <=
     assert // overflow
     intc_0 // 32
     bzero
-    uncover 2
+    swap
     dig 1
     b|
     dig 2
@@ -92,17 +87,3 @@ test:
     log
     intc_1 // 1
     return
-
-
-// _puya_lib.mem.new_slot() -> uint64:
-_puya_lib.mem.new_slot:
-    load 5
-    bitlen
-    load 5
-    pushint 256
-    dig 2
-    -
-    pushint 0
-    setbit // on error: no available slots
-    store 5
-    retsub

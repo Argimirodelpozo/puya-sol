@@ -5,16 +5,10 @@
 main:
     intcblock 0 1 32 8
     bytecblock "test" "arr" 0x1e89d778 0x151f7c75
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
-    store 5
     txn ApplicationID
     bnz main_after_if_else@2
-    callsub _puya_lib.mem.new_slot
-    dup
-    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    stores
     bytec_1 // "arr"
-    swap
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     bytec_0 // "test"
     intc_0 // 0
@@ -127,17 +121,3 @@ test:
     log
     intc_1 // 1
     return
-
-
-// _puya_lib.mem.new_slot() -> uint64:
-_puya_lib.mem.new_slot:
-    load 5
-    bitlen
-    load 5
-    pushint 256
-    dig 2
-    -
-    intc_0 // 0
-    setbit // on error: no available slots
-    store 5
-    retsub

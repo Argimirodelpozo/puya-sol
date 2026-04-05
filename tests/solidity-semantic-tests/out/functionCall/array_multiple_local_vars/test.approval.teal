@@ -35,27 +35,25 @@ main_f_route@4:
 f:
     intc_1 // 0
     txna ApplicationArgs 1
-    dup
+    dupn 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
+    dup
+    cover 2
     intc_0 // 32
     *
     pushint 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
-    extract 2 0
     intc_1 // 0
     itob
     dup
 
 f_while_top@2:
     dig 2
-    len
-    intc_0 // 32
-    /
     itob
     dig 2
     b>
@@ -73,14 +71,15 @@ f_while_top@2:
     intc_3 // 8
     -
     extract_uint64
-    dig 3
+    dig 4
+    extract 2 0
     swap
     intc_0 // 32
     *
     intc_0 // 32
     extract3 // on error: index access is out of bounds
     dup
-    bury 5
+    bury 6
     pushbytes 0x03e8
     b>=
     bz f_else_body@7
@@ -92,7 +91,7 @@ f_while_top@2:
 
 f_else_body@7:
     dup
-    dig 4
+    dig 5
     b+
     dup
     pushbytes 0x01f4

@@ -72,18 +72,19 @@ std::unique_ptr<NodeBuilder> SolArrayBuilder::member_access(
 	if (_name == "length")
 	{
 		auto base = resolve();
-		// For ReferenceArray: use ArrayLength node
-		if (base->wtype && base->wtype->kind() == awst::WTypeKind::ReferenceArray)
+		// Use ArrayLength node for ReferenceArray and ARC4 arrays
+		auto kind = base->wtype ? base->wtype->kind() : awst::WTypeKind::Bytes;
+		if (kind == awst::WTypeKind::ReferenceArray
+			|| kind == awst::WTypeKind::ARC4StaticArray
+			|| kind == awst::WTypeKind::ARC4DynamicArray)
 		{
 			auto e = std::make_shared<awst::ArrayLength>();
 			e->sourceLocation = _loc;
 			e->wtype = awst::WType::uint64Type();
 			e->array = std::move(base);
-			// Return as a generic instance builder (uint64 result)
-			// Will be replaced with proper SolIntegerBuilder once we can construct one here
 			return std::make_unique<SolArrayBuilder>(m_ctx, m_arrayType, std::move(e));
 		}
-		// For other array types: use len intrinsic
+		// For other types (bytes): use len intrinsic
 		auto len = std::make_shared<awst::IntrinsicCall>();
 		len->sourceLocation = _loc;
 		len->wtype = awst::WType::uint64Type();

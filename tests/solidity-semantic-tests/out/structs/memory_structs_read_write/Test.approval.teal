@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_read_write.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 0 8 255
     bytecblock "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -127,22 +127,37 @@ testCopyRead:
     loads
     extract 128 64 // on error: index access is out of bounds
     dup
-    extract 0 8
+    intc_1 // 0
+    extract_uint64
     dig 1
-    extract 8 8
+    intc_2 // 8
+    extract_uint64
     dig 2
     extract 16 32
     uncover 3
     extract 48 16
-    extract 8 8 // on error: index access is out of bounds
+    intc_2 // 8
+    extract_uint64
     uncover 3
+    intc_3 // 255
+    &
     uncover 3
+    pushint 65535
+    &
+    uncover 2
+    intc_3 // 255
+    &
+    uncover 2
+    itob
+    uncover 2
+    itob
     concat
     uncover 2
     uncover 3
     b|
     concat
     swap
+    itob
     concat
     pushbytes 0x151f7c75
     swap

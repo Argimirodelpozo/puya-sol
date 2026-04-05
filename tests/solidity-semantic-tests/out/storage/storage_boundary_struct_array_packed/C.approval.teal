@@ -1,0 +1,283 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_struct_array_packed.sol.C.approval_program() -> uint64:
+main:
+    intcblock 8 1 0 320
+    bytecblock 0x04 0x01 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x0a 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x3edce88b 0x6c7cd03f 0x94ed5782 0xe4dbdd11 0xcaad2bd6 0x4d54d1bf 0x0c5a0f10 0xc67bf355 // method "fillBoundaryArray()void", method "deleteBoundaryArray()void", method "copyFromBoundary()void", method "copyToBoundary()void", method "fillDestArray()void", method "boundaryArray()(uint64,uint64,uint64,uint64)[10]", method "destArray()(uint64,uint64,uint64,uint64)[10]", method "canaryValue()uint256"
+    txna ApplicationArgs 0
+    match fillBoundaryArray main_deleteBoundaryArray_route@6 main_copyFromBoundary_route@7 main_copyToBoundary_route@8 fillDestArray boundaryArray destArray canaryValue
+    err
+
+main_copyToBoundary_route@8:
+    intc_1 // 1
+    return
+
+main_copyFromBoundary_route@7:
+    intc_1 // 1
+    return
+
+main_deleteBoundaryArray_route@6:
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_struct_array_packed.sol.C.fillBoundaryArray[routing]() -> void:
+fillBoundaryArray:
+    load 0
+    store 0
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    intc_2 // 0
+    itob
+
+fillBoundaryArray_while_top@2:
+    dup
+    bytec_3 // 0x0a
+    b<
+    bz fillBoundaryArray_after_while@4
+    intc_0 // 8
+    bzero
+    dig 1
+    dup
+    cover 2
+    bytec_0 // 0x04
+    b*
+    bytec_1 // 0x01
+    dig 1
+    b+
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    pushbytes 0x02
+    dig 2
+    b+
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    pushbytes 0x03
+    dig 3
+    b+
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    bytec_0 // 0x04
+    uncover 4
+    b+
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    dig 4
+    dup
+    cover 2
+    intc_2 // 0
+    intc_3 // 320
+    extract3 // on error: index access is out of bounds
+    swap
+    pushint 32
+    *
+    uncover 3
+    replace3 // on error: index access is out of bounds
+    replace2 0 // on error: index access is out of bounds
+    bury 3
+    bytec_1 // 0x01
+    b+
+    bury 1
+    b fillBoundaryArray_while_top@2
+
+fillBoundaryArray_after_while@4:
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_struct_array_packed.sol.C.fillDestArray[routing]() -> void:
+fillDestArray:
+    load 0
+    store 0
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    intc_2 // 0
+    itob
+
+fillDestArray_while_top@2:
+    dup
+    bytec_3 // 0x0a
+    b<
+    bz fillDestArray_after_while@4
+    intc_0 // 8
+    bzero
+    dig 1
+    dup
+    cover 2
+    bytec_0 // 0x04
+    b*
+    pushbytes 0x29
+    dig 1
+    b+
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    pushbytes 0x2a
+    dig 2
+    b+
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    pushbytes 0x2b
+    dig 3
+    b+
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    pushbytes 0x2c
+    uncover 4
+    b+
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    dig 4
+    dup
+    cover 2
+    intc_2 // 0
+    intc_3 // 320
+    extract3 // on error: index access is out of bounds
+    swap
+    pushint 32
+    *
+    uncover 3
+    replace3 // on error: index access is out of bounds
+    replace2 0 // on error: index access is out of bounds
+    bury 3
+    bytec_1 // 0x01
+    b+
+    bury 1
+    b fillDestArray_while_top@2
+
+fillDestArray_after_while@4:
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_struct_array_packed.sol.C.boundaryArray[routing]() -> void:
+boundaryArray:
+    load 0
+    store 0
+    bytec 4 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_struct_array_packed.sol.C.destArray[routing]() -> void:
+destArray:
+    load 0
+    store 0
+    bytec 4 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_struct_array_packed.sol.C.canaryValue[routing]() -> void:
+canaryValue:
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return

@@ -5,8 +5,6 @@
 main:
     intcblock 32 1 0 2
     bytecblock "storageArray" "__ctor_pending" 0x151f7c75
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
-    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
@@ -59,22 +57,53 @@ test:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_0 // "storageArray"
-    box_get
-    assert // box exists
-    intc_3 // 2
-    intc_2 // 0
-    extract3
-    swap
     intc_0 // 32
     <=
     assert // overflow
     intc_0 // 32
     bzero
-    uncover 2
     b|
-    concat // on error: max array length exceeded
+    pushbytes 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    bytec_0 // "storageArray"
+    intc_2 // 0
+    intc_3 // 2
+    box_extract
+    btoi
+    bytec_0 // "storageArray"
+    box_len
     pop
+    dig 2
+    intc_0 // 32
+    *
+    +
+    bytec_0 // "storageArray"
+    swap
+    box_resize
+    dup
+    uncover 2
+    +
+    itob
+    extract 6 2
+    bytec_0 // "storageArray"
+    intc_2 // 0
+    uncover 2
+    box_replace
+    intc_0 // 32
+    *
+    intc_3 // 2
+    +
+    bytec_0 // "storageArray"
+    swap
+    intc_2 // 0
+    uncover 3
+    box_splice
     intc_1 // 1
     return
 
@@ -106,21 +135,10 @@ fetch:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    callsub _puya_lib.mem.new_slot
-    dup
-    pushbytes 0x
-    stores
     bytec_0 // "storageArray"
     box_get
-    swap
-    intc_3 // 2
-    intc_2 // 0
-    extract3
-    callsub _puya_lib.mem.new_slot
-    dup
-    uncover 2
-    stores
-    swap
+    pushbytes 0x0000
+    cover 2
     select
     pushint 8
     bzero
@@ -132,7 +150,7 @@ fetch:
     -
     extract_uint64
     swap
-    loads
+    extract 2 0
     swap
     intc_0 // 32
     *
@@ -152,17 +170,3 @@ fetch:
     log
     intc_1 // 1
     return
-
-
-// _puya_lib.mem.new_slot() -> uint64:
-_puya_lib.mem.new_slot:
-    load 5
-    bitlen
-    load 5
-    pushint 256
-    dig 2
-    -
-    intc_2 // 0
-    setbit // on error: no available slots
-    store 5
-    retsub

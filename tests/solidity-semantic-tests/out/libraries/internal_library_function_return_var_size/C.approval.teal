@@ -4,8 +4,6 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_return_var_size.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
-    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -33,10 +31,28 @@ main_f_route@4:
     b f
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_return_var_size.sol.L.f(_s: bytes) -> uint64:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_return_var_size.sol.L.f(_s: bytes) -> bytes, bytes:
 L.f:
-    proto 1 1
+    proto 1 2
     frame_dig -1
+    intc_0 // 0
+    extract_uint16
+    frame_dig -1
+    len
+    frame_dig -1
+    dig 2
+    uncover 2
+    substring3
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    replace2 98 // on error: index access is out of bounds
+    frame_dig -1
+    intc_0 // 0
+    uncover 3
+    extract3
+    swap
+    concat
+    dup
+    frame_bury -1
     intc_0 // 0
     extract_uint16
     frame_dig -1
@@ -44,17 +60,7 @@ L.f:
     frame_dig -1
     cover 2
     substring3
-    pushint 2
-    intc_0 // 0
-    extract3
-    dup
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
-    replace2 96 // on error: index access is out of bounds
-    pop
-    callsub _puya_lib.mem.new_slot
-    dup
-    uncover 2
-    stores
+    frame_dig -1
     retsub
 
 
@@ -62,10 +68,10 @@ L.f:
 f:
     pushint 32
     bzero
-    pushbytes 0x000200070000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x000200070000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     callsub L.f
-    loads
-    extract 96 32 // on error: index access is out of bounds
+    pop
+    extract 98 32
     b|
     pushbytes 0x151f7c75
     swap
@@ -73,17 +79,3 @@ f:
     log
     intc_1 // 1
     return
-
-
-// _puya_lib.mem.new_slot() -> uint64:
-_puya_lib.mem.new_slot:
-    load 5
-    bitlen
-    load 5
-    pushint 256
-    dig 2
-    -
-    intc_0 // 0
-    setbit // on error: no available slots
-    store 5
-    retsub

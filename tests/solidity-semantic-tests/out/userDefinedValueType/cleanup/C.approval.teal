@@ -3,18 +3,18 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 8 511 255
+    intcblock 255 1 0 8 511
     bytecblock 0x151f7c75 "a" "c" "b"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "a"
-    intc_0 // 0
+    intc_2 // 0
     app_global_put
     bytec_3 // "b"
-    intc_0 // 0
+    intc_2 // 0
     app_global_put
     bytec_2 // "c"
-    intc_0 // 0
+    intc_2 // 0
     app_global_put
     intc_1 // 1
     return
@@ -42,7 +42,7 @@ main_after_if_else@2:
 wrap:
     proto 1 1
     load 0
-    intc_2 // 8
+    intc_3 // 8
     bzero
     frame_dig -1
     pushbytes 0xff
@@ -50,7 +50,7 @@ wrap:
     concat
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     -
     extract_uint64
     swap
@@ -69,9 +69,11 @@ unwrap:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup.sol.C.ret[routing]() -> void:
 ret:
-    intc_3 // 511
+    intc 4 // 511
     itob
     callsub wrap
+    intc_0 // 255
+    &
     itob
     bytec_0 // 0x151f7c75
     swap
@@ -86,15 +88,15 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     dup
-    intc 4 // 255
+    intc_0 // 255
     <=
     assert // ABI validation
-    intc 4 // 255
+    intc_0 // 255
     &
     itob
     bytec_0 // 0x151f7c75
@@ -107,25 +109,25 @@ f:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/cleanup.sol.C.mem[routing]() -> void:
 mem:
-    intc_3 // 511
+    intc 4 // 511
     itob
     callsub wrap
     itob
     pushbytes 0x00000000000000000000000000000000
     swap
-    replace2 0 // on error: index access is out of bounds
-    intc 4 // 255
+    replace2 2 // on error: index access is out of bounds
+    intc_0 // 255
     itob
     callsub wrap
     itob
-    replace2 8 // on error: index access is out of bounds
+    replace2 10 // on error: index access is out of bounds
     dup
-    intc_0 // 0
+    pushint 2
     extract_uint64
     dup
     callsub unwrap
     dig 2
-    intc_2 // 8
+    pushint 10
     extract_uint64
     dup
     callsub unwrap
@@ -142,14 +144,6 @@ mem:
     callsub unwrap
     ==
     assert
-    dup
-    len
-    intc_2 // 8
-    /
-    itob
-    extract 6 2
-    swap
-    concat
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -166,21 +160,28 @@ stor:
     bytec_2 // "c"
     pushint 2
     app_global_put
-    intc_3 // 511
+    intc 4 // 511
     itob
     callsub wrap
     bytec_3 // "b"
     dig 1
     app_global_put
-    intc_0 // 0
+    intc_2 // 0
     bytec_1 // "a"
     app_global_get_ex
     assert // check a exists
-    intc_0 // 0
+    intc_0 // 255
+    &
+    swap
+    intc_0 // 255
+    &
+    intc_2 // 0
     bytec_2 // "c"
     app_global_get_ex
     assert // check c exists
-    swap
+    intc_0 // 255
+    &
+    uncover 2
     itob
     uncover 2
     itob

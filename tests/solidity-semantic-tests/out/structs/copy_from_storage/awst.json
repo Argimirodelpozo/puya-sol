@@ -800,7 +800,7 @@
         "return_type": {
           "_type": "ARC4DynamicArray",
           "name": "arc4.dynamic_array<S>",
-          "immutable": true,
+          "immutable": false,
           "element_type": {
             "_type": "ARC4Struct",
             "name": "S",
@@ -855,9 +855,9 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<S, 1>",
-                  "immutable": true,
+                  "_type": "ARC4StaticArray",
+                  "name": "arc4.static_array<S, 1>",
+                  "immutable": false,
                   "element_type": {
                     "_type": "ARC4Struct",
                     "name": "S",
@@ -878,6 +878,7 @@
                     "desc": null
                   },
                   "array_size": 1,
+                  "arc4_alias": null,
                   "source_location": null
                 },
                 "name": "sMemory"
@@ -893,9 +894,9 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<S, 1>",
-                  "immutable": true,
+                  "_type": "ARC4StaticArray",
+                  "name": "arc4.static_array<S, 1>",
+                  "immutable": false,
                   "element_type": {
                     "_type": "ARC4Struct",
                     "name": "S",
@@ -916,6 +917,7 @@
                     "desc": null
                   },
                   "array_size": 1,
+                  "arc4_alias": null,
                   "source_location": null
                 },
                 "values": [
@@ -1054,9 +1056,9 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "ReferenceArray",
-                      "name": "array<S>",
-                      "immutable": true,
+                      "_type": "ARC4DynamicArray",
+                      "name": "arc4.dynamic_array<S>",
+                      "immutable": false,
                       "element_type": {
                         "_type": "ARC4Struct",
                         "name": "S",
@@ -1076,7 +1078,7 @@
                         "source_location": null,
                         "desc": null
                       },
-                      "array_size": null,
+                      "arc4_alias": null,
                       "source_location": null
                     },
                     "name": "sMemory"
@@ -1162,7 +1164,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "ARC4Encode",
+                "_type": "VarExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/copy_from_storage.sol",
                   "line": 331,
@@ -1174,7 +1176,7 @@
                 "wtype": {
                   "_type": "ARC4DynamicArray",
                   "name": "arc4.dynamic_array<S>",
-                  "immutable": true,
+                  "immutable": false,
                   "element_type": {
                     "_type": "ARC4Struct",
                     "name": "S",
@@ -1197,45 +1199,7 @@
                   "arc4_alias": null,
                   "source_location": null
                 },
-                "value": {
-                  "_type": "VarExpression",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/copy_from_storage.sol",
-                    "line": 331,
-                    "end_line": 338,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "ReferenceArray",
-                    "name": "array<S>",
-                    "immutable": true,
-                    "element_type": {
-                      "_type": "ARC4Struct",
-                      "name": "S",
-                      "immutable": true,
-                      "fields": {
-                        "x": {
-                          "_type": "ARC4UIntN",
-                          "name": "arc4.uint256",
-                          "immutable": true,
-                          "n": 256,
-                          "arc4_alias": null,
-                          "source_location": null
-                        }
-                      },
-                      "frozen": true,
-                      "arc4_alias": null,
-                      "source_location": null,
-                      "desc": null
-                    },
-                    "array_size": null,
-                    "source_location": null
-                  },
-                  "name": "sMemory"
-                },
-                "error_message": null
+                "name": "sMemory"
               }
             }
           ],

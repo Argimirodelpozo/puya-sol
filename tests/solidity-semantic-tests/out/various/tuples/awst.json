@@ -877,15 +877,18 @@
               "immutable": true
             },
             {
-              "_type": "ReferenceArray",
-              "name": "array<biguint>",
-              "immutable": true,
+              "_type": "ARC4DynamicArray",
+              "name": "arc4.dynamic_array<arc4.uint256>",
+              "immutable": false,
               "element_type": {
-                "_type": "WType",
-                "name": "biguint",
-                "immutable": true
+                "_type": "ARC4UIntN",
+                "name": "arc4.uint256",
+                "immutable": true,
+                "n": 256,
+                "arc4_alias": null,
+                "source_location": null
               },
-              "array_size": null,
+              "arc4_alias": null,
               "source_location": null
             }
           ],
@@ -1020,21 +1023,24 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<biguint>",
-                  "immutable": true,
+                  "_type": "ARC4DynamicArray",
+                  "name": "arc4.dynamic_array<arc4.uint256>",
+                  "immutable": false,
                   "element_type": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
-                  "array_size": null,
+                  "arc4_alias": null,
                   "source_location": null
                 },
                 "name": "c"
               },
               "value": {
-                "_type": "NewArray",
+                "_type": "BytesConstant",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol",
                   "line": 57,
@@ -1044,18 +1050,22 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<biguint>",
-                  "immutable": true,
+                  "_type": "ARC4DynamicArray",
+                  "name": "arc4.dynamic_array<arc4.uint256>",
+                  "immutable": false,
                   "element_type": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
-                  "array_size": null,
+                  "arc4_alias": null,
                   "source_location": null
                 },
-                "values": []
+                "value": "000",
+                "encoding": "base16"
               }
             },
             {
@@ -1094,15 +1104,18 @@
                       "immutable": true
                     },
                     {
-                      "_type": "ReferenceArray",
-                      "name": "array<biguint>",
-                      "immutable": true,
+                      "_type": "ARC4DynamicArray",
+                      "name": "arc4.dynamic_array<arc4.uint256>",
+                      "immutable": false,
                       "element_type": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint256",
+                        "immutable": true,
+                        "n": 256,
+                        "arc4_alias": null,
+                        "source_location": null
                       },
-                      "array_size": null,
+                      "arc4_alias": null,
                       "source_location": null
                     }
                   ],
@@ -1221,7 +1234,7 @@
                     }
                   },
                   {
-                    "_type": "VarExpression",
+                    "_type": "StateGet",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol",
                       "line": 155,
@@ -1230,19 +1243,79 @@
                       "column": null,
                       "end_column": null
                     },
-                    "wtype": {
-                      "_type": "ReferenceArray",
-                      "name": "array<biguint>",
-                      "immutable": true,
-                      "element_type": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
+                    "field": {
+                      "_type": "BoxValueExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol",
+                        "line": 155,
+                        "end_line": 159,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
                       },
-                      "array_size": null,
-                      "source_location": null
+                      "wtype": {
+                        "_type": "ARC4DynamicArray",
+                        "name": "arc4.dynamic_array<arc4.uint256>",
+                        "immutable": false,
+                        "element_type": {
+                          "_type": "ARC4UIntN",
+                          "name": "arc4.uint256",
+                          "immutable": true,
+                          "n": 256,
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "key": {
+                        "_type": "BytesConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol",
+                          "line": 155,
+                          "end_line": 159,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "box_key",
+                          "immutable": true
+                        },
+                        "value": "WMOn+",
+                        "encoding": "utf8"
+                      },
+                      "exists_assertion_message": null
                     },
-                    "name": "data"
+                    "default": {
+                      "_type": "BytesConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol",
+                        "line": 155,
+                        "end_line": 159,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "ARC4DynamicArray",
+                        "name": "arc4.dynamic_array<arc4.uint256>",
+                        "immutable": false,
+                        "element_type": {
+                          "_type": "ARC4UIntN",
+                          "name": "arc4.uint256",
+                          "immutable": true,
+                          "n": 256,
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "value": "000",
+                      "encoding": "base16"
+                    }
                   }
                 ]
               }
@@ -1648,8 +1721,8 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "ReferenceArray",
-                    "name": "array<arc4.uint256>",
+                    "_type": "ARC4DynamicArray",
+                    "name": "arc4.dynamic_array<arc4.uint256>",
                     "immutable": false,
                     "element_type": {
                       "_type": "ARC4UIntN",
@@ -1659,7 +1732,7 @@
                       "arc4_alias": null,
                       "source_location": null
                     },
-                    "array_size": null,
+                    "arc4_alias": null,
                     "source_location": null
                   },
                   "key": {
@@ -1693,8 +1766,8 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "ReferenceArray",
-                    "name": "array<arc4.uint256>",
+                    "_type": "ARC4DynamicArray",
+                    "name": "arc4.dynamic_array<arc4.uint256>",
                     "immutable": false,
                     "element_type": {
                       "_type": "ARC4UIntN",
@@ -1704,7 +1777,7 @@
                       "arc4_alias": null,
                       "source_location": null
                     },
-                    "array_size": null,
+                    "arc4_alias": null,
                     "source_location": null
                   },
                   "values": [
@@ -3366,65 +3439,6 @@
               "else_branch": null
             },
             {
-              "_type": "AssignmentStatement",
-              "source_location": {
-                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol",
-                "line": 437,
-                "end_line": 462,
-                "comment_lines": 0,
-                "column": null,
-                "end_column": null
-              },
-              "target": {
-                "_type": "VarExpression",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol",
-                  "line": 437,
-                  "end_line": 456,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<biguint>",
-                  "immutable": true,
-                  "element_type": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
-                  },
-                  "array_size": null,
-                  "source_location": null
-                },
-                "name": "c"
-              },
-              "value": {
-                "_type": "VarExpression",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol",
-                  "line": 459,
-                  "end_line": 462,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<biguint>",
-                  "immutable": true,
-                  "element_type": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
-                  },
-                  "array_size": null,
-                  "source_location": null
-                },
-                "name": "m_c"
-              }
-            },
-            {
               "_type": "ExpressionStatement",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol",
@@ -3460,15 +3474,18 @@
                       "immutable": true
                     },
                     {
-                      "_type": "ReferenceArray",
-                      "name": "array<biguint>",
-                      "immutable": true,
+                      "_type": "ARC4DynamicArray",
+                      "name": "arc4.dynamic_array<arc4.uint256>",
+                      "immutable": false,
                       "element_type": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint256",
+                        "immutable": true,
+                        "n": 256,
+                        "arc4_alias": null,
+                        "source_location": null
                       },
-                      "array_size": null,
+                      "arc4_alias": null,
                       "source_location": null
                     }
                   ],
@@ -3565,15 +3582,18 @@
                           "immutable": true
                         },
                         {
-                          "_type": "ReferenceArray",
-                          "name": "array<biguint>",
-                          "immutable": true,
+                          "_type": "ARC4DynamicArray",
+                          "name": "arc4.dynamic_array<arc4.uint256>",
+                          "immutable": false,
                           "element_type": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint256",
+                            "immutable": true,
+                            "n": 256,
+                            "arc4_alias": null,
+                            "source_location": null
                           },
-                          "array_size": null,
+                          "arc4_alias": null,
                           "source_location": null
                         }
                       ],
@@ -3673,15 +3693,18 @@
                           "immutable": true
                         },
                         {
-                          "_type": "ReferenceArray",
-                          "name": "array<biguint>",
-                          "immutable": true,
+                          "_type": "ARC4DynamicArray",
+                          "name": "arc4.dynamic_array<arc4.uint256>",
+                          "immutable": false,
                           "element_type": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint256",
+                            "immutable": true,
+                            "n": 256,
+                            "arc4_alias": null,
+                            "source_location": null
                           },
-                          "array_size": null,
+                          "arc4_alias": null,
                           "source_location": null
                         }
                       ],
@@ -3719,40 +3742,64 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<biguint>",
-                  "immutable": true,
+                  "_type": "ARC4DynamicArray",
+                  "name": "arc4.dynamic_array<arc4.uint256>",
+                  "immutable": false,
                   "element_type": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
-                  "array_size": null,
+                  "arc4_alias": null,
                   "source_location": null
                 },
                 "target": {
-                  "_type": "VarExpression",
+                  "_type": "BoxValueExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol",
-                    "line": 479,
-                    "end_line": 480,
+                    "line": 459,
+                    "end_line": 462,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "ReferenceArray",
-                    "name": "array<biguint>",
-                    "immutable": true,
+                    "_type": "ARC4DynamicArray",
+                    "name": "arc4.dynamic_array<arc4.uint256>",
+                    "immutable": false,
                     "element_type": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint256",
+                      "immutable": true,
+                      "n": 256,
+                      "arc4_alias": null,
+                      "source_location": null
                     },
-                    "array_size": null,
+                    "arc4_alias": null,
                     "source_location": null
                   },
-                  "name": "c"
+                  "key": {
+                    "_type": "BytesConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol",
+                      "line": 459,
+                      "end_line": 462,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "box_key",
+                      "immutable": true
+                    },
+                    "value": "ZC_&",
+                    "encoding": "utf8"
+                  },
+                  "exists_assertion_message": null
                 },
                 "value": {
                   "_type": "TupleItemExpression",
@@ -3765,15 +3812,18 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "ReferenceArray",
-                    "name": "array<biguint>",
-                    "immutable": true,
+                    "_type": "ARC4DynamicArray",
+                    "name": "arc4.dynamic_array<arc4.uint256>",
+                    "immutable": false,
                     "element_type": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint256",
+                      "immutable": true,
+                      "n": 256,
+                      "arc4_alias": null,
+                      "source_location": null
                     },
-                    "array_size": null,
+                    "arc4_alias": null,
                     "source_location": null
                   },
                   "base": {
@@ -3802,15 +3852,18 @@
                           "immutable": true
                         },
                         {
-                          "_type": "ReferenceArray",
-                          "name": "array<biguint>",
-                          "immutable": true,
+                          "_type": "ARC4DynamicArray",
+                          "name": "arc4.dynamic_array<arc4.uint256>",
+                          "immutable": false,
                           "element_type": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint256",
+                            "immutable": true,
+                            "n": 256,
+                            "arc4_alias": null,
+                            "source_location": null
                           },
-                          "array_size": null,
+                          "arc4_alias": null,
                           "source_location": null
                         }
                       ],
@@ -3990,7 +4043,7 @@
                     "immutable": true
                   },
                   "lhs": {
-                    "_type": "IndexExpression",
+                    "_type": "ARC4Decode",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol",
                       "line": 521,
@@ -4004,48 +4057,128 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "base": {
-                      "_type": "VarExpression",
+                    "value": {
+                      "_type": "IndexExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol",
                         "line": 521,
-                        "end_line": 522,
+                        "end_line": 525,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "ReferenceArray",
-                        "name": "array<biguint>",
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint256",
                         "immutable": true,
-                        "element_type": {
-                          "_type": "WType",
-                          "name": "biguint",
-                          "immutable": true
-                        },
-                        "array_size": null,
+                        "n": 256,
+                        "arc4_alias": null,
                         "source_location": null
                       },
-                      "name": "c"
+                      "base": {
+                        "_type": "StateGet",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol",
+                          "line": 459,
+                          "end_line": 462,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "field": {
+                          "_type": "BoxValueExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol",
+                            "line": 459,
+                            "end_line": 462,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "ARC4DynamicArray",
+                            "name": "arc4.dynamic_array<arc4.uint256>",
+                            "immutable": false,
+                            "element_type": {
+                              "_type": "ARC4UIntN",
+                              "name": "arc4.uint256",
+                              "immutable": true,
+                              "n": 256,
+                              "arc4_alias": null,
+                              "source_location": null
+                            },
+                            "arc4_alias": null,
+                            "source_location": null
+                          },
+                          "key": {
+                            "_type": "BytesConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol",
+                              "line": 459,
+                              "end_line": 462,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "box_key",
+                              "immutable": true
+                            },
+                            "value": "ZC_&",
+                            "encoding": "utf8"
+                          },
+                          "exists_assertion_message": null
+                        },
+                        "default": {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol",
+                            "line": 459,
+                            "end_line": 462,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "ARC4DynamicArray",
+                            "name": "arc4.dynamic_array<arc4.uint256>",
+                            "immutable": false,
+                            "element_type": {
+                              "_type": "ARC4UIntN",
+                              "name": "arc4.uint256",
+                              "immutable": true,
+                              "n": 256,
+                              "arc4_alias": null,
+                              "source_location": null
+                            },
+                            "arc4_alias": null,
+                            "source_location": null
+                          },
+                          "value": "000",
+                          "encoding": "base16"
+                        }
+                      },
+                      "index": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol",
+                          "line": 523,
+                          "end_line": 524,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 0,
+                        "teal_alias": null
+                      }
                     },
-                    "index": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/tuples.sol",
-                        "line": 523,
-                        "end_line": 524,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "error_message": null
                   },
                   "operator": "!=",
                   "rhs": {

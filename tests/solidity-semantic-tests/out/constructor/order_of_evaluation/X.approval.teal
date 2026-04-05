@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/order_of_evaluation.sol.X.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "__ctor_pending"
+    bytecblock "__ctor_pending" "x"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
@@ -40,7 +40,7 @@ __postInit:
     bytec_0 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    pushbytes "x"
+    bytec_1 // "x"
     intc_1 // 0
     box_create
     pop
@@ -50,16 +50,11 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/order_of_evaluation.sol.X.g[routing]() -> void:
 g:
-    pushbytes ""
-    loads
-    dup
-    len
-    pushint 32
-    /
-    itob
-    extract 6 2
-    swap
-    concat
+    bytec_1 // "x"
+    box_get
+    pushbytes 0x0000
+    cover 2
+    select
     pushbytes 0x151f7c75
     swap
     concat

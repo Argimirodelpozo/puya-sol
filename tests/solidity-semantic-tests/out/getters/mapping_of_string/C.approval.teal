@@ -4,12 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32 2
-    bytecblock 0x000000000000000000000000000000000000000000000000 "__ctor_pending" "x"
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
-    store 5
+    bytecblock "__ctor_pending" 0x78ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad "x"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -36,90 +34,40 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_of_string.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     intc_1 // 0
     app_global_put
     bytec_2 // "x"
     intc_1 // 0
     box_create
     pop
-    callsub _puya_lib.mem.new_slot
-    dup
-    bytec_0 // 0x000000000000000000000000000000000000000000000000
-    stores
-    pushbytes 0x78ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
-    box_get
-    callsub _puya_lib.mem.new_slot
-    dup
-    dig 3
-    stores
-    uncover 3
-    swap
-    dig 2
-    select
     intc_0 // 1
     itob
-    dig 1
-    loads
-    swap
-    replace2 0 // on error: index access is out of bounds
-    stores
-    callsub _puya_lib.mem.new_slot
-    dup
-    bytec_0 // 0x000000000000000000000000000000000000000000000000
-    stores
-    callsub _puya_lib.mem.new_slot
-    dup
-    dig 4
-    stores
-    dig 2
-    select
+    bytec_1 // 0x78ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    intc_1 // 0
+    uncover 2
+    box_replace // on error: index out of bounds
     pushint 3
     itob
-    dig 1
-    loads
-    swap
-    replace2 16 // on error: index access is out of bounds
-    stores
-    callsub _puya_lib.mem.new_slot
-    dup
-    bytec_0 // 0x000000000000000000000000000000000000000000000000
-    stores
-    callsub _puya_lib.mem.new_slot
-    dup
-    uncover 4
-    stores
+    bytec_1 // 0x78ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    pushint 16
     uncover 2
-    select
+    box_replace // on error: index out of bounds
     intc_3 // 2
     itob
-    dig 1
-    loads
-    swap
-    replace2 8 // on error: index access is out of bounds
-    stores
-    callsub _puya_lib.mem.new_slot
-    dup
-    bytec_0 // 0x000000000000000000000000000000000000000000000000
-    stores
-    pushbytes 0x78cb8379ac2098aa165029e3938a51da0bcecfc008fd6795f401178647f96c5b34
-    box_get
-    callsub _puya_lib.mem.new_slot
-    dup
-    uncover 3
-    stores
-    swap
-    select
+    bytec_1 // 0x78ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    pushint 8
+    uncover 2
+    box_replace // on error: index out of bounds
     pushint 9
     itob
-    dig 1
-    loads
-    swap
-    replace2 8 // on error: index access is out of bounds
-    stores
+    pushbytes 0x78cb8379ac2098aa165029e3938a51da0bcecfc008fd6795f401178647f96c5b34
+    pushint 8
+    uncover 2
+    box_replace // on error: index out of bounds
     intc_0 // 1
     return
 
@@ -172,17 +120,3 @@ x:
     log
     intc_0 // 1
     return
-
-
-// _puya_lib.mem.new_slot() -> uint64:
-_puya_lib.mem.new_slot:
-    load 5
-    bitlen
-    load 5
-    pushint 256
-    dig 2
-    -
-    intc_1 // 0
-    setbit // on error: no available slots
-    store 5
-    retsub

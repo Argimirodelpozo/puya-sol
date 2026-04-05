@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 1
-    bytecblock "x" 0x01 0x 0xc608be41 0x010000000000000000000000000000000000000000000000000000000000000000
+    intcblock 32 0 1 6
+    bytecblock "x" 0x01 0x 0xc608be41 0x010000000000000000000000000000000000000000000000000000000000000000 0x0a8101
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
@@ -82,7 +82,7 @@ stack:
     global CurrentApplicationAddress
     pushint 24
     extract_uint64
-    pushint 6
+    intc_3 // 6
     itxn_field TypeEnum
     intc_1 // 0
     itxn_field OnCompletion
@@ -139,4 +139,26 @@ x:
     bytec_0 // "x"
     swap
     app_global_put
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field Fee
+    bytec 5 // 0x0a8101
+    itxn_field ClearStateProgram
+    bytec 5 // 0x0a8101
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_2 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_1 // 0
+    itxn_field Fee
+    pushint 200000
+    itxn_field Amount
+    itxn_submit
     retsub

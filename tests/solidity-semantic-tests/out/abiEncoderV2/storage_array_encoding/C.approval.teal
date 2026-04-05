@@ -1,0 +1,112 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/storage_array_encoding.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock "__ctor_pending" "tmp_h" 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x4c6e5c75 0xc8df2d7c // method "__postInit()void", method "h(uint256[2][])byte[]", method "i(uint256[2][2])byte[]"
+    txna ApplicationArgs 0
+    match __postInit h i
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/storage_array_encoding.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_1 // "tmp_h"
+    intc_1 // 0
+    box_create
+    pop
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/storage_array_encoding.sol.C.h[routing]() -> void:
+h:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 64
+    *
+    pushint 2
+    +
+    dig 1
+    len
+    dup
+    uncover 2
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint256, 2>>
+    bytec_1 // "tmp_h"
+    box_del
+    pop
+    bytec_1 // "tmp_h"
+    dig 2
+    box_put
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/storage_array_encoding.sol.C.i[routing]() -> void:
+i:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 128
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.static_array<arc4.uint256, 2>, 2>
+    pushbytes "tmp_i"
+    dig 1
+    box_put
+    dup
+    extract 0 64 // on error: index access is out of bounds
+    swap
+    extract 64 64 // on error: index access is out of bounds
+    concat
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

@@ -1,0 +1,105 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/arrays.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock "__ctor_pending" "flags"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x3f91f9c7 0xc6420dec 0xd28042fd 0x3b5a1911 0x29bb6014 0x4dcad27e 0x9f19ada4 0xdad9e060 // method "__postInit()void", method "r()bool[3]", method "s()(uint256[2],uint256)", method "u()(uint256,uint256,string)[2]", method "v()bool[2][]", method "w1()string[1]", method "w2()string[2]", method "w3()string[3]", method "x()(string[2],string[3])"
+    txna ApplicationArgs 0
+    match __postInit main_r_route@6 main_s_route@7 main_u_route@8 v main_w1_route@10 main_w2_route@11 main_w3_route@12 main_x_route@13
+    err
+
+main_x_route@13:
+    pushbytes 0x151f7c7500040012000400090003616e790003616e790006000b00100003616e790003616e790003616e79
+    log
+    intc_0 // 1
+    return
+
+main_w3_route@12:
+    pushbytes 0x151f7c750006000b00100003616e790003616e790003616e79
+    log
+    intc_0 // 1
+    return
+
+main_w2_route@11:
+    pushbytes 0x151f7c75000400090003616e790003616e79
+    log
+    intc_0 // 1
+    return
+
+main_w1_route@10:
+    pushbytes 0x151f7c7500020003616e79
+    log
+    intc_0 // 1
+    return
+
+main_u_route@8:
+    pushbytes 0x151f7c750004004b0000000000000000000000000000000000000000000000000000000000000017000000000000000000000000000000000000000000000000000000000000002a00420003616e79000000000000000000000000000000000000000000000000000000000000022b000000000000000000000000000000000000000000000000000000000000029a00420003616e79
+    log
+    intc_0 // 1
+    return
+
+main_s_route@7:
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000007b00000000000000000000000000000000000000000000000000000000000001c80000000000000000000000000000000000000000000000000000000000000315
+    log
+    intc_0 // 1
+    return
+
+main_r_route@6:
+    pushbytes 0x151f7c75a0
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/arrays.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_1 // "flags"
+    intc_1 // 0
+    box_create
+    pop
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/arrays.sol.C.v[routing]() -> void:
+v:
+    bytec_1 // "flags"
+    box_get
+    pushbytes 0x0000
+    cover 2
+    select
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

@@ -75,35 +75,32 @@ test:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    uncover 5
-    uncover 5
-    extract 2 0
-    cover 2
     intc_1 // 8
     bzero
     dup
-    uncover 6
+    uncover 4
     concat
     dup
     len
     intc_1 // 8
     -
     extract_uint64
-    uncover 2
-    swap
     intc_0 // 32
     *
+    uncover 6
+    swap
     intc_0 // 32
     extract3 // on error: index access is out of bounds
     dig 1
-    uncover 5
+    uncover 4
     concat
     dup
     len
     intc_1 // 8
     -
     extract_uint64
-    uncover 4
+    uncover 5
+    extract 2 0
     swap
     intc_0 // 32
     *

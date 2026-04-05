@@ -37,12 +37,19 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewBytes()
 std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 {
 	auto* resultType = m_ctx.typeMapper.map(m_call.annotation().type);
-	auto* refArr = dynamic_cast<awst::ReferenceArray const*>(resultType);
+	awst::WType const* elemType = nullptr;
+	if (auto* refArr = dynamic_cast<awst::ReferenceArray const*>(resultType))
+		elemType = refArr->elementType();
+	else if (auto* arc4Static = dynamic_cast<awst::ARC4StaticArray const*>(resultType))
+		elemType = arc4Static->elementType();
+	else if (auto* arc4Dyn = dynamic_cast<awst::ARC4DynamicArray const*>(resultType))
+		elemType = arc4Dyn->elementType();
+
 	auto e = std::make_shared<awst::NewArray>();
 	e->sourceLocation = m_loc;
 	e->wtype = resultType;
 
-	if (!m_call.arguments().empty() && refArr)
+	if (!m_call.arguments().empty() && elemType)
 	{
 		// Try compile-time size resolution
 		unsigned long long n = 0;
@@ -70,7 +77,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 			// Compile-time known: N default values
 			for (unsigned long long i = 0; i < n; ++i)
 				e->values.push_back(
-					builder::StorageMapper::makeDefaultValue(refArr->elementType(), m_loc));
+					builder::StorageMapper::makeDefaultValue(elemType, m_loc));
 		}
 		else
 		{
@@ -127,7 +134,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 			loopBody->sourceLocation = m_loc;
 
 			// extend with default
-			auto defaultElem = builder::StorageMapper::makeDefaultValue(refArr->elementType(), m_loc);
+			auto defaultElem = builder::StorageMapper::makeDefaultValue(elemType, m_loc);
 			auto singleArr = std::make_shared<awst::NewArray>();
 			singleArr->sourceLocation = m_loc;
 			singleArr->wtype = resultType;
@@ -177,7 +184,9 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 	if (resultType && resultType->kind() == awst::WTypeKind::Bytes)
 		return handleNewBytes();
 
-	if (resultType && resultType->kind() == awst::WTypeKind::ReferenceArray)
+	if (resultType && (resultType->kind() == awst::WTypeKind::ReferenceArray
+		|| resultType->kind() == awst::WTypeKind::ARC4StaticArray
+		|| resultType->kind() == awst::WTypeKind::ARC4DynamicArray))
 		return handleNewArray();
 
 	// new Contract(...) — deploy child contract via inner app creation transaction.

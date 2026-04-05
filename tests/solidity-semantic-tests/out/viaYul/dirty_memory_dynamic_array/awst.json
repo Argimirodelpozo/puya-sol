@@ -610,15 +610,19 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<uint64, 1>",
-                  "immutable": true,
+                  "_type": "ARC4StaticArray",
+                  "name": "arc4.static_array<arc4.uint64, 1>",
+                  "immutable": false,
                   "element_type": {
-                    "_type": "WType",
-                    "name": "uint64",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint64",
+                    "immutable": true,
+                    "n": 64,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
                   "array_size": 1,
+                  "arc4_alias": null,
                   "source_location": null
                 },
                 "name": "m"
@@ -634,15 +638,19 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<uint64, 1>",
-                  "immutable": true,
+                  "_type": "ARC4StaticArray",
+                  "name": "arc4.static_array<arc4.uint64, 1>",
+                  "immutable": false,
                   "element_type": {
-                    "_type": "WType",
-                    "name": "uint64",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint64",
+                    "immutable": true,
+                    "n": 64,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
                   "array_size": 1,
+                  "arc4_alias": null,
                   "source_location": null
                 },
                 "values": [
@@ -657,9 +665,12 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "WType",
-                      "name": "uint64",
-                      "immutable": true
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint64",
+                      "immutable": true,
+                      "n": 64,
+                      "arc4_alias": null,
+                      "source_location": null
                     },
                     "value": 0,
                     "teal_alias": null
@@ -1560,7 +1571,7 @@
                 "name": "x"
               },
               "value": {
-                "_type": "IndexExpression",
+                "_type": "ARC4Decode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_memory_dynamic_array.sol",
                   "line": 193,
@@ -1574,48 +1585,71 @@
                   "name": "uint64",
                   "immutable": true
                 },
-                "base": {
-                  "_type": "VarExpression",
+                "value": {
+                  "_type": "IndexExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_memory_dynamic_array.sol",
                     "line": 193,
-                    "end_line": 194,
+                    "end_line": 197,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "ReferenceArray",
-                    "name": "array<uint64>",
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint64",
                     "immutable": true,
-                    "element_type": {
+                    "n": 64,
+                    "arc4_alias": null,
+                    "source_location": null
+                  },
+                  "base": {
+                    "_type": "VarExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_memory_dynamic_array.sol",
+                      "line": 193,
+                      "end_line": 194,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "ARC4DynamicArray",
+                      "name": "arc4.dynamic_array<arc4.uint64>",
+                      "immutable": false,
+                      "element_type": {
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint64",
+                        "immutable": true,
+                        "n": 64,
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "name": "m"
+                  },
+                  "index": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_memory_dynamic_array.sol",
+                      "line": 195,
+                      "end_line": 196,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
                       "_type": "WType",
                       "name": "uint64",
                       "immutable": true
                     },
-                    "array_size": null,
-                    "source_location": null
-                  },
-                  "name": "m"
+                    "value": 0,
+                    "teal_alias": null
+                  }
                 },
-                "index": {
-                  "_type": "IntegerConstant",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_memory_dynamic_array.sol",
-                    "line": 195,
-                    "end_line": 196,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "WType",
-                    "name": "uint64",
-                    "immutable": true
-                  },
-                  "value": 0,
-                  "teal_alias": null
-                }
+                "error_message": null
               }
             },
             {
@@ -1921,7 +1955,7 @@
                       "immutable": true
                     },
                     "lhs": {
-                      "_type": "IndexExpression",
+                      "_type": "ARC4Decode",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_memory_dynamic_array.sol",
                         "line": 282,
@@ -1935,48 +1969,71 @@
                         "name": "uint64",
                         "immutable": true
                       },
-                      "base": {
-                        "_type": "VarExpression",
+                      "value": {
+                        "_type": "IndexExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_memory_dynamic_array.sol",
                           "line": 282,
-                          "end_line": 283,
+                          "end_line": 286,
                           "comment_lines": 0,
                           "column": null,
                           "end_column": null
                         },
                         "wtype": {
-                          "_type": "ReferenceArray",
-                          "name": "array<uint64>",
+                          "_type": "ARC4UIntN",
+                          "name": "arc4.uint64",
                           "immutable": true,
-                          "element_type": {
+                          "n": 64,
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "base": {
+                          "_type": "VarExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_memory_dynamic_array.sol",
+                            "line": 282,
+                            "end_line": 283,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "ARC4DynamicArray",
+                            "name": "arc4.dynamic_array<arc4.uint64>",
+                            "immutable": false,
+                            "element_type": {
+                              "_type": "ARC4UIntN",
+                              "name": "arc4.uint64",
+                              "immutable": true,
+                              "n": 64,
+                              "arc4_alias": null,
+                              "source_location": null
+                            },
+                            "arc4_alias": null,
+                            "source_location": null
+                          },
+                          "name": "m"
+                        },
+                        "index": {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_memory_dynamic_array.sol",
+                            "line": 284,
+                            "end_line": 285,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
                             "_type": "WType",
                             "name": "uint64",
                             "immutable": true
                           },
-                          "array_size": null,
-                          "source_location": null
-                        },
-                        "name": "m"
+                          "value": 0,
+                          "teal_alias": null
+                        }
                       },
-                      "index": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/dirty_memory_dynamic_array.sol",
-                          "line": 284,
-                          "end_line": 285,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
+                      "error_message": null
                     },
                     "operator": "==",
                     "rhs": {

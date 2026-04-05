@@ -1345,20 +1345,11 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					val->value = "0";
 					defaultVal = val;
 				}
-				else if (wtype->kind() == awst::WTypeKind::ReferenceArray)
+				else if (wtype->kind() == awst::WTypeKind::ReferenceArray
+					|| wtype->kind() == awst::WTypeKind::ARC4StaticArray
+					|| wtype->kind() == awst::WTypeKind::ARC4DynamicArray)
 				{
-					// Fixed-size array → NewArray with default elements
-					auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(wtype);
-					auto arr = std::make_shared<awst::NewArray>();
-					arr->sourceLocation = method.sourceLocation;
-					arr->wtype = wtype;
-					if (refArr && refArr->arraySize())
-					{
-						for (int i = 0; i < *refArr->arraySize(); ++i)
-							arr->values.push_back(
-								StorageMapper::makeDefaultValue(refArr->elementType(), method.sourceLocation));
-					}
-					defaultVal = arr;
+					defaultVal = StorageMapper::makeDefaultValue(wtype, method.sourceLocation);
 				}
 				else if (wtype->kind() == awst::WTypeKind::ARC4Struct
 					|| wtype->kind() == awst::WTypeKind::WTuple)
@@ -1417,8 +1408,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					auto* wtype = m_typeMapper.map(var->type());
 					if (!wtype)
 						continue;
-					// Collect ReferenceArrays AND dynamic bytes for box creation
+					// Collect dynamic arrays AND dynamic bytes for box creation
 					bool isBoxType = wtype->kind() == awst::WTypeKind::ReferenceArray
+						|| wtype->kind() == awst::WTypeKind::ARC4DynamicArray
 						|| wtype == awst::WType::bytesType()
 						|| (wtype->kind() == awst::WTypeKind::Bytes
 							&& !dynamic_cast<awst::BytesWType const*>(wtype)->length().has_value());
@@ -1557,6 +1549,16 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 						decode->value = std::move(cast);
 						paramVal = std::move(decode);
 					}
+				}
+				else if (paramType->kind() == awst::WTypeKind::ARC4StaticArray
+					|| paramType->kind() == awst::WTypeKind::ARC4DynamicArray)
+				{
+					// ARC4 array params: just ReinterpretCast raw bytes to ARC4 type
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = method.sourceLocation;
+					cast->wtype = paramType;
+					cast->expr = std::move(readArg);
+					paramVal = std::move(cast);
 				}
 				else if (paramType->kind() == awst::WTypeKind::Bytes
 					&& dynamic_cast<awst::BytesWType const*>(paramType)
@@ -1737,6 +1739,8 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			{
 				bool isAggregate = arg.wtype
 					&& (arg.wtype->kind() == awst::WTypeKind::ReferenceArray
+						|| arg.wtype->kind() == awst::WTypeKind::ARC4StaticArray
+						|| arg.wtype->kind() == awst::WTypeKind::ARC4DynamicArray
 						|| arg.wtype->kind() == awst::WTypeKind::WTuple);
 				if (isAggregate)
 				{
@@ -2448,6 +2452,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			// Remap aggregate types (arrays, tuples) to ARC4 encoding
 			bool isAggregate = arg.wtype
 				&& (arg.wtype->kind() == awst::WTypeKind::ReferenceArray
+					|| arg.wtype->kind() == awst::WTypeKind::ARC4StaticArray
+					|| arg.wtype->kind() == awst::WTypeKind::ARC4DynamicArray
 					|| arg.wtype->kind() == awst::WTypeKind::WTuple);
 			if (!isAggregate)
 				continue;

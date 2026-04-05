@@ -4,10 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/arrays_complex_from_and_to_storage.sol.Test.approval_program() -> uint64:
 main:
     intcblock 32 1 0 24
-    bytecblock "__ctor_pending" "data" 0x151f7c75
+    bytecblock "data" "__ctor_pending" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -34,13 +34,13 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/arrays_complex_from_and_to_storage.sol.Test.__postInit[routing]() -> void:
 __postInit:
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    bytec_1 // "data"
+    bytec_0 // "data"
     intc_2 // 0
     box_create
     pop
@@ -62,9 +62,13 @@ set:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint64, 3>>
-    extract 2 0
+    bytec_0 // "data"
+    box_del
     pop
-    bytec_1 // "data"
+    bytec_0 // "data"
+    swap
+    box_put
+    bytec_0 // "data"
     box_len
     pop
     intc_3 // 24
@@ -83,16 +87,11 @@ set:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/arrays_complex_from_and_to_storage.sol.Test.get[routing]() -> void:
 get:
-    pushbytes ""
-    loads
-    dup
-    len
-    intc_3 // 24
-    /
-    itob
-    extract 6 2
-    swap
-    concat
+    bytec_0 // "data"
+    box_get
+    pushbytes 0x0000
+    cover 2
+    select
     bytec_2 // 0x151f7c75
     swap
     concat
@@ -137,7 +136,7 @@ data:
     extract3
     concat
     sha256
-    bytec_1 // "data"
+    bytec_0 // "data"
     swap
     concat
     box_get

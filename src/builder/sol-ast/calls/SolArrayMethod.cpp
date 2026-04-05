@@ -174,8 +174,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 	auto const* solArrType = dynamic_cast<ArrayType const*>(_varDecl.type());
 	auto* rawElemType = m_ctx.typeMapper.map(solArrType->baseType());
 	auto* elemType = m_ctx.typeMapper.mapToARC4Type(rawElemType);
-	auto* arrWType = m_ctx.typeMapper.createType<awst::ReferenceArray>(
-		elemType, false, std::nullopt);
+	auto* arrWType = m_ctx.typeMapper.map(solArrType);
 
 	auto const* ident = dynamic_cast<Identifier const*>(&_baseExpr);
 	std::string arrayVarName = ident->name();
@@ -375,11 +374,30 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMemoryArray(
 		else
 		{
 			// array.push(val) — ArrayExtend
-			// Promote element to match array element type (e.g., uint64 → biguint)
-			auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(baseWtype);
-			if (refArr && val->wtype != refArr->elementType())
+			// Get element type from array and coerce/encode value
+			awst::WType const* elemType = nullptr;
+			if (auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(baseWtype))
+				elemType = refArr->elementType();
+			else if (auto const* arc4Static = dynamic_cast<awst::ARC4StaticArray const*>(baseWtype))
+				elemType = arc4Static->elementType();
+			else if (auto const* arc4Dyn = dynamic_cast<awst::ARC4DynamicArray const*>(baseWtype))
+				elemType = arc4Dyn->elementType();
+
+			if (elemType && val->wtype != elemType)
+			{
+				// Try numeric cast first (e.g., uint64 → biguint)
 				val = builder::TypeCoercion::implicitNumericCast(
-					std::move(val), refArr->elementType(), m_loc);
+					std::move(val), elemType, m_loc);
+				// ARC4Encode if still mismatched (native → ARC4)
+				if (val->wtype != elemType)
+				{
+					auto encode = std::make_shared<awst::ARC4Encode>();
+					encode->sourceLocation = m_loc;
+					encode->wtype = elemType;
+					encode->value = std::move(val);
+					val = std::move(encode);
+				}
+			}
 			auto singleArr = std::make_shared<awst::NewArray>();
 			singleArr->sourceLocation = m_loc;
 			singleArr->wtype = baseWtype;

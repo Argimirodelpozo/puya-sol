@@ -472,13 +472,13 @@
               "end_column": null
             },
             "wtype": {
-              "_type": "ReferenceArray",
-              "name": "array<arc4.static_array<arc4.uint256, 3>, 2>",
-              "immutable": true,
+              "_type": "ARC4StaticArray",
+              "name": "arc4.static_array<arc4.static_array<arc4.uint256, 3>, 2>",
+              "immutable": false,
               "element_type": {
                 "_type": "ARC4StaticArray",
                 "name": "arc4.static_array<arc4.uint256, 3>",
-                "immutable": true,
+                "immutable": false,
                 "element_type": {
                   "_type": "ARC4UIntN",
                   "name": "arc4.uint256",
@@ -492,6 +492,7 @@
                 "source_location": null
               },
               "array_size": 2,
+              "arc4_alias": null,
               "source_location": null
             }
           }
@@ -507,15 +508,19 @@
               "immutable": true
             },
             {
-              "_type": "ReferenceArray",
-              "name": "array<biguint, 3>",
-              "immutable": true,
+              "_type": "ARC4StaticArray",
+              "name": "arc4.static_array<arc4.uint256, 3>",
+              "immutable": false,
               "element_type": {
-                "_type": "WType",
-                "name": "biguint",
-                "immutable": true
+                "_type": "ARC4UIntN",
+                "name": "arc4.uint256",
+                "immutable": true,
+                "n": 256,
+                "arc4_alias": null,
+                "source_location": null
               },
               "array_size": 3,
+              "arc4_alias": null,
               "source_location": null
             }
           ],
@@ -564,15 +569,19 @@
                       "immutable": true
                     },
                     {
-                      "_type": "ReferenceArray",
-                      "name": "array<biguint, 3>",
-                      "immutable": true,
+                      "_type": "ARC4StaticArray",
+                      "name": "arc4.static_array<arc4.uint256, 3>",
+                      "immutable": false,
                       "element_type": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint256",
+                        "immutable": true,
+                        "n": 256,
+                        "arc4_alias": null,
+                        "source_location": null
                       },
                       "array_size": 3,
+                      "arc4_alias": null,
                       "source_location": null
                     }
                   ],
@@ -581,7 +590,7 @@
                 },
                 "items": [
                   {
-                    "_type": "IndexExpression",
+                    "_type": "ARC4Decode",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
                       "line": 116,
@@ -595,29 +604,25 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "base": {
-                      "_type": "ARC4Decode",
+                    "value": {
+                      "_type": "IndexExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
                         "line": 116,
-                        "end_line": 120,
+                        "end_line": 123,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "ReferenceArray",
-                        "name": "array<biguint, 3>",
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint256",
                         "immutable": true,
-                        "element_type": {
-                          "_type": "WType",
-                          "name": "biguint",
-                          "immutable": true
-                        },
-                        "array_size": 3,
+                        "n": 256,
+                        "arc4_alias": null,
                         "source_location": null
                       },
-                      "value": {
+                      "base": {
                         "_type": "IndexExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
@@ -630,7 +635,7 @@
                         "wtype": {
                           "_type": "ARC4StaticArray",
                           "name": "arc4.static_array<arc4.uint256, 3>",
-                          "immutable": true,
+                          "immutable": false,
                           "element_type": {
                             "_type": "ARC4UIntN",
                             "name": "arc4.uint256",
@@ -654,13 +659,13 @@
                             "end_column": null
                           },
                           "wtype": {
-                            "_type": "ReferenceArray",
-                            "name": "array<arc4.static_array<arc4.uint256, 3>, 2>",
-                            "immutable": true,
+                            "_type": "ARC4StaticArray",
+                            "name": "arc4.static_array<arc4.static_array<arc4.uint256, 3>, 2>",
+                            "immutable": false,
                             "element_type": {
                               "_type": "ARC4StaticArray",
                               "name": "arc4.static_array<arc4.uint256, 3>",
-                              "immutable": true,
+                              "immutable": false,
                               "element_type": {
                                 "_type": "ARC4UIntN",
                                 "name": "arc4.uint256",
@@ -674,6 +679,7 @@
                               "source_location": null
                             },
                             "array_size": 2,
+                            "arc4_alias": null,
                             "source_location": null
                           },
                           "name": "s"
@@ -697,116 +703,12 @@
                           "teal_alias": null
                         }
                       },
-                      "error_message": null
-                    },
-                    "index": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
-                        "line": 121,
-                        "end_line": 122,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 1,
-                      "teal_alias": null
-                    }
-                  },
-                  {
-                    "_type": "ARC4Decode",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
-                      "line": 125,
-                      "end_line": 129,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "ReferenceArray",
-                      "name": "array<biguint, 3>",
-                      "immutable": true,
-                      "element_type": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
-                      },
-                      "array_size": 3,
-                      "source_location": null
-                    },
-                    "value": {
-                      "_type": "IndexExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
-                        "line": 125,
-                        "end_line": 129,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "ARC4StaticArray",
-                        "name": "arc4.static_array<arc4.uint256, 3>",
-                        "immutable": true,
-                        "element_type": {
-                          "_type": "ARC4UIntN",
-                          "name": "arc4.uint256",
-                          "immutable": true,
-                          "n": 256,
-                          "arc4_alias": null,
-                          "source_location": null
-                        },
-                        "array_size": 3,
-                        "arc4_alias": null,
-                        "source_location": null
-                      },
-                      "base": {
-                        "_type": "VarExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
-                          "line": 125,
-                          "end_line": 126,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "ReferenceArray",
-                          "name": "array<arc4.static_array<arc4.uint256, 3>, 2>",
-                          "immutable": true,
-                          "element_type": {
-                            "_type": "ARC4StaticArray",
-                            "name": "arc4.static_array<arc4.uint256, 3>",
-                            "immutable": true,
-                            "element_type": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint256",
-                              "immutable": true,
-                              "n": 256,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "array_size": 3,
-                            "arc4_alias": null,
-                            "source_location": null
-                          },
-                          "array_size": 2,
-                          "source_location": null
-                        },
-                        "name": "s"
-                      },
                       "index": {
                         "_type": "IntegerConstant",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
-                          "line": 127,
-                          "end_line": 128,
+                          "line": 121,
+                          "end_line": 122,
                           "comment_lines": 0,
                           "column": null,
                           "end_column": null
@@ -821,6 +723,87 @@
                       }
                     },
                     "error_message": null
+                  },
+                  {
+                    "_type": "IndexExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
+                      "line": 125,
+                      "end_line": 129,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "ARC4StaticArray",
+                      "name": "arc4.static_array<arc4.uint256, 3>",
+                      "immutable": false,
+                      "element_type": {
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint256",
+                        "immutable": true,
+                        "n": 256,
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "array_size": 3,
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "base": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
+                        "line": 125,
+                        "end_line": 126,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "ARC4StaticArray",
+                        "name": "arc4.static_array<arc4.static_array<arc4.uint256, 3>, 2>",
+                        "immutable": false,
+                        "element_type": {
+                          "_type": "ARC4StaticArray",
+                          "name": "arc4.static_array<arc4.uint256, 3>",
+                          "immutable": false,
+                          "element_type": {
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint256",
+                            "immutable": true,
+                            "n": 256,
+                            "arc4_alias": null,
+                            "source_location": null
+                          },
+                          "array_size": 3,
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "array_size": 2,
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "name": "s"
+                    },
+                    "index": {
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
+                        "line": 127,
+                        "end_line": 128,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "value": 1,
+                      "teal_alias": null
+                    }
                   }
                 ]
               }
@@ -870,7 +853,7 @@
           },
           {
             "_type": "SubroutineArgument",
-            "name": "__arc4_s",
+            "name": "s",
             "source_location": {
               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
               "line": 159,
@@ -882,11 +865,11 @@
             "wtype": {
               "_type": "ARC4StaticArray",
               "name": "arc4.static_array<arc4.static_array<arc4.uint256, 3>, 2>",
-              "immutable": true,
+              "immutable": false,
               "element_type": {
                 "_type": "ARC4StaticArray",
                 "name": "arc4.static_array<arc4.uint256, 3>",
-                "immutable": true,
+                "immutable": false,
                 "element_type": {
                   "_type": "ARC4UIntN",
                   "name": "arc4.uint256",
@@ -956,123 +939,6 @@
               "_type": "AssignmentStatement",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
-                "line": 159,
-                "end_line": 180,
-                "comment_lines": 0,
-                "column": null,
-                "end_column": null
-              },
-              "target": {
-                "_type": "VarExpression",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
-                  "line": 159,
-                  "end_line": 180,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<arc4.static_array<arc4.uint256, 3>, 2>",
-                  "immutable": true,
-                  "element_type": {
-                    "_type": "ARC4StaticArray",
-                    "name": "arc4.static_array<arc4.uint256, 3>",
-                    "immutable": true,
-                    "element_type": {
-                      "_type": "ARC4UIntN",
-                      "name": "arc4.uint256",
-                      "immutable": true,
-                      "n": 256,
-                      "arc4_alias": null,
-                      "source_location": null
-                    },
-                    "array_size": 3,
-                    "arc4_alias": null,
-                    "source_location": null
-                  },
-                  "array_size": 2,
-                  "source_location": null
-                },
-                "name": "s"
-              },
-              "value": {
-                "_type": "ARC4Decode",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
-                  "line": 159,
-                  "end_line": 180,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<arc4.static_array<arc4.uint256, 3>, 2>",
-                  "immutable": true,
-                  "element_type": {
-                    "_type": "ARC4StaticArray",
-                    "name": "arc4.static_array<arc4.uint256, 3>",
-                    "immutable": true,
-                    "element_type": {
-                      "_type": "ARC4UIntN",
-                      "name": "arc4.uint256",
-                      "immutable": true,
-                      "n": 256,
-                      "arc4_alias": null,
-                      "source_location": null
-                    },
-                    "array_size": 3,
-                    "arc4_alias": null,
-                    "source_location": null
-                  },
-                  "array_size": 2,
-                  "source_location": null
-                },
-                "value": {
-                  "_type": "VarExpression",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
-                    "line": 159,
-                    "end_line": 180,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "ARC4StaticArray",
-                    "name": "arc4.static_array<arc4.static_array<arc4.uint256, 3>, 2>",
-                    "immutable": true,
-                    "element_type": {
-                      "_type": "ARC4StaticArray",
-                      "name": "arc4.static_array<arc4.uint256, 3>",
-                      "immutable": true,
-                      "element_type": {
-                        "_type": "ARC4UIntN",
-                        "name": "arc4.uint256",
-                        "immutable": true,
-                        "n": 256,
-                        "arc4_alias": null,
-                        "source_location": null
-                      },
-                      "array_size": 3,
-                      "arc4_alias": null,
-                      "source_location": null
-                    },
-                    "array_size": 2,
-                    "arc4_alias": null,
-                    "source_location": null
-                  },
-                  "name": "__arc4_s"
-                },
-                "error_message": null
-              }
-            },
-            {
-              "_type": "AssignmentStatement",
-              "source_location": {
-                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
                 "line": 233,
                 "end_line": 268,
                 "comment_lines": 0,
@@ -1132,15 +998,19 @@
                         "immutable": true
                       },
                       {
-                        "_type": "ReferenceArray",
-                        "name": "array<biguint, 3>",
-                        "immutable": true,
+                        "_type": "ARC4StaticArray",
+                        "name": "arc4.static_array<arc4.uint256, 3>",
+                        "immutable": false,
                         "element_type": {
-                          "_type": "WType",
-                          "name": "biguint",
-                          "immutable": true
+                          "_type": "ARC4UIntN",
+                          "name": "arc4.uint256",
+                          "immutable": true,
+                          "n": 256,
+                          "arc4_alias": null,
+                          "source_location": null
                         },
                         "array_size": 3,
+                        "arc4_alias": null,
                         "source_location": null
                       }
                     ],
@@ -1168,15 +1038,19 @@
                           "immutable": true
                         },
                         {
-                          "_type": "ReferenceArray",
-                          "name": "array<biguint, 3>",
-                          "immutable": true,
+                          "_type": "ARC4StaticArray",
+                          "name": "arc4.static_array<arc4.uint256, 3>",
+                          "immutable": false,
                           "element_type": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint256",
+                            "immutable": true,
+                            "n": 256,
+                            "arc4_alias": null,
+                            "source_location": null
                           },
                           "array_size": 3,
+                          "arc4_alias": null,
                           "source_location": null
                         }
                       ],
@@ -1201,13 +1075,13 @@
                             "end_column": null
                           },
                           "wtype": {
-                            "_type": "ReferenceArray",
-                            "name": "array<arc4.static_array<arc4.uint256, 3>, 2>",
-                            "immutable": true,
+                            "_type": "ARC4StaticArray",
+                            "name": "arc4.static_array<arc4.static_array<arc4.uint256, 3>, 2>",
+                            "immutable": false,
                             "element_type": {
                               "_type": "ARC4StaticArray",
                               "name": "arc4.static_array<arc4.uint256, 3>",
-                              "immutable": true,
+                              "immutable": false,
                               "element_type": {
                                 "_type": "ARC4UIntN",
                                 "name": "arc4.uint256",
@@ -1221,6 +1095,7 @@
                               "source_location": null
                             },
                             "array_size": 2,
+                            "arc4_alias": null,
                             "source_location": null
                           },
                           "name": "s"
@@ -1254,15 +1129,19 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<biguint, 3>",
-                  "immutable": true,
+                  "_type": "ARC4StaticArray",
+                  "name": "arc4.static_array<arc4.uint256, 3>",
+                  "immutable": false,
                   "element_type": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
                   "array_size": 3,
+                  "arc4_alias": null,
                   "source_location": null
                 },
                 "name": "y"
@@ -1278,15 +1157,19 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<biguint, 3>",
-                  "immutable": true,
+                  "_type": "ARC4StaticArray",
+                  "name": "arc4.static_array<arc4.uint256, 3>",
+                  "immutable": false,
                   "element_type": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
                   "array_size": 3,
+                  "arc4_alias": null,
                   "source_location": null
                 },
                 "base": {
@@ -1310,15 +1193,19 @@
                         "immutable": true
                       },
                       {
-                        "_type": "ReferenceArray",
-                        "name": "array<biguint, 3>",
-                        "immutable": true,
+                        "_type": "ARC4StaticArray",
+                        "name": "arc4.static_array<arc4.uint256, 3>",
+                        "immutable": false,
                         "element_type": {
-                          "_type": "WType",
-                          "name": "biguint",
-                          "immutable": true
+                          "_type": "ARC4UIntN",
+                          "name": "arc4.uint256",
+                          "immutable": true,
+                          "n": 256,
+                          "arc4_alias": null,
+                          "source_location": null
                         },
                         "array_size": 3,
+                        "arc4_alias": null,
                         "source_location": null
                       }
                     ],
@@ -1346,15 +1233,19 @@
                           "immutable": true
                         },
                         {
-                          "_type": "ReferenceArray",
-                          "name": "array<biguint, 3>",
-                          "immutable": true,
+                          "_type": "ARC4StaticArray",
+                          "name": "arc4.static_array<arc4.uint256, 3>",
+                          "immutable": false,
                           "element_type": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint256",
+                            "immutable": true,
+                            "n": 256,
+                            "arc4_alias": null,
+                            "source_location": null
                           },
                           "array_size": 3,
+                          "arc4_alias": null,
                           "source_location": null
                         }
                       ],
@@ -1379,13 +1270,13 @@
                             "end_column": null
                           },
                           "wtype": {
-                            "_type": "ReferenceArray",
-                            "name": "array<arc4.static_array<arc4.uint256, 3>, 2>",
-                            "immutable": true,
+                            "_type": "ARC4StaticArray",
+                            "name": "arc4.static_array<arc4.static_array<arc4.uint256, 3>, 2>",
+                            "immutable": false,
                             "element_type": {
                               "_type": "ARC4StaticArray",
                               "name": "arc4.static_array<arc4.uint256, 3>",
-                              "immutable": true,
+                              "immutable": false,
                               "element_type": {
                                 "_type": "ARC4UIntN",
                                 "name": "arc4.uint256",
@@ -1399,6 +1290,7 @@
                               "source_location": null
                             },
                             "array_size": 2,
+                            "arc4_alias": null,
                             "source_location": null
                           },
                           "name": "s"
@@ -1469,7 +1361,7 @@
                     "name": "x"
                   },
                   {
-                    "_type": "IndexExpression",
+                    "_type": "ARC4Decode",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
                       "line": 289,
@@ -1483,48 +1375,72 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "base": {
-                      "_type": "VarExpression",
+                    "value": {
+                      "_type": "IndexExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
                         "line": 289,
-                        "end_line": 290,
+                        "end_line": 293,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "ReferenceArray",
-                        "name": "array<biguint, 3>",
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint256",
                         "immutable": true,
-                        "element_type": {
-                          "_type": "WType",
-                          "name": "biguint",
-                          "immutable": true
-                        },
-                        "array_size": 3,
+                        "n": 256,
+                        "arc4_alias": null,
                         "source_location": null
                       },
-                      "name": "y"
+                      "base": {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
+                          "line": 289,
+                          "end_line": 290,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "ARC4StaticArray",
+                          "name": "arc4.static_array<arc4.uint256, 3>",
+                          "immutable": false,
+                          "element_type": {
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint256",
+                            "immutable": true,
+                            "n": 256,
+                            "arc4_alias": null,
+                            "source_location": null
+                          },
+                          "array_size": 3,
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "name": "y"
+                      },
+                      "index": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
+                          "line": 291,
+                          "end_line": 292,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 0,
+                        "teal_alias": null
+                      }
                     },
-                    "index": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
-                        "line": 291,
-                        "end_line": 292,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "error_message": null
                   }
                 ]
               }
@@ -1625,13 +1541,13 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<arc4.static_array<arc4.uint256, 3>, 2>",
-                  "immutable": true,
+                  "_type": "ARC4StaticArray",
+                  "name": "arc4.static_array<arc4.static_array<arc4.uint256, 3>, 2>",
+                  "immutable": false,
                   "element_type": {
                     "_type": "ARC4StaticArray",
                     "name": "arc4.static_array<arc4.uint256, 3>",
-                    "immutable": true,
+                    "immutable": false,
                     "element_type": {
                       "_type": "ARC4UIntN",
                       "name": "arc4.uint256",
@@ -1645,12 +1561,13 @@
                     "source_location": null
                   },
                   "array_size": 2,
+                  "arc4_alias": null,
                   "source_location": null
                 },
                 "name": "x"
               },
               "value": {
-                "_type": "NewArray",
+                "_type": "BytesConstant",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
                   "line": 357,
@@ -1660,13 +1577,13 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ReferenceArray",
-                  "name": "array<arc4.static_array<arc4.uint256, 3>, 2>",
-                  "immutable": true,
+                  "_type": "ARC4StaticArray",
+                  "name": "arc4.static_array<arc4.static_array<arc4.uint256, 3>, 2>",
+                  "immutable": false,
                   "element_type": {
                     "_type": "ARC4StaticArray",
                     "name": "arc4.static_array<arc4.uint256, 3>",
-                    "immutable": true,
+                    "immutable": false,
                     "element_type": {
                       "_type": "ARC4UIntN",
                       "name": "arc4.uint256",
@@ -1680,68 +1597,11 @@
                     "source_location": null
                   },
                   "array_size": 2,
+                  "arc4_alias": null,
                   "source_location": null
                 },
-                "values": [
-                  {
-                    "_type": "BytesConstant",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
-                      "line": 357,
-                      "end_line": 376,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "ARC4StaticArray",
-                      "name": "arc4.static_array<arc4.uint256, 3>",
-                      "immutable": true,
-                      "element_type": {
-                        "_type": "ARC4UIntN",
-                        "name": "arc4.uint256",
-                        "immutable": true,
-                        "n": 256,
-                        "arc4_alias": null,
-                        "source_location": null
-                      },
-                      "array_size": 3,
-                      "arc4_alias": null,
-                      "source_location": null
-                    },
-                    "value": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-                    "encoding": "base16"
-                  },
-                  {
-                    "_type": "BytesConstant",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
-                      "line": 357,
-                      "end_line": 376,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "ARC4StaticArray",
-                      "name": "arc4.static_array<arc4.uint256, 3>",
-                      "immutable": true,
-                      "element_type": {
-                        "_type": "ARC4UIntN",
-                        "name": "arc4.uint256",
-                        "immutable": true,
-                        "n": 256,
-                        "arc4_alias": null,
-                        "source_location": null
-                      },
-                      "array_size": 3,
-                      "arc4_alias": null,
-                      "source_location": null
-                    },
-                    "value": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-                    "encoding": "base16"
-                  }
-                ]
+                "value": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                "encoding": "base16"
               }
             },
             {
@@ -1765,9 +1625,12 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
                 "target": {
                   "_type": "IndexExpression",
@@ -1780,12 +1643,15 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
                   "base": {
-                    "_type": "ARC4Decode",
+                    "_type": "IndexExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
                       "line": 386,
@@ -1795,98 +1661,75 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "ReferenceArray",
-                      "name": "array<biguint, 3>",
-                      "immutable": true,
+                      "_type": "ARC4StaticArray",
+                      "name": "arc4.static_array<arc4.uint256, 3>",
+                      "immutable": false,
                       "element_type": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint256",
+                        "immutable": true,
+                        "n": 256,
+                        "arc4_alias": null,
+                        "source_location": null
                       },
                       "array_size": 3,
+                      "arc4_alias": null,
                       "source_location": null
                     },
-                    "value": {
-                      "_type": "IndexExpression",
+                    "base": {
+                      "_type": "VarExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
                         "line": 386,
-                        "end_line": 390,
+                        "end_line": 387,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
                       },
                       "wtype": {
                         "_type": "ARC4StaticArray",
-                        "name": "arc4.static_array<arc4.uint256, 3>",
-                        "immutable": true,
+                        "name": "arc4.static_array<arc4.static_array<arc4.uint256, 3>, 2>",
+                        "immutable": false,
                         "element_type": {
-                          "_type": "ARC4UIntN",
-                          "name": "arc4.uint256",
-                          "immutable": true,
-                          "n": 256,
-                          "arc4_alias": null,
-                          "source_location": null
-                        },
-                        "array_size": 3,
-                        "arc4_alias": null,
-                        "source_location": null
-                      },
-                      "base": {
-                        "_type": "VarExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
-                          "line": 386,
-                          "end_line": 387,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "ReferenceArray",
-                          "name": "array<arc4.static_array<arc4.uint256, 3>, 2>",
-                          "immutable": true,
+                          "_type": "ARC4StaticArray",
+                          "name": "arc4.static_array<arc4.uint256, 3>",
+                          "immutable": false,
                           "element_type": {
-                            "_type": "ARC4StaticArray",
-                            "name": "arc4.static_array<arc4.uint256, 3>",
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint256",
                             "immutable": true,
-                            "element_type": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint256",
-                              "immutable": true,
-                              "n": 256,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "array_size": 3,
+                            "n": 256,
                             "arc4_alias": null,
                             "source_location": null
                           },
-                          "array_size": 2,
+                          "array_size": 3,
+                          "arc4_alias": null,
                           "source_location": null
                         },
-                        "name": "x"
+                        "array_size": 2,
+                        "arc4_alias": null,
+                        "source_location": null
                       },
-                      "index": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
-                          "line": 388,
-                          "end_line": 389,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      }
+                      "name": "x"
                     },
-                    "error_message": null
+                    "index": {
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
+                        "line": 388,
+                        "end_line": 389,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "value": 0,
+                      "teal_alias": null
+                    }
                   },
                   "index": {
                     "_type": "IntegerConstant",
@@ -1908,7 +1751,7 @@
                   }
                 },
                 "value": {
-                  "_type": "ReinterpretCast",
+                  "_type": "ARC4Encode",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
                     "line": 386,
@@ -1918,12 +1761,15 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
-                  "expr": {
-                    "_type": "IntrinsicCall",
+                  "value": {
+                    "_type": "ReinterpretCast",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
                       "line": 386,
@@ -1933,34 +1779,51 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "BytesWType",
-                      "name": "bytes",
-                      "immutable": true,
-                      "length": null
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
                     },
-                    "op_code": "itob",
-                    "immediates": [],
-                    "stack_args": [
-                      {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
-                          "line": 396,
-                          "end_line": 397,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 7,
-                        "teal_alias": null
-                      }
-                    ]
-                  }
+                    "expr": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
+                        "line": 386,
+                        "end_line": 397,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "itob",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
+                            "line": 396,
+                            "end_line": 397,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 7,
+                          "teal_alias": null
+                        }
+                      ]
+                    }
+                  },
+                  "error_message": null
                 }
               }
             },
@@ -1985,9 +1848,12 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
                 "target": {
                   "_type": "IndexExpression",
@@ -2000,12 +1866,15 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
                   "base": {
-                    "_type": "ARC4Decode",
+                    "_type": "IndexExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
                       "line": 407,
@@ -2015,98 +1884,75 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "ReferenceArray",
-                      "name": "array<biguint, 3>",
-                      "immutable": true,
+                      "_type": "ARC4StaticArray",
+                      "name": "arc4.static_array<arc4.uint256, 3>",
+                      "immutable": false,
                       "element_type": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint256",
+                        "immutable": true,
+                        "n": 256,
+                        "arc4_alias": null,
+                        "source_location": null
                       },
                       "array_size": 3,
+                      "arc4_alias": null,
                       "source_location": null
                     },
-                    "value": {
-                      "_type": "IndexExpression",
+                    "base": {
+                      "_type": "VarExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
                         "line": 407,
-                        "end_line": 411,
+                        "end_line": 408,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
                       },
                       "wtype": {
                         "_type": "ARC4StaticArray",
-                        "name": "arc4.static_array<arc4.uint256, 3>",
-                        "immutable": true,
+                        "name": "arc4.static_array<arc4.static_array<arc4.uint256, 3>, 2>",
+                        "immutable": false,
                         "element_type": {
-                          "_type": "ARC4UIntN",
-                          "name": "arc4.uint256",
-                          "immutable": true,
-                          "n": 256,
-                          "arc4_alias": null,
-                          "source_location": null
-                        },
-                        "array_size": 3,
-                        "arc4_alias": null,
-                        "source_location": null
-                      },
-                      "base": {
-                        "_type": "VarExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
-                          "line": 407,
-                          "end_line": 408,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "ReferenceArray",
-                          "name": "array<arc4.static_array<arc4.uint256, 3>, 2>",
-                          "immutable": true,
+                          "_type": "ARC4StaticArray",
+                          "name": "arc4.static_array<arc4.uint256, 3>",
+                          "immutable": false,
                           "element_type": {
-                            "_type": "ARC4StaticArray",
-                            "name": "arc4.static_array<arc4.uint256, 3>",
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint256",
                             "immutable": true,
-                            "element_type": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint256",
-                              "immutable": true,
-                              "n": 256,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "array_size": 3,
+                            "n": 256,
                             "arc4_alias": null,
                             "source_location": null
                           },
-                          "array_size": 2,
+                          "array_size": 3,
+                          "arc4_alias": null,
                           "source_location": null
                         },
-                        "name": "x"
+                        "array_size": 2,
+                        "arc4_alias": null,
+                        "source_location": null
                       },
-                      "index": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
-                          "line": 409,
-                          "end_line": 410,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 1,
-                        "teal_alias": null
-                      }
+                      "name": "x"
                     },
-                    "error_message": null
+                    "index": {
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
+                        "line": 409,
+                        "end_line": 410,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "value": 1,
+                      "teal_alias": null
+                    }
                   },
                   "index": {
                     "_type": "IntegerConstant",
@@ -2128,7 +1974,7 @@
                   }
                 },
                 "value": {
-                  "_type": "ReinterpretCast",
+                  "_type": "ARC4Encode",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
                     "line": 407,
@@ -2138,12 +1984,15 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
                   },
-                  "expr": {
-                    "_type": "IntrinsicCall",
+                  "value": {
+                    "_type": "ReinterpretCast",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
                       "line": 407,
@@ -2153,34 +2002,51 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "BytesWType",
-                      "name": "bytes",
-                      "immutable": true,
-                      "length": null
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
                     },
-                    "op_code": "itob",
-                    "immediates": [],
-                    "stack_args": [
-                      {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
-                          "line": 417,
-                          "end_line": 418,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 8,
-                        "teal_alias": null
-                      }
-                    ]
-                  }
+                    "expr": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
+                        "line": 407,
+                        "end_line": 418,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "itob",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
+                            "line": 417,
+                            "end_line": 418,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 8,
+                          "teal_alias": null
+                        }
+                      ]
+                    }
+                  },
+                  "error_message": null
                 }
               }
             },
@@ -2357,11 +2223,11 @@
                               "length": null
                             },
                             "expr": {
-                              "_type": "ARC4Encode",
+                              "_type": "VarExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
-                                "line": 435,
-                                "end_line": 450,
+                                "line": 445,
+                                "end_line": 446,
                                 "comment_lines": 0,
                                 "column": null,
                                 "end_column": null
@@ -2369,11 +2235,11 @@
                               "wtype": {
                                 "_type": "ARC4StaticArray",
                                 "name": "arc4.static_array<arc4.static_array<arc4.uint256, 3>, 2>",
-                                "immutable": true,
+                                "immutable": false,
                                 "element_type": {
                                   "_type": "ARC4StaticArray",
                                   "name": "arc4.static_array<arc4.uint256, 3>",
-                                  "immutable": true,
+                                  "immutable": false,
                                   "element_type": {
                                     "_type": "ARC4UIntN",
                                     "name": "arc4.uint256",
@@ -2390,42 +2256,7 @@
                                 "arc4_alias": null,
                                 "source_location": null
                               },
-                              "value": {
-                                "_type": "VarExpression",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_fixed_array.sol",
-                                  "line": 445,
-                                  "end_line": 446,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "ReferenceArray",
-                                  "name": "array<arc4.static_array<arc4.uint256, 3>, 2>",
-                                  "immutable": true,
-                                  "element_type": {
-                                    "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint256, 3>",
-                                    "immutable": true,
-                                    "element_type": {
-                                      "_type": "ARC4UIntN",
-                                      "name": "arc4.uint256",
-                                      "immutable": true,
-                                      "n": 256,
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "array_size": 3,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "array_size": 2,
-                                  "source_location": null
-                                },
-                                "name": "x"
-                              },
-                              "error_message": null
+                              "name": "x"
                             }
                           },
                           {

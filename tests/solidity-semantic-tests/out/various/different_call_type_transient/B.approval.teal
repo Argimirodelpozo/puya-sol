@@ -1,0 +1,74 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.B.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    bytecblock "value"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "value"
+    pushbytes 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xc46a4b39 0x75d12918 // method "setValue(uint256)void", method "value()uint256"
+    txna ApplicationArgs 0
+    match setValue value
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.B.setValue[routing]() -> void:
+setValue:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_2 // 0
+    bytec_0 // "value"
+    app_global_get_ex
+    assert // check value exists
+    b+
+    bytec_0 // "value"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.B.value[routing]() -> void:
+value:
+    intc_2 // 0
+    bytec_0 // "value"
+    app_global_get_ex
+    assert // check value exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

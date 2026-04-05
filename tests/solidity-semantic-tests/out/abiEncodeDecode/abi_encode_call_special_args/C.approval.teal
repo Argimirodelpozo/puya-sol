@@ -27,8 +27,14 @@ main_after_if_else@2:
     assert
     pushbytess 0x22b2fda0 0xb6e08150 0x2e5fdc8c 0x10da340f 0xa0a2a599 0x88ce8eb6 0x795d221f 0x2e346852 0x7f9c7280 0xb2fd8e38 // method "fNoArgs()void", method "fArray(uint256[])void", method "fUint(uint256,uint256)(uint256,uint256)", method "fSignatureFromLiteralNoArgs()byte[]", method "fPointerNoArgs()byte[]", method "fSignatureFromLiteralArray()byte[]", method "fPointerArray()byte[]", method "fSignatureFromLiteralUint()byte[]", method "fPointerUint()byte[]", method "assertConsistentSelectors()void"
     txna ApplicationArgs 0
-    match main_fNoArgs_route@5 fArray fUint main_fSignatureFromLiteralNoArgs_route@8 main_fPointerNoArgs_route@9 fSignatureFromLiteralArray fPointerArray main_fSignatureFromLiteralUint_route@12 main_fPointerUint_route@13 assertConsistentSelectors
+    match main_fNoArgs_route@5 fArray fUint main_fSignatureFromLiteralNoArgs_route@8 main_fPointerNoArgs_route@9 main_fSignatureFromLiteralArray_route@10 main_fPointerArray_route@11 main_fSignatureFromLiteralUint_route@12 main_fPointerUint_route@13 main_assertConsistentSelectors_route@14
     err
+
+main_assertConsistentSelectors_route@14:
+    intc_1 // 0
+    assert
+    intc_0 // 1
+    return
 
 main_fPointerUint_route@13:
     pushbytes 0x151f7c7500142e5fdc8c000000000000000c000000000000000d
@@ -38,6 +44,18 @@ main_fPointerUint_route@13:
 
 main_fSignatureFromLiteralUint_route@12:
     pushbytes 0x151f7c750014a6280636000000000000000c000000000000000d
+    log
+    intc_0 // 1
+    return
+
+main_fPointerArray_route@11:
+    pushbytes 0x151f7c750006b6e081500000
+    log
+    intc_0 // 1
+    return
+
+main_fSignatureFromLiteralArray_route@10:
+    pushbytes 0x151f7c750006cebba9b10000
     log
     intc_0 // 1
     return
@@ -69,12 +87,10 @@ fArray:
     *
     pushint 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
-    extract 2 0
-    pop
     intc_0 // 1
     return
 
@@ -93,29 +109,5 @@ fUint:
     assert // invalid number of bytes for arc4.uint256
     pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_special_args.sol.C.fSignatureFromLiteralArray[routing]() -> void:
-fSignatureFromLiteralArray:
-    pushbytes 0x151f7c750006cebba9b10000
-    log
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_special_args.sol.C.fPointerArray[routing]() -> void:
-fPointerArray:
-    pushbytes 0x151f7c750006b6e081500000
-    log
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_special_args.sol.C.assertConsistentSelectors[routing]() -> void:
-assertConsistentSelectors:
-    intc_1 // 0
-    assert
     intc_0 // 1
     return

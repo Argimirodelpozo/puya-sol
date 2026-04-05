@@ -3,10 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/calldata_array_read.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    pushint 1
     return
 
 main_after_if_else@2:
@@ -41,7 +40,7 @@ f:
     *
     pushint 2
     +
-    dig 1
+    swap
     len
     dup
     uncover 2
@@ -52,38 +51,10 @@ f:
     itob
     swap
     store 0
-    swap
-    extract 64 64 // on error: index access is out of bounds
     load 0
-    intc_0 // 32
-    bzero
-    dig 2
-    extract 0 32 // on error: index access is out of bounds
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    uncover 2
-    swap
-    replace2 128
-    uncover 2
-    extract 32 32 // on error: index access is out of bounds
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    replace2 160
     store 0
+    pushint 32
+    bzero
     b|
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
     swap
@@ -94,5 +65,5 @@ f:
     swap
     concat
     log
-    intc_1 // 1
+    pushint 1
     return

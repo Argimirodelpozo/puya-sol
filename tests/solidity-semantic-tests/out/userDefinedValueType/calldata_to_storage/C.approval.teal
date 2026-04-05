@@ -4,10 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata_to_storage.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 0 2
-    bytecblock 0x151f7c75 "__ctor_pending" "small" "l"
+    bytecblock 0x151f7c75 "small" "l" "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -34,17 +34,17 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata_to_storage.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_1 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_1 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    bytec_2 // "small"
+    bytec_1 // "small"
     intc_2 // 0
     box_create
     pop
-    bytec_3 // "l"
+    bytec_2 // "l"
     intc_2 // 0
     box_create
     pop
@@ -81,15 +81,12 @@ g:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint64>
-    extract 2 0
-    dup
-    len
-    pushint 8
-    /
-    itob
-    extract 6 2
-    swap
-    concat
+    bytec_1 // "small"
+    box_del
+    pop
+    bytec_1 // "small"
+    dig 1
+    box_put
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -112,15 +109,12 @@ h:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 2>>
-    extract 2 0
-    dup
-    len
-    intc_3 // 2
-    /
-    itob
-    extract 6 2
-    swap
-    concat
+    bytec_2 // "l"
+    box_del
+    pop
+    bytec_2 // "l"
+    dig 1
+    box_put
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -178,7 +172,7 @@ small:
     intc_1 // 32
     extract3
     sha256
-    bytec_2 // "small"
+    bytec_1 // "small"
     swap
     concat
     box_get
@@ -216,7 +210,7 @@ l:
     intc_1 // 32
     extract3
     sha256
-    bytec_3 // "l"
+    bytec_2 // "l"
     swap
     concat
     box_get

@@ -1,0 +1,98 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_post_cancun_redeploy.sol.Factory.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    bytecblock 0x5ad93c9d3c2816c34b358565e8f5fcd6ed6a8120e4b073c8ee7812e3317ef0f8 0xffffffffffffffffffffffffffffffffffffffff
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0x5352a900 // method "deploy(byte[32])address"
+    txna ApplicationArgs 0
+    match main_deploy_route@4
+    err
+
+main_deploy_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b deploy
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_post_cancun_redeploy.sol.Factory.deploy[routing]() -> void:
+deploy:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    intc_0 // 32
+    bzero
+    global CurrentApplicationAddress
+    dig 1
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    dig 1
+    concat
+    bytec_0 // 0x5ad93c9d3c2816c34b358565e8f5fcd6ed6a8120e4b073c8ee7812e3317ef0f8
+    concat
+    keccak256
+    btoi
+    itob
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
+    dig 2
+    swap
+    concat
+    global CurrentApplicationAddress
+    uncover 2
+    concat
+    bytec_0 // 0x5ad93c9d3c2816c34b358565e8f5fcd6ed6a8120e4b073c8ee7812e3317ef0f8
+    concat
+    keccak256
+    btoi
+    itob
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffff
+    b&
+    uncover 2
+    swap
+    concat
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    load 0
+    store 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    ==
+    assert
+    pushbytes 0x995352300000000000000000000000000000000000000000000000000000000000000000
+    swap
+    concat
+    log
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_1 // 1
+    return

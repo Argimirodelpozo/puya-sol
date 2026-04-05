@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "__ctor_pending" 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000 "s"
+    intcblock 1 0 32 2
+    bytecblock "s" "__ctor_pending" 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -32,13 +32,13 @@ main_after_if_else@2:
     err
 
 main_h_route@8:
-    bytec_1 // 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
 
 main_f_route@6:
-    bytec_1 // 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
@@ -46,36 +46,58 @@ main_f_route@6:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    bytec_2 // "s"
+    bytec_0 // "s"
     intc_1 // 0
     box_create
     pop
 
 __postInit_while_top@2:
-    bytec_2 // "s"
+    bytec_0 // "s"
     box_len
     pop
-    pushint 32
+    intc_2 // 32
     /
     itob
     pushbytes 0x2a
     b<
     bz __postInit_after_while@4
-    bytec_2 // "s"
-    box_get
-    assert // box exists
-    pushint 2
+    bytec_0 // "s"
     intc_1 // 0
-    extract3
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
-    concat // on error: max array length exceeded
+    intc_3 // 2
+    box_extract
+    btoi
+    bytec_0 // "s"
+    box_len
     pop
+    intc_2 // 32
+    +
+    bytec_0 // "s"
+    swap
+    box_resize
+    dup
+    intc_0 // 1
+    +
+    itob
+    extract 6 2
+    bytec_0 // "s"
+    intc_1 // 0
+    uncover 2
+    box_replace
+    intc_2 // 32
+    *
+    intc_3 // 2
+    +
+    bytec_0 // "s"
+    swap
+    intc_1 // 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    box_splice
     b __postInit_while_top@2
 
 __postInit_after_while@4:
@@ -87,7 +109,7 @@ __postInit_after_while@4:
 g:
     load 0
     store 0
-    bytec_1 // 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return

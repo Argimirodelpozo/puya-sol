@@ -5,8 +5,6 @@
 main:
     intcblock 32 0 1 8
     bytecblock "storageArray" "__ctor_pending" 0x068101 0x01
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
-    store 5
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
@@ -61,7 +59,7 @@ test_indices:
     ==
     assert // invalid number of bytes for arc4.uint256
 
-test_indices_while_top@15:
+test_indices_while_top@17:
     pushint 170010
     global OpcodeBudget
     >
@@ -78,7 +76,7 @@ test_indices_while_top@15:
     intc_1 // 0
     itxn_field Fee
     itxn_submit
-    b test_indices_while_top@15
+    b test_indices_while_top@17
 
 test_indices_while_top@2:
     bytec_0 // "storageArray"
@@ -111,19 +109,36 @@ test_indices_while_top@5:
     b>
     bz test_indices_after_while@7
     bytec_0 // "storageArray"
-    box_get
-    assert // box exists
-    pushint 2
     intc_1 // 0
-    extract3
+    pushint 2
+    box_extract
+    btoi
+    intc_2 // 1
+    -
     dup
-    len
+    itob
+    extract 6 2
+    bytec_0 // "storageArray"
+    intc_1 // 0
+    uncover 2
+    box_replace
+    intc_0 // 32
+    *
+    pushint 2
+    +
+    bytec_0 // "storageArray"
+    swap
+    intc_0 // 32
+    pushbytes 0x
+    box_splice
+    bytec_0 // "storageArray"
+    box_len
+    pop
     intc_0 // 32
     -
-    intc_1 // 0
+    bytec_0 // "storageArray"
     swap
-    substring3
-    pop
+    box_resize
     b test_indices_while_top@5
 
 test_indices_after_while@7:
@@ -150,15 +165,9 @@ test_indices_while_top@8:
     bzero
     dig 1
     b|
-    bytec_0 // "storageArray"
-    box_get
-    assert // box exists
-    pushint 2
-    intc_1 // 0
-    extract3
     intc_3 // 8
     bzero
-    uncover 4
+    uncover 3
     concat
     dup
     len
@@ -167,22 +176,12 @@ test_indices_while_top@8:
     extract_uint64
     intc_0 // 32
     *
+    pushint 2
+    +
+    bytec_0 // "storageArray"
+    swap
     uncover 2
-    replace3 // on error: index access is out of bounds
-    dup
-    len
-    intc_0 // 32
-    /
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_0 // "storageArray"
-    box_del
-    pop
-    bytec_0 // "storageArray"
-    swap
-    box_put
+    box_replace // on error: index out of bounds
     bury 2
     b test_indices_while_top@8
 
@@ -191,21 +190,10 @@ test_indices_while_top@11:
     dig 1
     b<
     bz test_indices_after_while@13
-    callsub _puya_lib.mem.new_slot
-    dup
-    pushbytes 0x
-    stores
     bytec_0 // "storageArray"
     box_get
-    swap
-    pushint 2
-    intc_1 // 0
-    extract3
-    callsub _puya_lib.mem.new_slot
-    dup
-    uncover 2
-    stores
-    swap
+    pushbytes 0x0000
+    cover 2
     select
     intc_3 // 8
     bzero
@@ -219,7 +207,7 @@ test_indices_while_top@11:
     -
     extract_uint64
     swap
-    loads
+    extract 2 0
     swap
     intc_0 // 32
     *
@@ -237,17 +225,3 @@ test_indices_while_top@11:
 test_indices_after_while@13:
     intc_2 // 1
     return
-
-
-// _puya_lib.mem.new_slot() -> uint64:
-_puya_lib.mem.new_slot:
-    load 5
-    bitlen
-    load 5
-    pushint 256
-    dig 2
-    -
-    intc_1 // 0
-    setbit // on error: no available slots
-    store 5
-    retsub

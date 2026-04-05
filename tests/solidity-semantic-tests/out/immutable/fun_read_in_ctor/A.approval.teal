@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/fun_read_in_ctor.sol.A.approval_program() -> uint64:
 main:
-    intcblock 0 1 3
+    intcblock 0 1 3 255
     bytecblock "a" "x" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -47,6 +47,8 @@ readX:
     bytec_1 // "x"
     app_global_get_ex
     assert // check x exists
+    intc_3 // 255
+    &
     itob
     bytec_2 // 0x151f7c75
     swap
@@ -62,6 +64,8 @@ readA:
     bytec_0 // "a"
     app_global_get_ex
     assert // check a exists
+    intc_3 // 255
+    &
     itob
     bytec_2 // 0x151f7c75
     swap
