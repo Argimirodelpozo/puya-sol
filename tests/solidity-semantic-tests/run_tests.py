@@ -777,6 +777,9 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                     a_bytes = b'\x00' * (expected_size - len(a_bytes)) + a_bytes
                 args.append(list(a_bytes))
             elif isinstance(a, int) and param_types.get(i) == 'address':
+                # ABI v2: address values > 2^160 - 1 are invalid (EVM addresses are 20 bytes)
+                if not uses_v1 and a > (2**160 - 1):
+                    raise ValueError(f"ABI v2: invalid address value (exceeds 160 bits)")
                 # int → address: encode as 32-byte Algorand address
                 from algosdk import encoding
                 a_bytes = a.to_bytes(32, 'big')
