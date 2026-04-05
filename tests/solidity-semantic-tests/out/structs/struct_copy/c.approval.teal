@@ -1,0 +1,241 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_copy.sol.c.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock "data" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c7580
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xf16d85a0 0x0a8fd477 0x471d04b1 // method "__postInit()void", method "set(uint256)bool", method "copy(uint256,uint256)bool", method "retrieve(uint256)(uint256,uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match __postInit set copy retrieve
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_copy.sol.c.__postInit[routing]() -> void:
+__postInit:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_0 // "data"
+    intc_2 // 0
+    box_create
+    pop
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_copy.sol.c.set[routing]() -> void:
+set:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "data"
+    swap
+    concat
+    dup
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 96 32
+    swap
+    extract 32 64
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
+    swap
+    concat
+    swap
+    concat
+    dup
+    extract 0 32
+    dig 1
+    extract 96 32
+    uncover 2
+    extract 32 64
+    extract 32 32
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
+    swap
+    concat
+    uncover 2
+    swap
+    concat
+    swap
+    concat
+    dup
+    extract 0 32
+    dig 1
+    extract 96 32
+    uncover 2
+    extract 32 64
+    extract 0 32
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
+    concat
+    uncover 2
+    swap
+    concat
+    swap
+    concat
+    dup
+    extract 0 32
+    swap
+    extract 32 64
+    concat
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    concat
+    box_put
+    bytec_3 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_copy.sol.c.copy[routing]() -> void:
+copy:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "data"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "data"
+    swap
+    concat
+    swap
+    box_put
+    bytec_3 // 0x151f7c7580
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_copy.sol.c.retrieve[routing]() -> void:
+retrieve:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_0 // "data"
+    swap
+    concat
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 32
+    dig 1
+    extract 32 64
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    uncover 3
+    extract 96 32
+    uncover 3
+    dig 4
+    b|
+    uncover 3
+    dig 4
+    b|
+    concat
+    uncover 2
+    dig 3
+    b|
+    concat
+    swap
+    uncover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

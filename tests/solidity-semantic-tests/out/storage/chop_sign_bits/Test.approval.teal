@@ -88,15 +88,31 @@ h:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    dup
+    pushint 127
+    <=
+    bnz h_bool_true@3
+    dup
+    pushint 18446744073709551488
+    >=
+    bz h_bool_false@4
+
+h_bool_true@3:
+    intc_2 // 1
+
+h_bool_merge@5:
+    assert // ABI validation
     bytec_1 // "z"
     dig 1
+    dup
+    cover 2
     app_global_put
     itob
     bytec_0 // 0xffff
     b&
     bytec 4 // 0x8000
     b>=
-    bz h_ternary_false@3
+    bz h_ternary_false@7
     intc_0 // 0
     bytec_1 // "z"
     app_global_get_ex
@@ -109,7 +125,7 @@ h:
     bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
-h_ternary_merge@4:
+h_ternary_merge@8:
     dup
     len
     intc_1 // 32
@@ -125,7 +141,7 @@ h_ternary_merge@4:
     intc_2 // 1
     return
 
-h_ternary_false@3:
+h_ternary_false@7:
     intc_0 // 0
     bytec_1 // "z"
     app_global_get_ex
@@ -133,7 +149,11 @@ h_ternary_false@3:
     itob
     bytec_0 // 0xffff
     b&
-    b h_ternary_merge@4
+    b h_ternary_merge@8
+
+h_bool_false@4:
+    intc_0 // 0
+    b h_bool_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/chop_sign_bits.sol.Test.x[routing]() -> void:

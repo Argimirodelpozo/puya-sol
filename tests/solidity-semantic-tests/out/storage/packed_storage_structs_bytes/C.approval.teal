@@ -1,0 +1,356 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_bytes.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1
+    bytecblock "data" 0x00000000000000000000000000000000000000000000000000000000000000000000 "y" "x" 0x31323334353637383930 0x313233343536373839 0x6162636465666768696a
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "x"
+    pushbytes 0x
+    app_global_put
+    bytec_2 // "y"
+    pushbytes 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0xf59e3cc4 // method "test()bool"
+    txna ApplicationArgs 0
+    match main_test_route@4
+    err
+
+main_test_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b test
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_bytes.sol.C.test[routing]() -> void:
+test:
+    bytec_3 // "x"
+    pushbytes 0x01
+    app_global_put
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 32 1
+    dig 1
+    extract 33 1
+    uncover 2
+    extract 1 31
+    pushbytes 0x02
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dup
+    extract 0 1
+    dig 1
+    extract 32 1
+    dig 2
+    extract 33 1
+    uncover 3
+    extract 1 31
+    dup
+    extract 1 1
+    dig 1
+    extract 2 10
+    dig 2
+    extract 12 9
+    uncover 3
+    extract 21 10
+    pushbytes 0x03
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 3
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dup
+    extract 0 1
+    dig 1
+    extract 32 1
+    dig 2
+    extract 33 1
+    uncover 3
+    extract 1 31
+    dup
+    extract 0 1
+    dig 1
+    extract 2 10
+    dig 2
+    extract 12 9
+    uncover 3
+    extract 21 10
+    uncover 3
+    pushbytes 0x04
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 3
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dup
+    extract 0 1
+    dig 1
+    extract 32 1
+    dig 2
+    extract 33 1
+    uncover 3
+    extract 1 31
+    dup
+    extract 0 1
+    dig 1
+    extract 1 1
+    dig 2
+    extract 12 9
+    uncover 3
+    extract 21 10
+    uncover 3
+    uncover 3
+    concat
+    bytec 4 // 0x31323334353637383930
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 3
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dup
+    extract 0 1
+    dig 1
+    extract 32 1
+    dig 2
+    extract 33 1
+    uncover 3
+    extract 1 31
+    dup
+    extract 0 1
+    dig 1
+    extract 1 1
+    dig 2
+    extract 2 10
+    uncover 3
+    extract 21 10
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    bytec 5 // 0x313233343536373839
+    concat
+    swap
+    concat
+    uncover 3
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dup
+    extract 0 1
+    dig 1
+    extract 32 1
+    dig 2
+    extract 33 1
+    uncover 3
+    extract 1 31
+    dup
+    extract 0 1
+    dig 1
+    extract 1 1
+    dig 2
+    extract 2 10
+    uncover 3
+    extract 12 9
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec 6 // 0x6162636465666768696a
+    concat
+    uncover 3
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dup
+    extract 0 1
+    dig 1
+    extract 33 1
+    uncover 2
+    extract 1 31
+    uncover 2
+    swap
+    concat
+    pushbytes 0x05
+    concat
+    swap
+    concat
+    dup
+    extract 0 1
+    dig 1
+    extract 32 1
+    uncover 2
+    extract 1 31
+    uncover 2
+    swap
+    concat
+    swap
+    concat
+    pushbytes 0x06
+    concat
+    bytec_0 // "data"
+    dig 1
+    box_put
+    bytec_2 // "y"
+    pushbytes 0x07
+    app_global_put
+    intc_0 // 0
+    getbyte
+    pushint 2
+    ==
+    bz test_bool_false@12
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 1 31
+    intc_0 // 0
+    getbyte
+    pushint 3
+    ==
+    bz test_bool_false@12
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 1 31
+    intc_1 // 1
+    getbyte
+    pushint 4
+    ==
+    bz test_bool_false@12
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 1 31
+    extract 2 10
+    bytec 4 // "1234567890"
+    ==
+    bz test_bool_false@12
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 1 31
+    extract 12 9
+    bytec 5 // "123456789"
+    ==
+    bz test_bool_false@12
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 1 31
+    extract 21 10
+    bytec 6 // "abcdefghij"
+    ==
+    bz test_bool_false@12
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    pushint 32
+    getbyte
+    pushint 5
+    ==
+    bz test_bool_false@12
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 33 1
+    pushbytes 0x06
+    ==
+    bz test_bool_false@12
+    intc_0 // 0
+    bytec_2 // "y"
+    app_global_get_ex
+    assert // check y exists
+    btoi
+    pushint 7
+    ==
+    bz test_bool_false@12
+    intc_1 // 1
+
+test_bool_merge@13:
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+test_bool_false@12:
+    intc_0 // 0
+    b test_bool_merge@13

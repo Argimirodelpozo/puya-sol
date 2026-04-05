@@ -32,7 +32,8 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_neg_overflow.sol.C.f[routing]() -> void:
 f:
     intc_2 // 0
-    dup
+    dupn 2
+    bytec_0 // ""
     txna ApplicationArgs 1
     dup
     len
@@ -40,6 +41,7 @@ f:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    dup
     txna ApplicationArgs 2
     dup
     cover 2
@@ -47,8 +49,22 @@ f:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    pushint 127
+    <=
+    bnz f_bool_true@3
+    dig 1
+    pushint 18446744073709551488
+    >=
+    bz f_bool_false@4
+
+f_bool_true@3:
+    intc_1 // 1
+
+f_bool_merge@5:
+    assert // ABI validation
     bytec_2 // 0x01
-    swap
+    bury 4
+    dig 1
     itob
     bytec_3 // 0x0100
     b%
@@ -56,79 +72,79 @@ f:
     bytec 4 // 0x80
     b<
     dup
-    cover 2
-    bnz f_ternary_false@3
+    bury 5
+    bnz f_ternary_false@7
     bytec_3 // 0x0100
     swap
     b-
+    bury 6
+
+f_ternary_merge@8:
+    dup
     bury 5
 
-f_ternary_merge@4:
-    dig 2
-    bury 4
-
-f_while_top@5:
-    dig 3
+f_while_top@9:
+    dig 4
     bytec_0 // 0x
     b>
-    bz f_after_while@9
-    dig 3
+    bz f_after_while@13
+    dig 4
     bytec_2 // 0x01
     b&
     bytec_0 // 0x
     b!=
-    bz f_after_if_else@8
-    dig 1
-    dig 5
-    b*
-    bury 2
-
-f_after_if_else@8:
+    bz f_after_if_else@12
     dig 3
+    dig 6
+    b*
+    bury 4
+
+f_after_if_else@12:
+    dig 4
     bytec_1 // 0x02
     b/
-    bury 4
-    dig 4
+    bury 5
+    dig 5
     dup
     b*
-    bury 5
-    b f_while_top@5
+    bury 6
+    b f_while_top@9
 
-f_after_while@9:
-    dup
-    bnz f_ternary_false@12
+f_after_while@13:
     dig 2
+    bnz f_ternary_false@16
+    dup
     bytec_1 // 0x02
     b%
     bytec_0 // 0x
     b!=
-    bz f_ternary_false@12
+    bz f_ternary_false@16
     bytec 4 // 0x80
-    dig 2
+    dig 4
     b<
     !
 
-f_ternary_merge@13:
+f_ternary_merge@17:
     assert // signed exp overflow
-    dup
-    bnz f_ternary_false@17
     dig 2
+    bnz f_ternary_false@21
+    dup
     bytec_1 // 0x02
     b%
     bytec_0 // 0x
     b!=
-    bz f_ternary_false@17
-    dig 1
+    bz f_ternary_false@21
+    dig 3
     bytec_0 // 0x
     b==
-    bnz f_ternary_false@17
+    bnz f_ternary_false@21
     bytec_3 // 0x0100
-    dig 2
+    dig 4
     b-
     bytec_3 // 0x0100
     b%
 
-f_ternary_merge@18:
+f_ternary_merge@22:
     dup
     len
     intc_0 // 32
@@ -144,19 +160,23 @@ f_ternary_merge@18:
     intc_1 // 1
     return
 
-f_ternary_false@17:
-    dig 1
-    b f_ternary_merge@18
+f_ternary_false@21:
+    dig 3
+    b f_ternary_merge@22
 
-f_ternary_false@12:
-    dig 1
+f_ternary_false@16:
+    dig 3
     bytec 4 // 0x80
     b<
-    b f_ternary_merge@13
+    b f_ternary_merge@17
 
-f_ternary_false@3:
-    bury 5
-    b f_ternary_merge@4
+f_ternary_false@7:
+    bury 6
+    b f_ternary_merge@8
+
+f_bool_false@4:
+    intc_2 // 0
+    b f_bool_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_neg_overflow.sol.C.g[routing]() -> void:

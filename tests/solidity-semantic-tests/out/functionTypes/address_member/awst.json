@@ -628,23 +628,39 @@
                   "name": "a1"
                 },
                 "value": {
-                  "_type": "BytesConstant",
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/address_member.sol",
-                    "line": 90,
+                    "line": 85,
                     "end_line": 118,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
+                    "_type": "WType",
+                    "name": "account",
+                    "immutable": true
                   },
-                  "value": "",
-                  "encoding": "base16"
+                  "expr": {
+                    "_type": "BytesConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/address_member.sol",
+                      "line": 90,
+                      "end_line": 118,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "value": "",
+                    "encoding": "base16"
+                  }
                 }
               }
             },
@@ -812,83 +828,99 @@
                   "name": "a2"
                 },
                 "value": {
-                  "_type": "IndexExpression",
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/address_member.sol",
-                    "line": 214,
+                    "line": 209,
                     "end_line": 247,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes[32]",
-                    "immutable": true,
-                    "length": 32
+                    "_type": "WType",
+                    "name": "account",
+                    "immutable": true
                   },
-                  "base": {
-                    "_type": "NewArray",
+                  "expr": {
+                    "_type": "IndexExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/address_member.sol",
                       "line": 214,
-                      "end_line": 244,
+                      "end_line": 247,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "ReferenceArray",
-                      "name": "array<bytes[32], 1>",
+                      "_type": "BytesWType",
+                      "name": "bytes[32]",
                       "immutable": true,
-                      "element_type": {
-                        "_type": "BytesWType",
-                        "name": "bytes[32]",
-                        "immutable": true,
-                        "length": 32
+                      "length": 32
+                    },
+                    "base": {
+                      "_type": "NewArray",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/address_member.sol",
+                        "line": 214,
+                        "end_line": 244,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
                       },
-                      "array_size": 1,
-                      "source_location": null
-                    },
-                    "values": [
-                      {
-                        "_type": "BytesConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/address_member.sol",
-                          "line": 215,
-                          "end_line": 243,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
+                      "wtype": {
+                        "_type": "ReferenceArray",
+                        "name": "array<bytes[32], 1>",
+                        "immutable": true,
+                        "element_type": {
                           "_type": "BytesWType",
-                          "name": "bytes",
+                          "name": "bytes[32]",
                           "immutable": true,
-                          "length": null
+                          "length": 32
                         },
-                        "value": "",
-                        "encoding": "base16"
-                      }
-                    ]
-                  },
-                  "index": {
-                    "_type": "IntegerConstant",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/address_member.sol",
-                      "line": 245,
-                      "end_line": 246,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
+                        "array_size": 1,
+                        "source_location": null
+                      },
+                      "values": [
+                        {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/address_member.sol",
+                            "line": 215,
+                            "end_line": 243,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "value": "",
+                          "encoding": "base16"
+                        }
+                      ]
                     },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "uint64",
-                      "immutable": true
-                    },
-                    "value": 0,
-                    "teal_alias": null
+                    "index": {
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/address_member.sol",
+                        "line": 245,
+                        "end_line": 246,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "value": 0,
+                      "teal_alias": null
+                    }
                   }
                 }
               }

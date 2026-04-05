@@ -1026,10 +1026,10 @@
                             "source_location": null
                           },
                           "value": {
-                            "_type": "IntegerConstant",
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/struct_with_bytes.sol",
-                              "line": 186,
+                              "line": 180,
                               "end_line": 187,
                               "comment_lines": 0,
                               "column": null,
@@ -1037,11 +1037,48 @@
                             },
                             "wtype": {
                               "_type": "WType",
-                              "name": "uint64",
+                              "name": "biguint",
                               "immutable": true
                             },
-                            "value": 7,
-                            "teal_alias": null
+                            "expr": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/struct_with_bytes.sol",
+                                "line": 180,
+                                "end_line": 187,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "itob",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/struct_with_bytes.sol",
+                                    "line": 186,
+                                    "end_line": 187,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "value": 7,
+                                  "teal_alias": null
+                                }
+                              ]
+                            }
                           },
                           "error_message": null
                         },
@@ -2478,21 +2515,38 @@
                             "source_location": null
                           },
                           "value": {
-                            "_type": "StringConstant",
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/struct_with_bytes.sol",
-                              "line": 203,
+                              "line": 197,
                               "end_line": 208,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "WType",
-                              "name": "string",
-                              "immutable": true
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
                             },
-                            "value": "abc"
+                            "expr": {
+                              "_type": "StringConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/struct_with_bytes.sol",
+                                "line": 203,
+                                "end_line": 208,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "string",
+                                "immutable": true
+                              },
+                              "value": "abc"
+                            }
                           },
                           "error_message": null
                         },
