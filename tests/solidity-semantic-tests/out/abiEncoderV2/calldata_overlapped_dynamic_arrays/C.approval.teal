@@ -3,23 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_overlapped_dynamic_arrays.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
-    bytecblock 0x151f7c75 "__ctor_pending" "n"
-    pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0
-    store 5
+    intcblock 1 0 32 64
+    bytecblock 0x151f7c75 "__ctor_pending" "s" "n"
     txn ApplicationID
     bnz main_after_if_else@2
-    callsub _puya_lib.mem.new_slot
-    dup
-    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    stores
-    bytec_2 // "n"
-    swap
-    app_global_put
     bytec_1 // "__ctor_pending"
-    intc_1 // 1
+    intc_0 // 1
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -35,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x560ea6a7 0x48f9eced 0x3a06436a 0x82e68c81 // method "__postInit()void", method "f_memory(uint256[],uint256[2])(uint256[],uint256[2])", method "f_encode(uint256[],uint256[2])byte[]", method "f_which(uint256[],uint256[2],uint256)byte[]", method "f_storage(uint256[],uint256[2])byte[]"
+    pushbytess 0xbacc49e3 0x560ea6a7 0x48f9eced 0xf95bdc67 0x82e68c81 // method "__postInit()void", method "f_memory(uint256[],uint256[2])(uint256[],uint256[2])", method "f_encode(uint256[],uint256[2])byte[]", method "f_which(uint256[],uint256[2],uint512)byte[]", method "f_storage(uint256[],uint256[2])byte[]"
     txna ApplicationArgs 0
     match __postInit f_memory f_encode f_which f_storage
     err
@@ -47,13 +38,16 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
-    pushbytes "s"
-    intc_2 // 0
+    bytec_2 // "s"
+    intc_1 // 0
     box_create
     pop
-    intc_1 // 1
+    bytec_3 // "n"
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    intc_0 // 1
     return
 
 
@@ -61,11 +55,11 @@ __postInit:
 f_memory:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_0 // 32
+    intc_2 // 32
     *
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
@@ -74,21 +68,11 @@ f_memory:
     txna ApplicationArgs 2
     dup
     len
-    pushint 64
+    intc_3 // 64
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
-    swap
-    extract 2 0
-    dup
-    len
-    intc_0 // 32
-    /
-    itob
-    extract 6 2
-    swap
-    concat
     pushbytes 0x0042
-    uncover 2
+    swap
     concat
     swap
     concat
@@ -96,7 +80,7 @@ f_memory:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -104,11 +88,11 @@ f_memory:
 f_encode:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_0 // 32
+    intc_2 // 32
     *
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
@@ -117,14 +101,12 @@ f_encode:
     txna ApplicationArgs 2
     dup
     len
-    pushint 64
+    intc_3 // 64
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
-    swap
-    extract 2 0
-    dig 1
+    dup
     extract 0 32 // on error: index access is out of bounds
-    uncover 2
+    swap
     extract 32 32 // on error: index access is out of bounds
     concat
     concat
@@ -138,7 +120,7 @@ f_encode:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -146,11 +128,11 @@ f_encode:
 f_which:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_0 // 32
+    intc_2 // 32
     *
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
@@ -159,18 +141,15 @@ f_which:
     txna ApplicationArgs 2
     dup
     len
-    pushint 64
+    intc_3 // 64
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
     txna ApplicationArgs 3
     dup
     len
-    intc_0 // 32
+    intc_3 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
-    uncover 2
-    extract 2 0
-    swap
+    assert // invalid number of bytes for arc4.uint512
     pushint 8
     bzero
     swap
@@ -180,9 +159,12 @@ f_which:
     pushint 8
     -
     extract_uint64
-    intc_0 // 32
+    uncover 2
+    extract 2 0
+    swap
+    intc_2 // 32
     *
-    intc_0 // 32
+    intc_2 // 32
     extract3 // on error: index access is out of bounds
     swap
     extract 32 32 // on error: index access is out of bounds
@@ -197,7 +179,7 @@ f_which:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -205,29 +187,33 @@ f_which:
 f_storage:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_0 // 32
+    intc_2 // 32
     *
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
+    dup
+    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
     txna ApplicationArgs 2
     dup
     len
-    pushint 64
+    intc_3 // 64
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
+    bytec_2 // "s"
+    box_del
+    pop
+    bytec_2 // "s"
+    dig 3
+    box_put
+    bytec_3 // "n"
     swap
-    extract 2 0
-    bytec_2 // "n"
-    uncover 2
     app_global_put
-    dup
-    len
     itob
     extract 6 2
     swap
@@ -236,19 +222,5 @@ f_storage:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
-
-
-// _puya_lib.mem.new_slot() -> uint64:
-_puya_lib.mem.new_slot:
-    load 5
-    bitlen
-    load 5
-    pushint 256
-    dig 2
-    -
-    intc_2 // 0
-    setbit // on error: no available slots
-    store 5
-    retsub
