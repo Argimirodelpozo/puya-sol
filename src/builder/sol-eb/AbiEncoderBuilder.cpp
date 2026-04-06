@@ -220,12 +220,13 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgAsARC4Bytes(
 		return _argExpr;
 	if (wtype == awst::WType::uint64Type())
 	{
+		// Solidity ABI: all integers are 32-byte big-endian
 		auto itob = std::make_shared<awst::IntrinsicCall>();
 		itob->sourceLocation = _loc;
 		itob->wtype = awst::WType::bytesType();
 		itob->opCode = "itob";
 		itob->stackArgs.push_back(std::move(_argExpr));
-		return itob;
+		return leftPadBytes(std::move(itob), 32, _loc);
 	}
 	if (wtype == awst::WType::biguintType())
 	{
@@ -237,6 +238,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgAsARC4Bytes(
 	}
 	if (wtype == awst::WType::boolType())
 	{
+		// Solidity ABI: bool is 32-byte right-aligned (0x00...00 or 0x00...01)
 		auto zeroByte = std::make_shared<awst::BytesConstant>();
 		zeroByte->sourceLocation = _loc;
 		zeroByte->wtype = awst::WType::bytesType();
@@ -250,7 +252,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgAsARC4Bytes(
 		setbit->stackArgs.push_back(std::move(zeroByte));
 		setbit->stackArgs.push_back(makeUint64("0", _loc));
 		setbit->stackArgs.push_back(std::move(_argExpr));
-		return setbit;
+		return leftPadBytes(std::move(setbit), 32, _loc);
 	}
 	if (wtype == awst::WType::accountType())
 	{
