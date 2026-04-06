@@ -48,6 +48,57 @@ static bool blockAlwaysTerminates(awst::Block const& _block)
 	return false;
 }
 
+/// Remove unreachable statements after terminators in a block body.
+static void removeDeadCode(std::vector<std::shared_ptr<awst::Statement>>& _body)
+{
+	for (size_t i = 0; i < _body.size(); ++i)
+	{
+		// Recurse into nested blocks
+		if (auto* ifElse = dynamic_cast<awst::IfElse*>(_body[i].get()))
+		{
+			if (ifElse->ifBranch) removeDeadCode(ifElse->ifBranch->body);
+			if (ifElse->elseBranch) removeDeadCode(ifElse->elseBranch->body);
+		}
+		else if (auto* block = dynamic_cast<awst::Block*>(_body[i].get()))
+			removeDeadCode(block->body);
+		else if (auto* whileLoop = dynamic_cast<awst::WhileLoop*>(_body[i].get()))
+		{
+			if (whileLoop->loopBody) removeDeadCode(whileLoop->loopBody->body);
+		}
+
+		// If this statement always terminates, remove everything after it
+		if (statementAlwaysTerminates(*_body[i]) && i + 1 < _body.size())
+		{
+			_body.erase(_body.begin() + i + 1, _body.end());
+			break;
+		}
+		// Also check if an IfElse terminates on all paths
+		if (auto const* ifElse = dynamic_cast<awst::IfElse const*>(_body[i].get()))
+		{
+			if (ifElse->ifBranch && ifElse->elseBranch
+				&& blockAlwaysTerminates(*ifElse->ifBranch)
+				&& blockAlwaysTerminates(*ifElse->elseBranch)
+				&& i + 1 < _body.size())
+			{
+				_body.erase(_body.begin() + i + 1, _body.end());
+				break;
+			}
+		}
+	}
+}
+
+/// Apply dead code elimination to all methods in a contract.
+static void eliminateDeadCode(awst::Contract& _contract)
+{
+	auto dce = [](awst::ContractMethod& m) {
+		if (m.body) removeDeadCode(m.body->body);
+	};
+	dce(_contract.approvalProgram);
+	dce(_contract.clearProgram);
+	for (auto& m: _contract.methods)
+		dce(m);
+}
+
 std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 	solidity::frontend::CompilerStack& _compiler,
 	std::string const& _sourceFile,
@@ -899,7 +950,10 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				hasPublicMethod = true;
 			}
 			if (hasPublicMethod)
+			{
+				eliminateDeadCode(*awstContract);
 				roots.push_back(std::move(awstContract));
+			}
 			else
 				Logger::instance().debug("Skipping non-deployable contract: " + contract->name());
 		}
