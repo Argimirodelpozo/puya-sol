@@ -173,7 +173,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 {
 	auto const* solArrType = dynamic_cast<ArrayType const*>(_varDecl.type());
 	auto* rawElemType = m_ctx.typeMapper.map(solArrType->baseType());
-	auto* elemType = m_ctx.typeMapper.mapToARC4Type(rawElemType);
+	auto* elemType = m_ctx.typeMapper.mapSolTypeToARC4(solArrType->baseType());
 	auto* arrWType = m_ctx.typeMapper.map(solArrType);
 
 	auto const* ident = dynamic_cast<Identifier const*>(&_baseExpr);

@@ -25,7 +25,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	auto const* arrType = dynamic_cast<ArrayType const*>(
 		m_indexAccess.baseExpression().annotation().type);
 	auto* rawElemType = m_ctx.typeMapper.map(arrType->baseType());
-	auto* elemType = m_ctx.typeMapper.mapToARC4Type(rawElemType);
+	auto* elemType = m_ctx.typeMapper.mapSolTypeToARC4(arrType->baseType());
 	auto* arrWType = m_ctx.typeMapper.map(arrType);
 
 	std::string arrayVarName;

@@ -65,12 +65,9 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 				result = awst::WType::bytesType();
 			else
 			{
-				// Map element type to ARC4 for array storage.
-				// Using ARC4 arrays (not ReferenceArray) enables:
-				// - Nested dynamic arrays (ARC4 of ARC4)
-				// - Atomic state storage (no per-element box decomposition)
-				// - No type mismatch between storage and memory forms
-				awst::WType const* arc4ElemType = mapToARC4Type(map(arrType->baseType()));
+				// Map element type to ARC4, preserving exact bit widths for ABI.
+				// Use mapSolTypeToARC4 to avoid uint8→uint64→arc4.uint64 promotion.
+				awst::WType const* arc4ElemType = mapSolTypeToARC4(arrType->baseType());
 				if (!arrType->isDynamicallySized())
 				{
 					int len = static_cast<int>(arrType->length());
@@ -285,15 +282,16 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 
 awst::WType const* TypeMapper::mapSolTypeToARC4(solidity::frontend::Type const* _solType)
 {
-	// Check for signed integers — use ARC4UIntN with arc4_alias "intN"
+	// Preserve exact bit width for integers (don't upcast uint8→uint64)
 	if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(_solType))
 	{
+		unsigned bits = intType->numBits();
 		if (intType->isSigned())
 		{
-			unsigned bits = intType->numBits();
 			std::string alias = "int" + std::to_string(bits);
 			return createType<awst::ARC4UIntN>(static_cast<int>(bits), alias);
 		}
+		return createType<awst::ARC4UIntN>(static_cast<int>(bits));
 	}
 	// Default: map through raw type → ARC4
 	return mapToARC4Type(map(_solType));
