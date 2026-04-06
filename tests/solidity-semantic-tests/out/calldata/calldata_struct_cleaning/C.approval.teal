@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x899ef505 // method "f((uint64,uint8[1]))(uint256,byte[32])"
+    pushbytes 0xd1bc6b89 // method "f((uint64,uint8[1]))(uint512,byte[32])"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -46,8 +46,7 @@ f:
     load 0
     intc_0 // 32
     bzero
-    dup
-    uncover 3
+    uncover 2
     concat
     dup
     len
@@ -56,9 +55,11 @@ f:
     intc_0 // 32
     extract3
     extract 0 32
-    uncover 2
+    swap
     store 0
-    cover 2
+    pushint 64
+    bzero
+    uncover 2
     b|
     swap
     concat

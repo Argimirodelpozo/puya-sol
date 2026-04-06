@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xcdcb8654 0xda1823d3 // method "f()address", method "recover(byte[32],uint64,byte[32],byte[32],uint256,byte[32])address"
+    pushbytess 0xcdcb8654 0xddf6783d // method "f()address", method "recover(byte[32],uint64,byte[32],byte[32],uint512,byte[32])address"
     txna ApplicationArgs 0
     match f recover
     err
@@ -74,9 +74,9 @@ recover:
     txna ApplicationArgs 5
     dup
     len
-    intc_0 // 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 6
     dup
     len

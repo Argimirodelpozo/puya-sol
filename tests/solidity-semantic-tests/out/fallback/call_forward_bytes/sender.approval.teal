@@ -3,14 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.approval_program() -> uint64:
 main:
-    intcblock 1 0 6 32
-    bytecblock "savedData" "rec" "__ctor_pending" 0x151f7c7580 0x0a8101
+    intcblock 1 0 6 64
+    bytecblock "savedData" "__ctor_pending" 0x151f7c7580 0x0a8101 "rec"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "rec"
-    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
-    app_global_put
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -29,13 +26,13 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x1bf9882b 0x0d0be52f 0xf321bc3d 0x70b65ae3 // method "__postInit()void", method "__fallback()void", method "forward()bool", method "clear()bool", method "val()uint256"
+    pushbytess 0xbacc49e3 0x1bf9882b 0x0d0be52f 0xf321bc3d 0x660fa314 // method "__postInit()void", method "__fallback()void", method "forward()bool", method "clear()bool", method "val()uint512"
     txna ApplicationArgs 0
     match __postInit /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.[routing] main_forward_route@7 clear val
     err
 
 main_forward_route@7:
-    bytec_3 // 0x151f7c7580
+    bytec_2 // 0x151f7c7580
     log
     intc_0 // 1
     return
@@ -43,10 +40,10 @@ main_forward_route@7:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__postInit[routing]() -> void:
 __postInit:
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 0
     app_global_put
     bytec_0 // "savedData"
@@ -58,9 +55,9 @@ __postInit:
     itxn_field TypeEnum
     intc_1 // 0
     itxn_field Fee
-    bytec 4 // 0x0a8101
+    bytec_3 // 0x0a8101
     itxn_field ClearStateProgram
-    bytec 4 // 0x0a8101
+    bytec_3 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -78,7 +75,7 @@ __postInit:
     itxn CreatedApplicationID
     app_params_get AppAddress
     pop
-    bytec_1 // "rec"
+    bytec 4 // "rec"
     swap
     app_global_put
     intc_0 // 1
@@ -106,7 +103,7 @@ clear:
     bytec_0 // "savedData"
     pushbytes 0x
     box_put
-    bytec_3 // 0x151f7c7580
+    bytec_2 // 0x151f7c7580
     log
     intc_0 // 1
     return
@@ -116,7 +113,7 @@ clear:
 val:
     itxn_begin
     intc_1 // 0
-    bytec_1 // "rec"
+    bytec 4 // "rec"
     app_global_get_ex
     assert // check rec exists
     pushint 24
@@ -135,10 +132,10 @@ val:
     extract 4 0
     dup
     len
-    intc_3 // 32
+    intc_3 // 64
     <=
     assert // overflow
-    intc_3 // 32
+    intc_3 // 64
     bzero
     b|
     pushbytes 0x151f7c75

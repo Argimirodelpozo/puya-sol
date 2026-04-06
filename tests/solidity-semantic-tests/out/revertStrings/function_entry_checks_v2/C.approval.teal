@@ -16,7 +16,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x293e4c45 // method "t(uint256)void"
+    pushbytes 0x0481fdc9 // method "t(uint512)void"
     txna ApplicationArgs 0
     match main_t_route@4
     err
@@ -34,8 +34,8 @@ main_t_route@4:
 t:
     txna ApplicationArgs 1
     len
-    pushint 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     pushint 1
     return

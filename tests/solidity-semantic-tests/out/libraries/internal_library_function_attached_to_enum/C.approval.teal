@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x22fb13ac // method "equalsA(uint256)bool"
+    pushbytes 0x088addd0 // method "equalsA(uint512)bool"
     txna ApplicationArgs 0
     match main_equalsA_route@4
     err
@@ -45,9 +45,9 @@ equalsA:
     txna ApplicationArgs 1
     dup
     len
-    pushint 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_1 // 8
     bzero
     swap

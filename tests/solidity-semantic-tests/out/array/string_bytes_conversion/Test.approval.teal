@@ -3,14 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_bytes_conversion.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 8
-    bytecblock "s" "__ctor_pending" "b" 0x151f7c75
+    intcblock 1 0 64 8
+    bytecblock "__ctor_pending" "b" "s" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "s"
-    pushbytes 0x
-    app_global_put
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -29,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x404428e8 0x0568fbe7 // method "__postInit()void", method "f(string,uint256)byte[1]", method "l()uint256"
+    pushbytess 0xbacc49e3 0xb3c84e6e 0x85f1356f // method "__postInit()void", method "f(string,uint512)byte[1]", method "l()uint512"
     txna ApplicationArgs 0
     match __postInit f l
     err
@@ -37,16 +34,19 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_bytes_conversion.sol.Test.__postInit[routing]() -> void:
 __postInit:
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    bytec_2 // "b"
+    bytec_1 // "b"
     intc_1 // 0
     box_create
     pop
+    bytec_2 // "s"
+    pushbytes 0x
+    app_global_put
     intc_0 // 1
     return
 
@@ -67,16 +67,16 @@ f:
     txna ApplicationArgs 2
     dup
     len
-    intc_2 // 32
+    intc_2 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
-    bytec_2 // "b"
+    assert // invalid number of bytes for arc4.uint512
+    bytec_1 // "b"
     box_del
     pop
-    bytec_2 // "b"
+    bytec_1 // "b"
     dig 2
     box_put
-    bytec_0 // "s"
+    bytec_2 // "s"
     dig 2
     app_global_put
     intc_3 // 8
@@ -101,12 +101,12 @@ f:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_bytes_conversion.sol.Test.l[routing]() -> void:
 l:
     intc_1 // 0
-    bytec_0 // "s"
+    bytec_2 // "s"
     app_global_get_ex
     assert // check s exists
     len
     itob
-    intc_2 // 32
+    intc_2 // 64
     bzero
     b|
     bytec_3 // 0x151f7c75

@@ -3,10 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_emit_via_interface.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 1 32
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x90f6ea23 // method "emitEvent(uint256)void"
+    pushbytes 0xd330ed31 // method "emitEvent(uint512)void"
     txna ApplicationArgs 0
     match main_emitEvent_route@4
     err
@@ -37,15 +37,15 @@ emitEvent:
     dup
     len
     dup
-    intc_0 // 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txn Sender
     swap
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     uncover 2
     b|
@@ -54,5 +54,5 @@ emitEvent:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/memory_params_in_external_function.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 2 32
+    intcblock 0 1 2 64
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xa36a8b2a 0x5351c36b // method "f(byte[],byte[],uint256[])(uint256,byte[1],uint256,byte[1],uint256,uint256)", method "g()(uint256,byte[1],uint256,byte[1],uint256,uint256)"
+    pushbytess 0x49712b6a 0x980a6fb9 // method "f(byte[],byte[],uint256[])(uint512,byte[1],uint512,byte[1],uint512,uint512)", method "g()(uint512,byte[1],uint512,byte[1],uint512,uint512)"
     txna ApplicationArgs 0
     match f g
     err
@@ -60,7 +60,7 @@ f:
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    intc_3 // 32
+    pushint 32
     *
     intc_2 // 2
     +
@@ -82,7 +82,7 @@ f:
     itob
     uncover 5
     extract 98 32
-    intc_3 // 32
+    intc_3 // 64
     bzero
     uncover 6
     dig 1
@@ -112,8 +112,6 @@ f:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/memory_params_in_external_function.sol.C.g[routing]() -> void:
 g:
-    intc_3 // 32
-    bzero
     itxn_begin
     global CurrentApplicationAddress
     pushint 24
@@ -146,23 +144,24 @@ g:
     extract 70 32
     itxn LastLog
     extract 102 32
-    uncover 5
-    dig 6
+    intc_3 // 64
+    bzero
+    uncover 6
+    dig 1
     b|
+    uncover 6
+    concat
     uncover 5
+    dig 2
+    b|
     concat
     uncover 4
-    dig 5
-    b|
     concat
     uncover 3
-    concat
-    uncover 2
-    dig 3
+    dig 2
     b|
     concat
-    swap
-    uncover 2
+    cover 2
     b|
     concat
     bytec_0 // 0x151f7c75

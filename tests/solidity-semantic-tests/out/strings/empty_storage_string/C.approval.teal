@@ -4,21 +4,9 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 4 2
-    bytecblock 0x151f7c75 "uninitializedString" 0x "emptyString" "nonEmptyString" "emptyBytes" "__ctor_pending" 0x0004 "nonEmptyString2" "uninitializedBytes" 0x151f7c750000
+    bytecblock 0x151f7c75 "emptyBytes" "uninitializedString" 0x "emptyString" "nonEmptyString" "__ctor_pending" 0x0004 "uninitializedBytes" "nonEmptyString2" 0x151f7c750000
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "uninitializedString"
-    bytec_2 // 0x
-    app_global_put
-    bytec_3 // "emptyString"
-    bytec_2 // ""
-    app_global_put
-    bytec 4 // "nonEmptyString"
-    pushbytes "This is a non empty string"
-    app_global_put
-    bytec 8 // "nonEmptyString2"
-    pushbytes "Another string"
-    app_global_put
     bytec 6 // "__ctor_pending"
     intc_0 // 1
     app_global_put
@@ -61,14 +49,26 @@ __postInit:
     bytec 6 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    bytec 9 // "uninitializedBytes"
+    bytec 8 // "uninitializedBytes"
     intc_1 // 0
     box_create
     pop
-    bytec 5 // "emptyBytes"
+    bytec_1 // "emptyBytes"
     intc_1 // 0
     box_create
     pop
+    bytec_2 // "uninitializedString"
+    bytec_3 // 0x
+    app_global_put
+    bytec 4 // "emptyString"
+    bytec_3 // ""
+    app_global_put
+    bytec 5 // "nonEmptyString"
+    pushbytes "This is a non empty string"
+    app_global_put
+    bytec 9 // "nonEmptyString2"
+    pushbytes "Another string"
+    app_global_put
     intc_0 // 1
     return
 
@@ -76,7 +76,7 @@ __postInit:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.f[routing]() -> void:
 f:
     intc_1 // 0
-    bytec_1 // "uninitializedString"
+    bytec_2 // "uninitializedString"
     app_global_get_ex
     assert // check uninitializedString exists
     dup
@@ -96,11 +96,11 @@ f:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.g[routing]() -> void:
 g:
     intc_1 // 0
-    bytec_1 // "uninitializedString"
+    bytec_2 // "uninitializedString"
     app_global_get_ex
     assert // check uninitializedString exists
     intc_1 // 0
-    bytec_3 // "emptyString"
+    bytec 4 // "emptyString"
     app_global_get_ex
     assert // check emptyString exists
     dig 1
@@ -140,11 +140,11 @@ g:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.h[routing]() -> void:
 h:
     intc_1 // 0
-    bytec_1 // "uninitializedString"
+    bytec_2 // "uninitializedString"
     app_global_get_ex
     assert // check uninitializedString exists
     intc_1 // 0
-    bytec 4 // "nonEmptyString"
+    bytec 5 // "nonEmptyString"
     app_global_get_ex
     assert // check nonEmptyString exists
     dig 1
@@ -184,11 +184,11 @@ h:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.i[routing]() -> void:
 i:
     intc_1 // 0
-    bytec 4 // "nonEmptyString"
+    bytec 5 // "nonEmptyString"
     app_global_get_ex
     assert // check nonEmptyString exists
     intc_1 // 0
-    bytec_3 // "emptyString"
+    bytec 4 // "emptyString"
     app_global_get_ex
     assert // check emptyString exists
     dig 1
@@ -247,8 +247,8 @@ j:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.k[routing]() -> void:
 k:
-    bytec 8 // "nonEmptyString2"
-    bytec_2 // ""
+    bytec 9 // "nonEmptyString2"
+    bytec_3 // ""
     app_global_put
     bytec 10 // 0x151f7c750000
     log
@@ -286,7 +286,7 @@ l:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.m[routing]() -> void:
 m:
     intc_1 // 0
-    bytec_3 // "emptyString"
+    bytec 4 // "emptyString"
     app_global_get_ex
     assert // check emptyString exists
     dup
@@ -306,7 +306,7 @@ m:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.o[routing]() -> void:
 o:
     intc_1 // 0
-    bytec_3 // "emptyString"
+    bytec 4 // "emptyString"
     app_global_get_ex
     assert // check emptyString exists
     dup
@@ -325,9 +325,9 @@ o:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.q[routing]() -> void:
 q:
-    bytec 9 // "uninitializedBytes"
+    bytec 8 // "uninitializedBytes"
     box_get
-    bytec_2 // 0x
+    bytec_3 // 0x
     cover 2
     select
     dup
@@ -346,11 +346,11 @@ q:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.r[routing]() -> void:
 r:
-    bytec 5 // "emptyBytes"
+    bytec_1 // "emptyBytes"
     box_del
     pop
-    bytec 5 // "emptyBytes"
-    bytec_2 // ""
+    bytec_1 // "emptyBytes"
+    bytec_3 // ""
     box_put
     bytec 10 // 0x151f7c750000
     log
@@ -361,13 +361,13 @@ r:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.s[routing]() -> void:
 s:
     intc_1 // 0
-    bytec_1 // "uninitializedString"
+    bytec_2 // "uninitializedString"
     app_global_get_ex
     assert // check uninitializedString exists
-    bytec 5 // "emptyBytes"
+    bytec_1 // "emptyBytes"
     box_del
     pop
-    bytec 5 // "emptyBytes"
+    bytec_1 // "emptyBytes"
     dig 1
     box_put
     dup
@@ -397,7 +397,7 @@ set:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bytec 4 // "nonEmptyString"
+    bytec 5 // "nonEmptyString"
     swap
     app_global_put
     intc_0 // 1
@@ -407,7 +407,7 @@ set:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.get[routing]() -> void:
 get:
     intc_1 // 0
-    bytec 4 // "nonEmptyString"
+    bytec 5 // "nonEmptyString"
     app_global_get_ex
     assert // check nonEmptyString exists
     dup

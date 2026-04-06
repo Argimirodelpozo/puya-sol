@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/inherited.sol.B.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 64
     bytecblock "data"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x1bf9882b 0xe1e64a74 // method "__fallback()void", method "getData()uint256"
+    pushbytess 0x1bf9882b 0xa7681aa9 // method "__fallback()void", method "getData()uint512"
     txna ApplicationArgs 0
     match /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/inherited.sol.B.[routing] getData
     err
@@ -51,10 +51,10 @@ getData:
     assert // check data exists
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     pushbytes 0x151f7c75

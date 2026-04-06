@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/create_memory_array_too_large.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
+    intcblock 1 0 64
     bytecblock 0x0000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xcd78b354 0x4b2c0376 // method "f()uint256", method "g()uint256"
+    pushbytess 0xe03b32a4 0x5ed33a7f // method "f()uint512", method "g()uint512"
     txna ApplicationArgs 0
     match f g
     err
@@ -58,12 +58,12 @@ f_while_top@2:
     b f_while_top@2
 
 f_after_while@4:
-    intc_2 // 32
-    bzero
-    dig 2
+    dig 1
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000002a
     replace2 34 // on error: index access is out of bounds
     extract 34 32
+    intc_2 // 64
+    bzero
     b|
     bytec_1 // 0x151f7c75
     swap
@@ -108,7 +108,7 @@ g_after_while@4:
     swap
     replace2 18 // on error: index access is out of bounds
     extract 18 8
-    intc_2 // 32
+    intc_2 // 64
     bzero
     b|
     bytec_1 // 0x151f7c75

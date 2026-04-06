@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/local_tuple_assignment.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
+    intcblock 64 1 32 0
     bytecblock "x" 0x151f7c75 0x000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -28,13 +28,13 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x2169a7ad 0xa48ee382 0xfb0e02b7 0x3ebd73fe 0x7c1072af // method "f(uint256,uint256)(uint256,uint256)", method "g()(uint256,uint256,uint256)", method "h()(uint256,uint256,uint256)", method "i()(uint256,uint256,uint256,uint256)", method "x()uint256"
+    pushbytess 0xef7aeb21 0x21413cf0 0x9d40eb1c 0xc4ac7ad7 0x3f4abdfd // method "f(uint512,uint512)(uint512,uint512)", method "g()(uint512,uint512,uint512)", method "h()(uint512,uint512,uint512)", method "i()(uint512,uint512,uint512,uint512)", method "x()uint512"
     txna ApplicationArgs 0
     match f g h main_i_route@8 x
     err
 
 main_i_route@8:
-    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a00000000000000000000000000000000000000000000000000000000000000170000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000d
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000017000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000d
     log
     intc_1 // 1
     return
@@ -46,30 +46,30 @@ f:
     dup
     len
     dup
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     len
     dup
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec_0 // "x"
     dig 2
     app_global_put
     uncover 2
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     uncover 3
     dig 1
     b|
     uncover 2
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
     cover 2
@@ -85,19 +85,17 @@ f:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/local_tuple_assignment.sol.C.g[routing]() -> void:
 g:
-    intc_2 // 0
+    intc_3 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
-    intc_0 // 32
+    intc_2 // 32
     bzero
     dig 1
     len
-    intc_0 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    swap
-    dig 1
     b|
     bytec_2 // 0x000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     swap
@@ -110,15 +108,16 @@ g:
     extract 32 32 // on error: index access is out of bounds
     uncover 2
     extract 0 32 // on error: index access is out of bounds
-    uncover 2
-    dig 3
+    intc_0 // 64
+    bzero
+    uncover 3
+    dig 1
     b|
-    uncover 2
-    dig 3
+    uncover 3
+    dig 2
     b|
     concat
-    swap
-    uncover 2
+    cover 2
     b|
     concat
     bytec_1 // 0x151f7c75
@@ -131,19 +130,17 @@ g:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/local_tuple_assignment.sol.C.h[routing]() -> void:
 h:
-    intc_2 // 0
+    intc_3 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
-    intc_0 // 32
+    intc_2 // 32
     bzero
     dig 1
     len
-    intc_0 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    swap
-    dig 1
     b|
     bytec_2 // 0x000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     swap
@@ -158,15 +155,16 @@ h:
     extract 32 32 // on error: index access is out of bounds
     uncover 2
     extract 0 32 // on error: index access is out of bounds
-    uncover 2
-    dig 3
+    intc_0 // 64
+    bzero
+    uncover 3
+    dig 1
     b|
-    uncover 2
-    dig 3
+    uncover 3
+    dig 2
     b|
     concat
-    swap
-    uncover 2
+    cover 2
     b|
     concat
     bytec_1 // 0x151f7c75
@@ -179,16 +177,16 @@ h:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/local_tuple_assignment.sol.C.x[routing]() -> void:
 x:
-    intc_2 // 0
+    intc_3 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_1 // 0x151f7c75

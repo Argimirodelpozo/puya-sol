@@ -1,9 +1,9 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_k2pmtiso/B.sol.A.approval_program() -> uint64:
+// /tmp/multisource__76_0b16/B.sol.A.approval_program() -> uint64:
 main:
-    intcblock 0 1 32 6
+    intcblock 0 1 64 6
     bytecblock 0x0a8101
     txn ApplicationID
     bnz main_after_if_else@2
@@ -18,7 +18,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xc14ad39f // method "g(uint256)uint256"
+    pushbytes 0x484a762a // method "g(uint512)uint512"
     txna ApplicationArgs 0
     match main_g_route@4
     err
@@ -32,13 +32,13 @@ main_g_route@4:
     b g
 
 
-// /tmp/multisource_k2pmtiso/B.sol.A.g[routing]() -> void:
+// /tmp/multisource__76_0b16/B.sol.A.g[routing]() -> void:
 g:
     txna ApplicationArgs 1
     len
-    intc_2 // 32
+    intc_2 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     itxn_begin
     intc_3 // 6
     itxn_field TypeEnum
@@ -81,10 +81,10 @@ g:
     extract 4 0
     dup
     len
-    intc_2 // 32
+    intc_2 // 64
     <=
     assert // overflow
-    intc_2 // 32
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x151f7c75

@@ -1,9 +1,9 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_30do5gyz/s3.sol.C.approval_program() -> uint64:
+// /tmp/multisource_6drx5mmd/s3.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 64
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xeddddc3d // method "foo()uint256"
+    pushbytes 0x554cde56 // method "foo()uint512"
     txna ApplicationArgs 0
     match main_foo_route@4
     err
@@ -31,22 +31,22 @@ main_foo_route@4:
     b foo
 
 
-// /tmp/multisource_30do5gyz/s3.sol.f_33() -> bytes:
+// /tmp/multisource_6drx5mmd/s3.sol.f_33() -> bytes:
 f:
     pushint 1337
     itob
     retsub
 
 
-// /tmp/multisource_30do5gyz/s3.sol.C.foo[routing]() -> void:
+// /tmp/multisource_6drx5mmd/s3.sol.C.foo[routing]() -> void:
 foo:
     callsub f
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     pushbytes 0x151f7c75

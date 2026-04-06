@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 64 0
     bytecblock "received"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x3bd31555 0x1bf9882b 0xc473430e // method "recv(uint256)void", method "__fallback()void", method "received()uint256"
+    pushbytess 0x8dd0b103 0x1bf9882b 0x87cd28bc // method "recv(uint512)void", method "__fallback()void", method "received()uint512"
     txna ApplicationArgs 0
     match recv /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.[routing] received
     err
@@ -37,9 +37,9 @@ recv:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_2 // 0
     bytec_0 // "received"
     app_global_get_ex
@@ -74,10 +74,10 @@ received:
     assert // check received exists
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     pushbytes 0x151f7c75

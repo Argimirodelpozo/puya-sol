@@ -166,7 +166,8 @@ def _extract_box_refs(teal_path):
                         seen.add(key)
                         refs.append((0, key.encode()))
                     break
-    # Also grab from bytecblock
+    # Also grab from bytecblock — but only short names that look like
+    # state variable names, not computed hashes or global state keys.
     bytecblock_match = re.search(r'bytecblock\s+(.*)', teal)
     if bytecblock_match:
         for token in bytecblock_match.group(1).split():
@@ -297,18 +298,30 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
                             if flat_idx < len(flat_vals):
                                 _postinit_args.append(flat_vals[flat_idx])
                                 flat_idx += 1
+                # First try without static box refs — let populate discover exact keys.
+                # This avoids wasting the 8-ref limit on mapping prefix strings.
                 _atc.add_method_call(
                     app_id=app_id, method=_postinit_method, sender=_sender,
                     sp=_sp, signer=_signer, method_args=_postinit_args,
-                    boxes=[AlgoBoxRef(app_index=0, name=ref[1]) for ref in box_refs] if box_refs else None,
                     note=_os.urandom(8),
                 )
-                # Auto-populate resources from simulate
                 try:
                     _atc = au.populate_app_call_resources(_atc, _algod)
+                    _atc.execute(_algod, wait_rounds=4)
                 except Exception:
-                    pass  # Fall back to static box refs
-                _atc.execute(_algod, wait_rounds=4)
+                    # Fall back: retry with static box refs for non-mapping cases
+                    _atc2 = AtomicTransactionComposer()
+                    _atc2.add_method_call(
+                        app_id=app_id, method=_postinit_method, sender=_sender,
+                        sp=_sp, signer=_signer, method_args=_postinit_args,
+                        boxes=[AlgoBoxRef(app_index=0, name=ref[1]) for ref in box_refs] if box_refs else None,
+                        note=_os.urandom(8),
+                    )
+                    try:
+                        _atc2 = au.populate_app_call_resources(_atc2, _algod)
+                    except Exception:
+                        pass
+                    _atc2.execute(_algod, wait_rounds=4)
             except Exception as e:
                 import sys
                 print(f"  [warn] __postInit failed: {str(e)[:100]}", file=sys.stderr)

@@ -18,7 +18,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x7bc493c6 // method "createEvent(uint256)void"
+    pushbytes 0x8e338b6d // method "createEvent(uint512)void"
     txna ApplicationArgs 0
     match main_createEvent_route@4
     err
@@ -130,9 +130,9 @@ createEvent:
     dup
     len
     dup
-    intc_3 // 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     pushbytes 0x00020004000600000000
     bytec_0 // 0x000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     intc_0 // 0

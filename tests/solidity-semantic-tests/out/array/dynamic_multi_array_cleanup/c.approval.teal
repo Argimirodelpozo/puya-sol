@@ -1,0 +1,274 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/dynamic_multi_array_cleanup.sol.c.approval_program() -> uint64:
+main:
+    intcblock 0 6 2 3
+    bytecblock "data" 0x0000 "__ctor_pending"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "__ctor_pending"
+    pushint 1
+    app_global_put
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x4dbb21e3 0x44977246 // method "__postInit()void", method "fill()uint512", method "clear()void"
+    txna ApplicationArgs 0
+    match __postInit fill clear
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/dynamic_multi_array_cleanup.sol.c.__postInit[routing]() -> void:
+__postInit:
+    bytec_2 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_2 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "data"
+    intc_0 // 0
+    box_create
+    pop
+    pushint 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/dynamic_multi_array_cleanup.sol.c.fill[routing]() -> void:
+fill:
+
+fill_while_top@2:
+    bytec_0 // "data"
+    box_len
+    pop
+    intc_0 // 0
+    /
+    itob
+    pushbytes 0x03
+    b<
+    bz fill_while_top@5
+    bytec_0 // "data"
+    box_len
+    pop
+    bytec_0 // "data"
+    swap
+    box_resize
+    b fill_while_top@2
+
+fill_while_top@5:
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x0000
+    cover 2
+    select
+    dup
+    extract 2 0
+    swap
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    dig 1
+    pushint 4
+    extract_uint16
+    swap
+    intc_3 // 3
+    - // on error: index access is out of bounds
+    dig 2
+    len
+    dig 3
+    intc_1 // 6
+    extract_uint16
+    uncover 2
+    select
+    substring3
+    dup
+    intc_0 // 0
+    extract_uint16
+    dig 1
+    len
+    substring3
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    pushbytes 0x04
+    b<
+    bnz fill_while_top@5
+
+fill_while_top@8:
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x0000
+    cover 2
+    select
+    dup
+    extract 2 0
+    swap
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    dig 1
+    pushint 4
+    extract_uint16
+    swap
+    intc_3 // 3
+    - // on error: index access is out of bounds
+    dig 2
+    len
+    dig 3
+    intc_1 // 6
+    extract_uint16
+    uncover 2
+    select
+    substring3
+    dup
+    intc_0 // 0
+    extract_uint16
+    dig 1
+    len
+    substring3
+    dup
+    extract 2 0
+    swap
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 3
+    >
+    assert // index access is out of bounds
+    dup
+    intc_1 // 6
+    extract_uint16
+    dup2
+    extract_uint16
+    pushint 32
+    *
+    intc_2 // 2
+    +
+    extract3
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    pushbytes 0x05
+    b<
+    bnz fill_while_top@8
+    bytec_0 // "data"
+    intc_1 // 6
+    intc_2 // 2
+    box_extract
+    btoi
+    pushint 4
+    +
+    bytec_0 // "data"
+    dig 1
+    intc_2 // 2
+    box_extract
+    btoi
+    intc_3 // 3
+    >
+    assert // index out of bounds
+    intc_2 // 2
+    +
+    dup
+    intc_1 // 6
+    +
+    bytec_0 // "data"
+    swap
+    intc_2 // 2
+    box_extract
+    btoi
+    +
+    bytec_0 // "data"
+    dig 1
+    intc_2 // 2
+    box_extract
+    btoi
+    pushint 4
+    >
+    assert // index out of bounds
+    pushint 130
+    +
+    bytec_0 // "data"
+    swap
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
+    box_replace // on error: index out of bounds
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x0000
+    cover 2
+    select
+    dup
+    extract 2 0
+    swap
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    dig 1
+    pushint 4
+    extract_uint16
+    swap
+    intc_3 // 3
+    - // on error: index access is out of bounds
+    dig 2
+    len
+    dig 3
+    intc_1 // 6
+    extract_uint16
+    uncover 2
+    select
+    substring3
+    dup
+    intc_0 // 0
+    extract_uint16
+    dig 1
+    len
+    substring3
+    dup
+    extract 2 0
+    swap
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 3
+    >
+    assert // index access is out of bounds
+    dup
+    intc_1 // 6
+    extract_uint16
+    dup2
+    extract_uint16
+    pushint 32
+    *
+    intc_2 // 2
+    +
+    extract3
+    extract 130 32
+    pushint 64
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    pushint 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/dynamic_multi_array_cleanup.sol.c.clear[routing]() -> void:
+clear:
+    bytec_0 // "data"
+    box_del
+    pop
+    bytec_0 // "data"
+    bytec_1 // 0x0000
+    box_put
+    pushint 1
+    return

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_switch.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 64 1
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x1928cd24 // method "f(uint256)uint256"
+    pushbytes 0xf3d5e499 // method "f(uint512)uint512"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -36,9 +36,9 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     load 0
     swap
     pushbytess 0x0000000000000000000000000000000000000000000000000000000000000001 0x0000000000000000000000000000000000000000000000000000000000000002
@@ -51,10 +51,10 @@ f_switch_case_next@5:
     store 0
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     pushbytes 0x151f7c75

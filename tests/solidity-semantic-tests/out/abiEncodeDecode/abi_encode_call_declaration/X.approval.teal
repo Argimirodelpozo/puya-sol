@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_declaration.sol.X.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 64
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -22,7 +22,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x82ba79cb 0xfcba8d6d // method "a(uint256)void", method "b(uint256)void"
+    pushbytess 0x7050876e 0xcfe8de89 // method "a(uint512)void", method "b(uint512)void"
     txna ApplicationArgs 0
     match a b
     err
@@ -32,9 +32,9 @@ main_after_if_else@2:
 a:
     txna ApplicationArgs 1
     len
-    intc_1 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_0 // 1
     return
 
@@ -43,8 +43,8 @@ a:
 b:
     txna ApplicationArgs 1
     len
-    intc_1 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_0 // 1
     return

@@ -1666,15 +1666,8 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 		if (needsPostInit)
 		{
-			// For postInit path, initialize all state vars upfront in create block.
-			// (Interleaving with ctor bodies isn't possible since ctors run in __postInit.)
-			{
-				auto const& linearized = _contract.annotation().linearizedBaseContracts;
-				for (auto it = linearized.rbegin(); it != linearized.rend(); ++it)
-					emitStateVarInit(**it, createBlock->body);
-			}
-
-			// Constructor writes to box storage — defer constructor body to __postInit().
+			// All init code deferred to __postInit (state var defaults + constructor body).
+			// Create call only sets the pending flag.
 			// Set __ctor_pending = 1 in create block.
 			auto pendingKey = std::make_shared<awst::BytesConstant>();
 			pendingKey->sourceLocation = method.sourceLocation;
@@ -1881,6 +1874,14 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					putStmt->expr = std::move(put);
 					postInitBody->body.push_back(std::move(putStmt));
 				}
+			}
+
+			// Initialize all state variable defaults in __postInit
+			// (after boxes are created, before constructor bodies run)
+			{
+				auto const& lin = _contract.annotation().linearizedBaseContracts;
+				for (auto it2 = lin.rbegin(); it2 != lin.rend(); ++it2)
+					emitStateVarInit(**it2, postInitBody->body);
 			}
 
 			// Inline base constructor bodies into __postInit

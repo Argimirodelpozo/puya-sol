@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/evm_exceptions_in_constructor_call_fail.sol.B.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
+    intcblock 1 0 64
     bytecblock "test" 0x0a8101
     txn ApplicationID
     bnz main_after_if_else@2
@@ -28,7 +28,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x547065be 0xc95a9d21 // method "testIt()void", method "test()uint256"
+    pushbytess 0x547065be 0xe1fb067c // method "testIt()void", method "test()uint512"
     txna ApplicationArgs 0
     match testIt test
     err
@@ -79,10 +79,10 @@ test:
     assert // check test exists
     dup
     len
-    intc_2 // 32
+    intc_2 // 64
     <=
     assert // overflow
-    intc_2 // 32
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x151f7c75

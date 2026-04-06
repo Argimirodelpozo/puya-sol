@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.B.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 64 0
     bytecblock "value"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xc46a4b39 0x75d12918 // method "setValue(uint256)void", method "value()uint256"
+    pushbytess 0xd0da65fd 0xefd9437e // method "setValue(uint512)void", method "value()uint512"
     txna ApplicationArgs 0
     match setValue value
     err
@@ -37,9 +37,9 @@ setValue:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_2 // 0
     bytec_0 // "value"
     app_global_get_ex
@@ -60,10 +60,10 @@ value:
     assert // check value exists
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     pushbytes 0x151f7c75

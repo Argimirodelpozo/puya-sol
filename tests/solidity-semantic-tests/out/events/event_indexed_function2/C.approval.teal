@@ -21,7 +21,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xe1ff2398 0x4e6a772f // method "f1()void", method "f2(uint256)void"
+    pushbytess 0xe1ff2398 0xe6b48ce8 // method "f1()void", method "f2(uint512)void"
     txna ApplicationArgs 0
     match main_f1_route@5 f2
     err
@@ -37,9 +37,9 @@ main_f1_route@5:
 f2:
     txna ApplicationArgs 1
     len
-    pushint 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     pushbytes 0x4a7839b7000200026632
     log
     pushint 1

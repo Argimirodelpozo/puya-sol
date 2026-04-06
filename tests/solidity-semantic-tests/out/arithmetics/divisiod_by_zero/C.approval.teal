@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/divisiod_by_zero.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 64 1
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x06d93317 0x6a78965d // method "div(uint256,uint256)uint256", method "mod(uint256,uint256)uint256"
+    pushbytess 0x96ea5365 0xb081b22a // method "div(uint512,uint512)uint512", method "mod(uint512,uint512)uint512"
     txna ApplicationArgs 0
     match div mod
     err
@@ -34,22 +34,22 @@ div:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     b/
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -65,22 +65,22 @@ mod:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     b%
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75

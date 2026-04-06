@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/if.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 23
+    intcblock 64 1 0 23
     bytecblock 0x151f7c75 0x0a
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xb168d7ea 0xfbc085e1 0x635e25a6 0x3883154d 0x5a05f225 0x40ea0e17 // method "f(bool)uint256", method "g(bool)uint256", method "h(bool)uint256", method "i(bool)uint256", method "j(uint256,uint256)(uint256,uint256)", method "k(uint256,uint256)(uint256,uint256)"
+    pushbytess 0x30c2e08e 0x9cb8ac2b 0xd332bdcb 0x4f23c93a 0xb01211b0 0xaa1cea10 // method "f(bool)uint512", method "g(bool)uint512", method "h(bool)uint512", method "i(bool)uint512", method "j(uint512,uint512)(uint512,uint512)", method "k(uint512,uint512)(uint512,uint512)"
     txna ApplicationArgs 0
     match f g h i j k
     err
@@ -54,10 +54,10 @@ f:
 f_after_if_else@3:
     dupn 2
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -89,10 +89,10 @@ g:
 g_after_if_else@4:
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -129,10 +129,10 @@ h:
 h_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/if.sol.C.h@4:
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -169,10 +169,10 @@ i:
 i_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/if.sol.C.i@5:
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -193,17 +193,17 @@ j:
     txna ApplicationArgs 1
     dupn 2
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     cover 2
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     b+
     bytec_1 // 0x0a
     b<
@@ -213,13 +213,13 @@ j:
 j_after_if_else@4:
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000064
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000064
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -239,17 +239,17 @@ k:
     txna ApplicationArgs 1
     dupn 2
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     cover 2
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     b+
     bytec_1 // 0x0a
     b<
@@ -265,10 +265,10 @@ k:
 k_after_while@15:
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     swap
     dig 1
@@ -276,7 +276,7 @@ k_after_while@15:
     dig 4
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
     uncover 2

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_push_with_arg.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
+    intcblock 32 1 0 64
     bytecblock "storageArray" "__ctor_pending" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x7d1b740d 0xbc6a2ad6 0x639bfc88 // method "__postInit()void", method "test(uint256)void", method "getLength()uint256", method "fetch(uint256)uint256"
+    pushbytess 0xbacc49e3 0xbd4a26fc 0x251143b7 0xa37a0800 // method "__postInit()void", method "test(uint512)void", method "getLength()uint512", method "fetch(uint512)uint512"
     txna ApplicationArgs 0
     match __postInit test getLength fetch
     err
@@ -54,9 +54,9 @@ test:
     dup
     len
     dup
-    intc_0 // 32
+    intc_3 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_0 // 32
     <=
     assert // overflow
@@ -73,7 +73,7 @@ test:
     extract_uint16 // on error: invalid array length header
     bytec_0 // "storageArray"
     intc_2 // 0
-    intc_3 // 2
+    pushint 2
     box_extract
     btoi
     bytec_0 // "storageArray"
@@ -97,7 +97,7 @@ test:
     box_replace
     intc_0 // 32
     *
-    intc_3 // 2
+    pushint 2
     +
     bytec_0 // "storageArray"
     swap
@@ -116,7 +116,7 @@ getLength:
     intc_0 // 32
     /
     itob
-    intc_0 // 32
+    intc_3 // 64
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -132,9 +132,9 @@ fetch:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_3 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec_0 // "storageArray"
     box_get
     pushbytes 0x0000
@@ -158,10 +158,10 @@ fetch:
     extract3 // on error: index access is out of bounds
     dup
     len
-    intc_0 // 32
+    intc_3 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_3 // 64
     bzero
     b|
     bytec_2 // 0x151f7c75

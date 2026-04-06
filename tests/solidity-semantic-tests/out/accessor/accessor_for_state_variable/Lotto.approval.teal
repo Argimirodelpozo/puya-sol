@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/accessor/accessor_for_state_variable.sol.Lotto.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 64
     bytecblock "ticketPrice"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x7070c6f5 // method "ticketPrice()uint256"
+    pushbytes 0xff5b5b08 // method "ticketPrice()uint512"
     txna ApplicationArgs 0
     match main_ticketPrice_route@4
     err
@@ -45,10 +45,10 @@ ticketPrice:
     assert // check ticketPrice exists
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     pushbytes 0x151f7c75

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/exponentiation/signed_base.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 64 1
     bytecblock 0x 0x01 0x03 0x02 0x80000000 0x0100000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -18,7 +18,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x219b312e // method "f()(uint256,uint256)"
+    pushbytes 0x6acb2994 // method "f()(uint512,uint512)"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -131,10 +131,10 @@ f_ternary_merge@35:
     dig 3
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     swap
     dig 1
@@ -142,7 +142,7 @@ f_ternary_merge@35:
     uncover 2
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
     uncover 2

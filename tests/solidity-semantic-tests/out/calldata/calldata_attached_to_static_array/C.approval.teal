@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_attached_to_static_array.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 64 1
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xe194a448 // method "test(uint256,uint256[2],uint256)(uint256,uint256)"
+    pushbytes 0xf03c52c2 // method "test(uint512,uint256[2],uint512)(uint512,uint512)"
     txna ApplicationArgs 0
     match main_test_route@4
     err
@@ -46,36 +46,36 @@ L.reverse:
 test:
     txna ApplicationArgs 1
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     len
-    pushint 64
+    intc_0 // 64
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
     txna ApplicationArgs 3
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     callsub L.reverse
     pop
     swap
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     swap
     dig 1
     b|
     dig 2
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
     cover 2

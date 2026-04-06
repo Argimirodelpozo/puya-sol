@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/swap_in_storage_overwrite.sol.c.approval_program() -> uint64:
 main:
-    intcblock 0 1 32
+    intcblock 0 1 64
     bytecblock "y" "x" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -29,7 +29,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x0f76205a 0x12b191c6 0x4f6eaa77 0x0a07b230 // method "set()void", method "swap()void", method "x()(uint256,uint256)", method "y()(uint256,uint256)"
+    pushbytess 0x0f76205a 0x12b191c6 0x27b81349 0xc6dd327a // method "set()void", method "swap()void", method "x()(uint512,uint512)", method "y()(uint512,uint512)"
     txna ApplicationArgs 0
     match set swap x y
     err
@@ -105,7 +105,7 @@ x:
     extract 0 32
     swap
     extract 32 32
-    intc_2 // 32
+    intc_2 // 64
     bzero
     uncover 2
     dig 1
@@ -131,7 +131,7 @@ y:
     extract 0 32
     swap
     extract 32 32
-    intc_2 // 32
+    intc_2 // 64
     bzero
     uncover 2
     dig 1

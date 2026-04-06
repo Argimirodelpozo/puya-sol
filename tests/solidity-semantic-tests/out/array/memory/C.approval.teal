@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/memory.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 128 0
-    bytecblock 0xbc2684ff 0x151f7c75
+    intcblock 64 1 128 0
+    bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -23,8 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    bytec_0 // method "h(uint256[4])uint256"
-    pushbytes 0xd0415e18 // method "i(uint256[4])uint256"
+    pushbytess 0x3f26d93b 0xb29576e1 // method "h(uint256[4])uint512", method "i(uint256[4])uint512"
     txna ApplicationArgs 0
     match h i
     err
@@ -51,13 +50,13 @@ h:
     b+
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -84,7 +83,7 @@ i:
     intc_3 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_0 // method "h(uint256[4])uint256"
+    pushbytes 0xbc2684ff // method "h(uint256[4])uint256"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
@@ -94,13 +93,13 @@ i:
     b*
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log

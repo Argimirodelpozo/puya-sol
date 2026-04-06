@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/dynamic_arrays.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 8 1
+    intcblock 64 8 1
     txn ApplicationID
     bnz main_after_if_else@2
     intc_2 // 1
@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x48adec8f // method "f(uint256,uint64[],uint256)(uint256,uint256,uint256)"
+    pushbytes 0x4f60ffab // method "f(uint512,uint64[],uint512)(uint512,uint512,uint512)"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -36,9 +36,9 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     pushint 0
@@ -56,9 +56,9 @@ f:
     dup
     len
     dup
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     uncover 2
     itob
     intc_1 // 8
@@ -77,14 +77,14 @@ f:
     *
     intc_1 // 8
     extract3 // on error: index access is out of bounds
-    intc_0 // 32
+    intc_0 // 64
     bzero
     uncover 2
     dig 1
     b|
     dig 2
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
     uncover 2
@@ -92,7 +92,7 @@ f:
     b|
     concat
     uncover 2
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
     cover 2

@@ -3,20 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/chop_sign_bits.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 0 32 1
-    bytecblock 0xffff "z" "x" "y" "__ctor_pending" 0x8000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    intcblock 0 1 64 32
+    bytecblock 0xffff "x" "z" "__ctor_pending" "y" 0x8000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_3 // "y"
-    pushbytes 0xfffffffffffffffbfffffffffffffffa
+    bytec_3 // "__ctor_pending"
+    intc_1 // 1
     app_global_put
-    bytec_1 // "z"
-    intc_0 // 0
-    app_global_put
-    bytec 4 // "__ctor_pending"
-    intc_2 // 1
-    app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -32,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x04244689 0x49769d80 0x8ca5396c 0x1cd31b6c 0x0ce9f74a // method "__postInit()void", method "f()uint64[]", method "g()uint64[2]", method "h(uint64)uint256", method "x(uint256)uint256", method "y(uint256)uint256"
+    pushbytess 0xbacc49e3 0x04244689 0x49769d80 0xbd14655b 0xafc4662c 0x68e659d7 // method "__postInit()void", method "f()uint64[]", method "g()uint64[2]", method "h(uint64)uint512", method "x(uint512)uint512", method "y(uint512)uint512"
     txna ApplicationArgs 0
     match __postInit f g h x y
     err
@@ -40,42 +34,48 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/chop_sign_bits.sol.Test.__postInit[routing]() -> void:
 __postInit:
-    bytec 4 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec 4 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_0 // 0
     app_global_put
-    bytec_2 // "x"
+    bytec_1 // "x"
     intc_0 // 0
     box_create
     pop
-    intc_2 // 1
+    bytec 4 // "y"
+    pushbytes 0xfffffffffffffffbfffffffffffffffa
+    app_global_put
+    bytec_2 // "z"
+    intc_0 // 0
+    app_global_put
+    intc_1 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/chop_sign_bits.sol.Test.f[routing]() -> void:
 f:
-    bytec_2 // "x"
+    bytec_1 // "x"
     box_del
     pop
-    bytec_2 // "x"
+    bytec_1 // "x"
     pushbytes 0x0002fffffffffffffffdfffffffffffffffc
     box_put
     pushbytes 0x151f7c750002fffffffffffffffdfffffffffffffffc
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/chop_sign_bits.sol.Test.g[routing]() -> void:
 g:
-    bytec_3 // "y"
+    bytec 4 // "y"
     pushbytes 0xfffffffffffffffdfffffffffffffffc
     app_global_put
     pushbytes 0x151f7c75fffffffffffffffdfffffffffffffffc
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -98,11 +98,11 @@ h:
     bz h_bool_false@4
 
 h_bool_true@3:
-    intc_2 // 1
+    intc_1 // 1
 
 h_bool_merge@5:
     assert // ABI validation
-    bytec_1 // "z"
+    bytec_2 // "z"
     dig 1
     dup
     cover 2
@@ -114,7 +114,7 @@ h_bool_merge@5:
     b>=
     bz h_ternary_false@7
     intc_0 // 0
-    bytec_1 // "z"
+    bytec_2 // "z"
     app_global_get_ex
     assert // check z exists
     itob
@@ -128,22 +128,22 @@ h_bool_merge@5:
 h_ternary_merge@8:
     dup
     len
-    intc_1 // 32
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 64
     bzero
     b|
     bytec 8 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 h_ternary_false@7:
     intc_0 // 0
-    bytec_1 // "z"
+    bytec_2 // "z"
     app_global_get_ex
     assert // check z exists
     itob
@@ -161,22 +161,21 @@ x:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
-    intc_1 // 32
+    assert // invalid number of bytes for arc4.uint512
+    intc_3 // 32
     bzero
-    dup
-    uncover 2
+    swap
     concat
     dup
     len
-    intc_1 // 32
+    intc_3 // 32
     -
-    intc_1 // 32
+    intc_3 // 32
     extract3
     sha256
-    bytec_2 // "x"
+    bytec_1 // "x"
     swap
     concat
     dup
@@ -211,16 +210,17 @@ x:
 x_ternary_merge@4:
     dup
     len
-    intc_1 // 32
+    intc_2 // 64
     <=
     assert // overflow
-    dig 1
+    intc_2 // 64
+    bzero
     b|
     bytec 8 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 x_ternary_false@3:
@@ -242,22 +242,21 @@ y:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
-    intc_1 // 32
+    assert // invalid number of bytes for arc4.uint512
+    intc_3 // 32
     bzero
-    dup
-    uncover 2
+    swap
     concat
     dup
     len
-    intc_1 // 32
+    intc_3 // 32
     -
-    intc_1 // 32
+    intc_3 // 32
     extract3
     sha256
-    bytec_3 // "y"
+    bytec 4 // "y"
     swap
     concat
     dup
@@ -292,16 +291,17 @@ y:
 y_ternary_merge@4:
     dup
     len
-    intc_1 // 32
+    intc_2 // 64
     <=
     assert // overflow
-    dig 1
+    intc_2 // 64
+    bzero
     b|
     bytec 8 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 y_ternary_false@3:

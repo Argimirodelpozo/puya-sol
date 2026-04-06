@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/positive_integers_to_signed.sol.test.approval_program() -> uint64:
 main:
-    intcblock 0 32 1
+    intcblock 0 64 1
     bytecblock 0xff "x" "y" "q" 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0xffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     txn ApplicationID
     bnz main_after_if_else@2
@@ -32,7 +32,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x7c1072af 0x5c5e3bbc 0x3baab253 // method "x()uint256", method "y()uint256", method "q()uint256"
+    pushbytess 0x3f4abdfd 0x60d68bc1 0x8ebe3a21 // method "x()uint512", method "y()uint512", method "q()uint512"
     txna ApplicationArgs 0
     match x y q
     err
@@ -65,10 +65,10 @@ x:
 x_ternary_merge@4:
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     bytec 5 // 0x151f7c75
@@ -116,10 +116,10 @@ y:
 y_ternary_merge@4:
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     bytec 5 // 0x151f7c75
@@ -167,10 +167,10 @@ q:
 q_ternary_merge@4:
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     bytec 5 // 0x151f7c75

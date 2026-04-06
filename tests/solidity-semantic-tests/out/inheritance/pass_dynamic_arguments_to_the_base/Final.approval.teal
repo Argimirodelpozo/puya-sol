@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/pass_dynamic_arguments_to_the_base.sol.Final.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 64
     bytecblock "m_i"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x158d96ad // method "m_i()uint256"
+    pushbytes 0x226f2c07 // method "m_i()uint512"
     txna ApplicationArgs 0
     match main_m_i_route@4
     err
@@ -45,10 +45,10 @@ m_i:
     assert // check m_i exists
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     pushbytes 0x151f7c75

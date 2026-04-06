@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 1
+    intcblock 0 64 1
     bytecblock 0xff "x" 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xcd78b354 0x7c1072af // method "f()uint256", method "x()uint256"
+    pushbytess 0xe03b32a4 0x3f4abdfd // method "f()uint512", method "x()uint512"
     txna ApplicationArgs 0
     match f x
     err
@@ -74,10 +74,10 @@ f:
 f_ternary_merge@5:
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     bytec 5 // 0x151f7c75
@@ -124,10 +124,10 @@ x:
 x_ternary_merge@4:
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     bytec 5 // 0x151f7c75

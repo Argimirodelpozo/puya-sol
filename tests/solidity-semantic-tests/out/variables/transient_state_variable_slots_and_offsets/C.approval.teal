@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_slots_and_offsets.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 32
+    intcblock 0 1 64
     bytecblock "x" "y" "w" 0x
     txn ApplicationID
     bnz main_after_if_else@2
@@ -30,7 +30,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x8b2dc9bc // method "f()(uint256,uint64,uint64,uint256)"
+    pushbytes 0xc3aded95 // method "f()(uint512,uint64,uint64,uint512)"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -76,10 +76,10 @@ f:
     assert // check w exists
     dig 2
     len
-    intc_2 // 32
+    intc_2 // 64
     <=
     assert // overflow
-    intc_2 // 32
+    intc_2 // 64
     bzero
     uncover 3
     b|
@@ -89,7 +89,7 @@ f:
     swap
     itob
     concat
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004
     concat
     pushbytes 0x151f7c75
     swap

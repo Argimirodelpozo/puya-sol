@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/error_struct.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 1 64 32
     bytecblock "_struct"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "_struct"
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x2d4970c7 0xc14ad39f // method "f()void", method "g(uint256)uint256"
+    pushbytess 0x2d4970c7 0x484a762a // method "f()void", method "g(uint512)uint512"
     txna ApplicationArgs 0
     match main_f_route@5 g
     err
@@ -41,25 +41,25 @@ g:
     dup
     len
     dup
-    intc_0 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
-    intc_0 // 32
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_2 // 32
     bzero
-    swap
-    dig 1
     b|
     bytec_0 // "_struct"
     dig 1
     app_global_put
     extract 0 32
+    intc_1 // 64
+    bzero
     b|
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return

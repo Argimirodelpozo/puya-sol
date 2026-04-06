@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/senders_balance.sol.D.approval_program() -> uint64:
 main:
-    intcblock 0 1 6 32
-    bytecblock "c" 0xcd78b354 0x0a8101
+    intcblock 0 1 6 64
+    bytecblock "c" 0x0a8101
     intc_0 // 0
     txn ApplicationID
     bnz main_after_if_else@2
@@ -22,7 +22,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    bytec_1 // method "f()uint256"
+    pushbytes 0xe03b32a4 // method "f()uint512"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -43,9 +43,9 @@ f:
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field Fee
-    bytec_2 // 0x0a8101
+    bytec_1 // 0x0a8101
     itxn_field ClearStateProgram
-    bytec_2 // 0x0a8101
+    bytec_1 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -74,17 +74,17 @@ f:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_1 // method "f()uint256"
+    pushbytes 0xcd78b354 // method "f()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     extract 4 0
     dup
     len
-    intc_3 // 32
+    intc_3 // 64
     <=
     assert // overflow
-    intc_3 // 32
+    intc_3 // 64
     bzero
     b|
     pushbytes 0x151f7c75

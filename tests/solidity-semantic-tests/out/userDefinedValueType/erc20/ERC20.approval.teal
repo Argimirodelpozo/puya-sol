@@ -3,14 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/erc20.sol.ERC20.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    bytecblock 0x "_allowances" "_balances" 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c7580 "_totalSupply" "__ctor_pending" 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x28918861
+    intcblock 32 1 64 0
+    bytecblock 0x "_allowances" "_balances" 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c7580 "__ctor_pending" 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 "_totalSupply" 0x28918861
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 5 // "_totalSupply"
-    bytec_0 // 0x
-    app_global_put
-    bytec 6 // "__ctor_pending"
+    bytec 5 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -29,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x79fab465 0x83bad7cc 0x5d854d0e 0x198c9820 0xfafb6a08 0x6df41f6d 0xe99cc979 0x7eb6db4c // method "__postInit()void", method "totalSupply()uint256", method "balanceOf(address)uint256", method "allowance(address,address)uint256", method "transfer(address,uint256)bool", method "approve(address,uint256)bool", method "transferFrom(address,address,uint256)bool", method "increaseAllowance(address,uint256)bool", method "decreaseAllowance(address,uint256)bool"
+    pushbytess 0xbacc49e3 0x49ac1a6b 0xc90c90b1 0x95b95bc6 0x42820278 0x3c4937bd 0x177171e7 0xd399fc39 0x245d529b // method "__postInit()void", method "totalSupply()uint512", method "balanceOf(address)uint512", method "allowance(address,address)uint512", method "transfer(address,uint512)bool", method "approve(address,uint512)bool", method "transferFrom(address,address,uint512)bool", method "increaseAllowance(address,uint512)bool", method "decreaseAllowance(address,uint512)bool"
     txna ApplicationArgs 0
     match __postInit totalSupply balanceOf allowance transfer approve transferFrom increaseAllowance decreaseAllowance
     err
@@ -52,29 +49,29 @@ FixedMath.sub:
     b>=
     assert // underflow
     frame_dig -2
-    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     frame_dig -1
     b-
-    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/erc20.sol.ERC20.__postInit[routing]() -> void:
 __postInit:
-    bytec 6 // "__ctor_pending"
+    bytec 5 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec 6 // "__ctor_pending"
-    intc_2 // 0
+    bytec 5 // "__ctor_pending"
+    intc_3 // 0
     app_global_put
     bytec_2 // "_balances"
-    intc_2 // 0
+    intc_3 // 0
     box_create
     pop
     bytec_1 // "_allowances"
-    intc_2 // 0
+    intc_3 // 0
     box_create
     pop
     txn Sender
@@ -84,13 +81,10 @@ __postInit:
     bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
     assert // ERC20: mint to the zero address
-    intc_2 // 0
-    bytec 5 // "_totalSupply"
-    app_global_get_ex
-    assert // check _totalSupply exists
+    bytec_0 // 0x
     dig 1
     callsub FixedMath.add
-    bytec 5 // "_totalSupply"
+    bytec 8 // "_totalSupply"
     swap
     app_global_put
     dig 1
@@ -124,19 +118,19 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/erc20.sol.ERC20.totalSupply[routing]() -> void:
 totalSupply:
-    intc_2 // 0
-    bytec 5 // "_totalSupply"
+    intc_3 // 0
+    bytec 8 // "_totalSupply"
     app_global_get_ex
     assert // check _totalSupply exists
     dup
     len
-    intc_0 // 32
+    intc_2 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_2 // 64
     bzero
     b|
-    bytec 7 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -162,13 +156,13 @@ balanceOf:
     select
     dup
     len
-    intc_0 // 32
+    intc_2 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_2 // 64
     bzero
     b|
-    bytec 7 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -201,13 +195,13 @@ allowance:
     select
     dup
     len
-    intc_0 // 32
+    intc_2 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_2 // 64
     bzero
     b|
-    bytec 7 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -226,9 +220,9 @@ transfer:
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_2 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txn Sender
     cover 2
     callsub _transfer
@@ -249,9 +243,9 @@ approve:
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_2 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txn Sender
     cover 2
     callsub _approve
@@ -278,9 +272,9 @@ transferFrom:
     txna ApplicationArgs 3
     dup
     len
-    intc_0 // 32
+    intc_2 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     dig 2
     uncover 2
     dig 2
@@ -317,9 +311,9 @@ increaseAllowance:
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_2 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txn Sender
     dup
     dig 3
@@ -354,9 +348,9 @@ decreaseAllowance:
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_2 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txn Sender
     dup
     dig 3

@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x7bc493c6 // method "__postInit()void", method "createEvent(uint256)void"
+    pushbytess 0xbacc49e3 0x8e338b6d // method "__postInit()void", method "createEvent(uint512)void"
     txna ApplicationArgs 0
     match __postInit createEvent
     err
@@ -54,9 +54,9 @@ createEvent:
     dup
     len
     dup
-    intc_0 // 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
 
 createEvent_while_top@2:
     bytec_0 // "arr"

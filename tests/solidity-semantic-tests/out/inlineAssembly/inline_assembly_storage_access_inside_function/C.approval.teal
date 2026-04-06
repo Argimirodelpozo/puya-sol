@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_storage_access_inside_function.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 32
+    intcblock 0 1 64
     bytecblock "z" "y" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -32,7 +32,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x4b4fb052 0x62d38f3e 0x5848be20 // method "f()bool", method "y()uint64", method "z()uint256"
+    pushbytess 0x4b4fb052 0x62d38f3e 0xf8ee0c77 // method "f()bool", method "y()uint64", method "z()uint512"
     txna ApplicationArgs 0
     match f y z
     err
@@ -74,10 +74,10 @@ z:
     assert // check z exists
     dup
     len
-    intc_2 // 32
+    intc_2 // 64
     <=
     assert // overflow
-    intc_2 // 32
+    intc_2 // 64
     bzero
     b|
     bytec_2 // 0x151f7c75

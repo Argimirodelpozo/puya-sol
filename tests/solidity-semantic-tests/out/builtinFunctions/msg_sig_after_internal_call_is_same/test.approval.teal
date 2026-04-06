@@ -22,7 +22,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x6b878efb 0x233716f1 // method "boo()byte[4]", method "foo(uint256)byte[4]"
+    pushbytess 0x6b878efb 0xd54ccfd4 // method "boo()byte[4]", method "foo(uint512)byte[4]"
     txna ApplicationArgs 0
     match main_boo_route@5 foo
     err
@@ -38,9 +38,9 @@ main_boo_route@5:
 foo:
     txna ApplicationArgs 1
     len
-    pushint 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec_0 // 0x151f7c75
     log
     pushint 1

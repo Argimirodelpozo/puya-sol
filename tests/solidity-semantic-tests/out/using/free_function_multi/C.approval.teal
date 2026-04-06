@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/using/free_function_multi.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 64 1
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x1928cd24 0xc14ad39f // method "f(uint256)uint256", method "g(uint256)uint256"
+    pushbytess 0xf3d5e499 0x484a762a // method "f(uint512)uint512", method "g(uint512)uint512"
     txna ApplicationArgs 0
     match f g
     err
@@ -49,16 +49,16 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     callsub id
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -74,16 +74,16 @@ g:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     callsub zero
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75

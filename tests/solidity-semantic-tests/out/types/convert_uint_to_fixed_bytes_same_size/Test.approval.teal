@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x7b35f2e9 // method "uintToBytes(uint256)byte[32]"
+    pushbytes 0xe5ff8971 // method "uintToBytes(uint512)byte[32]"
     txna ApplicationArgs 0
     match main_uintToBytes_route@4
     err
@@ -36,9 +36,9 @@ uintToBytes:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_0 // 32
     bzero
     swap

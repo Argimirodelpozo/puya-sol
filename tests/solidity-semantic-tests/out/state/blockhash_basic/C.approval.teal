@@ -44,7 +44,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xc108630f 0x54bb3e66 0x691a451c // method "f(uint256)byte[32]", method "genesisHash()byte[32]", method "currentHash()byte[32]"
+    pushbytess 0x66948499 0x54bb3e66 0x691a451c // method "f(uint512)byte[32]", method "genesisHash()byte[32]", method "currentHash()byte[32]"
     txna ApplicationArgs 0
     match f genesisHash currentHash
     err
@@ -55,9 +55,9 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    pushint 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_2 // 8
     bzero
     swap

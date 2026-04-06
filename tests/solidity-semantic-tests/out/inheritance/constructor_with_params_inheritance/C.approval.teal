@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/constructor_with_params_inheritance.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
+    intcblock 64 1 0
     bytecblock "i" "k" 0x 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -37,7 +37,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x3f72e9ed 0x08ee23b1 // method "i()uint256", method "k()uint256"
+    pushbytess 0xeb8d0031 0xf1bcdc94 // method "i()uint512", method "k()uint512"
     txna ApplicationArgs 0
     match i k
     err
@@ -51,10 +51,10 @@ i:
     assert // check i exists
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_3 // 0x151f7c75
@@ -73,10 +73,10 @@ k:
     assert // check k exists
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_3 // 0x151f7c75

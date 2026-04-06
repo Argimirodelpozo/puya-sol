@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/strings_in_struct.sol.buggystruct.approval_program() -> uint64:
 main:
-    intcblock 1 32 96
+    intcblock 1 64 96
     bytecblock "bug" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000620000 0x151f7c75 "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0xb34655fa 0x561ed45e 0x7b6ea079 0x2942dd81 0x77a3ca95 // method "__postInit()void", method "getFirst()uint256", method "getSecond()uint256", method "getThird()uint256", method "getLast()string", method "bug()(uint256,uint256,uint256,string)"
+    pushbytess 0xbacc49e3 0xe4925f60 0xf97ffff2 0x981efeb5 0x2942dd81 0x4da3f16f // method "__postInit()void", method "getFirst()uint512", method "getSecond()uint512", method "getThird()uint512", method "getLast()string", method "bug()(uint512,uint512,uint512,string)"
     txna ApplicationArgs 0
     match __postInit getFirst getSecond getThird getLast bug
     err
@@ -58,7 +58,7 @@ getFirst:
     cover 2
     select
     extract 0 32
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -77,7 +77,7 @@ getSecond:
     cover 2
     select
     extract 32 32
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -96,7 +96,7 @@ getThird:
     cover 2
     select
     extract 64 32
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -150,7 +150,7 @@ bug:
     cover 2
     substring3
     extract 2 0
-    intc_1 // 32
+    intc_1 // 64
     bzero
     uncover 4
     dig 1
@@ -170,7 +170,7 @@ bug:
     uncover 2
     concat
     swap
-    pushbytes 0x0062
+    pushbytes 0x00c2
     concat
     swap
     concat

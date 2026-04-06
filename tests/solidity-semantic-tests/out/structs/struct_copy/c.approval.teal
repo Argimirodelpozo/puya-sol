@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_copy.sol.c.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
+    intcblock 32 1 64 0
     bytecblock "data" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c7580
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0xf16d85a0 0x0a8fd477 0x471d04b1 // method "__postInit()void", method "set(uint256)bool", method "copy(uint256,uint256)bool", method "retrieve(uint256)(uint256,uint256,uint256,uint256)"
+    pushbytess 0xbacc49e3 0x58e1426a 0x0ed36226 0x0d268a2c // method "__postInit()void", method "set(uint512)bool", method "copy(uint512,uint512)bool", method "retrieve(uint512)(uint512,uint512,uint512,uint512)"
     txna ApplicationArgs 0
     match __postInit set copy retrieve
     err
@@ -38,10 +38,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_2 // 0
+    intc_3 // 0
     app_global_put
     bytec_0 // "data"
-    intc_2 // 0
+    intc_3 // 0
     box_create
     pop
     intc_1 // 1
@@ -53,9 +53,9 @@ set:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_2 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_0 // 32
     bzero
     swap
@@ -132,15 +132,15 @@ copy:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_2 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_2 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_0 // 32
     bzero
     dup
@@ -186,13 +186,12 @@ retrieve:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_2 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_0 // 32
     bzero
-    dup
-    uncover 2
+    swap
     concat
     dup
     len
@@ -218,19 +217,20 @@ retrieve:
     extract 32 32
     uncover 3
     extract 96 32
-    uncover 3
-    dig 4
+    intc_2 // 64
+    bzero
+    uncover 4
+    dig 1
     b|
-    uncover 3
-    dig 4
-    b|
-    concat
-    uncover 2
-    dig 3
+    uncover 4
+    dig 2
     b|
     concat
-    swap
-    uncover 2
+    uncover 3
+    dig 2
+    b|
+    concat
+    cover 2
     b|
     concat
     pushbytes 0x151f7c75

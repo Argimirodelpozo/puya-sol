@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xa5074cc7 0x74ee17b8 // method "__postInit(uint256)void", method "s()byte[]"
+    pushbytess 0x51e966e2 0x74ee17b8 // method "__postInit(uint512)void", method "s()byte[]"
     txna ApplicationArgs 0
     match __postInit s
     err
@@ -36,9 +36,9 @@ main_after_if_else@2:
 __postInit:
     txna ApplicationArgs 1
     len
-    pushint 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called

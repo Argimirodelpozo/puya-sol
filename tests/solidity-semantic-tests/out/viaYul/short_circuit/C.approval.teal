@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/short_circuit.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 8 0
+    intcblock 64 1 8 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -22,7 +22,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xc18c475d 0x0ca95559 // method "or(uint256)(bool,uint256)", method "and(uint256)(bool,uint256)"
+    pushbytess 0xf55240eb 0xd53d1249 // method "or(uint512)(bool,uint512)", method "and(uint512)(bool,uint512)"
     txna ApplicationArgs 0
     match or and
     err
@@ -33,9 +33,9 @@ or:
     txna ApplicationArgs 1
     dupn 2
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     pushbytes 0x
     b==
     bnz or_bool_true@3
@@ -46,10 +46,10 @@ or:
 or_bool_true@3:
     dupn 2
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     pushbytes 0x151f7c7580
@@ -65,9 +65,9 @@ and:
     txna ApplicationArgs 1
     dupn 2
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     pushbytes 0x
     b==
     bz and_bool_false@4
@@ -84,10 +84,10 @@ and_bool_merge@5:
     dig 1
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     concat

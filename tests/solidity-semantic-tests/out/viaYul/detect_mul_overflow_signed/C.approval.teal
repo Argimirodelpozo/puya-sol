@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/detect_mul_overflow_signed.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 8 18446744073709551488
+    intcblock 64 1 0 8 18446744073709551488
     bytecblock 0x0100 0x010000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x 0x80 0x8000000000000000000000000000000000000000 0x8000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x2b9082ff 0xfbdf87d5 0x5c69fadf // method "f(uint256,uint256)uint256", method "g(uint64,uint64)uint256", method "h(uint256,uint256)uint256"
+    pushbytess 0x24402ea4 0x4791650a 0x15a3edef // method "f(uint512,uint512)uint512", method "g(uint64,uint64)uint512", method "h(uint512,uint512)uint512"
     txna ApplicationArgs 0
     match f g h
     err
@@ -37,15 +37,15 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dupn 2
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec_3 // 0x
     b==
     bnz f_bool_true@18
@@ -95,10 +95,10 @@ f_bool_merge@20:
     b%
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec 7 // 0x151f7c75
@@ -286,10 +286,10 @@ g_bool_merge@28:
 g_ternary_merge@31:
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec 7 // 0x151f7c75
@@ -363,15 +363,15 @@ h:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec_1 // 0x010000000000000000000000000000000000000000
     b%
     dup
@@ -443,10 +443,10 @@ h_bool_merge@20:
 h_ternary_merge@23:
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec 7 // 0x151f7c75

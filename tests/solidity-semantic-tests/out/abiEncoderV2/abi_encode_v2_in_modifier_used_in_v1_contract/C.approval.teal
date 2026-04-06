@@ -1,9 +1,9 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_0pcfwopy/B.sol.C.approval_program() -> uint64:
+// /tmp/multisource_17wsf_ht/B.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 6 1 32
+    intcblock 0 6 1 64
     bytecblock 0x290efb48 "y" "x" 0x0a8101
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x619fed17 // method "test()(uint256,uint256)"
+    pushbytes 0x3cc4fb64 // method "test()(uint512,uint512)"
     txna ApplicationArgs 0
     match main_test_route@4
     err
@@ -40,7 +40,7 @@ main_test_route@4:
     b test
 
 
-// /tmp/multisource_0pcfwopy/B.sol.C.test[routing]() -> void:
+// /tmp/multisource_17wsf_ht/B.sol.C.test[routing]() -> void:
 test:
     itxn_begin
     intc_1 // 6
@@ -127,15 +127,15 @@ test:
     bytec_1 // "y"
     pushbytes 0x
     app_global_put
-    intc_3 // 32
+    intc_3 // 64
     bzero
     dig 1
     len
-    intc_3 // 32
+    intc_3 // 64
     <=
     assert // overflow
     b|
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     swap
     concat
     log

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_string_input.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
-    bytecblock 0x151f7c75 0x0024
+    intcblock 64 1 0 2
+    bytecblock 0x151f7c75 0x0044
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x36b8a41c 0xabe3ecb5 0xa00e8796 0x3731636f 0x8f6e3c93 // method "f()string", method "g(string)string", method "h(string,uint256)(string,uint256)", method "i(string,uint256,string)(string,string,uint256)", method "j(string,uint256)(string,string,uint256)"
+    pushbytess 0x36b8a41c 0xabe3ecb5 0x8fc2ea3f 0x7f36c83b 0x58661a04 // method "f()string", method "g(string)string", method "h(string,uint512)(string,uint512)", method "i(string,uint512,string)(string,string,uint512)", method "j(string,uint512)(string,string,uint512)"
     txna ApplicationArgs 0
     match main_f_route@5 g h i j
     err
@@ -72,9 +72,9 @@ h:
     dup
     len
     dup
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     dig 2
     len
     itob
@@ -82,14 +82,14 @@ h:
     uncover 3
     concat
     swap
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     uncover 2
     b|
-    pushbytes 0x0022
+    pushbytes 0x0042
     swap
     concat
     swap
@@ -119,9 +119,9 @@ i:
     dup
     len
     dup
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 3
     dup
     intc_2 // 0
@@ -141,7 +141,7 @@ i:
     concat
     dup
     len
-    pushint 36
+    pushint 68
     +
     dig 2
     len
@@ -152,14 +152,14 @@ i:
     swap
     itob
     extract 6 2
-    bytec_1 // 0x0024
+    bytec_1 // 0x0044
     swap
     concat
     uncover 3
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     uncover 4
     b|
@@ -193,9 +193,9 @@ j:
     dup
     len
     dup
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     dig 2
     len
     itob
@@ -204,18 +204,18 @@ j:
     concat
     dup
     len
-    pushint 36
+    pushint 68
     +
     itob
     extract 6 2
-    bytec_1 // 0x0024
+    bytec_1 // 0x0044
     swap
     concat
     uncover 2
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     uncover 3
     b|

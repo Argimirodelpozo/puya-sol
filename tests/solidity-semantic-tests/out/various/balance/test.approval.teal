@@ -16,7 +16,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xad7db34f // method "getBalance()uint256"
+    pushbytes 0x070050f4 // method "getBalance()uint512"
     txna ApplicationArgs 0
     match main_getBalance_route@4
     err
@@ -36,7 +36,7 @@ getBalance:
     acct_params_get AcctBalance
     pop
     itob
-    pushint 32
+    pushint 64
     bzero
     b|
     pushbytes 0x151f7c75

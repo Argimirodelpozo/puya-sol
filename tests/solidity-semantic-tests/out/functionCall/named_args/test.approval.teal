@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/named_args.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 1
-    bytecblock 0x151f7c75000000000000000000000000000000000000000000000000000000000000007b
+    intcblock 64 1
+    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007b
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -23,19 +23,19 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x9b86c37c 0xddb04781 0x311e3db1 // method "a(uint256,uint256,uint256)uint256", method "b()uint256", method "c()uint256"
+    pushbytess 0x8f2859e9 0xad382f9d 0xf86a3d56 // method "a(uint512,uint512,uint512)uint512", method "b()uint512", method "c()uint512"
     txna ApplicationArgs 0
     match a main_b_route@6 main_c_route@7
     err
 
 main_c_route@7:
-    bytec_0 // 0x151f7c75000000000000000000000000000000000000000000000000000000000000007b
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007b
     log
     intc_1 // 1
     return
 
 main_b_route@6:
-    bytec_0 // 0x151f7c75000000000000000000000000000000000000000000000000000000000000007b
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007b
     log
     intc_1 // 1
     return
@@ -46,21 +46,21 @@ a:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 3
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     uncover 2
     pushbytes 0x64
     b*
@@ -71,10 +71,10 @@ a:
     b+
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     pushbytes 0x151f7c75

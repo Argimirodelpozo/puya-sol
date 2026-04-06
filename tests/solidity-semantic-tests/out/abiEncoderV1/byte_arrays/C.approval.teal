@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/byte_arrays.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
+    intcblock 64 1 0 2
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x450e6a34 0x78d8baa7 // method "f(uint256,byte[],uint256)(uint256,uint256,byte[1],uint256)", method "f_external(uint256,byte[],uint256)(uint256,uint256,byte[1],uint256)"
+    pushbytess 0xf5530a36 0x90cc805a // method "f(uint512,byte[],uint512)(uint512,uint512,byte[1],uint512)", method "f_external(uint512,byte[],uint512)(uint512,uint512,byte[1],uint512)"
     txna ApplicationArgs 0
     match f f_external
     err
@@ -35,9 +35,9 @@ f:
     dup
     len
     dup
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     intc_2 // 0
@@ -54,19 +54,19 @@ f:
     dup
     len
     dup
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     uncover 2
     len
     itob
     uncover 3
     extract 5 1
     uncover 4
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     uncover 5
     dig 1
@@ -78,7 +78,7 @@ f:
     uncover 2
     concat
     uncover 2
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
     cover 2
@@ -98,9 +98,9 @@ f_external:
     dup
     len
     dup
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     intc_2 // 0
@@ -117,19 +117,19 @@ f_external:
     dup
     len
     dup
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     uncover 2
     len
     itob
     uncover 3
     extract 5 1
     uncover 4
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     uncover 5
     dig 1
@@ -141,7 +141,7 @@ f_external:
     uncover 2
     concat
     uncover 2
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
     cover 2

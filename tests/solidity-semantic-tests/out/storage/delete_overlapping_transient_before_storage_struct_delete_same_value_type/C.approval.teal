@@ -29,7 +29,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x418bf109 0xf412851a // method "setAndDelete()void", method "getS()(uint256,address)"
+    pushbytess 0x418bf109 0xbfb98e59 // method "setAndDelete()void", method "getS()(uint512,address)"
     txna ApplicationArgs 0
     match setAndDelete getS
     err
@@ -62,7 +62,7 @@ getS:
     extract 0 32
     swap
     extract 32 32
-    pushint 32
+    pushint 64
     bzero
     uncover 2
     b|

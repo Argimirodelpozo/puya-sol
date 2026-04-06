@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_uint8_read.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
+    intcblock 32 1 0 64
     bytecblock "x" 0xff 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x9172775d 0x0232350d 0x7c1072af // method "create_dirty_slot()void", method "read_unclean_value()byte[32]", method "x()uint256"
+    pushbytess 0x9172775d 0x0232350d 0x3f4abdfd // method "create_dirty_slot()void", method "read_unclean_value()byte[32]", method "x()uint512"
     txna ApplicationArgs 0
     match create_dirty_slot read_unclean_value x
     err
@@ -121,10 +121,10 @@ x:
 x_ternary_merge@4:
     dup
     len
-    intc_0 // 32
+    intc_3 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_3 // 64
     bzero
     b|
     bytec_2 // 0x151f7c75

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/address_overload_resolution.sol.D.approval_program() -> uint64:
 main:
-    intcblock 0 1 6 32 200000
+    intcblock 0 1 6 64 200000
     bytecblock 0x0a8101 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xcd78b354 0x4b2c0376 // method "f()uint256", method "g()uint256"
+    pushbytess 0xe03b32a4 0x5ed33a7f // method "f()uint512", method "g()uint512"
     txna ApplicationArgs 0
     match f g
     err
@@ -73,10 +73,10 @@ f:
     extract 4 0
     dup
     len
-    intc_3 // 32
+    intc_3 // 64
     <=
     assert // overflow
-    intc_3 // 32
+    intc_3 // 64
     bzero
     b|
     bytec_1 // 0x151f7c75
@@ -135,10 +135,10 @@ g:
     extract 4 0
     dup
     len
-    intc_3 // 32
+    intc_3 // 64
     <=
     assert // overflow
-    intc_3 // 32
+    intc_3 // 64
     bzero
     b|
     bytec_1 // 0x151f7c75

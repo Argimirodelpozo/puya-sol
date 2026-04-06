@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/calldata_length_read.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 32
+    intcblock 1 0 2 64
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x644078a9 0x6eb0a6d5 // method "lenBytesRead(byte[])uint256", method "lenStringRead(string)uint256"
+    pushbytess 0x1abbebc2 0xa0462538 // method "lenBytesRead(byte[])uint512", method "lenStringRead(string)uint512"
     txna ApplicationArgs 0
     match lenBytesRead lenStringRead
     err
@@ -48,7 +48,7 @@ lenBytesRead:
     itob
     swap
     store 0
-    intc_3 // 32
+    intc_3 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -78,7 +78,7 @@ lenStringRead:
     itob
     swap
     store 0
-    intc_3 // 32
+    intc_3 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 16777215 1 32
+    intcblock 0 16777215 1 64
     bytecblock "y" "z" 0xffffff "x" "w" 0x800000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -30,7 +30,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x11790307 // method "f()(uint64,uint256,uint64,uint256)"
+    pushbytes 0x24efe58c // method "f()(uint64,uint512,uint64,uint512)"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -157,10 +157,10 @@ f_ternary_merge@7:
     dig 4
     dup
     len
-    intc_3 // 32
+    intc_3 // 64
     <=
     assert // overflow
-    intc_3 // 32
+    intc_3 // 64
     bzero
     swap
     dig 1
@@ -174,7 +174,7 @@ f_ternary_merge@7:
     uncover 2
     dup
     len
-    intc_3 // 32
+    intc_3 // 64
     <=
     assert // overflow
     uncover 2

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_3.sol.B.approval_program() -> uint64:
 main:
-    intcblock 32 0 1
+    intcblock 64 0 1
     bytecblock 0x151f7c75 "a" "b" 0x "c" "b_a" "b_b" "b_c"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -91,7 +91,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x4075f398 0xcf0aa045 0x6960bdf6 0xa4043651 0x0eeafdf6 0xb5251388 0xddb04781 0x311e3db1 0x1928cd24 // method "d()uint256", method "e()uint256", method "b_a()uint256", method "b_b()uint256", method "b_c()uint256", method "a()uint256", method "b()uint256", method "c()uint256", method "f(uint256)uint256"
+    pushbytess 0xeb34bdcf 0x03ab7b01 0x18f27a01 0x1fbe76a6 0xa5f7cbb2 0x978d552f 0xad382f9d 0xf86a3d56 0xf3d5e499 // method "d()uint512", method "e()uint512", method "b_a()uint512", method "b_b()uint512", method "b_c()uint512", method "a()uint512", method "b()uint512", method "c()uint512", method "f(uint512)uint512"
     txna ApplicationArgs 0
     match d e b_a b_b b_c a b c f
     err
@@ -105,10 +105,10 @@ d:
     assert // check d exists
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -127,10 +127,10 @@ e:
     assert // check e exists
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -149,10 +149,10 @@ b_a:
     assert // check b_a exists
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -171,10 +171,10 @@ b_b:
     assert // check b_b exists
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -193,10 +193,10 @@ b_c:
     assert // check b_c exists
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -215,10 +215,10 @@ a:
     assert // check a exists
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -237,10 +237,10 @@ b:
     assert // check b exists
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -259,10 +259,10 @@ c:
     assert // check c exists
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -278,15 +278,15 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     pushbytes 0x03
     b*
     bytec 4 // "c"
     swap
     app_global_put
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000017
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000017
     log
     intc_2 // 1
     return

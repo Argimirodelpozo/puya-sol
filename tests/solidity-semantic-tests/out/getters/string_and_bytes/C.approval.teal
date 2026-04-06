@@ -4,18 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/string_and_bytes.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "c" 0x151f7c75 "a" 0x "b" "__ctor_pending"
+    bytecblock "c" 0x151f7c75 "__ctor_pending" "a" "b"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "a"
-    bytec_3 // 0x
-    app_global_put
-    bytec 4 // "b"
-    bytec_3 // 0x
-    app_global_put
-    pushbytess "d" "abcd"
-    app_global_put
-    bytec 5 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -42,17 +34,25 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/string_and_bytes.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec 5 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec 5 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_1 // 0
     app_global_put
     bytec_0 // "c"
     intc_1 // 0
     box_create
     pop
-    bytec_2 // "a"
+    bytec_3 // "a"
+    pushbytes 0x
+    app_global_put
+    bytec 4 // "b"
+    pushbytes 0x
+    app_global_put
+    pushbytess "d" "abcd"
+    app_global_put
+    bytec_3 // "a"
     pushbytes "hello world"
     app_global_put
     bytec 4 // "b"
@@ -71,7 +71,7 @@ __postInit:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/string_and_bytes.sol.C.a[routing]() -> void:
 a:
     intc_1 // 0
-    bytec_2 // "a"
+    bytec_3 // "a"
     app_global_get_ex
     assert // check a exists
     dup
@@ -112,7 +112,7 @@ b:
 c:
     bytec_0 // "c"
     box_get
-    bytec_3 // 0x
+    pushbytes 0x
     cover 2
     select
     dup

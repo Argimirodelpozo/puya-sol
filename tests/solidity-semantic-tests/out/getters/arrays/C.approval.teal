@@ -74,7 +74,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x23e53d16 // method "a(uint256,uint256)uint64"
+    pushbytes 0x6eb5b3dc // method "a(uint512,uint512)uint64"
     txna ApplicationArgs 0
     match main_a_route@4
     err
@@ -177,15 +177,15 @@ a:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     len
-    intc_2 // 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_2 // 32
     bzero
     dup

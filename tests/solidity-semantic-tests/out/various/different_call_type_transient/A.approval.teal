@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.A.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 1 64 32
     bytecblock "value"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "value"
     pushbytes 0x
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x667d8c6d 0x8359b348 0xc9a303a5 0x75d12918 // method "delegateSetValue(address,uint256)void", method "callSetValue(address,uint256)void", method "staticSetValue(address,uint256)bool", method "value()uint256"
+    pushbytess 0x0765bc84 0x6ec2cb5b 0xd3126e67 0xefd9437e // method "delegateSetValue(address,uint512)void", method "callSetValue(address,uint512)void", method "staticSetValue(address,uint512)bool", method "value()uint512"
     txna ApplicationArgs 0
     match delegateSetValue callSetValue staticSetValue value
     err
@@ -36,15 +36,15 @@ main_after_if_else@2:
 delegateSetValue:
     txna ApplicationArgs 1
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     len
-    intc_0 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
-    intc_1 // 1
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 1
     return
 
 
@@ -52,15 +52,15 @@ delegateSetValue:
 callSetValue:
     txna ApplicationArgs 1
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     len
-    intc_0 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
-    intc_1 // 1
+    assert // invalid number of bytes for arc4.uint512
+    intc_0 // 1
     return
 
 
@@ -68,17 +68,17 @@ callSetValue:
 staticSetValue:
     txna ApplicationArgs 1
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     len
-    intc_0 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     pushbytes 0x151f7c7580
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -90,15 +90,15 @@ value:
     assert // check value exists
     dup
     len
-    intc_0 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 64
     bzero
     b|
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/store2.sol.InvalidTest.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
+    intcblock 1 0 64
     bytecblock "x" 0x "storedFn"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -32,7 +32,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xa6ff944a 0x1db3c594 0x7c1072af // method "run()void", method "z()void", method "x()uint256"
+    pushbytess 0xa6ff944a 0x1db3c594 0x3f4abdfd // method "run()void", method "z()void", method "x()uint512"
     txna ApplicationArgs 0
     match main_run_route@5 z x
     err
@@ -64,10 +64,10 @@ x:
     assert // check x exists
     dup
     len
-    intc_2 // 32
+    intc_2 // 64
     <=
     assert // overflow
-    intc_2 // 32
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x151f7c75

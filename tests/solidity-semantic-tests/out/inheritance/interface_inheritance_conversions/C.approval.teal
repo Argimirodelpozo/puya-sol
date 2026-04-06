@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/interface_inheritance_conversions.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 1 24
-    bytecblock 0xe9e76f25 0x151f7c75 0xecb66829 0x9a55e4c8
+    intcblock 0 64 1 24
+    bytecblock 0xe9e76f25 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_2 // 1
@@ -23,28 +23,25 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    bytec_0 // method "parentFun()uint256"
-    bytec_2 // method "subAFun()uint256"
-    bytec_3 // method "subBFun()uint256"
-    pushbytess 0x53cd411f 0xb4e2b703 0xa31afe56 // method "convertParent()uint256", method "convertSubA()(uint256,uint256)", method "convertSubB()(uint256,uint256)"
+    pushbytess 0xe8a4b0e2 0xfcbc8025 0xae677bfc 0x0738cb6a 0x43e3346a 0x645e802c // method "parentFun()uint512", method "subAFun()uint512", method "subBFun()uint512", method "convertParent()uint512", method "convertSubA()(uint512,uint512)", method "convertSubB()(uint512,uint512)"
     txna ApplicationArgs 0
     match main_parentFun_route@5 main_subAFun_route@6 main_subBFun_route@7 convertParent convertSubA convertSubB
     err
 
 main_subBFun_route@7:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000003
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003
     log
     intc_2 // 1
     return
 
 main_subAFun_route@6:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002
     log
     intc_2 // 1
     return
 
 main_parentFun_route@5:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001
     log
     intc_2 // 1
     return
@@ -70,10 +67,10 @@ convertParent:
     extract 4 0
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     bytec_1 // 0x151f7c75
@@ -111,7 +108,7 @@ convertSubA:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_2 // method "subAFun()uint256"
+    pushbytes 0xecb66829 // method "subAFun()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -120,17 +117,17 @@ convertSubA:
     extract 4 0
     dig 1
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     uncover 2
     dig 1
     b|
     dig 2
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
     cover 2
@@ -171,7 +168,7 @@ convertSubB:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_3 // method "subBFun()uint256"
+    pushbytes 0x9a55e4c8 // method "subBFun()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -180,17 +177,17 @@ convertSubB:
     extract 4 0
     dig 1
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     uncover 2
     dig 1
     b|
     dig 2
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
     cover 2

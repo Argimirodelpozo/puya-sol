@@ -18,7 +18,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x2b9082ff // method "f(uint256,uint256)uint256"
+    pushbytes 0x24402ea4 // method "f(uint512,uint512)uint512"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -133,15 +133,15 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
 
 f_while_top@20:
     pushint 170010
@@ -603,10 +603,10 @@ f_after_while@10:
     extract3 // on error: index access is out of bounds
     dup
     len
-    intc_1 // 32
+    pushint 64
     <=
     assert // overflow
-    intc_1 // 32
+    pushint 64
     bzero
     b|
     pushbytes 0x151f7c75

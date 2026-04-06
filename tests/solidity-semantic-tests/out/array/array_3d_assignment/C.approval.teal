@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x1928cd24 // method "f(uint256)uint256"
+    pushbytes 0xf3d5e499 // method "f(uint512)uint512"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -132,9 +132,9 @@ f:
     dup
     len
     dup
-    intc_3 // 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     pushbytes 0x00020004000600000000
     intc_2 // 0
     itob
@@ -256,9 +256,8 @@ f_after_while@7:
     intc_3 // 32
     bzero
     dig 5
-    dig 1
     b|
-    dig 4
+    dig 3
     dup
     extract 2 0
     dig 1
@@ -346,6 +345,8 @@ f_after_while@7:
     +
     extract3
     extract 34 32
+    pushint 64
+    bzero
     b|
     pushbytes 0x151f7c75
     swap

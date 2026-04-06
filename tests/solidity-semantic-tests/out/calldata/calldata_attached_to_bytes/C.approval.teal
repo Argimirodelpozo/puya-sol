@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_attached_to_bytes.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 64
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xada8b4b9 // method "test(uint256,byte[],uint256)(byte[1],byte[1])"
+    pushbytes 0x3630d7f8 // method "test(uint512,byte[],uint512)(byte[1],byte[1])"
     txna ApplicationArgs 0
     match main_test_route@4
     err
@@ -45,9 +45,9 @@ L.reverse:
 test:
     txna ApplicationArgs 1
     len
-    intc_1 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     pushint 0
@@ -61,9 +61,9 @@ test:
     extract 2 0
     txna ApplicationArgs 3
     len
-    intc_1 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     callsub L.reverse
     concat
     pushbytes 0x151f7c75

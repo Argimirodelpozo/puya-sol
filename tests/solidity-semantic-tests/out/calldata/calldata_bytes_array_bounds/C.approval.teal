@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_bytes_array_bounds.sol.C.approval_program() -> uint64:
 main:
-    intcblock 2 0 1 32
+    intcblock 2 0 1 64
     txn ApplicationID
     bnz main_after_if_else@2
     intc_2 // 1
@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x1c1960a7 // method "f(byte[][],uint256)uint256"
+    pushbytes 0x736d979d // method "f(byte[][],uint512)uint512"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -90,9 +90,9 @@ f_after_for@4:
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 32
+    intc_3 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     dig 5
     assert // index access is out of bounds
     dig 2
@@ -118,7 +118,7 @@ f_after_for@4:
     pushint 255
     &
     itob
-    intc_3 // 32
+    intc_3 // 64
     bzero
     b|
     pushbytes 0x151f7c75

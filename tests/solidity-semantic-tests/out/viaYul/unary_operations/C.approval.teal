@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/unary_operations.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 8 255 18446744073709551488
+    intcblock 64 1 8 255 18446744073709551488
     bytecblock 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x80 0xff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x0100 0x01 0x010000000000000000 0x8000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x8c31cf21 0x1e756e80 0x5053bc94 0x893ec837 0x40d7e743 0x73651fc1 0x818aee12 0x4c4b0928 0x14d310b5 0xe56d9f14 0xb2648f97 0xb4ae2bd1 0xad7fec2b 0xc87f5912 0xb71bd24c 0xdc3252f5 0xb46a39d9 0xd8d91b03 0x7eab6ff9 // method "preincr_u8(uint64)uint64", method "postincr_u8(uint64)uint64", method "predecr_u8(uint64)uint64", method "postdecr_u8(uint64)uint64", method "preincr_s8(uint64)(uint256,uint256)", method "postincr_s8(uint64)(uint256,uint256)", method "predecr_s8(uint64)(uint256,uint256)", method "postdecr_s8(uint64)(uint256,uint256)", method "preincr(uint256)uint256", method "postincr(uint256)uint256", method "predecr(uint256)uint256", method "postdecr(uint256)uint256", method "not(bool)bool", method "bitnot(uint256)uint256", method "bitnot_u8(uint64)uint256", method "bitnot_s8()uint256", method "negate(uint256)uint256", method "negate_s8(uint64)uint256", method "negate_s16(uint64)uint256"
+    pushbytess 0x8c31cf21 0x1e756e80 0x5053bc94 0x893ec837 0xed38ef85 0x3d3b5293 0xaa7acc1b 0x1b44c95d 0x7399e26c 0x9627d890 0x4ee508a4 0x9b6357bf 0xad7fec2b 0xefdb8e82 0xe7aa0446 0xe350d4b9 0x28937e75 0x6eb6f7b4 0x69088df4 // method "preincr_u8(uint64)uint64", method "postincr_u8(uint64)uint64", method "predecr_u8(uint64)uint64", method "postdecr_u8(uint64)uint64", method "preincr_s8(uint64)(uint512,uint512)", method "postincr_s8(uint64)(uint512,uint512)", method "predecr_s8(uint64)(uint512,uint512)", method "postdecr_s8(uint64)(uint512,uint512)", method "preincr(uint512)uint512", method "postincr(uint512)uint512", method "predecr(uint512)uint512", method "postdecr(uint512)uint512", method "not(bool)bool", method "bitnot(uint512)uint512", method "bitnot_u8(uint64)uint512", method "bitnot_s8()uint512", method "negate(uint512)uint512", method "negate_s8(uint64)uint512", method "negate_s16(uint64)uint512"
     txna ApplicationArgs 0
     match preincr_u8 postincr_u8 predecr_u8 postdecr_u8 preincr_s8 postincr_s8 predecr_s8 postdecr_s8 preincr postincr predecr postdecr not bitnot bitnot_u8 bitnot_s8 negate negate_s8 negate_s16
     err
@@ -238,10 +238,10 @@ preincr_s8_ternary_merge@11:
     dig 4
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     swap
     dig 1
@@ -249,7 +249,7 @@ preincr_s8_ternary_merge@11:
     uncover 2
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
     uncover 2
@@ -357,10 +357,10 @@ postincr_s8_ternary_merge@11:
     dig 4
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     swap
     dig 1
@@ -368,7 +368,7 @@ postincr_s8_ternary_merge@11:
     uncover 2
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
     uncover 2
@@ -470,10 +470,10 @@ predecr_s8_ternary_merge@11:
     dig 4
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     swap
     dig 1
@@ -481,7 +481,7 @@ predecr_s8_ternary_merge@11:
     uncover 2
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
     uncover 2
@@ -589,10 +589,10 @@ postdecr_s8_ternary_merge@11:
     dig 4
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     swap
     dig 1
@@ -600,7 +600,7 @@ postdecr_s8_ternary_merge@11:
     uncover 2
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
     uncover 2
@@ -630,19 +630,19 @@ preincr:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec 6 // 0x01
     b+
     dup
     b+
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -658,19 +658,19 @@ postincr:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec 6 // 0x01
     b+
     dup
     b+
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -686,19 +686,19 @@ predecr:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec 6 // 0x01
     b-
     dup
     b+
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -714,19 +714,19 @@ postdecr:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec 6 // 0x01
     b-
     dup
     b+
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -769,16 +769,16 @@ bitnot:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     b~
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -811,7 +811,7 @@ bitnot_u8:
     itob
     swap
     store 0
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -828,7 +828,7 @@ bitnot_s8:
     store 0
     load 0
     store 0
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000063
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000063
     log
     intc_1 // 1
     return
@@ -839,9 +839,9 @@ negate:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     dup
     pushbytes 0x8000000000000000000000000000000000000000000000000000000000000000
     b!=
@@ -853,10 +853,10 @@ negate:
     b%
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -927,10 +927,10 @@ negate_s8_bool_merge@5:
 negate_s8_ternary_merge@8:
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -1008,10 +1008,10 @@ negate_s16_bool_merge@5:
 negate_s16_ternary_merge@8:
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75

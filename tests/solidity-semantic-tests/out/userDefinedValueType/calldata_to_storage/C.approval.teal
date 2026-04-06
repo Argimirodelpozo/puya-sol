@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata_to_storage.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 2
+    intcblock 1 0 32 2
     bytecblock 0x151f7c75 "small" "l" "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x55274694 0x4acc92c3 0xc1043203 0xfc9b39cb 0x7e7f32eb 0xea2a632a // method "__postInit()void", method "f((uint64,uint64,uint8[2],uint64))void", method "g(uint64[])uint64[]", method "h(uint8[2][])uint8[2][]", method "s()(uint64,uint64,byte[2],uint64)", method "small(uint256)uint64", method "l(uint256)byte[2]"
+    pushbytess 0xbacc49e3 0x55274694 0x4acc92c3 0xc1043203 0xfc9b39cb 0x846fb64c 0xeaaf51d7 // method "__postInit()void", method "f((uint64,uint64,uint8[2],uint64))void", method "g(uint64[])uint64[]", method "h(uint8[2][])uint8[2][]", method "s()(uint64,uint64,byte[2],uint64)", method "small(uint512)uint64", method "l(uint512)byte[2]"
     txna ApplicationArgs 0
     match __postInit f g h s small l
     err
@@ -38,14 +38,14 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_3 // "__ctor_pending"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
     bytec_1 // "small"
-    intc_2 // 0
+    intc_1 // 0
     box_create
     pop
     bytec_2 // "l"
-    intc_2 // 0
+    intc_1 // 0
     box_create
     pop
     intc_0 // 1
@@ -71,7 +71,7 @@ f:
 g:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 8
     *
@@ -99,7 +99,7 @@ g:
 h:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_3 // 2
     *
@@ -158,18 +158,18 @@ small:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
-    intc_1 // 32
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 32
     bzero
     swap
     concat
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     -
-    intc_1 // 32
+    intc_2 // 32
     extract3
     sha256
     bytec_1 // "small"
@@ -178,7 +178,7 @@ small:
     box_get
     swap
     btoi
-    intc_2 // 0
+    intc_1 // 0
     swap
     uncover 2
     select
@@ -196,18 +196,18 @@ l:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
-    intc_1 // 32
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 32
     bzero
     swap
     concat
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     -
-    intc_1 // 32
+    intc_2 // 32
     extract3
     sha256
     bytec_2 // "l"

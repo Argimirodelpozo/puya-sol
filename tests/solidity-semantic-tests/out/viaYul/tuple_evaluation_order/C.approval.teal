@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/tuple_evaluation_order.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
+    intcblock 64 1 0
     bytecblock "x" 0x "y" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -29,7 +29,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x7093054d 0x219b312e // method "set(uint256)uint256", method "f()(uint256,uint256)"
+    pushbytess 0x51e56a61 0x6acb2994 // method "set(uint512)uint512", method "f()(uint512,uint512)"
     txna ApplicationArgs 0
     match set f
     err
@@ -41,16 +41,16 @@ set:
     dup
     len
     dup
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec_0 // "x"
     dig 2
     app_global_put
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_3 // 0x151f7c75
@@ -79,13 +79,13 @@ f:
     assert // check x exists
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003
     concat
     bytec_3 // 0x151f7c75
     swap

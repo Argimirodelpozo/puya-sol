@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
-    bytecblock "x" 0x88035e71
+    intcblock 1 64 0
+    bytecblock "x"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
@@ -26,9 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytes 0x8a37d29b // method "f(uint256)void"
-    bytec_1 // method "g(uint256)void"
-    pushbytess 0x0a449f0b 0x7c1072af // method "h()void", method "x()uint256"
+    pushbytess 0xacb9e794 0x8a846521 0x0a449f0b 0x3f4abdfd // method "f(uint512)void", method "g(uint512)void", method "h()void", method "x()uint512"
     txna ApplicationArgs 0
     match f g h x
     err
@@ -39,9 +37,9 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec_0 // "x"
     swap
     app_global_put
@@ -54,9 +52,9 @@ g:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec_0 // "x"
     swap
     app_global_put
@@ -79,7 +77,7 @@ h:
     intc_2 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_1 // method "g(uint256)void"
+    pushbytes 0x88035e71 // method "g(uint256)void"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
@@ -95,10 +93,10 @@ x:
     assert // check x exists
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     pushbytes 0x151f7c75

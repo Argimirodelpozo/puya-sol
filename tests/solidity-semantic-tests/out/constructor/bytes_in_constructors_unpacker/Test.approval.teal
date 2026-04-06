@@ -3,14 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_unpacker.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    bytecblock "m_s" "m_x" "__ctor_pending" 0x 0x151f7c75
+    intcblock 1 0 64
+    bytecblock "m_s" "__ctor_pending" "m_x" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "m_x"
-    bytec_3 // 0x
-    app_global_put
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -29,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x0510532b 0xce7531ad 0xa28ecb34 // method "__postInit(uint256,byte[])void", method "m_x()uint256", method "m_s()byte[]"
+    pushbytess 0xf8cd4da6 0xef04bd33 0xa28ecb34 // method "__postInit(uint512,byte[])void", method "m_x()uint512", method "m_s()byte[]"
     txna ApplicationArgs 0
     match __postInit m_x m_s
     err
@@ -40,9 +37,9 @@ __postInit:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    intc_2 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     intc_1 // 0
@@ -54,17 +51,17 @@ __postInit:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 0
     app_global_put
     bytec_0 // "m_s"
     intc_1 // 0
     box_create
     pop
-    bytec_1 // "m_x"
+    bytec_2 // "m_x"
     uncover 2
     app_global_put
     bytec_0 // "m_s"
@@ -80,18 +77,18 @@ __postInit:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_unpacker.sol.Test.m_x[routing]() -> void:
 m_x:
     intc_1 // 0
-    bytec_1 // "m_x"
+    bytec_2 // "m_x"
     app_global_get_ex
     assert // check m_x exists
     dup
     len
-    intc_2 // 32
+    intc_2 // 64
     <=
     assert // overflow
-    intc_2 // 32
+    intc_2 // 64
     bzero
     b|
-    bytec 4 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -103,7 +100,7 @@ m_x:
 m_s:
     bytec_0 // "m_s"
     box_get
-    bytec_3 // 0x
+    pushbytes 0x
     cover 2
     select
     dup
@@ -112,7 +109,7 @@ m_s:
     extract 6 2
     swap
     concat
-    bytec 4 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/transient_storage_state_variable_abstract_contract.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 1
+    intcblock 0 64 1
     bytecblock "x" 0x "y" "w" "z"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -35,7 +35,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xf2b65f27 0xa46062d6 // method "g()void", method "f()(uint256,uint256,uint256,uint256)"
+    pushbytess 0xf2b65f27 0x7404354e // method "g()void", method "f()(uint512,uint512,uint512,uint512)"
     txna ApplicationArgs 0
     match g f
     err
@@ -87,17 +87,17 @@ f:
     assert // check z exists
     dig 3
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     uncover 4
     dig 1
     b|
     dig 4
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
     uncover 4
@@ -106,7 +106,7 @@ f:
     concat
     dig 3
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
     uncover 3
@@ -115,7 +115,7 @@ f:
     concat
     dig 2
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
     cover 2

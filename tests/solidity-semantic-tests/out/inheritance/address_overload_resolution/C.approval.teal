@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/address_overload_resolution.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 64
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -22,13 +22,13 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x76d8a28f 0x7ec2df0b // method "balance()uint256", method "transfer(uint256)uint256"
+    pushbytess 0x7149acee 0x799a80d4 // method "balance()uint512", method "transfer(uint512)uint512"
     txna ApplicationArgs 0
     match main_balance_route@5 transfer
     err
 
 main_balance_route@5:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001
     log
     intc_0 // 1
     return
@@ -40,13 +40,13 @@ transfer:
     dup
     len
     dup
-    intc_1 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
-    intc_1 // 32
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     pushbytes 0x151f7c75

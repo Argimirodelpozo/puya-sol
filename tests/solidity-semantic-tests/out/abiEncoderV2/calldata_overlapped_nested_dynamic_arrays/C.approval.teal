@@ -7,8 +7,6 @@ main:
     bytecblock "__ctor_pending" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytess "n" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    app_global_put
     bytec_0 // "__ctor_pending"
     intc_2 // 1
     app_global_put
@@ -28,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x9ac3fda7 0xf8c45c9d 0x22ad0279 // method "__postInit()void", method "f_memory(uint256[][])uint256[][]", method "f_encode(uint256[][])byte[]", method "f_which(uint256[][],uint256)uint256[]"
+    pushbytess 0xbacc49e3 0x9ac3fda7 0xf8c45c9d 0x40a6ddd9 // method "__postInit()void", method "f_memory(uint256[][])uint256[][]", method "f_encode(uint256[][])byte[]", method "f_which(uint256[][],uint512)uint256[]"
     txna ApplicationArgs 0
     match __postInit f_memory f_encode f_which
     err
@@ -46,6 +44,8 @@ __postInit:
     intc_1 // 0
     box_create
     pop
+    pushbytess "n" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
     intc_2 // 1
     return
 
@@ -249,9 +249,9 @@ f_which_after_for@4:
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     pushint 8
     bzero
     swap

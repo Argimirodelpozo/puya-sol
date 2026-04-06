@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x06071aa5 // method "__postInit()void", method "test_indices(uint256)void"
+    pushbytess 0xbacc49e3 0x4d2579a9 // method "__postInit()void", method "test_indices(uint512)void"
     txna ApplicationArgs 0
     match __postInit test_indices
     err
@@ -55,9 +55,9 @@ test_indices:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
 
 test_indices_while_top@17:
     pushint 170010

@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/mapping_key.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
+    intcblock 32 64 1 0
     bytecblock "m" "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
-    intc_1 // 1
+    intc_2 // 1
     app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x76a2115c 0x043cd6f0 0x8338d04b // method "__postInit()void", method "set(uint256,uint256)void", method "set_unwrapped(uint256,uint256)void", method "m(uint256)uint256"
+    pushbytess 0xbacc49e3 0x9af1cffa 0xa00514e1 0x54630a99 // method "__postInit()void", method "set(uint512,uint512)void", method "set_unwrapped(uint512,uint512)void", method "m(uint512)uint512"
     txna ApplicationArgs 0
     match __postInit set set_unwrapped m
     err
@@ -38,13 +38,13 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_2 // 0
+    intc_3 // 0
     app_global_put
     bytec_0 // "m"
-    intc_2 // 0
+    intc_3 // 0
     box_create
     pop
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
@@ -53,15 +53,15 @@ set:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_0 // 32
     bzero
     uncover 2
@@ -81,7 +81,7 @@ set:
     pop
     swap
     box_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
@@ -90,15 +90,15 @@ set_unwrapped:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_0 // 32
     bzero
     uncover 2
@@ -118,7 +118,7 @@ set_unwrapped:
     pop
     swap
     box_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
@@ -127,13 +127,12 @@ m:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_0 // 32
     bzero
-    dup
-    uncover 2
+    swap
     concat
     dup
     len
@@ -151,13 +150,15 @@ m:
     select
     dup
     len
-    intc_0 // 32
+    intc_1 // 64
     <=
     assert // overflow
+    intc_1 // 64
+    bzero
     b|
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return

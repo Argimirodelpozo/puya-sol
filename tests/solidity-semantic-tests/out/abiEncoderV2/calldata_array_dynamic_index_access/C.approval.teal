@@ -24,11 +24,11 @@ main_after_if_else@2:
     txn ApplicationID
     assert
     bytec_1 // method "f(uint256[])byte[]"
-    pushbytes 0x239d143d // method "g(uint256[][2],uint256)byte[]"
+    pushbytes 0xaad817cd // method "g(uint256[][2],uint512)byte[]"
     bytec_2 // method "h(uint64[])byte[]"
-    pushbytes 0x887364a4 // method "i(uint64[][2],uint256)byte[]"
+    pushbytes 0xcbb4a7c7 // method "i(uint64[][2],uint512)byte[]"
     bytec_3 // method "j(byte[])byte[]"
-    pushbytes 0xb5ff7ca6 // method "k(byte[][2],uint256)byte[]"
+    pushbytes 0x3fff83cb // method "k(byte[][2],uint512)byte[]"
     txna ApplicationArgs 0
     match f g h i j k
     err
@@ -112,9 +112,9 @@ g_after_for@4:
     txna ApplicationArgs 2
     dup
     len
-    pushint 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     itxn_begin
     intc_3 // 8
     bzero
@@ -249,9 +249,9 @@ i_after_for@4:
     txna ApplicationArgs 2
     dup
     len
-    pushint 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     itxn_begin
     intc_3 // 8
     bzero
@@ -376,9 +376,9 @@ k_after_for@4:
     txna ApplicationArgs 2
     dup
     len
-    pushint 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     itxn_begin
     intc_3 // 8
     bzero

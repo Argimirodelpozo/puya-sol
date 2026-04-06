@@ -3,17 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
-    bytecblock "m_s" "m_x" "__ctor_pending" 0x151f7c75
+    intcblock 1 0 32 64
+    bytecblock "m_s" "__ctor_pending" 0x151f7c75 "m_x"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "m_x"
-    pushbytes 0x
+    bytec_1 // "__ctor_pending"
+    intc_0 // 1
     app_global_put
-    bytec_2 // "__ctor_pending"
-    intc_1 // 1
-    app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -29,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x7af52ace 0xc1f6ed5b 0xce7531ad 0xc8283ac6 // method "__postInit(uint8[32][],uint256)void", method "f(uint8[32][])uint8[32][]", method "m_x()uint256", method "part(uint256)address"
+    pushbytess 0x824f3487 0xc1f6ed5b 0xef04bd33 0x5096427e // method "__postInit(uint8[32][],uint512)void", method "f(uint8[32][])uint8[32][]", method "m_x()uint512", method "part(uint512)address"
     txna ApplicationArgs 0
     match __postInit f m_x part
     err
@@ -39,11 +36,11 @@ main_after_if_else@2:
 __postInit:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_0 // 32
+    intc_2 // 32
     *
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
@@ -52,20 +49,20 @@ __postInit:
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_3 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
-    bytec_2 // "__ctor_pending"
+    assert // invalid number of bytes for arc4.uint512
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_2 // "__ctor_pending"
-    intc_2 // 0
+    bytec_1 // "__ctor_pending"
+    intc_1 // 0
     app_global_put
     bytec_0 // "m_s"
-    intc_2 // 0
+    intc_1 // 0
     box_create
     pop
-    bytec_1 // "m_x"
+    bytec_3 // "m_x"
     swap
     app_global_put
     bytec_0 // "m_s"
@@ -74,7 +71,7 @@ __postInit:
     bytec_0 // "m_s"
     swap
     box_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -82,43 +79,43 @@ __postInit:
 f:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_0 // 32
+    intc_2 // 32
     *
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 32>>
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Main.m_x[routing]() -> void:
 m_x:
-    intc_2 // 0
-    bytec_1 // "m_x"
+    intc_1 // 0
+    bytec_3 // "m_x"
     app_global_get_ex
     assert // check m_x exists
     dup
     len
-    intc_0 // 32
+    intc_3 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_3 // 64
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -127,9 +124,9 @@ part:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_3 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec_0 // "m_s"
     box_get
     pushbytes 0x0000
@@ -147,13 +144,13 @@ part:
     swap
     extract 2 0
     swap
-    intc_0 // 32
+    intc_2 // 32
     *
-    intc_0 // 32
+    intc_2 // 32
     extract3 // on error: index access is out of bounds
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return

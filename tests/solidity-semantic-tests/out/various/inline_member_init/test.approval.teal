@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_member_init.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 0 1
+    intcblock 64 0 1
     bytecblock "m_b" "m_c" "m_a"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -41,7 +41,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x90a2d552 // method "get()(uint256,uint256,uint256)"
+    pushbytes 0x24b6ac84 // method "get()(uint512,uint512,uint512)"
     txna ApplicationArgs 0
     match main_get_route@4
     err
@@ -71,17 +71,17 @@ get:
     assert // check m_c exists
     dig 2
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     uncover 3
     dig 1
     b|
     dig 3
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
     uncover 3
@@ -90,7 +90,7 @@ get:
     concat
     dig 2
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
     cover 2

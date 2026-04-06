@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_literals.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 64 1
     bytecblock 0x 0x01 0x02 0x8000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x0100
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x68bc2874 0xf62d50f8 0xfa3fd661 0x47ce4b81 0x064299d1 0xd9229d64 0x935cfb8d 0x3c03b40a // method "exp_2(uint256)uint256", method "exp_minus_2(uint256)uint256", method "exp_uint_max(uint256)uint256", method "exp_int_max(uint256)uint256", method "exp_5(uint256)uint256", method "exp_minus_5(uint256)uint256", method "exp_256(uint256)uint256", method "exp_minus_256(uint256)uint256"
+    pushbytess 0x1d632fcd 0x68e0ebf4 0xc78a8c48 0x7d8c2441 0x5a791e67 0xf7600b67 0x670e1efb 0x390e54d8 // method "exp_2(uint512)uint512", method "exp_minus_2(uint512)uint512", method "exp_uint_max(uint512)uint512", method "exp_int_max(uint512)uint512", method "exp_5(uint512)uint512", method "exp_minus_5(uint512)uint512", method "exp_256(uint512)uint512", method "exp_minus_256(uint512)uint512"
     txna ApplicationArgs 0
     match exp_2 exp_minus_2 exp_uint_max exp_int_max exp_5 exp_minus_5 exp_256 exp_minus_256
     err
@@ -34,9 +34,9 @@ exp_2:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec_1 // 0x01
     swap
     bytec_2 // 0x02
@@ -73,10 +73,10 @@ exp_2_after_while@6:
     dig 2
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec 4 // 0x151f7c75
@@ -93,9 +93,9 @@ exp_minus_2:
     txna ApplicationArgs 1
     dupn 2
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec_1 // 0x01
     swap
     bytec_2 // 0x02
@@ -159,10 +159,10 @@ exp_minus_2_ternary_merge@13:
 exp_minus_2_ternary_merge@18:
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec 4 // 0x151f7c75
@@ -188,9 +188,9 @@ exp_uint_max:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec_1 // 0x01
     swap
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -227,10 +227,10 @@ exp_uint_max_after_while@6:
     dig 2
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec 4 // 0x151f7c75
@@ -247,9 +247,9 @@ exp_int_max:
     txna ApplicationArgs 1
     dupn 2
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec_1 // 0x01
     swap
     bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
@@ -313,10 +313,10 @@ exp_int_max_ternary_merge@13:
 exp_int_max_ternary_merge@18:
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec 4 // 0x151f7c75
@@ -342,9 +342,9 @@ exp_5:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec_1 // 0x01
     swap
     pushbytes 0x05
@@ -381,10 +381,10 @@ exp_5_after_while@6:
     dig 2
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec 4 // 0x151f7c75
@@ -401,9 +401,9 @@ exp_minus_5:
     txna ApplicationArgs 1
     dupn 2
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec_1 // 0x01
     swap
     pushbytes 0x05
@@ -467,10 +467,10 @@ exp_minus_5_ternary_merge@13:
 exp_minus_5_ternary_merge@18:
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec 4 // 0x151f7c75
@@ -496,9 +496,9 @@ exp_256:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec_1 // 0x01
     swap
     bytec 6 // 0x0100
@@ -535,10 +535,10 @@ exp_256_after_while@6:
     dig 2
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec 4 // 0x151f7c75
@@ -555,9 +555,9 @@ exp_minus_256:
     txna ApplicationArgs 1
     dupn 2
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec_1 // 0x01
     swap
     bytec 6 // 0x0100
@@ -621,10 +621,10 @@ exp_minus_256_ternary_merge@13:
 exp_minus_256_ternary_merge@18:
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec 4 // 0x151f7c75

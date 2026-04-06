@@ -27,7 +27,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x2bbf0199 0x963090af 0x3e40144f 0x5c5e3bbc // method "fillArray()void", method "clearArray()void", method "x()uint256[10]", method "y()uint256"
+    pushbytess 0x2bbf0199 0x963090af 0x3e40144f 0x60d68bc1 // method "fillArray()void", method "clearArray()void", method "x()uint256[10]", method "y()uint512"
     txna ApplicationArgs 0
     match fillArray main_clearArray_route@6 x y
     err
@@ -109,10 +109,10 @@ y:
     assert // check y exists
     dup
     len
-    intc_1 // 32
+    pushint 64
     <=
     assert // overflow
-    intc_1 // 32
+    pushint 64
     bzero
     b|
     pushbytes 0x151f7c75

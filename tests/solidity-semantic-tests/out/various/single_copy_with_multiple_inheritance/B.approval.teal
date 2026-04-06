@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/single_copy_with_multiple_inheritance.sol.B.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
+    intcblock 64 1 0
     bytecblock "data" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x0640f355 0x6fe076ab 0xc9bcbbdf // method "getViaB()uint256", method "setData(uint256)void", method "getViaBase()uint256"
+    pushbytess 0x3a5014d3 0xb085d800 0x122e5d2f // method "getViaB()uint512", method "setData(uint512)void", method "getViaBase()uint512"
     txna ApplicationArgs 0
     match getViaB setData getViaBase
     err
@@ -40,10 +40,10 @@ getViaB:
     assert // check data exists
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_1 // 0x151f7c75
@@ -59,9 +59,9 @@ setData:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec_0 // "data"
     swap
     app_global_put
@@ -77,10 +77,10 @@ getViaBase:
     assert // check data exists
     dup
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    intc_0 // 32
+    intc_0 // 64
     bzero
     b|
     bytec_1 // 0x151f7c75

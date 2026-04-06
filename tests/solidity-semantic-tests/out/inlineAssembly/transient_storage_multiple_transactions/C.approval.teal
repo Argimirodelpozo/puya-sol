@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_transactions.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 64
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x2d4970c7 0x4b2c0376 0xafedb2e5 // method "f()void", method "g()uint256", method "h()uint256"
+    pushbytess 0x2d4970c7 0x5ed33a7f 0x24d97035 // method "f()void", method "g()uint512", method "h()uint512"
     txna ApplicationArgs 0
     match f g h
     err
@@ -46,7 +46,7 @@ g:
     extract 0 32
     swap
     store 0
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -66,7 +66,7 @@ h:
     extract 0 32
     swap
     store 0
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75

@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/array_mapping_abstract_constructor_param.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
+    intcblock 32 64 1 0
     bytecblock "__ctor_pending" "m" 0x6d08e00266fff0aacc64974f22a53622a7dc458ac1b5fd446ae7c99a4a99a564e6
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
-    intc_1 // 1
+    intc_2 // 1
     app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0xca419643 // method "__postInit()void", method "m(uint256,uint256,uint256)uint256"
+    pushbytess 0xbacc49e3 0x74436df8 // method "__postInit()void", method "m(uint512,uint512,uint512)uint512"
     txna ApplicationArgs 0
     match __postInit m
     err
@@ -38,10 +38,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_2 // 0
+    intc_3 // 0
     app_global_put
     bytec_1 // "m"
-    intc_2 // 0
+    intc_3 // 0
     box_create
     pop
     pushint 2
@@ -52,7 +52,7 @@ __postInit:
     bytec_2 // 0x6d08e00266fff0aacc64974f22a53622a7dc458ac1b5fd446ae7c99a4a99a564e6
     swap
     box_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
@@ -61,21 +61,21 @@ m:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 3
     dup
     len
-    intc_0 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_0 // 32
     bzero
     dup
@@ -97,8 +97,8 @@ m:
     intc_0 // 32
     extract3
     concat
-    dig 1
-    uncover 3
+    swap
+    uncover 2
     concat
     dup
     len
@@ -117,13 +117,15 @@ m:
     select
     dup
     len
-    intc_0 // 32
+    intc_1 // 64
     <=
     assert // overflow
+    intc_1 // 64
+    bzero
     b|
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return

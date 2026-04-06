@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_decode_fixed_arrays.sol.C.approval_program() -> uint64:
 main:
-    intcblock 8 32 1 16
+    intcblock 8 64 1 16
     txn ApplicationID
     bnz main_after_if_else@2
     intc_2 // 1
@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x2c29a4bc // method "f(uint64[3],uint64[2][3],uint256,uint256,uint256)(uint256,uint256)"
+    pushbytes 0xd0fd444a // method "f(uint64[3],uint64[2][3],uint512,uint512,uint512)(uint512,uint512)"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -48,21 +48,21 @@ f:
     txna ApplicationArgs 3
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 4
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 5
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_0 // 8
     bzero
     dup
@@ -109,17 +109,17 @@ f:
     extract3 // on error: index access is out of bounds
     dig 1
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     uncover 2
     dig 1
     b|
     dig 2
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
     cover 2

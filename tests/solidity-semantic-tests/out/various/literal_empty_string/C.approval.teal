@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/literal_empty_string.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 0 64
     bytecblock "x" 0x "a" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -29,7 +29,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x8fd9fca1 0xf2b65f27 0x7632a750 0xb5251388 // method "f(byte[32],uint256)void", method "g()void", method "x()byte[32]", method "a()uint256"
+    pushbytess 0x8e63603c 0xf2b65f27 0x7632a750 0x978d552f // method "f(byte[32],uint512)void", method "g()void", method "x()byte[32]", method "a()uint512"
     txna ApplicationArgs 0
     match f g x a
     err
@@ -40,15 +40,15 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    pushint 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 32
+    intc_2 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec_0 // "x"
     uncover 2
     app_global_put
@@ -69,9 +69,9 @@ g:
     extract_uint64
     pushint 6
     itxn_field TypeEnum
-    intc_2 // 0
+    intc_1 // 0
     itxn_field OnCompletion
-    intc_2 // 0
+    intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationID
     pushbytes 0x0fa32405 // method "f(uint8[32],uint256)void"
@@ -86,7 +86,7 @@ g:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/literal_empty_string.sol.C.x[routing]() -> void:
 x:
-    intc_2 // 0
+    intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
@@ -100,16 +100,16 @@ x:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/literal_empty_string.sol.C.a[routing]() -> void:
 a:
-    intc_2 // 0
+    intc_1 // 0
     bytec_2 // "a"
     app_global_get_ex
     assert // check a exists
     dup
     len
-    intc_1 // 32
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 64
     bzero
     b|
     bytec_3 // 0x151f7c75

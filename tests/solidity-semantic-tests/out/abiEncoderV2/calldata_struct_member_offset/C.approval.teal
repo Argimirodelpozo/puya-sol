@@ -3,11 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_struct_member_offset.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 34
-    bytecblock 0xc088d831
+    intcblock 0 1 64 34
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -23,8 +22,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    bytec_0 // method "g(((uint256,uint256[]),uint256))uint256"
-    pushbytes 0x219b312e // method "f()(uint256,uint256)"
+    pushbytess 0x365ad72e 0x6acb2994 // method "g(((uint256,uint256[]),uint256))uint512", method "f()(uint512,uint512)"
     txna ApplicationArgs 0
     match g f
     err
@@ -36,7 +34,7 @@ g:
     dup
     len
     dig 1
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid tuple encoding
     dup
     intc_3 // 34
@@ -49,7 +47,7 @@ g:
     dup
     len
     dig 1
-    intc_0 // 32
+    pushint 32
     extract_uint16 // on error: invalid tuple encoding
     dup
     intc_3 // 34
@@ -57,57 +55,57 @@ g:
     assert // invalid tail pointer at index 1 of (uint256,(len+uint256[]))
     swap
     substring3
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    intc_0 // 32
+    pushint 32
     *
     pushint 70
     +
     ==
     assert // invalid number of bytes for B
     extract 2 32
-    intc_0 // 32
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_struct_member_offset.sol.C.f[routing]() -> void:
 f:
-    intc_0 // 32
-    bzero
     itxn_begin
     global CurrentApplicationAddress
     pushint 24
     extract_uint64
     pushint 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_0 // method "g(((uint256,uint256[]),uint256))uint256"
+    pushbytes 0xc088d831 // method "g(((uint256,uint256[]),uint256))uint256"
     itxn_field ApplicationArgs
     pushbytes 0x0022000000000000000000000000000000000000000000000000000000000000000b00000000000000000000000000000000000000000000000000000000000001a400220014000000000000000000000000000000000000000000000000000000000000001f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     extract 4 0
-    dup
+    intc_2 // 64
+    bzero
+    dig 1
     len
-    intc_0 // 32
+    intc_2 // 64
     <=
     assert // overflow
     b|
-    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000b
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000b
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return

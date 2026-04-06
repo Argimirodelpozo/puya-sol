@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_string_key.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 2
+    intcblock 1 64 0 2
     bytecblock "__ctor_pending" "m_nameToRecord" 0x6d5f6e616d65546f5265636f7264992a93455c71fedd36ac9bbc439952c041cf61445958472af479269b8d873513 0x 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x538298f7 0x9990960a 0xcc0c123f 0x25bad250 // method "__postInit()void", method "set(string,uint256)void", method "get(string)uint256", method "setFixed(uint256)void", method "getFixed()uint256"
+    pushbytess 0xbacc49e3 0x406e40a4 0xdefc74c8 0x28d73e48 0x042998d2 // method "__postInit()void", method "set(string,uint512)void", method "get(string)uint512", method "setFixed(uint512)void", method "getFixed()uint512"
     txna ApplicationArgs 0
     match __postInit set get setFixed getFixed
     err
@@ -64,9 +64,9 @@ set:
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     swap
     sha256
     bytec_1 // "m_nameToRecord"
@@ -104,10 +104,10 @@ get:
     select
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     bytec 4 // 0x151f7c75
@@ -123,9 +123,9 @@ setFixed:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec_2 // 0x6d5f6e616d65546f5265636f7264992a93455c71fedd36ac9bbc439952c041cf61445958472af479269b8d873513
     box_del
     pop
@@ -145,10 +145,10 @@ getFixed:
     select
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     bytec 4 // 0x151f7c75

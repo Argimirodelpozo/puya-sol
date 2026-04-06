@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/multiple_return_values.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 64 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x5eac5f8b // method "run(bool,uint256)(uint256,bool,uint256)"
+    pushbytes 0x3f1b28be // method "run(bool,uint512)(uint512,bool,uint512)"
     txna ApplicationArgs 0
     match main_run_route@4
     err
@@ -45,17 +45,17 @@ run:
     dup
     len
     dup
-    intc_1 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     dig 2
     intc_0 // 1
     <=
     assert // ABI bool validation
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     pushbytes 0x00
@@ -63,7 +63,7 @@ run:
     uncover 3
     setbit
     concat
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     concat
     pushbytes 0x151f7c75
     swap

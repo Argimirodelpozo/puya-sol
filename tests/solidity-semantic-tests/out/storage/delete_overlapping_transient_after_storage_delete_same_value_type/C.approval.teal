@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_delete_same_value_type.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
+    intcblock 1 0 64
     bytecblock "varTransient" "varStorage" 0x
     txn ApplicationID
     bnz main_after_if_else@2
@@ -31,7 +31,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x9939b21d 0xdd9bf710 // method "setAndClear()void", method "varStorage()uint256"
+    pushbytess 0x9939b21d 0xe3f676db // method "setAndClear()void", method "varStorage()uint512"
     txna ApplicationArgs 0
     match setAndClear varStorage
     err
@@ -72,10 +72,10 @@ varStorage:
     assert // check varStorage exists
     dup
     len
-    intc_2 // 32
+    intc_2 // 64
     <=
     assert // overflow
-    intc_2 // 32
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x151f7c75

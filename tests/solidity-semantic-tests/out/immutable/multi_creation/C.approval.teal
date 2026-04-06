@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/multi_creation.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 6 1 32 200000
+    intcblock 0 6 1 64 200000
     bytecblock 0x0a8101 0xcd78b354 "a" 0x "x" "y" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@8
@@ -123,7 +123,7 @@ main_after_if_else@8:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xb34b38c7 0x7c1072af 0x5c5e3bbc // method "f()(uint256,uint256,uint256)", method "x()uint256", method "y()uint256"
+    pushbytess 0xcc388e13 0x3f4abdfd 0x60d68bc1 // method "f()(uint512,uint512,uint512)", method "x()uint512", method "y()uint512"
     txna ApplicationArgs 0
     match f x y
     err
@@ -217,17 +217,17 @@ f:
     extract 4 0
     dig 2
     len
-    intc_3 // 32
+    intc_3 // 64
     <=
     assert // overflow
-    intc_3 // 32
+    intc_3 // 64
     bzero
     uncover 3
     dig 1
     b|
     dig 3
     len
-    intc_3 // 32
+    intc_3 // 64
     <=
     assert // overflow
     uncover 3
@@ -236,7 +236,7 @@ f:
     concat
     dig 2
     len
-    intc_3 // 32
+    intc_3 // 64
     <=
     assert // overflow
     cover 2
@@ -258,10 +258,10 @@ x:
     assert // check x exists
     dup
     len
-    intc_3 // 32
+    intc_3 // 64
     <=
     assert // overflow
-    intc_3 // 32
+    intc_3 // 64
     bzero
     b|
     bytec 6 // 0x151f7c75
@@ -280,10 +280,10 @@ y:
     assert // check y exists
     dup
     len
-    intc_3 // 32
+    intc_3 // 64
     <=
     assert // overflow
-    intc_3 // 32
+    intc_3 // 64
     bzero
     b|
     bytec 6 // 0x151f7c75

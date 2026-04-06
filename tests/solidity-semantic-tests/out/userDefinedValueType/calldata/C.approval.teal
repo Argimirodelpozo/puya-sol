@@ -29,7 +29,7 @@ main_after_if_else@2:
     pushbytes 0xbacc49e3 // method "__postInit()void"
     bytec 4 // method "f(uint8[32][])void"
     bytec 5 // method "g(uint8[32][])void"
-    pushbytess 0x0ec23091 0x10d82b40 0x004c2225 // method "test_f()bool", method "test_g()bool", method "addresses(uint256)address"
+    pushbytess 0x0ec23091 0x10d82b40 0x929cd5db // method "test_f()bool", method "test_g()bool", method "addresses(uint512)address"
     txna ApplicationArgs 0
     match __postInit f g test_f test_g addresses
     err
@@ -206,9 +206,9 @@ addresses:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_1 // 32
     bzero
     swap

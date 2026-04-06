@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/msg_data_to_struct_member_copy.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 64 1
     bytecblock 0x151f7c750002
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x863fa9ed 0x660674e7 0xb20464d3 0xd1ce5f0d 0xb73d65ad // method "f()(byte[])", method "g()(byte[])", method "hashes()(byte[4],byte[4])", method "large(uint256,uint256,uint256,uint256)(byte[])", method "another_large(uint256,uint256,uint256,uint256)(byte[])"
+    pushbytess 0x863fa9ed 0x660674e7 0xb20464d3 0xb1d019cd 0x46767cd7 // method "f()(byte[])", method "g()(byte[])", method "hashes()(byte[4],byte[4])", method "large(uint512,uint512,uint512,uint512)(byte[])", method "another_large(uint512,uint512,uint512,uint512)(byte[])"
     txna ApplicationArgs 0
     match f g main_hashes_route@7 large another_large
     err
@@ -73,24 +73,24 @@ g:
 large:
     txna ApplicationArgs 1
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 3
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 4
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 0
     dup
     len
@@ -110,24 +110,24 @@ large:
 another_large:
     txna ApplicationArgs 1
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 3
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 4
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 0
     dup
     len

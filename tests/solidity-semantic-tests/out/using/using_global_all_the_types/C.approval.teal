@@ -1,9 +1,9 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource__b16biw_/B.sol.C.approval_program() -> uint64:
+// /tmp/multisource_zn6sos8j/B.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 64 1
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xb34b38c7 // method "f()(uint256,uint256,uint256)"
+    pushbytes 0xcc388e13 // method "f()(uint512,uint512,uint512)"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -31,7 +31,7 @@ main_f_route@4:
     b f
 
 
-// /tmp/multisource__b16biw_/B.sol.L.f(1)_0(e: uint64) -> bytes:
+// /tmp/multisource_zn6sos8j/B.sol.L.f(1)_0(e: uint64) -> bytes:
 L.f:
     proto 1 1
     frame_dig -1
@@ -39,56 +39,55 @@ L.f:
     retsub
 
 
-// /tmp/multisource__b16biw_/B.sol.L.f(1)_1(s: bytes) -> bytes:
-/tmp/multisource__b16biw_/B.sol.L.f(1)_1:
+// /tmp/multisource_zn6sos8j/B.sol.L.f(1)_1(s: bytes) -> bytes:
+/tmp/multisource_zn6sos8j/B.sol.L.f(1)_1:
     proto 1 1
     frame_dig -1
     extract 0 32
     retsub
 
 
-// /tmp/multisource__b16biw_/B.sol.L.f(1)_2(t: bytes) -> bytes:
-/tmp/multisource__b16biw_/B.sol.L.f(1)_2:
+// /tmp/multisource_zn6sos8j/B.sol.L.f(1)_2(t: bytes) -> bytes:
+/tmp/multisource_zn6sos8j/B.sol.L.f(1)_2:
     proto 1 1
     frame_dig -1
     retsub
 
 
-// /tmp/multisource__b16biw_/B.sol.C.f[routing]() -> void:
+// /tmp/multisource_zn6sos8j/B.sol.C.f[routing]() -> void:
 f:
     intc_1 // 1
     callsub L.f
-    intc_0 // 32
-    bzero
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
-    callsub /tmp/multisource__b16biw_/B.sol.L.f(1)_1
+    callsub /tmp/multisource_zn6sos8j/B.sol.L.f(1)_1
     pushint 9
     itob
-    callsub /tmp/multisource__b16biw_/B.sol.L.f(1)_2
+    callsub /tmp/multisource_zn6sos8j/B.sol.L.f(1)_2
+    dig 2
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    uncover 3
+    dig 1
+    b|
     dig 3
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
     uncover 3
-    dig 3
-    b|
     dig 2
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 2
-    dig 3
     b|
     concat
-    dig 1
+    dig 2
     len
-    intc_0 // 32
+    intc_0 // 64
     <=
     assert // overflow
-    swap
-    uncover 2
+    cover 2
     b|
     concat
     pushbytes 0x151f7c75

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/derived_overload_base_function_direct.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 64
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -22,19 +22,19 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x1928cd24 0x4b2c0376 0xcd78b354 // method "f(uint256)uint256", method "g()uint256", method "f()uint256"
+    pushbytess 0xf3d5e499 0x5ed33a7f 0xe03b32a4 // method "f(uint512)uint512", method "g()uint512", method "f()uint512"
     txna ApplicationArgs 0
     match f(u256) main_g_route@6 main_f_route@7
     err
 
 main_f_route@7:
-    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000a
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a
     log
     intc_0 // 1
     return
 
 main_g_route@6:
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002
     log
     intc_0 // 1
     return
@@ -45,17 +45,17 @@ f(u256):
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     pushbytes 0x02
     b*
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     pushbytes 0x151f7c75

@@ -18,7 +18,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xd77840ee // method "f(uint256)string"
+    pushbytes 0xd607507f // method "f(uint512)string"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -37,9 +37,9 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    pushint 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_1 // 8
     bzero
     swap

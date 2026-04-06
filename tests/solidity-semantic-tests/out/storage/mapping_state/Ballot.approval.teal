@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mapping_state.sol.Ballot.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
+    intcblock 1 0 32 64
     bytecblock "__ctor_pending" "canVote" "voteCount" "voted" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0xaf08416b 0x81890f0b 0x39830387 // method "__postInit()void", method "getVoteCount(address)uint256", method "grantVoteRight(address)void", method "vote(address,address)bool"
+    pushbytess 0xbacc49e3 0x040e9454 0x81890f0b 0x39830387 // method "__postInit()void", method "getVoteCount(address)uint512", method "grantVoteRight(address)void", method "vote(address,address)bool"
     txna ApplicationArgs 0
     match __postInit getVoteCount grantVoteRight vote
     err
@@ -74,10 +74,10 @@ getVoteCount:
     select
     dup
     len
-    intc_2 // 32
+    intc_3 // 64
     <=
     assert // overflow
-    intc_2 // 32
+    intc_3 // 64
     bzero
     b|
     bytec 4 // 0x151f7c75

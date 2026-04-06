@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/multislot_struct_allocation.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 64 0
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x04738df9 0xcd78b354 // method "o(uint256)uint256", method "f()uint256"
+    pushbytess 0x126ff02f 0xe03b32a4 // method "o(uint512)uint512", method "f()uint512"
     txna ApplicationArgs 0
     match o f
     err
@@ -34,17 +34,17 @@ o:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     pushbytes 0x01
     b+
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -59,8 +59,6 @@ o:
 f:
     intc_0 // 1
     itob
-    intc_1 // 32
-    bzero
     itxn_begin
     pushint 6
     itxn_field TypeEnum
@@ -72,16 +70,17 @@ f:
     itxn_field ApplicationID
     pushbytes 0x0bdce004 // method "x()byte[]"
     itxn_field ApplicationArgs
-    swap
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     extract 4 0
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
+    intc_1 // 64
+    bzero
     b|
     bytec_0 // 0x151f7c75
     swap

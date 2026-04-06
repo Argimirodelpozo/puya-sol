@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_overflow.sol.C.approval_program() -> uint64:
 main:
-    intcblock 255 32 1 8
+    intcblock 255 64 1 8
     bytecblock 0x151f7c75 0x01 0x
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x8906c82f 0x6a732b8a // method "f(uint64,uint64)uint256", method "g(uint256,uint256)uint256"
+    pushbytess 0xce44a3c6 0x22d8143c // method "f(uint64,uint64)uint512", method "g(uint512,uint512)uint512"
     txna ApplicationArgs 0
     match f g
     err
@@ -69,7 +69,7 @@ f_ternary_merge@4:
     <=
     assert // overflow
     itob
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -90,15 +90,15 @@ g:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     bytec_1 // 0x01
     cover 2
 
@@ -133,10 +133,10 @@ g_after_while@6:
     dig 2
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75

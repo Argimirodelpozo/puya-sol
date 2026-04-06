@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_struct_internal.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 64 1
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x91a9b1cb // method "f(uint256,(uint256,uint256),uint256)(uint256,uint256)"
+    pushbytes 0x671600fa // method "f(uint512,(uint256,uint256),uint512)(uint512,uint512)"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -35,25 +35,25 @@ main_f_route@4:
 f(u256,28,u256):
     txna ApplicationArgs 1
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     len
-    pushint 64
+    intc_0 // 64
     ==
     assert // invalid number of bytes for S
     txna ApplicationArgs 3
     len
-    intc_0 // 32
+    intc_0 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     dup
     extract 0 32
     swap
     extract 32 32
-    intc_0 // 32
+    intc_0 // 64
     bzero
     uncover 2
     dig 1

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/uninitialized.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 32
+    intcblock 0 1 64
     bytecblock "u" "b" "a"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -27,7 +27,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x2c6c2b37 // method "get()(uint256,bool,address)"
+    pushbytes 0x14ec100a // method "get()(uint512,bool,address)"
     txna ApplicationArgs 0
     match main_get_route@4
     err
@@ -57,10 +57,10 @@ get:
     assert // check a exists
     dig 2
     len
-    intc_2 // 32
+    intc_2 // 64
     <=
     assert // overflow
-    intc_2 // 32
+    intc_2 // 64
     bzero
     uncover 3
     b|

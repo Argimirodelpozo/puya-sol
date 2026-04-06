@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/state_smoke_test.sol.test.approval_program() -> uint64:
 main:
-    intcblock 255 1 32 8
+    intcblock 255 1 64 8
     bytecblock "value1" "value2" 0x
     txn ApplicationID
     bnz main_after_if_else@2
@@ -29,7 +29,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xba51bbf2 0x4334fac7 // method "get(uint64)uint256", method "set(uint64,uint256)void"
+    pushbytess 0x7f1b0fca 0x7ab01c4a // method "get(uint64)uint512", method "set(uint64,uint512)void"
     txna ApplicationArgs 0
     match get set
     err
@@ -59,10 +59,10 @@ get:
 get_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/state_smoke_test.sol.test.get@4:
     dup
     len
-    intc_2 // 32
+    intc_2 // 64
     <=
     assert // overflow
-    intc_2 // 32
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x151f7c75
@@ -93,9 +93,9 @@ set:
     dup
     cover 2
     len
-    intc_2 // 32
+    intc_2 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     dup
     intc_0 // 255
     <=

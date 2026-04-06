@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 24 6 1
-    bytecblock 0x96f3d936 0x76a2115c 0x 0x15
+    bytecblock 0x96f3d936 0x 0x76a2115c 0x15
     txn ApplicationID
     bnz main_after_if_else@2
     intc_3 // 1
@@ -23,9 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    bytec_0 // method "get(uint256)uint256"
-    bytec_1 // method "set(uint256,uint256)void"
-    pushbytes 0xa78000de // method "test()void"
+    pushbytess 0x7cea95ea 0x9af1cffa 0xa78000de // method "get(uint512)uint512", method "set(uint512,uint512)void", method "test()void"
     txna ApplicationArgs 0
     match get set test
     err
@@ -36,9 +34,9 @@ get:
     txna ApplicationArgs 1
     dup
     len
-    pushint 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     pushint 160
     bzero
     load 0
@@ -54,10 +52,10 @@ get:
     store 0
     dup
     len
-    pushint 32
+    pushint 64
     <=
     assert // overflow
-    pushint 32
+    pushint 64
     bzero
     b|
     pushbytes 0x151f7c75
@@ -72,14 +70,14 @@ get:
 set:
     txna ApplicationArgs 1
     len
-    pushint 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     len
-    pushint 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     load 0
     store 0
     intc_3 // 1
@@ -126,12 +124,12 @@ test:
     itxn_submit
     itxn LastLog
     extract 4 0
-    bytec_2 // 0x
+    bytec_1 // 0x
     b==
     bz test_bool_false@6
     itxn LastLog
     extract 4 0
-    bytec_2 // 0x
+    bytec_1 // 0x
     b==
     bz test_bool_false@6
     intc_3 // 1
@@ -151,7 +149,7 @@ test_bool_merge@7:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_1 // method "set(uint256,uint256)void"
+    bytec_2 // method "set(uint256,uint256)void"
     itxn_field ApplicationArgs
     dig 2
     dup
@@ -197,7 +195,7 @@ test_bool_merge@7:
     bz test_bool_false@13
     itxn LastLog
     extract 4 0
-    bytec_2 // 0x
+    bytec_1 // 0x
     b==
     bz test_bool_false@13
     intc_3 // 1
@@ -217,7 +215,7 @@ test_bool_merge@14:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_1 // method "set(uint256,uint256)void"
+    bytec_2 // method "set(uint256,uint256)void"
     itxn_field ApplicationArgs
     dig 1
     dup

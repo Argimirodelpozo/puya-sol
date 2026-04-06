@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/arrays_complex_from_and_to_storage.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 24
+    intcblock 1 32 0 64
     bytecblock "data" "__ctor_pending" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
-    intc_1 // 1
+    intc_0 // 1
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x10395df8 0x95713e09 0x11d11551 // method "__postInit()void", method "set(uint64[3][])uint256", method "get()uint64[3][]", method "data(uint256,uint256)uint64"
+    pushbytess 0xbacc49e3 0x3656dc90 0x95713e09 0xf95feac5 // method "__postInit()void", method "set(uint64[3][])uint512", method "get()uint64[3][]", method "data(uint512,uint512)uint64"
     txna ApplicationArgs 0
     match __postInit set get data
     err
@@ -44,7 +44,7 @@ __postInit:
     intc_2 // 0
     box_create
     pop
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -54,7 +54,7 @@ set:
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 24
+    pushint 24
     *
     pushint 2
     +
@@ -71,17 +71,17 @@ set:
     bytec_0 // "data"
     box_len
     pop
-    intc_3 // 24
+    pushint 24
     /
     itob
-    intc_0 // 32
+    intc_3 // 64
     bzero
     b|
     bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -96,7 +96,7 @@ get:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -105,34 +105,34 @@ data:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_3 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_3 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
-    intc_0 // 32
+    assert // invalid number of bytes for arc4.uint512
+    intc_1 // 32
     bzero
     dup
     uncover 3
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     swap
     uncover 2
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     concat
     sha256
@@ -151,5 +151,5 @@ data:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return

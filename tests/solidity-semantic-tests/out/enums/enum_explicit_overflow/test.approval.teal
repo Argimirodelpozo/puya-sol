@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/enum_explicit_overflow.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 32 8 0
+    intcblock 1 64 8 0
     bytecblock "choice" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x1c5791a6 0x08d88de6 0x19c32ccd // method "getChoiceExp(uint256)uint256", method "getChoiceFromSigned(uint256)uint256", method "getChoiceFromMax()uint256"
+    pushbytess 0xfab6c849 0x090fed74 0xcb5b3309 // method "getChoiceExp(uint512)uint512", method "getChoiceFromSigned(uint512)uint512", method "getChoiceFromMax()uint512"
     txna ApplicationArgs 0
     match getChoiceExp getChoiceFromSigned getChoiceFromMax
     err
@@ -37,9 +37,9 @@ getChoiceExp:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_2 // 8
     bzero
     swap
@@ -57,7 +57,7 @@ getChoiceExp:
     dig 1
     app_global_put
     itob
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     bytec_1 // 0x151f7c75
@@ -73,9 +73,9 @@ getChoiceFromSigned:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_2 // 8
     bzero
     swap
@@ -93,7 +93,7 @@ getChoiceFromSigned:
     dig 1
     app_global_put
     itob
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     bytec_1 // 0x151f7c75
@@ -111,7 +111,7 @@ getChoiceFromMax:
     bytec_0 // "choice"
     pushint 18446744073709551615
     app_global_put
-    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000ffffffffffffffff
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffff
     log
     intc_0 // 1
     return

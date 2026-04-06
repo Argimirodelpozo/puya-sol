@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_tuple_assignment.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 1
+    intcblock 0 64 1
     bytecblock "y" "w" "x" 0x "z"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -30,7 +30,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xb34b38c7 // method "f()(uint256,uint256,uint256)"
+    pushbytes 0xcc388e13 // method "f()(uint512,uint512,uint512)"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -117,17 +117,17 @@ f:
     assert // check y exists
     dig 1
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     uncover 2
     dig 1
     b|
     dig 2
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
     uncover 2
@@ -136,7 +136,7 @@ f:
     concat
     dig 2
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
     cover 2
