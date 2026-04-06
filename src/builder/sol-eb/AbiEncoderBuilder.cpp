@@ -142,7 +142,8 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
 		itob->wtype = awst::WType::bytesType();
 		itob->opCode = "itob";
 		itob->stackArgs.push_back(std::move(_expr));
-		bytesExpr = std::move(itob);
+		// For non-packed (abi.encode), pad to 32-byte ABI word
+		bytesExpr = _isPacked ? std::move(itob) : leftPadBytes(std::move(itob), 32, _loc);
 	}
 	else if (_expr->wtype == awst::WType::biguintType())
 	{
@@ -150,7 +151,8 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
 		cast->sourceLocation = _loc;
 		cast->wtype = awst::WType::bytesType();
 		cast->expr = std::move(_expr);
-		bytesExpr = std::move(cast);
+		// For non-packed, ensure 32-byte padding
+		bytesExpr = _isPacked ? std::move(cast) : leftPadBytes(std::move(cast), 32, _loc);
 	}
 	else if (_expr->wtype == awst::WType::accountType())
 	{
