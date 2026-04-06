@@ -35,6 +35,7 @@ class SemanticTest:
     calls: list[TestCall] = field(default_factory=list)
     skipped: bool = False
     skip_reason: str = ""
+    compile_via_yul: bool = False
 
     @property
     def name(self):
@@ -59,6 +60,16 @@ def parse_test_file(path: Path) -> SemanticTest:
     assertion_block = parts[1]
 
     # No parser-level skips — let everything compile or fail honestly
+
+    # Detect compileViaYul setting in assertion block
+    compile_via_yul = False
+    for line in assertion_block.strip().split("\n"):
+        line = line.strip()
+        if line.startswith("//"):
+            inner = line[2:].strip()
+            if inner.startswith("compileViaYul:"):
+                val = inner.split(":", 1)[1].strip().lower()
+                compile_via_yul = val == "true"
 
     calls = []
     # Join continuation lines: "// -> result" after a method call line
@@ -90,9 +101,9 @@ def parse_test_file(path: Path) -> SemanticTest:
 
     # Tests with no assertions still pass if compilation + deployment succeeds
     if not calls:
-        return SemanticTest(source_path=path, source_code=source_code)
+        return SemanticTest(source_path=path, source_code=source_code, compile_via_yul=compile_via_yul)
 
-    return SemanticTest(source_path=path, source_code=source_code, calls=calls)
+    return SemanticTest(source_path=path, source_code=source_code, calls=calls, compile_via_yul=compile_via_yul)
 
 
 def _parse_assertion_line(line: str) -> TestCall | None:

@@ -39,11 +39,11 @@ f:
     pushint 0
     itob
 
-f_while_top@2:
+f_while_top@4:
     dup
     dig 3
     b<
-    bz f_after_while@4
+    bz f_after_while@6
     dig 1
     pushbytes 0x01
     b+
@@ -52,9 +52,9 @@ f_while_top@2:
     pushbytes 0x01
     b+
     bury 1
-    b f_while_top@2
+    b f_while_top@4
 
-f_after_while@4:
+f_after_while@6:
     dig 1
     dup
     len

@@ -97,9 +97,10 @@ def _split_multi_source(sol_path):
     return tmp_dir / main, all_sources, tmp_dir
 
 
-def compile_test(sol_path: Path, out_dir: Path, ensure_budget: dict = None) -> dict | None:
+def compile_test(sol_path: Path, out_dir: Path, ensure_budget: dict = None, via_yul_behavior: bool = False) -> dict | None:
     """Compile a .sol file. Returns dict of contract artifacts or None on failure.
-    ensure_budget: dict of func_name → budget, or None."""
+    ensure_budget: dict of func_name → budget, or None.
+    via_yul_behavior: emulate Solidity's viaIR codegen semantics for modifiers."""
     out_dir.mkdir(parents=True, exist_ok=True)
 
     source_path, all_sources, import_dir = _split_multi_source(sol_path)
@@ -116,6 +117,8 @@ def compile_test(sol_path: Path, out_dir: Path, ensure_budget: dict = None) -> d
     if ensure_budget:
         for func, budget in ensure_budget.items():
             cmd += ["--ensure-budget", f"{func}:{budget}"]
+    if via_yul_behavior:
+        cmd += ["--via-yul-behavior"]
 
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
@@ -1174,7 +1177,7 @@ def run_test(test: SemanticTest, localnet, account, verbose=False, _budget_retry
     # Compile — on budget retry, inject ensure_budget for failing functions
     out_dir = OUT_DIR / test.category / test.name
     ensure_budget = getattr(test, '_ensure_budget', None) if _budget_retry else None
-    contracts = compile_test(test.source_path, out_dir, ensure_budget=ensure_budget)
+    contracts = compile_test(test.source_path, out_dir, ensure_budget=ensure_budget, via_yul_behavior=test.compile_via_yul)
     if not contracts:
         return "COMPILE_ERROR", "compilation failed"
 

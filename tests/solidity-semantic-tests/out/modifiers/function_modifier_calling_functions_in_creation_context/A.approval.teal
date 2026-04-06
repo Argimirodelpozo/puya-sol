@@ -6,7 +6,7 @@ main:
     intcblock 1 0 64
     bytecblock "data"
     txn ApplicationID
-    bnz main_after_if_else@2
+    bnz main_after_if_else@5
     bytec_0 // "data"
     pushbytes 0x
     app_global_put
@@ -15,7 +15,7 @@ main:
     intc_0 // 1
     return
 
-main_after_if_else@2:
+main_after_if_else@5:
     pushint 4096
     bzero
     store 0
@@ -30,10 +30,10 @@ main_after_if_else@2:
     assert
     pushbytess 0xe1ff2398 0xe54503a7 0x7abeaa76 0xa7681aa9 // method "f1()void", method "f2()void", method "f3()void", method "getData()uint512"
     txna ApplicationArgs 0
-    match f1 f2 main_f3_route@7 getData
+    match f1 f2 main_f3_route@10 getData
     err
 
-main_f3_route@7:
+main_f3_route@10:
     intc_0 // 1
     return
 

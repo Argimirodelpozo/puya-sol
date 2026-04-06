@@ -42,11 +42,11 @@ f:
     btoi
     pushint 0
 
-f_while_top@2:
+f_while_top@4:
     dup
     pushbytes "1234567"
     ==
-    bz f_after_while@6
+    bz f_after_while@11
     dig 1
     dup
     intc_1 // 255
@@ -55,9 +55,9 @@ f_while_top@2:
     intc_1 // 255
     &
     bury 2
-    b f_while_top@2
+    b f_while_top@4
 
-f_after_while@6:
+f_after_while@11:
     pushbytes 0x151f7c7500000000000000
     log
     intc_0 // 1

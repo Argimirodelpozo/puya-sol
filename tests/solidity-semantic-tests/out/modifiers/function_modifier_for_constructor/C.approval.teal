@@ -6,14 +6,14 @@ main:
     intcblock 1 64
     bytecblock "data"
     txn ApplicationID
-    bnz main_after_if_else@2
+    bnz main_after_if_else@5
     bytec_0 // "data"
     pushbytes 0x06
     app_global_put
     intc_0 // 1
     return
 
-main_after_if_else@2:
+main_after_if_else@5:
     pushint 4096
     bzero
     store 0
@@ -23,10 +23,10 @@ main_after_if_else@2:
     store 0
     pushbytes 0xa7681aa9 // method "getData()uint512"
     txna ApplicationArgs 0
-    match main_getData_route@4
+    match main_getData_route@7
     err
 
-main_getData_route@4:
+main_getData_route@7:
     txn OnCompletion
     !
     txn ApplicationID

@@ -132,7 +132,7 @@ def _split_multi_source(sol_path):
     return main_file, tmp_dir
 
 
-def compile_sol(sol_path, out_dir):
+def compile_sol(sol_path, out_dir, via_yul_behavior=False):
     # Always clean and recompile — no stale cache
     import shutil
     if out_dir.exists():
@@ -167,6 +167,8 @@ def compile_sol(sol_path, out_dir):
            "--puya-path", str(PUYA)]
     if import_dir:
         cmd += ["--import-path", str(import_dir)]
+    if via_yul_behavior:
+        cmd += ["--via-yul-behavior"]
 
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
 

@@ -152,7 +152,8 @@ ContractBuilder::ContractBuilder(
 	LibraryFunctionIdMap const& _libraryFunctionIds,
 	uint64_t _opupBudget,
 	FreeFunctionIdMap const& _freeFunctionById,
-	std::map<std::string, uint64_t> const& _ensureBudget
+	std::map<std::string, uint64_t> const& _ensureBudget,
+	bool _viaIR
 )
 	: m_typeMapper(_typeMapper),
 	  m_storageMapper(_storageMapper),
@@ -160,7 +161,8 @@ ContractBuilder::ContractBuilder(
 	  m_libraryFunctionIds(_libraryFunctionIds),
 	  m_opupBudget(_opupBudget),
 	  m_freeFunctionById(_freeFunctionById),
-	  m_ensureBudget(_ensureBudget)
+	  m_ensureBudget(_ensureBudget),
+	  m_viaIR(_viaIR)
 {
 	Logger::instance().debug("[TRACE] ContractBuilder m_freeFunctionById.size()=" + std::to_string(m_freeFunctionById.size()) + " addr=" + std::to_string((uintptr_t)&m_freeFunctionById));
 }
@@ -3087,9 +3089,16 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			method.body->body.insert(method.body->body.begin(), std::move(initStmt));
 		}
 
-		// Inline modifiers — textual _ expansion shares local variables
+		// Modifier inlining strategy depends on codegen mode:
+		// - Legacy (default): textual _ expansion, shared local variables
+		// - Via IR: separate subroutines per modifier, fresh vars per _ invocation
 		if (!_func.modifiers().empty())
-			inlineModifiers(_func, method.body);
+		{
+			if (m_viaIR)
+				buildModifierChain(_func, method, _contractName);
+			else
+				inlineModifiers(_func, method.body);
+		}
 
 		// Inject ensure_budget for opup budget padding
 		// Check per-function map first, then global opup budget

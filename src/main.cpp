@@ -3,8 +3,6 @@
 #include "json/AWSTSerializer.h"
 #include "json/OptionsWriter.h"
 #include "runner/PuyaRunner.h"
-#include "splitter/SizeEstimator.h"
-#include "splitter/ConstantExternalizer.h"
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/FileReader.h>
@@ -147,6 +145,7 @@ struct Options
 	bool outputIr = false;
 	bool outputLogs = true;
 	bool splitTest = false;
+	bool viaYulBehavior = false;
 	std::string upstreamTestDir; // for ExternalSource resolution
 };
 
@@ -169,6 +168,8 @@ void printUsage(char const* _progName)
 		<< "  --optimization-level <N>   Puya optimization level: 0, 1, 2 (default: 1)\n"
 		<< "  --output-ir            Output all intermediate representations (SSA IR, MIR, TEAL)\n"
 		<< "  --no-output-logs       Disable writing compilation logs to output directory\n"
+		<< "  --via-yul-behavior     Emulate Solidity's viaIR/compileViaYul codegen semantics\n"
+		<< "                         (separate subroutines per modifier, fresh vars per _ invocation)\n"
 		<< "  --split-test           Split a semantic test file (Source/ExternalSource directives)\n"
 		<< "                         into individual .sol files in output-dir. Prints main source path.\n"
 		<< "  --upstream-test-dir <d> Upstream Solidity semanticTests dir (for ExternalSource)\n"
@@ -215,6 +216,8 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.outputIr = true;
 		else if (arg == "--no-output-logs")
 			opts.outputLogs = false;
+		else if (arg == "--via-yul-behavior")
+			opts.viaYulBehavior = true;
 		else if (arg == "--split-test")
 			opts.splitTest = true;
 		else if (arg == "--upstream-test-dir" && i + 1 < _argc)
@@ -630,7 +633,7 @@ int main(int _argc, char* _argv[])
 	// Build AWST
 	logger.info("Building AWST...");
 	puyasol::builder::AWSTBuilder builder;
-	auto roots = builder.build(compiler, sourceFile, opts.opupBudget, opts.ensureBudget);
+	auto roots = builder.build(compiler, sourceFile, opts.opupBudget, opts.ensureBudget, opts.viaYulBehavior);
 
 	if (roots.empty())
 	{
@@ -640,51 +643,7 @@ int main(int _argc, char* _argv[])
 
 	logger.info("Generated " + std::to_string(roots.size()) + " AWST root node(s)");
 
-	// ─── Constant externalization ────────────────────────────────────────
-	// Move large constants (proof data, etc.) to box storage. This reduces
-	// bytecode size and enables contracts to fit within AVM 8KB limit.
-	// A __load_constants() ABI method is added to read from box → scratch.
-	{
-		std::shared_ptr<puyasol::awst::Contract> primaryContract;
-		std::string sourceBaseName = fs::path(sourceFile).stem().string();
-		for (auto const& root: roots)
-		{
-			if (auto contract = std::dynamic_pointer_cast<puyasol::awst::Contract>(root))
-			{
-				primaryContract = contract;
-				if (contract->name == sourceBaseName)
-					break;
-			}
-		}
-
-		if (primaryContract)
-		{
-			std::vector<std::shared_ptr<puyasol::awst::RootNode>> subroutines;
-			for (auto const& root: roots)
-			{
-				if (dynamic_cast<puyasol::awst::Subroutine const*>(root.get()))
-					subroutines.push_back(root);
-			}
-
-			puyasol::splitter::ConstantExternalizer constExt;
-			auto constResult = constExt.externalize(*primaryContract, subroutines);
-			if (constResult.didExternalize)
-			{
-				logger.info("Externalized " + std::to_string(constResult.constants.size()) +
-					" constant(s) to box '" + constResult.boxName + "' (" +
-					std::to_string(constResult.totalBoxSize) + " bytes)");
-			}
-
-			// ─── Size estimation diagnostic ──────────────────────────────────
-			puyasol::splitter::SizeEstimator estimator;
-			auto estimate = estimator.estimate(*primaryContract, subroutines);
-			logger.debug("Estimated contract size: " +
-				std::to_string(estimate.estimatedBytes) + " bytes (" +
-				std::to_string(estimate.totalInstructions) + " instructions)");
-		}
-	}
-
-	// ─── Normal (non-split) serialization and output ───────────────────────
+	// ─── Serialization and output ─────────────────────────────────────────
 
 	// Serialize to JSON
 	puyasol::json::AWSTSerializer serializer;

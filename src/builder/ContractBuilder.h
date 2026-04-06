@@ -35,7 +35,8 @@ public:
 		LibraryFunctionIdMap const& _libraryFunctionIds,
 		uint64_t _opupBudget = 0,
 		FreeFunctionIdMap const& _freeFunctionById = {},
-		std::map<std::string, uint64_t> const& _ensureBudget = {}
+		std::map<std::string, uint64_t> const& _ensureBudget = {},
+		bool _viaIR = false
 	);
 
 	/// Build AWST from a full contract definition.
@@ -51,6 +52,7 @@ private:
 	uint64_t m_opupBudget = 0;
 	FreeFunctionIdMap const& m_freeFunctionById;
 	std::map<std::string, uint64_t> m_ensureBudget;
+	bool m_viaIR = false;
 
 	std::unique_ptr<ExpressionBuilder> m_exprBuilder;
 

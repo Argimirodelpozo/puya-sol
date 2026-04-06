@@ -26,7 +26,8 @@ public:
 		solidity::frontend::CompilerStack& _compiler,
 		std::string const& _sourceFile,
 		uint64_t _opupBudget = 0,
-		std::map<std::string, uint64_t> const& _ensureBudget = {}
+		std::map<std::string, uint64_t> const& _ensureBudget = {},
+		bool _viaYulBehavior = false
 	);
 
 private:

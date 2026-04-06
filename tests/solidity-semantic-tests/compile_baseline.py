@@ -32,13 +32,14 @@ def compile_one(sol_path: Path) -> tuple[str, str, str, str]:
     out_dir = OUT_DIR / category / name
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    cmd = [str(COMPILER), "--source", str(sol_path),
+           "--output-dir", str(out_dir),
+           "--puya-path", str(PUYA)]
+    if test.compile_via_yul:
+        cmd += ["--via-yul-behavior"]
+
     try:
-        result = subprocess.run(
-            [str(COMPILER), "--source", str(sol_path),
-             "--output-dir", str(out_dir),
-             "--puya-path", str(PUYA)],
-            capture_output=True, text=True, timeout=120,
-        )
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
     except subprocess.TimeoutExpired:
         return category, name, "COMPILE_ERROR", "timeout"
 
