@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_three_dimensional_dynamic_array_index_access.sol.C.approval_program() -> uint64:
 main:
-    intcblock 2 0 1 8
+    intcblock 2 0 1 32
     bytecblock 0x151f7c75 ""
     txn ApplicationID
     bnz main_after_if_else@2
@@ -69,7 +69,7 @@ f_for_header@1:
     substring3
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 32
+    intc_3 // 32
     *
     intc_0 // 2
     +
@@ -99,48 +99,57 @@ f_after_for@4:
     pushint 64
     ==
     assert // invalid number of bytes for arc4.uint512
-    intc_3 // 8
+    intc_3 // 32
+    bzero
+    pushint 8
     bzero
     dup
+    uncover 4
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    swap
     uncover 3
     concat
     dup
     len
-    intc_3 // 8
-    -
-    extract_uint64
-    swap
-    uncover 2
-    concat
-    dup
-    len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     dig 1
-    dig 7
+    dig 8
     <
     assert // index access is out of bounds
     swap
     intc_0 // 2
     *
-    dig 3
+    dig 4
     dup
     uncover 2
     extract_uint16
     dup2
     extract_uint16
-    pushint 32
+    intc_3 // 32
     *
     intc_0 // 2
     +
     extract3
     extract 2 0
     swap
-    pushint 32
+    intc_3 // 32
     *
-    pushint 32
+    intc_3 // 32
     extract3 // on error: index access is out of bounds
+    concat
+    dup
+    len
+    intc_3 // 32
+    -
+    intc_3 // 32
+    extract3
     dup
     len
     itob
@@ -231,7 +240,7 @@ g_for_header@3:
     substring3
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 32
+    intc_3 // 32
     *
     intc_0 // 2
     +
@@ -280,36 +289,38 @@ g_after_for@8:
     pushint 64
     ==
     assert // invalid number of bytes for arc4.uint512
-    intc_3 // 8
+    intc_3 // 32
+    bzero
+    pushint 8
     bzero
     dup
-    uncover 4
+    uncover 5
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     dig 1
+    uncover 5
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    uncover 2
     uncover 4
     concat
     dup
     len
-    intc_3 // 8
-    -
-    extract_uint64
-    uncover 2
-    uncover 3
-    concat
-    dup
-    len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     dig 2
     intc_0 // 2
     *
-    dig 5
+    dig 6
     dup
     cover 3
     swap
@@ -317,7 +328,7 @@ g_after_for@8:
     uncover 4
     intc_2 // 1
     +
-    dig 9
+    dig 10
     dig 1
     - // on error: index access is out of bounds
     dig 4
@@ -349,17 +360,24 @@ g_after_for@8:
     extract_uint16
     dup2
     extract_uint16
-    pushint 32
+    intc_3 // 32
     *
     intc_0 // 2
     +
     extract3
     extract 2 0
     swap
-    pushint 32
+    intc_3 // 32
     *
-    pushint 32
+    intc_3 // 32
     extract3 // on error: index access is out of bounds
+    concat
+    dup
+    len
+    intc_3 // 32
+    -
+    intc_3 // 32
+    extract3
     dup
     len
     itob
@@ -439,7 +457,7 @@ h_for_header@3:
     substring3
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 32
+    intc_3 // 32
     *
     intc_0 // 2
     +
@@ -477,13 +495,13 @@ h_after_for@8:
     pushint 64
     ==
     assert // invalid number of bytes for arc4.uint512
-    intc_3 // 8
+    pushint 8
     bzero
     swap
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     dig 2
@@ -509,7 +527,7 @@ h_after_for@8:
     extract_uint16
     dup2
     extract_uint16
-    pushint 32
+    intc_3 // 32
     *
     intc_0 // 2
     +
@@ -615,7 +633,7 @@ k_for_header@3:
     substring3
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 32
+    intc_3 // 32
     *
     pushint 4
     +
@@ -658,14 +676,14 @@ k_after_for@8:
     pushint 64
     ==
     assert // invalid number of bytes for arc4.uint512
-    intc_3 // 8
+    pushint 8
     bzero
     dup
     uncover 3
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     swap
@@ -673,7 +691,7 @@ k_after_for@8:
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     dig 1
@@ -820,7 +838,7 @@ l_for_header@3:
     substring3
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 32
+    intc_3 // 32
     *
     pushint 4
     +
@@ -862,14 +880,14 @@ l_after_for@8:
     pushint 64
     ==
     assert // invalid number of bytes for arc4.uint512
-    intc_3 // 8
+    pushint 8
     bzero
     dup
     uncover 3
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     swap
@@ -877,7 +895,7 @@ l_after_for@8:
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     dig 1
