@@ -129,16 +129,8 @@ std::vector<awst::AppStorageDefinition> StorageMapper::mapStateVariables(
 			}
 				else if (auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(var->type()))
 				{
-					// Dynamic state array → box-backed array.
-					// Stored as a single box with packed elements. Puya backend
-					// handles ArrayPop, ArrayExtend, indexed access via
-					// box_extract/box_splice/box_resize.
-					// Element type must be ARC4-encodable for box storage.
-					auto* rawElemType = m_typeMapper.map(arrType->baseType());
-					auto* arc4ElemType = m_typeMapper.mapToARC4Type(rawElemType);
-					def.storageWType = m_typeMapper.createType<awst::ReferenceArray>(
-						arc4ElemType, false/*mutable*/, std::nullopt/*dynamic*/
-					);
+					// Dynamic state array → box-backed ARC4 dynamic array.
+					def.storageWType = m_typeMapper.map(arrType);
 					def.isMap = false;
 				}
 				else
