@@ -41,7 +41,7 @@ f_while_top@2:
     dup
     pushbytes 0x0a
     b<
-    bz f_after_while@5
+    bz f_after_while@6
     intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
@@ -54,14 +54,14 @@ f_while_top@2:
     dup
     bytec_1 // 0x01
     b==
-    bnz f_after_while@5
+    bnz f_after_while@6
     dup
     bytec_1 // 0x01
     b+
     bury 1
     b f_while_top@2
 
-f_after_while@5:
+f_after_while@6:
     intc_0 // 1
     return
 

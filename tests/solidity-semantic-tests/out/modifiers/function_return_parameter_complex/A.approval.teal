@@ -4,12 +4,12 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_return_parameter_complex.sol.A.approval_program() -> uint64:
 main:
     intcblock 0 1 64
-    bytecblock 0x "x" 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    bytecblock "x" 0x 0x01 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 0
     itob
-    bytec_1 // "x"
+    bytec_0 // "x"
     swap
     app_global_put
     intc_1 // 1
@@ -38,18 +38,18 @@ main_after_if_else@2:
 f:
     intc_0 // 0
     dupn 2
-    bytec_1 // "x"
+    bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     bytec_2 // 0x01
     b+
-    bytec_1 // "x"
+    bytec_0 // "x"
     swap
     app_global_put
-    bytec_0 // 0x
+    bytec_1 // 0x
     b==
     assert // a is not zero
-    bytec_0 // 0x
+    bytec_1 // 0x
     b==
     assert // b is not zero
     pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040
@@ -70,19 +70,19 @@ shouldFail:
     pushbytes 0x14
     b+
     intc_0 // 0
-    bytec_1 // "x"
+    bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     bytec_2 // 0x01
     b+
-    bytec_1 // "x"
+    bytec_0 // "x"
     swap
     app_global_put
     swap
-    bytec_0 // 0x
+    bytec_1 // 0x
     b==
     assert // a is not zero
-    bytec_0 // 0x
+    bytec_1 // 0x
     b==
     assert // b is not zero
     pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -95,56 +95,25 @@ shouldFail:
 g:
     intc_0 // 0
     dup
-    bytec_1 // "x"
-    app_global_get_ex
-    assert // check x exists
-    intc_0 // 0
-    swap
-    intc_0 // 0
-    dup
-    dig 1
-    b+
-    dig 1
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    uncover 2
-    b-
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    intc_0 // 0
-    dup
     dig 1
     b*
-    uncover 4
+    intc_0 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
     pushbytes 0x04
     b+
-    bytec_1 // "x"
+    bytec_0 // "x"
     dig 1
     app_global_put
     swap
-    bytec_0 // 0x
+    bytec_1 // 0x
     b==
     assert // a is not zero
     swap
-    bytec_0 // 0x
+    bytec_1 // 0x
     b==
     assert // b is not zero
-    uncover 2
-    bytec_0 // 0x
-    b==
-    assert // a is not zero
-    swap
-    bytec_0 // 0x
-    b==
-    assert // b is not zero
-    swap
-    bytec_0 // 0x
-    b==
-    assert // a is not zero
-    swap
-    bytec_0 // 0x
-    b==
-    assert // a is not zero
     dup
     len
     intc_2 // 64
@@ -153,7 +122,7 @@ g:
     intc_2 // 64
     bzero
     b|
-    bytec 4 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -164,7 +133,7 @@ g:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_return_parameter_complex.sol.A.x[routing]() -> void:
 x:
     intc_0 // 0
-    bytec_1 // "x"
+    bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     dup
@@ -175,7 +144,7 @@ x:
     intc_2 // 64
     bzero
     b|
-    bytec 4 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log

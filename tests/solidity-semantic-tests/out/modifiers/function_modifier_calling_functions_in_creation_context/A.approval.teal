@@ -11,6 +11,7 @@ main:
     pushbytes 0x
     app_global_put
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_calling_functions_in_creation_context.sol.A.f2
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_calling_functions_in_creation_context.sol.A.f1
     intc_0 // 1
     return
 
@@ -29,14 +30,17 @@ main_after_if_else@2:
     assert
     pushbytess 0xe1ff2398 0xe54503a7 0x7abeaa76 0xa7681aa9 // method "f1()void", method "f2()void", method "f3()void", method "getData()uint512"
     txna ApplicationArgs 0
-    match main_f1_route@5 f2 main_f3_route@7 getData
+    match f1 f2 main_f3_route@7 getData
     err
 
 main_f3_route@7:
     intc_0 // 1
     return
 
-main_f1_route@5:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_calling_functions_in_creation_context.sol.A.f1[routing]() -> void:
+f1:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_calling_functions_in_creation_context.sol.A.f1
     intc_0 // 1
     return
 
@@ -68,6 +72,20 @@ getData:
     log
     intc_0 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_calling_functions_in_creation_context.sol.A.f1() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_calling_functions_in_creation_context.sol.A.f1:
+    intc_1 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    pushbytes 0x01
+    b|
+    bytec_0 // "data"
+    swap
+    app_global_put
+    retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_calling_functions_in_creation_context.sol.A.f2() -> void:
