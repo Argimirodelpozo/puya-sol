@@ -3367,62 +3367,147 @@ void ContractBuilder::inlineModifiers(
 		auto translatedModBody = buildBlock(modDef->body());
 		setPlaceholderBody(nullptr);
 
-		// Fix bare returns in modifier body: return; → return <retvar|default>
-		// Modifier returns exit the whole function, so they need the function's return type.
+		// Modifier `return` should exit the modifier scope, not the function.
+		// Strategy: use a flag __mod_exit_N. Replace return → { flag=true; break; }
+		// After each inner loop, check flag and break again if set.
+		// Wrap entire modifier body in while(true){...;break;} so outer break works.
 		if (translatedModBody)
 		{
-			awst::WType const* funcReturnType = nullptr;
-			std::string funcReturnName;
-			if (!_func.returnParameters().empty())
-			{
-				funcReturnType = m_typeMapper.map(_func.returnParameters()[0]->type());
-				if (!_func.returnParameters()[0]->name().empty())
-					funcReturnName = _func.returnParameters()[0]->name();
-			}
+			static int modExitCounter = 0;
+			std::string flagName = "__mod_exit_" + std::to_string(modExitCounter++);
+			auto flagLoc = translatedModBody->sourceLocation;
 
-			if (funcReturnType)
-			{
-				std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> fixReturns;
-				fixReturns = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts) {
-					for (auto& s : stmts)
+			// Helper: create flag = true assignment
+			auto makeFlagSet = [&]() -> std::shared_ptr<awst::Statement> {
+				auto target = std::make_shared<awst::VarExpression>();
+				target->sourceLocation = flagLoc;
+				target->wtype = awst::WType::boolType();
+				target->name = flagName;
+				auto trueVal = std::make_shared<awst::BoolConstant>();
+				trueVal->sourceLocation = flagLoc;
+				trueVal->wtype = awst::WType::boolType();
+				trueVal->value = true;
+				auto assign = std::make_shared<awst::AssignmentStatement>();
+				assign->sourceLocation = flagLoc;
+				assign->target = std::move(target);
+				assign->value = std::move(trueVal);
+				return assign;
+			};
+
+			// Helper: create LoopExit
+			auto makeBreak = [&]() -> std::shared_ptr<awst::Statement> {
+				auto le = std::make_shared<awst::LoopExit>();
+				le->sourceLocation = flagLoc;
+				return le;
+			};
+
+			// Helper: create if(flag) break;
+			auto makeFlagCheck = [&]() -> std::shared_ptr<awst::Statement> {
+				auto cond = std::make_shared<awst::VarExpression>();
+				cond->sourceLocation = flagLoc;
+				cond->wtype = awst::WType::boolType();
+				cond->name = flagName;
+				auto branchBody = std::make_shared<awst::Block>();
+				branchBody->sourceLocation = flagLoc;
+				branchBody->body.push_back(makeBreak());
+				auto ifStmt = std::make_shared<awst::IfElse>();
+				ifStmt->sourceLocation = flagLoc;
+				ifStmt->condition = std::move(cond);
+				ifStmt->ifBranch = std::move(branchBody);
+				return ifStmt;
+			};
+
+			// Replace ReturnStatement → { flag=true; break; }
+			// Inside loops: also add flag check after the loop
+			bool hasReturnInLoop = false;
+			std::function<void(std::vector<std::shared_ptr<awst::Statement>>&, bool)> replaceReturns;
+			replaceReturns = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts, bool inLoop) {
+				for (size_t i = 0; i < stmts.size(); ++i)
+				{
+					auto& s = stmts[i];
+					if (dynamic_cast<awst::ReturnStatement*>(s.get()))
 					{
-						if (auto* ret = dynamic_cast<awst::ReturnStatement*>(s.get()))
+						// Replace return with { flag=true; break; }
+						auto block = std::make_shared<awst::Block>();
+						block->sourceLocation = s->sourceLocation;
+						block->body.push_back(makeFlagSet());
+						block->body.push_back(makeBreak());
+						s = std::move(block);
+						if (inLoop) hasReturnInLoop = true;
+					}
+					else if (auto* ifElse = dynamic_cast<awst::IfElse*>(s.get()))
+					{
+						if (ifElse->ifBranch) replaceReturns(ifElse->ifBranch->body, inLoop);
+						if (ifElse->elseBranch) replaceReturns(ifElse->elseBranch->body, inLoop);
+					}
+					else if (auto* block = dynamic_cast<awst::Block*>(s.get()))
+						replaceReturns(block->body, inLoop);
+					else if (auto* whileLoop = dynamic_cast<awst::WhileLoop*>(s.get()))
+					{
+						if (whileLoop->loopBody)
+							replaceReturns(whileLoop->loopBody->body, /*inLoop=*/true);
+					}
+				}
+			};
+			replaceReturns(translatedModBody->body, false);
+
+			// After each WhileLoop that contains a return, insert flag check
+			if (hasReturnInLoop)
+			{
+				std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> insertFlagChecks;
+				insertFlagChecks = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts) {
+					for (size_t i = 0; i < stmts.size(); ++i)
+					{
+						if (dynamic_cast<awst::WhileLoop*>(stmts[i].get()))
 						{
-							if (!ret->value)
-							{
-								if (!funcReturnName.empty())
-								{
-									auto retVar = std::make_shared<awst::VarExpression>();
-									retVar->sourceLocation = ret->sourceLocation;
-									retVar->wtype = funcReturnType;
-									retVar->name = funcReturnName;
-									ret->value = std::move(retVar);
-								}
-								else
-								{
-									ret->value = StorageMapper::makeDefaultValue(
-										funcReturnType, ret->sourceLocation);
-								}
-							}
+							// Insert flag check after the loop
+							stmts.insert(stmts.begin() + i + 1, makeFlagCheck());
+							++i; // skip inserted
 						}
-						else if (auto* ifElse = dynamic_cast<awst::IfElse*>(s.get()))
+						else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmts[i].get()))
 						{
-							if (ifElse->ifBranch) fixReturns(ifElse->ifBranch->body);
-							if (ifElse->elseBranch) fixReturns(ifElse->elseBranch->body);
+							if (ifElse->ifBranch) insertFlagChecks(ifElse->ifBranch->body);
+							if (ifElse->elseBranch) insertFlagChecks(ifElse->elseBranch->body);
 						}
-						else if (auto* block = dynamic_cast<awst::Block*>(s.get()))
-							fixReturns(block->body);
-						else if (auto* whileLoop = dynamic_cast<awst::WhileLoop*>(s.get()))
-						{
-							if (whileLoop->loopBody) fixReturns(whileLoop->loopBody->body);
-						}
+						else if (auto* block = dynamic_cast<awst::Block*>(stmts[i].get()))
+							insertFlagChecks(block->body);
 					}
 				};
-				fixReturns(translatedModBody->body);
+				insertFlagChecks(translatedModBody->body);
 			}
 
+			// Initialize flag: __mod_exit_N = false
+			auto flagInit = std::make_shared<awst::AssignmentStatement>();
+			flagInit->sourceLocation = flagLoc;
+			auto flagTarget = std::make_shared<awst::VarExpression>();
+			flagTarget->sourceLocation = flagLoc;
+			flagTarget->wtype = awst::WType::boolType();
+			flagTarget->name = flagName;
+			auto falseVal = std::make_shared<awst::BoolConstant>();
+			falseVal->sourceLocation = flagLoc;
+			falseVal->wtype = awst::WType::boolType();
+			falseVal->value = false;
+			flagInit->target = std::move(flagTarget);
+			flagInit->value = std::move(falseVal);
+			modBody->body.push_back(std::move(flagInit));
+
+			// Wrap in while(true) { ...body...; break; }
+			auto wrapperLoop = std::make_shared<awst::WhileLoop>();
+			wrapperLoop->sourceLocation = flagLoc;
+			auto trueConst = std::make_shared<awst::BoolConstant>();
+			trueConst->sourceLocation = flagLoc;
+			trueConst->wtype = awst::WType::boolType();
+			trueConst->value = true;
+			wrapperLoop->condition = std::move(trueConst);
+
+			auto loopBody = std::make_shared<awst::Block>();
+			loopBody->sourceLocation = flagLoc;
 			for (auto& stmt: translatedModBody->body)
-				modBody->body.push_back(std::move(stmt));
+				loopBody->body.push_back(std::move(stmt));
+			loopBody->body.push_back(makeBreak()); // always exit after one pass
+			wrapperLoop->loopBody = std::move(loopBody);
+
+			modBody->body.push_back(std::move(wrapperLoop));
 		}
 		else
 		{
