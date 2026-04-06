@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/exp_neg_overflow.sol.C.approval_program() -> uint64:
 main:
     intcblock 64 1 0
-    bytecblock 0x 0x02 0x01 0x0100 0x80 0x8000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    bytecblock 0x 0x0100 0x02 0x01 0x80 0x010000000000000000000000000000000000000000000000000000000000000000 0xff 0x8000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -62,11 +62,11 @@ f_bool_true@3:
 
 f_bool_merge@5:
     assert // ABI validation
-    bytec_2 // 0x01
+    bytec_3 // 0x01
     bury 4
     dig 1
     itob
-    bytec_3 // 0x0100
+    bytec_1 // 0x0100
     b%
     dup
     bytec 4 // 0x80
@@ -74,7 +74,7 @@ f_bool_merge@5:
     dup
     bury 5
     bnz f_ternary_false@7
-    bytec_3 // 0x0100
+    bytec_1 // 0x0100
     swap
     b-
     bury 6
@@ -89,7 +89,7 @@ f_while_top@9:
     b>
     bz f_after_while@13
     dig 4
-    bytec_2 // 0x01
+    bytec_3 // 0x01
     b&
     bytec_0 // 0x
     b!=
@@ -101,7 +101,7 @@ f_while_top@9:
 
 f_after_if_else@12:
     dig 4
-    bytec_1 // 0x02
+    bytec_2 // 0x02
     b/
     bury 5
     dig 5
@@ -114,7 +114,7 @@ f_after_while@13:
     dig 2
     bnz f_ternary_false@16
     dup
-    bytec_1 // 0x02
+    bytec_2 // 0x02
     b%
     bytec_0 // 0x
     b!=
@@ -129,7 +129,7 @@ f_ternary_merge@17:
     dig 2
     bnz f_ternary_false@21
     dup
-    bytec_1 // 0x02
+    bytec_2 // 0x02
     b%
     bytec_0 // 0x
     b!=
@@ -138,13 +138,45 @@ f_ternary_merge@17:
     bytec_0 // 0x
     b==
     bnz f_ternary_false@21
-    bytec_3 // 0x0100
+    bytec_1 // 0x0100
     dig 4
     b-
-    bytec_3 // 0x0100
+    bytec_1 // 0x0100
     b%
 
 f_ternary_merge@22:
+    bytec 6 // 0xff
+    b&
+    bytec 4 // 0x80
+    b>=
+    bz f_ternary_false@29
+    dig 2
+    bnz f_ternary_false@27
+    dup
+    bytec_2 // 0x02
+    b%
+    bytec_0 // 0x
+    b!=
+    bz f_ternary_false@27
+    dig 3
+    bytec_0 // 0x
+    b==
+    bnz f_ternary_false@27
+    bytec_1 // 0x0100
+    dig 4
+    b-
+    bytec_1 // 0x0100
+    b%
+
+f_ternary_merge@28:
+    bytec 6 // 0xff
+    b&
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b+
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+f_ternary_merge@35:
     dup
     len
     intc_0 // 64
@@ -153,12 +185,44 @@ f_ternary_merge@22:
     intc_0 // 64
     bzero
     b|
-    bytec 7 // 0x151f7c75
+    bytec 8 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
+
+f_ternary_false@27:
+    dig 3
+    b f_ternary_merge@28
+
+f_ternary_false@29:
+    dig 2
+    bnz f_ternary_false@33
+    dup
+    bytec_2 // 0x02
+    b%
+    bytec_0 // 0x
+    b!=
+    bz f_ternary_false@33
+    dig 3
+    bytec_0 // 0x
+    b==
+    bnz f_ternary_false@33
+    bytec_1 // 0x0100
+    dig 4
+    b-
+    bytec_1 // 0x0100
+    b%
+
+f_ternary_merge@34:
+    bytec 6 // 0xff
+    b&
+    b f_ternary_merge@35
+
+f_ternary_false@33:
+    dig 3
+    b f_ternary_merge@34
 
 f_ternary_false@21:
     dig 3
@@ -196,14 +260,14 @@ g:
     intc_0 // 64
     ==
     assert // invalid number of bytes for arc4.uint512
-    bytec_2 // 0x01
+    bytec_3 // 0x01
     cover 2
-    bytec 5 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     dup
     cover 2
     bnz g_ternary_false@3
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     swap
     b-
     bury 5
@@ -218,7 +282,7 @@ g_while_top@5:
     b>
     bz g_after_while@9
     dig 3
-    bytec_2 // 0x01
+    bytec_3 // 0x01
     b&
     bytec_0 // 0x
     b!=
@@ -230,7 +294,7 @@ g_while_top@5:
 
 g_after_if_else@8:
     dig 3
-    bytec_1 // 0x02
+    bytec_2 // 0x02
     b/
     bury 4
     dig 4
@@ -243,12 +307,12 @@ g_after_while@9:
     dup
     bnz g_ternary_false@12
     dig 2
-    bytec_1 // 0x02
+    bytec_2 // 0x02
     b%
     bytec_0 // 0x
     b!=
     bz g_ternary_false@12
-    bytec 5 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x8000000000000000000000000000000000000000000000000000000000000000
     dig 2
     b<
     !
@@ -258,7 +322,7 @@ g_ternary_merge@13:
     dup
     bnz g_ternary_false@17
     dig 2
-    bytec_1 // 0x02
+    bytec_2 // 0x02
     b%
     bytec_0 // 0x
     b!=
@@ -267,10 +331,10 @@ g_ternary_merge@13:
     bytec_0 // 0x
     b==
     bnz g_ternary_false@17
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     dig 2
     b-
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 g_ternary_merge@18:
@@ -282,7 +346,7 @@ g_ternary_merge@18:
     intc_0 // 64
     bzero
     b|
-    bytec 7 // 0x151f7c75
+    bytec 8 // 0x151f7c75
     swap
     concat
     log
@@ -295,7 +359,7 @@ g_ternary_false@17:
 
 g_ternary_false@12:
     dig 1
-    bytec 5 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     b g_ternary_merge@13
 
