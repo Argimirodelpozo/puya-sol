@@ -3407,15 +3407,7 @@ void ContractBuilder::buildModifierChain(
 	std::string baseName = _func.name();
 	std::string cref = m_sourceFile + "." + _contractName;
 
-	// Collect named return parameter names for implicit passing
-	std::vector<std::pair<std::string, awst::WType const*>> namedReturnParams;
-	for (auto const& retParam: _func.returnParameters())
-		if (!retParam->name().empty())
-			namedReturnParams.emplace_back(retParam->name(), m_typeMapper.map(retParam->type()));
-
-	// Step 1: Create the innermost subroutine (function body without modifiers).
-	// Named return vars are passed as implicit parameters so that multiple `_`
-	// invocations in a modifier share the same variable (not fresh copies).
+	// Step 1: Create the innermost subroutine (function body without modifiers)
 	std::string bodySubName = baseName + "__body_" + std::to_string(chainId);
 	{
 		awst::ContractMethod bodySub;
@@ -3424,46 +3416,8 @@ void ContractBuilder::buildModifierChain(
 		bodySub.memberName = bodySubName;
 		bodySub.returnType = _method.returnType;
 		bodySub.args = _method.args; // same params as outer function
-
-		// Add named return vars as implicit parameters
-		for (auto const& [name, type]: namedReturnParams)
-		{
-			awst::SubroutineArgument arg;
-			arg.name = name;
-			arg.wtype = type;
-			arg.sourceLocation = _method.sourceLocation;
-			bodySub.args.push_back(std::move(arg));
-		}
-
-		// Strip the initialization of named return vars from the body —
-		// they come in as parameters now, not freshly initialized.
-		auto body = std::make_shared<awst::Block>();
-		body->sourceLocation = _method.body->sourceLocation;
-		std::set<std::string> namedRetNames;
-		for (auto const& [n, _]: namedReturnParams) namedRetNames.insert(n);
-		bool firstInit = true;
-		for (auto const& stmt: _method.body->body)
-		{
-			// Skip the first assignment to each named return var (the default init)
-			if (firstInit)
-			{
-				if (auto const* assign = dynamic_cast<awst::AssignmentStatement const*>(stmt.get()))
-				{
-					if (auto const* target = dynamic_cast<awst::VarExpression const*>(assign->target.get()))
-					{
-						if (namedRetNames.count(target->name))
-						{
-							namedRetNames.erase(target->name);
-							if (namedRetNames.empty()) firstInit = false;
-							continue; // skip this init
-						}
-					}
-				}
-			}
-			body->body.push_back(stmt);
-		}
-		bodySub.body = body;
-		bodySub.arc4MethodConfig = std::nullopt;
+		bodySub.body = _method.body; // move the original function body here
+		bodySub.arc4MethodConfig = std::nullopt; // internal, not ABI-routable
 		bodySub.pure = _method.pure;
 		m_modifierSubroutines.push_back(std::move(bodySub));
 	}
@@ -3586,18 +3540,6 @@ void ContractBuilder::buildModifierChain(
 				varRef->sourceLocation = modSub.sourceLocation;
 				varRef->wtype = arg.wtype;
 				varRef->name = arg.name;
-				ca.value = std::move(varRef);
-				call->args.push_back(std::move(ca));
-			}
-			// Pass named return vars as implicit args (for multi-_ sharing)
-			for (auto const& [name, type]: namedReturnParams)
-			{
-				awst::CallArg ca;
-				ca.name = name;
-				auto varRef = std::make_shared<awst::VarExpression>();
-				varRef->sourceLocation = modSub.sourceLocation;
-				varRef->wtype = type;
-				varRef->name = name;
 				ca.value = std::move(varRef);
 				call->args.push_back(std::move(ca));
 			}
