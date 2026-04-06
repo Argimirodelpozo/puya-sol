@@ -316,22 +316,21 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 
 		if (isBytesBacked && (_op == Token::Equal || _op == Token::NotEqual))
 		{
-			// Coerce both sides to the same wtype (bytes) if they differ
-			auto coerceToBytes = [&](std::shared_ptr<awst::Expression>& expr) {
-				if (expr->wtype != awst::WType::bytesType()
-					&& expr->wtype != awst::WType::accountType())
-				{
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = _loc;
-					cast->wtype = awst::WType::bytesType();
-					cast->expr = std::move(expr);
-					expr = std::move(cast);
-				}
-			};
+			// Coerce both sides to bytes if they differ
 			if (_left->wtype != _right->wtype)
 			{
-				coerceToBytes(_left);
-				coerceToBytes(_right);
+				auto castToBytes = [&](std::shared_ptr<awst::Expression>& expr) {
+					if (expr->wtype != awst::WType::bytesType())
+					{
+						auto cast = std::make_shared<awst::ReinterpretCast>();
+						cast->sourceLocation = _loc;
+						cast->wtype = awst::WType::bytesType();
+						cast->expr = std::move(expr);
+						expr = std::move(cast);
+					}
+				};
+				castToBytes(_left);
+				castToBytes(_right);
 			}
 			auto e = std::make_shared<awst::BytesComparisonExpression>();
 			e->sourceLocation = _loc;
