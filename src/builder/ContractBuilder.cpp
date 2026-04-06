@@ -3087,9 +3087,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			method.body->body.insert(method.body->body.begin(), std::move(initStmt));
 		}
 
-		// Build modifier chain as separate subroutines (or inline for simple cases)
+		// Inline modifiers — textual `_` expansion shares local variables
 		if (!_func.modifiers().empty())
-			buildModifierChain(_func, method, _contractName);
+			inlineModifiers(_func, method.body);
 
 		// Inject ensure_budget for opup budget padding
 		// Check per-function map first, then global opup budget
