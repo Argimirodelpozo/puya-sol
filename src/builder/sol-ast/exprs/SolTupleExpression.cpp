@@ -57,11 +57,53 @@ std::shared_ptr<awst::Expression> SolTupleExpression::toAwst()
 					// ARC4Encode if still not matching element type (native → ARC4)
 					if (val->wtype != elementType)
 					{
-						auto encode = std::make_shared<awst::ARC4Encode>();
-						encode->sourceLocation = m_loc;
-						encode->wtype = elementType;
-						encode->value = std::move(val);
-						val = std::move(encode);
+						// For sub-64-bit ARC4 types, encode via the full-width
+						// ARC4 type first, then reinterpret to target width.
+						auto const* arc4uint = dynamic_cast<awst::ARC4UIntN const*>(elementType);
+						if (arc4uint && arc4uint->n() < 64 && val->wtype == awst::WType::uint64Type())
+						{
+							// Encode uint64 → arc4.uint64, then ReinterpretCast to arc4.uintN
+							auto fullEncode = std::make_shared<awst::ARC4Encode>();
+							fullEncode->sourceLocation = m_loc;
+							fullEncode->wtype = m_ctx.typeMapper.createType<awst::ARC4UIntN>(64);
+							fullEncode->value = std::move(val);
+
+							// Extract last N/8 bytes
+							auto startConst = std::make_shared<awst::IntegerConstant>();
+							startConst->sourceLocation = m_loc;
+							startConst->wtype = awst::WType::uint64Type();
+							startConst->value = std::to_string(8 - arc4uint->n() / 8);
+							auto lenConst = std::make_shared<awst::IntegerConstant>();
+							lenConst->sourceLocation = m_loc;
+							lenConst->wtype = awst::WType::uint64Type();
+							lenConst->value = std::to_string(arc4uint->n() / 8);
+
+							auto extract = std::make_shared<awst::IntrinsicCall>();
+							extract->sourceLocation = m_loc;
+							extract->wtype = awst::WType::bytesType();
+							extract->opCode = "extract3";
+							auto castBytes = std::make_shared<awst::ReinterpretCast>();
+							castBytes->sourceLocation = m_loc;
+							castBytes->wtype = awst::WType::bytesType();
+							castBytes->expr = std::move(fullEncode);
+							extract->stackArgs.push_back(std::move(castBytes));
+							extract->stackArgs.push_back(std::move(startConst));
+							extract->stackArgs.push_back(std::move(lenConst));
+
+							auto cast = std::make_shared<awst::ReinterpretCast>();
+							cast->sourceLocation = m_loc;
+							cast->wtype = elementType;
+							cast->expr = std::move(extract);
+							val = std::move(cast);
+						}
+						else
+						{
+							auto encode = std::make_shared<awst::ARC4Encode>();
+							encode->sourceLocation = m_loc;
+							encode->wtype = elementType;
+							encode->value = std::move(val);
+							val = std::move(encode);
+						}
 					}
 				}
 				e->values.push_back(std::move(val));
