@@ -101,6 +101,24 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 				stmt->value = ExpressionBuilder::implicitNumericCast(
 					std::move(stmt->value), expectedType, m_loc);
 
+				// Sign-extend if returning a narrow signed integer as a wider signed type.
+				// e.g. int8 result returned as int256: value 128 (int8 -128) needs
+				// to become 2^256-128 (int256 -128 in two's complement).
+				auto const* exprSolType = m_node.expression()->annotation().type;
+				auto const* retSolType = retParams[0]->type();
+				if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(exprSolType))
+					exprSolType = &udvt->underlyingType();
+				if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(retSolType))
+					retSolType = &udvt->underlyingType();
+				auto const* exprInt = dynamic_cast<solidity::frontend::IntegerType const*>(exprSolType);
+				auto const* retInt = dynamic_cast<solidity::frontend::IntegerType const*>(retSolType);
+				if (exprInt && retInt && exprInt->isSigned() && retInt->isSigned()
+					&& exprInt->numBits() < retInt->numBits())
+				{
+					stmt->value = TypeCoercion::signExtendToUint256(
+						std::move(stmt->value), exprInt->numBits(), m_loc);
+				}
+
 				// IntegerConstant → BytesConstant for bytes[N] returns
 				if (expectedType && expectedType->kind() == awst::WTypeKind::Bytes
 					&& stmt->value->wtype != expectedType)
