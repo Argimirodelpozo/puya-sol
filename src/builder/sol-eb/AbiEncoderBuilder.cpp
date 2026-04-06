@@ -413,7 +413,20 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 					indexExpr->sourceLocation = _loc;
 					indexExpr->base = arrayExpr;
 					indexExpr->index = std::move(idx);
-					indexExpr->wtype = _ctx.typeMapper.map(elemSolType);
+					// Use ARC4 element type if base is ARC4 array
+					if (arrayExpr->wtype
+						&& (arrayExpr->wtype->kind() == awst::WTypeKind::ARC4StaticArray
+							|| arrayExpr->wtype->kind() == awst::WTypeKind::ARC4DynamicArray))
+					{
+						awst::WType const* arc4ElemType = nullptr;
+						if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(arrayExpr->wtype))
+							arc4ElemType = sa->elementType();
+						else if (auto const* da = dynamic_cast<awst::ARC4DynamicArray const*>(arrayExpr->wtype))
+							arc4ElemType = da->elementType();
+						indexExpr->wtype = arc4ElemType ? arc4ElemType : _ctx.typeMapper.map(elemSolType);
+					}
+					else
+						indexExpr->wtype = _ctx.typeMapper.map(elemSolType);
 
 					auto elemBytes = toPackedBytes(_ctx, std::move(indexExpr), elemSolType, _isPacked, _loc);
 					if (!packed)
