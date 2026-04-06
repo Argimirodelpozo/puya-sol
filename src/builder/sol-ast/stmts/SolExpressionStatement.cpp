@@ -87,7 +87,34 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 	auto stmt = std::make_shared<awst::ReturnStatement>();
 	stmt->sourceLocation = m_loc;
 
-	if (m_node.expression())
+	if (!m_node.expression())
+	{
+		// Bare return; — synthesize a return value from context
+		auto const& retAnnotation = dynamic_cast<ReturnAnnotation const&>(m_node.annotation());
+		if (retAnnotation.functionReturnParameters)
+		{
+			auto const& retParams = retAnnotation.functionReturnParameters->parameters();
+			if (retParams.size() == 1)
+			{
+				auto* retType = m_ctx.typeMapper->map(retParams[0]->type());
+				if (!retParams[0]->name().empty())
+				{
+					// Named return: return the variable
+					auto retVar = std::make_shared<awst::VarExpression>();
+					retVar->sourceLocation = m_loc;
+					retVar->wtype = retType;
+					retVar->name = retParams[0]->name();
+					stmt->value = std::move(retVar);
+				}
+				else
+				{
+					// Unnamed return: return default value (0/false/empty)
+					stmt->value = builder::StorageMapper::makeDefaultValue(retType, m_loc);
+				}
+			}
+		}
+	}
+	else if (m_node.expression())
 	{
 		stmt->value = m_ctx.buildExpr(*m_node.expression());
 

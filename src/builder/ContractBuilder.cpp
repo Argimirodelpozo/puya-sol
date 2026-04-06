@@ -3087,9 +3087,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			method.body->body.insert(method.body->body.begin(), std::move(initStmt));
 		}
 
-		// Build modifier chain as separate subroutines (or inline for simple cases)
+		// Inline modifiers — textual _ expansion shares local variables
 		if (!_func.modifiers().empty())
-			buildModifierChain(_func, method, _contractName);
+			inlineModifiers(_func, method.body);
 
 		// Inject ensure_budget for opup budget padding
 		// Check per-function map first, then global opup budget
@@ -3367,8 +3367,60 @@ void ContractBuilder::inlineModifiers(
 		auto translatedModBody = buildBlock(modDef->body());
 		setPlaceholderBody(nullptr);
 
+		// Fix bare returns in modifier body: return; → return <retvar|default>
+		// Modifier returns exit the whole function, so they need the function's return type.
 		if (translatedModBody)
 		{
+			awst::WType const* funcReturnType = nullptr;
+			std::string funcReturnName;
+			if (!_func.returnParameters().empty())
+			{
+				funcReturnType = m_typeMapper.map(_func.returnParameters()[0]->type());
+				if (!_func.returnParameters()[0]->name().empty())
+					funcReturnName = _func.returnParameters()[0]->name();
+			}
+
+			if (funcReturnType)
+			{
+				std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> fixReturns;
+				fixReturns = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts) {
+					for (auto& s : stmts)
+					{
+						if (auto* ret = dynamic_cast<awst::ReturnStatement*>(s.get()))
+						{
+							if (!ret->value)
+							{
+								if (!funcReturnName.empty())
+								{
+									auto retVar = std::make_shared<awst::VarExpression>();
+									retVar->sourceLocation = ret->sourceLocation;
+									retVar->wtype = funcReturnType;
+									retVar->name = funcReturnName;
+									ret->value = std::move(retVar);
+								}
+								else
+								{
+									ret->value = StorageMapper::makeDefaultValue(
+										funcReturnType, ret->sourceLocation);
+								}
+							}
+						}
+						else if (auto* ifElse = dynamic_cast<awst::IfElse*>(s.get()))
+						{
+							if (ifElse->ifBranch) fixReturns(ifElse->ifBranch->body);
+							if (ifElse->elseBranch) fixReturns(ifElse->elseBranch->body);
+						}
+						else if (auto* block = dynamic_cast<awst::Block*>(s.get()))
+							fixReturns(block->body);
+						else if (auto* whileLoop = dynamic_cast<awst::WhileLoop*>(s.get()))
+						{
+							if (whileLoop->loopBody) fixReturns(whileLoop->loopBody->body);
+						}
+					}
+				};
+				fixReturns(translatedModBody->body);
+			}
+
 			for (auto& stmt: translatedModBody->body)
 				modBody->body.push_back(std::move(stmt));
 		}
