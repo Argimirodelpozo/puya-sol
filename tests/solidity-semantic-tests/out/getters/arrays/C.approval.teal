@@ -13,8 +13,6 @@ main:
     bytec_0 // 0x
     dig 1
     extract_uint16
-    pushint 8
-    *
     intc_0 // 2
     +
     bytec_0 // 0x
@@ -28,20 +26,18 @@ main:
     itob
     extract 6 0
     replace2 0
-    pushbytes 0x0000000000000003
+    pushbytes 0x03
     concat
     bytec_0 // 0x
     swap
     intc_1 // 1
     intc_0 // 2
-    callsub static_array_replace_dynamic_element
+    callsub static_array_replace_byte_length_head
     dup
     intc_0 // 2
     extract_uint16
     dup2
     extract_uint16
-    pushint 8
-    *
     intc_0 // 2
     +
     dig 2
@@ -55,11 +51,11 @@ main:
     itob
     extract 6 0
     replace2 0
-    pushbytes 0x0000000000000004
+    pushbytes 0x04
     concat
     intc_1 // 1
     intc_0 // 2
-    callsub static_array_replace_dynamic_element
+    callsub static_array_replace_byte_length_head
     bytec_1 // "a"
     swap
     app_global_put
@@ -88,86 +84,82 @@ main_a_route@4:
     b a
 
 
-// _puya_lib.arc4.static_array_replace_dynamic_element(array_head_and_tail: bytes, new_item: bytes, index: uint64, array_length: uint64) -> bytes:
-static_array_replace_dynamic_element:
+// _puya_lib.arc4.static_array_replace_byte_length_head(array_head_and_tail: bytes, new_item: bytes, index: uint64, array_length: uint64) -> bytes:
+static_array_replace_byte_length_head:
     proto 4 1
     frame_dig -2
+    frame_dig -1
+    <
+    assert // Index out of bounds
+    frame_dig -2
     intc_0 // 2
     *
     frame_dig -4
-    swap
+    dig 1
     extract_uint16
-    frame_dig -2
-    intc_1 // 1
+    frame_dig -4
+    dig 1
+    extract_uint16
+    dig 1
     +
     intc_0 // 2
-    *
-    frame_dig -4
-    dig 1
-    extract_uint16
-    frame_dig -4
-    len
-    frame_dig -1
-    frame_dig -2
-    -
-    intc_1 // 1
-    -
-    dig 1
-    uncover 3
-    uncover 2
-    select
-    dup
-    dig 4
-    -
-    cover 4
-    frame_dig -3
-    len
-    cover 4
+    +
     frame_dig -4
     intc_3 // 0
-    uncover 5
+    uncover 3
     substring3
     frame_dig -3
     concat
     frame_dig -4
-    uncover 2
+    len
+    frame_dig -4
     uncover 3
+    uncover 2
     substring3
     concat
-    swap
+    frame_bury -4
     frame_dig -1
     intc_0 // 2
     *
+    dup
+    cover 2
+    frame_dig -4
+    dig 2
+    extract_uint16
+    frame_dig -2
+    select
     swap
 
-static_array_replace_dynamic_element_for_header@1:
-    frame_dig 4
-    frame_dig 3
-    <
-    bz static_array_replace_dynamic_element_after_for@4
+static_array_replace_byte_length_head_for_header@2:
     frame_dig 2
-    dup
-    frame_dig 4
-    dup
-    cover 3
-    extract_uint16
-    frame_dig 1
-    +
     frame_dig 0
-    -
+    <
+    bz static_array_replace_byte_length_head_after_for@5
+    frame_dig 1
+    dup
     itob
     extract 6 2
-    dig 2
-    swap
+    frame_dig -4
+    frame_dig 2
+    dup
+    cover 4
+    uncover 2
     replace3
-    frame_bury 2
+    dup
+    frame_bury -4
+    dig 1
+    extract_uint16
     intc_0 // 2
     +
-    frame_bury 4
-    b static_array_replace_dynamic_element_for_header@1
+    +
+    frame_bury 1
+    intc_0 // 2
+    +
+    frame_bury 2
+    b static_array_replace_byte_length_head_for_header@2
 
-static_array_replace_dynamic_element_after_for@4:
-    frame_dig 2
+static_array_replace_byte_length_head_after_for@5:
+    frame_dig -4
     frame_bury 0
     retsub
 

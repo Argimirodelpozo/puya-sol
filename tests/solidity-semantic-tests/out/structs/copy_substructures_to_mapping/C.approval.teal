@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0xfb61ff67 0xb4380aa2 0xd0750a0a 0xfc72bf1d // method "__postInit()void", method "from_memory()(byte[],uint64[],uint64)", method "from_state()(byte[],uint64[],uint64)", method "from_storage()(byte[],uint64[],uint64)", method "from_calldata((byte[],uint64[],uint64))(byte[],uint64[],uint64)"
+    pushbytess 0xbacc49e3 0x5f2cbcb0 0x3716d8b3 0x46a4b2a5 0xbbb98e9b // method "__postInit()void", method "from_memory()(byte[],uint16[],uint64)", method "from_state()(byte[],uint16[],uint64)", method "from_storage()(byte[],uint16[],uint64)", method "from_calldata((byte[],uint16[],uint64))(byte[],uint16[],uint64)"
     txna ApplicationArgs 0
     match __postInit from_memory from_state from_storage from_calldata
     err
@@ -96,7 +96,7 @@ __postInit:
     concat
     swap
     concat
-    pushbytes 0x0002000000000000000d000000000000000e
+    pushbytes 0x0002000d000e
     concat
     bytec_0 // "s"
     box_del
@@ -584,7 +584,7 @@ from_calldata:
     dup
     intc_2 // 12
     ==
-    assert // invalid tail pointer at index 0 of ((len+uint8[]),(len+uint64[]),uint64)
+    assert // invalid tail pointer at index 0 of ((len+uint8[]),(len+uint16[]),uint64)
     dig 2
     dig 1
     dig 3
@@ -599,7 +599,7 @@ from_calldata:
     dup
     dig 2
     ==
-    assert // invalid tail pointer at index 1 of ((len+uint8[]),(len+uint64[]),uint64)
+    assert // invalid tail pointer at index 1 of ((len+uint8[]),(len+uint16[]),uint64)
     dig 4
     dig 1
     dig 5
@@ -607,7 +607,7 @@ from_calldata:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 8
+    intc_0 // 2
     *
     intc_0 // 2
     +

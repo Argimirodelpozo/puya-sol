@@ -811,13 +811,13 @@
                     },
                     "wtype": {
                       "_type": "ARC4StaticArray",
-                      "name": "arc4.static_array<arc4.uint64, 4>",
+                      "name": "arc4.static_array<arc4.uint8, 4>",
                       "immutable": false,
                       "element_type": {
                         "_type": "ARC4UIntN",
-                        "name": "arc4.uint64",
+                        "name": "arc4.uint8",
                         "immutable": true,
-                        "n": 64,
+                        "n": 8,
                         "arc4_alias": null,
                         "source_location": null
                       },
@@ -827,7 +827,7 @@
                     },
                     "values": [
                       {
-                        "_type": "ARC4Encode",
+                        "_type": "ReinterpretCast",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
                           "line": 137,
@@ -838,34 +838,127 @@
                         },
                         "wtype": {
                           "_type": "ARC4UIntN",
-                          "name": "arc4.uint64",
+                          "name": "arc4.uint8",
                           "immutable": true,
-                          "n": 64,
+                          "n": 8,
                           "arc4_alias": null,
                           "source_location": null
                         },
-                        "value": {
-                          "_type": "IntegerConstant",
+                        "expr": {
+                          "_type": "IntrinsicCall",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
-                            "line": 138,
-                            "end_line": 139,
+                            "line": 137,
+                            "end_line": 146,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
                           },
                           "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
                           },
-                          "value": 1,
-                          "teal_alias": null
-                        },
-                        "error_message": null
+                          "op_code": "extract3",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "ReinterpretCast",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                "line": 137,
+                                "end_line": 146,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "expr": {
+                                "_type": "ARC4Encode",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                  "line": 137,
+                                  "end_line": 146,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint64",
+                                  "immutable": true,
+                                  "n": 64,
+                                  "arc4_alias": null,
+                                  "source_location": null
+                                },
+                                "value": {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                    "line": 138,
+                                    "end_line": 139,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "value": 1,
+                                  "teal_alias": null
+                                },
+                                "error_message": null
+                              }
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                "line": 137,
+                                "end_line": 146,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 7,
+                              "teal_alias": null
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                "line": 137,
+                                "end_line": 146,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 1,
+                              "teal_alias": null
+                            }
+                          ]
+                        }
                       },
                       {
-                        "_type": "ARC4Encode",
+                        "_type": "ReinterpretCast",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
                           "line": 137,
@@ -876,34 +969,127 @@
                         },
                         "wtype": {
                           "_type": "ARC4UIntN",
-                          "name": "arc4.uint64",
+                          "name": "arc4.uint8",
                           "immutable": true,
-                          "n": 64,
+                          "n": 8,
                           "arc4_alias": null,
                           "source_location": null
                         },
-                        "value": {
-                          "_type": "IntegerConstant",
+                        "expr": {
+                          "_type": "IntrinsicCall",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
-                            "line": 140,
-                            "end_line": 141,
+                            "line": 137,
+                            "end_line": 146,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
                           },
                           "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
                           },
-                          "value": 2,
-                          "teal_alias": null
-                        },
-                        "error_message": null
+                          "op_code": "extract3",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "ReinterpretCast",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                "line": 137,
+                                "end_line": 146,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "expr": {
+                                "_type": "ARC4Encode",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                  "line": 137,
+                                  "end_line": 146,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint64",
+                                  "immutable": true,
+                                  "n": 64,
+                                  "arc4_alias": null,
+                                  "source_location": null
+                                },
+                                "value": {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                    "line": 140,
+                                    "end_line": 141,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "value": 2,
+                                  "teal_alias": null
+                                },
+                                "error_message": null
+                              }
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                "line": 137,
+                                "end_line": 146,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 7,
+                              "teal_alias": null
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                "line": 137,
+                                "end_line": 146,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 1,
+                              "teal_alias": null
+                            }
+                          ]
+                        }
                       },
                       {
-                        "_type": "ARC4Encode",
+                        "_type": "ReinterpretCast",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
                           "line": 137,
@@ -914,34 +1100,127 @@
                         },
                         "wtype": {
                           "_type": "ARC4UIntN",
-                          "name": "arc4.uint64",
+                          "name": "arc4.uint8",
                           "immutable": true,
-                          "n": 64,
+                          "n": 8,
                           "arc4_alias": null,
                           "source_location": null
                         },
-                        "value": {
-                          "_type": "IntegerConstant",
+                        "expr": {
+                          "_type": "IntrinsicCall",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
-                            "line": 142,
-                            "end_line": 143,
+                            "line": 137,
+                            "end_line": 146,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
                           },
                           "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
                           },
-                          "value": 3,
-                          "teal_alias": null
-                        },
-                        "error_message": null
+                          "op_code": "extract3",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "ReinterpretCast",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                "line": 137,
+                                "end_line": 146,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "expr": {
+                                "_type": "ARC4Encode",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                  "line": 137,
+                                  "end_line": 146,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint64",
+                                  "immutable": true,
+                                  "n": 64,
+                                  "arc4_alias": null,
+                                  "source_location": null
+                                },
+                                "value": {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                    "line": 142,
+                                    "end_line": 143,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "value": 3,
+                                  "teal_alias": null
+                                },
+                                "error_message": null
+                              }
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                "line": 137,
+                                "end_line": 146,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 7,
+                              "teal_alias": null
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                "line": 137,
+                                "end_line": 146,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 1,
+                              "teal_alias": null
+                            }
+                          ]
+                        }
                       },
                       {
-                        "_type": "ARC4Encode",
+                        "_type": "ReinterpretCast",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
                           "line": 137,
@@ -952,31 +1231,124 @@
                         },
                         "wtype": {
                           "_type": "ARC4UIntN",
-                          "name": "arc4.uint64",
+                          "name": "arc4.uint8",
                           "immutable": true,
-                          "n": 64,
+                          "n": 8,
                           "arc4_alias": null,
                           "source_location": null
                         },
-                        "value": {
-                          "_type": "IntegerConstant",
+                        "expr": {
+                          "_type": "IntrinsicCall",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
-                            "line": 144,
-                            "end_line": 145,
+                            "line": 137,
+                            "end_line": 146,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
                           },
                           "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
                           },
-                          "value": 4,
-                          "teal_alias": null
-                        },
-                        "error_message": null
+                          "op_code": "extract3",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "ReinterpretCast",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                "line": 137,
+                                "end_line": 146,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "expr": {
+                                "_type": "ARC4Encode",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                  "line": 137,
+                                  "end_line": 146,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint64",
+                                  "immutable": true,
+                                  "n": 64,
+                                  "arc4_alias": null,
+                                  "source_location": null
+                                },
+                                "value": {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                    "line": 144,
+                                    "end_line": 145,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "value": 4,
+                                  "teal_alias": null
+                                },
+                                "error_message": null
+                              }
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                "line": 137,
+                                "end_line": 146,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 7,
+                              "teal_alias": null
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                "line": 137,
+                                "end_line": 146,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 1,
+                              "teal_alias": null
+                            }
+                          ]
+                        }
                       }
                     ]
                   },
@@ -1104,13 +1476,13 @@
                     },
                     "wtype": {
                       "_type": "ARC4StaticArray",
-                      "name": "arc4.static_array<arc4.uint64, 2>",
+                      "name": "arc4.static_array<arc4.uint8, 2>",
                       "immutable": false,
                       "element_type": {
                         "_type": "ARC4UIntN",
-                        "name": "arc4.uint64",
+                        "name": "arc4.uint8",
                         "immutable": true,
-                        "n": 64,
+                        "n": 8,
                         "arc4_alias": null,
                         "source_location": null
                       },
@@ -1120,7 +1492,7 @@
                     },
                     "values": [
                       {
-                        "_type": "ARC4Encode",
+                        "_type": "ReinterpretCast",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
                           "line": 164,
@@ -1131,34 +1503,127 @@
                         },
                         "wtype": {
                           "_type": "ARC4UIntN",
-                          "name": "arc4.uint64",
+                          "name": "arc4.uint8",
                           "immutable": true,
-                          "n": 64,
+                          "n": 8,
                           "arc4_alias": null,
                           "source_location": null
                         },
-                        "value": {
-                          "_type": "IntegerConstant",
+                        "expr": {
+                          "_type": "IntrinsicCall",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
-                            "line": 165,
-                            "end_line": 167,
+                            "line": 164,
+                            "end_line": 172,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
                           },
                           "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
                           },
-                          "value": 10,
-                          "teal_alias": null
-                        },
-                        "error_message": null
+                          "op_code": "extract3",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "ReinterpretCast",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                "line": 164,
+                                "end_line": 172,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "expr": {
+                                "_type": "ARC4Encode",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                  "line": 164,
+                                  "end_line": 172,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint64",
+                                  "immutable": true,
+                                  "n": 64,
+                                  "arc4_alias": null,
+                                  "source_location": null
+                                },
+                                "value": {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                    "line": 165,
+                                    "end_line": 167,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "value": 10,
+                                  "teal_alias": null
+                                },
+                                "error_message": null
+                              }
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                "line": 164,
+                                "end_line": 172,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 7,
+                              "teal_alias": null
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                "line": 164,
+                                "end_line": 172,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 1,
+                              "teal_alias": null
+                            }
+                          ]
+                        }
                       },
                       {
-                        "_type": "ARC4Encode",
+                        "_type": "ReinterpretCast",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
                           "line": 164,
@@ -1169,31 +1634,124 @@
                         },
                         "wtype": {
                           "_type": "ARC4UIntN",
-                          "name": "arc4.uint64",
+                          "name": "arc4.uint8",
                           "immutable": true,
-                          "n": 64,
+                          "n": 8,
                           "arc4_alias": null,
                           "source_location": null
                         },
-                        "value": {
-                          "_type": "IntegerConstant",
+                        "expr": {
+                          "_type": "IntrinsicCall",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
-                            "line": 169,
-                            "end_line": 171,
+                            "line": 164,
+                            "end_line": 172,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
                           },
                           "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
                           },
-                          "value": 20,
-                          "teal_alias": null
-                        },
-                        "error_message": null
+                          "op_code": "extract3",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "ReinterpretCast",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                "line": 164,
+                                "end_line": 172,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "expr": {
+                                "_type": "ARC4Encode",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                  "line": 164,
+                                  "end_line": 172,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint64",
+                                  "immutable": true,
+                                  "n": 64,
+                                  "arc4_alias": null,
+                                  "source_location": null
+                                },
+                                "value": {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                    "line": 169,
+                                    "end_line": 171,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "value": 20,
+                                  "teal_alias": null
+                                },
+                                "error_message": null
+                              }
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                "line": 164,
+                                "end_line": 172,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 7,
+                              "teal_alias": null
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol",
+                                "line": 164,
+                                "end_line": 172,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 1,
+                              "teal_alias": null
+                            }
+                          ]
+                        }
                       }
                     ]
                   },

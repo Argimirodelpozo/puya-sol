@@ -547,9 +547,9 @@
                         },
                         "wtype": {
                           "_type": "ARC4UIntN",
-                          "name": "arc4.uint64",
+                          "name": "arc4.uint8",
                           "immutable": true,
-                          "n": 64,
+                          "n": 8,
                           "arc4_alias": null,
                           "source_location": null
                         },
@@ -565,13 +565,13 @@
                           },
                           "wtype": {
                             "_type": "ARC4StaticArray",
-                            "name": "arc4.static_array<arc4.uint64, 1>",
+                            "name": "arc4.static_array<arc4.uint8, 1>",
                             "immutable": false,
                             "element_type": {
                               "_type": "ARC4UIntN",
-                              "name": "arc4.uint64",
+                              "name": "arc4.uint8",
                               "immutable": true,
-                              "n": 64,
+                              "n": 8,
                               "arc4_alias": null,
                               "source_location": null
                             },
@@ -581,7 +581,7 @@
                           },
                           "values": [
                             {
-                              "_type": "ARC4Encode",
+                              "_type": "ReinterpretCast",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/inline_array_singleton.sol",
                                 "line": 150,
@@ -592,31 +592,124 @@
                               },
                               "wtype": {
                                 "_type": "ARC4UIntN",
-                                "name": "arc4.uint64",
+                                "name": "arc4.uint8",
                                 "immutable": true,
-                                "n": 64,
+                                "n": 8,
                                 "arc4_alias": null,
                                 "source_location": null
                               },
-                              "value": {
-                                "_type": "IntegerConstant",
+                              "expr": {
+                                "_type": "IntrinsicCall",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/inline_array_singleton.sol",
-                                  "line": 151,
-                                  "end_line": 152,
+                                  "line": 150,
+                                  "end_line": 153,
                                   "comment_lines": 0,
                                   "column": null,
                                   "end_column": null
                                 },
                                 "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
                                 },
-                                "value": 4,
-                                "teal_alias": null
-                              },
-                              "error_message": null
+                                "op_code": "extract3",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "ReinterpretCast",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/inline_array_singleton.sol",
+                                      "line": 150,
+                                      "end_line": 153,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "expr": {
+                                      "_type": "ARC4Encode",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/inline_array_singleton.sol",
+                                        "line": 150,
+                                        "end_line": 153,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "ARC4UIntN",
+                                        "name": "arc4.uint64",
+                                        "immutable": true,
+                                        "n": 64,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "value": {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/inline_array_singleton.sol",
+                                          "line": 151,
+                                          "end_line": 152,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "value": 4,
+                                        "teal_alias": null
+                                      },
+                                      "error_message": null
+                                    }
+                                  },
+                                  {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/inline_array_singleton.sol",
+                                      "line": 150,
+                                      "end_line": 153,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 7,
+                                    "teal_alias": null
+                                  },
+                                  {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/inline_array_singleton.sol",
+                                      "line": 150,
+                                      "end_line": 153,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 1,
+                                    "teal_alias": null
+                                  }
+                                ]
+                              }
                             }
                           ]
                         },

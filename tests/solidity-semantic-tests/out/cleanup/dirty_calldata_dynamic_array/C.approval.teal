@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/dirty_calldata_dynamic_array.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 0 2
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xb76f5bcf // method "f(uint64[])bool"
+    pushbytes 0xf5c790fa // method "f(int16[])bool"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -37,16 +37,20 @@ f:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 8
+    intc_2 // 2
     *
-    pushint 2
+    intc_2 // 2
     +
     dig 1
     len
     ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint64>
-    extract 10 8
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint16>
+    pushint 4
+    extract_uint16
     load 0
+    swap
+    itob
+    swap
     store 0
     pushbytes 0x7fff
     b==

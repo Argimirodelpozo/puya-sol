@@ -380,13 +380,13 @@
                         },
                         "wtype": {
                           "_type": "ARC4StaticArray",
-                          "name": "arc4.static_array<arc4.uint64, 3>",
+                          "name": "arc4.static_array<arc4.uint16, 3>",
                           "immutable": false,
                           "element_type": {
                             "_type": "ARC4UIntN",
-                            "name": "arc4.uint64",
+                            "name": "arc4.uint16",
                             "immutable": true,
-                            "n": 64,
+                            "n": 16,
                             "arc4_alias": null,
                             "source_location": null
                           },
@@ -394,7 +394,7 @@
                           "arc4_alias": null,
                           "source_location": null
                         },
-                        "value": "000000000000000000000000000000",
+                        "value": "00000000",
                         "encoding": "base16"
                       }
                     ]
@@ -662,13 +662,13 @@
                     },
                     "wtype": {
                       "_type": "ARC4StaticArray",
-                      "name": "arc4.static_array<arc4.uint64, 3>",
+                      "name": "arc4.static_array<arc4.uint16, 3>",
                       "immutable": false,
                       "element_type": {
                         "_type": "ARC4UIntN",
-                        "name": "arc4.uint64",
+                        "name": "arc4.uint16",
                         "immutable": true,
-                        "n": 64,
+                        "n": 16,
                         "arc4_alias": null,
                         "source_location": null
                       },
@@ -688,13 +688,13 @@
                       },
                       "wtype": {
                         "_type": "ARC4StaticArray",
-                        "name": "arc4.static_array<arc4.uint64, 3>",
+                        "name": "arc4.static_array<arc4.uint16, 3>",
                         "immutable": false,
                         "element_type": {
                           "_type": "ARC4UIntN",
-                          "name": "arc4.uint64",
+                          "name": "arc4.uint16",
                           "immutable": true,
-                          "n": 64,
+                          "n": 16,
                           "arc4_alias": null,
                           "source_location": null
                         },
@@ -734,13 +734,13 @@
                       },
                       "wtype": {
                         "_type": "ARC4StaticArray",
-                        "name": "arc4.static_array<arc4.uint64, 3>",
+                        "name": "arc4.static_array<arc4.uint16, 3>",
                         "immutable": false,
                         "element_type": {
                           "_type": "ARC4UIntN",
-                          "name": "arc4.uint64",
+                          "name": "arc4.uint16",
                           "immutable": true,
-                          "n": 64,
+                          "n": 16,
                           "arc4_alias": null,
                           "source_location": null
                         },
@@ -750,7 +750,7 @@
                       },
                       "values": [
                         {
-                          "_type": "ARC4Encode",
+                          "_type": "ReinterpretCast",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
                             "line": 183,
@@ -761,51 +761,144 @@
                           },
                           "wtype": {
                             "_type": "ARC4UIntN",
-                            "name": "arc4.uint64",
+                            "name": "arc4.uint16",
                             "immutable": true,
-                            "n": 64,
+                            "n": 16,
                             "arc4_alias": null,
                             "source_location": null
                           },
-                          "value": {
-                            "_type": "AppStateExpression",
+                          "expr": {
+                            "_type": "IntrinsicCall",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
-                              "line": 184,
-                              "end_line": 185,
+                              "line": 183,
+                              "end_line": 192,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
                             },
-                            "key": {
-                              "_type": "BytesConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
-                                "line": 184,
-                                "end_line": 185,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
+                            "op_code": "extract3",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "ReinterpretCast",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
+                                  "line": 183,
+                                  "end_line": 192,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "expr": {
+                                  "_type": "ARC4Encode",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
+                                    "line": 183,
+                                    "end_line": 192,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "ARC4UIntN",
+                                    "name": "arc4.uint64",
+                                    "immutable": true,
+                                    "n": 64,
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "value": {
+                                    "_type": "AppStateExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
+                                      "line": 184,
+                                      "end_line": 185,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "key": {
+                                      "_type": "BytesConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
+                                        "line": 184,
+                                        "end_line": 185,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "state_key",
+                                        "immutable": true
+                                      },
+                                      "value": "VE",
+                                      "encoding": "utf8"
+                                    },
+                                    "exists_assertion_message": "check a exists"
+                                  },
+                                  "error_message": null
+                                }
                               },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "state_key",
-                                "immutable": true
+                              {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
+                                  "line": 183,
+                                  "end_line": 192,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 6,
+                                "teal_alias": null
                               },
-                              "value": "VE",
-                              "encoding": "utf8"
-                            },
-                            "exists_assertion_message": "check a exists"
-                          },
-                          "error_message": null
+                              {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
+                                  "line": 183,
+                                  "end_line": 192,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 2,
+                                "teal_alias": null
+                              }
+                            ]
+                          }
                         },
                         {
-                          "_type": "ARC4Encode",
+                          "_type": "ReinterpretCast",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
                             "line": 183,
@@ -816,51 +909,144 @@
                           },
                           "wtype": {
                             "_type": "ARC4UIntN",
-                            "name": "arc4.uint64",
+                            "name": "arc4.uint16",
                             "immutable": true,
-                            "n": 64,
+                            "n": 16,
                             "arc4_alias": null,
                             "source_location": null
                           },
-                          "value": {
-                            "_type": "AppStateExpression",
+                          "expr": {
+                            "_type": "IntrinsicCall",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
-                              "line": 187,
-                              "end_line": 188,
+                              "line": 183,
+                              "end_line": 192,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
                             },
-                            "key": {
-                              "_type": "BytesConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
-                                "line": 187,
-                                "end_line": 188,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
+                            "op_code": "extract3",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "ReinterpretCast",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
+                                  "line": 183,
+                                  "end_line": 192,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "expr": {
+                                  "_type": "ARC4Encode",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
+                                    "line": 183,
+                                    "end_line": 192,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "ARC4UIntN",
+                                    "name": "arc4.uint64",
+                                    "immutable": true,
+                                    "n": 64,
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "value": {
+                                    "_type": "AppStateExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
+                                      "line": 187,
+                                      "end_line": 188,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "key": {
+                                      "_type": "BytesConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
+                                        "line": 187,
+                                        "end_line": 188,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "state_key",
+                                        "immutable": true
+                                      },
+                                      "value": "Vg",
+                                      "encoding": "utf8"
+                                    },
+                                    "exists_assertion_message": "check b exists"
+                                  },
+                                  "error_message": null
+                                }
                               },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "state_key",
-                                "immutable": true
+                              {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
+                                  "line": 183,
+                                  "end_line": 192,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 6,
+                                "teal_alias": null
                               },
-                              "value": "Vg",
-                              "encoding": "utf8"
-                            },
-                            "exists_assertion_message": "check b exists"
-                          },
-                          "error_message": null
+                              {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
+                                  "line": 183,
+                                  "end_line": 192,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 2,
+                                "teal_alias": null
+                              }
+                            ]
+                          }
                         },
                         {
-                          "_type": "ARC4Encode",
+                          "_type": "ReinterpretCast",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
                             "line": 183,
@@ -871,48 +1057,141 @@
                           },
                           "wtype": {
                             "_type": "ARC4UIntN",
-                            "name": "arc4.uint64",
+                            "name": "arc4.uint16",
                             "immutable": true,
-                            "n": 64,
+                            "n": 16,
                             "arc4_alias": null,
                             "source_location": null
                           },
-                          "value": {
-                            "_type": "AppStateExpression",
+                          "expr": {
+                            "_type": "IntrinsicCall",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
-                              "line": 190,
-                              "end_line": 191,
+                              "line": 183,
+                              "end_line": 192,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
                             },
-                            "key": {
-                              "_type": "BytesConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
-                                "line": 190,
-                                "end_line": 191,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
+                            "op_code": "extract3",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "ReinterpretCast",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
+                                  "line": 183,
+                                  "end_line": 192,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "expr": {
+                                  "_type": "ARC4Encode",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
+                                    "line": 183,
+                                    "end_line": 192,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "ARC4UIntN",
+                                    "name": "arc4.uint64",
+                                    "immutable": true,
+                                    "n": 64,
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "value": {
+                                    "_type": "AppStateExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
+                                      "line": 190,
+                                      "end_line": 191,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "key": {
+                                      "_type": "BytesConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
+                                        "line": 190,
+                                        "end_line": 191,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "state_key",
+                                        "immutable": true
+                                      },
+                                      "value": "V*",
+                                      "encoding": "utf8"
+                                    },
+                                    "exists_assertion_message": "check c exists"
+                                  },
+                                  "error_message": null
+                                }
                               },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "state_key",
-                                "immutable": true
+                              {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
+                                  "line": 183,
+                                  "end_line": 192,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 6,
+                                "teal_alias": null
                               },
-                              "value": "V*",
-                              "encoding": "utf8"
-                            },
-                            "exists_assertion_message": "check c exists"
-                          },
-                          "error_message": null
+                              {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol",
+                                  "line": 183,
+                                  "end_line": 192,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 2,
+                                "teal_alias": null
+                              }
+                            ]
+                          }
                         }
                       ]
                     }
@@ -3205,13 +3484,13 @@
         "member_name": "x",
         "storage_wtype": {
           "_type": "ARC4StaticArray",
-          "name": "arc4.static_array<arc4.uint64, 3>",
+          "name": "arc4.static_array<arc4.uint16, 3>",
           "immutable": false,
           "element_type": {
             "_type": "ARC4UIntN",
-            "name": "arc4.uint64",
+            "name": "arc4.uint16",
             "immutable": true,
-            "n": 64,
+            "n": 16,
             "arc4_alias": null,
             "source_location": null
           },

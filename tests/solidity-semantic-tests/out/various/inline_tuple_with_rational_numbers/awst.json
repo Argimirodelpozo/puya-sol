@@ -498,14 +498,14 @@
                 },
                 "wtype": {
                   "_type": "ARC4StaticArray",
-                  "name": "arc4.static_array<arc4.uint64, 5>",
+                  "name": "arc4.static_array<arc4.int8, 5>",
                   "immutable": false,
                   "element_type": {
                     "_type": "ARC4UIntN",
-                    "name": "arc4.uint64",
+                    "name": "arc4.int8",
                     "immutable": true,
-                    "n": 64,
-                    "arc4_alias": null,
+                    "n": 8,
+                    "arc4_alias": "int8",
                     "source_location": null
                   },
                   "array_size": 5,
@@ -526,14 +526,14 @@
                 },
                 "wtype": {
                   "_type": "ARC4StaticArray",
-                  "name": "arc4.static_array<arc4.uint64, 5>",
+                  "name": "arc4.static_array<arc4.int8, 5>",
                   "immutable": false,
                   "element_type": {
                     "_type": "ARC4UIntN",
-                    "name": "arc4.uint64",
+                    "name": "arc4.int8",
                     "immutable": true,
-                    "n": 64,
-                    "arc4_alias": null,
+                    "n": 8,
+                    "arc4_alias": "int8",
                     "source_location": null
                   },
                   "array_size": 5,
@@ -542,7 +542,7 @@
                 },
                 "values": [
                   {
-                    "_type": "ARC4Encode",
+                    "_type": "ReinterpretCast",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
                       "line": 84,
@@ -553,51 +553,13 @@
                     },
                     "wtype": {
                       "_type": "ARC4UIntN",
-                      "name": "arc4.uint64",
+                      "name": "arc4.int8",
                       "immutable": true,
-                      "n": 64,
-                      "arc4_alias": null,
+                      "n": 8,
+                      "arc4_alias": "int8",
                       "source_location": null
                     },
-                    "value": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
-                        "line": 90,
-                        "end_line": 91,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 1,
-                      "teal_alias": null
-                    },
-                    "error_message": null
-                  },
-                  {
-                    "_type": "ARC4Encode",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
-                      "line": 84,
-                      "end_line": 106,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "ARC4UIntN",
-                      "name": "arc4.uint64",
-                      "immutable": true,
-                      "n": 64,
-                      "arc4_alias": null,
-                      "source_location": null
-                    },
-                    "value": {
+                    "expr": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
@@ -608,15 +570,16 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
                       },
-                      "op_code": "btoi",
+                      "op_code": "extract3",
                       "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "IntrinsicCall",
+                          "_type": "ReinterpretCast",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
                             "line": 84,
@@ -631,10 +594,156 @@
                             "immutable": true,
                             "length": null
                           },
-                          "op_code": "extract3",
-                          "immediates": [],
-                          "stack_args": [
-                            {
+                          "expr": {
+                            "_type": "ARC4Encode",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                              "line": 84,
+                              "end_line": 106,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "ARC4UIntN",
+                              "name": "arc4.uint64",
+                              "immutable": true,
+                              "n": 64,
+                              "arc4_alias": null,
+                              "source_location": null
+                            },
+                            "value": {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                                "line": 90,
+                                "end_line": 91,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 1,
+                              "teal_alias": null
+                            },
+                            "error_message": null
+                          }
+                        },
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                            "line": 84,
+                            "end_line": 106,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 7,
+                          "teal_alias": null
+                        },
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                            "line": 84,
+                            "end_line": 106,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 1,
+                          "teal_alias": null
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "_type": "ReinterpretCast",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                      "line": 84,
+                      "end_line": 106,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.int8",
+                      "immutable": true,
+                      "n": 8,
+                      "arc4_alias": "int8",
+                      "source_location": null
+                    },
+                    "expr": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                        "line": 84,
+                        "end_line": 106,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "extract3",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "ReinterpretCast",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                            "line": 84,
+                            "end_line": 106,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "expr": {
+                            "_type": "ARC4Encode",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                              "line": 84,
+                              "end_line": 106,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "ARC4UIntN",
+                              "name": "arc4.uint64",
+                              "immutable": true,
+                              "n": 64,
+                              "arc4_alias": null,
+                              "source_location": null
+                            },
+                            "value": {
                               "_type": "IntrinsicCall",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
@@ -645,12 +754,11 @@
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
                               },
-                              "op_code": "concat",
+                              "op_code": "btoi",
                               "immediates": [],
                               "stack_args": [
                                 {
@@ -669,9 +777,254 @@
                                     "immutable": true,
                                     "length": null
                                   },
-                                  "op_code": "bzero",
+                                  "op_code": "extract3",
                                   "immediates": [],
                                   "stack_args": [
+                                    {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                                        "line": 84,
+                                        "end_line": 106,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "op_code": "concat",
+                                      "immediates": [],
+                                      "stack_args": [
+                                        {
+                                          "_type": "IntrinsicCall",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                                            "line": 84,
+                                            "end_line": 106,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "BytesWType",
+                                            "name": "bytes",
+                                            "immutable": true,
+                                            "length": null
+                                          },
+                                          "op_code": "bzero",
+                                          "immediates": [],
+                                          "stack_args": [
+                                            {
+                                              "_type": "IntegerConstant",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                                                "line": 84,
+                                                "end_line": 106,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "uint64",
+                                                "immutable": true
+                                              },
+                                              "value": 8,
+                                              "teal_alias": null
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "_type": "ReinterpretCast",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                                            "line": 84,
+                                            "end_line": 106,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "BytesWType",
+                                            "name": "bytes",
+                                            "immutable": true,
+                                            "length": null
+                                          },
+                                          "expr": {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                                              "line": 94,
+                                              "end_line": 96,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "biguint",
+                                              "immutable": true
+                                            },
+                                            "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                                            "teal_alias": null
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "_type": "UInt64BinaryOperation",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                                        "line": 84,
+                                        "end_line": 106,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "left": {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                                          "line": 84,
+                                          "end_line": 106,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "op_code": "len",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                                              "line": 84,
+                                              "end_line": 106,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "op_code": "concat",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
+                                                "_type": "IntrinsicCall",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                                                  "line": 84,
+                                                  "end_line": 106,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "op_code": "bzero",
+                                                "immediates": [],
+                                                "stack_args": [
+                                                  {
+                                                    "_type": "IntegerConstant",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                                                      "line": 84,
+                                                      "end_line": 106,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "WType",
+                                                      "name": "uint64",
+                                                      "immutable": true
+                                                    },
+                                                    "value": 8,
+                                                    "teal_alias": null
+                                                  }
+                                                ]
+                                              },
+                                              {
+                                                "_type": "ReinterpretCast",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                                                  "line": 84,
+                                                  "end_line": 106,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "expr": {
+                                                  "_type": "IntegerConstant",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                                                    "line": 94,
+                                                    "end_line": 96,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "biguint",
+                                                    "immutable": true
+                                                  },
+                                                  "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                                                  "teal_alias": null
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      "op": "-",
+                                      "right": {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                                          "line": 84,
+                                          "end_line": 106,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "value": 8,
+                                        "teal_alias": null
+                                      }
+                                    },
                                     {
                                       "_type": "IntegerConstant",
                                       "source_location": {
@@ -691,200 +1044,128 @@
                                       "teal_alias": null
                                     }
                                   ]
-                                },
-                                {
-                                  "_type": "ReinterpretCast",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
-                                    "line": 84,
-                                    "end_line": 106,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "expr": {
-                                    "_type": "IntegerConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
-                                      "line": 94,
-                                      "end_line": 96,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "biguint",
-                                      "immutable": true
-                                    },
-                                    "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
-                                    "teal_alias": null
-                                  }
                                 }
                               ]
                             },
-                            {
-                              "_type": "UInt64BinaryOperation",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
-                                "line": 84,
-                                "end_line": 106,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "uint64",
-                                "immutable": true
-                              },
-                              "left": {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
-                                  "line": 84,
-                                  "end_line": 106,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "op_code": "len",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
-                                      "line": 84,
-                                      "end_line": 106,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "op_code": "concat",
-                                    "immediates": [],
-                                    "stack_args": [
-                                      {
-                                        "_type": "IntrinsicCall",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
-                                          "line": 84,
-                                          "end_line": 106,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "BytesWType",
-                                          "name": "bytes",
-                                          "immutable": true,
-                                          "length": null
-                                        },
-                                        "op_code": "bzero",
-                                        "immediates": [],
-                                        "stack_args": [
-                                          {
-                                            "_type": "IntegerConstant",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
-                                              "line": 84,
-                                              "end_line": 106,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "WType",
-                                              "name": "uint64",
-                                              "immutable": true
-                                            },
-                                            "value": 8,
-                                            "teal_alias": null
-                                          }
-                                        ]
-                                      },
-                                      {
-                                        "_type": "ReinterpretCast",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
-                                          "line": 84,
-                                          "end_line": 106,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "BytesWType",
-                                          "name": "bytes",
-                                          "immutable": true,
-                                          "length": null
-                                        },
-                                        "expr": {
-                                          "_type": "IntegerConstant",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
-                                            "line": 94,
-                                            "end_line": 96,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "biguint",
-                                            "immutable": true
-                                          },
-                                          "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
-                                          "teal_alias": null
-                                        }
-                                      }
-                                    ]
-                                  }
-                                ]
-                              },
-                              "op": "-",
-                              "right": {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
-                                  "line": 84,
-                                  "end_line": 106,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "value": 8,
-                                "teal_alias": null
-                              }
+                            "error_message": null
+                          }
+                        },
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                            "line": 84,
+                            "end_line": 106,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 7,
+                          "teal_alias": null
+                        },
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                            "line": 84,
+                            "end_line": 106,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 1,
+                          "teal_alias": null
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "_type": "ReinterpretCast",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                      "line": 84,
+                      "end_line": 106,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.int8",
+                      "immutable": true,
+                      "n": 8,
+                      "arc4_alias": "int8",
+                      "source_location": null
+                    },
+                    "expr": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                        "line": 84,
+                        "end_line": 106,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "extract3",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "ReinterpretCast",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                            "line": 84,
+                            "end_line": 106,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "expr": {
+                            "_type": "ARC4Encode",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                              "line": 84,
+                              "end_line": 106,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
                             },
-                            {
+                            "wtype": {
+                              "_type": "ARC4UIntN",
+                              "name": "arc4.uint64",
+                              "immutable": true,
+                              "n": 64,
+                              "arc4_alias": null,
+                              "source_location": null
+                            },
+                            "value": {
                               "_type": "IntegerConstant",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
-                                "line": 84,
-                                "end_line": 106,
+                                "line": 98,
+                                "end_line": 99,
                                 "comment_lines": 0,
                                 "column": null,
                                 "end_column": null
@@ -894,17 +1175,53 @@
                                 "name": "uint64",
                                 "immutable": true
                               },
-                              "value": 8,
+                              "value": 0,
                               "teal_alias": null
-                            }
-                          ]
+                            },
+                            "error_message": null
+                          }
+                        },
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                            "line": 84,
+                            "end_line": 106,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 7,
+                          "teal_alias": null
+                        },
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                            "line": 84,
+                            "end_line": 106,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 1,
+                          "teal_alias": null
                         }
                       ]
-                    },
-                    "error_message": null
+                    }
                   },
                   {
-                    "_type": "ARC4Encode",
+                    "_type": "ReinterpretCast",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
                       "line": 84,
@@ -915,34 +1232,127 @@
                     },
                     "wtype": {
                       "_type": "ARC4UIntN",
-                      "name": "arc4.uint64",
+                      "name": "arc4.int8",
                       "immutable": true,
-                      "n": 64,
-                      "arc4_alias": null,
+                      "n": 8,
+                      "arc4_alias": "int8",
                       "source_location": null
                     },
-                    "value": {
-                      "_type": "IntegerConstant",
+                    "expr": {
+                      "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
-                        "line": 98,
-                        "end_line": 99,
+                        "line": 84,
+                        "end_line": 106,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
                       },
-                      "value": 0,
-                      "teal_alias": null
-                    },
-                    "error_message": null
+                      "op_code": "extract3",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "ReinterpretCast",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                            "line": 84,
+                            "end_line": 106,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "expr": {
+                            "_type": "ARC4Encode",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                              "line": 84,
+                              "end_line": 106,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "ARC4UIntN",
+                              "name": "arc4.uint64",
+                              "immutable": true,
+                              "n": 64,
+                              "arc4_alias": null,
+                              "source_location": null
+                            },
+                            "value": {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                                "line": 101,
+                                "end_line": 102,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 0,
+                              "teal_alias": null
+                            },
+                            "error_message": null
+                          }
+                        },
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                            "line": 84,
+                            "end_line": 106,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 7,
+                          "teal_alias": null
+                        },
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                            "line": 84,
+                            "end_line": 106,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 1,
+                          "teal_alias": null
+                        }
+                      ]
+                    }
                   },
                   {
-                    "_type": "ARC4Encode",
+                    "_type": "ReinterpretCast",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
                       "line": 84,
@@ -953,69 +1363,124 @@
                     },
                     "wtype": {
                       "_type": "ARC4UIntN",
-                      "name": "arc4.uint64",
+                      "name": "arc4.int8",
                       "immutable": true,
-                      "n": 64,
-                      "arc4_alias": null,
+                      "n": 8,
+                      "arc4_alias": "int8",
                       "source_location": null
                     },
-                    "value": {
-                      "_type": "IntegerConstant",
+                    "expr": {
+                      "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
-                        "line": 101,
-                        "end_line": 102,
+                        "line": 84,
+                        "end_line": 106,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
                       },
-                      "value": 0,
-                      "teal_alias": null
-                    },
-                    "error_message": null
-                  },
-                  {
-                    "_type": "ARC4Encode",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
-                      "line": 84,
-                      "end_line": 106,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "ARC4UIntN",
-                      "name": "arc4.uint64",
-                      "immutable": true,
-                      "n": 64,
-                      "arc4_alias": null,
-                      "source_location": null
-                    },
-                    "value": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
-                        "line": 104,
-                        "end_line": 105,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    },
-                    "error_message": null
+                      "op_code": "extract3",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "ReinterpretCast",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                            "line": 84,
+                            "end_line": 106,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "expr": {
+                            "_type": "ARC4Encode",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                              "line": 84,
+                              "end_line": 106,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "ARC4UIntN",
+                              "name": "arc4.uint64",
+                              "immutable": true,
+                              "n": 64,
+                              "arc4_alias": null,
+                              "source_location": null
+                            },
+                            "value": {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                                "line": 104,
+                                "end_line": 105,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 0,
+                              "teal_alias": null
+                            },
+                            "error_message": null
+                          }
+                        },
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                            "line": 84,
+                            "end_line": 106,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 7,
+                          "teal_alias": null
+                        },
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/inline_tuple_with_rational_numbers.sol",
+                            "line": 84,
+                            "end_line": 106,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 1,
+                          "teal_alias": null
+                        }
+                      ]
+                    }
                   }
                 ]
               }
@@ -1136,10 +1601,10 @@
                               },
                               "wtype": {
                                 "_type": "ARC4UIntN",
-                                "name": "arc4.uint64",
+                                "name": "arc4.int8",
                                 "immutable": true,
-                                "n": 64,
-                                "arc4_alias": null,
+                                "n": 8,
+                                "arc4_alias": "int8",
                                 "source_location": null
                               },
                               "base": {
@@ -1154,14 +1619,14 @@
                                 },
                                 "wtype": {
                                   "_type": "ARC4StaticArray",
-                                  "name": "arc4.static_array<arc4.uint64, 5>",
+                                  "name": "arc4.static_array<arc4.int8, 5>",
                                   "immutable": false,
                                   "element_type": {
                                     "_type": "ARC4UIntN",
-                                    "name": "arc4.uint64",
+                                    "name": "arc4.int8",
                                     "immutable": true,
-                                    "n": 64,
-                                    "arc4_alias": null,
+                                    "n": 8,
+                                    "arc4_alias": "int8",
                                     "source_location": null
                                   },
                                   "array_size": 5,
@@ -1340,10 +1805,10 @@
                                 },
                                 "wtype": {
                                   "_type": "ARC4UIntN",
-                                  "name": "arc4.uint64",
+                                  "name": "arc4.int8",
                                   "immutable": true,
-                                  "n": 64,
-                                  "arc4_alias": null,
+                                  "n": 8,
+                                  "arc4_alias": "int8",
                                   "source_location": null
                                 },
                                 "base": {
@@ -1358,14 +1823,14 @@
                                   },
                                   "wtype": {
                                     "_type": "ARC4StaticArray",
-                                    "name": "arc4.static_array<arc4.uint64, 5>",
+                                    "name": "arc4.static_array<arc4.int8, 5>",
                                     "immutable": false,
                                     "element_type": {
                                       "_type": "ARC4UIntN",
-                                      "name": "arc4.uint64",
+                                      "name": "arc4.int8",
                                       "immutable": true,
-                                      "n": 64,
-                                      "arc4_alias": null,
+                                      "n": 8,
+                                      "arc4_alias": "int8",
                                       "source_location": null
                                     },
                                     "array_size": 5,
@@ -1534,10 +1999,10 @@
                             },
                             "wtype": {
                               "_type": "ARC4UIntN",
-                              "name": "arc4.uint64",
+                              "name": "arc4.int8",
                               "immutable": true,
-                              "n": 64,
-                              "arc4_alias": null,
+                              "n": 8,
+                              "arc4_alias": "int8",
                               "source_location": null
                             },
                             "base": {
@@ -1552,14 +2017,14 @@
                               },
                               "wtype": {
                                 "_type": "ARC4StaticArray",
-                                "name": "arc4.static_array<arc4.uint64, 5>",
+                                "name": "arc4.static_array<arc4.int8, 5>",
                                 "immutable": false,
                                 "element_type": {
                                   "_type": "ARC4UIntN",
-                                  "name": "arc4.uint64",
+                                  "name": "arc4.int8",
                                   "immutable": true,
-                                  "n": 64,
-                                  "arc4_alias": null,
+                                  "n": 8,
+                                  "arc4_alias": "int8",
                                   "source_location": null
                                 },
                                 "array_size": 5,

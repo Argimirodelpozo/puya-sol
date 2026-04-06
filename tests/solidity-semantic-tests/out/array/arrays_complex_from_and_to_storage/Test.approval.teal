@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x3656dc90 0x95713e09 0xf95feac5 // method "__postInit()void", method "set(uint64[3][])uint512", method "get()uint64[3][]", method "data(uint512,uint512)uint64"
+    pushbytess 0xbacc49e3 0xbd199138 0x3dcfe5b2 0xf95feac5 // method "__postInit()void", method "set(uint24[3][])uint512", method "get()uint24[3][]", method "data(uint512,uint512)uint64"
     txna ApplicationArgs 0
     match __postInit set get data
     err
@@ -54,14 +54,14 @@ set:
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 24
+    pushint 9
     *
     pushint 2
     +
     dig 1
     len
     ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint64, 3>>
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint24, 3>>
     bytec_0 // "data"
     box_del
     pop
@@ -71,7 +71,7 @@ set:
     bytec_0 // "data"
     box_len
     pop
-    pushint 24
+    pushint 9
     /
     itob
     intc_3 // 64

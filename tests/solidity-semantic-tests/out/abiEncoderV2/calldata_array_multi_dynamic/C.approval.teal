@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_multi_dynamic.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 2 1 24
-    bytecblock 0x151f7c75 0x70a485f7 0xf7db12c4 0x11612544
+    bytecblock 0x151f7c75 0x70a485f7 0xf4a124af 0x11612544
     txn ApplicationID
     bnz main_after_if_else@2
     intc_2 // 1
@@ -25,8 +25,8 @@ main_after_if_else@2:
     assert
     bytec_1 // method "f(uint256[][])byte[]"
     pushbytes 0x5f41e76c // method "g(uint256[][])byte[]"
-    bytec_2 // method "h(uint64[][])byte[]"
-    pushbytes 0x20024d77 // method "i(uint64[][])byte[]"
+    bytec_2 // method "h(uint8[][])byte[]"
+    pushbytes 0x011685af // method "i(uint8[][])byte[]"
     bytec_3 // method "j(byte[][])byte[]"
     pushbytes 0xa24b90ab // method "k(byte[][])byte[]"
     txna ApplicationArgs 0
@@ -230,14 +230,12 @@ h_for_header@1:
     dup
     cover 4
     ==
-    assert // invalid tail pointer for (len+(len+uint64[])[])
+    assert // invalid tail pointer for (len+(len+uint8[])[])
     dig 1
     len
     substring3
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 8
-    *
     intc_1 // 2
     +
     +
@@ -255,7 +253,7 @@ h_after_for@4:
     dup
     uncover 2
     ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint64>>
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint8>>
     itob
     extract 6 2
     dig 6
@@ -302,14 +300,12 @@ i_for_header@1:
     dup
     cover 4
     ==
-    assert // invalid tail pointer for (len+(len+uint64[])[])
+    assert // invalid tail pointer for (len+(len+uint8[])[])
     dig 1
     len
     substring3
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 8
-    *
     intc_1 // 2
     +
     +
@@ -325,7 +321,7 @@ i_after_for@4:
     +
     dig 3
     ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint64>>
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint8>>
     itxn_begin
     global CurrentApplicationAddress
     intc_3 // 24
@@ -337,7 +333,7 @@ i_after_for@4:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_2 // method "h(uint64[][])byte[]"
+    bytec_2 // method "h(uint8[][])byte[]"
     itxn_field ApplicationArgs
     dig 5
     itxn_field ApplicationArgs

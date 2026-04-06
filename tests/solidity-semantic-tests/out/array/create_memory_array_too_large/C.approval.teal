@@ -92,7 +92,7 @@ g_while_top@2:
     itob
     extract 6 0
     replace2 0
-    pushbytes 0x0000000000000000
+    bytec_0 // 0x0000
     concat
     bury 2
     dup
@@ -102,12 +102,12 @@ g_while_top@2:
     b g_while_top@2
 
 g_after_while@4:
-    pushint 42
+    dig 1
+    pushbytes 0x002a
+    replace2 6 // on error: index access is out of bounds
+    pushint 6
+    extract_uint16
     itob
-    dig 2
-    swap
-    replace2 18 // on error: index access is out of bounds
-    extract 18 8
     intc_2 // 64
     bzero
     b|
