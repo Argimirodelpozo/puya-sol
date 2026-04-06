@@ -1,0 +1,120 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor_packed.sol.C.approval_program() -> uint64:
+main:
+    intcblock 65535 0 1 8
+    bytecblock 0x151f7c75 "result_in_constructor" "x" "other"
+    intc_1 // 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "result_in_constructor"
+    intc_1 // 0
+    app_global_put
+    bytec_2 // "x"
+    pushbytes 0x
+    app_global_put
+    bytec_3 // "other"
+    pushint 8191
+    app_global_put
+    bytec_2 // "x"
+    dig 1
+    app_global_put
+    err // uninitialized function pointer
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xa146920a 0xa30e9367 0x354cc6d3 0xa12886b0 // method "doubleInv(uint64)uint64", method "use(uint64)uint64", method "result_in_constructor()uint64", method "other()uint64"
+    txna ApplicationArgs 0
+    match doubleInv use result_in_constructor other
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor_packed.sol.C.doubleInv[routing]() -> void:
+doubleInv:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    dup
+    intc_0 // 65535
+    <=
+    assert // ABI validation
+    intc_0 // 65535
+    &
+    pushint 2
+    *
+    dup
+    intc_0 // 65535
+    <=
+    assert // overflow
+    intc_0 // 65535
+    ^
+    intc_0 // 65535
+    &
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor_packed.sol.C.use[routing]() -> void:
+use:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    intc_0 // 65535
+    <=
+    assert // ABI validation
+    err // uninitialized function pointer
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor_packed.sol.C.result_in_constructor[routing]() -> void:
+result_in_constructor:
+    intc_1 // 0
+    bytec_1 // "result_in_constructor"
+    app_global_get_ex
+    assert // check result_in_constructor exists
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor_packed.sol.C.other[routing]() -> void:
+other:
+    intc_1 // 0
+    bytec_3 // "other"
+    app_global_get_ex
+    assert // check other exists
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

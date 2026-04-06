@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/revert.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 64
     bytecblock "a"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -28,7 +28,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x2d4970c7 0xf2b65f27 0xb5251388 // method "f()void", method "g()void", method "a()uint256"
+    pushbytess 0x2d4970c7 0xf2b65f27 0x978d552f // method "f()void", method "g()void", method "a()uint512"
     txna ApplicationArgs 0
     match f g a
     err
@@ -62,10 +62,10 @@ a:
     assert // check a exists
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     pushbytes 0x151f7c75

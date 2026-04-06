@@ -1,0 +1,93 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.approval_program() -> uint64:
+main:
+    intcblock 64 0 1
+    bytecblock "result_in_constructor" 0x151f7c75
+    intc_1 // 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "result_in_constructor"
+    pushbytes 0x
+    app_global_put
+    pushbytes "x"
+    dig 1
+    app_global_put
+    err // uninitialized function pointer
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xcd0bb95d 0xd3e19adf 0xae8c4c69 // method "double(uint512)uint512", method "use(uint512)uint512", method "result_in_constructor()uint512"
+    txna ApplicationArgs 0
+    match double use result_in_constructor
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.double[routing]() -> void:
+double:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    pushbytes 0x02
+    b*
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.use[routing]() -> void:
+use:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    err // uninitialized function pointer
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.result_in_constructor[routing]() -> void:
+result_in_constructor:
+    intc_1 // 0
+    bytec_0 // "result_in_constructor"
+    app_global_get_ex
+    assert // check result_in_constructor exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
