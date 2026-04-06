@@ -141,42 +141,10 @@ def compile_test(sol_path: Path, out_dir: Path, ensure_budget: dict = None) -> d
 
 
 def _extract_box_refs(teal_path):
-    """Extract box references from TEAL — find strings used with box_* ops."""
-    teal = teal_path.read_text()
-    refs = []
-    seen = set()
-    lines = teal.split('\n')
-    for i, line in enumerate(lines):
-        stripped = line.strip()
-        if any(op in stripped for op in ['box_create', 'box_get', 'box_put',
-                'box_del', 'box_len', 'box_resize', 'box_replace', 'box_extract']):
-            for j in range(max(0, i-5), i):
-                prev = lines[j].strip()
-                m = re.search(r'// "([^"]+)"', prev)
-                if m:
-                    key = m.group(1)
-                    if key not in seen:
-                        seen.add(key)
-                        refs.append((0, key.encode()))
-                    break
-                m2 = re.search(r'pushbytes "([^"]+)"', prev)
-                if m2:
-                    key = m2.group(1)
-                    if key not in seen:
-                        seen.add(key)
-                        refs.append((0, key.encode()))
-                    break
-    # Also grab from bytecblock — but only short names that look like
-    # state variable names, not computed hashes or global state keys.
-    bytecblock_match = re.search(r'bytecblock\s+(.*)', teal)
-    if bytecblock_match:
-        for token in bytecblock_match.group(1).split():
-            if token.startswith('"') and token.endswith('"'):
-                key = token[1:-1]
-                if key not in seen and len(key) <= 64:
-                    seen.add(key)
-                    refs.append((0, key.encode()))
-    return refs
+    """Box refs are discovered via simulate (populate_app_call_resources).
+    Static TEAL scanning is unreliable — returns prefixes, global state keys, etc.
+    This function returns empty; kept for API compatibility."""
+    return []
 
 
 def _encode_ctor_arg(val_str: str) -> bytes:
@@ -298,30 +266,14 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
                             if flat_idx < len(flat_vals):
                                 _postinit_args.append(flat_vals[flat_idx])
                                 flat_idx += 1
-                # First try without static box refs — let populate discover exact keys.
-                # This avoids wasting the 8-ref limit on mapping prefix strings.
+                # Let populate_app_call_resources discover box refs via simulate.
                 _atc.add_method_call(
                     app_id=app_id, method=_postinit_method, sender=_sender,
                     sp=_sp, signer=_signer, method_args=_postinit_args,
                     note=_os.urandom(8),
                 )
-                try:
-                    _atc = au.populate_app_call_resources(_atc, _algod)
-                    _atc.execute(_algod, wait_rounds=4)
-                except Exception:
-                    # Fall back: retry with static box refs for non-mapping cases
-                    _atc2 = AtomicTransactionComposer()
-                    _atc2.add_method_call(
-                        app_id=app_id, method=_postinit_method, sender=_sender,
-                        sp=_sp, signer=_signer, method_args=_postinit_args,
-                        boxes=[AlgoBoxRef(app_index=0, name=ref[1]) for ref in box_refs] if box_refs else None,
-                        note=_os.urandom(8),
-                    )
-                    try:
-                        _atc2 = au.populate_app_call_resources(_atc2, _algod)
-                    except Exception:
-                        pass
-                    _atc2.execute(_algod, wait_rounds=4)
+                _atc = au.populate_app_call_resources(_atc, _algod)
+                _atc.execute(_algod, wait_rounds=4)
             except Exception as e:
                 import sys
                 print(f"  [warn] __postInit failed: {str(e)[:100]}", file=sys.stderr)
@@ -438,17 +390,11 @@ def _call_with_extra_budget(app, method, args, extra_calls=15):
 
     sim_atc = AtomicTransactionComposer()
 
-    # Known box refs from TEAL analysis
-    box_refs = []
-    if hasattr(app, '_box_refs') and app._box_refs:
-        box_refs = [AlgoBoxRef(app_index=0, name=ref[1]) for ref in app._box_refs]
-
     abi_method = Method.from_signature(method)
     sim_atc.add_method_call(
         app_id=app_id, method=abi_method, sender=sender,
         sp=sim_sp, signer=signer, method_args=args if args else [],
         note=os.urandom(8),
-        boxes=box_refs if box_refs else None,
     )
     for _ in range(extra_calls):
         txn = ApplicationCallTxn(
@@ -482,7 +428,6 @@ def _call_with_extra_budget(app, method, args, extra_calls=15):
         app_id=app_id, method=abi_method, sender=sender,
         sp=sp, signer=signer, method_args=args if args else [],
         note=os.urandom(8),
-        boxes=box_refs if box_refs else None,
     )
 
     sp_dummy = algod.suggested_params()
@@ -863,7 +808,7 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                 _sender = app._default_sender
                 _signer = app._default_signer or app.algorand.account.get_signer(_sender)
                 _fee = 1000 + app._ensure_budget_fee
-                _boxes = [_BoxRef(app_index=0, name=r[1]) for r in app._box_refs] if hasattr(app, '_box_refs') and app._box_refs else None
+                _boxes = None  # discovered via simulate
 
                 # Step 1: Simulate with extra_opcode_budget to discover resources
                 _sim_sp = _algod.suggested_params()
