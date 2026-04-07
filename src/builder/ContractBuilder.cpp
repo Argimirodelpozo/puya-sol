@@ -2455,7 +2455,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			// Without this, puya maps biguint→uint512 (AVM max) instead of uint256.
 			// Skip signed integers — they need different ABI names (int256 vs uint256)
 			// and are handled by sign-extension logic elsewhere.
-			if (arg.wtype == awst::WType::biguintType() && pi < solParams.size())
+			// Skip when function has modifiers — modifier args reference params by
+			// original name, and the ARC4 decode rename would break those references.
+			if (arg.wtype == awst::WType::biguintType() && pi < solParams.size()
+				&& _func.modifiers().empty())
 			{
 				auto const* solType = solParams[pi]->annotation().type;
 				auto const* intType = solType ? dynamic_cast<solidity::frontend::IntegerType const*>(solType) : nullptr;

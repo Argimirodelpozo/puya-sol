@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 64
+    intcblock 1 64 0 32
     bytecblock 0x01 "called" 0x 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x1928cd24 0x6ca363a8 // method "f(uint256)uint256", method "called()uint512"
+    pushbytess 0x607ebd63 0x6ca363a8 // method "f(uint512)uint256", method "called()uint512"
     txna ApplicationArgs 0
     match f called
     err
@@ -37,9 +37,9 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol.C.f
     bytec_3 // 0x151f7c75
     swap
@@ -57,10 +57,10 @@ called:
     assert // check called exists
     dup
     len
-    intc_3 // 64
+    intc_1 // 64
     <=
     assert // overflow
-    intc_3 // 64
+    intc_1 // 64
     bzero
     b|
     bytec_3 // 0x151f7c75
@@ -71,7 +71,7 @@ called:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol.C.f(__arc4_x: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol.C.f(x: bytes) -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol.C.f:
     proto 1 1
     intc_2 // 0
@@ -136,10 +136,10 @@ called:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/modifer_recursive.sol.C.f_ternary_merge@10:
     dup
     len
-    intc_1 // 32
+    intc_3 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_3 // 32
     bzero
     b|
     frame_bury 0

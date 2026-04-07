@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_multiple_times.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 64
+    intcblock 1 64 0 32
     bytecblock "a" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x1928cd24 0x978d552f // method "f(uint256)uint256", method "a()uint512"
+    pushbytess 0x607ebd63 0x978d552f // method "f(uint512)uint256", method "a()uint512"
     txna ApplicationArgs 0
     match f a
     err
@@ -35,12 +35,12 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_multiple_times.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    intc_2 // 0
     dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    intc_2 // 0
     bytec_0 // "a"
     app_global_get_ex
     assert // check a exists
@@ -52,10 +52,10 @@ f:
     app_global_put
     dup
     len
-    intc_1 // 32
+    intc_3 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_3 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
@@ -74,10 +74,10 @@ a:
     assert // check a exists
     dup
     len
-    intc_3 // 64
+    intc_1 // 64
     <=
     assert // overflow
-    intc_3 // 64
+    intc_1 // 64
     bzero
     b|
     bytec_1 // 0x151f7c75
