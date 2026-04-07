@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x9c07c057 0x5dc8f718 // method "index(uint256)bool", method "accessIndex(uint256,uint256)uint256"
+    pushbytess 0x9c07c057 0x1f951311 // method "index(uint256)bool", method "accessIndex(uint256,uint512)uint256"
     txna ApplicationArgs 0
     match index accessIndex
     err
@@ -209,9 +209,9 @@ accessIndex:
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_1 // 0
     itob
     bytec_2 // 0x0000

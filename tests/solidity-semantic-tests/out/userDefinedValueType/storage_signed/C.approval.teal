@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_signed.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 8 32
+    intcblock 0 1 64 8
     bytecblock 0x010000 "a" 0x8000 0x02 0xffff 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -30,7 +30,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xf1f3b2ec 0x42af00d9 0xbadc1488 0x6840c918 0xaa5769a9 0x1ad81721 0x978d552f // method "direct()uint16", method "indirect()uint16", method "toMemDirect()uint64[1]", method "toMemIndirect()int16[1]", method "div()uint16", method "viaasm()byte[32]", method "a()uint512"
+    pushbytess 0x052c135e 0xa65b0a28 0xbadc1488 0x6840c918 0x1d6433cd 0x1ad81721 0x978d552f // method "direct()uint512", method "indirect()uint512", method "toMemDirect()uint64[1]", method "toMemIndirect()int16[1]", method "div()uint512", method "viaasm()byte[32]", method "a()uint512"
     txna ApplicationArgs 0
     match direct indirect toMemDirect toMemIndirect div viaasm a
     err
@@ -61,6 +61,14 @@ direct:
     b%
 
 direct_ternary_merge@4:
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
     bytec 5 // 0x151f7c75
     swap
     concat
@@ -104,6 +112,14 @@ indirect:
     b%
 
 indirect_ternary_merge@4:
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
     bytec 5 // 0x151f7c75
     swap
     concat
@@ -160,7 +176,7 @@ div:
     bytec_1 // "a"
     app_global_get_ex
     assert // check a exists
-    intc_2 // 8
+    intc_3 // 8
     bzero
     swap
     itob
@@ -303,11 +319,11 @@ div_ternary_merge@49:
     swap
     concat
     len
-    intc_2 // 8
+    intc_3 // 8
     -
     dig 2
     swap
-    intc_2 // 8
+    intc_3 // 8
     extract3
     bytec 4 // 0xffff
     b&
@@ -458,11 +474,11 @@ div_ternary_merge@94:
     swap
     concat
     len
-    intc_2 // 8
+    intc_3 // 8
     -
     dig 4
     swap
-    intc_2 // 8
+    intc_3 // 8
     extract3
     bytec 4 // 0xffff
     b&
@@ -472,6 +488,14 @@ div_ternary_merge@94:
     b%
 
 div_ternary_merge@140:
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
     bytec 5 // 0x151f7c75
     swap
     concat
@@ -738,11 +762,11 @@ div_ternary_merge@139:
     swap
     concat
     len
-    intc_2 // 8
+    intc_3 // 8
     -
     dig 3
     swap
-    intc_2 // 8
+    intc_3 // 8
     extract3
     bytec 4 // 0xffff
     b&
@@ -984,16 +1008,16 @@ viaasm:
     app_global_get_ex
     assert // check a exists
     load 0
-    intc_3 // 32
+    pushint 32
     bzero
     uncover 2
     itob
     concat
     dup
     len
-    intc_3 // 32
+    pushint 32
     -
-    intc_3 // 32
+    pushint 32
     extract3
     extract 0 32
     swap
@@ -1033,10 +1057,10 @@ a:
 a_ternary_merge@4:
     dup
     len
-    pushint 64
+    intc_2 // 64
     <=
     assert // overflow
-    pushint 64
+    intc_2 // 64
     bzero
     b|
     bytec 5 // 0x151f7c75

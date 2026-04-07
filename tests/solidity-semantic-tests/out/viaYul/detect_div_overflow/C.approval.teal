@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x2b9082ff 0x73775f9a 0x5c69fadf // method "f(uint256,uint256)uint256", method "g(uint64,uint64)uint8", method "h(uint256,uint256)uint256"
+    pushbytess 0x2b9082ff 0x4791650a 0x5c69fadf // method "f(uint256,uint256)uint256", method "g(uint64,uint64)uint512", method "h(uint256,uint256)uint256"
     txna ApplicationArgs 0
     match f g h
     err
@@ -275,6 +275,14 @@ g_ternary_merge@57:
     b%
 
 g_ternary_merge@60:
+    dup
+    len
+    pushint 64
+    <=
+    assert // overflow
+    pushint 64
+    bzero
+    b|
     bytec_3 // 0x151f7c75
     swap
     concat

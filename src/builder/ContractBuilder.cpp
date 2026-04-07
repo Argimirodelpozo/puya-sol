@@ -2453,6 +2453,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 			// Remap biguint args to ARC4UIntN with the original Solidity bit width.
 			// Without this, puya maps biguint→uint512 (AVM max) instead of uint256.
+			// Skip signed integers — they need different ABI names (int256 vs uint256)
+			// and are handled by sign-extension logic elsewhere.
 			if (arg.wtype == awst::WType::biguintType() && pi < solParams.size())
 			{
 				auto const* solType = solParams[pi]->annotation().type;
@@ -2460,6 +2462,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				if (!intType && solType)
 					if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
 						intType = dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
+				// Only wrap unsigned integers — signed use different ABI type names
+				if (intType && intType->isSigned())
+					continue;
 				unsigned bits = intType ? intType->numBits() : 256;
 				auto const* arc4Type = m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
 				paramDecodes.push_back({arg.name, arg.wtype, arc4Type, arg.sourceLocation});
@@ -2650,7 +2655,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 		// For ARC4 methods returning biguint, wrap return values in ARC4Encode
 		// with the correct bit width (e.g., uint256 not uint512).
-		if (method.arc4MethodConfig.has_value() && method.returnType == awst::WType::biguintType())
+		// Skip signed integer returns — they have their own sign-extension logic below.
+		if (method.arc4MethodConfig.has_value() && method.returnType == awst::WType::biguintType()
+			&& signedReturns.empty())
 		{
 			// Get original Solidity bit width for the return type
 			unsigned retBits = 256;

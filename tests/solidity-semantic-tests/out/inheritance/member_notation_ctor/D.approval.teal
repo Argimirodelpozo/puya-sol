@@ -1,9 +1,9 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_7qaihb65/B.sol.D.approval_program() -> uint64:
+// /tmp/multisource_daezpj18/B.sol.D.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 64
     txn ApplicationID
     bnz main_after_if_else@2
     pushbytes "x"
@@ -20,7 +20,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x43e6f972 // method "getX()uint256"
+    pushbytes 0xfdd59e04 // method "getX()uint512"
     txna ApplicationArgs 0
     match main_getX_route@4
     err
@@ -34,7 +34,7 @@ main_getX_route@4:
     b getX
 
 
-// /tmp/multisource_7qaihb65/B.sol.D.getX[routing]() -> void:
+// /tmp/multisource_daezpj18/B.sol.D.getX[routing]() -> void:
 getX:
     pushint 0
     pushbytes "x"
@@ -42,10 +42,10 @@ getX:
     assert // check x exists
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     pushbytes 0x151f7c75
