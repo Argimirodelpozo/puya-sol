@@ -393,6 +393,246 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 {
 	auto const* baseType = m_indexAccess.baseExpression().annotation().type;
 
+	// Slot-based storage reference: _x[i] → __storage_read(slot + i)
+	// For multi-dim: _x[i][j] → __storage_read(slot + i * stride + j)
+	if (auto const* ident = dynamic_cast<Identifier const*>(&m_indexAccess.baseExpression()))
+	{
+		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
+				ident->annotation().referencedDeclaration))
+		{
+			auto slotRef = m_ctx.slotStorageRefs.count(varDecl->id())
+				? m_ctx.slotStorageRefs.at(varDecl->id()) : nullptr;
+			if (slotRef)
+			{
+				// Compute slot offset from index
+				auto indexExpr = m_indexAccess.indexExpression()
+					? buildExpr(*m_indexAccess.indexExpression()) : nullptr;
+
+				// Ensure index is biguint for slot arithmetic
+				if (indexExpr && indexExpr->wtype == awst::WType::uint64Type())
+				{
+					auto itob = std::make_shared<awst::IntrinsicCall>();
+					itob->sourceLocation = m_loc;
+					itob->wtype = awst::WType::bytesType();
+					itob->opCode = "itob";
+					itob->stackArgs.push_back(std::move(indexExpr));
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = m_loc;
+					cast->wtype = awst::WType::biguintType();
+					cast->expr = std::move(itob);
+					indexExpr = std::move(cast);
+				}
+
+				// slot_var holds the base slot (biguint)
+				auto slotVar = std::make_shared<awst::VarExpression>();
+				slotVar->sourceLocation = m_loc;
+				slotVar->wtype = awst::WType::biguintType();
+				slotVar->name = varDecl->name();
+
+				// For now, handle simple single-index: slot + index
+				// The outer array is T[N][1], so _x[0] accesses the inner T[N]
+				// at base slot. Each element is 1 slot (uint256).
+				// For _x[0], the inner array starts at slot. We need to return
+				// a "slot reference" that subsequent indexing can use.
+				// For nested _x[0][j], compute slot + j.
+
+				// If this is the outer index of a storage array (e.g., _x[0] in _x[0] = y),
+				// the result should be another slot ref pointing to (slot + index * inner_size).
+				// For now, just pass through the slot expression — the inner index will add j.
+
+				auto const* arrType = dynamic_cast<ArrayType const*>(baseType);
+				if (arrType && arrType->baseType()->category() == Type::Category::Array)
+				{
+					// Outer dimension: _x[i] → returns a "slot ref" for the inner array
+					// Inner stride = inner array length
+					auto const* innerArr = dynamic_cast<ArrayType const*>(arrType->baseType());
+					if (innerArr && indexExpr)
+					{
+						unsigned innerLen = innerArr->isDynamicallySized() ? 0
+							: static_cast<unsigned>(innerArr->length());
+						if (innerLen > 0)
+						{
+							// newSlot = slot + index * innerLen
+							auto stride = std::make_shared<awst::IntegerConstant>();
+							stride->sourceLocation = m_loc;
+							stride->wtype = awst::WType::biguintType();
+							stride->value = std::to_string(innerLen);
+
+							auto mul = std::make_shared<awst::BigUIntBinaryOperation>();
+							mul->sourceLocation = m_loc;
+							mul->wtype = awst::WType::biguintType();
+							mul->left = std::move(indexExpr);
+							mul->op = awst::BigUIntBinaryOperator::Mult;
+							mul->right = std::move(stride);
+
+							auto add = std::make_shared<awst::BigUIntBinaryOperation>();
+							add->sourceLocation = m_loc;
+							add->wtype = awst::WType::biguintType();
+							add->left = std::move(slotVar);
+							add->op = awst::BigUIntBinaryOperator::Add;
+							add->right = std::move(mul);
+							return add;
+						}
+					}
+					// Fallback: just return slot
+					return slotVar;
+				}
+
+				// Inner dimension: _x[j] where _x is already a slot offset (biguint)
+				// → __storage_read(slot + j)
+				if (indexExpr)
+				{
+					// computedSlot = base + j
+					auto add = std::make_shared<awst::BigUIntBinaryOperation>();
+					add->sourceLocation = m_loc;
+					add->wtype = awst::WType::biguintType();
+					add->left = std::move(slotVar);
+					add->op = awst::BigUIntBinaryOperator::Add;
+					add->right = std::move(indexExpr);
+
+					// __storage_read expects uint64 slot, but we have biguint.
+					// Truncate: btoi(add)
+					auto castToBytes = std::make_shared<awst::ReinterpretCast>();
+					castToBytes->sourceLocation = m_loc;
+					castToBytes->wtype = awst::WType::bytesType();
+					castToBytes->expr = std::move(add);
+
+					// Safe truncate biguint to uint64: extract last 8 bytes then btoi
+					auto lenOp = std::make_shared<awst::IntrinsicCall>();
+					lenOp->sourceLocation = m_loc;
+					lenOp->wtype = awst::WType::uint64Type();
+					lenOp->opCode = "len";
+					lenOp->stackArgs.push_back(castToBytes);
+					auto sub8 = std::make_shared<awst::UInt64BinaryOperation>();
+					sub8->sourceLocation = m_loc;
+					sub8->wtype = awst::WType::uint64Type();
+					sub8->left = std::move(lenOp);
+					sub8->op = awst::UInt64BinaryOperator::Sub;
+					auto eight = std::make_shared<awst::IntegerConstant>();
+					eight->sourceLocation = m_loc;
+					eight->wtype = awst::WType::uint64Type();
+					eight->value = "8";
+					sub8->right = std::move(eight);
+					auto last8 = std::make_shared<awst::IntrinsicCall>();
+					last8->sourceLocation = m_loc;
+					last8->wtype = awst::WType::bytesType();
+					last8->opCode = "extract3";
+					last8->stackArgs.push_back(std::move(castToBytes));
+					last8->stackArgs.push_back(std::move(sub8));
+					auto eight2 = std::make_shared<awst::IntegerConstant>();
+					eight2->sourceLocation = m_loc;
+					eight2->wtype = awst::WType::uint64Type();
+					eight2->value = "8";
+					last8->stackArgs.push_back(std::move(eight2));
+					auto btoi = std::make_shared<awst::IntrinsicCall>();
+					btoi->sourceLocation = m_loc;
+					btoi->wtype = awst::WType::uint64Type();
+					btoi->opCode = "btoi";
+					btoi->stackArgs.push_back(std::move(last8));
+
+					auto call = std::make_shared<awst::SubroutineCallExpression>();
+					call->sourceLocation = m_loc;
+					call->wtype = awst::WType::biguintType();
+					call->target = awst::InstanceMethodTarget{"__storage_read"};
+					awst::CallArg arg;
+					arg.name = "__slot";
+					arg.value = std::move(btoi);
+					call->args.push_back(std::move(arg));
+					return call;
+				}
+			}
+		}
+	}
+
+	// Also check if the base is a biguint expression (from outer slot index)
+	// e.g., (_x[0])[j] where _x[0] returned a biguint slot offset
+	{
+		auto baseExpr = buildExpr(m_indexAccess.baseExpression());
+		if (baseExpr && baseExpr->wtype == awst::WType::biguintType()
+			&& m_indexAccess.indexExpression())
+		{
+			auto indexExpr = buildExpr(*m_indexAccess.indexExpression());
+			if (indexExpr)
+			{
+				// Ensure index is biguint
+				if (indexExpr->wtype == awst::WType::uint64Type())
+				{
+					auto itob = std::make_shared<awst::IntrinsicCall>();
+					itob->sourceLocation = m_loc;
+					itob->wtype = awst::WType::bytesType();
+					itob->opCode = "itob";
+					itob->stackArgs.push_back(std::move(indexExpr));
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = m_loc;
+					cast->wtype = awst::WType::biguintType();
+					cast->expr = std::move(itob);
+					indexExpr = std::move(cast);
+				}
+
+				auto add = std::make_shared<awst::BigUIntBinaryOperation>();
+				add->sourceLocation = m_loc;
+				add->wtype = awst::WType::biguintType();
+				add->left = std::move(baseExpr);
+				add->op = awst::BigUIntBinaryOperator::Add;
+				add->right = std::move(indexExpr);
+
+				// For read: __storage_read(slot)
+				if (!m_indexAccess.annotation().willBeWrittenTo)
+				{
+					auto castToBytes = std::make_shared<awst::ReinterpretCast>();
+					castToBytes->sourceLocation = m_loc;
+					castToBytes->wtype = awst::WType::bytesType();
+					castToBytes->expr = std::move(add);
+
+					// Safe truncate biguint to uint64: extract last 8 bytes then btoi
+					auto lenOp = std::make_shared<awst::IntrinsicCall>();
+					lenOp->sourceLocation = m_loc;
+					lenOp->wtype = awst::WType::uint64Type();
+					lenOp->opCode = "len";
+					lenOp->stackArgs.push_back(castToBytes);
+					auto sub8 = std::make_shared<awst::UInt64BinaryOperation>();
+					sub8->sourceLocation = m_loc;
+					sub8->wtype = awst::WType::uint64Type();
+					sub8->left = std::move(lenOp);
+					sub8->op = awst::UInt64BinaryOperator::Sub;
+					auto eight = std::make_shared<awst::IntegerConstant>();
+					eight->sourceLocation = m_loc;
+					eight->wtype = awst::WType::uint64Type();
+					eight->value = "8";
+					sub8->right = std::move(eight);
+					auto last8 = std::make_shared<awst::IntrinsicCall>();
+					last8->sourceLocation = m_loc;
+					last8->wtype = awst::WType::bytesType();
+					last8->opCode = "extract3";
+					last8->stackArgs.push_back(std::move(castToBytes));
+					last8->stackArgs.push_back(std::move(sub8));
+					auto eight2 = std::make_shared<awst::IntegerConstant>();
+					eight2->sourceLocation = m_loc;
+					eight2->wtype = awst::WType::uint64Type();
+					eight2->value = "8";
+					last8->stackArgs.push_back(std::move(eight2));
+					auto btoi = std::make_shared<awst::IntrinsicCall>();
+					btoi->sourceLocation = m_loc;
+					btoi->wtype = awst::WType::uint64Type();
+					btoi->opCode = "btoi";
+					btoi->stackArgs.push_back(std::move(last8));
+
+					auto call = std::make_shared<awst::SubroutineCallExpression>();
+					call->sourceLocation = m_loc;
+					call->wtype = awst::WType::biguintType();
+					call->target = awst::InstanceMethodTarget{"__storage_read"};
+					awst::CallArg arg;
+					arg.name = "__slot";
+					arg.value = std::move(btoi);
+					call->args.push_back(std::move(arg));
+					return call;
+				}
+				// For write: return the computed slot as biguint (assignment handler will use __storage_write)
+				return add;
+			}
+		}
+	}
+
 	// Box-backed dynamic array access
 	bool isDynamicArrayAccess = false;
 	if (auto const* arrType = dynamic_cast<ArrayType const*>(baseType))

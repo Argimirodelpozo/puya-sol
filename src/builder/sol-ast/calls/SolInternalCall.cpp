@@ -23,7 +23,15 @@ awst::WType const* SolInternalCall::returnTypeFrom(FunctionDefinition const* _fu
 	if (_funcDef->returnParameters().empty())
 		return awst::WType::voidType();
 	if (_funcDef->returnParameters().size() == 1)
+	{
+		// Storage reference return with .slot assembly → biguint (slot number)
+		if (_funcDef->returnParameters()[0]->referenceLocation() == VariableDeclaration::Location::Storage
+			&& _funcDef->isImplemented()
+			&& std::any_of(_funcDef->body().statements().begin(), _funcDef->body().statements().end(),
+				[](auto const& s) { return dynamic_cast<InlineAssembly const*>(s.get()); }))
+			return awst::WType::biguintType();
 		return m_ctx.typeMapper.map(_funcDef->returnParameters()[0]->type());
+	}
 
 	std::vector<awst::WType const*> retTypes;
 	for (auto const& param: _funcDef->returnParameters())

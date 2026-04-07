@@ -167,6 +167,17 @@ private:
 	/// so that later references to `p` resolve to the box, not a local variable.
 	std::map<int64_t, std::shared_ptr<awst::Expression>> m_storageAliases;
 
+	/// Slot-based storage references: maps AST declaration ID to the slot expression.
+	/// For `Type storage _x = getArray()` where getArray() sets .slot in assembly,
+	/// stores the slot call expression. IndexAccess on these translates to sload/sstore.
+	std::map<int64_t, std::shared_ptr<awst::Expression>> m_slotStorageRefs;
+public:
+	void addSlotStorageRef(int64_t _declId, std::shared_ptr<awst::Expression> _expr)
+	{ m_slotStorageRefs[_declId] = std::move(_expr); }
+	std::shared_ptr<awst::Expression> getSlotStorageRef(int64_t _declId) const
+	{ auto it = m_slotStorageRefs.find(_declId); return it != m_slotStorageRefs.end() ? it->second : nullptr; }
+private:
+
 	/// Function pointer targets: maps a local variable AST ID to the FunctionDefinition
 	/// it was assigned. For `function() ptr = g;`, later `ptr()` resolves to `g()`.
 	std::map<int64_t, solidity::frontend::FunctionDefinition const*> m_funcPtrTargets;

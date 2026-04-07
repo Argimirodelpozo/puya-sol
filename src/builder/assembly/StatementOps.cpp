@@ -428,10 +428,45 @@ void AssemblyBuilder::buildAssignment(
 
 	std::string name = _assign.variableNames[0].name.str();
 
-	// Skip ERC-7201 storage slot assignments: $.slot := CONSTANT
-	// These set EVM storage base positions, which have no AVM equivalent
+	// Handle storage slot assignments: _x.slot := expr
+	// Compute the slot value and assign to the base variable name.
+	// The variable holds the slot number as biguint, enabling slot-based
+	// storage operations (sload/sstore) for storage references.
 	if (name.find(".slot") != std::string::npos)
 	{
+		std::string baseName = name.substr(0, name.find(".slot"));
+		if (!baseName.empty() && _assign.value)
+		{
+			auto slotExpr = buildExpression(*_assign.value);
+			if (slotExpr)
+			{
+				// Ensure biguint type for the slot value
+				if (slotExpr->wtype == awst::WType::uint64Type())
+				{
+					auto itob = std::make_shared<awst::IntrinsicCall>();
+					itob->sourceLocation = loc;
+					itob->wtype = awst::WType::bytesType();
+					itob->opCode = "itob";
+					itob->stackArgs.push_back(std::move(slotExpr));
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = loc;
+					cast->wtype = awst::WType::biguintType();
+					cast->expr = std::move(itob);
+					slotExpr = std::move(cast);
+				}
+
+				auto target = std::make_shared<awst::VarExpression>();
+				target->sourceLocation = loc;
+				target->wtype = awst::WType::biguintType();
+				target->name = baseName;
+
+				auto assign = std::make_shared<awst::AssignmentStatement>();
+				assign->sourceLocation = loc;
+				assign->target = std::move(target);
+				assign->value = std::move(slotExpr);
+				_out.push_back(std::move(assign));
+			}
+		}
 		return;
 	}
 

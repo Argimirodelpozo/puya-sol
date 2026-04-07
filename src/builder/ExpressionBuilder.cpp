@@ -187,6 +187,7 @@ eb::BuilderContext ExpressionBuilder::makeBuilderContext()
 		/*.paramRemaps =*/ m_paramRemaps,
 		/*.superTargetNames =*/ m_superTargetNames,
 		/*.storageAliases =*/ m_storageAliases,
+		/*.slotStorageRefs =*/ m_slotStorageRefs,
 		/*.funcPtrTargets =*/ m_funcPtrTargets,
 		/*.constantLocals =*/ m_constantLocals,
 		/*.inConstructor =*/ m_inConstructor,

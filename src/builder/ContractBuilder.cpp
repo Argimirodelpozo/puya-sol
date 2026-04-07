@@ -2364,6 +2364,13 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	else if (returnParams.size() == 1)
 	{
 		method.returnType = m_typeMapper.map(returnParams[0]->type());
+		// Storage reference returns (from functions with .slot assembly):
+		// return type is biguint (slot number), not the array type.
+		if (returnParams[0]->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
+			&& _func.isImplemented()
+			&& std::any_of(_func.body().statements().begin(), _func.body().statements().end(),
+				[](auto const& s) { return dynamic_cast<solidity::frontend::InlineAssembly const*>(s.get()); }))
+			method.returnType = awst::WType::biguintType();
 		// For signed integer returns ≤64 bits, promote to biguint for proper
 		// 256-bit two's complement ARC4 encoding.
 		// Unwrap UserDefinedValueType to find the underlying IntegerType.
@@ -3945,7 +3952,17 @@ void ContractBuilder::buildStorageDispatch(
 	StorageLayout layout;
 	layout.computeLayout(_contract, m_typeMapper);
 
-	if (layout.totalSlots() == 0)
+	// Check if any function has inline assembly (might use .slot / sload / sstore)
+	bool hasInlineAsm = false;
+	for (auto const* base: _contract.annotation().linearizedBaseContracts)
+		for (auto const* func: base->definedFunctions())
+			if (func->isImplemented())
+				for (auto const& stmt: func->body().statements())
+					if (dynamic_cast<solidity::frontend::InlineAssembly const*>(stmt.get()))
+					{ hasInlineAsm = true; goto asmCheckDone; }
+	asmCheckDone:
+
+	if (layout.totalSlots() == 0 && !hasInlineAsm)
 		return;
 
 	std::string cref = m_sourceFile + "." + _contractName;
@@ -3990,17 +4007,66 @@ void ContractBuilder::buildStorageDispatch(
 
 		// Build if/else chain for known slots
 		// Start from innermost (default case) and wrap outward
-		// Default: return biguint(0) (unknown slot)
+		// Default: read from global state using slot key "s" + itob(slot)
+		// This supports dynamic slot-based storage references (assembly .slot)
 		auto defaultBlock = std::make_shared<awst::Block>();
 		defaultBlock->sourceLocation = loc;
 		{
+			// Use a single large box "__dyn_storage" for all dynamic slots.
+			// Each slot occupies 32 bytes at offset (slot % 256) * 32.
+			// This avoids per-slot box reference limits (max 8 per txn).
+			auto boxKey = makeBytes("__dyn_storage");
+
+			// Compute offset: (__slot % 256) * 32
+			auto slotVar = std::make_shared<awst::VarExpression>();
+			slotVar->sourceLocation = loc;
+			slotVar->wtype = awst::WType::uint64Type();
+			slotVar->name = "__slot";
+
+			auto mod256 = std::make_shared<awst::UInt64BinaryOperation>();
+			mod256->sourceLocation = loc;
+			mod256->wtype = awst::WType::uint64Type();
+			mod256->left = std::move(slotVar);
+			mod256->op = awst::UInt64BinaryOperator::Mod;
+			mod256->right = makeUint64("256");
+
+			auto offset = std::make_shared<awst::UInt64BinaryOperation>();
+			offset->sourceLocation = loc;
+			offset->wtype = awst::WType::uint64Type();
+			offset->left = std::move(mod256);
+			offset->op = awst::UInt64BinaryOperator::Mult;
+			offset->right = makeUint64("32");
+
+			// box_create("__dyn_storage", 8192) — 256 slots * 32 bytes
+			auto boxCreate = std::make_shared<awst::IntrinsicCall>();
+			boxCreate->sourceLocation = loc;
+			boxCreate->wtype = awst::WType::boolType();
+			boxCreate->opCode = "box_create";
+			boxCreate->stackArgs.push_back(boxKey);
+			boxCreate->stackArgs.push_back(makeUint64("8192"));
+
+			auto popStmt = std::make_shared<awst::ExpressionStatement>();
+			popStmt->sourceLocation = loc;
+			popStmt->expr = std::move(boxCreate);
+			defaultBlock->body.push_back(std::move(popStmt));
+
+			// box_extract("__dyn_storage", offset, 32)
+			auto boxExtract = std::make_shared<awst::IntrinsicCall>();
+			boxExtract->sourceLocation = loc;
+			boxExtract->wtype = awst::WType::bytesType();
+			boxExtract->opCode = "box_extract";
+			boxExtract->stackArgs.push_back(std::move(boxKey));
+			boxExtract->stackArgs.push_back(std::move(offset));
+			boxExtract->stackArgs.push_back(makeUint64("32"));
+
+			auto cast = std::make_shared<awst::ReinterpretCast>();
+			cast->sourceLocation = loc;
+			cast->wtype = awst::WType::biguintType();
+			cast->expr = std::move(boxExtract);
+
 			auto ret = std::make_shared<awst::ReturnStatement>();
 			ret->sourceLocation = loc;
-			auto zero = std::make_shared<awst::IntegerConstant>();
-			zero->sourceLocation = loc;
-			zero->wtype = awst::WType::biguintType();
-			zero->value = "0";
-			ret->value = std::move(zero);
+			ret->value = std::move(cast);
 			defaultBlock->body.push_back(std::move(ret));
 		}
 
@@ -4136,8 +4202,123 @@ void ContractBuilder::buildStorageDispatch(
 		// Build if/else chain for known slots
 		auto defaultBlock = std::make_shared<awst::Block>();
 		defaultBlock->sourceLocation = loc;
-		// Default: no-op (unknown slot, silently ignore)
+		// Default: write to global state using slot key "s" + itob(slot)
 		{
+			// Build key: concat("s", itob(__slot))
+			auto prefix = makeBytes("s");
+			auto slotItob = std::make_shared<awst::IntrinsicCall>();
+			slotItob->sourceLocation = loc;
+			slotItob->wtype = awst::WType::bytesType();
+			slotItob->opCode = "itob";
+			auto slotVar = std::make_shared<awst::VarExpression>();
+			slotVar->sourceLocation = loc;
+			slotVar->wtype = awst::WType::uint64Type();
+			slotVar->name = "__slot";
+			slotItob->stackArgs.push_back(std::move(slotVar));
+
+			auto key = std::make_shared<awst::IntrinsicCall>();
+			key->sourceLocation = loc;
+			key->wtype = awst::WType::bytesType();
+			key->opCode = "concat";
+			key->stackArgs.push_back(std::move(prefix));
+			key->stackArgs.push_back(std::move(slotItob));
+
+			// Use single "__dyn_storage" box, same as read
+			auto boxKey = makeBytes("__dyn_storage");
+
+			// Compute offset: (__slot % 256) * 32
+			auto slotVar2 = std::make_shared<awst::VarExpression>();
+			slotVar2->sourceLocation = loc;
+			slotVar2->wtype = awst::WType::uint64Type();
+			slotVar2->name = "__slot";
+
+			auto mod256 = std::make_shared<awst::UInt64BinaryOperation>();
+			mod256->sourceLocation = loc;
+			mod256->wtype = awst::WType::uint64Type();
+			mod256->left = std::move(slotVar2);
+			mod256->op = awst::UInt64BinaryOperator::Mod;
+			mod256->right = makeUint64("256");
+
+			auto offset = std::make_shared<awst::UInt64BinaryOperation>();
+			offset->sourceLocation = loc;
+			offset->wtype = awst::WType::uint64Type();
+			offset->left = std::move(mod256);
+			offset->op = awst::UInt64BinaryOperator::Mult;
+			offset->right = makeUint64("32");
+
+			// value as bytes (pad to 32)
+			auto valueVar = std::make_shared<awst::VarExpression>();
+			valueVar->sourceLocation = loc;
+			valueVar->wtype = awst::WType::biguintType();
+			valueVar->name = "__value";
+
+			auto valBytes = std::make_shared<awst::ReinterpretCast>();
+			valBytes->sourceLocation = loc;
+			valBytes->wtype = awst::WType::bytesType();
+			valBytes->expr = std::move(valueVar);
+
+			// Pad to 32 bytes
+			auto bz = std::make_shared<awst::IntrinsicCall>();
+			bz->sourceLocation = loc;
+			bz->wtype = awst::WType::bytesType();
+			bz->opCode = "bzero";
+			bz->stackArgs.push_back(makeUint64("32"));
+
+			auto cat = std::make_shared<awst::IntrinsicCall>();
+			cat->sourceLocation = loc;
+			cat->wtype = awst::WType::bytesType();
+			cat->opCode = "concat";
+			cat->stackArgs.push_back(std::move(bz));
+			cat->stackArgs.push_back(std::move(valBytes));
+
+			auto lenCall = std::make_shared<awst::IntrinsicCall>();
+			lenCall->sourceLocation = loc;
+			lenCall->wtype = awst::WType::uint64Type();
+			lenCall->opCode = "len";
+			lenCall->stackArgs.push_back(cat);
+
+			auto sub32 = std::make_shared<awst::UInt64BinaryOperation>();
+			sub32->sourceLocation = loc;
+			sub32->wtype = awst::WType::uint64Type();
+			sub32->left = std::move(lenCall);
+			sub32->op = awst::UInt64BinaryOperator::Sub;
+			sub32->right = makeUint64("32");
+
+			auto paddedVal = std::make_shared<awst::IntrinsicCall>();
+			paddedVal->sourceLocation = loc;
+			paddedVal->wtype = awst::WType::bytesType();
+			paddedVal->opCode = "extract3";
+			paddedVal->stackArgs.push_back(cat);
+			paddedVal->stackArgs.push_back(std::move(sub32));
+			paddedVal->stackArgs.push_back(makeUint64("32"));
+
+			// box_create("__dyn_storage", 8192) — ensure box exists
+			auto boxCreate = std::make_shared<awst::IntrinsicCall>();
+			boxCreate->sourceLocation = loc;
+			boxCreate->wtype = awst::WType::boolType();
+			boxCreate->opCode = "box_create";
+			boxCreate->stackArgs.push_back(boxKey);
+			boxCreate->stackArgs.push_back(makeUint64("8192"));
+
+			auto createStmt = std::make_shared<awst::ExpressionStatement>();
+			createStmt->sourceLocation = loc;
+			createStmt->expr = std::move(boxCreate);
+			defaultBlock->body.push_back(std::move(createStmt));
+
+			// box_replace("__dyn_storage", offset, padded_value)
+			auto boxReplace = std::make_shared<awst::IntrinsicCall>();
+			boxReplace->sourceLocation = loc;
+			boxReplace->wtype = awst::WType::voidType();
+			boxReplace->opCode = "box_replace";
+			boxReplace->stackArgs.push_back(std::move(boxKey));
+			boxReplace->stackArgs.push_back(std::move(offset));
+			boxReplace->stackArgs.push_back(std::move(paddedVal));
+
+			auto replaceStmt = std::make_shared<awst::ExpressionStatement>();
+			replaceStmt->sourceLocation = loc;
+			replaceStmt->expr = std::move(boxReplace);
+			defaultBlock->body.push_back(std::move(replaceStmt));
+
 			auto ret = std::make_shared<awst::ReturnStatement>();
 			ret->sourceLocation = loc;
 			defaultBlock->body.push_back(std::move(ret));

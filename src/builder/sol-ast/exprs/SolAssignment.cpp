@@ -423,6 +423,150 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 	auto target = buildExpr(m_assignment.leftHandSide());
 	auto value = buildExpr(m_assignment.rightHandSide());
 
+	// Slot-based storage write: target is biguint (slot offset), value is array
+	// Expand to individual __storage_write(slot + j, value[j]) calls
+	if (op == Token::Assign && target->wtype == awst::WType::biguintType())
+	{
+		auto const* lhsType = m_assignment.leftHandSide().annotation().type;
+		auto const* arrType = lhsType ? dynamic_cast<ArrayType const*>(lhsType) : nullptr;
+		if (!arrType)
+		{
+			// Check if RHS is an array type
+			auto const* rhsType = m_assignment.rightHandSide().annotation().type;
+			arrType = rhsType ? dynamic_cast<ArrayType const*>(rhsType) : nullptr;
+		}
+		if (arrType && !arrType->isDynamicallySized())
+		{
+			unsigned len = static_cast<unsigned>(arrType->length());
+			// Emit: for j in 0..len-1: __storage_write(btoi(slot + j), value[j])
+			for (unsigned j = 0; j < len; ++j)
+			{
+				// slot + j
+				auto jConst = std::make_shared<awst::IntegerConstant>();
+				jConst->sourceLocation = m_loc;
+				jConst->wtype = awst::WType::biguintType();
+				jConst->value = std::to_string(j);
+
+				auto slotJ = std::make_shared<awst::BigUIntBinaryOperation>();
+				slotJ->sourceLocation = m_loc;
+				slotJ->wtype = awst::WType::biguintType();
+				slotJ->left = target; // shared, not moved (reused each iteration)
+				slotJ->op = awst::BigUIntBinaryOperator::Add;
+				slotJ->right = std::move(jConst);
+
+				// btoi(slot + j) for __storage_write
+				auto castBytes = std::make_shared<awst::ReinterpretCast>();
+				castBytes->sourceLocation = m_loc;
+				castBytes->wtype = awst::WType::bytesType();
+				castBytes->expr = std::move(slotJ);
+
+				// Safe truncate biguint slot to uint64: extract last 8 bytes then btoi
+				auto lenOp = std::make_shared<awst::IntrinsicCall>();
+				lenOp->sourceLocation = m_loc;
+				lenOp->wtype = awst::WType::uint64Type();
+				lenOp->opCode = "len";
+				lenOp->stackArgs.push_back(castBytes);
+				auto sub8 = std::make_shared<awst::UInt64BinaryOperation>();
+				sub8->sourceLocation = m_loc;
+				sub8->wtype = awst::WType::uint64Type();
+				sub8->left = std::move(lenOp);
+				sub8->op = awst::UInt64BinaryOperator::Sub;
+				auto eight = std::make_shared<awst::IntegerConstant>();
+				eight->sourceLocation = m_loc;
+				eight->wtype = awst::WType::uint64Type();
+				eight->value = "8";
+				sub8->right = std::move(eight);
+				auto last8 = std::make_shared<awst::IntrinsicCall>();
+				last8->sourceLocation = m_loc;
+				last8->wtype = awst::WType::bytesType();
+				last8->opCode = "extract3";
+				last8->stackArgs.push_back(std::move(castBytes));
+				last8->stackArgs.push_back(std::move(sub8));
+				auto eight2 = std::make_shared<awst::IntegerConstant>();
+				eight2->sourceLocation = m_loc;
+				eight2->wtype = awst::WType::uint64Type();
+				eight2->value = "8";
+				last8->stackArgs.push_back(std::move(eight2));
+				auto btoi = std::make_shared<awst::IntrinsicCall>();
+				btoi->sourceLocation = m_loc;
+				btoi->wtype = awst::WType::uint64Type();
+				btoi->opCode = "btoi";
+				btoi->stackArgs.push_back(std::move(last8));
+
+				// value[j]
+				auto idx = std::make_shared<awst::IntegerConstant>();
+				idx->sourceLocation = m_loc;
+				idx->wtype = awst::WType::uint64Type();
+				idx->value = std::to_string(j);
+
+				auto elemExpr = std::make_shared<awst::IndexExpression>();
+				elemExpr->sourceLocation = m_loc;
+				elemExpr->base = value; // shared
+				elemExpr->index = std::move(idx);
+				// Element type: use the ARC4 element type from the value's wtype
+				if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(value->wtype))
+					elemExpr->wtype = sa->elementType();
+				else if (auto const* da = dynamic_cast<awst::ARC4DynamicArray const*>(value->wtype))
+					elemExpr->wtype = da->elementType();
+				else
+					elemExpr->wtype = m_ctx.typeMapper.map(arrType->baseType());
+
+				// If element is ARC4-encoded, decode to biguint
+				std::shared_ptr<awst::Expression> elemVal = std::move(elemExpr);
+				if (elemVal->wtype && elemVal->wtype->kind() == awst::WTypeKind::ARC4UIntN)
+				{
+					auto decode = std::make_shared<awst::ARC4Decode>();
+					decode->sourceLocation = m_loc;
+					decode->wtype = awst::WType::biguintType();
+					decode->value = std::move(elemVal);
+					elemVal = std::move(decode);
+				}
+				else if (elemVal->wtype == awst::WType::uint64Type())
+				{
+					// Convert uint64 to biguint
+					auto itob = std::make_shared<awst::IntrinsicCall>();
+					itob->sourceLocation = m_loc;
+					itob->wtype = awst::WType::bytesType();
+					itob->opCode = "itob";
+					itob->stackArgs.push_back(std::move(elemVal));
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = m_loc;
+					cast->wtype = awst::WType::biguintType();
+					cast->expr = std::move(itob);
+					elemVal = std::move(cast);
+				}
+
+				// __storage_write(slot, value)
+				auto call = std::make_shared<awst::SubroutineCallExpression>();
+				call->sourceLocation = m_loc;
+				call->wtype = awst::WType::voidType();
+				call->target = awst::InstanceMethodTarget{"__storage_write"};
+				{
+					awst::CallArg slotArg;
+					slotArg.name = "__slot";
+					slotArg.value = std::move(btoi);
+					call->args.push_back(std::move(slotArg));
+
+					awst::CallArg valArg;
+					valArg.name = "__value";
+					valArg.value = std::move(elemVal);
+					call->args.push_back(std::move(valArg));
+				}
+
+				auto stmt = std::make_shared<awst::ExpressionStatement>();
+				stmt->sourceLocation = m_loc;
+				stmt->expr = std::move(call);
+				m_ctx.pendingStatements.push_back(std::move(stmt));
+			}
+			// Return a dummy value (void-like, the writes are in pending)
+			auto zero = std::make_shared<awst::IntegerConstant>();
+			zero->sourceLocation = m_loc;
+			zero->wtype = awst::WType::biguintType();
+			zero->value = "0";
+			return zero;
+		}
+	}
+
 	// Tuple decomposition
 	if (dynamic_cast<awst::TupleExpression const*>(target.get()))
 		return handleTupleAssignment(std::move(target), std::move(value));

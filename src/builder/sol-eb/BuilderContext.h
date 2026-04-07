@@ -66,6 +66,7 @@ struct BuilderContext
 	std::map<int64_t, ParamRemap>& paramRemaps;
 	std::unordered_map<int64_t, std::string>& superTargetNames;
 	std::map<int64_t, std::shared_ptr<awst::Expression>>& storageAliases;
+	std::map<int64_t, std::shared_ptr<awst::Expression>>& slotStorageRefs;
 	std::map<int64_t, solidity::frontend::FunctionDefinition const*>& funcPtrTargets;
 	std::unordered_map<int64_t, unsigned long long>& constantLocals;
 	bool inConstructor;

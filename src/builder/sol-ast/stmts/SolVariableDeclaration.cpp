@@ -124,6 +124,31 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 					result.push_back(std::move(p));
 				return result;
 			}
+
+			// Slot-based storage reference: initialized from internal function call
+			// that returns a storage reference (typically has .slot := in assembly).
+			// Register as slot ref so IndexAccess translates to sload/sstore.
+			if (dynamic_cast<awst::SubroutineCallExpression const*>(value.get()))
+			{
+				m_exprBuilder.addSlotStorageRef(decl.id(), value);
+				// Also emit the call as an assignment so the slot value is available
+				auto slotVar = std::make_shared<awst::VarExpression>();
+				slotVar->sourceLocation = m_loc;
+				slotVar->wtype = awst::WType::biguintType();
+				slotVar->name = decl.name();
+
+				auto assign = std::make_shared<awst::AssignmentStatement>();
+				assign->sourceLocation = m_loc;
+				assign->target = std::move(slotVar);
+				assign->value = std::move(value);
+				result.push_back(std::move(assign));
+
+				for (auto& p: m_ctx.takePrePending())
+					result.push_back(std::move(p));
+				for (auto& p: m_ctx.takePending())
+					result.push_back(std::move(p));
+				return result;
+			}
 		}
 
 		auto assign = std::make_shared<awst::AssignmentStatement>();
