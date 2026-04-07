@@ -1,0 +1,81 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/transient_state_variable_slot_offset.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1
+    bytecblock 0x
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytes "x"
+    bytec_0 // 0x
+    app_global_put
+    pushbytes "y"
+    bytec_0 // 0x
+    app_global_put
+    pushbytes "w"
+    bytec_0 // 0x
+    app_global_put
+    pushbytes "z"
+    bytec_0 // 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xfbb0074f 0x93cfbb67 0x0e57d0fb 0xc4d2bd2b // method "xSlotOffset()(uint512,uint512)", method "ySlotOffset()(uint512,uint512)", method "wSlotOffset()(uint512,uint512)", method "zSlotOffset()(uint512,uint512)"
+    txna ApplicationArgs 0
+    match xSlotOffset ySlotOffset wSlotOffset zSlotOffset
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/transient_state_variable_slot_offset.sol.C.xSlotOffset[routing]() -> void:
+xSlotOffset:
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/transient_state_variable_slot_offset.sol.C.ySlotOffset[routing]() -> void:
+ySlotOffset:
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/transient_state_variable_slot_offset.sol.C.wSlotOffset[routing]() -> void:
+wSlotOffset:
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/transient_state_variable_slot_offset.sol.C.zSlotOffset[routing]() -> void:
+zSlotOffset:
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return

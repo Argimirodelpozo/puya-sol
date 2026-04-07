@@ -1,0 +1,155 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/mapping_storage_end.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 32 1
+    bytecblock "__ctor_pending" "m" 0x068101 0x03e8
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_2 // 1
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x83f14748 0xc121d597 // method "__postInit()void", method "init()void", method "validate()void"
+    txna ApplicationArgs 0
+    match __postInit init validate
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/mapping_storage_end.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_1 // "m"
+    intc_0 // 0
+    box_create
+    pop
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/mapping_storage_end.sol.C.init[routing]() -> void:
+init:
+    intc_0 // 0
+
+init_while_top@6:
+    pushint 170010
+    global OpcodeBudget
+    >
+    bz init_after_while@11
+    itxn_begin
+    pushint 6 // appl
+    itxn_field TypeEnum
+    pushint 5 // DeleteApplication
+    itxn_field OnCompletion
+    bytec_2 // 0x068101
+    itxn_field ApprovalProgram
+    bytec_2 // 0x068101
+    itxn_field ClearStateProgram
+    intc_0 // 0
+    itxn_field Fee
+    itxn_submit
+    b init_while_top@6
+
+init_after_while@11:
+    intc_0 // 0
+    itob
+    bury 1
+
+init_while_top@2:
+    dup
+    bytec_3 // 0x03e8
+    b<
+    bz init_after_while@4
+    dupn 2
+    pushbytes 0x01
+    b+
+    intc_1 // 32
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    sha256
+    bytec_1 // "m"
+    swap
+    concat
+    dup
+    box_del
+    pop
+    dig 1
+    box_put
+    bury 1
+    b init_while_top@2
+
+init_after_while@4:
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/mapping_storage_end.sol.C.validate[routing]() -> void:
+validate:
+    intc_0 // 0
+    itob
+
+validate_while_top@2:
+    dup
+    bytec_3 // 0x03e8
+    b<
+    bz validate_after_while@4
+    intc_1 // 32
+    bzero
+    dig 1
+    dup
+    cover 2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    sha256
+    bytec_1 // "m"
+    swap
+    concat
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    swap
+    pushbytes 0x01
+    b+
+    dup
+    bury 3
+    b==
+    assert
+    b validate_while_top@2
+
+validate_after_while@4:
+    intc_2 // 1
+    return

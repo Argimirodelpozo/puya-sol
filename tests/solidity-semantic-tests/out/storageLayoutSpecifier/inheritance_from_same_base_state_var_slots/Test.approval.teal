@@ -1,0 +1,222 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.Test.approval_program() -> uint64:
+main:
+    intcblock 0 1 6 64 200000
+    bytecblock 0x0a8101 0x151f7c75 "a" "b"
+    intc_0 // 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "a"
+    dig 1
+    dup
+    cover 2
+    app_global_put
+    bytec_3 // "b"
+    dig 1
+    app_global_put
+    pushbytes "c"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xd85400f5 0x1c7be9ed 0x56a3323f // method "contractASlots()uint512", method "contractBSlots()(uint512,uint512)", method "contractCSlots()(uint512,uint512)"
+    txna ApplicationArgs 0
+    match contractASlots contractBSlots contractCSlots
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.Test.contractASlots[routing]() -> void:
+contractASlots:
+    itxn_begin
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field Fee
+    bytec_0 // 0x0a8101
+    itxn_field ClearStateProgram
+    bytec_0 // 0x0a8101
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    intc 4 // 200000
+    itxn_field Amount
+    itxn_submit
+    itxn_begin
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field Fee
+    bytec_0 // 0x0a8101
+    itxn_field ClearStateProgram
+    bytec_0 // 0x0a8101
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    intc 4 // 200000
+    itxn_field Amount
+    itxn_submit
+    itxn_begin
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field Fee
+    bytec_0 // 0x0a8101
+    itxn_field ClearStateProgram
+    bytec_0 // 0x0a8101
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    intc 4 // 200000
+    itxn_field Amount
+    itxn_submit
+    itxn_begin
+    intc_0 // 0
+    bytec_2 // "a"
+    app_global_get_ex
+    assert // check a exists
+    pushint 24
+    extract_uint64
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x1453c42d // method "xSlot()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.Test.contractBSlots[routing]() -> void:
+contractBSlots:
+    itxn_begin
+    intc_0 // 0
+    bytec_3 // "b"
+    app_global_get_ex
+    assert // check b exists
+    pushint 24
+    extract_uint64
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x754f94b6 // method "xAndYSlots()(uint256,uint256)"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 32
+    itxn LastLog
+    extract 36 32
+    intc_3 // 64
+    bzero
+    uncover 2
+    dig 1
+    b|
+    cover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.Test.contractCSlots[routing]() -> void:
+contractCSlots:
+    itxn_begin
+    intc_0 // 0
+    pushbytes "c"
+    app_global_get_ex
+    assert // check c exists
+    pushint 24
+    extract_uint64
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x3c3cc0db // method "xAndZSlots()(uint256,uint256)"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 32
+    itxn LastLog
+    extract 36 32
+    intc_3 // 64
+    bzero
+    uncover 2
+    dig 1
+    b|
+    cover 2
+    b|
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

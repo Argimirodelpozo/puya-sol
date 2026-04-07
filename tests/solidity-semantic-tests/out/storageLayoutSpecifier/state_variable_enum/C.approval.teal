@@ -1,0 +1,69 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_enum.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock "c"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "c"
+    intc_1 // 0
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xacd46a0c 0x0a1c1d05 0xa6fd40b7 // method "cSlotOffset()(uint512,uint512)", method "setBlue()void", method "checkBlue()bool"
+    txna ApplicationArgs 0
+    match cSlotOffset main_setBlue_route@6 checkBlue
+    err
+
+main_setBlue_route@6:
+    bytec_0 // "c"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_enum.sol.C.cSlotOffset[routing]() -> void:
+cSlotOffset:
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_enum.sol.C.checkBlue[routing]() -> void:
+checkBlue:
+    intc_1 // 0
+    bytec_0 // "c"
+    app_global_get_ex
+    assert // check c exists
+    intc_0 // 1
+    ==
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

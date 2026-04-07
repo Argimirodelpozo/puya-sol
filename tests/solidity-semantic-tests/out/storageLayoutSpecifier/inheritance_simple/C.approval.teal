@@ -1,0 +1,121 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_simple.sol.C.approval_program() -> uint64:
+main:
+    intcblock 64 1 0
+    bytecblock "x" "y" 0x151f7c75 0x04 0x010000000000000000000000000000000000000000000000000000000000000000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 10
+    itob
+    bytec_0 // "x"
+    swap
+    app_global_put
+    bytec_1 // "y"
+    pushbytes 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xe03b32a4 0x60d68bc1 0x3f4abdfd // method "f()uint512", method "y()uint512", method "x()uint512"
+    txna ApplicationArgs 0
+    match f y x
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_simple.sol.C.f[routing]() -> void:
+f:
+    intc_2 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    dup
+    bytec_3 // 0x04
+    b>=
+    assert // underflow
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec_3 // 0x04
+    b-
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // "x"
+    dig 1
+    app_global_put
+    pushbytes 0x02
+    b+
+    bytec_1 // "y"
+    dig 1
+    app_global_put
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_simple.sol.C.y[routing]() -> void:
+y:
+    intc_2 // 0
+    bytec_1 // "y"
+    app_global_get_ex
+    assert // check y exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_simple.sol.C.x[routing]() -> void:
+x:
+    intc_2 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

@@ -1,0 +1,108 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/constructor.sol.B.approval_program() -> uint64:
+main:
+    intcblock 0 64 1
+    bytecblock "y" 0xff "x" 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "x"
+    pushbytes 0x
+    app_global_put
+    bytec_0 // "y"
+    intc_0 // 0
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x60d68bc1 0x3f4abdfd // method "y()uint512", method "x()uint512"
+    txna ApplicationArgs 0
+    match y x
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/constructor.sol.B.y[routing]() -> void:
+y:
+    intc_0 // 0
+    bytec_0 // "y"
+    app_global_get_ex
+    assert // check y exists
+    itob
+    bytec_1 // 0xff
+    b&
+    pushbytes 0x80
+    b>=
+    bz y_ternary_false@3
+    intc_0 // 0
+    bytec_0 // "y"
+    app_global_get_ex
+    assert // check y exists
+    itob
+    bytec_1 // 0xff
+    b&
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b+
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+y_ternary_merge@4:
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+y_ternary_false@3:
+    intc_0 // 0
+    bytec_0 // "y"
+    app_global_get_ex
+    assert // check y exists
+    itob
+    bytec_1 // 0xff
+    b&
+    b y_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/constructor.sol.B.x[routing]() -> void:
+x:
+    intc_0 // 0
+    bytec_2 // "x"
+    app_global_get_ex
+    assert // check x exists
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

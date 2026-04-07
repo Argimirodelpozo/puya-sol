@@ -79,7 +79,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleBytesMemoryRead(
 	// In AVM: extract3(data, offset, 32) — bytes have no length header
 
 	auto* outerAdd = std::get_if<solidity::yul::FunctionCall>(&_addrExpr);
-	if (!outerAdd || outerAdd->functionName.name.str() != "add"
+	if (!outerAdd || getFunctionName(outerAdd->functionName) != "add"
 		|| outerAdd->arguments.size() != 2)
 		return nullptr;
 
@@ -90,12 +90,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleBytesMemoryRead(
 	auto* call0 = std::get_if<solidity::yul::FunctionCall>(&outerAdd->arguments[0]);
 	auto* call1 = std::get_if<solidity::yul::FunctionCall>(&outerAdd->arguments[1]);
 
-	if (call0 && call0->functionName.name.str() == "add" && call0->arguments.size() == 2)
+	if (call0 && getFunctionName(call0->functionName) == "add" && call0->arguments.size() == 2)
 	{
 		innerAdd = call0;
 		offsetExprYul = &outerAdd->arguments[1];
 	}
-	else if (call1 && call1->functionName.name.str() == "add" && call1->arguments.size() == 2)
+	else if (call1 && getFunctionName(call1->functionName) == "add" && call1->arguments.size() == 2)
 	{
 		innerAdd = call1;
 		offsetExprYul = &outerAdd->arguments[0];
@@ -207,7 +207,7 @@ bool AssemblyBuilder::tryHandleBytesMemoryWrite(
 
 	// First arg must be add(bytes_var, 32) or add(32, bytes_var)
 	auto* addCall = std::get_if<solidity::yul::FunctionCall>(&_call.arguments[0]);
-	if (!addCall || addCall->functionName.name.str() != "add"
+	if (!addCall || getFunctionName(addCall->functionName) != "add"
 		|| addCall->arguments.size() != 2)
 		return false;
 

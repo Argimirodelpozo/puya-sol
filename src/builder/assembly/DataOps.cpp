@@ -156,7 +156,7 @@ std::optional<uint64_t> AssemblyBuilder::resolveConstantYulValue(
 	// Handle function calls: add, sub, mul, mload
 	if (auto const* call = std::get_if<solidity::yul::FunctionCall>(&_expr))
 	{
-		std::string name = call->functionName.name.str();
+		std::string name = getFunctionName(call->functionName);
 		if (call->arguments.size() == 2)
 		{
 			auto left = resolveConstantYulValue(call->arguments[0]);

@@ -47,7 +47,7 @@ void AssemblyBuilder::buildStatement(
 					{
 						if (auto const* funcCall = std::get_if<solidity::yul::FunctionCall>(&exprStmt->expression))
 						{
-							if (funcCall->functionName.name.str() == "revert")
+							if (getFunctionName(funcCall->functionName) == "revert")
 								isRevertBody = true;
 						}
 					}
@@ -244,7 +244,7 @@ void AssemblyBuilder::buildVariableDeclaration(
 	{
 		if (auto const* call = std::get_if<solidity::yul::FunctionCall>(_decl.value.get()))
 		{
-			std::string callName = call->functionName.name.str();
+			std::string callName = getFunctionName(call->functionName);
 
 			if (_decl.variables.size() == 1 && (callName == "staticcall" || callName == "call"))
 			{
@@ -377,7 +377,7 @@ void AssemblyBuilder::buildAssignment(
 		{
 			if (auto const* call = std::get_if<solidity::yul::FunctionCall>(_assign.value.get()))
 			{
-				std::string callName = call->functionName.name.str();
+				std::string callName = getFunctionName(call->functionName);
 				if (m_asmFunctions.count(callName))
 				{
 					auto const& funcDef = *m_asmFunctions[callName];
@@ -440,7 +440,7 @@ void AssemblyBuilder::buildAssignment(
 	{
 		if (auto const* call = std::get_if<solidity::yul::FunctionCall>(_assign.value.get()))
 		{
-			std::string callName = call->functionName.name.str();
+			std::string callName = getFunctionName(call->functionName);
 			if (callName == "staticcall" || callName == "call")
 			{
 				handlePrecompileCall(*call, name, loc, _out, /*_isCall=*/callName == "call");
@@ -641,7 +641,7 @@ void AssemblyBuilder::buildExpressionStatement(
 	// like mstore(), return(), or user-defined function calls.
 	if (auto const* call = std::get_if<solidity::yul::FunctionCall>(&_stmt.expression))
 	{
-		std::string funcName = call->functionName.name.str();
+		std::string funcName = getFunctionName(call->functionName);
 
 		// Before translating args, check for patterns that need raw Yul AST access.
 		if (funcName == "mstore")

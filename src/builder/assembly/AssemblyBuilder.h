@@ -4,6 +4,7 @@
 #include "builder/sol-types/TypeMapper.h"
 
 #include <libyul/AST.h>
+#include <libyul/ASTForward.h>
 
 #include <map>
 #include <memory>
@@ -57,6 +58,10 @@ public:
 		std::map<std::string, unsigned> const& _paramBitWidths = {},
 		std::map<std::string, std::string> const& _storageSlotVars = {}
 	);
+
+	/// Extract function name string from a Yul FunctionName variant.
+	/// Works for both Identifier (user-defined) and BuiltinName (opcode) variants.
+	static std::string getFunctionName(solidity::yul::FunctionName const& _name);
 
 	// ── Memory blob constants ──────────────────────────────────────────
 

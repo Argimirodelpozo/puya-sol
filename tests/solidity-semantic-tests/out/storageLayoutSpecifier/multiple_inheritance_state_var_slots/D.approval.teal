@@ -1,0 +1,77 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance_state_var_slots.sol.D.approval_program() -> uint64:
+main:
+    intcblock 1
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytess "x" 0x
+    app_global_put
+    pushbytes "y"
+    pushint 0
+    app_global_put
+    pushbytess "w" 0x
+    app_global_put
+    pushbytess "z" 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xfbb0074f 0x93cfbb67 0x0e57d0fb 0xc4d2bd2b // method "xSlotOffset()(uint512,uint512)", method "ySlotOffset()(uint512,uint512)", method "wSlotOffset()(uint512,uint512)", method "zSlotOffset()(uint512,uint512)"
+    txna ApplicationArgs 0
+    match xSlotOffset ySlotOffset wSlotOffset zSlotOffset
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance_state_var_slots.sol.D.xSlotOffset[routing]() -> void:
+xSlotOffset:
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance_state_var_slots.sol.D.ySlotOffset[routing]() -> void:
+ySlotOffset:
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance_state_var_slots.sol.D.wSlotOffset[routing]() -> void:
+wSlotOffset:
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance_state_var_slots.sol.D.zSlotOffset[routing]() -> void:
+zSlotOffset:
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return

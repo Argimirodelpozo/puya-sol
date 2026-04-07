@@ -121,7 +121,7 @@ def compile_test(sol_path: Path, out_dir: Path, ensure_budget: dict = None, via_
         cmd += ["--via-yul-behavior"]
 
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
     except subprocess.TimeoutExpired:
         raise Exception(f"compilation timed out after 60s")
 

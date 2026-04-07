@@ -23,6 +23,9 @@ include_directories(
 add_definitions(-DFMT_HEADER_ONLY=1)
 
 # Boost (required by libsolidity)
+set(BOOST_ROOT "$ENV{HOME}/.local/boost-1.83" CACHE PATH "Boost root")
+set(Boost_NO_SYSTEM_PATHS ON)
+set(Boost_NO_BOOST_CMAKE ON)
 find_package(Boost REQUIRED COMPONENTS filesystem)
 include_directories(${Boost_INCLUDE_DIRS})
 

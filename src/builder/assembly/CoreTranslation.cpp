@@ -231,7 +231,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 )
 {
 	auto loc = makeLoc(_call.debugData);
-	std::string funcName = _call.functionName.name.str();
+	std::string funcName = getFunctionName(_call.functionName);
 
 	// Before translating args, check for Yul-level patterns that need raw AST access.
 	// mload(add(add(bytes_param, 32), offset)) → extract3(param, offset, 32)

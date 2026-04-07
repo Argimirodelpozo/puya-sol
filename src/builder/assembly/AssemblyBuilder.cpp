@@ -2,11 +2,26 @@
 #include "Logger.h"
 
 #include <liblangutil/DebugData.h>
+#include <libyul/backends/evm/EVMDialect.h>
+#include <libevmasm/Instruction.h>
 
 #include <sstream>
 
 namespace puyasol::builder
 {
+
+std::string AssemblyBuilder::getFunctionName(solidity::yul::FunctionName const& _name)
+{
+	if (auto const* ident = std::get_if<solidity::yul::Identifier>(&_name))
+		return ident->name.str();
+	if (auto const* builtin = std::get_if<solidity::yul::BuiltinName>(&_name))
+	{
+		// Resolve builtin name through the EVM dialect
+		auto const& dialect = solidity::yul::EVMDialect::strictAssemblyForEVMObjects(solidity::langutil::EVMVersion{}, std::nullopt);
+		return std::string(dialect.builtin(builtin->handle).name);
+	}
+	return "<unknown>";
+}
 
 AssemblyBuilder::AssemblyBuilder(
 	TypeMapper& _typeMapper,

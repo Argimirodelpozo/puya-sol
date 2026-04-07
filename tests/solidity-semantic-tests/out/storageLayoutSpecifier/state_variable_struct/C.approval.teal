@@ -1,0 +1,273 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_struct.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 512 1 64
+    bytecblock 0x00 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x "s1" "s2"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytes "t1"
+    bytec_3 // 0x
+    app_global_put
+    pushbytes "y"
+    bytec_3 // 0x
+    app_global_put
+    pushbytes "z"
+    intc_0 // 0
+    app_global_put
+    pushbytes "t2"
+    bytec_3 // 0x
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x48b0aa08 0x1a8006db 0x27b5e8ca 0x999aa266 // method "initS1()(uint512,address,bool)", method "initS2()(uint512,address,bool)", method "s2()(uint512,address,bool)", method "s1()(uint512,address,bool)"
+    txna ApplicationArgs 0
+    match initS1 initS2 s2 s1
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_struct.sol.C.initS1[routing]() -> void:
+initS1:
+    bytec 4 // "s1"
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 32 32
+    swap
+    intc_1 // 512
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
+    uncover 2
+    concat
+    swap
+    concat
+    dup
+    intc_1 // 512
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    swap
+    extract 0 32
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000abc
+    concat
+    swap
+    concat
+    dup
+    extract 32 32
+    swap
+    extract 0 32
+    swap
+    concat
+    pushbytes 0x80
+    concat
+    bytec 4 // "s1"
+    dig 1
+    box_put
+    dup
+    extract 0 32
+    dig 1
+    extract 32 32
+    uncover 2
+    intc_1 // 512
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    intc_0 // 0
+    getbit
+    intc_3 // 64
+    bzero
+    uncover 3
+    b|
+    uncover 2
+    concat
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 3
+    setbit
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_struct.sol.C.initS2[routing]() -> void:
+initS2:
+    bytec 5 // "s2"
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 32 32
+    swap
+    intc_1 // 512
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
+    uncover 2
+    concat
+    swap
+    concat
+    dup
+    intc_1 // 512
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    swap
+    extract 0 32
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000def
+    concat
+    swap
+    concat
+    dup
+    extract 32 32
+    swap
+    extract 0 32
+    swap
+    concat
+    bytec_0 // 0x00
+    concat
+    bytec 5 // "s2"
+    dig 1
+    box_put
+    dup
+    extract 0 32
+    dig 1
+    extract 32 32
+    uncover 2
+    intc_1 // 512
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    intc_0 // 0
+    getbit
+    intc_3 // 64
+    bzero
+    uncover 3
+    b|
+    uncover 2
+    concat
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 3
+    setbit
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_struct.sol.C.s2[routing]() -> void:
+s2:
+    bytec 5 // "s2"
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 32
+    dig 1
+    extract 32 32
+    uncover 2
+    intc_1 // 512
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    intc_0 // 0
+    getbit
+    intc_3 // 64
+    bzero
+    uncover 3
+    b|
+    uncover 2
+    concat
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 3
+    setbit
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_struct.sol.C.s1[routing]() -> void:
+s1:
+    bytec 4 // "s1"
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 32
+    dig 1
+    extract 32 32
+    uncover 2
+    intc_1 // 512
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    intc_0 // 0
+    getbit
+    intc_3 // 64
+    bzero
+    uncover 3
+    b|
+    uncover 2
+    concat
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 3
+    setbit
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return

@@ -1,0 +1,126 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 256
+    bytecblock "s" 0x00
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "s"
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xcc6b3203 0xd6fd9524 0xcc8c5ad8 // method "InitUsingReference()void", method "validate((uint256,bool))void", method "s()(uint512,bool)"
+    txna ApplicationArgs 0
+    match InitUsingReference validate s
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.InitUsingReference[routing]() -> void:
+InitUsingReference:
+    intc_0 // 0
+    bytec_0 // "s"
+    app_global_get_ex
+    assert // check s exists
+    intc_2 // 256
+    getbit
+    bytec_1 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    swap
+    concat
+    extract 0 32
+    pushbytes 0x80
+    concat
+    bytec_0 // "s"
+    dig 1
+    app_global_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate[routing]() -> void:
+validate:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 33
+    ==
+    assert // invalid number of bytes for S
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.s[routing]() -> void:
+s:
+    intc_0 // 0
+    bytec_0 // "s"
+    app_global_get_ex
+    assert // check s exists
+    dup
+    extract 0 32
+    swap
+    intc_2 // 256
+    getbit
+    bytec_1 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    intc_0 // 0
+    getbit
+    pushint 64
+    bzero
+    uncover 2
+    b|
+    bytec_1 // 0x00
+    intc_0 // 0
+    uncover 3
+    setbit
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate(ptr: bytes) -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_inheritance.sol.C.validate:
+    proto 1 0
+    frame_dig -1
+    extract 0 32
+    pushbytes 0x02
+    b==
+    assert
+    frame_dig -1
+    intc_2 // 256
+    getbit
+    bytec_1 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    intc_0 // 0
+    getbit
+    assert
+    retsub

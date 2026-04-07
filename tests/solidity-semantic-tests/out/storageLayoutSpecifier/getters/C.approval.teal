@@ -1,0 +1,128 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/getters.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 64
+    bytecblock "y" 0x151f7c75 0xff "x"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    itob
+    bytec_3 // "x"
+    swap
+    app_global_put
+    bytec_0 // "y"
+    pushint 2
+    app_global_put
+    pushbytes "z"
+    pushint 3
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x3f4abdfd 0x60d68bc1 0x5bb3453a // method "x()uint512", method "y()uint512", method "z()uint64"
+    txna ApplicationArgs 0
+    match x y z
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/getters.sol.C.x[routing]() -> void:
+x:
+    intc_1 // 0
+    bytec_3 // "x"
+    app_global_get_ex
+    assert // check x exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/getters.sol.C.y[routing]() -> void:
+y:
+    intc_1 // 0
+    bytec_0 // "y"
+    app_global_get_ex
+    assert // check y exists
+    itob
+    bytec_2 // 0xff
+    b&
+    pushbytes 0x80
+    b>=
+    bz y_ternary_false@3
+    intc_1 // 0
+    bytec_0 // "y"
+    app_global_get_ex
+    assert // check y exists
+    itob
+    bytec_2 // 0xff
+    b&
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b+
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+y_ternary_merge@4:
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+y_ternary_false@3:
+    intc_1 // 0
+    bytec_0 // "y"
+    app_global_get_ex
+    assert // check y exists
+    itob
+    bytec_2 // 0xff
+    b&
+    b y_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/getters.sol.C.z[routing]() -> void:
+z:
+    intc_1 // 0
+    pushbytes "z"
+    app_global_get_ex
+    assert // check z exists
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

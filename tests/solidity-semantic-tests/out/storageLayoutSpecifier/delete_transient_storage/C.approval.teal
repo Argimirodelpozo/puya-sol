@@ -1,0 +1,86 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/delete_transient_storage.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 99
+    bytecblock "x" "a" 0x 0x0000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000001234
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "x"
+    bytec_2 // 0x
+    app_global_put
+    bytec_1 // "a"
+    bytec_3 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x2d4970c7 0xf2b65f27 // method "f()void", method "g()void"
+    txna ApplicationArgs 0
+    match f g
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/delete_transient_storage.sol.C.f[routing]() -> void:
+f:
+    intc_2 // 99
+    itob
+    bytec_0 // "x"
+    swap
+    app_global_put
+    bytec_1 // "a"
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000001234
+    app_global_put
+    intc_1 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    bury 1
+    assert // check x exists
+    bytec_0 // "x"
+    bytec_2 // 0x
+    app_global_put
+    intc_1 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    bury 1
+    assert // check a exists
+    bytec_1 // "a"
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    intc_1 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    bytec_2 // 0x
+    b==
+    assert
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/delete_transient_storage.sol.C.g[routing]() -> void:
+g:
+    intc_2 // 99
+    itob
+    bytec_0 // "x"
+    swap
+    app_global_put
+    bytec_1 // "a"
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000001234
+    app_global_put
+    intc_0 // 1
+    return

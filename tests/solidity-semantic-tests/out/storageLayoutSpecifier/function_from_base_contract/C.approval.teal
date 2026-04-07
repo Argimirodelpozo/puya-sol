@@ -1,0 +1,198 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/function_from_base_contract.sol.C.approval_program() -> uint64:
+main:
+    intcblock 64 1 0
+    bytecblock "x" "y" 0x151f7c75 0x "z"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "x"
+    bytec_3 // 0x
+    app_global_put
+    bytec_1 // "y"
+    bytec_3 // 0x
+    app_global_put
+    bytec 4 // "z"
+    bytec_3 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xe1fb067c 0xf8ee0c77 0x60d68bc1 0x3f4abdfd 0x5ed33a7f 0xe03b32a4 // method "test()uint512", method "z()uint512", method "y()uint512", method "x()uint512", method "g()uint512", method "f()uint512"
+    txna ApplicationArgs 0
+    match test z y x g f
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/function_from_base_contract.sol.C.test[routing]() -> void:
+test:
+    intc_2 // 0
+    bytec_1 // "y"
+    app_global_get_ex
+    assert // check y exists
+    pushbytes 0x02
+    b+
+    bytec_1 // "y"
+    dig 1
+    app_global_put
+    intc_2 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    pushbytes 0x01
+    b+
+    bytec_0 // "x"
+    dig 1
+    app_global_put
+    b+
+    bytec 4 // "z"
+    dig 1
+    app_global_put
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/function_from_base_contract.sol.C.z[routing]() -> void:
+z:
+    intc_2 // 0
+    bytec 4 // "z"
+    app_global_get_ex
+    assert // check z exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/function_from_base_contract.sol.C.y[routing]() -> void:
+y:
+    intc_2 // 0
+    bytec_1 // "y"
+    app_global_get_ex
+    assert // check y exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/function_from_base_contract.sol.C.x[routing]() -> void:
+x:
+    intc_2 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/function_from_base_contract.sol.C.g[routing]() -> void:
+g:
+    intc_2 // 0
+    bytec_1 // "y"
+    app_global_get_ex
+    assert // check y exists
+    pushbytes 0x02
+    b+
+    bytec_1 // "y"
+    dig 1
+    app_global_put
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/function_from_base_contract.sol.C.f[routing]() -> void:
+f:
+    intc_2 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    pushbytes 0x01
+    b+
+    bytec_0 // "x"
+    dig 1
+    app_global_put
+    dup
+    len
+    intc_0 // 64
+    <=
+    assert // overflow
+    intc_0 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
