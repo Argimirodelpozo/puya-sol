@@ -32,7 +32,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x6d91e1e1 0x2119ef26 0x10724c0f 0xf9522e2f 0xa91d6dec 0xa57f4fbe // method "write_a()void", method "write_b()void", method "get_b(uint512)byte[1]", method "a()uint64", method "b()byte[2]", method "x()byte[2]"
+    pushbytess 0x6d91e1e1 0x2119ef26 0x7244714e 0xf9522e2f 0xa91d6dec 0xa57f4fbe // method "write_a()void", method "write_b()void", method "get_b(uint256)byte[1]", method "a()uint64", method "b()byte[2]", method "x()byte[2]"
     txna ApplicationArgs 0
     match write_a write_b get_b a b x
     err
@@ -65,9 +65,9 @@ get_b:
     txna ApplicationArgs 1
     dup
     len
-    pushint 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     intc_2 // 0
     bytec_0 // "b"
     app_global_get_ex

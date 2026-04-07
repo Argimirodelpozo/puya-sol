@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/many_local_variables.sol.test.approval_program() -> uint64:
 main:
-    intcblock 64 1
+    intcblock 32 1
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x95574cb4 // method "run(uint512,uint512,uint512)uint512"
+    pushbytes 0xd7394324 // method "run(uint256,uint256,uint256)uint256"
     txna ApplicationArgs 0
     match main_run_route@4
     err
@@ -36,21 +36,21 @@ run:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     pushint 273
     itob
     uncover 3
@@ -65,10 +65,10 @@ run:
     b+
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     pushbytes 0x151f7c75

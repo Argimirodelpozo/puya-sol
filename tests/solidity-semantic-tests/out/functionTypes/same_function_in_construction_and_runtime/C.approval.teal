@@ -3,12 +3,18 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/same_function_in_construction_and_runtime.sol.C.approval_program() -> uint64:
 main:
-    intcblock 64 1
-    bytecblock 0x151f7c75 "initial" 0x02
+    intcblock 32 1 64
+    bytecblock "initial" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "initial"
-    pushbytes 0x04
+    bytec_0 // "initial"
+    pushbytes 0x
+    app_global_put
+    pushint 2
+    itob
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/same_function_in_construction_and_runtime.sol.C.double
+    bytec_0 // "initial"
+    swap
     app_global_put
     intc_1 // 1
     return
@@ -26,7 +32,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xcd0bb95d 0xe6a2c0e4 0xe0923cd8 // method "double(uint512)uint512", method "runtime(uint512)uint512", method "initial()uint512"
+    pushbytess 0x82fadf35 0xf76272b7 0xe0923cd8 // method "double(uint256)uint256", method "runtime(uint256)uint256", method "initial()uint512"
     txna ApplicationArgs 0
     match double runtime initial
     err
@@ -37,20 +43,11 @@ double:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    bytec_2 // 0x02
-    b*
-    dup
-    len
-    intc_0 // 64
-    <=
-    assert // overflow
-    intc_0 // 64
-    bzero
-    b|
-    bytec_0 // 0x151f7c75
+    assert // invalid number of bytes for arc4.uint256
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/same_function_in_construction_and_runtime.sol.C.double
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -63,20 +60,19 @@ runtime:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    bytec_2 // 0x02
-    b*
+    assert // invalid number of bytes for arc4.uint256
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/same_function_in_construction_and_runtime.sol.C.double
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -87,20 +83,37 @@ runtime:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/same_function_in_construction_and_runtime.sol.C.initial[routing]() -> void:
 initial:
     pushint 0
-    bytec_1 // "initial"
+    bytec_0 // "initial"
     app_global_get_ex
     assert // check initial exists
     dup
     len
-    intc_0 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_0 // 64
+    intc_2 // 64
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/same_function_in_construction_and_runtime.sol.C.double(__arc4__arg: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/same_function_in_construction_and_runtime.sol.C.double:
+    proto 1 1
+    frame_dig -1
+    pushbytes 0x02
+    b*
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub

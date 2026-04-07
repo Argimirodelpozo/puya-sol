@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_interface.sol.C.approval_program() -> uint64:
 main:
-    intcblock 64 1
+    intcblock 1 32 64
     bytecblock "y" 0x04 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "y"
     pushbytes 0x
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xf3d5e499 0x60d68bc1 // method "f(uint512)uint512", method "y()uint512"
+    pushbytess 0x1928cd24 0x60d68bc1 // method "f(uint256)uint256", method "y()uint512"
     txna ApplicationArgs 0
     match f y
     err
@@ -37,9 +37,9 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     dup
     bytec_1 // 0x04
     b>=
@@ -57,17 +57,17 @@ f:
     app_global_put
     dup
     len
-    intc_0 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_3 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -79,15 +79,15 @@ y:
     assert // check y exists
     dup
     len
-    intc_0 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_0 // 64
+    intc_2 // 64
     bzero
     b|
     bytec_3 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return

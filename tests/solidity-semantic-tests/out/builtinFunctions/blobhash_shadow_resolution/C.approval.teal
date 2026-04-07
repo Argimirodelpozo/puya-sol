@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blobhash_shadow_resolution.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 32 1
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xdaa5f29d 0x4494bd16 // method "blobhash(uint512)byte[32]", method "f()byte[32]"
+    pushbytess 0x922961d1 0x4494bd16 // method "blobhash(uint256)byte[32]", method "f()byte[32]"
     txna ApplicationArgs 0
     match blobhash f
     err
@@ -34,15 +34,15 @@ blobhash:
     txna ApplicationArgs 1
     dup
     len
-    pushint 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blobhash_shadow_resolution.sol.C.blobhash
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
@@ -55,21 +55,21 @@ f:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blobhash_shadow_resolution.sol.C.blobhash(index: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blobhash_shadow_resolution.sol.C.blobhash(__arc4_index: bytes) -> bytes:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/blobhash_shadow_resolution.sol.C.blobhash:
     proto 1 1
-    intc_1 // 32
+    intc_0 // 32
     bzero
     frame_dig -1
     concat
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    intc_0 // 32
     extract3
     retsub

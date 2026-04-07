@@ -666,7 +666,7 @@
         "args": [
           {
             "_type": "SubroutineArgument",
-            "name": "a",
+            "name": "__arc4_a",
             "source_location": {
               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_arithmetic_expression.sol",
               "line": 98,
@@ -676,16 +676,22 @@
               "end_column": null
             },
             "wtype": {
-              "_type": "WType",
-              "name": "biguint",
-              "immutable": true
+              "_type": "ARC4UIntN",
+              "name": "arc4.uint256",
+              "immutable": true,
+              "n": 256,
+              "arc4_alias": null,
+              "source_location": null
             }
           }
         ],
         "return_type": {
-          "_type": "WType",
-          "name": "biguint",
-          "immutable": true
+          "_type": "ARC4UIntN",
+          "name": "arc4.uint256",
+          "immutable": true,
+          "n": 256,
+          "arc4_alias": null,
+          "source_location": null
         },
         "body": {
           "_type": "Block",
@@ -698,6 +704,71 @@
             "end_column": null
           },
           "body": [
+            {
+              "_type": "AssignmentStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_arithmetic_expression.sol",
+                "line": 98,
+                "end_line": 104,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "target": {
+                "_type": "VarExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_arithmetic_expression.sol",
+                  "line": 98,
+                  "end_line": 104,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
+                },
+                "name": "a"
+              },
+              "value": {
+                "_type": "ARC4Decode",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_arithmetic_expression.sol",
+                  "line": 98,
+                  "end_line": 104,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
+                },
+                "value": {
+                  "_type": "VarExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_arithmetic_expression.sol",
+                    "line": 98,
+                    "end_line": 104,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
+                  },
+                  "name": "__arc4_a"
+                },
+                "error_message": null
+              }
+            },
             {
               "_type": "ExpressionStatement",
               "source_location": {
@@ -1290,7 +1361,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "AppStateExpression",
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_arithmetic_expression.sol",
                   "line": 203,
@@ -1300,12 +1371,15 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "key": {
-                  "_type": "BytesConstant",
+                "value": {
+                  "_type": "AppStateExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_arithmetic_expression.sol",
                     "line": 203,
@@ -1316,13 +1390,30 @@
                   },
                   "wtype": {
                     "_type": "WType",
-                    "name": "state_key",
+                    "name": "biguint",
                     "immutable": true
                   },
-                  "value": "dH",
-                  "encoding": "utf8"
+                  "key": {
+                    "_type": "BytesConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_arithmetic_expression.sol",
+                      "line": 203,
+                      "end_line": 204,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "state_key",
+                      "immutable": true
+                    },
+                    "value": "dH",
+                    "encoding": "utf8"
+                  },
+                  "exists_assertion_message": "check z exists"
                 },
-                "exists_assertion_message": "check z exists"
+                "error_message": null
               }
             }
           ],

@@ -461,9 +461,12 @@
         },
         "args": [],
         "return_type": {
-          "_type": "WType",
-          "name": "biguint",
-          "immutable": true
+          "_type": "ARC4UIntN",
+          "name": "arc4.uint256",
+          "immutable": true,
+          "n": 256,
+          "arc4_alias": null,
+          "source_location": null
         },
         "body": {
           "_type": "Block",
@@ -487,7 +490,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "BigUIntBinaryOperation",
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_overflow_expression.sol",
                   "line": 74,
@@ -497,12 +500,15 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "left": {
-                  "_type": "ReinterpretCast",
+                "value": {
+                  "_type": "BigUIntBinaryOperation",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_overflow_expression.sol",
                     "line": 74,
@@ -516,8 +522,8 @@
                     "name": "biguint",
                     "immutable": true
                   },
-                  "expr": {
-                    "_type": "IntrinsicCall",
+                  "left": {
+                    "_type": "ReinterpretCast",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_overflow_expression.sol",
                       "line": 74,
@@ -527,87 +533,104 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "BytesWType",
-                      "name": "bytes",
-                      "immutable": true,
-                      "length": null
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
                     },
-                    "op_code": "itob",
-                    "immediates": [],
-                    "stack_args": [
-                      {
-                        "_type": "VoidConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_overflow_expression.sol",
-                          "line": 74,
-                          "end_line": 97,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "void",
-                          "immutable": true
+                    "expr": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_overflow_expression.sol",
+                        "line": 74,
+                        "end_line": 123,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "itob",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "VoidConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_overflow_expression.sol",
+                            "line": 74,
+                            "end_line": 97,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "void",
+                            "immutable": true
+                          }
                         }
-                      }
-                    ]
+                      ]
+                    }
+                  },
+                  "op": "+",
+                  "right": {
+                    "_type": "ReinterpretCast",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_overflow_expression.sol",
+                      "line": 74,
+                      "end_line": 123,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "expr": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_overflow_expression.sol",
+                        "line": 74,
+                        "end_line": 123,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "itob",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "VoidConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_overflow_expression.sol",
+                            "line": 100,
+                            "end_line": 123,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "void",
+                            "immutable": true
+                          }
+                        }
+                      ]
+                    }
                   }
                 },
-                "op": "+",
-                "right": {
-                  "_type": "ReinterpretCast",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_overflow_expression.sol",
-                    "line": 74,
-                    "end_line": 123,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
-                  },
-                  "expr": {
-                    "_type": "IntrinsicCall",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_overflow_expression.sol",
-                      "line": 74,
-                      "end_line": 123,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "BytesWType",
-                      "name": "bytes",
-                      "immutable": true,
-                      "length": null
-                    },
-                    "op_code": "itob",
-                    "immediates": [],
-                    "stack_args": [
-                      {
-                        "_type": "VoidConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_overflow_expression.sol",
-                          "line": 100,
-                          "end_line": 123,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "void",
-                          "immutable": true
-                        }
-                      }
-                    ]
-                  }
-                }
+                "error_message": null
               }
             }
           ],

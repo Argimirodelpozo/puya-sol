@@ -461,9 +461,12 @@
         },
         "args": [],
         "return_type": {
-          "_type": "WType",
-          "name": "biguint",
-          "immutable": true
+          "_type": "ARC4UIntN",
+          "name": "arc4.uint256",
+          "immutable": true,
+          "n": 256,
+          "arc4_alias": null,
+          "source_location": null
         },
         "body": {
           "_type": "Block",
@@ -487,7 +490,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "ReinterpretCast",
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/senders_balance.sol",
                   "line": 77,
@@ -497,12 +500,15 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "expr": {
-                  "_type": "IntrinsicCall",
+                "value": {
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/senders_balance.sol",
                     "line": 77,
@@ -512,31 +518,31 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
                   },
-                  "op_code": "itob",
-                  "immediates": [],
-                  "stack_args": [
-                    {
-                      "_type": "TupleItemExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/senders_balance.sol",
-                        "line": 77,
-                        "end_line": 95,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "base": {
-                        "_type": "IntrinsicCall",
+                  "expr": {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/senders_balance.sol",
+                      "line": 77,
+                      "end_line": 95,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "op_code": "itob",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "TupleItemExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/senders_balance.sol",
                           "line": 77,
@@ -546,56 +552,73 @@
                           "end_column": null
                         },
                         "wtype": {
-                          "_type": "WTuple",
-                          "name": "tuple",
-                          "immutable": true,
-                          "types": [
-                            {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            {
-                              "_type": "WType",
-                              "name": "bool",
-                              "immutable": true
-                            }
-                          ],
-                          "names": null,
-                          "source_location": null
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
                         },
-                        "op_code": "acct_params_get",
-                        "immediates": [
-                          "AcctBalance"
-                        ],
-                        "stack_args": [
-                          {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/senders_balance.sol",
-                              "line": 77,
-                              "end_line": 87,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "account",
-                              "immutable": true
-                            },
-                            "op_code": "txn",
-                            "immediates": [
-                              "Sender"
+                        "base": {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/senders_balance.sol",
+                            "line": 77,
+                            "end_line": 95,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WTuple",
+                            "name": "tuple",
+                            "immutable": true,
+                            "types": [
+                              {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              {
+                                "_type": "WType",
+                                "name": "bool",
+                                "immutable": true
+                              }
                             ],
-                            "stack_args": []
-                          }
-                        ]
-                      },
-                      "index": 0
-                    }
-                  ]
-                }
+                            "names": null,
+                            "source_location": null
+                          },
+                          "op_code": "acct_params_get",
+                          "immediates": [
+                            "AcctBalance"
+                          ],
+                          "stack_args": [
+                            {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/senders_balance.sol",
+                                "line": 77,
+                                "end_line": 87,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "account",
+                                "immutable": true
+                              },
+                              "op_code": "txn",
+                              "immediates": [
+                                "Sender"
+                              ],
+                              "stack_args": []
+                            }
+                          ]
+                        },
+                        "index": 0
+                      }
+                    ]
+                  }
+                },
+                "error_message": null
               }
             }
           ],
@@ -1222,9 +1245,12 @@
         },
         "args": [],
         "return_type": {
-          "_type": "WType",
-          "name": "biguint",
-          "immutable": true
+          "_type": "ARC4UIntN",
+          "name": "arc4.uint256",
+          "immutable": true,
+          "n": 256,
+          "arc4_alias": null,
+          "source_location": null
         },
         "body": {
           "_type": "Block",
@@ -2014,7 +2040,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "ReinterpretCast",
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/senders_balance.sol",
                   "line": 234,
@@ -2024,12 +2050,15 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "expr": {
-                  "_type": "IntrinsicCall",
+                "value": {
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/senders_balance.sol",
                     "line": 234,
@@ -2039,41 +2068,58 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
                   },
-                  "op_code": "extract",
-                  "immediates": [
-                    4,
-                    0
-                  ],
-                  "stack_args": [
-                    {
-                      "_type": "IntrinsicCall",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/senders_balance.sol",
-                        "line": 234,
-                        "end_line": 239,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
-                      },
-                      "op_code": "itxn",
-                      "immediates": [
-                        "LastLog"
-                      ],
-                      "stack_args": []
-                    }
-                  ]
-                }
+                  "expr": {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/senders_balance.sol",
+                      "line": 234,
+                      "end_line": 239,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "op_code": "extract",
+                    "immediates": [
+                      4,
+                      0
+                    ],
+                    "stack_args": [
+                      {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/senders_balance.sol",
+                          "line": 234,
+                          "end_line": 239,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "itxn",
+                        "immediates": [
+                          "LastLog"
+                        ],
+                        "stack_args": []
+                      }
+                    ]
+                  }
+                },
+                "error_message": null
               }
             }
           ],

@@ -461,9 +461,12 @@
         },
         "args": [],
         "return_type": {
-          "_type": "WType",
-          "name": "biguint",
-          "immutable": true
+          "_type": "ARC4UIntN",
+          "name": "arc4.uint256",
+          "immutable": true,
+          "n": 256,
+          "arc4_alias": null,
+          "source_location": null
         },
         "body": {
           "_type": "Block",
@@ -533,7 +536,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "ReinterpretCast",
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
                   "line": 75,
@@ -543,12 +546,15 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "expr": {
-                  "_type": "IntrinsicCall",
+                "value": {
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
                     "line": 75,
@@ -558,34 +564,51 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
                   },
-                  "op_code": "itob",
-                  "immediates": [],
-                  "stack_args": [
-                    {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
-                        "line": 82,
-                        "end_line": 83,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 1,
-                      "teal_alias": null
-                    }
-                  ]
-                }
+                  "expr": {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
+                      "line": 75,
+                      "end_line": 83,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "op_code": "itob",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
+                          "line": 82,
+                          "end_line": 83,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 1,
+                        "teal_alias": null
+                      }
+                    ]
+                  }
+                },
+                "error_message": null
               }
             }
           ],
@@ -1098,9 +1121,12 @@
         },
         "args": [],
         "return_type": {
-          "_type": "WType",
-          "name": "biguint",
-          "immutable": true
+          "_type": "ARC4UIntN",
+          "name": "arc4.uint256",
+          "immutable": true,
+          "n": 256,
+          "arc4_alias": null,
+          "source_location": null
         },
         "body": {
           "_type": "Block",
@@ -1170,7 +1196,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "BigUIntBinaryOperation",
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
                   "line": 191,
@@ -1180,34 +1206,15 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "left": {
-                  "_type": "SubroutineCallExpression",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
-                    "line": 191,
-                    "end_line": 200,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
-                  },
-                  "target": {
-                    "_type": "InstanceMethodTarget",
-                    "member_name": "f__super_24"
-                  },
-                  "args": []
-                },
-                "op": "|",
-                "right": {
-                  "_type": "IntegerConstant",
+                "value": {
+                  "_type": "BigUIntBinaryOperation",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
                     "line": 191,
@@ -1221,9 +1228,48 @@
                     "name": "biguint",
                     "immutable": true
                   },
-                  "value": 2,
-                  "teal_alias": null
-                }
+                  "left": {
+                    "_type": "SubroutineCallExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
+                      "line": 191,
+                      "end_line": 200,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "target": {
+                      "_type": "InstanceMethodTarget",
+                      "member_name": "f__super_24"
+                    },
+                    "args": []
+                  },
+                  "op": "|",
+                  "right": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
+                      "line": 191,
+                      "end_line": 204,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "value": 2,
+                    "teal_alias": null
+                  }
+                },
+                "error_message": null
               }
             }
           ],
@@ -1272,9 +1318,12 @@
         },
         "args": [],
         "return_type": {
-          "_type": "WType",
-          "name": "biguint",
-          "immutable": true
+          "_type": "ARC4UIntN",
+          "name": "arc4.uint256",
+          "immutable": true,
+          "n": 256,
+          "arc4_alias": null,
+          "source_location": null
         },
         "body": {
           "_type": "Block",
@@ -1344,7 +1393,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "ReinterpretCast",
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
                   "line": 75,
@@ -1354,12 +1403,15 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "expr": {
-                  "_type": "IntrinsicCall",
+                "value": {
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
                     "line": 75,
@@ -1369,34 +1421,51 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
                   },
-                  "op_code": "itob",
-                  "immediates": [],
-                  "stack_args": [
-                    {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
-                        "line": 82,
-                        "end_line": 83,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 1,
-                      "teal_alias": null
-                    }
-                  ]
-                }
+                  "expr": {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
+                      "line": 75,
+                      "end_line": 83,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "op_code": "itob",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
+                          "line": 82,
+                          "end_line": 83,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 1,
+                        "teal_alias": null
+                      }
+                    ]
+                  }
+                },
+                "error_message": null
               }
             }
           ],
@@ -1890,9 +1959,12 @@
         },
         "args": [],
         "return_type": {
-          "_type": "WType",
-          "name": "biguint",
-          "immutable": true
+          "_type": "ARC4UIntN",
+          "name": "arc4.uint256",
+          "immutable": true,
+          "n": 256,
+          "arc4_alias": null,
+          "source_location": null
         },
         "body": {
           "_type": "Block",
@@ -1962,7 +2034,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "BigUIntBinaryOperation",
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
                   "line": 312,
@@ -1972,34 +2044,15 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "left": {
-                  "_type": "SubroutineCallExpression",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
-                    "line": 312,
-                    "end_line": 321,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
-                  },
-                  "target": {
-                    "_type": "InstanceMethodTarget",
-                    "member_name": "f__super_40"
-                  },
-                  "args": []
-                },
-                "op": "|",
-                "right": {
-                  "_type": "IntegerConstant",
+                "value": {
+                  "_type": "BigUIntBinaryOperation",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
                     "line": 312,
@@ -2013,9 +2066,48 @@
                     "name": "biguint",
                     "immutable": true
                   },
-                  "value": 4,
-                  "teal_alias": null
-                }
+                  "left": {
+                    "_type": "SubroutineCallExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
+                      "line": 312,
+                      "end_line": 321,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "target": {
+                      "_type": "InstanceMethodTarget",
+                      "member_name": "f__super_40"
+                    },
+                    "args": []
+                  },
+                  "op": "|",
+                  "right": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
+                      "line": 312,
+                      "end_line": 325,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "value": 4,
+                    "teal_alias": null
+                  }
+                },
+                "error_message": null
               }
             }
           ],
@@ -2064,9 +2156,12 @@
         },
         "args": [],
         "return_type": {
-          "_type": "WType",
-          "name": "biguint",
-          "immutable": true
+          "_type": "ARC4UIntN",
+          "name": "arc4.uint256",
+          "immutable": true,
+          "n": 256,
+          "arc4_alias": null,
+          "source_location": null
         },
         "body": {
           "_type": "Block",
@@ -2136,7 +2231,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "ReinterpretCast",
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
                   "line": 75,
@@ -2146,12 +2241,15 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "expr": {
-                  "_type": "IntrinsicCall",
+                "value": {
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
                     "line": 75,
@@ -2161,34 +2259,51 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
                   },
-                  "op_code": "itob",
-                  "immediates": [],
-                  "stack_args": [
-                    {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
-                        "line": 82,
-                        "end_line": 83,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 1,
-                      "teal_alias": null
-                    }
-                  ]
-                }
+                  "expr": {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
+                      "line": 75,
+                      "end_line": 83,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "op_code": "itob",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
+                          "line": 82,
+                          "end_line": 83,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 1,
+                        "teal_alias": null
+                      }
+                    ]
+                  }
+                },
+                "error_message": null
               }
             }
           ],
@@ -2870,9 +2985,12 @@
         },
         "args": [],
         "return_type": {
-          "_type": "WType",
-          "name": "biguint",
-          "immutable": true
+          "_type": "ARC4UIntN",
+          "name": "arc4.uint256",
+          "immutable": true,
+          "n": 256,
+          "arc4_alias": null,
+          "source_location": null
         },
         "body": {
           "_type": "Block",
@@ -2942,7 +3060,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "AppStateExpression",
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
                   "line": 511,
@@ -2952,12 +3070,15 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "key": {
-                  "_type": "BytesConstant",
+                "value": {
+                  "_type": "AppStateExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
                     "line": 511,
@@ -2968,13 +3089,30 @@
                   },
                   "wtype": {
                     "_type": "WType",
-                    "name": "state_key",
+                    "name": "biguint",
                     "immutable": true
                   },
-                  "value": "WMOn+",
-                  "encoding": "utf8"
+                  "key": {
+                    "_type": "BytesConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
+                      "line": 511,
+                      "end_line": 515,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "state_key",
+                      "immutable": true
+                    },
+                    "value": "WMOn+",
+                    "encoding": "utf8"
+                  },
+                  "exists_assertion_message": "check data exists"
                 },
-                "exists_assertion_message": "check data exists"
+                "error_message": null
               }
             }
           ],
@@ -3023,9 +3161,12 @@
         },
         "args": [],
         "return_type": {
-          "_type": "WType",
-          "name": "biguint",
-          "immutable": true
+          "_type": "ARC4UIntN",
+          "name": "arc4.uint256",
+          "immutable": true,
+          "n": 256,
+          "arc4_alias": null,
+          "source_location": null
         },
         "body": {
           "_type": "Block",
@@ -3095,7 +3236,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "ReinterpretCast",
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
                   "line": 75,
@@ -3105,12 +3246,15 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "expr": {
-                  "_type": "IntrinsicCall",
+                "value": {
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
                     "line": 75,
@@ -3120,34 +3264,51 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
                   },
-                  "op_code": "itob",
-                  "immediates": [],
-                  "stack_args": [
-                    {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
-                        "line": 82,
-                        "end_line": 83,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 1,
-                      "teal_alias": null
-                    }
-                  ]
-                }
+                  "expr": {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
+                      "line": 75,
+                      "end_line": 83,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "op_code": "itob",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
+                          "line": 82,
+                          "end_line": 83,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 1,
+                        "teal_alias": null
+                      }
+                    ]
+                  }
+                },
+                "error_message": null
               }
             }
           ],
@@ -3177,9 +3338,12 @@
         },
         "args": [],
         "return_type": {
-          "_type": "WType",
-          "name": "biguint",
-          "immutable": true
+          "_type": "ARC4UIntN",
+          "name": "arc4.uint256",
+          "immutable": true,
+          "n": 256,
+          "arc4_alias": null,
+          "source_location": null
         },
         "body": {
           "_type": "Block",
@@ -3249,7 +3413,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "BigUIntBinaryOperation",
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
                   "line": 191,
@@ -3259,34 +3423,15 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "left": {
-                  "_type": "SubroutineCallExpression",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
-                    "line": 191,
-                    "end_line": 200,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
-                  },
-                  "target": {
-                    "_type": "InstanceMethodTarget",
-                    "member_name": "f__super_24"
-                  },
-                  "args": []
-                },
-                "op": "|",
-                "right": {
-                  "_type": "IntegerConstant",
+                "value": {
+                  "_type": "BigUIntBinaryOperation",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
                     "line": 191,
@@ -3300,9 +3445,48 @@
                     "name": "biguint",
                     "immutable": true
                   },
-                  "value": 2,
-                  "teal_alias": null
-                }
+                  "left": {
+                    "_type": "SubroutineCallExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
+                      "line": 191,
+                      "end_line": 200,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "target": {
+                      "_type": "InstanceMethodTarget",
+                      "member_name": "f__super_24"
+                    },
+                    "args": []
+                  },
+                  "op": "|",
+                  "right": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
+                      "line": 191,
+                      "end_line": 204,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "value": 2,
+                    "teal_alias": null
+                  }
+                },
+                "error_message": null
               }
             }
           ],
@@ -3332,9 +3516,12 @@
         },
         "args": [],
         "return_type": {
-          "_type": "WType",
-          "name": "biguint",
-          "immutable": true
+          "_type": "ARC4UIntN",
+          "name": "arc4.uint256",
+          "immutable": true,
+          "n": 256,
+          "arc4_alias": null,
+          "source_location": null
         },
         "body": {
           "_type": "Block",
@@ -3404,7 +3591,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "BigUIntBinaryOperation",
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
                   "line": 312,
@@ -3414,34 +3601,15 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "left": {
-                  "_type": "SubroutineCallExpression",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
-                    "line": 312,
-                    "end_line": 321,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
-                  },
-                  "target": {
-                    "_type": "InstanceMethodTarget",
-                    "member_name": "f"
-                  },
-                  "args": []
-                },
-                "op": "|",
-                "right": {
-                  "_type": "IntegerConstant",
+                "value": {
+                  "_type": "BigUIntBinaryOperation",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
                     "line": 312,
@@ -3455,9 +3623,48 @@
                     "name": "biguint",
                     "immutable": true
                   },
-                  "value": 4,
-                  "teal_alias": null
-                }
+                  "left": {
+                    "_type": "SubroutineCallExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
+                      "line": 312,
+                      "end_line": 321,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "target": {
+                      "_type": "InstanceMethodTarget",
+                      "member_name": "f"
+                    },
+                    "args": []
+                  },
+                  "op": "|",
+                  "right": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/super_in_constructor.sol",
+                      "line": 312,
+                      "end_line": 325,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "value": 4,
+                    "teal_alias": null
+                  }
+                },
+                "error_message": null
               }
             }
           ],

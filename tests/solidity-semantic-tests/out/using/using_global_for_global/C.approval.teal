@@ -1,9 +1,9 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_e0tbj3eq/B.sol.C.approval_program() -> uint64:
+// /tmp/multisource_gqiy11xi/B.sol.C.approval_program() -> uint64:
 main:
-    intcblock 64 1
+    intcblock 32 1
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xf3d5e499 // method "f(uint512)uint512"
+    pushbytes 0x1928cd24 // method "f(uint256)uint256"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -28,10 +28,10 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    b /tmp/multisource_e0tbj3eq/B.sol.C.f[routing]
+    b /tmp/multisource_gqiy11xi/B.sol.C.f[routing]
 
 
-// /tmp/multisource_e0tbj3eq/B.sol.f(x: bytes) -> bytes:
+// /tmp/multisource_gqiy11xi/B.sol.f(x: bytes) -> bytes:
 f:
     proto 1 1
     frame_dig -1
@@ -40,7 +40,7 @@ f:
     retsub
 
 
-// /tmp/multisource_e0tbj3eq/B.sol.g(x: bytes) -> bytes:
+// /tmp/multisource_gqiy11xi/B.sol.g(x: bytes) -> bytes:
 g:
     proto 1 1
     frame_dig -1
@@ -49,22 +49,22 @@ g:
     retsub
 
 
-// /tmp/multisource_e0tbj3eq/B.sol.C.f[routing]() -> void:
-/tmp/multisource_e0tbj3eq/B.sol.C.f[routing]:
+// /tmp/multisource_gqiy11xi/B.sol.C.f[routing]() -> void:
+/tmp/multisource_gqiy11xi/B.sol.C.f[routing]:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     callsub f
     callsub g
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     pushbytes 0x151f7c75

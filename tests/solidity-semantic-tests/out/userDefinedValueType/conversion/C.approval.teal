@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/conversion.sol.C.approval_program() -> uint64:
 main:
-    intcblock 8 255 1 64
+    intcblock 8 255 1 32
     bytecblock 0x151f7c75 0xff 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xcbbae568 0x484a762a 0xbd14655b 0x0e5a6e3c 0xae2c400d 0x2aa15a5a 0x38b44a3e // method "f(uint512)uint64", method "g(uint512)uint512", method "h(uint64)uint512", method "i(uint64)uint64", method "j(uint64)uint512", method "k(uint64)uint64", method "m(uint64)uint64"
+    pushbytess 0xc38cc40c 0x44302d1d 0x0237b2e1 0x0e5a6e3c 0xa7348d1d 0x2aa15a5a 0x38b44a3e // method "f(uint256)uint64", method "g(uint256)uint8", method "h(uint64)uint8", method "i(uint64)uint64", method "j(uint64)uint256", method "k(uint64)uint64", method "m(uint64)uint64"
     txna ApplicationArgs 0
     match f g h i j k m
     err
@@ -34,9 +34,9 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 64
+    intc_3 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     intc_0 // 8
     bzero
     swap
@@ -62,9 +62,9 @@ g:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 64
+    intc_3 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     intc_0 // 8
     bzero
     swap
@@ -87,14 +87,6 @@ g:
     b%
 
 g_ternary_merge@4:
-    dup
-    len
-    intc_3 // 64
-    <=
-    assert // overflow
-    intc_3 // 64
-    bzero
-    b|
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -134,14 +126,6 @@ h:
     b%
 
 h_ternary_merge@4:
-    dup
-    len
-    intc_3 // 64
-    <=
-    assert // overflow
-    intc_3 // 64
-    bzero
-    b|
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -193,7 +177,7 @@ j:
     intc_1 // 255
     &
     itob
-    intc_3 // 64
+    intc_3 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75

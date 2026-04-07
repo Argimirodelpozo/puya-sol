@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/calldata_offset_read.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64 0 2
+    intcblock 1 0 2 32
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -22,7 +22,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xa8a03bb9 0x5bf3f289 // method "f(byte[])uint512", method "f(uint512,byte[],uint512)(uint512,uint512)"
+    pushbytess 0x4e631e90 0xb82766d1 // method "f(byte[])uint256", method "f(uint256,byte[],uint256)(uint512,uint512)"
     txna ApplicationArgs 0
     match f(2) f(u256,13,u256)
     err
@@ -32,9 +32,9 @@ main_after_if_else@2:
 f(2):
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    intc_2 // 2
     +
     swap
     len
@@ -42,7 +42,7 @@ f(2):
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     load 0
     store 0
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000004
     log
     intc_0 // 1
     return
@@ -52,14 +52,14 @@ f(2):
 f(u256,13,u256):
     txna ApplicationArgs 1
     len
-    intc_1 // 64
+    intc_3 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    intc_2 // 2
     +
     dig 1
     len
@@ -68,16 +68,16 @@ f(u256,13,u256):
     extract 2 0
     txna ApplicationArgs 3
     len
-    intc_1 // 64
+    intc_3 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     load 0
     swap
     len
     itob
     swap
     store 0
-    intc_1 // 64
+    pushint 64
     bzero
     b|
     pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000024

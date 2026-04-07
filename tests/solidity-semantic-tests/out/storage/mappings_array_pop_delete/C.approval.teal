@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/mappings_array_pop_delete.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 64
+    intcblock 32 1 0 2
     bytecblock "a" 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x3d7e8eb3 0xb5288a7b 0xe7aecfde 0x97d26e57 0xeb34bdcf // method "__postInit()void", method "n1(uint512,uint512)void", method "n2()void", method "map(uint512)uint512", method "p()void", method "d()uint512"
+    pushbytess 0xbacc49e3 0x2eb8d5fd 0xb5288a7b 0xd2e971a4 0x97d26e57 0x4075f398 // method "__postInit()void", method "n1(uint256,uint256)void", method "n2()void", method "map(uint256)uint256", method "p()void", method "d()uint256"
     txna ApplicationArgs 0
     match __postInit n1 n2 map p d
     err
@@ -53,15 +53,15 @@ n1:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     bytec_0 // "a"
     box_len
     pop
@@ -136,9 +136,9 @@ map:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     bytec_0 // "a"
     box_len
     pop
@@ -167,8 +167,8 @@ map:
     -
     intc_0 // 32
     extract3
-    swap
-    uncover 2
+    dig 1
+    uncover 3
     concat
     dup
     len
@@ -187,11 +187,9 @@ map:
     select
     dup
     len
-    intc_3 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_3 // 64
-    bzero
     b|
     bytec 4 // 0x151f7c75
     swap
@@ -212,7 +210,7 @@ p:
     intc_1 // 1
     -
     dup
-    pushint 2
+    intc_3 // 2
     *
     dup
     cover 3
@@ -226,7 +224,7 @@ p:
     dig 4
     substring3
     dig 3
-    pushint 2
+    intc_3 // 2
     +
     uncover 3
     swap
@@ -260,11 +258,11 @@ p_for_header@2:
     bury 6
     dig 1
     extract_uint16
-    pushint 2
+    intc_3 // 2
     +
     +
     bury 3
-    pushint 2
+    intc_3 // 2
     +
     bury 1
     b p_for_header@2
@@ -291,11 +289,11 @@ d:
     bytec_0 // "a"
     pushbytes 0x0000
     box_put
-    pushint 2
+    intc_3 // 2
     intc_2 // 0
     /
     itob
-    intc_3 // 64
+    intc_0 // 32
     bzero
     b|
     bytec 4 // 0x151f7c75

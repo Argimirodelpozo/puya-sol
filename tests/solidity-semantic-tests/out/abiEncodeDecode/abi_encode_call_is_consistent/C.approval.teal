@@ -32,7 +32,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xc17044be 0x178d6fa2 0x87b3184a 0xce316b93 0xd38dceec 0x61e7ca43 0x00f784fc 0x692353b1 0xf96c0244 0xa326be91 0xb2fd8e38 // method "fExternal(uint512,string)void", method "getExternalFunctionPointer()byte[]", method "fSignatureFromLiteral()byte[]", method "fSignatureFromLiteralCall()byte[]", method "fSignatureFromMemory()byte[]", method "fSignatureFromMemoryCall()byte[]", method "fSignatureFromMemorys()byte[]", method "fPointerCall()byte[]", method "fLocalPointerCall()byte[]", method "fReturnedFunctionPointer()byte[]", method "assertConsistentSelectors()void"
+    pushbytess 0xd50c8672 0x178d6fa2 0x87b3184a 0xce316b93 0xd38dceec 0x61e7ca43 0x00f784fc 0x692353b1 0xf96c0244 0xa326be91 0xb2fd8e38 // method "fExternal(uint256,string)void", method "getExternalFunctionPointer()byte[]", method "fSignatureFromLiteral()byte[]", method "fSignatureFromLiteralCall()byte[]", method "fSignatureFromMemory()byte[]", method "fSignatureFromMemoryCall()byte[]", method "fSignatureFromMemorys()byte[]", method "fPointerCall()byte[]", method "fLocalPointerCall()byte[]", method "fReturnedFunctionPointer()byte[]", method "assertConsistentSelectors()void"
     txna ApplicationArgs 0
     match fExternal getExternalFunctionPointer main_fSignatureFromLiteral_route@7 main_fSignatureFromLiteralCall_route@8 main_fSignatureFromMemory_route@9 main_fSignatureFromMemoryCall_route@10 fSignatureFromMemorys fPointerCall main_fLocalPointerCall_route@13 main_fReturnedFunctionPointer_route@14 assertConsistentSelectors
     err
@@ -78,9 +78,9 @@ main_fSignatureFromLiteral_route@7:
 fExternal:
     txna ApplicationArgs 1
     len
-    pushint 64
+    pushint 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     intc_1 // 0

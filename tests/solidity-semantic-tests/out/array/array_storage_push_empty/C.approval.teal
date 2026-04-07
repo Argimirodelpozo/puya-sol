@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_push_empty.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 32 8
+    intcblock 0 32 1 8
     bytecblock "storageArray" "__ctor_pending" 0x068101
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
-    intc_1 // 1
+    intc_2 // 1
     app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0xa0dca732 // method "__postInit()void", method "pushEmpty(uint512)void"
+    pushbytess 0xbacc49e3 0x1e3ddb1a // method "__postInit()void", method "pushEmpty(uint256)void"
     txna ApplicationArgs 0
     match __postInit pushEmpty
     err
@@ -44,7 +44,7 @@ __postInit:
     intc_0 // 0
     box_create
     pop
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
@@ -54,9 +54,9 @@ pushEmpty:
     txna ApplicationArgs 1
     dup
     len
-    pushint 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
 
 pushEmpty_while_top@9:
     pushint 170010
@@ -81,7 +81,7 @@ pushEmpty_while_top@2:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_2 // 32
+    intc_1 // 32
     /
     itob
     dig 1
@@ -90,7 +90,7 @@ pushEmpty_while_top@2:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_2 // 32
+    intc_1 // 32
     +
     bytec_0 // "storageArray"
     swap
@@ -125,9 +125,9 @@ pushEmpty_while_top@5:
     swap
     extract 2 0
     swap
-    intc_2 // 32
+    intc_1 // 32
     *
-    intc_2 // 32
+    intc_1 // 32
     extract3 // on error: index access is out of bounds
     pushbytes 0x
     b==
@@ -138,5 +138,5 @@ pushEmpty_while_top@5:
     b pushEmpty_while_top@5
 
 pushEmpty_after_while@7:
-    intc_1 // 1
+    intc_2 // 1
     return

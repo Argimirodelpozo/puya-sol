@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_overlapped_dynamic_arrays.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 64
+    intcblock 32 1 0 2
     bytecblock 0x151f7c75 "__ctor_pending" "s" "n"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x560ea6a7 0x48f9eced 0xf95bdc67 0x82e68c81 // method "__postInit()void", method "f_memory(uint256[],uint256[2])(uint256[],uint256[2])", method "f_encode(uint256[],uint256[2])byte[]", method "f_which(uint256[],uint256[2],uint512)byte[]", method "f_storage(uint256[],uint256[2])byte[]"
+    pushbytess 0xbacc49e3 0x560ea6a7 0x48f9eced 0x3a06436a 0x82e68c81 // method "__postInit()void", method "f_memory(uint256[],uint256[2])(uint256[],uint256[2])", method "f_encode(uint256[],uint256[2])byte[]", method "f_which(uint256[],uint256[2],uint256)byte[]", method "f_storage(uint256[],uint256[2])byte[]"
     txna ApplicationArgs 0
     match __postInit f_memory f_encode f_which f_storage
     err
@@ -59,7 +59,7 @@ f_memory:
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -68,7 +68,7 @@ f_memory:
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 64
+    pushint 64
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
     pushbytes 0x0042
@@ -92,7 +92,7 @@ f_encode:
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -101,7 +101,7 @@ f_encode:
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 64
+    pushint 64
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
     dup
@@ -132,7 +132,7 @@ f_which:
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -141,15 +141,15 @@ f_which:
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 64
+    pushint 64
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
     txna ApplicationArgs 3
     dup
     len
-    intc_3 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     intc_0 // 32
     bzero
     pushint 8
@@ -211,7 +211,7 @@ f_storage:
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -222,7 +222,7 @@ f_storage:
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 64
+    pushint 64
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
     bytec_2 // "s"

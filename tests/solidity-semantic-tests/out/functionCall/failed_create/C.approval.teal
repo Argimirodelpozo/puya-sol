@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 64 32
-    bytecblock "x" 0x01 0x 0x010000000000000000000000000000000000000000000000000000000000000000 0x0a8101
+    intcblock 0 1 32 6
+    bytecblock "x" 0x01 0x 0xc608be41 0x010000000000000000000000000000000000000000000000000000000000000000 0x0a8101
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
@@ -26,7 +26,9 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xacb9e794 0x75a0f5bd 0x3f4abdfd // method "f(uint512)void", method "stack(uint512)void", method "x()uint512"
+    pushbytes 0x8a37d29b // method "f(uint256)void"
+    bytec_3 // method "stack(uint256)void"
+    pushbytes 0x3f4abdfd // method "x()uint512"
     txna ApplicationArgs 0
     match f stack x
     err
@@ -37,9 +39,9 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.f
     intc_1 // 1
     return
@@ -50,9 +52,9 @@ stack:
     txna ApplicationArgs 1
     dupn 2
     len
-    intc_2 // 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     bytec_2 // 0x
     b>
     bz stack_else_body@4
@@ -61,33 +63,33 @@ stack:
     b>=
     assert // underflow
     itxn_begin
-    intc_3 // 32
+    intc_2 // 32
     bzero
     swap
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     bytec_1 // 0x01
     b-
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     concat
     dup
     len
-    intc_3 // 32
+    intc_2 // 32
     -
-    intc_3 // 32
+    intc_2 // 32
     extract3
     global CurrentApplicationAddress
     pushint 24
     extract_uint64
-    pushint 6
+    intc_3 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    pushbytes 0xc608be41 // method "stack(uint256)void"
+    bytec_3 // method "stack(uint256)void"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
@@ -111,10 +113,10 @@ x:
     assert // check x exists
     dup
     len
-    intc_2 // 64
+    pushint 64
     <=
     assert // overflow
-    intc_2 // 64
+    pushint 64
     bzero
     b|
     pushbytes 0x151f7c75
@@ -125,7 +127,7 @@ x:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.f(amount: bytes) -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.f(__arc4_amount: bytes) -> void:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.f:
     proto 1 0
     intc_0 // 0
@@ -138,13 +140,13 @@ x:
     swap
     app_global_put
     itxn_begin
-    pushint 6
+    intc_3 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field Fee
-    bytec 4 // 0x0a8101
+    bytec 5 // 0x0a8101
     itxn_field ClearStateProgram
-    bytec 4 // 0x0a8101
+    bytec 5 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID

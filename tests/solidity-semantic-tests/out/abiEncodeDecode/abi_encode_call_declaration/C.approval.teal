@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_declaration.sol.C.approval_program() -> uint64:
 main:
-    intcblock 64 1 0 32
-    bytecblock 0x151f7c75
+    intcblock 32 1 0
+    bytecblock 0x7e9f4949 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -23,7 +23,8 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xe1fb067c 0x7c354840 0x2536e4ab // method "test()uint512", method "b(uint512)uint512", method "a(uint512)uint512"
+    pushbytess 0xc95a9d21 0x2930a603 // method "test()uint256", method "b(uint256)uint256"
+    bytec_0 // method "a(uint256)uint256"
     txna ApplicationArgs 0
     match test b a
     err
@@ -35,7 +36,7 @@ test:
     assert
     intc_2 // 0
     assert
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return
@@ -46,19 +47,20 @@ b:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     itxn_begin
-    intc_3 // 32
+    intc_0 // 32
     bzero
-    swap
+    dup
+    uncover 2
     concat
     dup
     len
-    intc_3 // 32
+    intc_0 // 32
     -
-    intc_3 // 32
+    intc_0 // 32
     extract3
     global CurrentApplicationAddress
     pushint 24
@@ -70,7 +72,7 @@ b:
     intc_2 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    pushbytes 0x7e9f4949 // method "a(uint256)uint256"
+    bytec_0 // method "a(uint256)uint256"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
@@ -78,13 +80,11 @@ b:
     extract 4 0
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
-    bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -97,20 +97,20 @@ a:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     pushbytes 0x01
     b+
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log

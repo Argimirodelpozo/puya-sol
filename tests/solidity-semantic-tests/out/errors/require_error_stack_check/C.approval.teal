@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/require_error_stack_check.sol.C.approval_program() -> uint64:
 main:
-    intcblock 64 1 0
+    intcblock 1 32 0 64
     bytecblock "x" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
     pushbytes 0x
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xa28910b0 0x5ba0c08b 0x3f4abdfd // method "e(uint512)uint512", method "f(bool,uint512,uint512,uint512)void", method "x()uint512"
+    pushbytess 0xc7619fcb 0xde29cd95 0x3f4abdfd // method "e(uint256)uint256", method "f(bool,uint256,uint256,uint256)void", method "x()uint512"
     txna ApplicationArgs 0
     match e f x
     err
@@ -38,20 +38,20 @@ e:
     dup
     len
     dup
-    intc_0 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    intc_0 // 64
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -60,29 +60,29 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 1
+    intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
     intc_2 // 0
     getbit
     txna ApplicationArgs 2
     len
-    intc_0 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    intc_0 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
     len
-    intc_0 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     dig 1
-    intc_1 // 1
+    intc_0 // 1
     <=
     assert // ABI bool validation
     swap
@@ -90,7 +90,7 @@ f:
     bytec_0 // "x"
     swap
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -102,15 +102,15 @@ x:
     assert // check x exists
     dup
     len
-    intc_0 // 64
+    intc_3 // 64
     <=
     assert // overflow
-    intc_0 // 64
+    intc_3 // 64
     bzero
     b|
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return

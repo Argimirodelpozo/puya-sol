@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.approval_program() -> uint64:
 main:
-    intcblock 1 0 6 64
+    intcblock 1 0 6 32
     bytecblock "savedData" "__ctor_pending" 0x151f7c7580 0x0a8101 "rec"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x1bf9882b 0x0d0be52f 0xf321bc3d 0x660fa314 // method "__postInit()void", method "__fallback()void", method "forward()bool", method "clear()bool", method "val()uint512"
+    pushbytess 0xbacc49e3 0x1bf9882b 0x0d0be52f 0xf321bc3d 0x70b65ae3 // method "__postInit()void", method "__fallback()void", method "forward()bool", method "clear()bool", method "val()uint256"
     txna ApplicationArgs 0
     match __postInit /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.[routing] main_forward_route@7 clear val
     err
@@ -132,10 +132,10 @@ val:
     extract 4 0
     dup
     len
-    intc_3 // 64
+    intc_3 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_3 // 32
     bzero
     b|
     pushbytes 0x151f7c75

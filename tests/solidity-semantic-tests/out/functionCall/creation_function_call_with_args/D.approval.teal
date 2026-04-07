@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/creation_function_call_with_args.sol.D.approval_program() -> uint64:
 main:
-    intcblock 0 1 6 64
+    intcblock 0 1 6 32
     bytecblock 0x0a8101 "c"
     txn ApplicationID
     bnz main_after_if_else@4
@@ -46,7 +46,7 @@ main_after_if_else@4:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xe03b32a4 // method "f()uint512"
+    pushbytes 0xcd78b354 // method "f()uint256"
     txna ApplicationArgs 0
     match main_f_route@6
     err
@@ -83,10 +83,10 @@ f:
     extract 4 0
     dup
     len
-    intc_3 // 64
+    intc_3 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_3 // 32
     bzero
     b|
     pushbytes 0x151f7c75

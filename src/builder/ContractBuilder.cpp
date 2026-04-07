@@ -2444,13 +2444,28 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	std::vector<ParamDecode> paramDecodes;
 	if (method.arc4MethodConfig.has_value())
 	{
-		// Remap aggregate types to ARC4 encoding.
-		// Note: Signed integers (int256) keep uint256 ABI type since
-		// ARC4/Algorand ABI doesn't support signed types. Two's complement
-		// encoding is handled at the application level.
+		// Remap types to ARC4 encoding for ABI-exposed methods.
+		// This ensures correct ABI signatures (e.g., uint256 not uint512 for biguint).
+		auto const& solParams = _func.parameters();
 		for (size_t pi = 0; pi < method.args.size(); ++pi)
 		{
 			auto& arg = method.args[pi];
+
+			// Remap biguint args to ARC4UIntN with the original Solidity bit width.
+			// Without this, puya maps biguint→uint512 (AVM max) instead of uint256.
+			if (arg.wtype == awst::WType::biguintType() && pi < solParams.size())
+			{
+				auto const* solType = solParams[pi]->annotation().type;
+				auto const* intType = solType ? dynamic_cast<solidity::frontend::IntegerType const*>(solType) : nullptr;
+				if (!intType && solType)
+					if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
+						intType = dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
+				unsigned bits = intType ? intType->numBits() : 256;
+				auto const* arc4Type = m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
+				paramDecodes.push_back({arg.name, arg.wtype, arc4Type, arg.sourceLocation});
+				arg.wtype = arc4Type;
+				continue;
+			}
 
 			// Remap aggregate types (arrays, tuples) to ARC4 encoding
 			bool isAggregate = arg.wtype
@@ -2631,6 +2646,53 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				wrapReturns(method.body->body);
 				method.returnType = arc4RetType;
 			}
+		}
+
+		// For ARC4 methods returning biguint, wrap return values in ARC4Encode
+		// with the correct bit width (e.g., uint256 not uint512).
+		if (method.arc4MethodConfig.has_value() && method.returnType == awst::WType::biguintType())
+		{
+			// Get original Solidity bit width for the return type
+			unsigned retBits = 256;
+			if (returnParams.size() == 1)
+			{
+				auto const* retSolType = returnParams[0]->type();
+				if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(retSolType))
+					retSolType = &udvt->underlyingType();
+				if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(retSolType))
+					retBits = intType->numBits();
+			}
+			auto const* arc4RetType = m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(retBits));
+
+			std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> wrapBiguintReturns;
+			wrapBiguintReturns = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
+			{
+				for (auto& stmt: stmts)
+				{
+					if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
+					{
+						if (ret->value && ret->value->wtype == awst::WType::biguintType())
+						{
+							auto encode = std::make_shared<awst::ARC4Encode>();
+							encode->sourceLocation = ret->value->sourceLocation;
+							encode->wtype = arc4RetType;
+							encode->value = std::move(ret->value);
+							ret->value = std::move(encode);
+						}
+					}
+					else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
+					{
+						if (ifElse->ifBranch) wrapBiguintReturns(ifElse->ifBranch->body);
+						if (ifElse->elseBranch) wrapBiguintReturns(ifElse->elseBranch->body);
+					}
+					else if (auto* block = dynamic_cast<awst::Block*>(stmt.get()))
+						wrapBiguintReturns(block->body);
+					else if (auto* loop = dynamic_cast<awst::WhileLoop*>(stmt.get()))
+						if (loop->loopBody) wrapBiguintReturns(loop->loopBody->body);
+				}
+			};
+			wrapBiguintReturns(method.body->body);
+			method.returnType = arc4RetType;
 		}
 
 		// Sign-extend return values for signed integer types ≤64 bits.

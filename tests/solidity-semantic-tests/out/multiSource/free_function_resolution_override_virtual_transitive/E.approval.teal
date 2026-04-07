@@ -1,12 +1,12 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_722xzh6w/s3.sol.E.approval_program() -> uint64:
+// /tmp/multisource_2b9nic3d/s3.sol.E.approval_program() -> uint64:
 main:
-    intcblock 1 64
+    intcblock 32 1
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x5ed33a7f // method "g()uint512"
+    pushbytes 0x4b2c0376 // method "g()uint256"
     txna ApplicationArgs 0
     match main_g_route@4
     err
@@ -31,29 +31,46 @@ main_g_route@4:
     b g
 
 
-// /tmp/multisource_722xzh6w/s3.sol.f_63() -> bytes:
+// /tmp/multisource_2b9nic3d/s3.sol.f_63() -> bytes:
 f:
     pushint 1337
     itob
     retsub
 
 
-// /tmp/multisource_722xzh6w/s3.sol.E.g[routing]() -> void:
+// /tmp/multisource_2b9nic3d/s3.sol.E.g[routing]() -> void:
 g:
     callsub f
-    pushbytes 0x02
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    pushbytes 0x01
     b+
     dup
     len
-    intc_1 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 64
-    bzero
+    dig 1
+    b|
+    pushbytes 0x01
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
     b|
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return

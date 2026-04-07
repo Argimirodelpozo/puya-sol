@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xe53ec233 0xd9b5ef3c // method "f(uint512,uint16[][],uint256[2][][3],uint512)(uint512,uint512,uint512,uint512,uint512,uint512,uint512)", method "test()(uint512,uint512,uint512,uint512,uint512,uint512,uint512)"
+    pushbytess 0x02dbdf1e 0xd9b5ef3c // method "f(uint256,uint16[][],uint256[2][][3],uint256)(uint512,uint512,uint512,uint512,uint512,uint512,uint512)", method "test()(uint512,uint512,uint512,uint512,uint512,uint512,uint512)"
     txna ApplicationArgs 0
     match f test
     err
@@ -214,9 +214,9 @@ f:
     dup
     len
     dup
-    intc_3 // 64
+    pushint 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     intc_1 // 0
@@ -326,9 +326,9 @@ f_after_for@8:
     dup
     len
     dup
-    intc_3 // 64
+    pushint 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     dig 7
     dup
     itob

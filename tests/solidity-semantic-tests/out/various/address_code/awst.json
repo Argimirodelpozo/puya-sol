@@ -1602,9 +1602,12 @@
         },
         "args": [],
         "return_type": {
-          "_type": "WType",
-          "name": "biguint",
-          "immutable": true
+          "_type": "ARC4UIntN",
+          "name": "arc4.uint256",
+          "immutable": true,
+          "n": 256,
+          "arc4_alias": null,
+          "source_location": null
         },
         "body": {
           "_type": "Block",
@@ -1628,7 +1631,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "ReinterpretCast",
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
                   "line": 424,
@@ -1638,12 +1641,15 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "expr": {
-                  "_type": "IntrinsicCall",
+                "value": {
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
                     "line": 424,
@@ -1653,50 +1659,49 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
                   },
-                  "op_code": "itob",
-                  "immediates": [],
-                  "stack_args": [
-                    {
-                      "_type": "IntrinsicCall",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                        "line": 431,
-                        "end_line": 453,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "op_code": "len",
-                      "immediates": [],
-                      "stack_args": [
-                        {
-                          "_type": "TupleItemExpression",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                            "line": 431,
-                            "end_line": 446,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "base": {
-                            "_type": "IntrinsicCall",
+                  "expr": {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                      "line": 424,
+                      "end_line": 453,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "op_code": "itob",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                          "line": 431,
+                          "end_line": 453,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "op_code": "len",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "TupleItemExpression",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
                               "line": 431,
@@ -1706,47 +1711,48 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "WTuple",
-                              "name": "tuple",
+                              "_type": "BytesWType",
+                              "name": "bytes",
                               "immutable": true,
-                              "types": [
-                                {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                {
-                                  "_type": "WType",
-                                  "name": "bool",
-                                  "immutable": true
-                                }
-                              ],
-                              "names": null,
-                              "source_location": null
+                              "length": null
                             },
-                            "op_code": "app_params_get",
-                            "immediates": [
-                              "AppApprovalProgram"
-                            ],
-                            "stack_args": [
-                              {
-                                "_type": "ReinterpretCast",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                  "line": 431,
-                                  "end_line": 446,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "application",
-                                  "immutable": true
-                                },
-                                "expr": {
-                                  "_type": "IntrinsicCall",
+                            "base": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                "line": 431,
+                                "end_line": 446,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WTuple",
+                                "name": "tuple",
+                                "immutable": true,
+                                "types": [
+                                  {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  {
+                                    "_type": "WType",
+                                    "name": "bool",
+                                    "immutable": true
+                                  }
+                                ],
+                                "names": null,
+                                "source_location": null
+                              },
+                              "op_code": "app_params_get",
+                              "immediates": [
+                                "AppApprovalProgram"
+                              ],
+                              "stack_args": [
+                                {
+                                  "_type": "ReinterpretCast",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
                                     "line": 431,
@@ -1757,67 +1763,67 @@
                                   },
                                   "wtype": {
                                     "_type": "WType",
-                                    "name": "uint64",
+                                    "name": "application",
                                     "immutable": true
                                   },
-                                  "op_code": "btoi",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                        "line": 431,
-                                        "end_line": 446,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "op_code": "extract",
-                                      "immediates": [
-                                        24,
-                                        8
-                                      ],
-                                      "stack_args": [
-                                        {
-                                          "_type": "ReinterpretCast",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                            "line": 431,
-                                            "end_line": 446,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "BytesWType",
-                                            "name": "bytes",
-                                            "immutable": true,
-                                            "length": null
-                                          },
-                                          "expr": {
+                                  "expr": {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                      "line": 431,
+                                      "end_line": 446,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "op_code": "btoi",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                          "line": 431,
+                                          "end_line": 446,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "op_code": "extract",
+                                        "immediates": [
+                                          24,
+                                          8
+                                        ],
+                                        "stack_args": [
+                                          {
                                             "_type": "ReinterpretCast",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
                                               "line": 431,
-                                              "end_line": 441,
+                                              "end_line": 446,
                                               "comment_lines": 0,
                                               "column": null,
                                               "end_column": null
                                             },
                                             "wtype": {
-                                              "_type": "WType",
-                                              "name": "account",
-                                              "immutable": true
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
                                             },
                                             "expr": {
-                                              "_type": "IntrinsicCall",
+                                              "_type": "ReinterpretCast",
                                               "source_location": {
                                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
                                                 "line": 431,
@@ -1827,162 +1833,30 @@
                                                 "end_column": null
                                               },
                                               "wtype": {
-                                                "_type": "BytesWType",
-                                                "name": "bytes",
-                                                "immutable": true,
-                                                "length": null
+                                                "_type": "WType",
+                                                "name": "account",
+                                                "immutable": true
                                               },
-                                              "op_code": "extract3",
-                                              "immediates": [],
-                                              "stack_args": [
-                                                {
-                                                  "_type": "IntrinsicCall",
-                                                  "source_location": {
-                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                    "line": 431,
-                                                    "end_line": 441,
-                                                    "comment_lines": 0,
-                                                    "column": null,
-                                                    "end_column": null
-                                                  },
-                                                  "wtype": {
-                                                    "_type": "BytesWType",
-                                                    "name": "bytes",
-                                                    "immutable": true,
-                                                    "length": null
-                                                  },
-                                                  "op_code": "concat",
-                                                  "immediates": [],
-                                                  "stack_args": [
-                                                    {
-                                                      "_type": "IntrinsicCall",
-                                                      "source_location": {
-                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                        "line": 431,
-                                                        "end_line": 441,
-                                                        "comment_lines": 0,
-                                                        "column": null,
-                                                        "end_column": null
-                                                      },
-                                                      "wtype": {
-                                                        "_type": "BytesWType",
-                                                        "name": "bytes",
-                                                        "immutable": true,
-                                                        "length": null
-                                                      },
-                                                      "op_code": "bzero",
-                                                      "immediates": [],
-                                                      "stack_args": [
-                                                        {
-                                                          "_type": "IntegerConstant",
-                                                          "source_location": {
-                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                            "line": 431,
-                                                            "end_line": 441,
-                                                            "comment_lines": 0,
-                                                            "column": null,
-                                                            "end_column": null
-                                                          },
-                                                          "wtype": {
-                                                            "_type": "WType",
-                                                            "name": "uint64",
-                                                            "immutable": true
-                                                          },
-                                                          "value": 32,
-                                                          "teal_alias": null
-                                                        }
-                                                      ]
-                                                    },
-                                                    {
-                                                      "_type": "ReinterpretCast",
-                                                      "source_location": {
-                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                        "line": 431,
-                                                        "end_line": 441,
-                                                        "comment_lines": 0,
-                                                        "column": null,
-                                                        "end_column": null
-                                                      },
-                                                      "wtype": {
-                                                        "_type": "BytesWType",
-                                                        "name": "bytes",
-                                                        "immutable": true,
-                                                        "length": null
-                                                      },
-                                                      "expr": {
-                                                        "_type": "ReinterpretCast",
-                                                        "source_location": {
-                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                          "line": 431,
-                                                          "end_line": 441,
-                                                          "comment_lines": 0,
-                                                          "column": null,
-                                                          "end_column": null
-                                                        },
-                                                        "wtype": {
-                                                          "_type": "WType",
-                                                          "name": "biguint",
-                                                          "immutable": true
-                                                        },
-                                                        "expr": {
-                                                          "_type": "IntrinsicCall",
-                                                          "source_location": {
-                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                            "line": 431,
-                                                            "end_line": 441,
-                                                            "comment_lines": 0,
-                                                            "column": null,
-                                                            "end_column": null
-                                                          },
-                                                          "wtype": {
-                                                            "_type": "BytesWType",
-                                                            "name": "bytes",
-                                                            "immutable": true,
-                                                            "length": null
-                                                          },
-                                                          "op_code": "itob",
-                                                          "immediates": [],
-                                                          "stack_args": [
-                                                            {
-                                                              "_type": "IntegerConstant",
-                                                              "source_location": {
-                                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                                "line": 439,
-                                                                "end_line": 440,
-                                                                "comment_lines": 0,
-                                                                "column": null,
-                                                                "end_column": null
-                                                              },
-                                                              "wtype": {
-                                                                "_type": "WType",
-                                                                "name": "uint64",
-                                                                "immutable": true
-                                                              },
-                                                              "value": 0,
-                                                              "teal_alias": null
-                                                            }
-                                                          ]
-                                                        }
-                                                      }
-                                                    }
-                                                  ]
+                                              "expr": {
+                                                "_type": "IntrinsicCall",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                  "line": 431,
+                                                  "end_line": 441,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
                                                 },
-                                                {
-                                                  "_type": "UInt64BinaryOperation",
-                                                  "source_location": {
-                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                    "line": 431,
-                                                    "end_line": 441,
-                                                    "comment_lines": 0,
-                                                    "column": null,
-                                                    "end_column": null
-                                                  },
-                                                  "wtype": {
-                                                    "_type": "WType",
-                                                    "name": "uint64",
-                                                    "immutable": true
-                                                  },
-                                                  "left": {
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "op_code": "extract3",
+                                                "immediates": [],
+                                                "stack_args": [
+                                                  {
                                                     "_type": "IntrinsicCall",
                                                     "source_location": {
                                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
@@ -1993,11 +1867,12 @@
                                                       "end_column": null
                                                     },
                                                     "wtype": {
-                                                      "_type": "WType",
-                                                      "name": "uint64",
-                                                      "immutable": true
+                                                      "_type": "BytesWType",
+                                                      "name": "bytes",
+                                                      "immutable": true,
+                                                      "length": null
                                                     },
-                                                    "op_code": "len",
+                                                    "op_code": "concat",
                                                     "immediates": [],
                                                     "stack_args": [
                                                       {
@@ -2016,10 +1891,61 @@
                                                           "immutable": true,
                                                           "length": null
                                                         },
-                                                        "op_code": "concat",
+                                                        "op_code": "bzero",
                                                         "immediates": [],
                                                         "stack_args": [
                                                           {
+                                                            "_type": "IntegerConstant",
+                                                            "source_location": {
+                                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                              "line": 431,
+                                                              "end_line": 441,
+                                                              "comment_lines": 0,
+                                                              "column": null,
+                                                              "end_column": null
+                                                            },
+                                                            "wtype": {
+                                                              "_type": "WType",
+                                                              "name": "uint64",
+                                                              "immutable": true
+                                                            },
+                                                            "value": 32,
+                                                            "teal_alias": null
+                                                          }
+                                                        ]
+                                                      },
+                                                      {
+                                                        "_type": "ReinterpretCast",
+                                                        "source_location": {
+                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                          "line": 431,
+                                                          "end_line": 441,
+                                                          "comment_lines": 0,
+                                                          "column": null,
+                                                          "end_column": null
+                                                        },
+                                                        "wtype": {
+                                                          "_type": "BytesWType",
+                                                          "name": "bytes",
+                                                          "immutable": true,
+                                                          "length": null
+                                                        },
+                                                        "expr": {
+                                                          "_type": "ReinterpretCast",
+                                                          "source_location": {
+                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                            "line": 431,
+                                                            "end_line": 441,
+                                                            "comment_lines": 0,
+                                                            "column": null,
+                                                            "end_column": null
+                                                          },
+                                                          "wtype": {
+                                                            "_type": "WType",
+                                                            "name": "biguint",
+                                                            "immutable": true
+                                                          },
+                                                          "expr": {
                                                             "_type": "IntrinsicCall",
                                                             "source_location": {
                                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
@@ -2035,15 +1961,15 @@
                                                               "immutable": true,
                                                               "length": null
                                                             },
-                                                            "op_code": "bzero",
+                                                            "op_code": "itob",
                                                             "immediates": [],
                                                             "stack_args": [
                                                               {
                                                                 "_type": "IntegerConstant",
                                                                 "source_location": {
                                                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                                  "line": 431,
-                                                                  "end_line": 441,
+                                                                  "line": 439,
+                                                                  "end_line": 440,
                                                                   "comment_lines": 0,
                                                                   "column": null,
                                                                   "end_column": null
@@ -2053,28 +1979,107 @@
                                                                   "name": "uint64",
                                                                   "immutable": true
                                                                 },
-                                                                "value": 32,
+                                                                "value": 0,
                                                                 "teal_alias": null
                                                               }
                                                             ]
+                                                          }
+                                                        }
+                                                      }
+                                                    ]
+                                                  },
+                                                  {
+                                                    "_type": "UInt64BinaryOperation",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                      "line": 431,
+                                                      "end_line": 441,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "WType",
+                                                      "name": "uint64",
+                                                      "immutable": true
+                                                    },
+                                                    "left": {
+                                                      "_type": "IntrinsicCall",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                        "line": 431,
+                                                        "end_line": 441,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "WType",
+                                                        "name": "uint64",
+                                                        "immutable": true
+                                                      },
+                                                      "op_code": "len",
+                                                      "immediates": [],
+                                                      "stack_args": [
+                                                        {
+                                                          "_type": "IntrinsicCall",
+                                                          "source_location": {
+                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                            "line": 431,
+                                                            "end_line": 441,
+                                                            "comment_lines": 0,
+                                                            "column": null,
+                                                            "end_column": null
                                                           },
-                                                          {
-                                                            "_type": "ReinterpretCast",
-                                                            "source_location": {
-                                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                              "line": 431,
-                                                              "end_line": 441,
-                                                              "comment_lines": 0,
-                                                              "column": null,
-                                                              "end_column": null
+                                                          "wtype": {
+                                                            "_type": "BytesWType",
+                                                            "name": "bytes",
+                                                            "immutable": true,
+                                                            "length": null
+                                                          },
+                                                          "op_code": "concat",
+                                                          "immediates": [],
+                                                          "stack_args": [
+                                                            {
+                                                              "_type": "IntrinsicCall",
+                                                              "source_location": {
+                                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                                "line": 431,
+                                                                "end_line": 441,
+                                                                "comment_lines": 0,
+                                                                "column": null,
+                                                                "end_column": null
+                                                              },
+                                                              "wtype": {
+                                                                "_type": "BytesWType",
+                                                                "name": "bytes",
+                                                                "immutable": true,
+                                                                "length": null
+                                                              },
+                                                              "op_code": "bzero",
+                                                              "immediates": [],
+                                                              "stack_args": [
+                                                                {
+                                                                  "_type": "IntegerConstant",
+                                                                  "source_location": {
+                                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                                    "line": 431,
+                                                                    "end_line": 441,
+                                                                    "comment_lines": 0,
+                                                                    "column": null,
+                                                                    "end_column": null
+                                                                  },
+                                                                  "wtype": {
+                                                                    "_type": "WType",
+                                                                    "name": "uint64",
+                                                                    "immutable": true
+                                                                  },
+                                                                  "value": 32,
+                                                                  "teal_alias": null
+                                                                }
+                                                              ]
                                                             },
-                                                            "wtype": {
-                                                              "_type": "BytesWType",
-                                                              "name": "bytes",
-                                                              "immutable": true,
-                                                              "length": null
-                                                            },
-                                                            "expr": {
+                                                            {
                                                               "_type": "ReinterpretCast",
                                                               "source_location": {
                                                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
@@ -2085,12 +2090,13 @@
                                                                 "end_column": null
                                                               },
                                                               "wtype": {
-                                                                "_type": "WType",
-                                                                "name": "biguint",
-                                                                "immutable": true
+                                                                "_type": "BytesWType",
+                                                                "name": "bytes",
+                                                                "immutable": true,
+                                                                "length": null
                                                               },
                                                               "expr": {
-                                                                "_type": "IntrinsicCall",
+                                                                "_type": "ReinterpretCast",
                                                                 "source_location": {
                                                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
                                                                   "line": 431,
@@ -2100,42 +2106,76 @@
                                                                   "end_column": null
                                                                 },
                                                                 "wtype": {
-                                                                  "_type": "BytesWType",
-                                                                  "name": "bytes",
-                                                                  "immutable": true,
-                                                                  "length": null
+                                                                  "_type": "WType",
+                                                                  "name": "biguint",
+                                                                  "immutable": true
                                                                 },
-                                                                "op_code": "itob",
-                                                                "immediates": [],
-                                                                "stack_args": [
-                                                                  {
-                                                                    "_type": "IntegerConstant",
-                                                                    "source_location": {
-                                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                                      "line": 439,
-                                                                      "end_line": 440,
-                                                                      "comment_lines": 0,
-                                                                      "column": null,
-                                                                      "end_column": null
-                                                                    },
-                                                                    "wtype": {
-                                                                      "_type": "WType",
-                                                                      "name": "uint64",
-                                                                      "immutable": true
-                                                                    },
-                                                                    "value": 0,
-                                                                    "teal_alias": null
-                                                                  }
-                                                                ]
+                                                                "expr": {
+                                                                  "_type": "IntrinsicCall",
+                                                                  "source_location": {
+                                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                                    "line": 431,
+                                                                    "end_line": 441,
+                                                                    "comment_lines": 0,
+                                                                    "column": null,
+                                                                    "end_column": null
+                                                                  },
+                                                                  "wtype": {
+                                                                    "_type": "BytesWType",
+                                                                    "name": "bytes",
+                                                                    "immutable": true,
+                                                                    "length": null
+                                                                  },
+                                                                  "op_code": "itob",
+                                                                  "immediates": [],
+                                                                  "stack_args": [
+                                                                    {
+                                                                      "_type": "IntegerConstant",
+                                                                      "source_location": {
+                                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                                        "line": 439,
+                                                                        "end_line": 440,
+                                                                        "comment_lines": 0,
+                                                                        "column": null,
+                                                                        "end_column": null
+                                                                      },
+                                                                      "wtype": {
+                                                                        "_type": "WType",
+                                                                        "name": "uint64",
+                                                                        "immutable": true
+                                                                      },
+                                                                      "value": 0,
+                                                                      "teal_alias": null
+                                                                    }
+                                                                  ]
+                                                                }
                                                               }
                                                             }
-                                                          }
-                                                        ]
-                                                      }
-                                                    ]
+                                                          ]
+                                                        }
+                                                      ]
+                                                    },
+                                                    "op": "-",
+                                                    "right": {
+                                                      "_type": "IntegerConstant",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                        "line": 431,
+                                                        "end_line": 441,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "WType",
+                                                        "name": "uint64",
+                                                        "immutable": true
+                                                      },
+                                                      "value": 32,
+                                                      "teal_alias": null
+                                                    }
                                                   },
-                                                  "op": "-",
-                                                  "right": {
+                                                  {
                                                     "_type": "IntegerConstant",
                                                     "source_location": {
                                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
@@ -2153,42 +2193,25 @@
                                                     "value": 32,
                                                     "teal_alias": null
                                                   }
-                                                },
-                                                {
-                                                  "_type": "IntegerConstant",
-                                                  "source_location": {
-                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                    "line": 431,
-                                                    "end_line": 441,
-                                                    "comment_lines": 0,
-                                                    "column": null,
-                                                    "end_column": null
-                                                  },
-                                                  "wtype": {
-                                                    "_type": "WType",
-                                                    "name": "uint64",
-                                                    "immutable": true
-                                                  },
-                                                  "value": 32,
-                                                  "teal_alias": null
-                                                }
-                                              ]
+                                                ]
+                                              }
                                             }
                                           }
-                                        }
-                                      ]
-                                    }
-                                  ]
+                                        ]
+                                      }
+                                    ]
+                                  }
                                 }
-                              }
-                            ]
-                          },
-                          "index": 0
-                        }
-                      ]
-                    }
-                  ]
-                }
+                              ]
+                            },
+                            "index": 0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "error_message": null
               }
             }
           ],
@@ -2237,9 +2260,12 @@
         },
         "args": [],
         "return_type": {
-          "_type": "WType",
-          "name": "biguint",
-          "immutable": true
+          "_type": "ARC4UIntN",
+          "name": "arc4.uint256",
+          "immutable": true,
+          "n": 256,
+          "arc4_alias": null,
+          "source_location": null
         },
         "body": {
           "_type": "Block",
@@ -2263,7 +2289,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "ReinterpretCast",
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
                   "line": 503,
@@ -2273,12 +2299,15 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "expr": {
-                  "_type": "IntrinsicCall",
+                "value": {
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
                     "line": 503,
@@ -2288,50 +2317,49 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
                   },
-                  "op_code": "itob",
-                  "immediates": [],
-                  "stack_args": [
-                    {
-                      "_type": "IntrinsicCall",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                        "line": 510,
-                        "end_line": 532,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "op_code": "len",
-                      "immediates": [],
-                      "stack_args": [
-                        {
-                          "_type": "TupleItemExpression",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                            "line": 510,
-                            "end_line": 525,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "base": {
-                            "_type": "IntrinsicCall",
+                  "expr": {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                      "line": 503,
+                      "end_line": 532,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "op_code": "itob",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                          "line": 510,
+                          "end_line": 532,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "op_code": "len",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "TupleItemExpression",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
                               "line": 510,
@@ -2341,47 +2369,48 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "WTuple",
-                              "name": "tuple",
+                              "_type": "BytesWType",
+                              "name": "bytes",
                               "immutable": true,
-                              "types": [
-                                {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                {
-                                  "_type": "WType",
-                                  "name": "bool",
-                                  "immutable": true
-                                }
-                              ],
-                              "names": null,
-                              "source_location": null
+                              "length": null
                             },
-                            "op_code": "app_params_get",
-                            "immediates": [
-                              "AppApprovalProgram"
-                            ],
-                            "stack_args": [
-                              {
-                                "_type": "ReinterpretCast",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                  "line": 510,
-                                  "end_line": 525,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "application",
-                                  "immutable": true
-                                },
-                                "expr": {
-                                  "_type": "IntrinsicCall",
+                            "base": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                "line": 510,
+                                "end_line": 525,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WTuple",
+                                "name": "tuple",
+                                "immutable": true,
+                                "types": [
+                                  {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  {
+                                    "_type": "WType",
+                                    "name": "bool",
+                                    "immutable": true
+                                  }
+                                ],
+                                "names": null,
+                                "source_location": null
+                              },
+                              "op_code": "app_params_get",
+                              "immediates": [
+                                "AppApprovalProgram"
+                              ],
+                              "stack_args": [
+                                {
+                                  "_type": "ReinterpretCast",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
                                     "line": 510,
@@ -2392,67 +2421,67 @@
                                   },
                                   "wtype": {
                                     "_type": "WType",
-                                    "name": "uint64",
+                                    "name": "application",
                                     "immutable": true
                                   },
-                                  "op_code": "btoi",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                        "line": 510,
-                                        "end_line": 525,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "op_code": "extract",
-                                      "immediates": [
-                                        24,
-                                        8
-                                      ],
-                                      "stack_args": [
-                                        {
-                                          "_type": "ReinterpretCast",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                            "line": 510,
-                                            "end_line": 525,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "BytesWType",
-                                            "name": "bytes",
-                                            "immutable": true,
-                                            "length": null
-                                          },
-                                          "expr": {
+                                  "expr": {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                      "line": 510,
+                                      "end_line": 525,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "op_code": "btoi",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                          "line": 510,
+                                          "end_line": 525,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "op_code": "extract",
+                                        "immediates": [
+                                          24,
+                                          8
+                                        ],
+                                        "stack_args": [
+                                          {
                                             "_type": "ReinterpretCast",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
                                               "line": 510,
-                                              "end_line": 520,
+                                              "end_line": 525,
                                               "comment_lines": 0,
                                               "column": null,
                                               "end_column": null
                                             },
                                             "wtype": {
-                                              "_type": "WType",
-                                              "name": "account",
-                                              "immutable": true
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
                                             },
                                             "expr": {
-                                              "_type": "IntrinsicCall",
+                                              "_type": "ReinterpretCast",
                                               "source_location": {
                                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
                                                 "line": 510,
@@ -2462,162 +2491,30 @@
                                                 "end_column": null
                                               },
                                               "wtype": {
-                                                "_type": "BytesWType",
-                                                "name": "bytes",
-                                                "immutable": true,
-                                                "length": null
+                                                "_type": "WType",
+                                                "name": "account",
+                                                "immutable": true
                                               },
-                                              "op_code": "extract3",
-                                              "immediates": [],
-                                              "stack_args": [
-                                                {
-                                                  "_type": "IntrinsicCall",
-                                                  "source_location": {
-                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                    "line": 510,
-                                                    "end_line": 520,
-                                                    "comment_lines": 0,
-                                                    "column": null,
-                                                    "end_column": null
-                                                  },
-                                                  "wtype": {
-                                                    "_type": "BytesWType",
-                                                    "name": "bytes",
-                                                    "immutable": true,
-                                                    "length": null
-                                                  },
-                                                  "op_code": "concat",
-                                                  "immediates": [],
-                                                  "stack_args": [
-                                                    {
-                                                      "_type": "IntrinsicCall",
-                                                      "source_location": {
-                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                        "line": 510,
-                                                        "end_line": 520,
-                                                        "comment_lines": 0,
-                                                        "column": null,
-                                                        "end_column": null
-                                                      },
-                                                      "wtype": {
-                                                        "_type": "BytesWType",
-                                                        "name": "bytes",
-                                                        "immutable": true,
-                                                        "length": null
-                                                      },
-                                                      "op_code": "bzero",
-                                                      "immediates": [],
-                                                      "stack_args": [
-                                                        {
-                                                          "_type": "IntegerConstant",
-                                                          "source_location": {
-                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                            "line": 510,
-                                                            "end_line": 520,
-                                                            "comment_lines": 0,
-                                                            "column": null,
-                                                            "end_column": null
-                                                          },
-                                                          "wtype": {
-                                                            "_type": "WType",
-                                                            "name": "uint64",
-                                                            "immutable": true
-                                                          },
-                                                          "value": 32,
-                                                          "teal_alias": null
-                                                        }
-                                                      ]
-                                                    },
-                                                    {
-                                                      "_type": "ReinterpretCast",
-                                                      "source_location": {
-                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                        "line": 510,
-                                                        "end_line": 520,
-                                                        "comment_lines": 0,
-                                                        "column": null,
-                                                        "end_column": null
-                                                      },
-                                                      "wtype": {
-                                                        "_type": "BytesWType",
-                                                        "name": "bytes",
-                                                        "immutable": true,
-                                                        "length": null
-                                                      },
-                                                      "expr": {
-                                                        "_type": "ReinterpretCast",
-                                                        "source_location": {
-                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                          "line": 510,
-                                                          "end_line": 520,
-                                                          "comment_lines": 0,
-                                                          "column": null,
-                                                          "end_column": null
-                                                        },
-                                                        "wtype": {
-                                                          "_type": "WType",
-                                                          "name": "biguint",
-                                                          "immutable": true
-                                                        },
-                                                        "expr": {
-                                                          "_type": "IntrinsicCall",
-                                                          "source_location": {
-                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                            "line": 510,
-                                                            "end_line": 520,
-                                                            "comment_lines": 0,
-                                                            "column": null,
-                                                            "end_column": null
-                                                          },
-                                                          "wtype": {
-                                                            "_type": "BytesWType",
-                                                            "name": "bytes",
-                                                            "immutable": true,
-                                                            "length": null
-                                                          },
-                                                          "op_code": "itob",
-                                                          "immediates": [],
-                                                          "stack_args": [
-                                                            {
-                                                              "_type": "IntegerConstant",
-                                                              "source_location": {
-                                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                                "line": 518,
-                                                                "end_line": 519,
-                                                                "comment_lines": 0,
-                                                                "column": null,
-                                                                "end_column": null
-                                                              },
-                                                              "wtype": {
-                                                                "_type": "WType",
-                                                                "name": "uint64",
-                                                                "immutable": true
-                                                              },
-                                                              "value": 1,
-                                                              "teal_alias": null
-                                                            }
-                                                          ]
-                                                        }
-                                                      }
-                                                    }
-                                                  ]
+                                              "expr": {
+                                                "_type": "IntrinsicCall",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                  "line": 510,
+                                                  "end_line": 520,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
                                                 },
-                                                {
-                                                  "_type": "UInt64BinaryOperation",
-                                                  "source_location": {
-                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                    "line": 510,
-                                                    "end_line": 520,
-                                                    "comment_lines": 0,
-                                                    "column": null,
-                                                    "end_column": null
-                                                  },
-                                                  "wtype": {
-                                                    "_type": "WType",
-                                                    "name": "uint64",
-                                                    "immutable": true
-                                                  },
-                                                  "left": {
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "op_code": "extract3",
+                                                "immediates": [],
+                                                "stack_args": [
+                                                  {
                                                     "_type": "IntrinsicCall",
                                                     "source_location": {
                                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
@@ -2628,11 +2525,12 @@
                                                       "end_column": null
                                                     },
                                                     "wtype": {
-                                                      "_type": "WType",
-                                                      "name": "uint64",
-                                                      "immutable": true
+                                                      "_type": "BytesWType",
+                                                      "name": "bytes",
+                                                      "immutable": true,
+                                                      "length": null
                                                     },
-                                                    "op_code": "len",
+                                                    "op_code": "concat",
                                                     "immediates": [],
                                                     "stack_args": [
                                                       {
@@ -2651,10 +2549,61 @@
                                                           "immutable": true,
                                                           "length": null
                                                         },
-                                                        "op_code": "concat",
+                                                        "op_code": "bzero",
                                                         "immediates": [],
                                                         "stack_args": [
                                                           {
+                                                            "_type": "IntegerConstant",
+                                                            "source_location": {
+                                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                              "line": 510,
+                                                              "end_line": 520,
+                                                              "comment_lines": 0,
+                                                              "column": null,
+                                                              "end_column": null
+                                                            },
+                                                            "wtype": {
+                                                              "_type": "WType",
+                                                              "name": "uint64",
+                                                              "immutable": true
+                                                            },
+                                                            "value": 32,
+                                                            "teal_alias": null
+                                                          }
+                                                        ]
+                                                      },
+                                                      {
+                                                        "_type": "ReinterpretCast",
+                                                        "source_location": {
+                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                          "line": 510,
+                                                          "end_line": 520,
+                                                          "comment_lines": 0,
+                                                          "column": null,
+                                                          "end_column": null
+                                                        },
+                                                        "wtype": {
+                                                          "_type": "BytesWType",
+                                                          "name": "bytes",
+                                                          "immutable": true,
+                                                          "length": null
+                                                        },
+                                                        "expr": {
+                                                          "_type": "ReinterpretCast",
+                                                          "source_location": {
+                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                            "line": 510,
+                                                            "end_line": 520,
+                                                            "comment_lines": 0,
+                                                            "column": null,
+                                                            "end_column": null
+                                                          },
+                                                          "wtype": {
+                                                            "_type": "WType",
+                                                            "name": "biguint",
+                                                            "immutable": true
+                                                          },
+                                                          "expr": {
                                                             "_type": "IntrinsicCall",
                                                             "source_location": {
                                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
@@ -2670,15 +2619,15 @@
                                                               "immutable": true,
                                                               "length": null
                                                             },
-                                                            "op_code": "bzero",
+                                                            "op_code": "itob",
                                                             "immediates": [],
                                                             "stack_args": [
                                                               {
                                                                 "_type": "IntegerConstant",
                                                                 "source_location": {
                                                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                                  "line": 510,
-                                                                  "end_line": 520,
+                                                                  "line": 518,
+                                                                  "end_line": 519,
                                                                   "comment_lines": 0,
                                                                   "column": null,
                                                                   "end_column": null
@@ -2688,28 +2637,107 @@
                                                                   "name": "uint64",
                                                                   "immutable": true
                                                                 },
-                                                                "value": 32,
+                                                                "value": 1,
                                                                 "teal_alias": null
                                                               }
                                                             ]
+                                                          }
+                                                        }
+                                                      }
+                                                    ]
+                                                  },
+                                                  {
+                                                    "_type": "UInt64BinaryOperation",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                      "line": 510,
+                                                      "end_line": 520,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "WType",
+                                                      "name": "uint64",
+                                                      "immutable": true
+                                                    },
+                                                    "left": {
+                                                      "_type": "IntrinsicCall",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                        "line": 510,
+                                                        "end_line": 520,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "WType",
+                                                        "name": "uint64",
+                                                        "immutable": true
+                                                      },
+                                                      "op_code": "len",
+                                                      "immediates": [],
+                                                      "stack_args": [
+                                                        {
+                                                          "_type": "IntrinsicCall",
+                                                          "source_location": {
+                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                            "line": 510,
+                                                            "end_line": 520,
+                                                            "comment_lines": 0,
+                                                            "column": null,
+                                                            "end_column": null
                                                           },
-                                                          {
-                                                            "_type": "ReinterpretCast",
-                                                            "source_location": {
-                                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                              "line": 510,
-                                                              "end_line": 520,
-                                                              "comment_lines": 0,
-                                                              "column": null,
-                                                              "end_column": null
+                                                          "wtype": {
+                                                            "_type": "BytesWType",
+                                                            "name": "bytes",
+                                                            "immutable": true,
+                                                            "length": null
+                                                          },
+                                                          "op_code": "concat",
+                                                          "immediates": [],
+                                                          "stack_args": [
+                                                            {
+                                                              "_type": "IntrinsicCall",
+                                                              "source_location": {
+                                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                                "line": 510,
+                                                                "end_line": 520,
+                                                                "comment_lines": 0,
+                                                                "column": null,
+                                                                "end_column": null
+                                                              },
+                                                              "wtype": {
+                                                                "_type": "BytesWType",
+                                                                "name": "bytes",
+                                                                "immutable": true,
+                                                                "length": null
+                                                              },
+                                                              "op_code": "bzero",
+                                                              "immediates": [],
+                                                              "stack_args": [
+                                                                {
+                                                                  "_type": "IntegerConstant",
+                                                                  "source_location": {
+                                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                                    "line": 510,
+                                                                    "end_line": 520,
+                                                                    "comment_lines": 0,
+                                                                    "column": null,
+                                                                    "end_column": null
+                                                                  },
+                                                                  "wtype": {
+                                                                    "_type": "WType",
+                                                                    "name": "uint64",
+                                                                    "immutable": true
+                                                                  },
+                                                                  "value": 32,
+                                                                  "teal_alias": null
+                                                                }
+                                                              ]
                                                             },
-                                                            "wtype": {
-                                                              "_type": "BytesWType",
-                                                              "name": "bytes",
-                                                              "immutable": true,
-                                                              "length": null
-                                                            },
-                                                            "expr": {
+                                                            {
                                                               "_type": "ReinterpretCast",
                                                               "source_location": {
                                                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
@@ -2720,12 +2748,13 @@
                                                                 "end_column": null
                                                               },
                                                               "wtype": {
-                                                                "_type": "WType",
-                                                                "name": "biguint",
-                                                                "immutable": true
+                                                                "_type": "BytesWType",
+                                                                "name": "bytes",
+                                                                "immutable": true,
+                                                                "length": null
                                                               },
                                                               "expr": {
-                                                                "_type": "IntrinsicCall",
+                                                                "_type": "ReinterpretCast",
                                                                 "source_location": {
                                                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
                                                                   "line": 510,
@@ -2735,42 +2764,76 @@
                                                                   "end_column": null
                                                                 },
                                                                 "wtype": {
-                                                                  "_type": "BytesWType",
-                                                                  "name": "bytes",
-                                                                  "immutable": true,
-                                                                  "length": null
+                                                                  "_type": "WType",
+                                                                  "name": "biguint",
+                                                                  "immutable": true
                                                                 },
-                                                                "op_code": "itob",
-                                                                "immediates": [],
-                                                                "stack_args": [
-                                                                  {
-                                                                    "_type": "IntegerConstant",
-                                                                    "source_location": {
-                                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                                      "line": 518,
-                                                                      "end_line": 519,
-                                                                      "comment_lines": 0,
-                                                                      "column": null,
-                                                                      "end_column": null
-                                                                    },
-                                                                    "wtype": {
-                                                                      "_type": "WType",
-                                                                      "name": "uint64",
-                                                                      "immutable": true
-                                                                    },
-                                                                    "value": 1,
-                                                                    "teal_alias": null
-                                                                  }
-                                                                ]
+                                                                "expr": {
+                                                                  "_type": "IntrinsicCall",
+                                                                  "source_location": {
+                                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                                    "line": 510,
+                                                                    "end_line": 520,
+                                                                    "comment_lines": 0,
+                                                                    "column": null,
+                                                                    "end_column": null
+                                                                  },
+                                                                  "wtype": {
+                                                                    "_type": "BytesWType",
+                                                                    "name": "bytes",
+                                                                    "immutable": true,
+                                                                    "length": null
+                                                                  },
+                                                                  "op_code": "itob",
+                                                                  "immediates": [],
+                                                                  "stack_args": [
+                                                                    {
+                                                                      "_type": "IntegerConstant",
+                                                                      "source_location": {
+                                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                                        "line": 518,
+                                                                        "end_line": 519,
+                                                                        "comment_lines": 0,
+                                                                        "column": null,
+                                                                        "end_column": null
+                                                                      },
+                                                                      "wtype": {
+                                                                        "_type": "WType",
+                                                                        "name": "uint64",
+                                                                        "immutable": true
+                                                                      },
+                                                                      "value": 1,
+                                                                      "teal_alias": null
+                                                                    }
+                                                                  ]
+                                                                }
                                                               }
                                                             }
-                                                          }
-                                                        ]
-                                                      }
-                                                    ]
+                                                          ]
+                                                        }
+                                                      ]
+                                                    },
+                                                    "op": "-",
+                                                    "right": {
+                                                      "_type": "IntegerConstant",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
+                                                        "line": 510,
+                                                        "end_line": 520,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "WType",
+                                                        "name": "uint64",
+                                                        "immutable": true
+                                                      },
+                                                      "value": 32,
+                                                      "teal_alias": null
+                                                    }
                                                   },
-                                                  "op": "-",
-                                                  "right": {
+                                                  {
                                                     "_type": "IntegerConstant",
                                                     "source_location": {
                                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
@@ -2788,42 +2851,25 @@
                                                     "value": 32,
                                                     "teal_alias": null
                                                   }
-                                                },
-                                                {
-                                                  "_type": "IntegerConstant",
-                                                  "source_location": {
-                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/address_code.sol",
-                                                    "line": 510,
-                                                    "end_line": 520,
-                                                    "comment_lines": 0,
-                                                    "column": null,
-                                                    "end_column": null
-                                                  },
-                                                  "wtype": {
-                                                    "_type": "WType",
-                                                    "name": "uint64",
-                                                    "immutable": true
-                                                  },
-                                                  "value": 32,
-                                                  "teal_alias": null
-                                                }
-                                              ]
+                                                ]
+                                              }
                                             }
                                           }
-                                        }
-                                      ]
-                                    }
-                                  ]
+                                        ]
+                                      }
+                                    ]
+                                  }
                                 }
-                              }
-                            ]
-                          },
-                          "index": 0
-                        }
-                      ]
-                    }
-                  ]
-                }
+                              ]
+                            },
+                            "index": 0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "error_message": null
               }
             }
           ],

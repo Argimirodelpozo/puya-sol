@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.approval_program() -> uint64:
 main:
-    intcblock 64 0 1
+    intcblock 32 0 1 64
     bytecblock "result_in_constructor" 0x151f7c75
     intc_1 // 0
     txn ApplicationID
@@ -29,7 +29,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xcd0bb95d 0xd3e19adf 0xae8c4c69 // method "double(uint512)uint512", method "use(uint512)uint512", method "result_in_constructor()uint512"
+    pushbytess 0x82fadf35 0x622cfe87 0xae8c4c69 // method "double(uint256)uint256", method "use(uint256)uint256", method "result_in_constructor()uint512"
     txna ApplicationArgs 0
     match double use result_in_constructor
     err
@@ -40,17 +40,17 @@ double:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     pushbytes 0x02
     b*
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
@@ -65,9 +65,9 @@ double:
 use:
     txna ApplicationArgs 1
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     err // uninitialized function pointer
 
 
@@ -79,10 +79,10 @@ result_in_constructor:
     assert // check result_in_constructor exists
     dup
     len
-    intc_0 // 64
+    intc_3 // 64
     <=
     assert // overflow
-    intc_0 // 64
+    intc_3 // 64
     bzero
     b|
     bytec_1 // 0x151f7c75

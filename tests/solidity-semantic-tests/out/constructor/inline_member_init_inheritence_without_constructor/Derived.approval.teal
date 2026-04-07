@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/inline_member_init_inheritence_without_constructor.sol.Derived.approval_program() -> uint64:
 main:
-    intcblock 64 1 0
+    intcblock 32 1 0
     bytecblock "m_base" "m_derived" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -33,7 +33,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x804edec2 0x57c055ac // method "getDMember()uint512", method "getBMember()uint512"
+    pushbytess 0xd4a8cc14 0x438b2773 // method "getDMember()uint256", method "getBMember()uint256"
     txna ApplicationArgs 0
     match getDMember getBMember
     err
@@ -47,10 +47,10 @@ getDMember:
     assert // check m_derived exists
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -69,10 +69,10 @@ getBMember:
     assert // check m_base exists
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75

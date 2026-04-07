@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_multi_array.sol.C.approval_program() -> uint64:
 main:
-    intcblock 2 0 1 64
+    intcblock 2 0 1 32
     bytecblock 0x151f7c75 0x000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xcefe99b9 0xdd4ba0fa // method "f(uint512,uint256[][2],uint512)(uint512,uint512)", method "g()(uint512,uint512)"
+    pushbytess 0xa7920df3 0xdd4ba0fa // method "f(uint256,uint256[][2],uint256)(uint512,uint512)", method "g()(uint512,uint512)"
     txna ApplicationArgs 0
     match f g()
     err
@@ -117,9 +117,9 @@ static_array_replace_dynamic_element_after_for@4:
 f:
     txna ApplicationArgs 1
     len
-    intc_3 // 64
+    intc_3 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     pushint 4
     intc_1 // 0
@@ -147,7 +147,7 @@ f_for_header@1:
     substring3
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 32
+    intc_3 // 32
     *
     intc_0 // 2
     +
@@ -167,9 +167,9 @@ f_after_for@4:
     assert // invalid number of bytes for arc4.static_array<arc4.dynamic_array<arc4.uint256>, 2>
     txna ApplicationArgs 3
     len
-    intc_3 // 64
+    intc_3 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     callsub g(6)
     cover 2
     pop
@@ -180,10 +180,10 @@ f_after_for@4:
     extract 2 32
     dig 1
     len
-    intc_3 // 64
+    pushint 64
     <=
     assert // overflow
-    intc_3 // 64
+    pushint 64
     bzero
     uncover 2
     dig 1
@@ -215,7 +215,7 @@ g():
     extract_uint16
     dup2
     extract_uint16
-    pushint 32
+    intc_3 // 32
     *
     intc_0 // 2
     +
@@ -232,7 +232,7 @@ g():
     extract_uint16
     dup2
     extract_uint16
-    pushint 32
+    intc_3 // 32
     *
     intc_0 // 2
     +
@@ -271,7 +271,7 @@ g():
     extract 4 32
     itxn LastLog
     extract 36 32
-    intc_3 // 64
+    pushint 64
     bzero
     uncover 2
     dig 1
@@ -296,7 +296,7 @@ g(6):
     frame_dig -1
     dig 1
     extract_uint16
-    pushint 32
+    intc_3 // 32
     *
     intc_0 // 2
     +
@@ -310,7 +310,7 @@ g(6):
     frame_dig -1
     dig 1
     extract_uint16
-    pushint 32
+    intc_3 // 32
     *
     intc_0 // 2
     +

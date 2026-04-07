@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_string_input.sol.C.approval_program() -> uint64:
 main:
-    intcblock 64 1 0 2
+    intcblock 1 64 0 2
     bytecblock 0x151f7c75 0x0044
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x36b8a41c 0xabe3ecb5 0x8fc2ea3f 0x7f36c83b 0x58661a04 // method "f()string", method "g(string)string", method "h(string,uint512)(string,uint512)", method "i(string,uint512,string)(string,string,uint512)", method "j(string,uint512)(string,string,uint512)"
+    pushbytess 0x36b8a41c 0xabe3ecb5 0x941c6dd1 0x4c3bbf68 0x6fda0f08 // method "f()string", method "g(string)string", method "h(string,uint256)(string,uint512)", method "i(string,uint256,string)(string,string,uint512)", method "j(string,uint256)(string,string,uint512)"
     txna ApplicationArgs 0
     match main_f_route@5 g h i j
     err
@@ -31,7 +31,7 @@ main_after_if_else@2:
 main_f_route@5:
     pushbytes 0x151f7c750000
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -51,7 +51,7 @@ g:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -72,9 +72,9 @@ h:
     dup
     len
     dup
-    intc_0 // 64
+    pushint 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     dig 2
     len
     itob
@@ -82,10 +82,10 @@ h:
     uncover 3
     concat
     swap
-    intc_0 // 64
+    intc_1 // 64
     <=
     assert // overflow
-    intc_0 // 64
+    intc_1 // 64
     bzero
     uncover 2
     b|
@@ -98,7 +98,7 @@ h:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -119,9 +119,9 @@ i:
     dup
     len
     dup
-    intc_0 // 64
+    pushint 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     intc_2 // 0
@@ -156,10 +156,10 @@ i:
     swap
     concat
     uncover 3
-    intc_0 // 64
+    intc_1 // 64
     <=
     assert // overflow
-    intc_0 // 64
+    intc_1 // 64
     bzero
     uncover 4
     b|
@@ -172,7 +172,7 @@ i:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -193,9 +193,9 @@ j:
     dup
     len
     dup
-    intc_0 // 64
+    pushint 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     dig 2
     len
     itob
@@ -212,10 +212,10 @@ j:
     swap
     concat
     uncover 2
-    intc_0 // 64
+    intc_1 // 64
     <=
     assert // overflow
-    intc_0 // 64
+    intc_1 // 64
     bzero
     uncover 3
     b|
@@ -228,5 +228,5 @@ j:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return

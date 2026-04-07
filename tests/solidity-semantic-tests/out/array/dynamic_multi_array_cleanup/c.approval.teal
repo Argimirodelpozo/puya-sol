@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x4dbb21e3 0x44977246 // method "__postInit()void", method "fill()uint512", method "clear()void"
+    pushbytess 0xbacc49e3 0x827395d2 0x44977246 // method "__postInit()void", method "fill()uint256", method "clear()void"
     txna ApplicationArgs 0
     match __postInit fill clear
     err
@@ -162,6 +162,8 @@ fill_while_top@8:
     pushbytes 0x05
     b<
     bnz fill_while_top@8
+    pushint 32
+    bzero
     bytec_0 // "data"
     intc_1 // 6
     intc_2 // 2
@@ -251,8 +253,6 @@ fill_while_top@8:
     +
     extract3
     extract 130 32
-    pushint 64
-    bzero
     b|
     pushbytes 0x151f7c75
     swap

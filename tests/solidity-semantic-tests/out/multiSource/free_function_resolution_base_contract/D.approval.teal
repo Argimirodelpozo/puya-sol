@@ -1,9 +1,9 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_tetb_8sc/s2.sol.D.approval_program() -> uint64:
+// /tmp/multisource_5fbzofrz/s2.sol.D.approval_program() -> uint64:
 main:
-    intcblock 64 1
+    intcblock 32 1
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,28 +23,28 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x24d97035 0x5ed33a7f // method "h()uint512", method "g()uint512"
+    pushbytess 0xafedb2e5 0x4b2c0376 // method "h()uint256", method "g()uint256"
     txna ApplicationArgs 0
     match h g
     err
 
 
-// /tmp/multisource_tetb_8sc/s2.sol.f_41() -> bytes:
+// /tmp/multisource_5fbzofrz/s2.sol.f_41() -> bytes:
 f:
     pushint 1337
     itob
     retsub
 
 
-// /tmp/multisource_tetb_8sc/s2.sol.D.h[routing]() -> void:
+// /tmp/multisource_5fbzofrz/s2.sol.D.h[routing]() -> void:
 h:
-    callsub f
+    callsub /tmp/multisource_5fbzofrz/s2.sol.D.g
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -55,20 +55,26 @@ h:
     return
 
 
-// /tmp/multisource_tetb_8sc/s2.sol.D.g[routing]() -> void:
+// /tmp/multisource_5fbzofrz/s2.sol.D.g[routing]() -> void:
 g:
-    callsub f
-    dup
-    len
-    intc_0 // 64
-    <=
-    assert // overflow
-    intc_0 // 64
-    bzero
-    b|
+    callsub /tmp/multisource_5fbzofrz/s2.sol.D.g
     bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
+
+
+// /tmp/multisource_5fbzofrz/s2.sol.D.g() -> bytes:
+/tmp/multisource_5fbzofrz/s2.sol.D.g:
+    callsub f
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub

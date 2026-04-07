@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_arguments_in_library.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 64 32 1 0
+    intcblock 32 1 0
     bytecblock "m" 0x "__ctor_pending" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_2 // "__ctor_pending"
-    intc_2 // 1
+    intc_1 // 1
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x5357d9c9 0x7cea95ea // method "__postInit()void", method "set(uint512,uint512)uint512", method "get(uint512)uint512"
+    pushbytess 0xbacc49e3 0x16f9c32b 0x96f3d936 // method "__postInit()void", method "set(uint256,uint256)uint256", method "get(uint256)uint256"
     txna ApplicationArgs 0
     match __postInit set get
     err
@@ -35,15 +35,15 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_arguments_in_library.sol.Lib.set(m: bytes, key: bytes, value: bytes) -> bytes:
 Lib.set:
     proto 3 1
-    intc_1 // 32
+    intc_0 // 32
     bzero
     frame_dig -2
     concat
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    intc_0 // 32
     extract3
     sha256
     bytec_0 // "m"
@@ -61,15 +61,15 @@ Lib.set:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_arguments_in_library.sol.Lib.get(m: bytes, key: bytes) -> bytes:
 Lib.get:
     proto 2 1
-    intc_1 // 32
+    intc_0 // 32
     bzero
     frame_dig -1
     concat
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    intc_0 // 32
     extract3
     sha256
     bytec_0 // "m"
@@ -88,13 +88,13 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_2 // "__ctor_pending"
-    intc_3 // 0
+    intc_2 // 0
     app_global_put
     bytec_0 // "m"
-    intc_3 // 0
+    intc_2 // 0
     box_create
     pop
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -103,15 +103,15 @@ set:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     bytec_0 // "m"
     box_get
     bytec_1 // 0x
@@ -130,17 +130,17 @@ set:
     pop
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec_3 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -149,9 +149,9 @@ get:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     bytec_0 // "m"
     box_get
     bytec_1 // 0x
@@ -161,15 +161,15 @@ get:
     callsub Lib.get
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec_3 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return

@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x38b8b62f 0xfae5064d // method "f()byte[]", method "g(uint512,bool)byte[]"
+    pushbytess 0x38b8b62f 0x5ac8024c // method "f()byte[]", method "g(uint256,bool)byte[]"
     txna ApplicationArgs 0
     match f g
     err
@@ -50,9 +50,9 @@ f:
 g:
     txna ApplicationArgs 1
     len
-    pushint 64
+    pushint 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     len
     intc_0 // 1

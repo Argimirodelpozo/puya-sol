@@ -1048,9 +1048,12 @@
         },
         "args": [],
         "return_type": {
-          "_type": "WType",
-          "name": "biguint",
-          "immutable": true
+          "_type": "ARC4UIntN",
+          "name": "arc4.uint256",
+          "immutable": true,
+          "n": 256,
+          "arc4_alias": null,
+          "source_location": null
         },
         "body": {
           "_type": "Block",
@@ -1577,7 +1580,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "BigUIntBinaryOperation",
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol",
                   "line": 374,
@@ -1587,11 +1590,14 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "left": {
+                "value": {
                   "_type": "BigUIntBinaryOperation",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol",
@@ -1622,25 +1628,7 @@
                       "immutable": true
                     },
                     "left": {
-                      "_type": "VarExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol",
-                        "line": 374,
-                        "end_line": 389,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
-                      },
-                      "name": "memorySizeAfter"
-                    },
-                    "op": "+",
-                    "right": {
-                      "_type": "IntegerConstant",
+                      "_type": "BigUIntBinaryOperation",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol",
                         "line": 374,
@@ -1654,16 +1642,68 @@
                         "name": "biguint",
                         "immutable": true
                       },
-                      "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
-                      "teal_alias": null
+                      "left": {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol",
+                          "line": 374,
+                          "end_line": 389,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "name": "memorySizeAfter"
+                      },
+                      "op": "+",
+                      "right": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol",
+                          "line": 374,
+                          "end_line": 408,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
+                        "teal_alias": null
+                      }
+                    },
+                    "op": "-",
+                    "right": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol",
+                        "line": 392,
+                        "end_line": 408,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "name": "memorySizeBefore"
                     }
                   },
-                  "op": "-",
+                  "op": "%",
                   "right": {
-                    "_type": "VarExpression",
+                    "_type": "IntegerConstant",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol",
-                      "line": 392,
+                      "line": 374,
                       "end_line": 408,
                       "comment_lines": 0,
                       "column": null,
@@ -1674,28 +1714,11 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "name": "memorySizeBefore"
+                    "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
+                    "teal_alias": null
                   }
                 },
-                "op": "%",
-                "right": {
-                  "_type": "IntegerConstant",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol",
-                    "line": 374,
-                    "end_line": 408,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
-                  },
-                  "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
-                  "teal_alias": null
-                }
+                "error_message": null
               }
             }
           ],
@@ -1744,9 +1767,12 @@
         },
         "args": [],
         "return_type": {
-          "_type": "WType",
-          "name": "biguint",
-          "immutable": true
+          "_type": "ARC4UIntN",
+          "name": "arc4.uint256",
+          "immutable": true,
+          "n": 256,
+          "arc4_alias": null,
+          "source_location": null
         },
         "body": {
           "_type": "Block",
@@ -2117,7 +2143,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "BigUIntBinaryOperation",
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol",
                   "line": 599,
@@ -2127,11 +2153,14 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "left": {
+                "value": {
                   "_type": "BigUIntBinaryOperation",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol",
@@ -2162,25 +2191,7 @@
                       "immutable": true
                     },
                     "left": {
-                      "_type": "VarExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol",
-                        "line": 599,
-                        "end_line": 614,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
-                      },
-                      "name": "memorySizeAfter"
-                    },
-                    "op": "+",
-                    "right": {
-                      "_type": "IntegerConstant",
+                      "_type": "BigUIntBinaryOperation",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol",
                         "line": 599,
@@ -2194,16 +2205,68 @@
                         "name": "biguint",
                         "immutable": true
                       },
-                      "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
-                      "teal_alias": null
+                      "left": {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol",
+                          "line": 599,
+                          "end_line": 614,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "name": "memorySizeAfter"
+                      },
+                      "op": "+",
+                      "right": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol",
+                          "line": 599,
+                          "end_line": 633,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
+                        "teal_alias": null
+                      }
+                    },
+                    "op": "-",
+                    "right": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol",
+                        "line": 617,
+                        "end_line": 633,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "name": "memorySizeBefore"
                     }
                   },
-                  "op": "-",
+                  "op": "%",
                   "right": {
-                    "_type": "VarExpression",
+                    "_type": "IntegerConstant",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol",
-                      "line": 617,
+                      "line": 599,
                       "end_line": 633,
                       "comment_lines": 0,
                       "column": null,
@@ -2214,28 +2277,11 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "name": "memorySizeBefore"
+                    "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
+                    "teal_alias": null
                   }
                 },
-                "op": "%",
-                "right": {
-                  "_type": "IntegerConstant",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/struct_allocation.sol",
-                    "line": 599,
-                    "end_line": 633,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
-                  },
-                  "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
-                  "teal_alias": null
-                }
+                "error_message": null
               }
             }
           ],

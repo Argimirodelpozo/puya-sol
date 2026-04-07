@@ -22,7 +22,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x75c6b363 0x4494bd16 // method "blockhash(uint512)byte[32]", method "f()byte[32]"
+    pushbytess 0x54b2ad6e 0x4494bd16 // method "blockhash(uint256)byte[32]", method "f()byte[32]"
     txna ApplicationArgs 0
     match blockhash main_f_route@6
     err
@@ -38,9 +38,9 @@ main_f_route@6:
 blockhash:
     txna ApplicationArgs 1
     len
-    pushint 64
+    pushint 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     pushint 1

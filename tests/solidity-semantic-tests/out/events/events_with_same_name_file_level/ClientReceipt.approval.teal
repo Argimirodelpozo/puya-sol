@@ -22,7 +22,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x0cead8dd 0xb6a1e5be 0x77f45bd5 0xddde55e2 // method "deposit()uint512", method "deposit(address)uint512", method "deposit(address,uint512)uint512", method "deposit(address,bool)uint512"
+    pushbytess 0x046ef2d5 0x24c1cdc8 0x8bd51f2f 0x64a16438 // method "deposit()uint256", method "deposit(address)uint256", method "deposit(address,uint256)uint256", method "deposit(address,bool)uint256"
     txna ApplicationArgs 0
     match deposit() deposit(addr) deposit(addr,u256) deposit(addr,b)
     err
@@ -32,7 +32,7 @@ main_after_if_else@2:
 deposit():
     pushbytes 0xed21248c
     log
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     log
     intc_0 // 1
     return
@@ -50,7 +50,7 @@ deposit(addr):
     swap
     concat
     log
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
     log
     intc_0 // 1
     return
@@ -68,9 +68,9 @@ deposit(addr,u256):
     dup
     len
     dup
-    pushint 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     intc_1 // 32
     <=
     assert // overflow
@@ -82,7 +82,7 @@ deposit(addr,u256):
     swap
     concat
     log
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000003
     log
     intc_0 // 1
     return
@@ -113,7 +113,7 @@ deposit(addr,b):
     swap
     concat
     log
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000004
     log
     intc_0 // 1
     return

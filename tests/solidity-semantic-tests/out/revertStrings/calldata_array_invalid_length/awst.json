@@ -496,9 +496,12 @@
           }
         ],
         "return_type": {
-          "_type": "WType",
-          "name": "biguint",
-          "immutable": true
+          "_type": "ARC4UIntN",
+          "name": "arc4.uint256",
+          "immutable": true,
+          "n": 256,
+          "arc4_alias": null,
+          "source_location": null
         },
         "body": {
           "_type": "Block",
@@ -522,7 +525,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "ReinterpretCast",
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/calldata_array_invalid_length.sol",
                   "line": 114,
@@ -532,12 +535,15 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "expr": {
-                  "_type": "IntrinsicCall",
+                "value": {
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/calldata_array_invalid_length.sol",
                     "line": 114,
@@ -547,110 +553,127 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
                   },
-                  "op_code": "itob",
-                  "immediates": [],
-                  "stack_args": [
-                    {
-                      "_type": "ArrayLength",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/calldata_array_invalid_length.sol",
-                        "line": 121,
-                        "end_line": 132,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "array": {
-                        "_type": "IndexExpression",
+                  "expr": {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/calldata_array_invalid_length.sol",
+                      "line": 114,
+                      "end_line": 132,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "op_code": "itob",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "ArrayLength",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/calldata_array_invalid_length.sol",
                           "line": 121,
-                          "end_line": 125,
+                          "end_line": 132,
                           "comment_lines": 0,
                           "column": null,
                           "end_column": null
                         },
                         "wtype": {
-                          "_type": "ARC4DynamicArray",
-                          "name": "arc4.dynamic_array<arc4.uint256>",
-                          "immutable": false,
-                          "element_type": {
-                            "_type": "ARC4UIntN",
-                            "name": "arc4.uint256",
-                            "immutable": true,
-                            "n": 256,
-                            "arc4_alias": null,
-                            "source_location": null
-                          },
-                          "arc4_alias": null,
-                          "source_location": null
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
                         },
-                        "base": {
-                          "_type": "VarExpression",
+                        "array": {
+                          "_type": "IndexExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/calldata_array_invalid_length.sol",
                             "line": 121,
-                            "end_line": 122,
+                            "end_line": 125,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
                           },
                           "wtype": {
                             "_type": "ARC4DynamicArray",
-                            "name": "arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>",
+                            "name": "arc4.dynamic_array<arc4.uint256>",
                             "immutable": false,
                             "element_type": {
-                              "_type": "ARC4DynamicArray",
-                              "name": "arc4.dynamic_array<arc4.uint256>",
-                              "immutable": false,
-                              "element_type": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint256",
-                                "immutable": true,
-                                "n": 256,
-                                "arc4_alias": null,
-                                "source_location": null
-                              },
+                              "_type": "ARC4UIntN",
+                              "name": "arc4.uint256",
+                              "immutable": true,
+                              "n": 256,
                               "arc4_alias": null,
                               "source_location": null
                             },
                             "arc4_alias": null,
                             "source_location": null
                           },
-                          "name": "x"
-                        },
-                        "index": {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/calldata_array_invalid_length.sol",
-                            "line": 123,
-                            "end_line": 124,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
+                          "base": {
+                            "_type": "VarExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/calldata_array_invalid_length.sol",
+                              "line": 121,
+                              "end_line": 122,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "ARC4DynamicArray",
+                              "name": "arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>",
+                              "immutable": false,
+                              "element_type": {
+                                "_type": "ARC4DynamicArray",
+                                "name": "arc4.dynamic_array<arc4.uint256>",
+                                "immutable": false,
+                                "element_type": {
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint256",
+                                  "immutable": true,
+                                  "n": 256,
+                                  "arc4_alias": null,
+                                  "source_location": null
+                                },
+                                "arc4_alias": null,
+                                "source_location": null
+                              },
+                              "arc4_alias": null,
+                              "source_location": null
+                            },
+                            "name": "x"
                           },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 0,
-                          "teal_alias": null
+                          "index": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/calldata_array_invalid_length.sol",
+                              "line": 123,
+                              "end_line": 124,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 0,
+                            "teal_alias": null
+                          }
                         }
                       }
-                    }
-                  ]
-                }
+                    ]
+                  }
+                },
+                "error_message": null
               }
             }
           ],

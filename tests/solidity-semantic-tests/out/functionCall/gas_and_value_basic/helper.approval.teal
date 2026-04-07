@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x070050f4 0x19d9fbcf 0x2fe85e04 // method "getBalance()uint512", method "setFlag()void", method "getFlag()bool"
+    pushbytess 0xad7db34f 0x19d9fbcf 0x2fe85e04 // method "getBalance()uint256", method "setFlag()void", method "getFlag()bool"
     txna ApplicationArgs 0
     match getBalance main_setFlag_route@6 getFlag
     err
@@ -45,7 +45,7 @@ getBalance:
     acct_params_get AcctBalance
     pop
     itob
-    pushint 64
+    pushint 32
     bzero
     b|
     bytec_1 // 0x151f7c75

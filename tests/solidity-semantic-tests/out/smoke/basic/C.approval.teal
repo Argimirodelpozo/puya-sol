@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/basic.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64 0
+    intcblock 1 32 64 0
     bytecblock 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x29efd0f6 0x03ab7b01 0x59607197 0xdd4ba0fa 0x15a3edef 0xc64fb23a 0xc490af20 0xf1bcdc94 0xac4a2f33 // method "d()void", method "e()uint512", method "f(uint512)(uint512,uint512)", method "g()(uint512,uint512)", method "h(uint512,uint512)uint512", method "i(bool)bool", method "j(byte[32])(byte[32],byte[32])", method "k()uint512", method "l(uint512)uint512"
+    pushbytess 0x29efd0f6 0xcf0aa045 0x13ac5132 0xdd4ba0fa 0x5c69fadf 0xc64fb23a 0xc490af20 0x08ee23b1 0x85597271 // method "d()void", method "e()uint256", method "f(uint256)(uint512,uint512)", method "g()(uint512,uint512)", method "h(uint256,uint256)uint256", method "i(bool)bool", method "j(byte[32])(byte[32],byte[32])", method "k()uint256", method "l(uint256)uint256"
     txna ApplicationArgs 0
     match main_d_route@5 e f main_g_route@8 h i j k l
     err
@@ -46,7 +46,7 @@ e:
     -
     gtxns Amount
     itob
-    intc_1 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -63,13 +63,13 @@ f:
     dup
     len
     dup
-    intc_1 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    intc_1 // 64
+    assert // invalid number of bytes for arc4.uint256
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     dup
@@ -87,15 +87,15 @@ h:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     swap
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
@@ -105,10 +105,10 @@ h:
     b%
     dup
     len
-    intc_1 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_1 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -127,7 +127,7 @@ i:
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    intc_2 // 0
+    intc_3 // 0
     getbit
     dup
     intc_0 // 1
@@ -135,7 +135,7 @@ i:
     assert // ABI bool validation
     !
     pushbytes 0x00
-    intc_2 // 0
+    intc_3 // 0
     uncover 2
     setbit
     bytec_0 // 0x151f7c75
@@ -151,7 +151,7 @@ j:
     txna ApplicationArgs 1
     dup
     len
-    pushint 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     dup
@@ -169,7 +169,7 @@ k:
     txna ApplicationArgs 0
     len
     itob
-    intc_1 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -185,17 +185,17 @@ l:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     pushbytes 0x07
     b*
     dup
     len
-    intc_1 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_1 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75

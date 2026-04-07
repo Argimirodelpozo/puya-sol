@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.C.approval_program() -> uint64:
 main:
     intcblock 64 1 0
-    bytecblock "x" 0x "z" 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    bytecblock "x" 0x "z" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
@@ -29,7 +29,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x9481ffde 0xf8ee0c77 0x3f4abdfd 0xbb0aa89c // method "xAndZSlots()(uint512,uint512)", method "z()uint512", method "x()uint512", method "xSlot()uint512"
+    pushbytess 0x9481ffde 0xf8ee0c77 0x3f4abdfd 0x1453c42d // method "xAndZSlots()(uint512,uint512)", method "z()uint512", method "x()uint512", method "xSlot()uint256"
     txna ApplicationArgs 0
     match xAndZSlots z x xSlot
     err
@@ -48,7 +48,7 @@ xAndZSlots:
     <=
     assert // overflow
     b|
-    bytec_3 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     swap
     concat
     log
@@ -70,7 +70,7 @@ z:
     intc_0 // 64
     bzero
     b|
-    bytec 4 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -92,7 +92,7 @@ x:
     intc_0 // 64
     bzero
     b|
-    bytec 4 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -104,7 +104,7 @@ x:
 xSlot:
     load 0
     store 0
-    bytec_3 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_1 // 1
     return

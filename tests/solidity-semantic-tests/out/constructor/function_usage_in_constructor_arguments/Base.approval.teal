@@ -5,10 +5,7 @@
 main:
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 2
-    itob
-    pushbytes "m_a"
-    swap
+    pushbytess "m_a" 0x0000000000000000000000000000000000000000000000000000000000000002
     app_global_put
     pushint 1
     return
@@ -21,7 +18,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x5ed33a7f // method "g()uint512"
+    pushbytes 0x4b2c0376 // method "g()uint256"
     txna ApplicationArgs 0
     match main_g_route@4
     err
@@ -32,7 +29,7 @@ main_g_route@4:
     txn ApplicationID
     &&
     assert
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
     log
     pushint 1
     return

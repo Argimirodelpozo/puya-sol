@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_literal.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64
+    intcblock 1 32
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x4b2b7081 0x66f61d21 // method "double42()uint512", method "doubleABC()byte[]"
+    pushbytess 0x936e3d1e 0x66f61d21 // method "double42()uint256", method "doubleABC()byte[]"
     txna ApplicationArgs 0
     match double42 doubleABC
     err
@@ -54,10 +54,10 @@ double42:
     callsub L.double
     dup
     len
-    intc_1 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_1 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75

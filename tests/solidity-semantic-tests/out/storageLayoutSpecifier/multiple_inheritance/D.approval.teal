@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.D.approval_program() -> uint64:
 main:
-    intcblock 64 0 1
+    intcblock 64 0 1 32
     bytecblock "x" "y" "w" 0x151f7c75 "z"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -35,7 +35,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x9c901fc6 0xf8ee0c77 0x9cea6db3 0x60d68bc1 0x3f4abdfd 0x0574ada2 0x8a846521 0xacb9e794 // method "test()(uint512,uint512,uint512,uint512)", method "z()uint512", method "w()uint512", method "y()uint512", method "x()uint512", method "h(uint512)void", method "g(uint512)void", method "f(uint512)void"
+    pushbytess 0x9c901fc6 0xf8ee0c77 0x9cea6db3 0x60d68bc1 0x3f4abdfd 0x2a49be10 0x88035e71 0x8a37d29b // method "test()(uint512,uint512,uint512,uint512)", method "z()uint512", method "w()uint512", method "y()uint512", method "x()uint512", method "h(uint256)void", method "g(uint256)void", method "f(uint256)void"
     txna ApplicationArgs 0
     match test z w y x h g f
     err
@@ -204,9 +204,9 @@ h:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_3 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.D.h
     intc_2 // 1
     return
@@ -217,9 +217,9 @@ g:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_3 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.D.g
     intc_2 // 1
     return
@@ -230,9 +230,9 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_3 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     bytec_0 // "x"
     swap
     app_global_put
@@ -240,7 +240,7 @@ f:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.D.h(a: bytes) -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.D.h(__arc4_a: bytes) -> void:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.D.h:
     proto 1 0
     frame_dig -1
@@ -260,7 +260,7 @@ f:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.D.g(a: bytes) -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.D.g(__arc4_a: bytes) -> void:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.D.g:
     proto 1 0
     intc_1 // 0

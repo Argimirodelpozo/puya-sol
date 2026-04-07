@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x2d4970c7 0x5ed33a7f // method "f()void", method "g()uint512"
+    pushbytess 0x2d4970c7 0x4b2c0376 // method "f()void", method "g()uint256"
     txna ApplicationArgs 0
     match f g
     err
@@ -101,10 +101,10 @@ g:
     extract 4 0
     dup
     len
-    pushint 64
+    pushint 32
     <=
     assert // overflow
-    pushint 64
+    pushint 32
     bzero
     b|
     pushbytes 0x151f7c75

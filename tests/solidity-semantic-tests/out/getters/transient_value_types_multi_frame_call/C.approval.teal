@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/transient_value_types_multi_frame_call.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 64 24
+    intcblock 0 1 24 6
     bytecblock "x" 0xff 0x0100 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0xf2b65f27
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,9 +26,9 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytes 0xe03b32a4 // method "f()uint512"
+    pushbytes 0x2eb79cf3 // method "f()uint8"
     bytec 7 // method "g()void"
-    pushbytess 0x24d97035 0x3f4abdfd // method "h()uint512", method "x()uint512"
+    pushbytess 0xe5802862 0x3f4abdfd // method "h()uint8", method "x()uint512"
     txna ApplicationArgs 0
     match f g h x
     err
@@ -41,9 +41,9 @@ f:
     app_global_put
     itxn_begin
     global CurrentApplicationAddress
-    intc_3 // 24
+    intc_2 // 24
     extract_uint64
-    pushint 6
+    intc_3 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -74,14 +74,6 @@ f:
     b%
 
 f_ternary_merge@5:
-    dup
-    len
-    intc_2 // 64
-    <=
-    assert // overflow
-    intc_2 // 64
-    bzero
-    b|
     bytec 6 // 0x151f7c75
     swap
     concat
@@ -176,9 +168,9 @@ g_bool_false@4:
 h:
     itxn_begin
     global CurrentApplicationAddress
-    intc_3 // 24
+    intc_2 // 24
     extract_uint64
-    pushint 6
+    intc_3 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -190,9 +182,9 @@ h:
     itxn_submit
     itxn_begin
     global CurrentApplicationAddress
-    intc_3 // 24
+    intc_2 // 24
     extract_uint64
-    pushint 6
+    intc_3 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -223,14 +215,6 @@ h:
     b%
 
 h_ternary_merge@6:
-    dup
-    len
-    intc_2 // 64
-    <=
-    assert // overflow
-    intc_2 // 64
-    bzero
-    b|
     bytec 6 // 0x151f7c75
     swap
     concat
@@ -275,10 +259,10 @@ x:
 x_ternary_merge@4:
     dup
     len
-    intc_2 // 64
+    pushint 64
     <=
     assert // overflow
-    intc_2 // 64
+    pushint 64
     bzero
     b|
     bytec 6 // 0x151f7c75

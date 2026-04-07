@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/code_access_create.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 64
+    intcblock 0 1 32
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xe1fb067c // method "test()uint512"
+    pushbytes 0xc95a9d21 // method "test()uint256"
     txna ApplicationArgs 0
     match main_test_route@4
     err
@@ -51,10 +51,10 @@ test:
     extract 4 0
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     pushbytes 0x151f7c75

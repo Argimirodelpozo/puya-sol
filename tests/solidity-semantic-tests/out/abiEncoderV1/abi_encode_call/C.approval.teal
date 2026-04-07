@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_encode_call.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1
+    intcblock 0 1 32
     bytecblock "x"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x4cee74ae 0x4b4fb052 // method "c(uint512,uint256[])void", method "f()bool"
+    pushbytess 0x66b94fc8 0x4b4fb052 // method "c(uint256,uint256[])void", method "f()bool"
     txna ApplicationArgs 0
     match c f
     err
@@ -37,15 +37,15 @@ c:
     txna ApplicationArgs 1
     dup
     len
-    pushint 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    pushint 32
+    intc_2 // 32
     *
     pushint 2
     +

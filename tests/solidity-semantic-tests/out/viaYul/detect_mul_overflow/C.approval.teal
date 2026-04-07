@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/detect_mul_overflow.sol.C.approval_program() -> uint64:
 main:
-    intcblock 255 64 1 8
+    intcblock 255 32 1 8
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x24402ea4 0x46e27a7c // method "f(uint512,uint512)uint512", method "g(uint64,uint64)uint64"
+    pushbytess 0x2b9082ff 0x46e27a7c // method "f(uint256,uint256)uint256", method "g(uint64,uint64)uint64"
     txna ApplicationArgs 0
     match f g
     err
@@ -34,22 +34,22 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     b*
     dup
     len
-    intc_1 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_1 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75

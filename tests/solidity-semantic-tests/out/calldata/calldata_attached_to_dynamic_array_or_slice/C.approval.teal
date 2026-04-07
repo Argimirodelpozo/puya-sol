@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_attached_to_dynamic_array_or_slice.sol.C.approval_program() -> uint64:
 main:
-    intcblock 64 1 0 32
+    intcblock 32 64 1 0
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xba8ea48e 0xa3d3517c // method "testArray(uint512,uint256[],uint512)(uint512,uint512)", method "testSlice(uint512,uint256[],uint512)(uint512,uint512)"
+    pushbytess 0xf25a8489 0xcff5bc98 // method "testArray(uint256,uint256[],uint256)(uint512,uint512)", method "testSlice(uint256,uint256[],uint256)(uint512,uint512)"
     txna ApplicationArgs 0
     match testArray testSlice
     err
@@ -44,14 +44,14 @@ L.reverse:
 testArray:
     txna ApplicationArgs 1
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    intc_2 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 32
+    intc_0 // 32
     *
     pushint 2
     +
@@ -61,25 +61,25 @@ testArray:
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
     txna ApplicationArgs 3
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     callsub L.reverse
     pop
     swap
     dup
     len
-    intc_0 // 64
+    intc_1 // 64
     <=
     assert // overflow
-    intc_0 // 64
+    intc_1 // 64
     bzero
     swap
     dig 1
     b|
     dig 2
     len
-    intc_0 // 64
+    intc_1 // 64
     <=
     assert // overflow
     cover 2
@@ -89,7 +89,7 @@ testArray:
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
@@ -97,14 +97,14 @@ testArray:
 testSlice:
     txna ApplicationArgs 1
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    intc_2 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 32
+    intc_0 // 32
     *
     pushint 2
     +
@@ -114,26 +114,26 @@ testSlice:
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
     txna ApplicationArgs 3
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     extract 0 0
     callsub L.reverse
     pop
     swap
     dup
     len
-    intc_0 // 64
+    intc_1 // 64
     <=
     assert // overflow
-    intc_0 // 64
+    intc_1 // 64
     bzero
     swap
     dig 1
     b|
     dig 2
     len
-    intc_0 // 64
+    intc_1 // 64
     <=
     assert // overflow
     cover 2
@@ -143,5 +143,5 @@ testSlice:
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return

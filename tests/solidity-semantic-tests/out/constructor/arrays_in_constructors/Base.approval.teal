@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Base.approval_program() -> uint64:
 main:
-    intcblock 1 64 0 32
+    intcblock 1 0 32 64
     bytecblock "m_s" "__ctor_pending" "m_x" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xa560581e 0x5096427e 0xef04bd33 // method "__postInit(uint512,uint8[32][])void", method "part(uint512)address", method "m_x()uint512"
+    pushbytess 0xa560581e 0xc8283ac6 0xef04bd33 // method "__postInit(uint512,uint8[32][])void", method "part(uint256)address", method "m_x()uint512"
     txna ApplicationArgs 0
     match __postInit part m_x
     err
@@ -37,14 +37,14 @@ __postInit:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 64
+    intc_3 // 64
     ==
     assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 32
+    intc_2 // 32
     *
     pushint 2
     +
@@ -56,10 +56,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_2 // 0
+    intc_1 // 0
     app_global_put
     bytec_0 // "m_s"
-    intc_2 // 0
+    intc_1 // 0
     box_create
     pop
     bytec_2 // "m_x"
@@ -80,9 +80,9 @@ part:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     bytec_0 // "m_s"
     box_get
     pushbytes 0x0000
@@ -100,9 +100,9 @@ part:
     swap
     extract 2 0
     swap
-    intc_3 // 32
+    intc_2 // 32
     *
-    intc_3 // 32
+    intc_2 // 32
     extract3 // on error: index access is out of bounds
     bytec_3 // 0x151f7c75
     swap
@@ -114,16 +114,16 @@ part:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/arrays_in_constructors.sol.Base.m_x[routing]() -> void:
 m_x:
-    intc_2 // 0
+    intc_1 // 0
     bytec_2 // "m_x"
     app_global_get_ex
     assert // check m_x exists
     dup
     len
-    intc_1 // 64
+    intc_3 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_3 // 64
     bzero
     b|
     bytec_3 // 0x151f7c75

@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x3acfa4c8 // method "f(bool,uint512)(uint512,uint512)"
+    pushbytes 0x13cf7979 // method "f(bool,uint256)(uint512,uint512)"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -45,9 +45,9 @@ f:
     dup
     cover 2
     len
-    intc_1 // 64
+    pushint 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     dup
     intc_0 // 1
     <=

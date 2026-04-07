@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xacb9e794 0x3f4abdfd // method "f(uint512)void", method "x()uint512"
+    pushbytess 0x8a37d29b 0x3f4abdfd // method "f(uint256)void", method "x()uint512"
     txna ApplicationArgs 0
     match f x
     err
@@ -37,9 +37,9 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 64
+    pushint 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     bytec_0 // "x"
     swap
     app_global_put

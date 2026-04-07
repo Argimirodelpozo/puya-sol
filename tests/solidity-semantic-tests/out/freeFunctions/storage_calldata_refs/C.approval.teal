@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/storage_calldata_refs.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 1 64
+    intcblock 0 32 1 2
     bytecblock "data" "__ctor_pending" 0x0000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x15881492 // method "__postInit()void", method "f(uint512,uint256[])(uint512,uint512)"
+    pushbytess 0xbacc49e3 0x5147181a // method "__postInit()void", method "f(uint256,uint256[])(uint512,uint512)"
     txna ApplicationArgs 0
     match __postInit f
     err
@@ -65,16 +65,16 @@ f:
     dup
     len
     dup
-    intc_3 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     intc_1 // 32
     *
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -98,7 +98,7 @@ f:
     extract_uint16 // on error: invalid array length header
     bytec_0 // "data"
     intc_0 // 0
-    pushint 2
+    intc_3 // 2
     box_extract
     btoi
     bytec_0 // "data"
@@ -122,7 +122,7 @@ f:
     box_replace
     intc_1 // 32
     *
-    pushint 2
+    intc_3 // 2
     +
     bytec_0 // "data"
     swap
@@ -150,10 +150,10 @@ f:
     extract 34 32
     dig 1
     len
-    intc_3 // 64
+    pushint 64
     <=
     assert // overflow
-    intc_3 // 64
+    pushint 64
     bzero
     uncover 2
     dig 1

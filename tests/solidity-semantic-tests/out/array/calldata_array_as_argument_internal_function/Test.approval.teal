@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/calldata_array_as_argument_internal_function.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 64 1 0 8
+    intcblock 32 1 0 8
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x9bd2c6b0 0xfd0739c6 // method "g(uint256[])(uint512,uint512)", method "h(uint256[],uint512,uint512)(uint512,uint512)"
+    pushbytess 0x9bd2c6b0 0x58028f6b // method "g(uint256[])(uint512,uint512)", method "h(uint256[],uint256,uint256)(uint512,uint512)"
     txna ApplicationArgs 0
     match g h
     err
@@ -36,7 +36,7 @@ g:
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    pushint 32
+    intc_0 // 32
     *
     pushint 2
     +
@@ -47,7 +47,7 @@ g:
     itob
     swap
     extract 2 32
-    intc_0 // 64
+    pushint 64
     bzero
     uncover 2
     dig 1
@@ -69,7 +69,7 @@ h:
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 32
+    intc_0 // 32
     *
     pushint 2
     +
@@ -80,15 +80,15 @@ h:
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     intc_3 // 8
     bzero
     dup
@@ -114,7 +114,7 @@ h:
     itob
     swap
     extract 2 32
-    intc_0 // 64
+    pushint 64
     bzero
     uncover 2
     dig 1

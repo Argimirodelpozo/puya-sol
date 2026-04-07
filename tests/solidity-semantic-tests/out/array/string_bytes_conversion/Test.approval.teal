@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_bytes_conversion.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 0 64 8
+    intcblock 1 0 32 8
     bytecblock "__ctor_pending" "b" "s" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0xb3c84e6e 0x85f1356f // method "__postInit()void", method "f(string,uint512)byte[1]", method "l()uint512"
+    pushbytess 0xbacc49e3 0x404428e8 0x0568fbe7 // method "__postInit()void", method "f(string,uint256)byte[1]", method "l()uint256"
     txna ApplicationArgs 0
     match __postInit f l
     err
@@ -67,9 +67,9 @@ f:
     txna ApplicationArgs 2
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     bytec_1 // "b"
     box_del
     pop
@@ -106,7 +106,7 @@ l:
     assert // check s exists
     len
     itob
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_3 // 0x151f7c75

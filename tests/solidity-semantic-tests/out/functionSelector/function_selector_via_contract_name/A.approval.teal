@@ -21,7 +21,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x2d4970c7 0x8a846521 // method "f()void", method "g(uint512)void"
+    pushbytess 0x2d4970c7 0x88035e71 // method "f()void", method "g(uint256)void"
     txna ApplicationArgs 0
     match main_f_route@5 g
     err
@@ -35,8 +35,8 @@ main_f_route@5:
 g:
     txna ApplicationArgs 1
     len
-    pushint 64
+    pushint 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     pushint 1
     return

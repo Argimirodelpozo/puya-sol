@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_boundary_test.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 64
+    intcblock 32 1 0 2
     bytecblock "storageArray" "__ctor_pending" 0x068101
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x26b2fe16 // method "__postInit()void", method "test_boundary_check(uint512,uint512)uint512"
+    pushbytess 0xbacc49e3 0x1dba4875 // method "__postInit()void", method "test_boundary_check(uint256,uint256)uint256"
     txna ApplicationArgs 0
     match __postInit test_boundary_check
     err
@@ -53,15 +53,15 @@ test_boundary_check:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
 
 test_boundary_check_while_top@11:
     pushint 170010
@@ -114,7 +114,7 @@ test_boundary_check_while_top@5:
     bz test_boundary_check_after_while@7
     bytec_0 // "storageArray"
     intc_2 // 0
-    pushint 2
+    intc_3 // 2
     box_extract
     btoi
     intc_1 // 1
@@ -128,7 +128,7 @@ test_boundary_check_while_top@5:
     box_replace
     intc_0 // 32
     *
-    pushint 2
+    intc_3 // 2
     +
     bytec_0 // "storageArray"
     swap
@@ -169,10 +169,10 @@ test_boundary_check_after_while@7:
     extract3 // on error: index access is out of bounds
     dup
     len
-    intc_3 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_0 // 32
     bzero
     b|
     pushbytes 0x151f7c75

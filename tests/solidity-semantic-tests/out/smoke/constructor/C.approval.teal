@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/constructor.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64
+    intcblock 1 32 64
     bytecblock "state" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x7149acee 0xf5d6fb55 0xe24e5b20 // method "balance()uint512", method "update(uint512)void", method "state()uint512"
+    pushbytess 0x76d8a28f 0x70dc8bf7 0xe24e5b20 // method "balance()uint256", method "update(uint256)void", method "state()uint512"
     txna ApplicationArgs 0
     match balance update state
     err
@@ -38,7 +38,7 @@ balance:
     acct_params_get AcctBalance
     pop
     itob
-    intc_1 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
@@ -54,9 +54,9 @@ update:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     bytec_0 // "state"
     swap
     app_global_put
@@ -72,10 +72,10 @@ state:
     assert // check state exists
     dup
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     bytec_1 // 0x151f7c75

@@ -3,10 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/short_circuit.sol.C.approval_program() -> uint64:
 main:
-    intcblock 64 1 8 0
+    intcblock 1 64 32 8
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -22,7 +22,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xf55240eb 0xd53d1249 // method "or(uint512)(bool,uint512)", method "and(uint512)(bool,uint512)"
+    pushbytess 0x7e6a9c02 0xbc2f632b // method "or(uint256)(bool,uint512)", method "and(uint256)(bool,uint512)"
     txna ApplicationArgs 0
     match or and
     err
@@ -33,31 +33,34 @@ or:
     txna ApplicationArgs 1
     dupn 2
     len
-    intc_0 // 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     pushbytes 0x
     b==
-    bnz or_bool_true@3
-    intc_2 // 8
-    itob
-    bury 1
+    bz or_or_contd@2
+    dup
 
 or_bool_true@3:
-    dupn 2
+    dup
     len
-    intc_0 // 64
+    intc_1 // 64
     <=
     assert // overflow
-    intc_0 // 64
+    intc_1 // 64
     bzero
     b|
     pushbytes 0x151f7c7580
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
+
+or_or_contd@2:
+    intc_3 // 8
+    itob
+    b or_bool_true@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/short_circuit.sol.C.and[routing]() -> void:
@@ -65,29 +68,29 @@ and:
     txna ApplicationArgs 1
     dupn 2
     len
-    intc_0 // 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     pushbytes 0x
     b==
     bz and_bool_false@4
-    intc_2 // 8
+    intc_3 // 8
     itob
-    bury 1
-    intc_1 // 1
+    intc_0 // 1
+    swap
 
 and_bool_merge@5:
     pushbytes 0x00
-    intc_3 // 0
-    uncover 2
+    pushint 0
+    uncover 3
     setbit
-    dig 1
+    swap
     dup
     len
-    intc_0 // 64
+    intc_1 // 64
     <=
     assert // overflow
-    intc_0 // 64
+    intc_1 // 64
     bzero
     b|
     concat
@@ -95,9 +98,11 @@ and_bool_merge@5:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 and_bool_false@4:
-    intc_3 // 0
+    dup
+    pushint 0
+    swap
     b and_bool_merge@5

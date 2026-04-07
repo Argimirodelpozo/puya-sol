@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/events_with_same_name_inherited_emit.sol.ClientReceipt.approval_program() -> uint64:
 main:
-    intcblock 1 32
-    bytecblock 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001
+    intcblock 32 1
+    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x0cead8dd 0xb6a1e5be 0x77f45bd5 // method "deposit()uint512", method "deposit(address)uint512", method "deposit(address,uint512)uint512"
+    pushbytess 0x046ef2d5 0x24c1cdc8 0x8bd51f2f // method "deposit()uint256", method "deposit(address)uint256", method "deposit(address,uint256)uint256"
     txna ApplicationArgs 0
     match deposit() deposit(addr) deposit(addr,u256)
     err
@@ -33,9 +33,9 @@ main_after_if_else@2:
 deposit():
     pushbytes 0xed21248c
     log
-    bytec_0 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
@@ -44,16 +44,16 @@ deposit(addr):
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     pushbytes 0x08db9ab9 // method "Deposit(address)"
     swap
     concat
     log
-    bytec_0 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
@@ -62,20 +62,20 @@ deposit(addr,u256):
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
     dup
-    pushint 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    intc_1 // 32
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     b|
     concat
@@ -83,7 +83,7 @@ deposit(addr,u256):
     swap
     concat
     log
-    bytec_0 // 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     log
-    intc_0 // 1
+    intc_1 // 1
     return

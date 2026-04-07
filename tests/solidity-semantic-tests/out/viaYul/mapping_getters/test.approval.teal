@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/mapping_getters.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 64 1 0
+    intcblock 32 1 64 0
     bytecblock "__ctor_pending" "m1" "m2" 0x 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
-    intc_2 // 1
+    intc_1 // 1
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x9af1cffa 0x7a8a3d27 0x54600926 0xa19f8b61 // method "__postInit()void", method "set(uint512,uint512)void", method "set(uint512,uint512,uint512)void", method "m1(uint512)uint512", method "m2(uint512,uint512)uint512"
+    pushbytess 0xbacc49e3 0x76a2115c 0xfa6f9035 0x54600926 0xa19f8b61 // method "__postInit()void", method "set(uint256,uint256)void", method "set(uint256,uint256,uint256)void", method "m1(uint512)uint512", method "m2(uint512,uint512)uint512"
     txna ApplicationArgs 0
     match __postInit set(u256,u256) set(u256,u256,u256) m1 m2
     err
@@ -48,7 +48,7 @@ __postInit:
     intc_3 // 0
     box_create
     pop
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -57,15 +57,15 @@ set(u256,u256):
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     intc_0 // 32
     bzero
     uncover 2
@@ -85,7 +85,7 @@ set(u256,u256):
     pop
     swap
     box_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -94,21 +94,21 @@ set(u256,u256,u256):
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    intc_1 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     intc_0 // 32
     bzero
     dup
@@ -139,7 +139,7 @@ set(u256,u256,u256):
     pop
     swap
     box_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -148,7 +148,7 @@ m1:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 64
+    intc_2 // 64
     ==
     assert // invalid number of bytes for arc4.uint512
     intc_0 // 32
@@ -171,17 +171,17 @@ m1:
     select
     dup
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     bytec 4 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -190,13 +190,13 @@ m2:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 64
+    intc_2 // 64
     ==
     assert // invalid number of bytes for arc4.uint512
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 64
+    intc_2 // 64
     ==
     assert // invalid number of bytes for arc4.uint512
     intc_0 // 32
@@ -230,15 +230,15 @@ m2:
     select
     dup
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     bytec 4 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return

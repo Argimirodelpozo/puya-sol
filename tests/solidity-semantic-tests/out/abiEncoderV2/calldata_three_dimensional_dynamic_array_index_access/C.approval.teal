@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_three_dimensional_dynamic_array_index_access.sol.C.approval_program() -> uint64:
 main:
-    intcblock 2 0 1 32
+    intcblock 2 0 32 1
     bytecblock 0x151f7c75 ""
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 1
+    intc_3 // 1
     return
 
 main_after_if_else@2:
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xb1988e15 0x6a31c6a5 0x6b827ceb 0x690bd125 0xe0762dcd // method "f(uint256[][],uint512,uint512)byte[]", method "g(uint256[][][],uint512,uint512,uint512)byte[]", method "h(uint256[][][1],uint512)byte[]", method "k((uint256[])[][],uint512,uint512)byte[]", method "l((uint256[])[2][2],uint512,uint512)byte[]"
+    pushbytess 0x472ede41 0x292665cb 0xa9a8885a 0x43ca4ebf 0x4cf9788a // method "f(uint256[][],uint256,uint256)byte[]", method "g(uint256[][][],uint256,uint256,uint256)byte[]", method "h(uint256[][][1],uint256)byte[]", method "k((uint256[])[][],uint256,uint256)byte[]", method "l((uint256[])[2][2],uint256,uint256)byte[]"
     txna ApplicationArgs 0
     match f g h k l
     err
@@ -69,13 +69,13 @@ f_for_header@1:
     substring3
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 32
+    intc_2 // 32
     *
     intc_0 // 2
     +
     +
     bury 5
-    intc_2 // 1
+    intc_3 // 1
     +
     bury 1
     b f_for_header@1
@@ -90,16 +90,16 @@ f_after_for@4:
     txna ApplicationArgs 2
     dup
     len
-    pushint 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    pushint 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    intc_3 // 32
+    assert // invalid number of bytes for arc4.uint256
+    intc_2 // 32
     bzero
     pushint 8
     bzero
@@ -132,23 +132,23 @@ f_after_for@4:
     extract_uint16
     dup2
     extract_uint16
-    intc_3 // 32
+    intc_2 // 32
     *
     intc_0 // 2
     +
     extract3
     extract 2 0
     swap
-    intc_3 // 32
+    intc_2 // 32
     *
-    intc_3 // 32
+    intc_2 // 32
     extract3 // on error: index access is out of bounds
     concat
     dup
     len
-    intc_3 // 32
+    intc_2 // 32
     -
-    intc_3 // 32
+    intc_2 // 32
     extract3
     dup
     len
@@ -160,7 +160,7 @@ f_after_for@4:
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return
 
 
@@ -240,13 +240,13 @@ g_for_header@3:
     substring3
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 32
+    intc_2 // 32
     *
     intc_0 // 2
     +
     +
     bury 7
-    intc_2 // 1
+    intc_3 // 1
     +
     bury 7
     b g_for_header@3
@@ -259,7 +259,7 @@ g_after_for@6:
     +
     bury 4
     dup
-    intc_2 // 1
+    intc_3 // 1
     +
     bury 1
     b g_for_header@1
@@ -274,22 +274,22 @@ g_after_for@8:
     txna ApplicationArgs 2
     dup
     len
-    pushint 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    pushint 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
     dup
     len
-    pushint 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    intc_3 // 32
+    assert // invalid number of bytes for arc4.uint256
+    intc_2 // 32
     bzero
     pushint 8
     bzero
@@ -326,7 +326,7 @@ g_after_for@8:
     swap
     extract_uint16
     uncover 4
-    intc_2 // 1
+    intc_3 // 1
     +
     dig 10
     dig 1
@@ -360,23 +360,23 @@ g_after_for@8:
     extract_uint16
     dup2
     extract_uint16
-    intc_3 // 32
+    intc_2 // 32
     *
     intc_0 // 2
     +
     extract3
     extract 2 0
     swap
-    intc_3 // 32
+    intc_2 // 32
     *
-    intc_3 // 32
+    intc_2 // 32
     extract3 // on error: index access is out of bounds
     concat
     dup
     len
-    intc_3 // 32
+    intc_2 // 32
     -
-    intc_3 // 32
+    intc_2 // 32
     extract3
     dup
     len
@@ -388,7 +388,7 @@ g_after_for@8:
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return
 
 
@@ -403,7 +403,7 @@ h:
 
 h_for_header@1:
     dup
-    intc_2 // 1
+    intc_3 // 1
     <
     bz h_after_for@8
     dup
@@ -457,13 +457,13 @@ h_for_header@3:
     substring3
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 32
+    intc_2 // 32
     *
     intc_0 // 2
     +
     +
     bury 5
-    intc_2 // 1
+    intc_3 // 1
     +
     bury 5
     b h_for_header@3
@@ -476,7 +476,7 @@ h_after_for@6:
     +
     bury 2
     dup
-    intc_2 // 1
+    intc_3 // 1
     +
     bury 1
     b h_for_header@1
@@ -492,9 +492,9 @@ h_after_for@8:
     txna ApplicationArgs 2
     dup
     len
-    pushint 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     pushint 8
     bzero
     swap
@@ -527,7 +527,7 @@ h_after_for@8:
     extract_uint16
     dup2
     extract_uint16
-    intc_3 // 32
+    intc_2 // 32
     *
     intc_0 // 2
     +
@@ -542,7 +542,7 @@ h_after_for@8:
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return
 
 
@@ -633,13 +633,13 @@ k_for_header@3:
     substring3
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 32
+    intc_2 // 32
     *
     pushint 4
     +
     +
     bury 7
-    intc_2 // 1
+    intc_3 // 1
     +
     bury 7
     b k_for_header@3
@@ -652,7 +652,7 @@ k_after_for@6:
     +
     bury 4
     dup
-    intc_2 // 1
+    intc_3 // 1
     +
     bury 1
     b k_for_header@1
@@ -667,15 +667,15 @@ k_after_for@8:
     txna ApplicationArgs 2
     dup
     len
-    pushint 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    pushint 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     pushint 8
     bzero
     dup
@@ -703,7 +703,7 @@ k_after_for@8:
     swap
     extract_uint16
     uncover 3
-    intc_2 // 1
+    intc_3 // 1
     +
     dig 8
     dig 1
@@ -733,7 +733,7 @@ k_after_for@8:
     swap
     extract_uint16
     uncover 3
-    intc_2 // 1
+    intc_3 // 1
     +
     uncover 2
     dig 1
@@ -765,7 +765,7 @@ k_after_for@8:
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return
 
 
@@ -838,13 +838,13 @@ l_for_header@3:
     substring3
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 32
+    intc_2 // 32
     *
     pushint 4
     +
     +
     bury 5
-    intc_2 // 1
+    intc_3 // 1
     +
     bury 5
     b l_for_header@3
@@ -855,7 +855,7 @@ l_after_for@6:
     +
     bury 2
     dup
-    intc_2 // 1
+    intc_3 // 1
     +
     bury 1
     b l_for_header@1
@@ -871,15 +871,15 @@ l_after_for@8:
     txna ApplicationArgs 2
     dup
     len
-    pushint 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    pushint 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     pushint 8
     bzero
     dup
@@ -905,7 +905,7 @@ l_after_for@8:
     swap
     extract_uint16
     uncover 2
-    intc_2 // 1
+    intc_3 // 1
     +
     intc_0 // 2
     dig 1
@@ -930,7 +930,7 @@ l_after_for@8:
     swap
     extract_uint16
     uncover 2
-    intc_2 // 1
+    intc_3 // 1
     +
     intc_0 // 2
     dig 1
@@ -962,5 +962,5 @@ l_after_for@8:
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return

@@ -24,7 +24,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xe1fb067c // method "test()uint512"
+    pushbytes 0xc95a9d21 // method "test()uint256"
     txna ApplicationArgs 0
     match main_test_route@4
     err
@@ -48,7 +48,6 @@ test:
     app_global_put
     intc_2 // 2
     itob
-    dup
     bytec_0 // "data"
     box_get
     bytec_1 // 0x000000000000000000000000000000000000000000000000
@@ -131,17 +130,9 @@ test:
     bz test_after_if_else@7
 
 test_if_body@6:
-    dup
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
 
 test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/packed_storage_structs_delete.sol.C.test@14:
-    dup
-    len
-    pushint 64
-    <=
-    assert // overflow
-    pushint 64
-    bzero
-    b|
     pushbytes 0x151f7c75
     swap
     concat
@@ -217,8 +208,7 @@ test_after_if_else@7:
     bz test_after_if_else@13
 
 test_if_body@12:
-    pushint 3
-    itob
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
     b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/packed_storage_structs_delete.sol.C.test@14
 
 test_after_if_else@13:
@@ -233,6 +223,5 @@ test_after_if_else@13:
     bytec_0 // "data"
     bytec_1 // 0x000000000000000000000000000000000000000000000000
     box_put
-    intc_1 // 1
-    itob
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
     b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/packed_storage_structs_delete.sol.C.test@14

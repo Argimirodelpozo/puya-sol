@@ -3,10 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_array_three_dimensional.sol.C.approval_program() -> uint64:
 main:
-    intcblock 2 0 1 64
+    intcblock 2 32 0 1
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 1
+    intc_3 // 1
     return
 
 main_after_if_else@2:
@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x82f9914e // method "f(uint256[][2][],uint512,uint512,uint512)(uint512,uint512,uint512,uint512)"
+    pushbytes 0x6e14a09e // method "f(uint256[][2][],uint256,uint256,uint256)(uint512,uint512,uint512,uint512)"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -33,12 +33,12 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_array_three_dimensional.sol.C.f[routing]() -> void:
 f:
-    intc_1 // 0
+    intc_2 // 0
     pushbytes ""
     dup
     txna ApplicationArgs 1
     dup
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
     cover 2
@@ -49,7 +49,7 @@ f:
     len
     swap
     extract 2 0
-    intc_1 // 0
+    intc_2 // 0
 
 f_for_header@1:
     dup
@@ -73,7 +73,7 @@ f_for_header@1:
     bury 8
     pushint 4
     bury 6
-    intc_1 // 0
+    intc_2 // 0
     bury 7
 
 f_for_header@3:
@@ -98,15 +98,15 @@ f_for_header@3:
     dig 1
     len
     substring3
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 32
+    intc_1 // 32
     *
     intc_0 // 2
     +
     +
     bury 7
-    intc_2 // 1
+    intc_3 // 1
     +
     bury 7
     b f_for_header@3
@@ -117,7 +117,7 @@ f_after_for@6:
     +
     bury 4
     dup
-    intc_2 // 1
+    intc_3 // 1
     +
     bury 1
     b f_for_header@1
@@ -132,21 +132,21 @@ f_after_for@8:
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    intc_3 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
     dup
     len
-    intc_3 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     dig 7
     dup
     cover 3
@@ -178,7 +178,7 @@ f_after_for@8:
     swap
     extract_uint16
     uncover 3
-    intc_2 // 1
+    intc_3 // 1
     +
     uncover 7
     dig 1
@@ -208,13 +208,13 @@ f_after_for@8:
     extract_uint16
     dup2
     extract_uint16
-    pushint 32
+    intc_1 // 32
     *
     intc_0 // 2
     +
     extract3
     dup
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     itob
     uncover 2
@@ -228,11 +228,11 @@ f_after_for@8:
     uncover 2
     extract 2 0
     swap
-    pushint 32
+    intc_1 // 32
     *
-    pushint 32
+    intc_1 // 32
     extract3 // on error: index access is out of bounds
-    intc_3 // 64
+    pushint 64
     bzero
     uncover 3
     dig 1
@@ -245,7 +245,7 @@ f_after_for@8:
     concat
     dig 2
     len
-    intc_3 // 64
+    pushint 64
     <=
     assert // overflow
     cover 2
@@ -255,5 +255,5 @@ f_after_for@8:
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return

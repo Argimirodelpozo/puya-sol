@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x824f3487 0xc1f6ed5b 0xef04bd33 0x5096427e // method "__postInit(uint8[32][],uint512)void", method "f(uint8[32][])uint8[32][]", method "m_x()uint512", method "part(uint512)address"
+    pushbytess 0x824f3487 0xc1f6ed5b 0xef04bd33 0xc8283ac6 // method "__postInit(uint8[32][],uint512)void", method "f(uint8[32][])uint8[32][]", method "m_x()uint512", method "part(uint256)address"
     txna ApplicationArgs 0
     match __postInit f m_x part
     err
@@ -124,9 +124,9 @@ part:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     bytec_0 // "m_s"
     box_get
     pushbytes 0x0000

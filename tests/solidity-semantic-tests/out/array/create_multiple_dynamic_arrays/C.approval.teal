@@ -18,7 +18,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xe03b32a4 // method "f()uint512"
+    pushbytes 0xcd78b354 // method "f()uint256"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -126,8 +126,6 @@ dynamic_array_replace_dynamic_element_after_for@5:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/create_multiple_dynamic_arrays.sol.C.f[routing]() -> void:
 f:
-    intc_0 // 0
-    itob
     pushbytes 0x002a005400560058005a005c005e00600062006400660068006a006c006e00700072007400760078007a007c007e00800082008400860088008a008c008e00900092009400960098009a009c009e00a000a200a400a6000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     bytec_0 // 0x00010000000000000000000000000000000000000000000000000000000000000000
     intc_0 // 0
@@ -496,18 +494,9 @@ f:
     pushbytes 0x58
     b==
     bz f_after_if_else@6
-    pushint 7
-    itob
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
 
 f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/create_multiple_dynamic_arrays.sol.C.f@7:
-    dup
-    len
-    pushint 64
-    <=
-    assert // overflow
-    pushint 64
-    bzero
-    b|
     pushbytes 0x151f7c75
     swap
     concat
@@ -516,5 +505,5 @@ f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tes
     return
 
 f_after_if_else@6:
-    dig 4
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/create_multiple_dynamic_arrays.sol.C.f@7

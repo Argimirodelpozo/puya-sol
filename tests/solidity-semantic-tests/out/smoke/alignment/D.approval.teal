@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/alignment.sol.D.approval_program() -> uint64:
 main:
-    intcblock 0 1 64 6
+    intcblock 0 1 32 64
     bytecblock 0x151f7c75 "stateBool" "stateDecimal" "stateBytes" 0x0a8101
     txn ApplicationID
     bnz main_after_if_else@2
@@ -34,7 +34,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x26d001f3 0xdf441576 0x54ab7f9a 0x19936773 0x6a2b8873 // method "internalStateDecimal()uint512", method "update(bool,uint512,byte[32])(bool,uint512,byte[32])", method "stateBool()bool", method "stateDecimal()uint512", method "stateBytes()byte[32]"
+    pushbytess 0x8f266e15 0x89c1f8b8 0x54ab7f9a 0x19936773 0x6a2b8873 // method "internalStateDecimal()uint256", method "update(bool,uint256,byte[32])(bool,uint512,byte[32])", method "stateBool()bool", method "stateDecimal()uint512", method "stateBytes()byte[32]"
     txna ApplicationArgs 0
     match internalStateDecimal update stateBool stateDecimal stateBytes
     err
@@ -43,7 +43,7 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/alignment.sol.D.internalStateDecimal[routing]() -> void:
 internalStateDecimal:
     itxn_begin
-    intc_3 // 6
+    pushint 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field Fee
@@ -70,7 +70,7 @@ internalStateDecimal:
     itxn_begin
     pushint 24
     extract_uint64
-    intc_3 // 6
+    pushint 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -84,10 +84,10 @@ internalStateDecimal:
     extract 4 0
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -111,13 +111,13 @@ update:
     txna ApplicationArgs 2
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    pushint 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     dig 2
@@ -147,10 +147,10 @@ update:
     setbit
     dig 1
     len
-    intc_2 // 64
+    intc_3 // 64
     <=
     assert // overflow
-    intc_2 // 64
+    intc_3 // 64
     bzero
     uncover 2
     b|
@@ -191,10 +191,10 @@ stateDecimal:
     assert // check stateDecimal exists
     dup
     len
-    intc_2 // 64
+    intc_3 // 64
     <=
     assert // overflow
-    intc_2 // 64
+    intc_3 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75

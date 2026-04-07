@@ -33,10 +33,7 @@ main:
     bytec 4 // "c"
     pushbytes 0x33
     app_global_put
-    pushint 23
-    itob
-    pushbytes "d"
-    swap
+    pushbytess "d" 0x0000000000000000000000000000000000000000000000000000000000000017
     app_global_put
     intc_1 // 0
     bytec_2 // "b"
@@ -91,7 +88,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xeb34bdcf 0x03ab7b01 0x18f27a01 0x1fbe76a6 0xa5f7cbb2 0x978d552f 0xad382f9d 0xf86a3d56 0xf3d5e499 // method "d()uint512", method "e()uint512", method "b_a()uint512", method "b_b()uint512", method "b_c()uint512", method "a()uint512", method "b()uint512", method "c()uint512", method "f(uint512)uint512"
+    pushbytess 0xeb34bdcf 0x03ab7b01 0x18f27a01 0x1fbe76a6 0xa5f7cbb2 0x978d552f 0xad382f9d 0xf86a3d56 0x1928cd24 // method "d()uint512", method "e()uint512", method "b_a()uint512", method "b_b()uint512", method "b_c()uint512", method "a()uint512", method "b()uint512", method "c()uint512", method "f(uint256)uint256"
     txna ApplicationArgs 0
     match d e b_a b_b b_c a b c f
     err
@@ -278,15 +275,15 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    pushint 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     pushbytes 0x03
     b*
     bytec 4 // "c"
     swap
     app_global_put
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000017
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000017
     log
     intc_2 // 1
     return

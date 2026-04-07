@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64 8 0
+    intcblock 1 8 32 64
     bytecblock "testArray" "__ctor_pending" 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x48a85013 0x2dd6bb0c 0x1bba4b06 0x2bbf0199 0x58d0419e 0x59d174ea // method "__postInit()void", method "getArrayDataAreaSlot()uint512", method "getCanarySlot()uint512", method "checkSlots()(uint512,uint512,uint512,uint512,uint512)", method "fillArray()void", method "deleteArray()void", method "canaryValue()uint512"
+    pushbytess 0xbacc49e3 0x4fa0465e 0xa3e4ca32 0x1bba4b06 0x2bbf0199 0x58d0419e 0xc67bf355 // method "__postInit()void", method "getArrayDataAreaSlot()uint256", method "getCanarySlot()uint256", method "checkSlots()(uint512,uint512,uint512,uint512,uint512)", method "fillArray()void", method "deleteArray()void", method "canaryValue()uint256"
     txna ApplicationArgs 0
     match __postInit getArrayDataAreaSlot getCanarySlot checkSlots fillArray deleteArray canaryValue
     err
@@ -38,10 +38,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_3 // 0
+    pushint 0
     app_global_put
     bytec_0 // "testArray"
-    intc_3 // 0
+    pushint 0
     box_create
     pop
     intc_0 // 1
@@ -51,14 +51,6 @@ __postInit:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.getArrayDataAreaSlot[routing]() -> void:
 getArrayDataAreaSlot:
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.getArrayDataAreaSlot
-    dup
-    len
-    intc_1 // 64
-    <=
-    assert // overflow
-    intc_1 // 64
-    bzero
-    b|
     bytec_2 // 0x151f7c75
     swap
     concat
@@ -74,10 +66,10 @@ getCanarySlot:
     b+
     dup
     len
-    intc_1 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -92,14 +84,14 @@ getCanarySlot:
 checkSlots:
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.getArrayDataAreaSlot
     load 0
-    intc_2 // 8
+    intc_1 // 8
     bzero
     dup
     dig 3
     concat
     dup
     len
-    intc_2 // 8
+    intc_1 // 8
     -
     extract_uint64
     callsub __storage_read
@@ -113,7 +105,7 @@ checkSlots:
     concat
     dup
     len
-    intc_2 // 8
+    intc_1 // 8
     -
     extract_uint64
     callsub __storage_read
@@ -127,7 +119,7 @@ checkSlots:
     concat
     dup
     len
-    intc_2 // 8
+    intc_1 // 8
     -
     extract_uint64
     callsub __storage_read
@@ -141,7 +133,7 @@ checkSlots:
     concat
     dup
     len
-    intc_2 // 8
+    intc_1 // 8
     -
     extract_uint64
     callsub __storage_read
@@ -153,17 +145,17 @@ checkSlots:
     itob
     dig 4
     len
-    intc_1 // 64
+    intc_3 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_3 // 64
     bzero
     uncover 5
     dig 1
     b|
     dig 5
     len
-    intc_1 // 64
+    intc_3 // 64
     <=
     assert // overflow
     uncover 5
@@ -172,7 +164,7 @@ checkSlots:
     concat
     dig 4
     len
-    intc_1 // 64
+    intc_3 // 64
     <=
     assert // overflow
     uncover 4
@@ -181,7 +173,7 @@ checkSlots:
     concat
     dig 3
     len
-    intc_1 // 64
+    intc_3 // 64
     <=
     assert // overflow
     uncover 3
@@ -201,7 +193,7 @@ checkSlots:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.fillArray[routing]() -> void:
 fillArray:
-    intc_3 // 0
+    pushint 0
     itob
 
 fillArray_while_top@2:
@@ -214,7 +206,7 @@ fillArray_while_top@2:
     pushbytes 0x
     cover 2
     select
-    intc_2 // 8
+    intc_1 // 8
     bzero
     dig 2
     pushbytes 0x01
@@ -224,7 +216,7 @@ fillArray_while_top@2:
     concat
     dup
     len
-    intc_2 // 8
+    intc_1 // 8
     -
     extract_uint64
     pushint 255
@@ -263,7 +255,7 @@ canaryValue:
     bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
     store 0
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
@@ -283,6 +275,9 @@ canaryValue:
     pushbytes 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
     b==
     assert
+    intc_2 // 32
+    bzero
+    b|
     retsub
 
 
@@ -291,16 +286,16 @@ __storage_read:
     proto 1 1
     frame_dig -1
     bnz __storage_read_else_body@2
-    pushint 32
+    intc_2 // 32
     bzero
     bytec_0 // "testArray"
     app_global_get
     concat
     dup
     len
-    pushint 32
+    intc_2 // 32
     -
-    pushint 32
+    intc_2 // 32
     extract3
     retsub
 

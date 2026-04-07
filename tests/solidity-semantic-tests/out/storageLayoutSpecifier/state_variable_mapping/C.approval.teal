@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x1b2fb4f5 0x10db82ae // method "__postInit()void", method "setup()void", method "open(uint512)string"
+    pushbytess 0xbacc49e3 0x1b2fb4f5 0x83cd9325 // method "__postInit()void", method "setup()void", method "open(uint256)string"
     txna ApplicationArgs 0
     match __postInit setup open
     err
@@ -103,9 +103,9 @@ open:
     txna ApplicationArgs 1
     dup
     len
-    pushint 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     intc_2 // 32
     bzero
     swap

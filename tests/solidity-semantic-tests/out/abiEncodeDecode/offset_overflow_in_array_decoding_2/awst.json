@@ -461,9 +461,12 @@
         },
         "args": [],
         "return_type": {
-          "_type": "WType",
-          "name": "biguint",
-          "immutable": true
+          "_type": "ARC4UIntN",
+          "name": "arc4.uint256",
+          "immutable": true,
+          "n": 256,
+          "arc4_alias": null,
+          "source_location": null
         },
         "body": {
           "_type": "Block",
@@ -2267,7 +2270,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "BigUIntBinaryOperation",
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_2.sol",
                   "line": 814,
@@ -2277,16 +2280,19 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "biguint",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "left": {
-                  "_type": "ARC4Decode",
+                "value": {
+                  "_type": "BigUIntBinaryOperation",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_2.sol",
                     "line": 814,
-                    "end_line": 827,
+                    "end_line": 843,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
@@ -2296,8 +2302,8 @@
                     "name": "biguint",
                     "immutable": true
                   },
-                  "value": {
-                    "_type": "IndexExpression",
+                  "left": {
+                    "_type": "ARC4Decode",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_2.sol",
                       "line": 814,
@@ -2307,78 +2313,112 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "ARC4UIntN",
-                      "name": "arc4.uint256",
-                      "immutable": true,
-                      "n": 256,
-                      "arc4_alias": null,
-                      "source_location": null
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
                     },
-                    "base": {
+                    "value": {
                       "_type": "IndexExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_2.sol",
                         "line": 814,
-                        "end_line": 824,
+                        "end_line": 827,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "ARC4DynamicArray",
-                        "name": "arc4.dynamic_array<arc4.uint256>",
-                        "immutable": false,
-                        "element_type": {
-                          "_type": "ARC4UIntN",
-                          "name": "arc4.uint256",
-                          "immutable": true,
-                          "n": 256,
-                          "arc4_alias": null,
-                          "source_location": null
-                        },
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint256",
+                        "immutable": true,
+                        "n": 256,
                         "arc4_alias": null,
                         "source_location": null
                       },
                       "base": {
-                        "_type": "VarExpression",
+                        "_type": "IndexExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_2.sol",
                           "line": 814,
-                          "end_line": 821,
+                          "end_line": 824,
                           "comment_lines": 0,
                           "column": null,
                           "end_column": null
                         },
                         "wtype": {
                           "_type": "ARC4DynamicArray",
-                          "name": "arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>",
+                          "name": "arc4.dynamic_array<arc4.uint256>",
                           "immutable": false,
                           "element_type": {
-                            "_type": "ARC4DynamicArray",
-                            "name": "arc4.dynamic_array<arc4.uint256>",
-                            "immutable": false,
-                            "element_type": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint256",
-                              "immutable": true,
-                              "n": 256,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint256",
+                            "immutable": true,
+                            "n": 256,
                             "arc4_alias": null,
                             "source_location": null
                           },
                           "arc4_alias": null,
                           "source_location": null
                         },
-                        "name": "decoded"
+                        "base": {
+                          "_type": "VarExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_2.sol",
+                            "line": 814,
+                            "end_line": 821,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "ARC4DynamicArray",
+                            "name": "arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>",
+                            "immutable": false,
+                            "element_type": {
+                              "_type": "ARC4DynamicArray",
+                              "name": "arc4.dynamic_array<arc4.uint256>",
+                              "immutable": false,
+                              "element_type": {
+                                "_type": "ARC4UIntN",
+                                "name": "arc4.uint256",
+                                "immutable": true,
+                                "n": 256,
+                                "arc4_alias": null,
+                                "source_location": null
+                              },
+                              "arc4_alias": null,
+                              "source_location": null
+                            },
+                            "arc4_alias": null,
+                            "source_location": null
+                          },
+                          "name": "decoded"
+                        },
+                        "index": {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_2.sol",
+                            "line": 822,
+                            "end_line": 823,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 0,
+                          "teal_alias": null
+                        }
                       },
                       "index": {
                         "_type": "IntegerConstant",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_2.sol",
-                          "line": 822,
-                          "end_line": 823,
+                          "line": 825,
+                          "end_line": 826,
                           "comment_lines": 0,
                           "column": null,
                           "end_column": null
@@ -2392,45 +2432,11 @@
                         "teal_alias": null
                       }
                     },
-                    "index": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_2.sol",
-                        "line": 825,
-                        "end_line": 826,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
+                    "error_message": null
                   },
-                  "error_message": null
-                },
-                "op": "+",
-                "right": {
-                  "_type": "ARC4Decode",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_2.sol",
-                    "line": 830,
-                    "end_line": 843,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
-                  },
-                  "value": {
-                    "_type": "IndexExpression",
+                  "op": "+",
+                  "right": {
+                    "_type": "ARC4Decode",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_2.sol",
                       "line": 830,
@@ -2440,78 +2446,112 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "ARC4UIntN",
-                      "name": "arc4.uint256",
-                      "immutable": true,
-                      "n": 256,
-                      "arc4_alias": null,
-                      "source_location": null
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
                     },
-                    "base": {
+                    "value": {
                       "_type": "IndexExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_2.sol",
                         "line": 830,
-                        "end_line": 840,
+                        "end_line": 843,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "ARC4DynamicArray",
-                        "name": "arc4.dynamic_array<arc4.uint256>",
-                        "immutable": false,
-                        "element_type": {
-                          "_type": "ARC4UIntN",
-                          "name": "arc4.uint256",
-                          "immutable": true,
-                          "n": 256,
-                          "arc4_alias": null,
-                          "source_location": null
-                        },
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint256",
+                        "immutable": true,
+                        "n": 256,
                         "arc4_alias": null,
                         "source_location": null
                       },
                       "base": {
-                        "_type": "VarExpression",
+                        "_type": "IndexExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_2.sol",
                           "line": 830,
-                          "end_line": 837,
+                          "end_line": 840,
                           "comment_lines": 0,
                           "column": null,
                           "end_column": null
                         },
                         "wtype": {
                           "_type": "ARC4DynamicArray",
-                          "name": "arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>",
+                          "name": "arc4.dynamic_array<arc4.uint256>",
                           "immutable": false,
                           "element_type": {
-                            "_type": "ARC4DynamicArray",
-                            "name": "arc4.dynamic_array<arc4.uint256>",
-                            "immutable": false,
-                            "element_type": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint256",
-                              "immutable": true,
-                              "n": 256,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint256",
+                            "immutable": true,
+                            "n": 256,
                             "arc4_alias": null,
                             "source_location": null
                           },
                           "arc4_alias": null,
                           "source_location": null
                         },
-                        "name": "decoded"
+                        "base": {
+                          "_type": "VarExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_2.sol",
+                            "line": 830,
+                            "end_line": 837,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "ARC4DynamicArray",
+                            "name": "arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>",
+                            "immutable": false,
+                            "element_type": {
+                              "_type": "ARC4DynamicArray",
+                              "name": "arc4.dynamic_array<arc4.uint256>",
+                              "immutable": false,
+                              "element_type": {
+                                "_type": "ARC4UIntN",
+                                "name": "arc4.uint256",
+                                "immutable": true,
+                                "n": 256,
+                                "arc4_alias": null,
+                                "source_location": null
+                              },
+                              "arc4_alias": null,
+                              "source_location": null
+                            },
+                            "arc4_alias": null,
+                            "source_location": null
+                          },
+                          "name": "decoded"
+                        },
+                        "index": {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_2.sol",
+                            "line": 838,
+                            "end_line": 839,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 1,
+                          "teal_alias": null
+                        }
                       },
                       "index": {
                         "_type": "IntegerConstant",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_2.sol",
-                          "line": 838,
-                          "end_line": 839,
+                          "line": 841,
+                          "end_line": 842,
                           "comment_lines": 0,
                           "column": null,
                           "end_column": null
@@ -2521,31 +2561,14 @@
                           "name": "uint64",
                           "immutable": true
                         },
-                        "value": 1,
+                        "value": 0,
                         "teal_alias": null
                       }
                     },
-                    "index": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/offset_overflow_in_array_decoding_2.sol",
-                        "line": 841,
-                        "end_line": 842,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
-                    }
-                  },
-                  "error_message": null
-                }
+                    "error_message": null
+                  }
+                },
+                "error_message": null
               }
             }
           ],

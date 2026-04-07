@@ -615,9 +615,12 @@
           }
         ],
         "return_type": {
-          "_type": "WType",
-          "name": "biguint",
-          "immutable": true
+          "_type": "ARC4UIntN",
+          "name": "arc4.uint256",
+          "immutable": true,
+          "n": 256,
+          "arc4_alias": null,
+          "source_location": null
         },
         "body": {
           "_type": "Block",
@@ -921,7 +924,7 @@
                       "end_column": null
                     },
                     "value": {
-                      "_type": "AppStateExpression",
+                      "_type": "ARC4Encode",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/state_smoke_test.sol",
                         "line": 150,
@@ -931,12 +934,15 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint256",
+                        "immutable": true,
+                        "n": 256,
+                        "arc4_alias": null,
+                        "source_location": null
                       },
-                      "key": {
-                        "_type": "BytesConstant",
+                      "value": {
+                        "_type": "AppStateExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/state_smoke_test.sol",
                           "line": 150,
@@ -947,13 +953,30 @@
                         },
                         "wtype": {
                           "_type": "WType",
-                          "name": "state_key",
+                          "name": "biguint",
                           "immutable": true
                         },
-                        "value": "c42IFWib",
-                        "encoding": "utf8"
+                        "key": {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/state_smoke_test.sol",
+                            "line": 150,
+                            "end_line": 156,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "state_key",
+                            "immutable": true
+                          },
+                          "value": "c42IFWib",
+                          "encoding": "utf8"
+                        },
+                        "exists_assertion_message": "check value1 exists"
                       },
-                      "exists_assertion_message": "check value1 exists"
+                      "error_message": null
                     }
                   }
                 ],
@@ -982,7 +1005,7 @@
                       "end_column": null
                     },
                     "value": {
-                      "_type": "AppStateExpression",
+                      "_type": "ARC4Encode",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/state_smoke_test.sol",
                         "line": 178,
@@ -992,12 +1015,15 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint256",
+                        "immutable": true,
+                        "n": 256,
+                        "arc4_alias": null,
+                        "source_location": null
                       },
-                      "key": {
-                        "_type": "BytesConstant",
+                      "value": {
+                        "_type": "AppStateExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/state_smoke_test.sol",
                           "line": 178,
@@ -1008,13 +1034,30 @@
                         },
                         "wtype": {
                           "_type": "WType",
-                          "name": "state_key",
+                          "name": "biguint",
                           "immutable": true
                         },
-                        "value": "c42IFWik",
-                        "encoding": "utf8"
+                        "key": {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/state_smoke_test.sol",
+                            "line": 178,
+                            "end_line": 184,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "state_key",
+                            "immutable": true
+                          },
+                          "value": "c42IFWik",
+                          "encoding": "utf8"
+                        },
+                        "exists_assertion_message": "check value2 exists"
                       },
-                      "exists_assertion_message": "check value2 exists"
+                      "error_message": null
                     }
                   }
                 ],
@@ -1086,7 +1129,7 @@
           },
           {
             "_type": "SubroutineArgument",
-            "name": "value",
+            "name": "__arc4_value",
             "source_location": {
               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/state_smoke_test.sol",
               "line": 222,
@@ -1096,9 +1139,12 @@
               "end_column": null
             },
             "wtype": {
-              "_type": "WType",
-              "name": "biguint",
-              "immutable": true
+              "_type": "ARC4UIntN",
+              "name": "arc4.uint256",
+              "immutable": true,
+              "n": 256,
+              "arc4_alias": null,
+              "source_location": null
             }
           }
         ],
@@ -1277,6 +1323,71 @@
                   "value": 255,
                   "teal_alias": null
                 }
+              }
+            },
+            {
+              "_type": "AssignmentStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/state_smoke_test.sol",
+                "line": 222,
+                "end_line": 235,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "target": {
+                "_type": "VarExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/state_smoke_test.sol",
+                  "line": 222,
+                  "end_line": 235,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
+                },
+                "name": "value"
+              },
+              "value": {
+                "_type": "ARC4Decode",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/state_smoke_test.sol",
+                  "line": 222,
+                  "end_line": 235,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
+                },
+                "value": {
+                  "_type": "VarExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/state_smoke_test.sol",
+                    "line": 222,
+                    "end_line": 235,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
+                  },
+                  "name": "__arc4_value"
+                },
+                "error_message": null
               }
             },
             {

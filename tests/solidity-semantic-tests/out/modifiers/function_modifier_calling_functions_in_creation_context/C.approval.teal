@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_calling_functions_in_creation_context.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 64
+    intcblock 1 0 32
     bytecblock "data"
     txn ApplicationID
     bnz main_after_if_else@5
@@ -28,7 +28,7 @@ main_after_if_else@5:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x7abeaa76 0xb7ecd9ae 0xe1ff2398 0xe54503a7 0xa7681aa9 // method "f3()void", method "f4()void", method "f1()void", method "f2()void", method "getData()uint512"
+    pushbytess 0x7abeaa76 0xb7ecd9ae 0xe1ff2398 0xe54503a7 0xe1e64a74 // method "f3()void", method "f4()void", method "f1()void", method "f2()void", method "getData()uint256"
     txna ApplicationArgs 0
     match f3 f4 f1 f2 getData
     err
@@ -78,10 +78,10 @@ getData:
     assert // check data exists
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     pushbytes 0x151f7c75

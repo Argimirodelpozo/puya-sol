@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/gas_and_value_basic.sol.test.approval_program() -> uint64:
 main:
-    intcblock 0 1 6 64
+    intcblock 0 1 6 32
     bytecblock "h" 0x0a8101 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@4
@@ -51,7 +51,7 @@ main_after_if_else@4:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xe27f71a3 0xd1b41813 0x0fd4ef80 // method "sendAmount(uint512)uint512", method "outOfGas()bool", method "checkState()(bool,uint512)"
+    pushbytess 0xafa0ab92 0xd1b41813 0x0fd4ef80 // method "sendAmount(uint256)uint256", method "outOfGas()bool", method "checkState()(bool,uint512)"
     txna ApplicationArgs 0
     match sendAmount outOfGas checkState
     err
@@ -61,9 +61,9 @@ main_after_if_else@4:
 sendAmount:
     txna ApplicationArgs 1
     len
-    intc_3 // 64
+    intc_3 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     itxn_begin
     intc_0 // 0
     bytec_0 // "h"
@@ -85,10 +85,10 @@ sendAmount:
     extract 4 0
     dup
     len
-    intc_3 // 64
+    intc_3 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_3 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -157,7 +157,7 @@ checkState:
     intc_0 // 0
     uncover 3
     setbit
-    intc_3 // 64
+    pushint 64
     bzero
     uncover 2
     b|

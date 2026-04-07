@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/require_error_function_pointer_parameter.sol.C.approval_program() -> uint64:
 main:
-    intcblock 64 1
+    intcblock 32 1
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -22,7 +22,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xa28910b0 0x2d4970c7 // method "e(uint512)uint512", method "f()void"
+    pushbytess 0xc7619fcb 0x2d4970c7 // method "e(uint256)uint256", method "f()void"
     txna ApplicationArgs 0
     match e main_f_route@6
     err
@@ -37,13 +37,13 @@ e:
     dup
     len
     dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    intc_0 // 64
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     pushbytes 0x151f7c75

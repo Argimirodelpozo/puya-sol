@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_bytes_types_v2.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 2 65535 64
+    intcblock 1 65535 258
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x9a54d0b5 // method "f(byte[2],uint64)uint512"
+    pushbytes 0xba3c900b // method "f(byte[2],uint64)uint256"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -36,7 +36,7 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 2
+    pushint 2
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 2>
     txna ApplicationArgs 2
@@ -47,27 +47,18 @@ f:
     assert // invalid number of bytes for arc4.uint64
     btoi
     dup
-    intc_2 // 65535
+    intc_1 // 65535
     <=
     assert // ABI validation
-    intc_2 // 65535
+    intc_1 // 65535
     &
     swap
     pushbytes "ab"
     !=
     bz f_after_if_else@3
-    intc_0 // 1
-    itob
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
 
 f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_bytes_types_v2.sol.C.f@8:
-    dup
-    len
-    intc_3 // 64
-    <=
-    assert // overflow
-    intc_3 // 64
-    bzero
-    b|
     pushbytes 0x151f7c75
     swap
     concat
@@ -77,11 +68,10 @@ f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tes
 
 f_after_if_else@3:
     dup
-    pushint 258
+    intc_2 // 258
     !=
     bz f_after_if_else@5
-    intc_1 // 2
-    itob
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
     b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_bytes_types_v2.sol.C.f@8
 
 f_after_if_else@5:
@@ -89,14 +79,12 @@ f_after_if_else@5:
     itob
     extract 5 3
     btoi
-    pushint 258
+    intc_2 // 258
     !=
     bz f_after_if_else@7
-    pushint 3
-    itob
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
     b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_bytes_types_v2.sol.C.f@8
 
 f_after_if_else@7:
-    pushint 0
-    itob
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/cleanup_bytes_types_v2.sol.C.f@8

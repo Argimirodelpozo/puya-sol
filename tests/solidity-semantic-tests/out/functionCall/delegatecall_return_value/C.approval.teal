@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/delegatecall_return_value.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64 0
+    intcblock 1 32 0
     bytecblock "value" 0x 0x151f7c758000030000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xd5fa9f39 0x1337d041 0x2dde089f 0xa0d1025d 0x8bfbfc88 // method "set(uint512)void", method "get()uint512", method "get_delegated()(bool,byte[])", method "assert0()void", method "assert0_delegated()(bool,byte[])"
+    pushbytess 0x7cb116cd 0xf08d7860 0x2dde089f 0xa0d1025d 0x8bfbfc88 // method "set(uint256)void", method "get()uint256", method "get_delegated()(bool,byte[])", method "assert0()void", method "assert0_delegated()(bool,byte[])"
     txna ApplicationArgs 0
     match set get main_get_delegated_route@7 assert0 main_assert0_delegated_route@9
     err
@@ -49,9 +49,9 @@ set:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     bytec_0 // "value"
     swap
     app_global_put
@@ -67,10 +67,10 @@ get:
     assert // check value exists
     dup
     len
-    intc_1 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_1 // 64
+    intc_1 // 32
     bzero
     b|
     pushbytes 0x151f7c75

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/exp_associativity.sol.C.approval_program() -> uint64:
 main:
-    intcblock 64 0 1
+    intcblock 32 0 1
     bytecblock 0x01 0x 0x02 0x151f7c75 0x00
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x6c98cc3d 0x641ae5cf 0x34722635 0xee8172bd 0x7266132d // method "test_hardcode1(uint512,uint512,uint512)uint512", method "test_hardcode2(uint512,uint512,uint512,uint512)uint512", method "test_invariant(uint512,uint512,uint512)bool", method "test_literal_mix(uint512,uint512)bool", method "test_other_operators(uint512,uint512)bool"
+    pushbytess 0x9cb98744 0xd85b32d0 0xf2e21b05 0xf457c316 0x22f3e79b // method "test_hardcode1(uint256,uint256,uint256)uint256", method "test_hardcode2(uint256,uint256,uint256,uint256)uint256", method "test_invariant(uint256,uint256,uint256)bool", method "test_literal_mix(uint256,uint256)bool", method "test_other_operators(uint256,uint256)bool"
     txna ApplicationArgs 0
     match test_hardcode1 test_hardcode2 test_invariant test_literal_mix test_other_operators
     err
@@ -36,21 +36,21 @@ test_hardcode1:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     bytec_0 // 0x01
     cover 2
 
@@ -120,10 +120,10 @@ test_hardcode1_after_while@11:
     dig 4
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec_3 // 0x151f7c75
@@ -141,27 +141,27 @@ test_hardcode2:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     bytec_0 // 0x01
     cover 2
 
@@ -266,10 +266,10 @@ test_hardcode2_after_while@16:
     dig 5
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec_3 // 0x151f7c75
@@ -287,23 +287,23 @@ test_invariant:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dupn 2
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     cover 2
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     bytec_0 // 0x01
     cover 2
 
@@ -462,15 +462,15 @@ test_literal_mix:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dupn 2
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     bytec_0 // 0x01
     swap
     bytec_2 // 0x02
@@ -927,17 +927,17 @@ test_other_operators:
     txna ApplicationArgs 1
     dupn 2
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     cover 2
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     bytec_0 // 0x01
     cover 2
 

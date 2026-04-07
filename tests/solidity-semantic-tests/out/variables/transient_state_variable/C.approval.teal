@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 64
+    intcblock 1 0 32 64
     bytecblock "x" 0x2d4970c7 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -27,7 +27,7 @@ main_after_if_else@2:
     txn ApplicationID
     assert
     bytec_1 // method "f()void"
-    pushbytess 0x5ed33a7f 0x24d97035 0x3f4abdfd // method "g()uint512", method "h()uint512", method "x()uint512"
+    pushbytess 0x4b2c0376 0xafedb2e5 0x3f4abdfd // method "g()uint256", method "h()uint256", method "x()uint512"
     txna ApplicationArgs 0
     match f g h x
     err
@@ -65,7 +65,7 @@ g:
     bytec_1 // method "f()void"
     itxn_field ApplicationArgs
     itxn_submit
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
@@ -79,10 +79,10 @@ h:
     assert // check x exists
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -101,10 +101,10 @@ x:
     assert // check x exists
     dup
     len
-    intc_2 // 64
+    intc_3 // 64
     <=
     assert // overflow
-    intc_2 // 64
+    intc_3 // 64
     bzero
     b|
     bytec_2 // 0x151f7c75

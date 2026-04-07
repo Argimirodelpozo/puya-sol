@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_with_garbage.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 64
+    intcblock 32 1 0 2
     bytecblock 0x151f7c75 "aTmp" "__ctor_pending" "bTmp"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x55f1e5e4 0x29467590 0x4c608446 0x6c6bfa09 0x128772ff 0x2df1c367 0x912c722b 0x6992cec7 // method "__postInit()void", method "f_memory(uint256[])uint256[]", method "f_encode(uint256[])byte[]", method "f_storage(uint256[])byte[]", method "f_index(uint256[],uint512)uint512", method "g_memory(uint256[],uint256[2])(uint256[],uint256[2])", method "g_encode(uint256[],uint256[2])byte[]", method "g_storage(uint256[],uint256[2])byte[]", method "g_index(uint256[],uint256[2],uint512)(uint512,uint512)"
+    pushbytess 0xbacc49e3 0x55f1e5e4 0x29467590 0x4c608446 0x208819f3 0x128772ff 0x2df1c367 0x912c722b 0xceb67ae4 // method "__postInit()void", method "f_memory(uint256[])uint256[]", method "f_encode(uint256[])byte[]", method "f_storage(uint256[])byte[]", method "f_index(uint256[],uint256)uint256", method "g_memory(uint256[],uint256[2])(uint256[],uint256[2])", method "g_encode(uint256[],uint256[2])byte[]", method "g_storage(uint256[],uint256[2])byte[]", method "g_index(uint256[],uint256[2],uint256)(uint512,uint512)"
     txna ApplicationArgs 0
     match __postInit f_memory f_encode f_storage f_index g_memory g_encode g_storage g_index
     err
@@ -59,7 +59,7 @@ f_memory:
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -81,7 +81,7 @@ f_encode:
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -109,7 +109,7 @@ f_storage:
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -143,7 +143,7 @@ f_index:
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -152,9 +152,9 @@ f_index:
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     pushint 8
     bzero
     swap
@@ -173,10 +173,10 @@ f_index:
     extract3 // on error: index access is out of bounds
     dup
     len
-    intc_3 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_0 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -195,7 +195,7 @@ g_memory:
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -204,7 +204,7 @@ g_memory:
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 64
+    pushint 64
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
     pushbytes 0x0042
@@ -228,7 +228,7 @@ g_encode:
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -237,7 +237,7 @@ g_encode:
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 64
+    pushint 64
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
     dup
@@ -268,7 +268,7 @@ g_storage:
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -277,7 +277,7 @@ g_storage:
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 64
+    pushint 64
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
     bytec_1 // "aTmp"
@@ -317,7 +317,7 @@ g_index:
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -326,15 +326,15 @@ g_index:
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 64
+    pushint 64
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
     txna ApplicationArgs 3
     dup
     len
-    intc_3 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     pushint 8
     bzero
     swap
@@ -355,10 +355,10 @@ g_index:
     extract 0 32 // on error: index access is out of bounds
     dig 1
     len
-    intc_3 // 64
+    pushint 64
     <=
     assert // overflow
-    intc_3 // 64
+    pushint 64
     bzero
     uncover 2
     dig 1

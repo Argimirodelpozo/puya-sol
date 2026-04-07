@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 6 24 200000
-    bytecblock 0x0a8101 0x151f7c7580 0x7cb116cd 0xf08d7860
+    bytecblock 0x0a8101 0x7cb116cd 0x151f7c7580 0xf08d7860
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -23,7 +23,9 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xd5fa9f39 0x1337d041 0x680b106e 0x84322d27 0x05fd7bc1 0xfe8eda34 // method "set(uint512)void", method "get()uint512", method "testDelegateCall()bool", method "testCall()bool", method "tloadAllowedStaticCall()bool", method "tstoreNotAllowedStaticCall()bool"
+    bytec_1 // method "set(uint256)void"
+    bytec_3 // method "get()uint256"
+    pushbytess 0x680b106e 0x84322d27 0x05fd7bc1 0xfe8eda34 // method "testDelegateCall()bool", method "testCall()bool", method "tloadAllowedStaticCall()bool", method "tstoreNotAllowedStaticCall()bool"
     txna ApplicationArgs 0
     match set get testDelegateCall testCall tloadAllowedStaticCall tstoreNotAllowedStaticCall
     err
@@ -33,9 +35,9 @@ main_after_if_else@2:
 set:
     txna ApplicationArgs 1
     len
-    pushint 64
+    pushint 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     load 0
     store 0
     intc_1 // 1
@@ -51,7 +53,7 @@ get:
     extract 0 32
     swap
     store 0
-    pushint 64
+    pushint 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -77,7 +79,7 @@ testDelegateCall:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_2 // method "set(uint256)void"
+    bytec_1 // method "set(uint256)void"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
@@ -122,7 +124,7 @@ testDelegateCall:
     pushbytes 0x06
     b==
     assert
-    bytec_1 // 0x151f7c7580
+    bytec_2 // 0x151f7c7580
     log
     intc_1 // 1
     return
@@ -143,7 +145,7 @@ testCall:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_2 // method "set(uint256)void"
+    bytec_1 // method "set(uint256)void"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
@@ -202,7 +204,7 @@ testCall:
     pushbytes 0x01
     b==
     assert
-    bytec_1 // 0x151f7c7580
+    bytec_2 // 0x151f7c7580
     log
     intc_1 // 1
     return
@@ -223,7 +225,7 @@ tloadAllowedStaticCall:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_2 // method "set(uint256)void"
+    bytec_1 // method "set(uint256)void"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
@@ -249,7 +251,7 @@ tloadAllowedStaticCall:
     intc 4 // 200000
     itxn_field Amount
     itxn_submit
-    bytec_1 // 0x151f7c7580
+    bytec_2 // 0x151f7c7580
     log
     intc_1 // 1
     return
@@ -281,7 +283,7 @@ tstoreNotAllowedStaticCall:
     itxn_submit
     intc_0 // 0
     assert
-    bytec_1 // 0x151f7c7580
+    bytec_2 // 0x151f7c7580
     log
     intc_1 // 1
     return
