@@ -71,6 +71,24 @@ private:
 		bool _isPacked,
 		awst::SourceLocation const& _loc);
 
+	/// EVM ABI encode with proper head/tail encoding for dynamic types.
+	static std::unique_ptr<InstanceBuilder> handleEncode(
+		BuilderContext& _ctx,
+		solidity::frontend::FunctionCall const& _callNode,
+		awst::SourceLocation const& _loc);
+
+	/// Right-pad bytes to 32-byte boundary (for dynamic data in tail).
+	static std::shared_ptr<awst::Expression> rightPadTo32(
+		std::shared_ptr<awst::Expression> _expr,
+		awst::SourceLocation const& _loc);
+
+	/// Encode a dynamic type's tail data: [length as 32 bytes][data right-padded to 32].
+	static std::shared_ptr<awst::Expression> encodeDynamicTail(
+		BuilderContext& _ctx,
+		std::shared_ptr<awst::Expression> _expr,
+		solidity::frontend::Type const* _solType,
+		awst::SourceLocation const& _loc);
+
 	static std::unique_ptr<InstanceBuilder> handleEncodeCall(
 		BuilderContext& _ctx,
 		solidity::frontend::FunctionCall const& _callNode,

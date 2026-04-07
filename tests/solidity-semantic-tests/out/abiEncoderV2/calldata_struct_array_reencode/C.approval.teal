@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_struct_array_reencode.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 2 1 32
-    bytecblock 0x151f7c75 ""
+    bytecblock 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000020 ""
     txn ApplicationID
     bnz main_after_if_else@2
     intc_2 // 1
@@ -51,9 +51,13 @@ f:
     *
     pushint 4
     +
-    dig 1
     ==
     assert // invalid number of bytes for D
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    dup
+    len
     itob
     extract 6 2
     swap
@@ -121,24 +125,11 @@ g_after_for@4:
     dig 2
     dup
     len
-    dup
-    dig 4
+    dig 3
     ==
     assert // invalid number of bytes for arc4.static_array<D, 2>
-    dig 1
-    intc_0 // 0
-    extract_uint16
-    dig 2
-    intc_1 // 2
-    extract_uint16
-    dig 3
-    uncover 2
-    dig 2
-    substring3
-    uncover 3
-    uncover 2
-    uncover 3
-    substring3
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    swap
     concat
     dup
     len
@@ -157,7 +148,7 @@ g_after_for@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_struct_array_reencode.sol.C.h[routing]() -> void:
 h:
     intc_0 // 0
-    bytec_1 // ""
+    bytec_2 // ""
     dupn 2
     txna ApplicationArgs 1
     dupn 2
@@ -270,13 +261,16 @@ h_after_for@8:
     intc_1 // 2
     +
     dig 3
-    dup
-    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<D>>
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    dig 6
+    concat
+    dup
+    len
     itob
     extract 6 2
-    dig 6
+    swap
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -289,7 +283,7 @@ h_after_for@8:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_struct_array_reencode.sol.C.i[routing]() -> void:
 i:
     intc_0 // 0
-    bytec_1 // ""
+    bytec_2 // ""
     dup
     txna ApplicationArgs 1
     dupn 2
@@ -393,13 +387,16 @@ i_after_for@8:
     intc_1 // 2
     +
     dig 3
-    dup
-    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<D, 2>>
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    dig 6
+    concat
+    dup
+    len
     itob
     extract 6 2
-    dig 6
+    swap
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -421,10 +418,13 @@ j:
     +
     dig 1
     len
-    dup
-    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<S>
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    dup
+    len
     itob
     extract 6 2
     swap
@@ -520,13 +520,16 @@ l_after_for@4:
     intc_1 // 2
     +
     dig 3
-    dup
-    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<S>>
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    dig 6
+    concat
+    dup
+    len
     itob
     extract 6 2
-    dig 6
+    swap
     concat
     bytec_0 // 0x151f7c75
     swap

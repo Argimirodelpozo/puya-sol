@@ -52,9 +52,13 @@ f:
     *
     pushint 4
     +
-    dig 1
     ==
     assert // invalid number of bytes for S
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    dup
+    len
     itob
     extract 6 2
     swap

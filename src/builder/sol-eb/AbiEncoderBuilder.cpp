@@ -528,14 +528,94 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSelector(
 	solidity::frontend::FunctionCall const& _callNode,
 	awst::SourceLocation const& _loc)
 {
+	using namespace solidity::frontend;
 	auto const& args = _callNode.arguments();
 	if (args.empty()) return nullptr;
 
-	std::vector<std::shared_ptr<awst::Expression>> parts;
-	parts.push_back(_ctx.buildExpr(*args[0]));
-	for (size_t i = 1; i < args.size(); ++i)
-		parts.push_back(encodeArgAsARC4Bytes(_ctx, _ctx.buildExpr(*args[i]), _loc));
+	// selector (4 bytes) + abi.encode(remaining args)
+	auto selector = _ctx.buildExpr(*args[0]);
 
+	if (args.size() == 1)
+		return std::make_unique<GenericAbiResult>(_ctx, std::move(selector));
+
+	// Check if trailing args have any dynamic types
+	bool hasDynamic = false;
+	for (size_t i = 1; i < args.size(); ++i)
+	{
+		auto const* solType = args[i]->annotation().type;
+		if (solType && solType->isDynamicallyEncoded())
+			hasDynamic = true;
+	}
+
+	std::vector<std::shared_ptr<awst::Expression>> parts;
+	parts.push_back(std::move(selector));
+
+	if (!hasDynamic)
+	{
+		// All static: simple concatenation
+		for (size_t i = 1; i < args.size(); ++i)
+			parts.push_back(toPackedBytes(_ctx, _ctx.buildExpr(*args[i]), args[i]->annotation().type, false, _loc));
+	}
+	else
+	{
+		// Head/tail encoding for trailing args
+		size_t numTrailing = args.size() - 1;
+		size_t headSize = numTrailing * 32;
+
+		std::vector<std::shared_ptr<awst::Expression>> headParts;
+		std::vector<std::shared_ptr<awst::Expression>> tailParts;
+		auto currentOffset = makeUint64(std::to_string(headSize), _loc);
+
+		for (size_t i = 1; i < args.size(); ++i)
+		{
+			auto const* solType = args[i]->annotation().type;
+			bool isDyn = solType && solType->isDynamicallyEncoded();
+			auto expr = _ctx.buildExpr(*args[i]);
+
+			if (!isDyn)
+			{
+				headParts.push_back(toPackedBytes(_ctx, std::move(expr), solType, false, _loc));
+			}
+			else
+			{
+				auto offsetItob = std::make_shared<awst::IntrinsicCall>();
+				offsetItob->sourceLocation = _loc;
+				offsetItob->wtype = awst::WType::bytesType();
+				offsetItob->opCode = "itob";
+				offsetItob->stackArgs.push_back(currentOffset);
+				headParts.push_back(leftPadBytes(std::move(offsetItob), 32, _loc));
+
+				auto tail = encodeDynamicTail(_ctx, std::move(expr), solType, _loc);
+				auto tailLen = std::make_shared<awst::IntrinsicCall>();
+				tailLen->sourceLocation = _loc;
+				tailLen->wtype = awst::WType::uint64Type();
+				tailLen->opCode = "len";
+				tailLen->stackArgs.push_back(tail);
+
+				auto newOffset = std::make_shared<awst::UInt64BinaryOperation>();
+				newOffset->sourceLocation = _loc;
+				newOffset->wtype = awst::WType::uint64Type();
+				newOffset->op = awst::UInt64BinaryOperator::Add;
+				newOffset->left = std::move(currentOffset);
+				newOffset->right = std::move(tailLen);
+				currentOffset = std::move(newOffset);
+				tailParts.push_back(std::move(tail));
+			}
+		}
+		auto encoded = concatByteExprs(std::move(headParts), _loc);
+		if (!tailParts.empty())
+		{
+			auto tail = concatByteExprs(std::move(tailParts), _loc);
+			auto concat = std::make_shared<awst::IntrinsicCall>();
+			concat->sourceLocation = _loc;
+			concat->wtype = awst::WType::bytesType();
+			concat->opCode = "concat";
+			concat->stackArgs.push_back(std::move(encoded));
+			concat->stackArgs.push_back(std::move(tail));
+			encoded = std::move(concat);
+		}
+		parts.push_back(std::move(encoded));
+	}
 	return std::make_unique<GenericAbiResult>(_ctx, concatByteExprs(std::move(parts), _loc));
 }
 
@@ -562,10 +642,11 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSignature(
 	}
 	else
 	{
+		// EVM uses keccak256 for function selectors
 		auto hash = std::make_shared<awst::IntrinsicCall>();
 		hash->sourceLocation = _loc;
 		hash->wtype = awst::WType::bytesType();
-		hash->opCode = "sha256";
+		hash->opCode = "keccak256";
 		hash->stackArgs.push_back(std::move(sigExpr));
 
 		auto extract4 = std::make_shared<awst::IntrinsicCall>();
@@ -577,9 +658,82 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSignature(
 		parts.push_back(std::move(extract4));
 	}
 
-	for (size_t i = 1; i < args.size(); ++i)
-		parts.push_back(encodeArgAsARC4Bytes(_ctx, _ctx.buildExpr(*args[i]), _loc));
+	if (args.size() == 1)
+		return std::make_unique<GenericAbiResult>(_ctx, concatByteExprs(std::move(parts), _loc));
 
+	// Check if trailing args have dynamic types
+	bool hasDynamic = false;
+	for (size_t i = 1; i < args.size(); ++i)
+	{
+		auto const* solType = args[i]->annotation().type;
+		if (solType && solType->isDynamicallyEncoded())
+			hasDynamic = true;
+	}
+
+	if (!hasDynamic)
+	{
+		for (size_t i = 1; i < args.size(); ++i)
+			parts.push_back(toPackedBytes(_ctx, _ctx.buildExpr(*args[i]), args[i]->annotation().type, false, _loc));
+	}
+	else
+	{
+		// Head/tail encoding
+		size_t numTrailing = args.size() - 1;
+		size_t headSize = numTrailing * 32;
+		std::vector<std::shared_ptr<awst::Expression>> headParts;
+		std::vector<std::shared_ptr<awst::Expression>> tailParts;
+		auto currentOffset = makeUint64(std::to_string(headSize), _loc);
+
+		for (size_t i = 1; i < args.size(); ++i)
+		{
+			auto const* solType = args[i]->annotation().type;
+			bool isDyn = solType && solType->isDynamicallyEncoded();
+			auto expr = _ctx.buildExpr(*args[i]);
+
+			if (!isDyn)
+			{
+				headParts.push_back(toPackedBytes(_ctx, std::move(expr), solType, false, _loc));
+			}
+			else
+			{
+				auto offsetItob = std::make_shared<awst::IntrinsicCall>();
+				offsetItob->sourceLocation = _loc;
+				offsetItob->wtype = awst::WType::bytesType();
+				offsetItob->opCode = "itob";
+				offsetItob->stackArgs.push_back(currentOffset);
+				headParts.push_back(leftPadBytes(std::move(offsetItob), 32, _loc));
+
+				auto tail = encodeDynamicTail(_ctx, std::move(expr), solType, _loc);
+				auto tailLen = std::make_shared<awst::IntrinsicCall>();
+				tailLen->sourceLocation = _loc;
+				tailLen->wtype = awst::WType::uint64Type();
+				tailLen->opCode = "len";
+				tailLen->stackArgs.push_back(tail);
+
+				auto newOffset = std::make_shared<awst::UInt64BinaryOperation>();
+				newOffset->sourceLocation = _loc;
+				newOffset->wtype = awst::WType::uint64Type();
+				newOffset->op = awst::UInt64BinaryOperator::Add;
+				newOffset->left = std::move(currentOffset);
+				newOffset->right = std::move(tailLen);
+				currentOffset = std::move(newOffset);
+				tailParts.push_back(std::move(tail));
+			}
+		}
+		auto encoded = concatByteExprs(std::move(headParts), _loc);
+		if (!tailParts.empty())
+		{
+			auto tail = concatByteExprs(std::move(tailParts), _loc);
+			auto concat = std::make_shared<awst::IntrinsicCall>();
+			concat->sourceLocation = _loc;
+			concat->wtype = awst::WType::bytesType();
+			concat->opCode = "concat";
+			concat->stackArgs.push_back(std::move(encoded));
+			concat->stackArgs.push_back(std::move(tail));
+			encoded = std::move(concat);
+		}
+		parts.push_back(std::move(encoded));
+	}
 	return std::make_unique<GenericAbiResult>(_ctx, concatByteExprs(std::move(parts), _loc));
 }
 
@@ -655,6 +809,278 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 	return std::make_unique<GenericAbiResult>(_ctx, std::move(cast));
 }
 
+// ── rightPadTo32: pad bytes to next 32-byte boundary ──
+
+std::shared_ptr<awst::Expression> AbiEncoderBuilder::rightPadTo32(
+	std::shared_ptr<awst::Expression> _expr,
+	awst::SourceLocation const& _loc)
+{
+	// Compute padding needed: (32 - (len % 32)) % 32
+	// Then concat with bzero(padding)
+	// For simplicity: concat(expr, bzero(32)), then extract first (len + padding) bytes
+	// Actually simpler: concat(expr, bzero(31)), then extract first ((len + 31) / 32 * 32) bytes
+
+	// len = len(expr)
+	auto lenCall = std::make_shared<awst::IntrinsicCall>();
+	lenCall->sourceLocation = _loc;
+	lenCall->wtype = awst::WType::uint64Type();
+	lenCall->opCode = "len";
+	lenCall->stackArgs.push_back(_expr);
+
+	// padded_len = ((len + 31) / 32) * 32
+	auto len31 = std::make_shared<awst::UInt64BinaryOperation>();
+	len31->sourceLocation = _loc;
+	len31->wtype = awst::WType::uint64Type();
+	len31->op = awst::UInt64BinaryOperator::Add;
+	len31->left = std::move(lenCall);
+	len31->right = makeUint64("31", _loc);
+
+	auto div32 = std::make_shared<awst::UInt64BinaryOperation>();
+	div32->sourceLocation = _loc;
+	div32->wtype = awst::WType::uint64Type();
+	div32->op = awst::UInt64BinaryOperator::FloorDiv;
+	div32->left = std::move(len31);
+	div32->right = makeUint64("32", _loc);
+
+	auto paddedLen = std::make_shared<awst::UInt64BinaryOperation>();
+	paddedLen->sourceLocation = _loc;
+	paddedLen->wtype = awst::WType::uint64Type();
+	paddedLen->op = awst::UInt64BinaryOperator::Mult;
+	paddedLen->left = std::move(div32);
+	paddedLen->right = makeUint64("32", _loc);
+
+	// concat(expr, bzero(31)) — ensure enough zeros for any padding
+	auto zeros = std::make_shared<awst::IntrinsicCall>();
+	zeros->sourceLocation = _loc;
+	zeros->wtype = awst::WType::bytesType();
+	zeros->opCode = "bzero";
+	zeros->stackArgs.push_back(makeUint64("31", _loc));
+
+	auto padded = std::make_shared<awst::IntrinsicCall>();
+	padded->sourceLocation = _loc;
+	padded->wtype = awst::WType::bytesType();
+	padded->opCode = "concat";
+	padded->stackArgs.push_back(std::move(_expr));
+	padded->stackArgs.push_back(std::move(zeros));
+
+	// extract3(padded, 0, paddedLen)
+	auto result = std::make_shared<awst::IntrinsicCall>();
+	result->sourceLocation = _loc;
+	result->wtype = awst::WType::bytesType();
+	result->opCode = "extract3";
+	result->stackArgs.push_back(std::move(padded));
+	result->stackArgs.push_back(makeUint64("0", _loc));
+	result->stackArgs.push_back(std::move(paddedLen));
+	return result;
+}
+
+// ── encodeDynamicTail: [length as 32 bytes][data right-padded to 32] ──
+
+std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
+	BuilderContext& _ctx,
+	std::shared_ptr<awst::Expression> _expr,
+	solidity::frontend::Type const* _solType,
+	awst::SourceLocation const& _loc)
+{
+	using namespace solidity::frontend;
+
+	// For bytes/string: [length][data padded to 32]
+	if (auto const* arrType = dynamic_cast<ArrayType const*>(_solType))
+	{
+		if (arrType->isByteArrayOrString())
+		{
+			// Convert to bytes
+			auto bytesExpr = std::move(_expr);
+			if (bytesExpr->wtype != awst::WType::bytesType())
+			{
+				auto cast = std::make_shared<awst::ReinterpretCast>();
+				cast->sourceLocation = _loc;
+				cast->wtype = awst::WType::bytesType();
+				cast->expr = std::move(bytesExpr);
+				bytesExpr = std::move(cast);
+			}
+
+			// length as 32-byte uint256
+			auto lenCall = std::make_shared<awst::IntrinsicCall>();
+			lenCall->sourceLocation = _loc;
+			lenCall->wtype = awst::WType::uint64Type();
+			lenCall->opCode = "len";
+			lenCall->stackArgs.push_back(bytesExpr);
+
+			auto lenItob = std::make_shared<awst::IntrinsicCall>();
+			lenItob->sourceLocation = _loc;
+			lenItob->wtype = awst::WType::bytesType();
+			lenItob->opCode = "itob";
+			lenItob->stackArgs.push_back(std::move(lenCall));
+			auto lenPadded = leftPadBytes(std::move(lenItob), 32, _loc);
+
+			// data right-padded to 32-byte boundary
+			auto dataPadded = rightPadTo32(std::move(bytesExpr), _loc);
+
+			// concat length + data
+			auto concat = std::make_shared<awst::IntrinsicCall>();
+			concat->sourceLocation = _loc;
+			concat->wtype = awst::WType::bytesType();
+			concat->opCode = "concat";
+			concat->stackArgs.push_back(std::move(lenPadded));
+			concat->stackArgs.push_back(std::move(dataPadded));
+			return concat;
+		}
+		// For T[]: [count][elem0][elem1]... each element 32-byte padded
+		// TODO: implement dynamic array encoding
+	}
+
+	// Fallback: just pad to 32
+	return toPackedBytes(_ctx, std::move(_expr), _solType, false, _loc);
+}
+
+// ── handleEncode: EVM ABI encode with head/tail encoding ──
+
+std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncode(
+	BuilderContext& _ctx,
+	solidity::frontend::FunctionCall const& _callNode,
+	awst::SourceLocation const& _loc)
+{
+	using namespace solidity::frontend;
+	auto const& args = _callNode.arguments();
+
+	if (args.empty())
+	{
+		auto e = std::make_shared<awst::BytesConstant>();
+		e->sourceLocation = _loc;
+		e->wtype = awst::WType::bytesType();
+		e->encoding = awst::BytesEncoding::Base16;
+		e->value = {};
+		return std::make_unique<GenericAbiResult>(_ctx, std::move(e));
+	}
+
+	// Check if any argument is dynamically encoded
+	bool hasDynamic = false;
+	for (auto const& arg : args)
+	{
+		auto const* solType = arg->annotation().type;
+		if (solType && solType->isDynamicallyEncoded())
+		{
+			hasDynamic = true;
+			break;
+		}
+	}
+
+	// If no dynamic types, fall back to simple concatenation (current behavior)
+	if (!hasDynamic)
+		return handleEncodePacked(_ctx, _callNode, /*isPacked=*/false, _loc);
+
+	// Head/tail encoding:
+	// Head: for each arg, either 32-byte value (static) or 32-byte offset (dynamic)
+	// Tail: concatenated dynamic data
+	size_t numArgs = args.size();
+	size_t headSize = numArgs * 32; // each slot is 32 bytes
+
+	// Build tail parts first to know their sizes
+	// For compile-time-known sizes, compute offsets statically
+	// For runtime sizes, we need runtime offset computation
+
+	// Strategy: build all parts, track which are dynamic.
+	// Then: head = concat of (static_value OR offset_to_tail) for each arg
+	//       tail = concat of all dynamic tails
+	// Offsets = headSize + sum of preceding tail sizes
+
+	struct ArgInfo {
+		bool isDynamic;
+		std::shared_ptr<awst::Expression> headPart;  // 32-byte value or offset
+		std::shared_ptr<awst::Expression> tailPart;   // null for static
+	};
+	std::vector<ArgInfo> argInfos;
+
+	// First pass: build all expressions and classify
+	std::vector<std::shared_ptr<awst::Expression>> tailParts;
+
+	for (size_t i = 0; i < numArgs; ++i)
+	{
+		auto const* solType = args[i]->annotation().type;
+		bool isDyn = solType && solType->isDynamicallyEncoded();
+		auto expr = _ctx.buildExpr(*args[i]);
+
+		if (!isDyn)
+		{
+			// Static: encode as 32-byte value
+			argInfos.push_back({false, toPackedBytes(_ctx, std::move(expr), solType, false, _loc), nullptr});
+		}
+		else
+		{
+			// Dynamic: tail data + placeholder for offset
+			auto tail = encodeDynamicTail(_ctx, std::move(expr), solType, _loc);
+			argInfos.push_back({true, nullptr, tail});
+		}
+	}
+
+	// Second pass: compute offsets and build head
+	// We need runtime offset computation because tail sizes may vary.
+	// Use a running offset variable: start at headSize, add each tail's length.
+	//
+	// For simplicity, compute tail sizes at runtime using len() and build
+	// offset values dynamically.
+	//
+	// offset_i = headSize + sum(len(tail_j) for j < i where j is dynamic)
+
+	// Build tail concat and track cumulative sizes
+	std::vector<std::shared_ptr<awst::Expression>> headParts;
+	std::vector<std::shared_ptr<awst::Expression>> tailConcatParts;
+
+	// Running tail offset as AWST expression (starts at headSize)
+	std::shared_ptr<awst::Expression> currentTailOffset = makeUint64(std::to_string(headSize), _loc);
+
+	for (size_t i = 0; i < numArgs; ++i)
+	{
+		if (!argInfos[i].isDynamic)
+		{
+			headParts.push_back(std::move(argInfos[i].headPart));
+		}
+		else
+		{
+			// Head: offset as 32-byte big-endian
+			auto offsetItob = std::make_shared<awst::IntrinsicCall>();
+			offsetItob->sourceLocation = _loc;
+			offsetItob->wtype = awst::WType::bytesType();
+			offsetItob->opCode = "itob";
+			offsetItob->stackArgs.push_back(currentTailOffset);
+			headParts.push_back(leftPadBytes(std::move(offsetItob), 32, _loc));
+
+			// Update running offset: currentTailOffset += len(tail_i)
+			auto tailLen = std::make_shared<awst::IntrinsicCall>();
+			tailLen->sourceLocation = _loc;
+			tailLen->wtype = awst::WType::uint64Type();
+			tailLen->opCode = "len";
+			tailLen->stackArgs.push_back(argInfos[i].tailPart);
+
+			auto newOffset = std::make_shared<awst::UInt64BinaryOperation>();
+			newOffset->sourceLocation = _loc;
+			newOffset->wtype = awst::WType::uint64Type();
+			newOffset->op = awst::UInt64BinaryOperator::Add;
+			newOffset->left = std::move(currentTailOffset);
+			newOffset->right = std::move(tailLen);
+			currentTailOffset = std::move(newOffset);
+
+			tailConcatParts.push_back(std::move(argInfos[i].tailPart));
+		}
+	}
+
+	// Concat head + tail
+	auto head = concatByteExprs(std::move(headParts), _loc);
+	if (!tailConcatParts.empty())
+	{
+		auto tail = concatByteExprs(std::move(tailConcatParts), _loc);
+		auto result = std::make_shared<awst::IntrinsicCall>();
+		result->sourceLocation = _loc;
+		result->wtype = awst::WType::bytesType();
+		result->opCode = "concat";
+		result->stackArgs.push_back(std::move(head));
+		result->stackArgs.push_back(std::move(tail));
+		return std::make_unique<GenericAbiResult>(_ctx, std::move(result));
+	}
+	return std::make_unique<GenericAbiResult>(_ctx, std::move(head));
+}
+
 // ── Top-level dispatcher ──
 
 std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::tryHandle(
@@ -666,7 +1092,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::tryHandle(
 	if (_memberName == "encodePacked")
 		return handleEncodePacked(_ctx, _callNode, /*isPacked=*/true, _loc);
 	if (_memberName == "encode")
-		return handleEncodePacked(_ctx, _callNode, /*isPacked=*/false, _loc);
+		return handleEncode(_ctx, _callNode, _loc);
 	if (_memberName == "encodeCall")
 		return handleEncodeCall(_ctx, _callNode, _loc);
 	if (_memberName == "encodeWithSelector")

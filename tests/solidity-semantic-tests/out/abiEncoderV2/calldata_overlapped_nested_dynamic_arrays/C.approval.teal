@@ -172,13 +172,16 @@ f_encode_after_for@4:
     intc_0 // 2
     +
     dig 3
-    dup
-    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000020
+    dig 6
+    concat
+    dup
+    len
     itob
     extract 6 2
-    dig 6
+    swap
     concat
     bytec_1 // 0x151f7c75
     swap

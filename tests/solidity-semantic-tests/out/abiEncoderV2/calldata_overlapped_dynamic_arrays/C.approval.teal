@@ -104,11 +104,10 @@ f_encode:
     pushint 64
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
-    dup
-    extract 0 32 // on error: index access is out of bounds
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000040
     swap
-    extract 32 32 // on error: index access is out of bounds
     concat
+    swap
     concat
     dup
     len
@@ -215,8 +214,6 @@ f_storage:
     +
     dig 1
     len
-    dup
-    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
     txna ApplicationArgs 2
@@ -229,11 +226,16 @@ f_storage:
     box_del
     pop
     bytec_2 // "s"
-    dig 3
+    dig 2
     box_put
     bytec_3 // "n"
     swap
     app_global_put
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    dup
+    len
     itob
     extract 6 2
     swap

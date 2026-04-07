@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/memory_dynamic_array_and_calldata_static_array.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2
-    bytecblock 0x151f7c75
+    bytecblock 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000040
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -49,7 +49,10 @@ f:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 1>
-    extract 0 32 // on error: index access is out of bounds
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000040
+    swap
+    concat
+    swap
     concat
     dup
     len
@@ -85,7 +88,10 @@ g:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 1>
-    extract 0 32 // on error: index access is out of bounds
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000040
+    swap
+    concat
+    swap
     concat
     dup
     len

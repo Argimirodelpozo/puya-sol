@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/abi_encode_calldata_slice.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 8 1
-    bytecblock 0x151f7c75 0x01 0x0003414242 0x0003000000000000000000000000000000000000000000000000000000000000004100000000000000000000000000000000000000000000000000000000000000420000000000000000000000000000000000000000000000000000000000000042 0x816afb97 0xd17ae0b2 0xcc6f5401 0x92d3ef4c 0x97c694a2 0x67e81702 0xacc047c3 0x95b01188
+    bytecblock 0x151f7c75 0x01 0x0000000000000000000000000000000000000000000000000000000000000020 0x0003414242 0x0003000000000000000000000000000000000000000000000000000000000000004100000000000000000000000000000000000000000000000000000000000000420000000000000000000000000000000000000000000000000000000000000042 0x816afb97 0xd17ae0b2 0xcc6f5401 0x92d3ef4c 0x97c694a2 0x67e81702 0xacc047c3 0x95b01188
     txn ApplicationID
     bnz main_after_if_else@2
     intc_3 // 1
@@ -23,14 +23,14 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    bytec 4 // method "enc_packed_bytes(byte[],uint256,uint256)byte[]"
-    bytec 5 // method "enc_packed_bytes_reference(byte[],uint256,uint256)byte[]"
-    bytec 6 // method "enc_bytes(byte[],uint256,uint256)byte[]"
-    bytec 7 // method "enc_bytes_reference(byte[],uint256,uint256)byte[]"
-    bytec 8 // method "enc_uint256(uint256[],uint256,uint256)byte[]"
-    bytec 9 // method "enc_uint256_reference(uint256[],uint256,uint256)byte[]"
-    bytec 10 // method "enc_packed_uint256(uint256[],uint256,uint256)byte[]"
-    bytec 11 // method "enc_packed_uint256_reference(uint256[],uint256,uint256)byte[]"
+    bytec 5 // method "enc_packed_bytes(byte[],uint256,uint256)byte[]"
+    bytec 6 // method "enc_packed_bytes_reference(byte[],uint256,uint256)byte[]"
+    bytec 7 // method "enc_bytes(byte[],uint256,uint256)byte[]"
+    bytec 8 // method "enc_bytes_reference(byte[],uint256,uint256)byte[]"
+    bytec 9 // method "enc_uint256(uint256[],uint256,uint256)byte[]"
+    bytec 10 // method "enc_uint256_reference(uint256[],uint256,uint256)byte[]"
+    bytec 11 // method "enc_packed_uint256(uint256[],uint256,uint256)byte[]"
+    bytec 12 // method "enc_packed_uint256_reference(uint256[],uint256,uint256)byte[]"
     pushbytess 0x907fcf9e 0x17089b2d // method "test_bytes()void", method "test_uint256()void"
     txna ApplicationArgs 0
     match enc_packed_bytes enc_packed_bytes_reference enc_bytes enc_bytes_reference enc_uint256 enc_uint256_reference enc_packed_uint256 enc_packed_uint256_reference test_bytes test_uint256
@@ -197,6 +197,9 @@ enc_bytes:
     -
     extract_uint64
     substring3
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
     dup
     len
     itob
@@ -236,10 +239,12 @@ enc_bytes_reference:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
     intc_2 // 8
     bzero
     dup
-    uncover 3
+    uncover 4
     concat
     dup
     len
@@ -247,14 +252,48 @@ enc_bytes_reference:
     -
     extract_uint64
     swap
-    uncover 2
+    uncover 3
     concat
     dup
     len
     intc_2 // 8
     -
     extract_uint64
+    uncover 3
+    cover 2
     substring3
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushint 31
+    bzero
+    uncover 3
+    swap
+    concat
+    uncover 2
+    pushint 31
+    +
+    intc_0 // 32
+    /
+    intc_0 // 32
+    *
+    intc_1 // 0
+    swap
+    extract3
+    concat
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
     dup
     len
     itob
@@ -314,6 +353,9 @@ enc_uint256:
     -
     extract_uint64
     substring3
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
     dup
     len
     itob
@@ -373,6 +415,9 @@ enc_uint256_reference:
     -
     extract_uint64
     substring3
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
     dup
     len
     itob
@@ -560,9 +605,9 @@ test_bytes_while_top@4:
     intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 4 // method "enc_packed_bytes(byte[],uint256,uint256)byte[]"
+    bytec 5 // method "enc_packed_bytes(byte[],uint256,uint256)byte[]"
     itxn_field ApplicationArgs
-    bytec_2 // 0x0003414242
+    bytec_3 // 0x0003414242
     itxn_field ApplicationArgs
     dig 1
     itxn_field ApplicationArgs
@@ -580,9 +625,9 @@ test_bytes_while_top@4:
     intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 5 // method "enc_packed_bytes_reference(byte[],uint256,uint256)byte[]"
+    bytec 6 // method "enc_packed_bytes_reference(byte[],uint256,uint256)byte[]"
     itxn_field ApplicationArgs
-    bytec_2 // 0x0003414242
+    bytec_3 // 0x0003414242
     itxn_field ApplicationArgs
     dig 1
     itxn_field ApplicationArgs
@@ -605,9 +650,9 @@ test_bytes_while_top@4:
     intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 6 // method "enc_bytes(byte[],uint256,uint256)byte[]"
+    bytec 7 // method "enc_bytes(byte[],uint256,uint256)byte[]"
     itxn_field ApplicationArgs
-    bytec_2 // 0x0003414242
+    bytec_3 // 0x0003414242
     itxn_field ApplicationArgs
     dig 1
     itxn_field ApplicationArgs
@@ -625,9 +670,9 @@ test_bytes_while_top@4:
     intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 7 // method "enc_bytes_reference(byte[],uint256,uint256)byte[]"
+    bytec 8 // method "enc_bytes_reference(byte[],uint256,uint256)byte[]"
     itxn_field ApplicationArgs
-    bytec_2 // 0x0003414242
+    bytec_3 // 0x0003414242
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
@@ -710,9 +755,9 @@ test_uint256_while_top@4:
     intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 10 // method "enc_packed_uint256(uint256[],uint256,uint256)byte[]"
+    bytec 11 // method "enc_packed_uint256(uint256[],uint256,uint256)byte[]"
     itxn_field ApplicationArgs
-    bytec_3 // 0x0003000000000000000000000000000000000000000000000000000000000000004100000000000000000000000000000000000000000000000000000000000000420000000000000000000000000000000000000000000000000000000000000042
+    bytec 4 // 0x0003000000000000000000000000000000000000000000000000000000000000004100000000000000000000000000000000000000000000000000000000000000420000000000000000000000000000000000000000000000000000000000000042
     itxn_field ApplicationArgs
     dig 1
     itxn_field ApplicationArgs
@@ -730,9 +775,9 @@ test_uint256_while_top@4:
     intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 11 // method "enc_packed_uint256_reference(uint256[],uint256,uint256)byte[]"
+    bytec 12 // method "enc_packed_uint256_reference(uint256[],uint256,uint256)byte[]"
     itxn_field ApplicationArgs
-    bytec_3 // 0x0003000000000000000000000000000000000000000000000000000000000000004100000000000000000000000000000000000000000000000000000000000000420000000000000000000000000000000000000000000000000000000000000042
+    bytec 4 // 0x0003000000000000000000000000000000000000000000000000000000000000004100000000000000000000000000000000000000000000000000000000000000420000000000000000000000000000000000000000000000000000000000000042
     itxn_field ApplicationArgs
     dig 1
     itxn_field ApplicationArgs
@@ -755,9 +800,9 @@ test_uint256_while_top@4:
     intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 8 // method "enc_uint256(uint256[],uint256,uint256)byte[]"
+    bytec 9 // method "enc_uint256(uint256[],uint256,uint256)byte[]"
     itxn_field ApplicationArgs
-    bytec_3 // 0x0003000000000000000000000000000000000000000000000000000000000000004100000000000000000000000000000000000000000000000000000000000000420000000000000000000000000000000000000000000000000000000000000042
+    bytec 4 // 0x0003000000000000000000000000000000000000000000000000000000000000004100000000000000000000000000000000000000000000000000000000000000420000000000000000000000000000000000000000000000000000000000000042
     itxn_field ApplicationArgs
     dig 1
     itxn_field ApplicationArgs
@@ -775,9 +820,9 @@ test_uint256_while_top@4:
     intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 9 // method "enc_uint256_reference(uint256[],uint256,uint256)byte[]"
+    bytec 10 // method "enc_uint256_reference(uint256[],uint256,uint256)byte[]"
     itxn_field ApplicationArgs
-    bytec_3 // 0x0003000000000000000000000000000000000000000000000000000000000000004100000000000000000000000000000000000000000000000000000000000000420000000000000000000000000000000000000000000000000000000000000042
+    bytec 4 // 0x0003000000000000000000000000000000000000000000000000000000000000004100000000000000000000000000000000000000000000000000000000000000420000000000000000000000000000000000000000000000000000000000000042
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
