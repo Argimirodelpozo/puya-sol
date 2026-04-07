@@ -3,9 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_assignment.sol.C.approval_program() -> uint64:
 main:
+    intcblock 32 1 256 8192
+    bytecblock "__dyn_storage"
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -30,11 +32,67 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_assignment.sol.C.assignArray[routing]() -> void:
 assignArray:
     txna ApplicationArgs 1
+    dup
     len
     pushint 320
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 10>
-    pushint 1
+    load 0
+    store 0
+    dup
+    extract 0 32 // on error: index access is out of bounds
+    pushint 18446744073709551611
+    swap
+    callsub __storage_write
+    dup
+    extract 32 32 // on error: index access is out of bounds
+    pushint 18446744073709551612
+    swap
+    callsub __storage_write
+    dup
+    extract 64 32 // on error: index access is out of bounds
+    pushint 18446744073709551613
+    swap
+    callsub __storage_write
+    dup
+    extract 96 32 // on error: index access is out of bounds
+    pushint 18446744073709551614
+    swap
+    callsub __storage_write
+    dup
+    extract 128 32 // on error: index access is out of bounds
+    pushint 18446744073709551615
+    swap
+    callsub __storage_write
+    dup
+    extract 160 32 // on error: index access is out of bounds
+    pushint 0
+    swap
+    callsub __storage_write
+    dup
+    extract 192 32 // on error: index access is out of bounds
+    intc_1 // 1
+    swap
+    callsub __storage_write
+    dup
+    extract 224 32 // on error: index access is out of bounds
+    pushint 2
+    swap
+    callsub __storage_write
+    dup
+    intc_2 // 256
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    pushint 3
+    swap
+    callsub __storage_write
+    pushint 288
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    pushint 4
+    swap
+    callsub __storage_write
+    intc_1 // 1
     return
 
 
@@ -42,7 +100,47 @@ assignArray:
 x:
     load 0
     store 0
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    load 0
+    store 0
+    bytec_0 // "__dyn_storage"
+    intc_3 // 8192
+    box_create
+    pop
+    bytec_0 // "__dyn_storage"
+    pushint 8032
+    intc_0 // 32
+    box_extract
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
-    pushint 1
+    intc_1 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/storage_boundary_array_assignment.sol.C.__storage_write(__slot: uint64, __value: bytes) -> void:
+__storage_write:
+    proto 2 0
+    bytec_0 // "__dyn_storage"
+    intc_3 // 8192
+    box_create
+    pop
+    frame_dig -2
+    intc_2 // 256
+    %
+    intc_0 // 32
+    *
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // "__dyn_storage"
+    cover 2
+    box_replace
+    retsub

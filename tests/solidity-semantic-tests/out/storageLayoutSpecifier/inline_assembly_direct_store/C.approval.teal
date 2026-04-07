@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inline_assembly_direct_store.sol.C.approval_program() -> uint64:
 main:
     intcblock 64 1 0
-    bytecblock "x" 0x151f7c75
+    bytecblock "x" "__dyn_storage" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
@@ -35,6 +35,14 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inline_assembly_direct_store.sol.C.f[routing]() -> void:
 f:
     load 0
+    bytec_1 // "__dyn_storage"
+    pushint 8192
+    box_create
+    pop
+    bytec_1 // "__dyn_storage"
+    pushint 1344
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000010
+    box_replace
     store 0
     intc_2 // 0
     bytec_0 // "x"
@@ -48,7 +56,7 @@ f:
     intc_0 // 64
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -70,7 +78,7 @@ x:
     intc_0 // 64
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log

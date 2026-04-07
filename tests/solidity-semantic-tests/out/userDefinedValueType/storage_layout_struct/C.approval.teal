@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
-    bytecblock 0x151f7c75 "b" 0x00000000000000000000000000000000 "a" "ra" "rb" "c" "rc" "d" "rd" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x151f7c75 "b" 0x00000000000000000000000000000000 "a" "ra" "rb" "c" "rc" "d" "rd" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "__dyn_storage"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_3 // "a"
@@ -581,7 +581,19 @@ read_slot_else_body@15:
     b read_slot_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.__storage_read@18
 
 read_slot_else_body@17:
-    pushbytes 0x
+    bytec 11 // "__dyn_storage"
+    pushint 8192
+    box_create
+    pop
+    dup
+    pushint 256
+    %
+    intc_0 // 32
+    *
+    bytec 11 // "__dyn_storage"
+    swap
+    intc_0 // 32
+    box_extract
     b read_slot_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/storage_layout_struct.sol.C.__storage_read@18
 
 

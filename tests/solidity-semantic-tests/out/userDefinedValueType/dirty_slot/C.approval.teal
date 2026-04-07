@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
-    bytecblock "b" 0x151f7c75 "a" "x" 0xf00e0bbc0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0e0c0ba098076054032001
+    bytecblock "b" 0x151f7c75 "a" "x" 0xf00e0bbc0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0e0c0ba098076054032001 "__dyn_storage"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_2 // "a"
@@ -191,4 +191,26 @@ __storage_write_else_body@4:
     retsub
 
 __storage_write_else_body@6:
+    bytec 5 // "__dyn_storage"
+    pushint 8192
+    box_create
+    pop
+    frame_dig -2
+    pushint 256
+    %
+    intc_0 // 32
+    *
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 5 // "__dyn_storage"
+    cover 2
+    box_replace
     retsub

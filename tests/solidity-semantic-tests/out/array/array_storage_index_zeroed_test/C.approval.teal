@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_zeroed_test.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 8 1
-    bytecblock "storageArray" 0x 0x01 "__ctor_pending" 0x068101
+    bytecblock "storageArray" 0x 0x01 "__ctor_pending" 0x068101 "__dyn_storage"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_3 // "__ctor_pending"
@@ -92,6 +92,7 @@ __postInit:
 test_zeroed_indices:
     intc_1 // 0
     dupn 2
+    bytec_1 // ""
     txna ApplicationArgs 1
     dup
     len
@@ -158,14 +159,15 @@ test_zeroed_indices_after_while@7:
     intc_1 // 0
     itob
     dup
-    bury 4
-    bury 2
+    bury 5
+    bury 3
 
 test_zeroed_indices_while_top@8:
-    dup2
+    dig 2
+    dig 1
     b<
     bz test_zeroed_indices_after_while@10
-    dig 1
+    dig 2
     dup
     bytec_2 // 0x01
     b+
@@ -195,7 +197,7 @@ test_zeroed_indices_while_top@8:
     swap
     uncover 2
     box_replace // on error: index out of bounds
-    bury 2
+    bury 3
     b test_zeroed_indices_while_top@8
 
 test_zeroed_indices_after_while@10:
@@ -243,10 +245,11 @@ test_zeroed_indices_while_top@15:
 test_zeroed_indices_after_while@17:
     pushint 3
     itob
-    bury 2
+    bury 3
 
 test_zeroed_indices_while_top@18:
-    dup2
+    dig 2
+    dig 1
     b<
     bz test_zeroed_indices_while_top@22
     load 0
@@ -256,10 +259,10 @@ test_zeroed_indices_while_top@18:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
     dup
-    bury 6
+    bury 7
     extract 0 32
     keccak256
-    dig 3
+    dig 4
     b+
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -269,6 +272,8 @@ test_zeroed_indices_while_top@18:
     intc_2 // 8
     -
     extract_uint64
+    dup
+    bury 3
     bnz test_zeroed_indices_else_body@33
     intc_0 // 32
     bzero
@@ -288,16 +293,28 @@ test_zeroed_indices_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puy
     !
     !
     assert // revert
-    dig 3
+    dig 4
     store 0
-    dig 1
+    dig 2
     bytec_2 // 0x01
     b+
-    bury 2
+    bury 3
     b test_zeroed_indices_while_top@18
 
 test_zeroed_indices_else_body@33:
-    bytec_1 // 0x
+    bytec 5 // "__dyn_storage"
+    pushint 8192
+    box_create
+    pop
+    dig 1
+    pushint 256
+    %
+    intc_0 // 32
+    *
+    bytec 5 // "__dyn_storage"
+    swap
+    intc_0 // 32
+    box_extract
     b test_zeroed_indices_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_zeroed_test.sol.C.__storage_read@34
 
 test_zeroed_indices_while_top@22:
@@ -337,7 +354,7 @@ test_zeroed_indices_while_top@25:
     b test_zeroed_indices_while_top@25
 
 test_zeroed_indices_while_top@28:
-    dig 2
+    dig 3
     dig 1
     b<
     bz test_zeroed_indices_after_while@30
@@ -348,7 +365,7 @@ test_zeroed_indices_while_top@28:
     select
     intc_2 // 8
     bzero
-    dig 4
+    dig 5
     dup
     cover 3
     concat
@@ -380,7 +397,7 @@ test_zeroed_indices_while_top@28:
     assert
     bytec_2 // 0x01
     b+
-    bury 3
+    bury 4
     b test_zeroed_indices_while_top@28
 
 test_zeroed_indices_after_while@30:
