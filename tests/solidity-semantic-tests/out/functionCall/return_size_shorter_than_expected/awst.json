@@ -1015,12 +1015,9 @@
         },
         "args": [],
         "return_type": {
-          "_type": "ARC4UIntN",
-          "name": "arc4.uint256",
-          "immutable": true,
-          "n": 256,
-          "arc4_alias": null,
-          "source_location": null
+          "_type": "WType",
+          "name": "biguint",
+          "immutable": true
         },
         "body": {
           "_type": "Block",
@@ -3125,7 +3122,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "ARC4Encode",
+                "_type": "BigUIntBinaryOperation",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/return_size_shorter_than_expected.sol",
                   "line": 545,
@@ -3135,14 +3132,11 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ARC4UIntN",
-                  "name": "arc4.uint256",
-                  "immutable": true,
-                  "n": 256,
-                  "arc4_alias": null,
-                  "source_location": null
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
                 },
-                "value": {
+                "left": {
                   "_type": "BigUIntBinaryOperation",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/return_size_shorter_than_expected.sol",
@@ -3173,7 +3167,25 @@
                       "immutable": true
                     },
                     "left": {
-                      "_type": "BigUIntBinaryOperation",
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/return_size_shorter_than_expected.sol",
+                        "line": 545,
+                        "end_line": 560,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "name": "freeMemoryAfter"
+                    },
+                    "op": "+",
+                    "right": {
+                      "_type": "IntegerConstant",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/return_size_shorter_than_expected.sol",
                         "line": 545,
@@ -3187,68 +3199,16 @@
                         "name": "biguint",
                         "immutable": true
                       },
-                      "left": {
-                        "_type": "VarExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/return_size_shorter_than_expected.sol",
-                          "line": 545,
-                          "end_line": 560,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "biguint",
-                          "immutable": true
-                        },
-                        "name": "freeMemoryAfter"
-                      },
-                      "op": "+",
-                      "right": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/return_size_shorter_than_expected.sol",
-                          "line": 545,
-                          "end_line": 579,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "biguint",
-                          "immutable": true
-                        },
-                        "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
-                        "teal_alias": null
-                      }
-                    },
-                    "op": "-",
-                    "right": {
-                      "_type": "VarExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/return_size_shorter_than_expected.sol",
-                        "line": 563,
-                        "end_line": 579,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
-                      },
-                      "name": "freeMemoryBefore"
+                      "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
+                      "teal_alias": null
                     }
                   },
-                  "op": "%",
+                  "op": "-",
                   "right": {
-                    "_type": "IntegerConstant",
+                    "_type": "VarExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/return_size_shorter_than_expected.sol",
-                      "line": 545,
+                      "line": 563,
                       "end_line": 579,
                       "comment_lines": 0,
                       "column": null,
@@ -3259,11 +3219,28 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
-                    "teal_alias": null
+                    "name": "freeMemoryBefore"
                   }
                 },
-                "error_message": null
+                "op": "%",
+                "right": {
+                  "_type": "IntegerConstant",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/return_size_shorter_than_expected.sol",
+                    "line": 545,
+                    "end_line": 579,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
+                  },
+                  "value": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
+                  "teal_alias": null
+                }
               }
             }
           ],

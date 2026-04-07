@@ -710,12 +710,9 @@
         },
         "args": [],
         "return_type": {
-          "_type": "ARC4UIntN",
-          "name": "arc4.uint256",
-          "immutable": true,
-          "n": 256,
-          "arc4_alias": null,
-          "source_location": null
+          "_type": "WType",
+          "name": "biguint",
+          "immutable": true
         },
         "body": {
           "_type": "Block",
@@ -1553,7 +1550,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "ARC4Encode",
+                "_type": "ReinterpretCast",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_arg.sol",
                   "line": 246,
@@ -1563,15 +1560,12 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ARC4UIntN",
-                  "name": "arc4.uint256",
-                  "immutable": true,
-                  "n": 256,
-                  "arc4_alias": null,
-                  "source_location": null
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
                 },
-                "value": {
-                  "_type": "ReinterpretCast",
+                "expr": {
+                  "_type": "IntrinsicCall",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_arg.sol",
                     "line": 246,
@@ -1581,58 +1575,41 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
+                    "_type": "BytesWType",
+                    "name": "bytes",
+                    "immutable": true,
+                    "length": null
                   },
-                  "expr": {
-                    "_type": "IntrinsicCall",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_arg.sol",
-                      "line": 246,
-                      "end_line": 266,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "BytesWType",
-                      "name": "bytes",
-                      "immutable": true,
-                      "length": null
-                    },
-                    "op_code": "extract",
-                    "immediates": [
-                      4,
-                      0
-                    ],
-                    "stack_args": [
-                      {
-                        "_type": "IntrinsicCall",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_arg.sol",
-                          "line": 246,
-                          "end_line": 266,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        "op_code": "itxn",
-                        "immediates": [
-                          "LastLog"
-                        ],
-                        "stack_args": []
-                      }
-                    ]
-                  }
-                },
-                "error_message": null
+                  "op_code": "extract",
+                  "immediates": [
+                    4,
+                    0
+                  ],
+                  "stack_args": [
+                    {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_arg.sol",
+                        "line": 246,
+                        "end_line": 266,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "itxn",
+                      "immediates": [
+                        "LastLog"
+                      ],
+                      "stack_args": []
+                    }
+                  ]
+                }
               }
             }
           ],

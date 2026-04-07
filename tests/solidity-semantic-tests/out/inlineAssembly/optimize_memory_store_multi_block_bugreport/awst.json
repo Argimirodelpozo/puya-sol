@@ -529,12 +529,9 @@
         },
         "args": [],
         "return_type": {
-          "_type": "ARC4UIntN",
-          "name": "arc4.uint256",
-          "immutable": true,
-          "n": 256,
-          "arc4_alias": null,
-          "source_location": null
+          "_type": "WType",
+          "name": "biguint",
+          "immutable": true
         },
         "body": {
           "_type": "Block",
@@ -972,7 +969,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "ARC4Encode",
+                "_type": "BigUIntBinaryOperation",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/optimize_memory_store_multi_block_bugreport.sol",
                   "line": 171,
@@ -982,19 +979,16 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ARC4UIntN",
-                  "name": "arc4.uint256",
-                  "immutable": true,
-                  "n": 256,
-                  "arc4_alias": null,
-                  "source_location": null
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
                 },
-                "value": {
+                "left": {
                   "_type": "BigUIntBinaryOperation",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/optimize_memory_store_multi_block_bugreport.sol",
                     "line": 171,
-                    "end_line": 187,
+                    "end_line": 176,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
@@ -1005,10 +999,28 @@
                     "immutable": true
                   },
                   "left": {
-                    "_type": "BigUIntBinaryOperation",
+                    "_type": "VarExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/optimize_memory_store_multi_block_bugreport.sol",
                       "line": 171,
+                      "end_line": 172,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "name": "a"
+                  },
+                  "op": "+",
+                  "right": {
+                    "_type": "VarExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/optimize_memory_store_multi_block_bugreport.sol",
+                      "line": 175,
                       "end_line": 176,
                       "comment_lines": 0,
                       "column": null,
@@ -1019,66 +1031,31 @@
                       "name": "biguint",
                       "immutable": true
                     },
-                    "left": {
-                      "_type": "VarExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/optimize_memory_store_multi_block_bugreport.sol",
-                        "line": 171,
-                        "end_line": 172,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
-                      },
-                      "name": "a"
-                    },
-                    "op": "+",
-                    "right": {
-                      "_type": "VarExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/optimize_memory_store_multi_block_bugreport.sol",
-                        "line": 175,
-                        "end_line": 176,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
-                      },
-                      "name": "b"
-                    }
-                  },
-                  "op": "+",
-                  "right": {
-                    "_type": "SubroutineCallExpression",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/optimize_memory_store_multi_block_bugreport.sol",
-                      "line": 179,
-                      "end_line": 187,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
-                    },
-                    "target": {
-                      "_type": "InstanceMethodTarget",
-                      "member_name": "myGetX"
-                    },
-                    "args": []
+                    "name": "b"
                   }
                 },
-                "error_message": null
+                "op": "+",
+                "right": {
+                  "_type": "SubroutineCallExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/optimize_memory_store_multi_block_bugreport.sol",
+                    "line": 179,
+                    "end_line": 187,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
+                  },
+                  "target": {
+                    "_type": "InstanceMethodTarget",
+                    "member_name": "myGetX"
+                  },
+                  "args": []
+                }
               }
             }
           ],

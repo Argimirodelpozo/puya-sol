@@ -529,12 +529,9 @@
         },
         "args": [],
         "return_type": {
-          "_type": "ARC4UIntN",
-          "name": "arc4.uint256",
-          "immutable": true,
-          "n": 256,
-          "arc4_alias": null,
-          "source_location": null
+          "_type": "WType",
+          "name": "biguint",
+          "immutable": true
         },
         "body": {
           "_type": "Block",
@@ -1027,7 +1024,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "ARC4Encode",
+                "_type": "ReinterpretCast",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_cleanup_tstore.sol",
                   "line": 152,
@@ -1037,15 +1034,12 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ARC4UIntN",
-                  "name": "arc4.uint256",
-                  "immutable": true,
-                  "n": 256,
-                  "arc4_alias": null,
-                  "source_location": null
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
                 },
-                "value": {
-                  "_type": "ReinterpretCast",
+                "expr": {
+                  "_type": "IntrinsicCall",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_cleanup_tstore.sol",
                     "line": 152,
@@ -1055,31 +1049,31 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
+                    "_type": "BytesWType",
+                    "name": "bytes",
+                    "immutable": true,
+                    "length": null
                   },
-                  "expr": {
-                    "_type": "IntrinsicCall",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_cleanup_tstore.sol",
-                      "line": 152,
-                      "end_line": 160,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "BytesWType",
-                      "name": "bytes",
-                      "immutable": true,
-                      "length": null
-                    },
-                    "op_code": "itob",
-                    "immediates": [],
-                    "stack_args": [
-                      {
-                        "_type": "AppStateExpression",
+                  "op_code": "itob",
+                  "immediates": [],
+                  "stack_args": [
+                    {
+                      "_type": "AppStateExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_cleanup_tstore.sol",
+                        "line": 159,
+                        "end_line": 160,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "key": {
+                        "_type": "BytesConstant",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_cleanup_tstore.sol",
                           "line": 159,
@@ -1090,33 +1084,16 @@
                         },
                         "wtype": {
                           "_type": "WType",
-                          "name": "uint64",
+                          "name": "state_key",
                           "immutable": true
                         },
-                        "key": {
-                          "_type": "BytesConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_cleanup_tstore.sol",
-                            "line": 159,
-                            "end_line": 160,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "state_key",
-                            "immutable": true
-                          },
-                          "value": "cm",
-                          "encoding": "utf8"
-                        },
-                        "exists_assertion_message": "check x exists"
-                      }
-                    ]
-                  }
-                },
-                "error_message": null
+                        "value": "cm",
+                        "encoding": "utf8"
+                      },
+                      "exists_assertion_message": "check x exists"
+                    }
+                  ]
+                }
               }
             }
           ],

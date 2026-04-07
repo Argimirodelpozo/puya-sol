@@ -472,22 +472,16 @@
               "end_column": null
             },
             "wtype": {
-              "_type": "ARC4UIntN",
-              "name": "arc4.uint256",
-              "immutable": true,
-              "n": 256,
-              "arc4_alias": null,
-              "source_location": null
+              "_type": "WType",
+              "name": "biguint",
+              "immutable": true
             }
           }
         ],
         "return_type": {
-          "_type": "ARC4UIntN",
-          "name": "arc4.uint256",
-          "immutable": true,
-          "n": 256,
-          "arc4_alias": null,
-          "source_location": null
+          "_type": "WType",
+          "name": "biguint",
+          "immutable": true
         },
         "body": {
           "_type": "Block",
@@ -676,29 +670,43 @@
                 "end_column": null
               },
               "value": {
-                "_type": "VarExpression",
+                "_type": "ReinterpretCast",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_switch.sol",
-                  "line": 106,
-                  "end_line": 107,
+                  "line": 99,
+                  "end_line": 318,
                   "comment_lines": 0,
                   "column": null,
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ARC4UIntN",
-                  "name": "arc4.uint256",
+                  "_type": "BytesWType",
+                  "name": "bytes",
                   "immutable": true,
-                  "n": 256,
-                  "arc4_alias": null,
-                  "source_location": null
+                  "length": null
                 },
-                "name": "a"
+                "expr": {
+                  "_type": "VarExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_switch.sol",
+                    "line": 106,
+                    "end_line": 107,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
+                  },
+                  "name": "a"
+                }
               },
               "cases": [
                 [
                   {
-                    "_type": "IntegerConstant",
+                    "_type": "BytesConstant",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_switch.sol",
                       "line": 129,
@@ -708,12 +716,13 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
                     },
-                    "value": 1,
-                    "teal_alias": null
+                    "value": "0000000000000000000000000000000000000001",
+                    "encoding": "base16"
                   },
                   {
                     "_type": "Block",
@@ -779,7 +788,7 @@
                 ],
                 [
                   {
-                    "_type": "IntegerConstant",
+                    "_type": "BytesConstant",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_switch.sol",
                       "line": 199,
@@ -789,12 +798,13 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
                     },
-                    "value": 2,
-                    "teal_alias": null
+                    "value": "0000000000000000000000000000000000000002",
+                    "encoding": "base16"
                   },
                   {
                     "_type": "Block",
@@ -983,7 +993,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "ARC4Encode",
+                "_type": "VarExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_switch.sol",
                   "line": 17,
@@ -993,31 +1003,11 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ARC4UIntN",
-                  "name": "arc4.uint256",
-                  "immutable": true,
-                  "n": 256,
-                  "arc4_alias": null,
-                  "source_location": null
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
                 },
-                "value": {
-                  "_type": "VarExpression",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_switch.sol",
-                    "line": 17,
-                    "end_line": 334,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
-                  },
-                  "name": "b"
-                },
-                "error_message": null
+                "name": "b"
               }
             }
           ],

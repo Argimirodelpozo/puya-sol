@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x13ac5132 // method "__postInit()void", method "f(uint256)(uint512,uint512)"
+    pushbytess 0xbacc49e3 0x59607197 // method "__postInit()void", method "f(uint512)(uint512,uint512)"
     txna ApplicationArgs 0
     match __postInit f
     err
@@ -61,9 +61,9 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    pushint 32
+    intc_2 // 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     intc_0 // 0
     swap
     intc_0 // 0
@@ -78,7 +78,7 @@ f:
     swap
     load 0
     swap
-    pushbytess 0x01 0x02
+    pushbytess 0x0000000000000000000000000000000000000000000000000000000000000001 0x0000000000000000000000000000000000000000000000000000000000000002
     uncover 2
     match f_switch_case_0@2 f_switch_case_1@3
     dig 5

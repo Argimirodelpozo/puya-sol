@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_multi_invocation.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 64
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xb168d7ea // method "f(bool)uint256"
+    pushbytes 0x30c2e08e // method "f(bool)uint512"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -49,7 +49,7 @@ f:
     intc_0 // 1
     <=
     assert // ABI bool validation
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
+    pushbytes 0x01
     bury 1
 
 f_after_if_else@5:
@@ -62,10 +62,10 @@ f_after_if_else@5:
     b+
     dup
     len
-    intc_1 // 32
+    intc_1 // 64
     <=
     assert // overflow
-    intc_1 // 32
+    intc_1 // 64
     bzero
     b|
     pushbytes 0x151f7c75

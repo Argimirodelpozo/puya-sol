@@ -2442,6 +2442,16 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		unsigned maskBits = 0; // >0 for sub-64-bit unsigned types needing input masking
 	};
 	std::vector<ParamDecode> paramDecodes;
+	// Detect inline assembly early — needed to skip ARC4 param wrapping
+	// which would break assembly variable references.
+	bool funcHasInlineAssembly = false;
+	if (_func.isImplemented())
+	{
+		for (auto const& stmt: _func.body().statements())
+			if (dynamic_cast<solidity::frontend::InlineAssembly const*>(stmt.get()))
+			{ funcHasInlineAssembly = true; break; }
+	}
+
 	if (method.arc4MethodConfig.has_value())
 	{
 		// Remap types to ARC4 encoding for ABI-exposed methods.
@@ -2455,10 +2465,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			// Without this, puya maps biguint→uint512 (AVM max) instead of uint256.
 			// Skip signed integers — they need different ABI names (int256 vs uint256)
 			// and are handled by sign-extension logic elsewhere.
-			// Skip when function has modifiers — modifier args reference params by
-			// original name, and the ARC4 decode rename would break those references.
+			// Skip when function has modifiers or inline assembly — both reference
+			// params by their original names and would break on rename.
 			if (arg.wtype == awst::WType::biguintType() && pi < solParams.size()
-				&& _func.modifiers().empty())
+				&& _func.modifiers().empty() && !funcHasInlineAssembly)
 			{
 				auto const* solType = solParams[pi]->annotation().type;
 				auto const* intType = solType ? dynamic_cast<solidity::frontend::IntegerType const*>(solType) : nullptr;
@@ -2658,9 +2668,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 		// For ARC4 methods returning biguint, wrap return values in ARC4Encode
 		// with the correct bit width (e.g., uint256 not uint512).
-		// Skip signed integer returns — they have their own sign-extension logic below.
+		// Skip signed returns, functions with modifiers, and functions with inline assembly.
 		if (method.arc4MethodConfig.has_value() && method.returnType == awst::WType::biguintType()
-			&& signedReturns.empty())
+			&& signedReturns.empty() && _func.modifiers().empty() && !funcHasInlineAssembly)
 		{
 			// Get original Solidity bit width for the return type
 			unsigned retBits = 256;

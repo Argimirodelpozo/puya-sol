@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x8c31cf21 0x1e756e80 0x5053bc94 0x893ec837 0xed38ef85 0x3d3b5293 0xaa7acc1b 0x1b44c95d 0x14d310b5 0xe56d9f14 0xb2648f97 0xb4ae2bd1 0xad7fec2b 0xefdb8e82 0xb71bd24c 0xe350d4b9 0x28937e75 0x6eb6f7b4 0x69088df4 // method "preincr_u8(uint64)uint64", method "postincr_u8(uint64)uint64", method "predecr_u8(uint64)uint64", method "postdecr_u8(uint64)uint64", method "preincr_s8(uint64)(uint512,uint512)", method "postincr_s8(uint64)(uint512,uint512)", method "predecr_s8(uint64)(uint512,uint512)", method "postdecr_s8(uint64)(uint512,uint512)", method "preincr(uint256)uint256", method "postincr(uint256)uint256", method "predecr(uint256)uint256", method "postdecr(uint256)uint256", method "not(bool)bool", method "bitnot(uint512)uint512", method "bitnot_u8(uint64)uint256", method "bitnot_s8()uint512", method "negate(uint512)uint512", method "negate_s8(uint64)uint512", method "negate_s16(uint64)uint512"
+    pushbytess 0x8c31cf21 0x1e756e80 0x5053bc94 0x893ec837 0xed38ef85 0x3d3b5293 0xaa7acc1b 0x1b44c95d 0x14d310b5 0xe56d9f14 0xb2648f97 0xb4ae2bd1 0xad7fec2b 0xefdb8e82 0xe7aa0446 0xe350d4b9 0x28937e75 0x6eb6f7b4 0x69088df4 // method "preincr_u8(uint64)uint64", method "postincr_u8(uint64)uint64", method "predecr_u8(uint64)uint64", method "postdecr_u8(uint64)uint64", method "preincr_s8(uint64)(uint512,uint512)", method "postincr_s8(uint64)(uint512,uint512)", method "predecr_s8(uint64)(uint512,uint512)", method "postdecr_s8(uint64)(uint512,uint512)", method "preincr(uint256)uint256", method "postincr(uint256)uint256", method "predecr(uint256)uint256", method "postdecr(uint256)uint256", method "not(bool)bool", method "bitnot(uint512)uint512", method "bitnot_u8(uint64)uint512", method "bitnot_s8()uint512", method "negate(uint512)uint512", method "negate_s8(uint64)uint512", method "negate_s16(uint64)uint512"
     txna ApplicationArgs 0
     match preincr_u8 postincr_u8 predecr_u8 postdecr_u8 preincr_s8 postincr_s8 predecr_s8 postdecr_s8 preincr postincr predecr postdecr not bitnot bitnot_u8 bitnot_s8 negate negate_s8 negate_s16
     err
@@ -811,7 +811,7 @@ bitnot_u8:
     itob
     swap
     store 0
-    pushint 32
+    intc_2 // 64
     bzero
     b|
     bytec_0 // 0x151f7c75

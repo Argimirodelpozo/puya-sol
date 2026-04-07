@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/assembly_access_bytes2_abicoder_v2.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 2
+    intcblock 1 32 2
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xa06d2b6d 0x4678de35 0x7c2e2d08 // method "f(byte[2])byte[2]", method "g(byte[2])byte[2]", method "h(uint256)byte[2]"
+    pushbytess 0xa06d2b6d 0x4678de35 0xd636c9d3 // method "f(byte[2])byte[2]", method "g(byte[2])byte[2]", method "h(uint512)byte[2]"
     txna ApplicationArgs 0
     match f g h
     err
@@ -34,7 +34,7 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 2
+    intc_2 // 2
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 2>
     load 0
@@ -52,7 +52,7 @@ g:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 2
+    intc_2 // 2
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 2>
     load 0
@@ -68,13 +68,28 @@ g:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/assembly_access_bytes2_abicoder_v2.sol.C.h[routing]() -> void:
 h:
     txna ApplicationArgs 1
+    dup
     len
-    pushint 32
+    pushint 64
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid number of bytes for arc4.uint512
     load 0
+    intc_1 // 32
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    extract 0 2
+    swap
     store 0
-    pushbytes 0x151f7c750000
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
