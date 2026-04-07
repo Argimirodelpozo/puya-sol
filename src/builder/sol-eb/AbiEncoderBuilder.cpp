@@ -642,11 +642,11 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSignature(
 	}
 	else
 	{
-		// EVM uses keccak256 for function selectors
+		// Use sha512_256 for function selectors (AVM's native hash)
 		auto hash = std::make_shared<awst::IntrinsicCall>();
 		hash->sourceLocation = _loc;
 		hash->wtype = awst::WType::bytesType();
-		hash->opCode = "keccak256";
+		hash->opCode = "sha512_256";
 		hash->stackArgs.push_back(std::move(sigExpr));
 
 		auto extract4 = std::make_shared<awst::IntrinsicCall>();
