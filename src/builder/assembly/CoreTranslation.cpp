@@ -381,6 +381,60 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	}
 	if (funcName == "timestamp")
 		return handleTimestamp(loc);
+	if (funcName == "prevrandao" || funcName == "difficulty")
+	{
+		// prevrandao()/difficulty() → deterministic hash as biguint stub
+		// AVM has no PREVRANDAO; return sha256 of a constant as non-zero placeholder.
+		Logger::instance().warning(
+			"prevrandao()/difficulty() has no AVM equivalent, returning deterministic stub", loc);
+		auto hashInput = std::make_shared<awst::BytesConstant>();
+		hashInput->sourceLocation = loc;
+		hashInput->wtype = awst::WType::bytesType();
+		hashInput->encoding = awst::BytesEncoding::Utf8;
+		hashInput->value = std::vector<uint8_t>{'p','r','e','v','r','a','n','d','a','o'};
+		auto hash = std::make_shared<awst::IntrinsicCall>();
+		hash->sourceLocation = loc;
+		hash->wtype = awst::WType::bytesType();
+		hash->opCode = "sha256";
+		hash->stackArgs.push_back(std::move(hashInput));
+		auto cast = std::make_shared<awst::ReinterpretCast>();
+		cast->sourceLocation = loc;
+		cast->wtype = awst::WType::biguintType();
+		cast->expr = std::move(hash);
+		return cast;
+	}
+	if (funcName == "number")
+	{
+		// number() → global Round (block number equivalent)
+		auto round = std::make_shared<awst::IntrinsicCall>();
+		round->sourceLocation = loc;
+		round->wtype = awst::WType::uint64Type();
+		round->opCode = "global";
+		round->immediates = {std::string("Round")};
+		// Convert to biguint (EVM returns uint256)
+		auto itob = std::make_shared<awst::IntrinsicCall>();
+		itob->sourceLocation = loc;
+		itob->wtype = awst::WType::bytesType();
+		itob->opCode = "itob";
+		itob->stackArgs.push_back(std::move(round));
+		auto cast = std::make_shared<awst::ReinterpretCast>();
+		cast->sourceLocation = loc;
+		cast->wtype = awst::WType::biguintType();
+		cast->expr = std::move(itob);
+		return cast;
+	}
+	if (funcName == "coinbase" || funcName == "gasprice" || funcName == "basefee"
+		|| funcName == "blobbasefee" || funcName == "selfbalance")
+	{
+		// Stub: return 0 for EVM-specific block properties with no AVM equivalent
+		Logger::instance().warning(
+			funcName + "() has no AVM equivalent, returning 0", loc);
+		auto zero = std::make_shared<awst::IntegerConstant>();
+		zero->sourceLocation = loc;
+		zero->wtype = awst::WType::biguintType();
+		zero->value = "0";
+		return zero;
+	}
 	if (funcName == "chainid")
 	{
 		// chainid() → global GenesisHash (32 bytes) → reinterpret as biguint
