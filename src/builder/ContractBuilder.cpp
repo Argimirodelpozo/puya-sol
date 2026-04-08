@@ -1,6 +1,7 @@
 #include "builder/ContractBuilder.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/sol-eb/FunctionPointerBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/storage/StorageLayout.h"
 #include "Logger.h"
@@ -1116,6 +1117,17 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// Generate __storage_read/__storage_write dispatch subroutines
 	// for assembly sload/sstore support
 	buildStorageDispatch(_contract, contract.get(), contractName);
+
+	// Generate function pointer dispatch tables
+	{
+		std::string cref = m_sourceFile + "." + contractName;
+		awst::SourceLocation loc;
+		loc.file = m_sourceFile;
+		auto dispatchMethods = eb::FunctionPointerBuilder::generateDispatchMethods(cref, loc);
+		for (auto& m : dispatchMethods)
+			contract->methods.push_back(std::move(m));
+		eb::FunctionPointerBuilder::reset();
+	}
 
 	return contract;
 }

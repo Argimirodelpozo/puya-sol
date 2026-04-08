@@ -4,6 +4,7 @@
 
 #include "builder/sol-ast/calls/SolInternalCall.h"
 #include "builder/sol-eb/CallResolver.h"
+#include "builder/sol-eb/FunctionPointerBuilder.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/storage/StorageMapper.h"
@@ -246,24 +247,25 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 			decl = it->second;
 			Logger::instance().debug("resolved function pointer '" + name + "' to '" + it->second->name() + "'");
 		}
-		else if (dynamic_cast<FunctionType const*>(varDecl->type()))
+		else if (auto const* funcType = dynamic_cast<FunctionType const*>(varDecl->type()))
 		{
-			// Unresolvable function pointer
-			Logger::instance().warning("call to unresolvable function pointer '" + name + "', emitting assert(false)", m_loc);
-			auto assertExpr = std::make_shared<awst::AssertExpression>();
-			assertExpr->sourceLocation = m_loc;
-			assertExpr->wtype = awst::WType::voidType();
-			auto falseLit = std::make_shared<awst::BoolConstant>();
-			falseLit->sourceLocation = m_loc;
-			falseLit->wtype = awst::WType::boolType();
-			falseLit->value = false;
-			assertExpr->condition = falseLit;
-			assertExpr->errorMessage = "uninitialized function pointer";
-			auto stmt = std::make_shared<awst::ExpressionStatement>();
-			stmt->sourceLocation = m_loc;
-			stmt->expr = assertExpr;
-			m_ctx.pendingStatements.push_back(std::move(stmt));
+			// Function pointer call via dispatch table
+			auto ptrVar = std::make_shared<awst::VarExpression>();
+			ptrVar->sourceLocation = m_loc;
+			ptrVar->wtype = eb::FunctionPointerBuilder::mapFunctionType(funcType);
+			ptrVar->name = name;
 
+			// Build args
+			std::vector<std::shared_ptr<awst::Expression>> args;
+			for (auto const& arg : m_call.arguments())
+				args.push_back(m_ctx.buildExpr(*arg));
+
+			auto result = eb::FunctionPointerBuilder::buildFunctionPointerCall(
+				m_ctx, std::move(ptrVar), funcType, std::move(args), m_loc);
+			if (result)
+				return result;
+
+			// Fallback: void
 			auto vc = std::make_shared<awst::VoidConstant>();
 			vc->sourceLocation = m_loc;
 			vc->wtype = awst::WType::voidType();

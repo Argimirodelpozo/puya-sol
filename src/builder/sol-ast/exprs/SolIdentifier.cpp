@@ -3,6 +3,7 @@
 /// Migrated from IdentifierBuilder.cpp.
 
 #include "builder/sol-ast/exprs/SolIdentifier.h"
+#include "builder/sol-eb/FunctionPointerBuilder.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -152,6 +153,12 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 
 			return m_ctx.storageMapper.createStateRead(name, type, kind, m_loc);
 		}
+	}
+
+	// Function reference: identifier refers to a FunctionDefinition → function pointer value
+	if (auto const* funcDef = dynamic_cast<solidity::frontend::FunctionDefinition const*>(decl))
+	{
+		return eb::FunctionPointerBuilder::buildFunctionReference(m_ctx, funcDef, m_loc);
 	}
 
 	// Regular local variable
