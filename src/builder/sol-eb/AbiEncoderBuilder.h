@@ -63,6 +63,25 @@ private:
 		std::shared_ptr<awst::Expression> _expr, int _n,
 		awst::SourceLocation const& _loc);
 
+	/// Extract a uint64 from a 32-byte ABI word (last 8 bytes → btoi).
+	static std::shared_ptr<awst::Expression> uint64FromAbiWord(
+		std::shared_ptr<awst::Expression> _word32,
+		awst::SourceLocation const& _loc);
+
+	/// Decode a single value from EVM ABI-encoded bytes at a given offset.
+	/// Handles static types (uint, bool, address, bytesN) and dynamic types
+	/// (bytes, string). Returns the decoded expression with the correct wtype.
+	/// @param _data     The full ABI-encoded bytes expression
+	/// @param _offset   Byte offset into _data where this value's head slot is
+	/// @param _solType  The Solidity type to decode as
+	/// @param _loc      Source location for generated nodes
+	static std::shared_ptr<awst::Expression> decodeAbiValue(
+		BuilderContext& _ctx,
+		std::shared_ptr<awst::Expression> _data,
+		std::shared_ptr<awst::Expression> _offset,
+		solidity::frontend::Type const* _solType,
+		awst::SourceLocation const& _loc);
+
 	// ── Individual handlers ──
 
 	static std::unique_ptr<InstanceBuilder> handleEncodePacked(
