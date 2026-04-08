@@ -544,46 +544,14 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 		}
 	}
 
-	// Chained slot-based index: (_x[0])[j] where the outer returns biguint (slot offset)
-	// Only applies when the BASE is a storage-ref array (not regular mappings)
+	// Slot-based storage index: if the base resolves to biguint AND the
+	// Solidity type is a storage-located array, treat as slot arithmetic.
+	// This handles any expression chain: _x[i][j], getArray()[j], etc.
 	{
-		auto const* baseArrayType = dynamic_cast<ArrayType const*>(
-			m_indexAccess.baseExpression().annotation().type);
-		bool baseIsStorageRef = false;
-		if (baseArrayType && baseArrayType->dataStoredIn(DataLocation::Storage))
-		{
-			// Check if the BASE's base is a slot-based storage ref:
-			// Pattern 1: _x[i][j] where _x is in slotStorageRefs
-			if (auto const* baseIdx = dynamic_cast<IndexAccess const*>(&m_indexAccess.baseExpression()))
-			{
-				if (auto const* baseIdent = dynamic_cast<Identifier const*>(&baseIdx->baseExpression()))
-				{
-					if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
-							baseIdent->annotation().referencedDeclaration))
-					{
-						if (m_ctx.slotStorageRefs.count(varDecl->id()))
-							baseIsStorageRef = true;
-					}
-				}
-			}
-			// Pattern 2: getArray()[j] where getArray() returns storage ref with .slot
-			if (auto const* baseFuncCall = dynamic_cast<FunctionCall const*>(&m_indexAccess.baseExpression()))
-			{
-				auto const* funcType = dynamic_cast<FunctionType const*>(baseFuncCall->expression().annotation().type);
-				if (funcType && funcType->hasDeclaration())
-				{
-					auto const* funcDef = dynamic_cast<FunctionDefinition const*>(&funcType->declaration());
-					if (funcDef && !funcDef->returnParameters().empty()
-						&& funcDef->returnParameters()[0]->referenceLocation() == VariableDeclaration::Location::Storage
-						&& funcDef->isImplemented()
-						&& std::any_of(funcDef->body().statements().begin(), funcDef->body().statements().end(),
-							[](auto const& s) { return dynamic_cast<InlineAssembly const*>(s.get()); }))
-						baseIsStorageRef = true;
-				}
-			}
-		}
-
-		if (baseIsStorageRef && m_indexAccess.indexExpression())
+		auto const* baseSolType = m_indexAccess.baseExpression().annotation().type;
+		auto const* baseArrayType = dynamic_cast<ArrayType const*>(baseSolType);
+		if (baseArrayType && baseArrayType->dataStoredIn(DataLocation::Storage)
+			&& m_indexAccess.indexExpression())
 		{
 			auto baseExpr = buildExpr(m_indexAccess.baseExpression());
 			if (baseExpr && baseExpr->wtype == awst::WType::biguintType())
@@ -591,6 +559,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 				auto indexExpr = buildExpr(*m_indexAccess.indexExpression());
 				if (indexExpr)
 				{
+					// Ensure index is biguint
 					if (indexExpr->wtype == awst::WType::uint64Type())
 					{
 						auto itob = std::make_shared<awst::IntrinsicCall>();
@@ -612,6 +581,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 					add->op = awst::BigUIntBinaryOperator::Add;
 					add->right = std::move(indexExpr);
 
+					// Read: __storage_read(truncated_slot)
 					if (!m_indexAccess.annotation().willBeWrittenTo)
 					{
 						auto castToBytes = std::make_shared<awst::ReinterpretCast>();
@@ -619,32 +589,14 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 						castToBytes->wtype = awst::WType::bytesType();
 						castToBytes->expr = std::move(add);
 
-						auto lenOp = std::make_shared<awst::IntrinsicCall>();
-						lenOp->sourceLocation = m_loc;
-						lenOp->wtype = awst::WType::uint64Type();
-						lenOp->opCode = "len";
-						lenOp->stackArgs.push_back(castToBytes);
-						auto sub8 = std::make_shared<awst::UInt64BinaryOperation>();
-						sub8->sourceLocation = m_loc;
-						sub8->wtype = awst::WType::uint64Type();
-						sub8->left = std::move(lenOp);
-						sub8->op = awst::UInt64BinaryOperator::Sub;
-						auto eight = std::make_shared<awst::IntegerConstant>();
-						eight->sourceLocation = m_loc;
-						eight->wtype = awst::WType::uint64Type();
-						eight->value = "8";
-						sub8->right = std::move(eight);
+						// Safe truncate biguint to uint64
 						auto last8 = std::make_shared<awst::IntrinsicCall>();
 						last8->sourceLocation = m_loc;
 						last8->wtype = awst::WType::bytesType();
-						last8->opCode = "extract3";
+						last8->opCode = "extract";
+						last8->immediates = {24, 8};
 						last8->stackArgs.push_back(std::move(castToBytes));
-						last8->stackArgs.push_back(std::move(sub8));
-						auto eight2 = std::make_shared<awst::IntegerConstant>();
-						eight2->sourceLocation = m_loc;
-						eight2->wtype = awst::WType::uint64Type();
-						eight2->value = "8";
-						last8->stackArgs.push_back(std::move(eight2));
+
 						auto btoi = std::make_shared<awst::IntrinsicCall>();
 						btoi->sourceLocation = m_loc;
 						btoi->wtype = awst::WType::uint64Type();
@@ -661,6 +613,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 						call->args.push_back(std::move(arg));
 						return call;
 					}
+					// Write: return computed slot for assignment handler
 					return add;
 				}
 			}
