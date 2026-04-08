@@ -147,7 +147,20 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					if (!func->isImplemented())
 						continue;
 
-					// Function-type parameters are now supported via function pointer dispatch.
+					// Skip functions with function-type parameters (AVM can't support function pointers)
+					{
+						bool hasFunctionParam = false;
+						for (auto const& p: func->parameters())
+						{
+							if (dynamic_cast<solidity::frontend::FunctionType const*>(p->type()))
+							{
+								hasFunctionParam = true;
+								break;
+							}
+						}
+						if (hasFunctionParam)
+							continue;
+					}
 
 					std::string baseName = libraryName + "." + func->name();
 					std::string qualifiedName = baseName;
@@ -257,7 +270,23 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				}
 
 				// Skip library functions with function-type parameters (e.g., comparators)
-				// Function-type parameters now supported via function pointer dispatch.
+				// AVM does not support function pointers / first-class functions
+				{
+					bool hasFunctionParam = false;
+					for (auto const& p: func->parameters())
+					{
+						if (dynamic_cast<solidity::frontend::FunctionType const*>(p->type()))
+						{
+							hasFunctionParam = true;
+							break;
+						}
+					}
+					if (hasFunctionParam)
+					{
+						Logger::instance().debug("Skipping library function with function-type param: " + qualifiedName);
+						continue;
+					}
+				}
 
 				Logger::instance().debug("Translating library function: " + qualifiedName);
 

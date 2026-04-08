@@ -157,22 +157,21 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 
 	case Type::Category::Function:
 	{
-		// Only handle function POINTER types (Internal/External).
-		// Other function kinds (Declaration, Event, Error, etc.) are not values.
 		auto const* funcType = dynamic_cast<FunctionType const*>(_solType);
-		if (funcType)
+		if (funcType && (funcType->kind() == FunctionType::Kind::Internal
+			|| funcType->kind() == FunctionType::Kind::External
+			|| funcType->kind() == FunctionType::Kind::DelegateCall))
 		{
-			auto kind = funcType->kind();
-			if (kind == FunctionType::Kind::Internal)
-				result = awst::WType::uint64Type(); // dispatch ID
-			else if (kind == FunctionType::Kind::External
-				|| kind == FunctionType::Kind::DelegateCall)
-				result = awst::WType::bytesType(); // address + selector
-			// For all other kinds (Declaration, Event, etc.) fall through to default
+			// Internal function pointers: uint64 (dispatch ID)
+			// External function pointers: bytes (address + selector)
+			result = (funcType->kind() == FunctionType::Kind::Internal)
+				? awst::WType::uint64Type()
+				: awst::WType::bytesType();
 		}
-		if (result) break;
+		else
+			result = awst::WType::uint64Type(); // default for other function kinds
+		break;
 	}
-	[[fallthrough]];
 
 	default:
 		// Unsupported type — return bytes as fallback
