@@ -283,11 +283,16 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		auto defaultBlock = std::make_shared<awst::Block>();
 		defaultBlock->sourceLocation = _loc;
 		{
-			// assert(false, "invalid function pointer")
-			auto assertExpr = std::make_shared<awst::IntrinsicCall>();
+			// assert(false) — invalid function pointer ID
+			auto assertExpr = std::make_shared<awst::AssertExpression>();
 			assertExpr->sourceLocation = _loc;
 			assertExpr->wtype = awst::WType::voidType();
-			assertExpr->opCode = "err";
+			auto falseLit = std::make_shared<awst::BoolConstant>();
+			falseLit->sourceLocation = _loc;
+			falseLit->wtype = awst::WType::boolType();
+			falseLit->value = false;
+			assertExpr->condition = std::move(falseLit);
+			assertExpr->errorMessage = "invalid function pointer";
 			auto stmt = std::make_shared<awst::ExpressionStatement>();
 			stmt->sourceLocation = _loc;
 			stmt->expr = std::move(assertExpr);

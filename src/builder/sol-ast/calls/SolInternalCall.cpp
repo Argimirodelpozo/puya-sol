@@ -46,35 +46,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	FunctionDefinition const* _funcDef,
 	bool _isUsingForCall)
 {
-	// Check for function-type parameters (unsupported on AVM)
-	if (_funcDef)
-	{
-		bool hasFunctionParam = false;
-		for (auto const& p: _funcDef->parameters())
-		{
-			if (dynamic_cast<FunctionType const*>(p->type()))
-			{
-				hasFunctionParam = true;
-				break;
-			}
-		}
-		if (hasFunctionParam)
-		{
-			Logger::instance().warning(
-				"skipping call to '" + _funcDef->name()
-				+ "' (has function-type parameter, not supported on AVM)", m_loc);
-			auto noop = std::make_shared<awst::IntrinsicCall>();
-			noop->sourceLocation = m_loc;
-			noop->wtype = awst::WType::voidType();
-			noop->opCode = "log";
-			auto msg = std::make_shared<awst::BytesConstant>();
-			msg->sourceLocation = m_loc;
-			msg->wtype = awst::WType::bytesType();
-			msg->value = {};
-			noop->stackArgs.push_back(std::move(msg));
-			return noop;
-		}
-	}
+	// Function-type parameters are now supported via function pointer dispatch.
+	// Internal function pointers are uint64 IDs, external are bytes.
 
 	auto call = std::make_shared<awst::SubroutineCallExpression>();
 	call->sourceLocation = m_loc;

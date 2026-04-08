@@ -155,10 +155,22 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 		}
 	}
 
-	// Function reference: identifier refers to a FunctionDefinition → function pointer value
+	// Function pointer reference: identifier refers to a FunctionDefinition used as a value
+	// (not as a call target). Only produce a function ID when the Solidity type annotation
+	// indicates this is a function-typed value expression — e.g., `ptr = myFunc` or
+	// `eval(g, x)` where g is passed as a function pointer argument.
 	if (auto const* funcDef = dynamic_cast<solidity::frontend::FunctionDefinition const*>(decl))
 	{
-		return eb::FunctionPointerBuilder::buildFunctionReference(m_ctx, funcDef, m_loc);
+		// Check if the annotation type is a FunctionType with Internal/External kind
+		// This distinguishes "myFunc" used as a value from "myFunc" used as a call target
+		if (auto const* funcType = dynamic_cast<solidity::frontend::FunctionType const*>(m_solType))
+		{
+			if (funcType->kind() == solidity::frontend::FunctionType::Kind::Internal
+				|| funcType->kind() == solidity::frontend::FunctionType::Kind::External)
+			{
+				return eb::FunctionPointerBuilder::buildFunctionReference(m_ctx, funcDef, m_loc);
+			}
+		}
 	}
 
 	// Regular local variable
