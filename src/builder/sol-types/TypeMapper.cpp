@@ -155,24 +155,6 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 		break;
 	}
 
-	case Type::Category::Function:
-	{
-		auto const* funcType = dynamic_cast<FunctionType const*>(_solType);
-		if (funcType && (funcType->kind() == FunctionType::Kind::Internal
-			|| funcType->kind() == FunctionType::Kind::External
-			|| funcType->kind() == FunctionType::Kind::DelegateCall))
-		{
-			// Internal function pointers: uint64 (dispatch ID)
-			// External function pointers: bytes (address + selector)
-			result = (funcType->kind() == FunctionType::Kind::Internal)
-				? awst::WType::uint64Type()
-				: awst::WType::bytesType();
-		}
-		else
-			result = awst::WType::uint64Type(); // default for other function kinds
-		break;
-	}
-
 	default:
 		// Unsupported type — return bytes as fallback
 		Logger::instance().warning("unsupported type '" + typeStr + "', falling back to bytes");
