@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/immutable_signed.sol.C.approval_program() -> uint64:
 main:
-    pushint 0
+    intcblock 1
     txn ApplicationID
     bnz main_after_if_else@2
     pushbytes "a"
@@ -12,9 +12,9 @@ main:
     pushbytess "b" 0x6162
     app_global_put
     pushbytes "f"
-    dig 1
+    intc_0 // 1
     app_global_put
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -38,7 +38,7 @@ main_after_if_else@2:
 main_direct_route@5:
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe6162
     log
-    pushint 1
+    intc_0 // 1
     return
 
 
@@ -48,5 +48,5 @@ viaasm:
     store 0
     pushbytes 0x151f7c75000000000000000000000000000000000000000000000000fffffffffffffffe6162000000000000000000000000000000000000000000000000000000000000
     log
-    pushint 1
+    intc_0 // 1
     return

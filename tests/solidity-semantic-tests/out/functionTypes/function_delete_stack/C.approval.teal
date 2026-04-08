@@ -23,14 +23,21 @@ main_after_if_else@2:
     assert
     pushbytess 0xb5251388 0xc95a9d21 // method "a()uint256", method "test()uint256"
     txna ApplicationArgs 0
-    match main_a_route@5 main_test_route@6
+    match main_a_route@5 test
     err
-
-main_test_route@6:
-    err // uninitialized function pointer
 
 main_a_route@5:
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000007
+    log
+    pushint 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_delete_stack.sol.C.test[routing]() -> void:
+test:
+    pushint 0
+    assert // invalid function pointer
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     pushint 1
     return

@@ -46,23 +46,26 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	FunctionDefinition const* _funcDef,
 	bool _isUsingForCall)
 {
-	// Check for function-type parameters (unsupported on AVM)
+	// Function-type parameters: only internal function pointers passed as params
+	// are supported. External/other function-type params are skipped.
 	if (_funcDef)
 	{
 		bool hasFunctionParam = false;
+		bool allInternal = true;
 		for (auto const& p: _funcDef->parameters())
 		{
-			if (dynamic_cast<FunctionType const*>(p->type()))
+			if (auto const* ft = dynamic_cast<FunctionType const*>(p->type()))
 			{
 				hasFunctionParam = true;
-				break;
+				if (ft->kind() != FunctionType::Kind::Internal)
+					allInternal = false;
 			}
 		}
-		if (hasFunctionParam)
+		if (hasFunctionParam && !allInternal)
 		{
 			Logger::instance().warning(
 				"skipping call to '" + _funcDef->name()
-				+ "' (has function-type parameter, not supported on AVM)", m_loc);
+				+ "' (has non-internal function-type parameter)", m_loc);
 			auto noop = std::make_shared<awst::IntrinsicCall>();
 			noop->sourceLocation = m_loc;
 			noop->wtype = awst::WType::voidType();
@@ -249,23 +252,54 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 		}
 		else if (auto const* funcType = dynamic_cast<FunctionType const*>(varDecl->type()))
 		{
-			// Function pointer call via dispatch table
-			auto ptrVar = std::make_shared<awst::VarExpression>();
-			ptrVar->sourceLocation = m_loc;
-			ptrVar->wtype = eb::FunctionPointerBuilder::mapFunctionType(funcType);
-			ptrVar->name = name;
+			if (funcType->kind() == FunctionType::Kind::Internal)
+			{
+				std::shared_ptr<awst::Expression> ptrExpr;
 
-			// Build args
-			std::vector<std::shared_ptr<awst::Expression>> args;
-			for (auto const& arg : m_call.arguments())
-				args.push_back(m_ctx.buildExpr(*arg));
+				if (varDecl->isStateVariable())
+				{
+					// State variable: read function ID from global state
+					ptrExpr = m_ctx.storageMapper.createStateRead(
+						name, awst::WType::uint64Type(),
+						awst::AppStorageKind::AppGlobal, m_loc);
+				}
+				else
+				{
+					// Local/param: use variable directly
+					ptrExpr = std::make_shared<awst::VarExpression>();
+					std::static_pointer_cast<awst::VarExpression>(ptrExpr)->sourceLocation = m_loc;
+					std::static_pointer_cast<awst::VarExpression>(ptrExpr)->wtype = awst::WType::uint64Type();
+					std::static_pointer_cast<awst::VarExpression>(ptrExpr)->name = name;
+				}
 
-			auto result = eb::FunctionPointerBuilder::buildFunctionPointerCall(
-				m_ctx, std::move(ptrVar), funcType, std::move(args), m_loc);
-			if (result)
-				return result;
+				std::vector<std::shared_ptr<awst::Expression>> args;
+				for (auto const& arg : m_call.arguments())
+					args.push_back(m_ctx.buildExpr(*arg));
 
-			// Fallback: void
+				auto result = eb::FunctionPointerBuilder::buildFunctionPointerCall(
+					m_ctx, std::move(ptrExpr), funcType, std::move(args), m_loc);
+				if (result)
+					return result;
+			}
+
+			// Fallback for external / unsupported:
+			// emit assert(false) to revert (matches EVM behavior for uninitialized pointers)
+			Logger::instance().warning(
+				"call to function pointer '" + name + "' (state var / unsupported), emitting assert(false)", m_loc);
+			auto assertExpr = std::make_shared<awst::AssertExpression>();
+			assertExpr->sourceLocation = m_loc;
+			assertExpr->wtype = awst::WType::voidType();
+			auto falseLit = std::make_shared<awst::BoolConstant>();
+			falseLit->sourceLocation = m_loc;
+			falseLit->wtype = awst::WType::boolType();
+			falseLit->value = false;
+			assertExpr->condition = std::move(falseLit);
+			assertExpr->errorMessage = "uninitialized function pointer";
+			auto stmt = std::make_shared<awst::ExpressionStatement>();
+			stmt->sourceLocation = m_loc;
+			stmt->expr = std::move(assertExpr);
+			m_ctx.pendingStatements.push_back(std::move(stmt));
+
 			auto vc = std::make_shared<awst::VoidConstant>();
 			vc->sourceLocation = m_loc;
 			vc->wtype = awst::WType::voidType();
@@ -354,6 +388,29 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 				auto target = awst::InstanceMethodTarget{
 					eb::CallResolver::resolveMethodName(m_ctx, *funcDef)};
 				return buildSubroutineCall(std::move(target), retType, funcDef, false);
+			}
+
+			// Function pointer state variable: C.x() where x is function() internal
+			if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(refDecl))
+			{
+				if (auto const* funcType = dynamic_cast<FunctionType const*>(varDecl->type()))
+				{
+					if (funcType->kind() == FunctionType::Kind::Internal)
+					{
+						auto ptrExpr = m_ctx.storageMapper.createStateRead(
+							varDecl->name(), awst::WType::uint64Type(),
+							awst::AppStorageKind::AppGlobal, m_loc);
+
+						std::vector<std::shared_ptr<awst::Expression>> args;
+						for (auto const& arg : m_call.arguments())
+							args.push_back(m_ctx.buildExpr(*arg));
+
+						auto result = eb::FunctionPointerBuilder::buildFunctionPointerCall(
+							m_ctx, std::move(ptrExpr), funcType, std::move(args), m_loc);
+						if (result)
+							return result;
+					}
+				}
 			}
 		}
 	}
@@ -450,7 +507,29 @@ std::shared_ptr<awst::Expression> SolInternalCall::toAwst()
 	if (auto const* innerCall = dynamic_cast<FunctionCall const*>(&funcExpr))
 		return resolveFunctionPointerCast(*innerCall);
 
-	// Unknown expression type
+	// Generic function pointer call: evaluate the expression to get a pointer ID,
+	// then dispatch through the function pointer table.
+	{
+		auto const* exprType = funcExpr.annotation().type;
+		auto const* funcType = dynamic_cast<FunctionType const*>(exprType);
+		if (funcType && funcType->kind() == FunctionType::Kind::Internal)
+		{
+			auto ptrExpr = m_ctx.buildExpr(funcExpr);
+			if (ptrExpr && ptrExpr->wtype == awst::WType::uint64Type())
+			{
+				std::vector<std::shared_ptr<awst::Expression>> args;
+				for (auto const& arg : m_call.arguments())
+					args.push_back(m_ctx.buildExpr(*arg));
+
+				auto result = eb::FunctionPointerBuilder::buildFunctionPointerCall(
+					m_ctx, std::move(ptrExpr), funcType, std::move(args), m_loc);
+				if (result)
+					return result;
+			}
+		}
+	}
+
+	// Fallback: unresolvable call
 	Logger::instance().warning("could not resolve function call target", m_loc);
 	auto* retType = m_ctx.typeMapper.map(m_call.annotation().type);
 	return buildSubroutineCall(

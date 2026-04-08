@@ -4,11 +4,11 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_delete_storage.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "y" 0x
+    bytecblock "y"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "y"
-    bytec_1 // 0x
+    intc_1 // 0
     app_global_put
     intc_0 // 1
     return
@@ -28,10 +28,16 @@ main_after_if_else@2:
     assert
     pushbytess 0xb5251388 0x90f88440 0x4075f398 0x96576474 // method "a()uint256", method "set()uint256", method "d()uint256", method "ca()uint256"
     txna ApplicationArgs 0
-    match main_a_route@5 set d main_ca_route@8
+    match main_a_route@5 main_set_route@6 d main_ca_route@8
     err
 
 main_ca_route@8:
+    err // uninitialized function pointer
+
+main_set_route@6:
+    bytec_0 // "y"
+    intc_0 // 1
+    app_global_put
     err // uninitialized function pointer
 
 main_a_route@5:
@@ -39,14 +45,6 @@ main_a_route@5:
     log
     intc_0 // 1
     return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_delete_storage.sol.C.set[routing]() -> void:
-set:
-    bytec_0 // "y"
-    intc_1 // 0
-    app_global_put
-    err // uninitialized function pointer
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_delete_storage.sol.C.d[routing]() -> void:
@@ -57,7 +55,7 @@ d:
     bury 1
     assert // check y exists
     bytec_0 // "y"
-    bytec_1 // 0x
+    intc_1 // 0
     app_global_put
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     log

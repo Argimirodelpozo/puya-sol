@@ -576,7 +576,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "IntrinsicCall",
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
                   "line": 81,
@@ -586,33 +586,77 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "void",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "op_code": "log",
-                "immediates": [],
-                "stack_args": [
-                  {
-                    "_type": "BytesConstant",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
-                      "line": 81,
-                      "end_line": 91,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
+                "value": {
+                  "_type": "SubroutineCallExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+                    "line": 81,
+                    "end_line": 91,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
+                  },
+                  "target": {
+                    "_type": "InstanceMethodTarget",
+                    "member_name": "eval"
+                  },
+                  "args": [
+                    {
+                      "name": null,
+                      "value": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+                          "line": 86,
+                          "end_line": 87,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 1,
+                        "teal_alias": null
+                      }
                     },
-                    "wtype": {
-                      "_type": "BytesWType",
-                      "name": "bytes",
-                      "immutable": true,
-                      "length": null
-                    },
-                    "value": "",
-                    "encoding": "unknown"
-                  }
-                ]
+                    {
+                      "name": null,
+                      "value": {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+                          "line": 89,
+                          "end_line": 90,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "name": "x"
+                      }
+                    }
+                  ]
+                },
+                "error_message": null
               }
             }
           ],
@@ -672,10 +716,9 @@
               "end_column": null
             },
             "wtype": {
-              "_type": "BytesWType",
-              "name": "bytes",
-              "immutable": true,
-              "length": null
+              "_type": "WType",
+              "name": "uint64",
+              "immutable": true
             }
           },
           {
@@ -713,17 +756,17 @@
           },
           "body": [
             {
-              "_type": "ExpressionStatement",
+              "_type": "ReturnStatement",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
-                "line": 209,
+                "line": 202,
                 "end_line": 213,
                 "comment_lines": 0,
                 "column": null,
                 "end_column": null
               },
-              "expr": {
-                "_type": "AssertExpression",
+              "value": {
+                "_type": "SubroutineCallExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
                   "line": 209,
@@ -734,28 +777,55 @@
                 },
                 "wtype": {
                   "_type": "WType",
-                  "name": "void",
+                  "name": "biguint",
                   "immutable": true
                 },
-                "condition": {
-                  "_type": "BoolConstant",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
-                    "line": 209,
-                    "end_line": 213,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "WType",
-                    "name": "bool",
-                    "immutable": true
-                  },
-                  "value": false
+                "target": {
+                  "_type": "InstanceMethodTarget",
+                  "member_name": "__funcptr_dispatch_u256_ret_u256"
                 },
-                "error_message": "uninitialized function pointer",
-                "comment": "uninitialized function pointer"
+                "args": [
+                  {
+                    "name": "__funcptr_id",
+                    "value": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+                        "line": 209,
+                        "end_line": 213,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "name": "x"
+                    }
+                  },
+                  {
+                    "name": "__arg0",
+                    "value": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+                        "line": 211,
+                        "end_line": 212,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "name": "a"
+                    }
+                  }
+                ]
               }
             }
           ],
@@ -1005,6 +1075,315 @@
           "resource_encoding": "value",
           "validate_encoding": null
         }
+      },
+      {
+        "_type": "ContractMethod",
+        "source_location": {
+          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+          "line": 1,
+          "end_line": 1,
+          "comment_lines": 0,
+          "column": null,
+          "end_column": null
+        },
+        "args": [
+          {
+            "_type": "SubroutineArgument",
+            "name": "__funcptr_id",
+            "source_location": {
+              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+              "line": 1,
+              "end_line": 1,
+              "comment_lines": 0,
+              "column": null,
+              "end_column": null
+            },
+            "wtype": {
+              "_type": "WType",
+              "name": "uint64",
+              "immutable": true
+            }
+          },
+          {
+            "_type": "SubroutineArgument",
+            "name": "__arg0",
+            "source_location": {
+              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+              "line": 1,
+              "end_line": 1,
+              "comment_lines": 0,
+              "column": null,
+              "end_column": null
+            },
+            "wtype": {
+              "_type": "WType",
+              "name": "biguint",
+              "immutable": true
+            }
+          }
+        ],
+        "return_type": {
+          "_type": "WType",
+          "name": "biguint",
+          "immutable": true
+        },
+        "body": {
+          "_type": "Block",
+          "source_location": {
+            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+            "line": 1,
+            "end_line": 1,
+            "comment_lines": 0,
+            "column": null,
+            "end_column": null
+          },
+          "body": [
+            {
+              "_type": "IfElse",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+                "line": 1,
+                "end_line": 1,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "condition": {
+                "_type": "NumericComparisonExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+                  "line": 1,
+                  "end_line": 1,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "bool",
+                  "immutable": true
+                },
+                "lhs": {
+                  "_type": "VarExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+                    "line": 1,
+                    "end_line": 1,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "uint64",
+                    "immutable": true
+                  },
+                  "name": "__funcptr_id"
+                },
+                "operator": "==",
+                "rhs": {
+                  "_type": "IntegerConstant",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+                    "line": 1,
+                    "end_line": 1,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "uint64",
+                    "immutable": true
+                  },
+                  "value": 1,
+                  "teal_alias": null
+                }
+              },
+              "if_branch": {
+                "_type": "Block",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+                  "line": 1,
+                  "end_line": 1,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "body": [
+                  {
+                    "_type": "ReturnStatement",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+                      "line": 1,
+                      "end_line": 1,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "value": {
+                      "_type": "ARC4Decode",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+                        "line": 1,
+                        "end_line": 1,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "value": {
+                        "_type": "SubroutineCallExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+                          "line": 1,
+                          "end_line": 1,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "ARC4UIntN",
+                          "name": "arc4.uint256",
+                          "immutable": true,
+                          "n": 256,
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "target": {
+                          "_type": "InstanceMethodTarget",
+                          "member_name": "g"
+                        },
+                        "args": [
+                          {
+                            "name": "__arc4_x",
+                            "value": {
+                              "_type": "ARC4Encode",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+                                "line": 1,
+                                "end_line": 1,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "ARC4UIntN",
+                                "name": "arc4.uint256",
+                                "immutable": true,
+                                "n": 256,
+                                "arc4_alias": null,
+                                "source_location": null
+                              },
+                              "value": {
+                                "_type": "VarExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+                                  "line": 1,
+                                  "end_line": 1,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "name": "__arg0"
+                              },
+                              "error_message": null
+                            }
+                          }
+                        ]
+                      },
+                      "error_message": null
+                    }
+                  }
+                ],
+                "label": null,
+                "comment": null
+              },
+              "else_branch": {
+                "_type": "Block",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+                  "line": 1,
+                  "end_line": 1,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "body": [
+                  {
+                    "_type": "ExpressionStatement",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+                      "line": 1,
+                      "end_line": 1,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "expr": {
+                      "_type": "AssertExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+                        "line": 1,
+                        "end_line": 1,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "void",
+                        "immutable": true
+                      },
+                      "condition": {
+                        "_type": "BoolConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol",
+                          "line": 1,
+                          "end_line": 1,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "bool",
+                          "immutable": true
+                        },
+                        "value": false
+                      },
+                      "error_message": "invalid function pointer",
+                      "comment": "invalid function pointer"
+                    }
+                  }
+                ],
+                "label": null,
+                "comment": null
+              }
+            }
+          ],
+          "label": null,
+          "comment": null
+        },
+        "documentation": {
+          "description": null,
+          "args": {},
+          "returns": null
+        },
+        "inline": null,
+        "pure": false,
+        "cref": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/pass_function_types_internally.sol.C",
+        "member_name": "__funcptr_dispatch_u256_ret_u256",
+        "arc4_method_config": null
       }
     ],
     "app_state": [],

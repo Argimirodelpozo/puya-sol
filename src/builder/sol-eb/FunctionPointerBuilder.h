@@ -28,6 +28,7 @@ struct FuncPtrEntry
 	std::string name;         // Function name (for dispatch subroutine)
 	unsigned id;              // Unique integer ID for this target
 	solidity::frontend::FunctionType const* funcType; // Signature
+	solidity::frontend::FunctionDefinition const* funcDef; // For visibility check
 };
 
 class FunctionPointerBuilder
@@ -58,9 +59,13 @@ public:
 
 	/// Register a function as a potential function pointer target.
 	/// Called during contract translation for any function whose address is taken.
+	/// Register a function as a potential function pointer target.
+	/// @param _awstName  The name used in the AWST (may differ from _funcDef->name()
+	///                   for super versions, e.g., "f__super_8").
 	static void registerTarget(
 		solidity::frontend::FunctionDefinition const* _funcDef,
-		solidity::frontend::FunctionType const* _funcType);
+		solidity::frontend::FunctionType const* _funcType,
+		std::string _awstName = "");
 
 	/// Generate the __funcptr_dispatch subroutine(s) for all registered targets.
 	/// Groups targets by signature (param types + return types) and generates

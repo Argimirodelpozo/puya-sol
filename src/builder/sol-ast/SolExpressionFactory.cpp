@@ -3,6 +3,7 @@
 /// Uses FunctionCallKind + FunctionType::Kind for dispatch.
 
 #include "builder/sol-ast/SolExpressionFactory.h"
+#include "builder/sol-eb/FunctionPointerBuilder.h"
 #include "builder/sol-ast/calls/SolRequireAssert.h"
 #include "builder/sol-ast/calls/SolRevert.h"
 #include "builder/sol-ast/calls/SolBuiltinCall.h"
@@ -34,6 +35,35 @@
 
 namespace puyasol::builder::sol_ast
 {
+
+/// Inline helper: MemberAccess that resolves to a function pointer ID (C.f)
+class SolFunctionPointerAccess : public SolMemberAccess
+{
+public:
+	SolFunctionPointerAccess(eb::BuilderContext& _ctx,
+		solidity::frontend::MemberAccess const& _node,
+		solidity::frontend::FunctionDefinition const* _funcDef)
+		: SolMemberAccess(_ctx, _node), m_funcDef(_funcDef) {}
+
+	std::shared_ptr<awst::Expression> toAwst() override
+	{
+		// Check if this function has a super version name (base class function
+		// that's overridden in the current contract)
+		std::string awstName;
+		auto it = m_ctx.superTargetNames.find(m_funcDef->id());
+		if (it != m_ctx.superTargetNames.end())
+			awstName = it->second;
+
+		eb::FunctionPointerBuilder::registerTarget(
+			m_funcDef,
+			m_funcDef->functionType(true),
+			awstName);
+
+		return eb::FunctionPointerBuilder::buildFunctionReference(m_ctx, m_funcDef, m_loc);
+	}
+private:
+	solidity::frontend::FunctionDefinition const* m_funcDef;
+};
 
 SolExpressionFactory::SolExpressionFactory(eb::BuilderContext& _ctx)
 	: m_ctx(_ctx)
@@ -229,7 +259,22 @@ std::unique_ptr<SolMemberAccess> SolExpressionFactory::createMemberAccess(
 	if (member == "length")
 		return std::make_unique<SolLengthAccess>(m_ctx, _node);
 
-	// 7. Contract member name (token.transfer in abi.encodeCall)
+	// 7. Function pointer via contract: C.f used as a value
+	if (auto const* refDecl = _node.annotation().referencedDeclaration)
+	{
+		if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(refDecl))
+		{
+			auto const* exprType = _node.annotation().type;
+			if (auto const* ft = dynamic_cast<FunctionType const*>(exprType))
+			{
+				if (ft->kind() == FunctionType::Kind::Internal
+					|| ft->kind() == FunctionType::Kind::External)
+					return std::make_unique<SolFunctionPointerAccess>(m_ctx, _node, funcDef);
+			}
+		}
+	}
+
+	// 8. Contract member name (token.transfer in abi.encodeCall)
 	if (baseType && baseType->category() == Type::Category::Contract)
 		return std::make_unique<SolConstantAccess>(m_ctx, _node);
 

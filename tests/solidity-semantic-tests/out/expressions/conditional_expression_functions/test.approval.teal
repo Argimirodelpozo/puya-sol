@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/conditional_expression_functions.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 2 32
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -50,7 +50,40 @@ f:
     assert // invalid number of bytes for arc4.bool
     pushint 0
     getbit
+    dup
     intc_0 // 1
     <=
     assert // ABI bool validation
-    err // uninitialized function pointer
+    intc_1 // 2
+    intc_0 // 1
+    uncover 2
+    select
+    dup
+    intc_1 // 2
+    ==
+    bz f_else_body@3
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+
+f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/conditional_expression_functions.sol.test.__funcptr_dispatch_ret_u256@4:
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+f_else_body@3:
+    dup
+    intc_0 // 1
+    ==
+    assert // invalid function pointer
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/conditional_expression_functions.sol.test.__funcptr_dispatch_ret_u256@4

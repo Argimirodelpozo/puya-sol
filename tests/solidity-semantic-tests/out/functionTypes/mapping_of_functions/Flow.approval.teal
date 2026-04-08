@@ -1,0 +1,136 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/mapping_of_functions.sol.Flow.approval_program() -> uint64:
+main:
+    intcblock 1 0 3 2
+    bytecblock "stages" "__ctor_pending" "success"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xcd78b354 0x5a4aa3d7 // method "__postInit()void", method "f()uint256", method "success()bool"
+    txna ApplicationArgs 0
+    match __postInit f success
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/mapping_of_functions.sol.Flow.__postInit[routing]() -> void:
+__postInit:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_0 // "stages"
+    intc_1 // 0
+    box_create
+    pop
+    bytec_2 // "success"
+    intc_1 // 0
+    app_global_put
+    txn Sender
+    sha256
+    bytec_0 // "stages"
+    swap
+    concat
+    intc_0 // 1
+    itob
+    box_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/mapping_of_functions.sol.Flow.f[routing]() -> void:
+f:
+    txn Sender
+    sha256
+    bytec_0 // "stages"
+    swap
+    concat
+    box_get
+    swap
+    btoi
+    intc_1 // 0
+    swap
+    uncover 2
+    select
+    dup
+    intc_2 // 3
+    ==
+    bz f_else_body@3
+    bytec_2 // "success"
+    intc_0 // 1
+    app_global_put
+
+f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/mapping_of_functions.sol.Flow.__funcptr_dispatch_ret@6:
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000007
+    log
+    intc_0 // 1
+    return
+
+f_else_body@3:
+    dup
+    intc_3 // 2
+    ==
+    bz f_else_body@5
+    txn Sender
+    sha256
+    bytec_0 // "stages"
+    swap
+    concat
+    intc_2 // 3
+    itob
+    box_put
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/mapping_of_functions.sol.Flow.__funcptr_dispatch_ret@6
+
+f_else_body@5:
+    dup
+    intc_0 // 1
+    ==
+    assert // invalid function pointer
+    txn Sender
+    sha256
+    bytec_0 // "stages"
+    swap
+    concat
+    intc_3 // 2
+    itob
+    box_put
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/mapping_of_functions.sol.Flow.__funcptr_dispatch_ret@6
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/mapping_of_functions.sol.Flow.success[routing]() -> void:
+success:
+    intc_1 // 0
+    bytec_2 // "success"
+    app_global_get_ex
+    assert // check success exists
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

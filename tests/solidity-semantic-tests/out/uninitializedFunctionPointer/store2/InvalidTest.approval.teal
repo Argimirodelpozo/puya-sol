@@ -3,20 +3,20 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/store2.sol.InvalidTest.approval_program() -> uint64:
 main:
-    intcblock 1 0 64
-    bytecblock "x" 0x "storedFn"
+    intcblock 0 1 64
+    bytecblock "x" "storedFn"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "storedFn"
-    bytec_1 // 0x
+    bytec_1 // "storedFn"
+    intc_0 // 0
     app_global_put
     bytec_0 // "x"
-    bytec_1 // 0x
+    pushbytes 0x
     app_global_put
-    bytec_2 // "storedFn"
-    bytec_1 // 0x
+    bytec_1 // "storedFn"
+    intc_0 // 0
     app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -43,7 +43,7 @@ main_run_route@5:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/store2.sol.InvalidTest.z[routing]() -> void:
 z:
-    intc_1 // 0
+    intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
@@ -52,13 +52,13 @@ z:
     bytec_0 // "x"
     swap
     app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/store2.sol.InvalidTest.x[routing]() -> void:
 x:
-    intc_1 // 0
+    intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
@@ -74,5 +74,5 @@ x:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return

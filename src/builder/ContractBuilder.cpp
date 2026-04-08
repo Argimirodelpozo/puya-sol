@@ -2352,6 +2352,15 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			arg.name = param->name();
 		arg.sourceLocation = makeLoc(param->location());
 		arg.wtype = m_typeMapper.map(param->type());
+		// Function pointer parameters: override type to uint64 (internal) or bytes (external)
+		if (auto const* funcType = dynamic_cast<solidity::frontend::FunctionType const*>(param->type()))
+		{
+			if (funcType->kind() == solidity::frontend::FunctionType::Kind::Internal)
+				arg.wtype = awst::WType::uint64Type();
+			else if (funcType->kind() == solidity::frontend::FunctionType::Kind::External
+				|| funcType->kind() == solidity::frontend::FunctionType::Kind::DelegateCall)
+				arg.wtype = awst::WType::bytesType();
+		}
 		method.args.push_back(std::move(arg));
 		paramIndex++;
 	}

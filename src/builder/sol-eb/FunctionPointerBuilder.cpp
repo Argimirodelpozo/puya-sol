@@ -41,17 +41,20 @@ awst::WType const* FunctionPointerBuilder::mapFunctionType(
 
 void FunctionPointerBuilder::registerTarget(
 	FunctionDefinition const* _funcDef,
-	FunctionType const* _funcType)
+	FunctionType const* _funcType,
+	std::string _awstName)
 {
 	if (!_funcDef) return;
 	int64_t id = _funcDef->id();
 	if (s_targets.count(id)) return; // already registered
 
+	std::string name = _awstName.empty() ? _funcDef->name() : std::move(_awstName);
 	s_targets[id] = FuncPtrEntry{
 		id,
-		_funcDef->name(),
+		name,
 		s_nextId++,
-		_funcType
+		_funcType,
+		_funcDef
 	};
 }
 
@@ -283,11 +286,16 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		auto defaultBlock = std::make_shared<awst::Block>();
 		defaultBlock->sourceLocation = _loc;
 		{
-			// assert(false, "invalid function pointer")
-			auto assertExpr = std::make_shared<awst::IntrinsicCall>();
+			// assert(false) — invalid function pointer ID
+			auto assertExpr = std::make_shared<awst::AssertExpression>();
 			assertExpr->sourceLocation = _loc;
 			assertExpr->wtype = awst::WType::voidType();
-			assertExpr->opCode = "err";
+			auto falseLit = std::make_shared<awst::BoolConstant>();
+			falseLit->sourceLocation = _loc;
+			falseLit->wtype = awst::WType::boolType();
+			falseLit->value = false;
+			assertExpr->condition = std::move(falseLit);
+			assertExpr->errorMessage = "invalid function pointer";
 			auto stmt = std::make_shared<awst::ExpressionStatement>();
 			stmt->sourceLocation = _loc;
 			stmt->expr = std::move(assertExpr);
@@ -325,23 +333,70 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 				call->wtype = dispatch.returnType;
 				call->target = awst::InstanceMethodTarget{entry->name};
 
+				// Check if target is public (has ARC4 wrapping)
+				bool isPublic = entry->funcDef && (
+					entry->funcDef->visibility() == Visibility::Public
+					|| entry->funcDef->visibility() == Visibility::External);
+
 				for (size_t i = 0; i < funcType->parameterTypes().size(); ++i)
 				{
 					awst::CallArg arg;
-					arg.name = "__arg" + std::to_string(i);
 					auto var = std::make_shared<awst::VarExpression>();
 					var->sourceLocation = _loc;
 					var->name = "__arg" + std::to_string(i);
-					var->wtype = dispatch.args[i + 1].wtype; // +1 for __funcptr_id
-					arg.value = std::move(var);
+					var->wtype = dispatch.args[i + 1].wtype;
+
+					// Get the actual parameter name from the target function
+					std::string paramName = "__arg" + std::to_string(i);
+					if (entry->funcDef && i < entry->funcDef->parameters().size())
+						paramName = entry->funcDef->parameters()[i]->name();
+
+					if (isPublic && var->wtype == awst::WType::biguintType())
+					{
+						// Public target: wrap biguint → ARC4UIntN for ARC4 params
+						auto const* paramSolType = funcType->parameterTypes()[i];
+						unsigned bits = 256;
+						if (auto const* intType = dynamic_cast<IntegerType const*>(paramSolType))
+							bits = intType->numBits();
+						auto arc4Type = new awst::ARC4UIntN(static_cast<int>(bits));
+
+						auto encode = std::make_shared<awst::ARC4Encode>();
+						encode->sourceLocation = _loc;
+						encode->wtype = arc4Type;
+						encode->value = std::move(var);
+
+						arg.name = "__arc4_" + paramName;
+						arg.value = std::move(encode);
+					}
+					else
+					{
+						arg.name = paramName;
+						arg.value = std::move(var);
+					}
 					call->args.push_back(std::move(arg));
+				}
+
+				// For public targets with ARC4 return, decode the result
+				if (isPublic && dispatch.returnType == awst::WType::biguintType())
+				{
+					call->wtype = new awst::ARC4UIntN(256); // arc4.uint256
 				}
 
 				if (dispatch.returnType != awst::WType::voidType())
 				{
+					std::shared_ptr<awst::Expression> retValue = std::move(call);
+					// If target is public and returns ARC4, decode back to biguint
+					if (isPublic && retValue->wtype != dispatch.returnType)
+					{
+						auto decode = std::make_shared<awst::ARC4Decode>();
+						decode->sourceLocation = _loc;
+						decode->wtype = dispatch.returnType;
+						decode->value = std::move(retValue);
+						retValue = std::move(decode);
+					}
 					auto ret = std::make_shared<awst::ReturnStatement>();
 					ret->sourceLocation = _loc;
-					ret->value = std::move(call);
+					ret->value = std::move(retValue);
 					ifBlock->body.push_back(std::move(ret));
 				}
 				else

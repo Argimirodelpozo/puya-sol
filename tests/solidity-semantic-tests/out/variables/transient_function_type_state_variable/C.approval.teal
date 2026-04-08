@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_function_type_state_variable.sol.C.approval_program() -> uint64:
 main:
-    bytecblock "f" "g"
+    bytecblock "f" 0x
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "f"
-    pushbytes 0x
+    bytec_1 // 0x
     app_global_put
     pushint 1
     return
@@ -41,11 +41,11 @@ test:
     bytec_0 // "f"
     app_global_get_ex
     assert // check f exists
-    bytec_1 // "g"
+    bytec_1 // 0x
     !=
     assert
     bytec_0 // "f"
-    bytec_1 // "g"
+    bytec_1 // 0x
     app_global_put
     pushbytes 0x151f7c7580
     log
