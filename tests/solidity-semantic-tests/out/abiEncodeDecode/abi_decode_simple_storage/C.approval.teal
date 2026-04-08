@@ -1,0 +1,109 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_decode_simple_storage.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 24 32
+    bytecblock "__ctor_pending" "data"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xcfb41b21 // method "__postInit()void", method "f(byte[])(uint512,byte[])"
+    txna ApplicationArgs 0
+    match __postInit f
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_decode_simple_storage.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_1 // "data"
+    intc_1 // 0
+    box_create
+    pop
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_decode_simple_storage.sol.C.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    dup
+    extract 2 0
+    bytec_1 // "data"
+    box_del
+    pop
+    bytec_1 // "data"
+    dig 1
+    box_put
+    dig 1
+    extract 2 32
+    uncover 2
+    extract 34 32
+    intc_2 // 24
+    extract_uint64
+    dup
+    intc_3 // 32
+    +
+    dig 3
+    uncover 2
+    intc_3 // 32
+    extract3
+    intc_2 // 24
+    extract_uint64
+    uncover 3
+    cover 2
+    extract3
+    pushint 64
+    bzero
+    uncover 2
+    b|
+    dig 1
+    len
+    itob
+    extract 6 2
+    uncover 2
+    concat
+    swap
+    pushbytes 0x0042
+    concat
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
