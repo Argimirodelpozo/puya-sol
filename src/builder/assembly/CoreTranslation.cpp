@@ -221,6 +221,41 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 	else
 		node->wtype = awst::WType::biguintType(); // Default: all assembly vars are uint256
 
+	// bytesN variables in assembly need left-alignment (right-padded to 32 bytes).
+	// EVM stores bytesN left-aligned in 256-bit words: bytes4(0xAABBCCDD) = 0xAABBCCDD000...00
+	// Without this, our internal bytes[N] representation gets reinterpreted as a right-aligned
+	// integer (0x000...00AABBCCDD) when used in assembly.
+	if (auto const* bwt = dynamic_cast<awst::BytesWType const*>(node->wtype))
+	{
+		if (bwt->length().has_value() && *bwt->length() < 32)
+		{
+			// Right-pad to 32 bytes: concat(value, bzero(32 - N)), reinterpret as biguint
+			int padLen = 32 - *bwt->length();
+			auto pad = std::make_shared<awst::IntrinsicCall>();
+			pad->sourceLocation = loc;
+			pad->wtype = awst::WType::bytesType();
+			pad->opCode = "bzero";
+			auto padSize = std::make_shared<awst::IntegerConstant>();
+			padSize->sourceLocation = loc;
+			padSize->wtype = awst::WType::uint64Type();
+			padSize->value = std::to_string(padLen);
+			pad->stackArgs.push_back(std::move(padSize));
+
+			auto cat = std::make_shared<awst::IntrinsicCall>();
+			cat->sourceLocation = loc;
+			cat->wtype = awst::WType::bytesType();
+			cat->opCode = "concat";
+			cat->stackArgs.push_back(std::move(node));
+			cat->stackArgs.push_back(std::move(pad));
+
+			auto cast = std::make_shared<awst::ReinterpretCast>();
+			cast->sourceLocation = loc;
+			cast->wtype = awst::WType::biguintType();
+			cast->expr = std::move(cat);
+			return cast;
+		}
+	}
+
 	return node;
 }
 
