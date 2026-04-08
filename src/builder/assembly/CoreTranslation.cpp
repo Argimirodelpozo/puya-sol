@@ -364,6 +364,21 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		cast->expr = std::move(addr);
 		return cast;
 	}
+	if (funcName == "caller" || funcName == "origin")
+	{
+		// caller() / origin() → txn Sender (32 bytes) → reinterpret as biguint
+		auto sender = std::make_shared<awst::IntrinsicCall>();
+		sender->sourceLocation = loc;
+		sender->wtype = awst::WType::bytesType();
+		sender->opCode = "txn";
+		sender->immediates.push_back("Sender");
+
+		auto cast = std::make_shared<awst::ReinterpretCast>();
+		cast->sourceLocation = loc;
+		cast->wtype = awst::WType::biguintType();
+		cast->expr = std::move(sender);
+		return cast;
+	}
 	if (funcName == "timestamp")
 		return handleTimestamp(loc);
 	if (funcName == "chainid")
