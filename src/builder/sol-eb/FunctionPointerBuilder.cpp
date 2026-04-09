@@ -236,16 +236,22 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		dispatch.arc4MethodConfig = std::nullopt;
 		dispatch.pure = false;
 
-		// Return type
+		// Return type — must match what buildFunction produces for the target.
+		// Signed integers ≤64 bits get promoted to biguint for ABI sign extension.
 		if (funcType->returnParameterTypes().empty())
 			dispatch.returnType = awst::WType::voidType();
 		else if (funcType->returnParameterTypes().size() == 1)
 		{
-			// Map the return type — use biguint for large ints, uint64 for small
 			auto const* retSolType = funcType->returnParameterTypes()[0];
 			if (auto const* intType = dynamic_cast<IntegerType const*>(retSolType))
-				dispatch.returnType = intType->numBits() <= 64
-					? awst::WType::uint64Type() : awst::WType::biguintType();
+			{
+				if (intType->numBits() <= 64 && intType->isSigned())
+					dispatch.returnType = awst::WType::biguintType(); // sign-extended
+				else if (intType->numBits() <= 64)
+					dispatch.returnType = awst::WType::uint64Type();
+				else
+					dispatch.returnType = awst::WType::biguintType();
+			}
 			else if (dynamic_cast<BoolType const*>(retSolType))
 				dispatch.returnType = awst::WType::boolType();
 			else
