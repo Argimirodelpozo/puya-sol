@@ -139,6 +139,7 @@ def compile_test(sol_path: Path, out_dir: Path, ensure_budget: dict = None, via_
             "arc56": arc56,
             "approval_teal": out_dir / f"{name}.approval.teal",
             "clear_teal": out_dir / f"{name}.clear.teal",
+            "sol_path": source_path,
         }
     return contracts
 
@@ -182,6 +183,100 @@ def _extract_box_refs(teal_path):
     return refs
 
 
+def _get_constructor_param_types(app_spec, artifacts):
+    """Extract constructor parameter types from __postInit ARC56 spec or Solidity source.
+    Returns a list of type descriptors: 'uint256', 'uint256[3]', 'bytes', etc.
+    Returns None if constructor params can't be determined."""
+    import re as _re
+
+    # Method 1: Check __postInit in ARC56
+    for m in app_spec.methods:
+        if m.name == "__postInit" and m.args:
+            return [str(a.type) for a in m.args]
+
+    # Method 2: Parse Solidity source for constructor signature
+    # Look for: constructor(type1 [memory] name1, type2 [memory] name2, ...)
+    sol_path = artifacts.get("sol_path")
+    if sol_path and sol_path.exists():
+        source = sol_path.read_text()
+        # Find constructor declaration
+        ctor_match = _re.search(r'constructor\s*\(([^)]*)\)', source)
+        if ctor_match:
+            params_str = ctor_match.group(1).strip()
+            if not params_str:
+                return []
+            # Parse parameters: "uint256 _a, uint256[3] memory _b"
+            param_types = []
+            for param in params_str.split(','):
+                param = param.strip()
+                # Remove storage qualifiers and param name
+                parts = param.split()
+                if parts:
+                    ptype = parts[0]
+                    # Check for array suffix on type: uint256[3]
+                    if len(parts) > 1 and parts[1].startswith('['):
+                        ptype += parts[1]
+                    # Check if type itself has array brackets
+                    param_types.append(ptype)
+            return param_types if param_types else None
+
+    return None
+
+
+def _group_ctor_args(flat_vals, param_types):
+    """Group flat EVM-style values into ARC4-encoded args based on param types.
+    E.g., flat_vals=[1,2,3,4], param_types=['uint256','uint256[3]']
+    → [encode(1), encode([2,3,4])]"""
+    import re
+    args = []
+    flat_idx = 0
+    for ptype in param_types:
+        # Check for static array: type[N]
+        m = re.match(r'(\w+)\[(\d+)\]$', ptype)
+        if m:
+            elem_type = m.group(1)
+            n = int(m.group(2))
+            arr_vals = flat_vals[flat_idx:flat_idx + n]
+            # Encode as concatenated elements
+            encoded = b''
+            for v in arr_vals:
+                if isinstance(v, int):
+                    encoded += v.to_bytes(32, 'big')
+                elif isinstance(v, bytes):
+                    encoded += v.ljust(32, b'\x00')[:32]
+                else:
+                    encoded += int(v).to_bytes(32, 'big')
+            args.append(encoded)
+            flat_idx += n
+        elif ptype == 'bool':
+            if flat_idx < len(flat_vals):
+                v = flat_vals[flat_idx]
+                args.append(b'\x00' * 31 + (b'\x01' if v else b'\x00'))
+                flat_idx += 1
+        elif ptype.startswith('byte[') or ptype == 'bytes' or ptype == 'string':
+            if flat_idx < len(flat_vals):
+                v = flat_vals[flat_idx]
+                if isinstance(v, bytes):
+                    args.append(v)
+                elif isinstance(v, int):
+                    args.append(v.to_bytes(32, 'big'))
+                else:
+                    args.append(str(v).encode())
+                flat_idx += 1
+        else:
+            # Default: uint256 or other scalar — 32 bytes
+            if flat_idx < len(flat_vals):
+                v = flat_vals[flat_idx]
+                if isinstance(v, int):
+                    args.append(v.to_bytes(32, 'big'))
+                elif isinstance(v, bytes):
+                    args.append(b'\x00' * (32 - len(v)) + v if len(v) < 32 else v[:32])
+                else:
+                    args.append(int(v).to_bytes(32, 'big'))
+                flat_idx += 1
+    return args
+
+
 def _encode_ctor_arg(val_str: str) -> bytes:
     """Encode a constructor argument value to ABI bytes (32-byte big-endian for ints)."""
     val = parse_value(val_str)
@@ -215,10 +310,19 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
         max_size = max(len(approval_bin), len(clear_bin))
         extra_pages = max(0, (max_size - 1) // 2048)
 
-        # Encode constructor arguments as application args
+        # Encode constructor arguments as application args.
+        # Group flat EVM-style args by the constructor's ARC4 parameter types.
+        # The TEAL reads ApplicationArgs[0..N] where each arg corresponds to one
+        # constructor parameter. Static arrays are passed as a single concatenated arg.
         app_args = None
         if ctor_args:
-            app_args = [_encode_ctor_arg(a) for a in ctor_args]
+            # Try to find constructor param types from __postInit or the Solidity source
+            ctor_param_types = _get_constructor_param_types(app_spec, artifacts)
+            if ctor_param_types:
+                flat_vals = [parse_value(a) for a in ctor_args]
+                app_args = _group_ctor_args(flat_vals, ctor_param_types)
+            else:
+                app_args = [_encode_ctor_arg(a) for a in ctor_args]
 
         # Extract box references from TEAL
         box_refs = _extract_box_refs(artifacts["approval_teal"])
