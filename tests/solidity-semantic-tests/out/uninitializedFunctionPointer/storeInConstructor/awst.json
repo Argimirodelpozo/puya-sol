@@ -978,7 +978,7 @@
                 "end_column": null
               },
               "expr": {
-                "_type": "VoidConstant",
+                "_type": "SubroutineCallExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/storeInConstructor.sol",
                   "line": 234,
@@ -991,53 +991,100 @@
                   "_type": "WType",
                   "name": "void",
                   "immutable": true
-                }
+                },
+                "target": {
+                  "_type": "InstanceMethodTarget",
+                  "member_name": "__funcptr_dispatch_ret"
+                },
+                "args": [
+                  {
+                    "name": "__funcptr_id",
+                    "value": {
+                      "_type": "AppStateExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/storeInConstructor.sol",
+                        "line": 234,
+                        "end_line": 244,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "key": {
+                        "_type": "BytesConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/storeInConstructor.sol",
+                          "line": 234,
+                          "end_line": 244,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "state_key",
+                          "immutable": true
+                        },
+                        "value": "b98TVWn@Nf",
+                        "encoding": "utf8"
+                      },
+                      "exists_assertion_message": "check storedFn exists"
+                    }
+                  }
+                ]
               }
             },
             {
-              "_type": "ExpressionStatement",
+              "_type": "ReturnStatement",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/storeInConstructor.sol",
-                "line": 234,
-                "end_line": 244,
+                "line": 152,
+                "end_line": 249,
                 "comment_lines": 0,
                 "column": null,
                 "end_column": null
               },
-              "expr": {
-                "_type": "AssertExpression",
+              "value": {
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/storeInConstructor.sol",
-                  "line": 234,
-                  "end_line": 244,
+                  "line": 152,
+                  "end_line": 249,
                   "comment_lines": 0,
                   "column": null,
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "void",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "condition": {
-                  "_type": "BoolConstant",
+                "value": {
+                  "_type": "IntegerConstant",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/storeInConstructor.sol",
-                    "line": 234,
-                    "end_line": 244,
+                    "line": 152,
+                    "end_line": 249,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
                   },
                   "wtype": {
                     "_type": "WType",
-                    "name": "bool",
+                    "name": "biguint",
                     "immutable": true
                   },
-                  "value": false
+                  "value": 0,
+                  "teal_alias": null
                 },
-                "error_message": "uninitialized function pointer",
-                "comment": "uninitialized function pointer"
+                "error_message": null
               }
             }
           ],

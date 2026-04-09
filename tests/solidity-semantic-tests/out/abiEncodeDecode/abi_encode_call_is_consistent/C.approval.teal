@@ -4,17 +4,17 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_is_consistent.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "fPointer" "xstor" 0x151f7c750000 0x151f7c75002781ca86700000000000000000000000000000000000000000000000000000000000000001313233 "sideEffectRan" 0x151f7c750027d50c86720000000000000000000000000000000000000000000000000000000000000001313233 "fExternal(uint256,string)" "fExternal"
+    bytecblock 0x 0x151f7c750000 "fPointer" "xstor" 0x151f7c75002781ca86700000000000000000000000000000000000000000000000000000000000000001313233 "sideEffectRan" 0x151f7c750027d50c86720000000000000000000000000000000000000000000000000000000000000001313233 "fExternal(uint256,string)"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 4 // "sideEffectRan"
+    bytec 5 // "sideEffectRan"
     intc_1 // 0
     app_global_put
-    bytec_0 // "fPointer"
-    pushbytes 0x
+    bytec_2 // "fPointer"
+    bytec_0 // 0x
     app_global_put
-    bytec_1 // "xstor"
-    pushbytes 0x
+    bytec_3 // "xstor"
+    bytec_0 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -38,37 +38,37 @@ main_after_if_else@2:
     err
 
 main_fReturnedFunctionPointer_route@14:
-    bytec_2 // 0x151f7c750000
+    bytec_1 // 0x151f7c750000
     log
     intc_0 // 1
     return
 
 main_fLocalPointerCall_route@13:
-    bytec_2 // 0x151f7c750000
+    bytec_1 // 0x151f7c750000
     log
     intc_0 // 1
     return
 
 main_fSignatureFromMemoryCall_route@10:
-    bytec 5 // 0x151f7c750027d50c86720000000000000000000000000000000000000000000000000000000000000001313233
+    bytec 6 // 0x151f7c750027d50c86720000000000000000000000000000000000000000000000000000000000000001313233
     log
     intc_0 // 1
     return
 
 main_fSignatureFromMemory_route@9:
-    bytec_3 // 0x151f7c75002781ca86700000000000000000000000000000000000000000000000000000000000000001313233
+    bytec 4 // 0x151f7c75002781ca86700000000000000000000000000000000000000000000000000000000000000001313233
     log
     intc_0 // 1
     return
 
 main_fSignatureFromLiteralCall_route@8:
-    bytec 5 // 0x151f7c750027d50c86720000000000000000000000000000000000000000000000000000000000000001313233
+    bytec 6 // 0x151f7c750027d50c86720000000000000000000000000000000000000000000000000000000000000001313233
     log
     intc_0 // 1
     return
 
 main_fSignatureFromLiteral_route@7:
-    bytec_3 // 0x151f7c75002781ca86700000000000000000000000000000000000000000000000000000000000000001313233
+    bytec 4 // 0x151f7c75002781ca86700000000000000000000000000000000000000000000000000000000000000001313233
     log
     intc_0 // 1
     return
@@ -97,10 +97,10 @@ fExternal:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_is_consistent.sol.C.getExternalFunctionPointer[routing]() -> void:
 getExternalFunctionPointer:
-    bytec 4 // "sideEffectRan"
+    bytec 5 // "sideEffectRan"
     intc_0 // 1
     app_global_put
-    pushbytes 0x151f7c7500096645787465726e616c
+    bytec_1 // 0x151f7c750000
     log
     intc_0 // 1
     return
@@ -108,10 +108,10 @@ getExternalFunctionPointer:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_is_consistent.sol.C.fSignatureFromMemorys[routing]() -> void:
 fSignatureFromMemorys:
-    bytec_1 // "xstor"
-    bytec 6 // "fExternal(uint256,string)"
+    bytec_3 // "xstor"
+    bytec 7 // "fExternal(uint256,string)"
     app_global_put
-    bytec_3 // 0x151f7c75002781ca86700000000000000000000000000000000000000000000000000000000000000001313233
+    bytec 4 // 0x151f7c75002781ca86700000000000000000000000000000000000000000000000000000000000000001313233
     log
     intc_0 // 1
     return
@@ -119,10 +119,10 @@ fSignatureFromMemorys:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call_is_consistent.sol.C.fPointerCall[routing]() -> void:
 fPointerCall:
-    bytec_0 // "fPointer"
-    bytec 7 // "fExternal"
+    bytec_2 // "fPointer"
+    bytec_0 // 0x
     app_global_put
-    bytec_2 // 0x151f7c750000
+    bytec_1 // 0x151f7c750000
     log
     intc_0 // 1
     return
@@ -132,11 +132,11 @@ fPointerCall:
 assertConsistentSelectors:
     intc_1 // 0
     assert
-    bytec_1 // "xstor"
-    bytec 6 // "fExternal(uint256,string)"
+    bytec_3 // "xstor"
+    bytec 7 // "fExternal(uint256,string)"
     app_global_put
-    bytec_0 // "fPointer"
-    bytec 7 // "fExternal"
+    bytec_2 // "fPointer"
+    bytec_0 // 0x
     app_global_put
     intc_0 // 1
     return

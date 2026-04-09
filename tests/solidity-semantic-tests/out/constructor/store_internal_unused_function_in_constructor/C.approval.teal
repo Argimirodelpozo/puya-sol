@@ -3,12 +3,13 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_internal_unused_function_in_constructor.sol.C.approval_program() -> uint64:
 main:
+    intcblock 1
     txn ApplicationID
     bnz main_after_if_else@2
     pushbytes "x"
-    pushint 1
+    intc_0 // 1
     app_global_put
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -30,4 +31,19 @@ main_t_route@4:
     txn ApplicationID
     &&
     assert
-    err // uninitialized function pointer
+    b t
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_internal_unused_function_in_constructor.sol.C.t[routing]() -> void:
+t:
+    pushint 0
+    pushbytes "x"
+    app_global_get_ex
+    assert // check x exists
+    intc_0 // 1
+    ==
+    assert // invalid function pointer
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000007
+    log
+    intc_0 // 1
+    return

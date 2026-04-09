@@ -778,17 +778,17 @@
           },
           "body": [
             {
-              "_type": "ExpressionStatement",
+              "_type": "ReturnStatement",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/internal_function_pointer.sol",
-                "line": 215,
+                "line": 208,
                 "end_line": 218,
                 "comment_lines": 0,
                 "column": null,
                 "end_column": null
               },
-              "expr": {
-                "_type": "AssertExpression",
+              "value": {
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/internal_function_pointer.sol",
                   "line": 215,
@@ -798,12 +798,15 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "void",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "condition": {
-                  "_type": "BoolConstant",
+                "value": {
+                  "_type": "SubroutineCallExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/internal_function_pointer.sol",
                     "line": 215,
@@ -814,13 +817,55 @@
                   },
                   "wtype": {
                     "_type": "WType",
-                    "name": "bool",
+                    "name": "biguint",
                     "immutable": true
                   },
-                  "value": false
+                  "target": {
+                    "_type": "InstanceMethodTarget",
+                    "member_name": "__funcptr_dispatch_ret_u256"
+                  },
+                  "args": [
+                    {
+                      "name": "__funcptr_id",
+                      "value": {
+                        "_type": "AppStateExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/internal_function_pointer.sol",
+                          "line": 215,
+                          "end_line": 218,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "key": {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/internal_function_pointer.sol",
+                            "line": 215,
+                            "end_line": 218,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "state_key",
+                            "immutable": true
+                          },
+                          "value": "dH",
+                          "encoding": "utf8"
+                        },
+                        "exists_assertion_message": "check z exists"
+                      }
+                    }
+                  ]
                 },
-                "error_message": "uninitialized function pointer",
-                "comment": "uninitialized function pointer"
+                "error_message": null
               }
             }
           ],
