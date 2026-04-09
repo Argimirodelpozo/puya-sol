@@ -578,6 +578,16 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				arg.name = paramName;
 				arg.sourceLocation = loc;
 				arg.wtype = m_typeMapper.map(solParamTypes[i]);
+				// Wrap biguint getter params to ARC4UIntN with correct bit width
+				if (arg.wtype == awst::WType::biguintType())
+				{
+					auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(solParamTypes[i]);
+					if (intType && !intType->isSigned())
+					{
+						unsigned bits = intType->numBits();
+						arg.wtype = m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
+					}
+				}
 				getter.args.push_back(std::move(arg));
 			}
 
@@ -599,6 +609,12 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 					{
 						getter.returnType = awst::WType::biguintType();
 						signedGetterBits = intType->numBits();
+					}
+					// Wrap unsigned biguint return to ARC4UIntN with correct bit width
+					else if (!intType->isSigned() && getter.returnType == awst::WType::biguintType())
+					{
+						getter.returnType = m_typeMapper.createType<awst::ARC4UIntN>(
+							static_cast<int>(intType->numBits()));
 					}
 				}
 			}
