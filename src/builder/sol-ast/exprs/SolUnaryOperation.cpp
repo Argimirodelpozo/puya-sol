@@ -771,6 +771,62 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 	if (auto const* sg = dynamic_cast<awst::StateGet const*>(target.get()))
 		target = sg->field;
 
+	// Slot-based storage delete: target is a computed biguint slot (e.g. delete _x[0] on multidim storage array)
+	if (dynamic_cast<awst::BigUIntBinaryOperation const*>(target.get())
+		&& target->wtype == awst::WType::biguintType())
+	{
+		// Determine number of slots to clear from the Solidity type
+		auto const* subExprType = m_unaryOp.subExpression().annotation().type;
+		auto const* arrType = subExprType ? dynamic_cast<ArrayType const*>(subExprType) : nullptr;
+		unsigned slotCount = 1;
+		if (arrType && !arrType->isDynamicallySized())
+			slotCount = static_cast<unsigned>(arrType->length());
+
+		for (unsigned j = 0; j < slotCount; ++j)
+		{
+			auto jConst = std::make_shared<awst::IntegerConstant>();
+			jConst->sourceLocation = m_loc;
+			jConst->wtype = awst::WType::biguintType();
+			jConst->value = std::to_string(j);
+
+			auto slotJ = std::make_shared<awst::BigUIntBinaryOperation>();
+			slotJ->sourceLocation = m_loc;
+			slotJ->wtype = awst::WType::biguintType();
+			slotJ->left = target; // shared, reused
+			slotJ->op = awst::BigUIntBinaryOperator::Add;
+			slotJ->right = std::move(jConst);
+
+			auto btoi = builder::StorageMapper::biguintSlotToBtoi(slotJ, m_loc);
+
+			auto zeroVal = std::make_shared<awst::IntegerConstant>();
+			zeroVal->sourceLocation = m_loc;
+			zeroVal->wtype = awst::WType::biguintType();
+			zeroVal->value = "0";
+
+			auto call = std::make_shared<awst::SubroutineCallExpression>();
+			call->sourceLocation = m_loc;
+			call->wtype = awst::WType::voidType();
+			call->target = awst::InstanceMethodTarget{"__storage_write"};
+			{
+				awst::CallArg slotArg;
+				slotArg.name = "__slot";
+				slotArg.value = std::move(btoi);
+				call->args.push_back(std::move(slotArg));
+
+				awst::CallArg valArg;
+				valArg.name = "__value";
+				valArg.value = std::move(zeroVal);
+				call->args.push_back(std::move(valArg));
+			}
+
+			auto stmt = std::make_shared<awst::ExpressionStatement>();
+			stmt->sourceLocation = m_loc;
+			stmt->expr = std::move(call);
+			m_ctx.pendingStatements.push_back(std::move(stmt));
+		}
+		return _operand;
+	}
+
 	auto assignStmt = std::make_shared<awst::AssignmentStatement>();
 	assignStmt->sourceLocation = m_loc;
 	assignStmt->target = target;

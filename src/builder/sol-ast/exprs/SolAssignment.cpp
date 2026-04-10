@@ -567,6 +567,65 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 		}
 	}
 
+	// Scalar slot-based storage write: target is a computed biguint slot (not an array assignment).
+	// Emit __storage_write(btoi(slot), value) directly.
+	if (dynamic_cast<awst::BigUIntBinaryOperation const*>(target.get())
+		&& target->wtype == awst::WType::biguintType())
+	{
+		// Compound assignment: read current value first
+		if (op != Token::Assign)
+		{
+			// __storage_read(btoi(slot))
+			auto readSlot = builder::StorageMapper::biguintSlotToBtoi(target, m_loc);
+			auto readCall = std::make_shared<awst::SubroutineCallExpression>();
+			readCall->sourceLocation = m_loc;
+			readCall->wtype = awst::WType::biguintType();
+			readCall->target = awst::InstanceMethodTarget{"__storage_read"};
+			awst::CallArg readArg;
+			readArg.name = "__slot";
+			readArg.value = std::move(readSlot);
+			readCall->args.push_back(std::move(readArg));
+
+			auto* targetSolType = m_assignment.leftHandSide().annotation().type;
+			auto builderResult = eb::AssignmentHelper::tryComputeCompoundValue(
+				m_ctx, op, targetSolType, readCall, value, m_loc);
+			if (builderResult)
+				value = std::move(builderResult);
+			else
+				value = m_ctx.buildBinaryOp(op, std::move(readCall), std::move(value),
+					target->wtype, m_loc);
+		}
+
+		auto btoi = builder::StorageMapper::biguintSlotToBtoi(target, m_loc);
+
+		auto call = std::make_shared<awst::SubroutineCallExpression>();
+		call->sourceLocation = m_loc;
+		call->wtype = awst::WType::voidType();
+		call->target = awst::InstanceMethodTarget{"__storage_write"};
+		{
+			awst::CallArg slotArg;
+			slotArg.name = "__slot";
+			slotArg.value = std::move(btoi);
+			call->args.push_back(std::move(slotArg));
+
+			awst::CallArg valArg;
+			valArg.name = "__value";
+			valArg.value = std::move(value);
+			call->args.push_back(std::move(valArg));
+		}
+
+		auto stmt = std::make_shared<awst::ExpressionStatement>();
+		stmt->sourceLocation = m_loc;
+		stmt->expr = std::move(call);
+		m_ctx.pendingStatements.push_back(std::move(stmt));
+
+		auto zero = std::make_shared<awst::IntegerConstant>();
+		zero->sourceLocation = m_loc;
+		zero->wtype = awst::WType::biguintType();
+		zero->value = "0";
+		return zero;
+	}
+
 	// Tuple decomposition
 	if (dynamic_cast<awst::TupleExpression const*>(target.get()))
 		return handleTupleAssignment(std::move(target), std::move(value));

@@ -258,4 +258,57 @@ std::shared_ptr<awst::Expression> StorageMapper::createStateWrite(
 	return assign;
 }
 
+std::shared_ptr<awst::Expression> StorageMapper::biguintSlotToBtoi(
+	std::shared_ptr<awst::Expression> const& _slotExpr,
+	awst::SourceLocation const& _loc
+)
+{
+	// reinterpret_cast<bytes>(slotExpr)
+	auto castToBytes = std::make_shared<awst::ReinterpretCast>();
+	castToBytes->sourceLocation = _loc;
+	castToBytes->wtype = awst::WType::bytesType();
+	castToBytes->expr = _slotExpr;
+
+	// len(castToBytes)
+	auto lenOp = std::make_shared<awst::IntrinsicCall>();
+	lenOp->sourceLocation = _loc;
+	lenOp->wtype = awst::WType::uint64Type();
+	lenOp->opCode = "len";
+	lenOp->stackArgs.push_back(castToBytes);
+
+	// len - 8
+	auto sub8 = std::make_shared<awst::UInt64BinaryOperation>();
+	sub8->sourceLocation = _loc;
+	sub8->wtype = awst::WType::uint64Type();
+	sub8->left = std::move(lenOp);
+	sub8->op = awst::UInt64BinaryOperator::Sub;
+	auto eight = std::make_shared<awst::IntegerConstant>();
+	eight->sourceLocation = _loc;
+	eight->wtype = awst::WType::uint64Type();
+	eight->value = "8";
+	sub8->right = std::move(eight);
+
+	// extract3(castToBytes, len-8, 8)
+	auto last8 = std::make_shared<awst::IntrinsicCall>();
+	last8->sourceLocation = _loc;
+	last8->wtype = awst::WType::bytesType();
+	last8->opCode = "extract3";
+	last8->stackArgs.push_back(std::move(castToBytes));
+	last8->stackArgs.push_back(std::move(sub8));
+	auto eight2 = std::make_shared<awst::IntegerConstant>();
+	eight2->sourceLocation = _loc;
+	eight2->wtype = awst::WType::uint64Type();
+	eight2->value = "8";
+	last8->stackArgs.push_back(std::move(eight2));
+
+	// btoi(last8)
+	auto btoi = std::make_shared<awst::IntrinsicCall>();
+	btoi->sourceLocation = _loc;
+	btoi->wtype = awst::WType::uint64Type();
+	btoi->opCode = "btoi";
+	btoi->stackArgs.push_back(std::move(last8));
+
+	return btoi;
+}
+
 } // namespace puyasol::builder
