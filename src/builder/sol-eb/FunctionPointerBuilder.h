@@ -15,6 +15,7 @@
 
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace puyasol::builder::eb
@@ -29,6 +30,7 @@ struct FuncPtrEntry
 	unsigned id;              // Unique integer ID for this target
 	solidity::frontend::FunctionType const* funcType; // Signature
 	solidity::frontend::FunctionDefinition const* funcDef; // For visibility check
+	std::string subroutineId; // AWST subroutine ID for library/free functions (empty = contract method)
 };
 
 class FunctionPointerBuilder
@@ -78,6 +80,11 @@ public:
 	/// Get the dispatch subroutine name for a given function type signature.
 	static std::string dispatchName(
 		solidity::frontend::FunctionType const* _funcType);
+
+	/// Set subroutine IDs for registered targets (from m_freeFunctionById map).
+	/// Called after all library/free functions are registered.
+	static void setSubroutineIds(
+		std::unordered_map<int64_t, std::string> const& _idMap);
 
 	/// Clear all registered targets (between contracts).
 	static void reset();

@@ -54,8 +54,20 @@ void FunctionPointerBuilder::registerTarget(
 		name,
 		s_nextId++,
 		_funcType,
-		_funcDef
+		_funcDef,
+		"" // subroutineId — populated later via setSubroutineId
 	};
+}
+
+void FunctionPointerBuilder::setSubroutineIds(
+	std::unordered_map<int64_t, std::string> const& _idMap)
+{
+	for (auto& [astId, entry] : s_targets)
+	{
+		auto it = _idMap.find(astId);
+		if (it != _idMap.end())
+			entry.subroutineId = it->second;
+	}
 }
 
 // ── Build a reference to a function (taking its "address") ──
@@ -337,7 +349,10 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 				auto call = std::make_shared<awst::SubroutineCallExpression>();
 				call->sourceLocation = _loc;
 				call->wtype = dispatch.returnType;
-				call->target = awst::InstanceMethodTarget{entry->name};
+				if (!entry->subroutineId.empty())
+					call->target = awst::SubroutineID{entry->subroutineId};
+				else
+					call->target = awst::InstanceMethodTarget{entry->name};
 
 				// Check if target is public (has ARC4 wrapping)
 				bool isPublic = entry->funcDef && (

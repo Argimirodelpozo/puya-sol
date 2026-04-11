@@ -1120,6 +1120,10 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 
 	// Generate function pointer dispatch tables
 	{
+		// Set subroutine IDs for library/free function targets so dispatch
+		// uses SubroutineID (resolvable by puya) instead of InstanceMethodTarget.
+		eb::FunctionPointerBuilder::setSubroutineIds(m_freeFunctionById);
+
 		std::string cref = m_sourceFile + "." + contractName;
 		awst::SourceLocation loc;
 		loc.file = m_sourceFile;
@@ -2299,6 +2303,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	std::string const& _nameOverride
 )
 {
+	// Scope guard for per-method state (varNameToId, funcPtrTargets, etc.)
+	auto methodScope = m_exprBuilder->pushScope();
+
 	awst::ContractMethod method;
 	method.sourceLocation = makeLoc(_func.location());
 	method.cref = m_sourceFile + "." + _contractName;
@@ -2564,6 +2571,11 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			}
 			setFunctionContext(paramContext, method.returnType, bitWidths);
 		}
+
+		// Register named return variable names so inner scoping detects shadowing
+		for (auto const& rp: returnParams)
+			if (!rp->name().empty())
+				m_exprBuilder->resolveVarName(rp->name(), rp->id());
 
 		method.body = buildBlock(_func.body());
 
