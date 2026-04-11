@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 3
+    intcblock 1 4 0 2
     bytecblock "data" 0x0000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -34,7 +34,7 @@ main_test_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_structs_enum.sol.C.test[routing]() -> void:
 test:
-    intc_1 // 0
+    intc_2 // 0
     dup
     intc_0 // 1
     itob
@@ -60,8 +60,12 @@ test:
     bytec_0 // "data"
     dig 1
     box_put
-    intc_1 // 0
+    intc_2 // 0
     extract_uint64
+    dup
+    intc_1 // 4
+    <
+    assert // enum out of range
     intc_0 // 1
     !=
     bz test_after_if_else@3
@@ -83,7 +87,7 @@ test_after_if_else@3:
     select
     dup
     extract 0 8
-    intc_2 // 2
+    intc_3 // 2
     itob
     dup
     cover 2
@@ -104,7 +108,11 @@ test_after_if_else@3:
     box_put
     pushint 8
     extract_uint64
-    intc_2 // 2
+    dup
+    intc_1 // 4
+    <
+    assert // enum out of range
+    intc_3 // 2
     !=
     bz test_after_if_else@5
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
@@ -120,7 +128,7 @@ test_after_if_else@5:
     extract 0 8
     dig 1
     extract 8 8
-    intc_3 // 3
+    pushint 3
     itob
     dup
     cover 3
@@ -138,7 +146,11 @@ test_after_if_else@5:
     box_put
     pushint 16
     extract_uint64
-    intc_3 // 3
+    dup
+    pushint 5
+    <
+    assert // enum out of range
+    pushint 3
     !=
     bz test_after_if_else@7
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
@@ -150,8 +162,12 @@ test_after_if_else@7:
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    intc_1 // 0
+    intc_2 // 0
     extract_uint64
+    dup
+    intc_1 // 4
+    <
+    assert // enum out of range
     intc_0 // 1
     !=
     bz test_after_if_else@9
@@ -180,9 +196,13 @@ test_after_if_else@9:
     bytec_0 // "data"
     dig 1
     box_put
-    intc_1 // 0
+    intc_2 // 0
     extract_uint64
-    intc_2 // 2
+    dup
+    intc_1 // 4
+    <
+    assert // enum out of range
+    intc_3 // 2
     !=
     bz test_after_if_else@11
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000006
@@ -196,7 +216,11 @@ test_after_if_else@11:
     select
     pushint 8
     extract_uint64
-    intc_2 // 2
+    dup
+    intc_1 // 4
+    <
+    assert // enum out of range
+    intc_3 // 2
     !=
     bz test_after_if_else@13
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
@@ -226,7 +250,11 @@ test_after_if_else@13:
     box_put
     pushint 8
     extract_uint64
-    intc_3 // 3
+    dup
+    intc_1 // 4
+    <
+    assert // enum out of range
+    pushint 3
     !=
     bz test_after_if_else@15
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
@@ -240,7 +268,11 @@ test_after_if_else@15:
     select
     pushint 16
     extract_uint64
-    intc_3 // 3
+    dup
+    pushint 5
+    <
+    assert // enum out of range
+    pushint 3
     !=
     bz test_after_if_else@17
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000009
@@ -269,6 +301,10 @@ test_after_if_else@17:
     box_put
     pushint 16
     extract_uint64
+    dup
+    pushint 5
+    <
+    assert // enum out of range
     intc_0 // 1
     !=
     bz test_after_if_else@19

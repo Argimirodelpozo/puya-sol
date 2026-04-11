@@ -3,10 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_enum.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 8 0
+    intcblock 2 1 8 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -35,6 +35,14 @@ main_equalsA_route@4:
 L.equals:
     proto 2 1
     frame_dig -2
+    intc_0 // 2
+    <
+    assert // enum out of range
+    frame_dig -1
+    intc_0 // 2
+    <
+    assert // enum out of range
+    frame_dig -2
     frame_dig -1
     ==
     retsub
@@ -48,29 +56,29 @@ equalsA:
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_1 // 8
+    intc_2 // 8
     bzero
     swap
     concat
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     -
     extract_uint64
     dup
-    pushint 2
+    intc_0 // 2
     <
     assert // enum out of range
-    intc_2 // 0
+    intc_3 // 0
     swap
     callsub L.equals
     pushbytes 0x00
-    intc_2 // 0
+    intc_3 // 0
     uncover 2
     setbit
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return

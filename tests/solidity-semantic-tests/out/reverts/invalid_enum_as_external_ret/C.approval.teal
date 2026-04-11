@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_as_external_ret.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     bytecblock 0x151f7c750000000000000005
     txn ApplicationID
     bnz main_after_if_else@2
@@ -33,6 +33,8 @@ main_after_if_else@2:
 test_return:
     load 0
     store 0
+    intc_1 // 0
+    assert // enum out of range
     bytec_0 // 0x151f7c750000000000000005
     log
     intc_0 // 1
@@ -53,7 +55,7 @@ test_inline_assignment:
 test_assignment:
     load 0
     store 0
-    pushint 0
+    intc_1 // 0
     assert // enum out of range
     bytec_0 // 0x151f7c750000000000000005
     log
