@@ -45,25 +45,20 @@ std::shared_ptr<awst::Expression> SolLiteral::toAwst()
 			mappedType = awst::WType::biguintType();
 		auto e = std::make_shared<awst::IntegerConstant>();
 		e->sourceLocation = m_loc;
-		e->wtype = mappedType;
 		if (auto const* ratType = dynamic_cast<RationalNumberType const*>(m_solType))
 		{
 			auto val = ratType->literalValue(nullptr);
-			if (val < 0 && mappedType == awst::WType::biguintType())
-			{
-				// Negative constant → two's complement for biguint
-				static const solidity::u256 pow256(
-					"115792089237316195423570985008687907853269984665640564039457584007913129639936");
-				solidity::u256 tcVal = pow256 + solidity::u256(val);
-				std::ostringstream oss;
-				oss << tcVal;
-				e->value = oss.str();
-			}
-			else
-				e->value = val.str();
+			// literalValue() returns u256 (two's complement for negatives).
+			// Truncate to uint64 range or use biguint as needed.
+			static const solidity::u256 uint64Max("18446744073709551615");
+			static const solidity::u256 pow64("18446744073709551616");   // 2^64
+			if (mappedType == awst::WType::uint64Type() && val > uint64Max)
+				val = val % pow64;  // truncate to 64-bit two's complement
+			e->value = val.str();
 		}
 		else
 			e->value = m_literal.value();
+		e->wtype = mappedType;
 		return e;
 	}
 	case Token::StringLiteral:

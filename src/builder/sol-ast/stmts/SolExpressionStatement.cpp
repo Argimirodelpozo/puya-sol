@@ -235,6 +235,18 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 						auto* expectedElemType = m_ctx.typeMapper->map(retParams[i]->type());
 						tupleExpr->items[i] = ExpressionBuilder::implicitNumericCast(
 							std::move(tupleExpr->items[i]), expectedElemType, m_loc);
+						// Bytes type widening: e.g. bytes2 → bytes16
+						if (tupleExpr->items[i]->wtype != expectedElemType
+							&& tupleExpr->items[i]->wtype
+							&& tupleExpr->items[i]->wtype->kind() == awst::WTypeKind::Bytes
+							&& expectedElemType->kind() == awst::WTypeKind::Bytes)
+						{
+							auto cast = std::make_shared<awst::ReinterpretCast>();
+							cast->sourceLocation = m_loc;
+							cast->wtype = expectedElemType;
+							cast->expr = std::move(tupleExpr->items[i]);
+							tupleExpr->items[i] = std::move(cast);
+						}
 						expectedTypes.push_back(tupleExpr->items[i]->wtype);
 					}
 					tupleExpr->wtype = m_ctx.typeMapper->createType<awst::WTuple>(

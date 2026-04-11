@@ -359,10 +359,14 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 	}
 	if (_type->kind() == awst::WTypeKind::ARC4UIntN)
 	{
-		auto val = std::make_shared<awst::IntegerConstant>();
+		auto const* arc4UInt = static_cast<awst::ARC4UIntN const*>(_type);
+		// ARC4 zero: N/8 zero bytes as BytesConstant with ARC4UIntN type
+		int numBytes = arc4UInt->n() / 8;
+		auto val = std::make_shared<awst::BytesConstant>();
 		val->sourceLocation = _loc;
 		val->wtype = _type;
-		val->value = "0";
+		val->encoding = awst::BytesEncoding::Base16;
+		val->value = std::vector<unsigned char>(numBytes, 0);
 		return val;
 	}
 

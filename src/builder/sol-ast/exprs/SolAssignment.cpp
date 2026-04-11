@@ -159,6 +159,14 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 			assignValue = std::move(enc);
 		}
 
+		// Nested tuple destructuring: if the target is itself a TupleExpression,
+		// recursively destructure instead of creating a direct assignment.
+		if (dynamic_cast<awst::TupleExpression const*>(assignTarget.get()))
+		{
+			handleTupleAssignment(assignTarget, std::move(assignValue));
+			continue;
+		}
+
 		auto e = std::make_shared<awst::AssignmentExpression>();
 		e->sourceLocation = m_loc;
 		e->wtype = assignTarget->wtype;
