@@ -51,7 +51,7 @@ __postInit:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_access.sol.C.test_indices[routing]() -> void:
 test_indices:
     intc_1 // 0
-    dup
+    dupn 2
     txna ApplicationArgs 1
     dup
     len
@@ -145,14 +145,15 @@ test_indices_after_while@7:
     intc_1 // 0
     itob
     dup
-    bury 4
-    bury 2
+    bury 5
+    bury 3
 
 test_indices_while_top@8:
-    dup2
-    b<
-    bz test_indices_while_top@11
+    dig 2
     dig 1
+    b<
+    bz test_indices_after_while@10
+    dig 2
     dup
     bytec_3 // 0x01
     b+
@@ -182,12 +183,15 @@ test_indices_while_top@8:
     swap
     uncover 2
     box_replace // on error: index out of bounds
-    bury 2
+    bury 3
     b test_indices_while_top@8
 
+test_indices_after_while@10:
+    dig 3
+    bury 2
+
 test_indices_while_top@11:
-    dig 2
-    dig 1
+    dup2
     b<
     bz test_indices_after_while@13
     bytec_0 // "storageArray"
@@ -197,7 +201,7 @@ test_indices_while_top@11:
     select
     intc_3 // 8
     bzero
-    dig 4
+    dig 3
     dup
     cover 3
     concat
@@ -217,7 +221,7 @@ test_indices_while_top@11:
     bytec_3 // 0x01
     b+
     dup
-    bury 5
+    bury 4
     b==
     assert
     b test_indices_while_top@11

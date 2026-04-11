@@ -36,7 +36,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		auto target = std::make_shared<awst::VarExpression>();
 		target->sourceLocation = m_ctx.makeLoc(decl.location());
 		target->wtype = type;
-		target->name = decl.name();
+		target->name = m_exprBuilder.resolveVarName(decl.name(), decl.id());
 
 		std::shared_ptr<awst::Expression> value;
 		if (initialValue)

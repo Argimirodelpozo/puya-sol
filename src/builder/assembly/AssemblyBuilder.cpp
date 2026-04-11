@@ -217,7 +217,7 @@ void AssemblyBuilder::initializeMemoryBlob(
 	// Write array parameter elements into the blob at 0x80 + i*0x20
 	if (!m_arrayParamName.empty() && m_arrayParamSize > 0)
 	{
-		for (int i = 0; i < m_arrayParamSize; ++i)
+		for (int64_t i = 0; i < m_arrayParamSize; ++i)
 		{
 			uint64_t offset = 0x80 + static_cast<uint64_t>(i) * 0x20;
 

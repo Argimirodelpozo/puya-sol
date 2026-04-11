@@ -32,7 +32,7 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_memory_index_access.sol.C.index[routing]() -> void:
 index:
     intc_1 // 0
-    dupn 4
+    dupn 5
     pushbytes ""
     txna ApplicationArgs 1
     dup
@@ -63,9 +63,9 @@ index_while_top@12:
 index_after_while@17:
     intc_1 // 0
     itob
-    bury 5
+    bury 6
     bytec_2 // 0x0000
-    bury 7
+    bury 8
     intc_1 // 0
     bury 2
 
@@ -84,7 +84,7 @@ index_while_top@2:
     dig 2
     >
     bz index_after_while@4
-    dig 6
+    dig 7
     dup
     intc_1 // 0
     extract_uint16
@@ -95,7 +95,7 @@ index_while_top@2:
     replace2 0
     bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
-    bury 7
+    bury 8
     dig 1
     intc_3 // 1
     +
@@ -103,17 +103,17 @@ index_while_top@2:
     b index_while_top@2
 
 index_after_while@4:
-    dig 6
-    bury 6
-    dig 4
-    bury 4
+    dig 7
+    bury 7
+    dig 5
+    bury 5
 
 index_while_top@5:
-    dig 3
+    dig 4
     dig 1
     b<
-    bz index_while_top@8
-    dig 3
+    bz index_after_while@7
+    dig 4
     dup
     bytec_0 // 0x01
     b+
@@ -138,21 +138,25 @@ index_while_top@5:
     *
     pushint 2
     +
-    dig 8
+    dig 9
     swap
     uncover 2
     replace3 // on error: index access is out of bounds
-    bury 7
-    bury 4
+    bury 8
+    bury 5
     b index_while_top@5
 
+index_after_while@7:
+    dig 5
+    bury 4
+
 index_while_top@8:
-    dig 4
+    dig 3
     dig 1
     b<
     bz index_after_while@10
     dig 2
-    dig 5
+    dig 4
     dup
     cover 2
     concat
@@ -161,7 +165,7 @@ index_while_top@8:
     intc_2 // 8
     -
     extract_uint64
-    dig 7
+    dig 8
     extract 2 0
     swap
     intc_0 // 32
@@ -172,13 +176,13 @@ index_while_top@8:
     bytec_0 // 0x01
     b+
     dup
-    bury 7
+    bury 6
     b==
     assert // Unexpected value in array!
     b index_while_top@8
 
 index_after_while@10:
-    dig 5
+    dig 6
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     itob

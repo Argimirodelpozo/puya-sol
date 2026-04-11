@@ -7,6 +7,7 @@
 #include "builder/sol-types/TypeMapper.h"
 
 #include <libsolidity/ast/AST.h>
+#include <sstream>
 
 namespace puyasol::builder::sol_ast
 {
@@ -35,12 +36,38 @@ std::shared_ptr<awst::Expression> SolMetaTypeAccess::toAwst()
 				? awst::WType::uint64Type()
 				: awst::WType::biguintType();
 
+			std::string val;
+			if (member == "max")
+			{
+				if (intType->isSigned())
+				{
+					// type(intN).max = 2^(N-1) - 1
+					solidity::u256 maxVal = (solidity::u256(1) << (bits - 1)) - 1;
+					std::ostringstream oss;
+					oss << maxVal;
+					val = oss.str();
+				}
+				else
+					val = puyasol::builder::maxUintValue(bits);
+			}
+			else
+			{
+				if (intType->isSigned())
+				{
+					// type(intN).min = 2^(N-1) in two's complement biguint
+					solidity::u256 minVal = solidity::u256(1) << (bits - 1);
+					std::ostringstream oss;
+					oss << minVal;
+					val = oss.str();
+				}
+				else
+					val = "0";
+			}
+
 			auto e = std::make_shared<awst::IntegerConstant>();
 			e->sourceLocation = m_loc;
 			e->wtype = wtype;
-			e->value = (member == "max")
-				? puyasol::builder::maxUintValue(bits)
-				: std::string("0");
+			e->value = val;
 			return e;
 		}
 

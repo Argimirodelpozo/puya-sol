@@ -2332,8 +2332,8 @@ static std::shared_ptr<awst::Expression> buildDefaultExpression(
 			// For fixed-size arrays, populate with default elements
 			if (ra->arraySize().has_value())
 			{
-				int size = ra->arraySize().value();
-				for (int i = 0; i < size; ++i)
+				int64_t size = ra->arraySize().value();
+				for (int64_t i = 0; i < size; ++i)
 					arr->values.push_back(buildDefaultExpression(_loc, ra->elementType()));
 			}
 			return arr;

@@ -1,13 +1,13 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_32u9w0k3/main.sol.C.approval_program() -> uint64:
+// /tmp/multisource_zv0vf55b/main.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "__ctor_pending" "data"
+    bytecblock "data" "__ctor_pending" "f"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -28,39 +28,67 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0xf59e3cc4 // method "__postInit()void", method "test()bool"
     txna ApplicationArgs 0
-    match __postInit main_test_route@6
+    match __postInit test
     err
 
-main_test_route@6:
-    err // uninitialized function pointer
 
-
-// /tmp/multisource_32u9w0k3/main.sol.longdata() -> bytes:
+// /tmp/multisource_zv0vf55b/main.sol.longdata() -> bytes:
 longdata:
     pushbytes "xasopca.pngaibngidak.jbtnudak.cAP.BRRSMCPJAGPD KIAJDOMHUKR,SCPIDxasopca.pngaibngidak.jbtnudak.cAP.BRRSMCPJAGPD KIAJDOMHUKR,SCPIDM,SEYBDXCNTKIMNJGO;DUIAQBQUEHAKMPGIDSAJCOUKANJBCUEBKNA.GIAKMV.TIAJMO<KXBANJCPGUD ABKCJIDHA NKIMAJU,EKAMHSO;PYCAKUM,L.UCA MR;KITAM,SEYBDXCNTKIMNJGO;DUIAQBQUEHAKMPGIDSAJCOUKANJBCUEBKNA.GIAKMV.TIAJMO<KXBANJCPGUD ABKCJIDHA NKIMAJU,EKAMHSO;PYCAKUM,L.UCA MR;KITA .RPOKIDAS,.CKUMT.,ORKAD ,NOKIDHA .CGKIAD OVHAMS CUAOGT DAKN OITxasopca.pngaibngidak.jbtnudak.cAP.BRRSMCPJAGPD KIAJDOMHUKR,SCPIDM,SEYBDXCNTKIMNJGO;DUIAQBQUEHAKMPGIDSAJCOUKANJBCUEBKNA.GIAKMV.TIAJMO<KXBANJCPGUD ABKCJIDHA NKIMAJU,EKAMHSO;PYCAKUM,L.UCA MR;KITAapibakrpidbacnidkacjadtnpdkylca.,jda,r.kuadc,jdlkjd',c'dj, ncg danosumantkudkc,djntudkantuadnc,ui,c.ud,.nujdncud,j.rsch'pkl.'pih"
     retsub
 
 
-// /tmp/multisource_32u9w0k3/main.sol.C.__postInit[routing]() -> void:
+// /tmp/multisource_zv0vf55b/main.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    bytec_1 // "data"
+    bytec_0 // "data"
     intc_1 // 0
     box_create
     pop
     callsub longdata
-    bytec_1 // "data"
+    bytec_0 // "data"
     box_del
     pop
-    bytec_1 // "data"
+    bytec_0 // "data"
     swap
     box_put
-    pushbytess "f" 0x
+    bytec_2 // "f"
+    intc_0 // 1
     app_global_put
+    intc_0 // 1
+    return
+
+
+// /tmp/multisource_zv0vf55b/main.sol.C.test[routing]() -> void:
+test:
+    bytec_0 // "data"
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    keccak256
+    intc_1 // 0
+    bytec_2 // "f"
+    app_global_get_ex
+    assert // check f exists
+    intc_0 // 1
+    ==
+    assert // invalid function pointer
+    callsub longdata
+    keccak256
+    ==
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
     intc_0 // 1
     return

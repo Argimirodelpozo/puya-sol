@@ -1,0 +1,88 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/ternary_contract_library_internal_function.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 2 32
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0x6561c8ff // method "test(bool)uint256"
+    txna ApplicationArgs 0
+    match main_test_route@4
+    err
+
+main_test_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b test
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/ternary_contract_library_internal_function.sol.L.f() -> bytes:
+L.f:
+    intc_0 // 1
+    itob
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/ternary_contract_library_internal_function.sol.C.test[routing]() -> void:
+test:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    pushint 0
+    getbit
+    dup
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
+    intc_1 // 2
+    intc_0 // 1
+    uncover 2
+    select
+    dup
+    intc_1 // 2
+    ==
+    bz test_else_body@3
+    intc_1 // 2
+    itob
+
+test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/ternary_contract_library_internal_function.sol.C.__funcptr_dispatch_ret_u256@4:
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+test_else_body@3:
+    dup
+    intc_0 // 1
+    ==
+    assert // invalid function pointer
+    callsub L.f
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/ternary_contract_library_internal_function.sol.C.__funcptr_dispatch_ret_u256@4

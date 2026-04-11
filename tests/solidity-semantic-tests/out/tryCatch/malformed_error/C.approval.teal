@@ -1,0 +1,75 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/malformed_error.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1
+    bytecblock 0x151f7c750000 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xacb9e794 0xb5251388 0xddb04781 0x7b0ed7ce 0x85aa9f8d 0x8c6ce091 0xd3c2139f // method "f(uint512)void", method "a()uint256", method "b()uint256", method "b2()uint256", method "b3()string", method "c()string", method "d()string"
+    txna ApplicationArgs 0
+    match f main_a_route@6 main_b_route@7 main_b2_route@8 main_b3_route@9 main_c_route@10 main_d_route@11
+    err
+
+main_d_route@11:
+    bytec_0 // 0x151f7c750000
+    log
+    intc_0 // 1
+    return
+
+main_c_route@10:
+    bytec_0 // 0x151f7c750000
+    log
+    intc_0 // 1
+    return
+
+main_b3_route@9:
+    bytec_0 // 0x151f7c750000
+    log
+    intc_0 // 1
+    return
+
+main_b2_route@8:
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_b_route@7:
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+main_a_route@6:
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/malformed_error.sol.C.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    err // revert

@@ -399,7 +399,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 		arr->wtype = _type;
 		if (refArr->arraySize().has_value())
 		{
-			for (int i = 0; i < refArr->arraySize().value(); ++i)
+			for (int64_t i = 0; i < refArr->arraySize().value(); ++i)
 				arr->values.push_back(makeDefaultValue(refArr->elementType(), _loc));
 		}
 		return arr;

@@ -181,10 +181,16 @@ g:
     assert // invalid number of bytes for arc4.bool
     intc_2 // 0
     getbit
+    dup
     intc_0 // 1
     <=
     assert // ABI bool validation
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bz g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.g@52
+    intc_2 // 0
+    assert // signed division overflow
+
+g_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/signed_mod.sol.C.g@52:
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return

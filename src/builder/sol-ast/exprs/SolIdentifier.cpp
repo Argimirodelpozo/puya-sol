@@ -173,12 +173,24 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 	// Regular local variable
 	auto e = std::make_shared<awst::VarExpression>();
 	e->sourceLocation = m_loc;
-	e->name = name;
 	if (decl)
 	{
 		if (auto const* vd = dynamic_cast<VariableDeclaration const*>(decl))
+		{
+			// Look up potentially renamed name (variable shadowing)
+			std::string unique = name + "__" + std::to_string(decl->id());
+			auto it = m_ctx.varNameToId.find(unique);
+			if (it != m_ctx.varNameToId.end() && it->second == decl->id())
+				e->name = unique;
+			else
+				e->name = name;
 			e->wtype = m_ctx.typeMapper.map(vd->type());
+		}
+		else
+			e->name = name;
 	}
+	else
+		e->name = name;
 	if (!e->wtype || e->wtype == awst::WType::voidType())
 	{
 		if (m_solType)

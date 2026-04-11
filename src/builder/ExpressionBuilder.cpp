@@ -190,6 +190,7 @@ eb::BuilderContext ExpressionBuilder::makeBuilderContext()
 		/*.slotStorageRefs =*/ m_slotStorageRefs,
 		/*.funcPtrTargets =*/ m_funcPtrTargets,
 		/*.constantLocals =*/ m_constantLocals,
+		/*.varNameToId =*/ m_varNameToId,
 		/*.inConstructor =*/ m_inConstructor,
 		/*.inUncheckedBlock =*/ m_inUncheckedBlock,
 		/*.buildExpr =*/ [this](solidity::frontend::Expression const& _expr) {

@@ -91,7 +91,7 @@ __postInit:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_zeroed_test.sol.C.test_zeroed_indices[routing]() -> void:
 test_zeroed_indices:
     intc_1 // 0
-    dupn 2
+    dupn 4
     bytec_1 // ""
     txna ApplicationArgs 1
     dup
@@ -159,15 +159,15 @@ test_zeroed_indices_after_while@7:
     intc_1 // 0
     itob
     dup
+    bury 7
     bury 5
-    bury 3
 
 test_zeroed_indices_while_top@8:
-    dig 2
+    dig 4
     dig 1
     b<
     bz test_zeroed_indices_after_while@10
-    dig 2
+    dig 4
     dup
     bytec_2 // 0x01
     b+
@@ -197,7 +197,7 @@ test_zeroed_indices_while_top@8:
     swap
     uncover 2
     box_replace // on error: index out of bounds
-    bury 3
+    bury 5
     b test_zeroed_indices_while_top@8
 
 test_zeroed_indices_after_while@10:
@@ -259,10 +259,10 @@ test_zeroed_indices_while_top@18:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
     dup
-    bury 7
+    bury 9
     extract 0 32
     keccak256
-    dig 4
+    dig 6
     b+
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -293,7 +293,7 @@ test_zeroed_indices_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puy
     !
     !
     assert // revert
-    dig 4
+    dig 6
     store 0
     dig 2
     bytec_2 // 0x01
@@ -342,7 +342,7 @@ test_zeroed_indices_while_top@25:
     itob
     dig 1
     b<
-    bz test_zeroed_indices_while_top@28
+    bz test_zeroed_indices_after_while@27
     bytec_0 // "storageArray"
     box_len
     pop
@@ -352,6 +352,10 @@ test_zeroed_indices_while_top@25:
     swap
     box_resize
     b test_zeroed_indices_while_top@25
+
+test_zeroed_indices_after_while@27:
+    dig 5
+    bury 4
 
 test_zeroed_indices_while_top@28:
     dig 3

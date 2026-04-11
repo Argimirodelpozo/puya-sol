@@ -70,7 +70,7 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 				awst::WType const* arc4ElemType = mapSolTypeToARC4(arrType->baseType());
 				if (!arrType->isDynamicallySized())
 				{
-					int len = static_cast<int>(arrType->length());
+					int64_t len = static_cast<int64_t>(arrType->length());
 					result = createType<awst::ARC4StaticArray>(arc4ElemType, len);
 				}
 				else

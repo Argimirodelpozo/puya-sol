@@ -637,7 +637,7 @@ private:
 	/// The array parameter name/type/size (for param initialization into blob).
 	std::string m_arrayParamName;
 	awst::WType const* m_arrayParamType = nullptr;
-	int m_arrayParamSize = 0;
+	int64_t m_arrayParamSize = 0;
 
 	/// Pending statements emitted by expression-level code (e.g., inlined
 	/// assembly function calls). Statement-level handlers drain these after

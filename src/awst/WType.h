@@ -179,7 +179,7 @@ private:
 class ARC4StaticArray: public WType
 {
 public:
-	ARC4StaticArray(WType const* _elementType, int _arraySize)
+	ARC4StaticArray(WType const* _elementType, int64_t _arraySize)
 		: WType(
 			  "arc4.static_array<" + _elementType->name() + ", "
 				  + std::to_string(_arraySize) + ">",
@@ -193,11 +193,11 @@ public:
 
 	std::string jsonType() const override { return "ARC4StaticArray"; }
 	WType const* elementType() const { return m_elementType; }
-	int arraySize() const { return m_arraySize; }
+	int64_t arraySize() const { return m_arraySize; }
 
 private:
 	WType const* m_elementType;
-	int m_arraySize;
+	int64_t m_arraySize;
 };
 
 class ARC4Struct: public WType
@@ -231,7 +231,7 @@ public:
 	explicit ReferenceArray(
 		WType const* _elementType,
 		bool _immutable = true,
-		std::optional<int> _arraySize = std::nullopt
+		std::optional<int64_t> _arraySize = std::nullopt
 	)
 		: WType(
 			  _arraySize
@@ -247,11 +247,11 @@ public:
 
 	std::string jsonType() const override { return "ReferenceArray"; }
 	WType const* elementType() const { return m_elementType; }
-	std::optional<int> arraySize() const { return m_arraySize; }
+	std::optional<int64_t> arraySize() const { return m_arraySize; }
 
 private:
 	WType const* m_elementType;
-	std::optional<int> m_arraySize;
+	std::optional<int64_t> m_arraySize;
 };
 
 class WTuple: public WType

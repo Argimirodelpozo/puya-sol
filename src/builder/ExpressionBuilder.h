@@ -176,7 +176,40 @@ public:
 	{ m_slotStorageRefs[_declId] = std::move(_expr); }
 	std::shared_ptr<awst::Expression> getSlotStorageRef(int64_t _declId) const
 	{ auto it = m_slotStorageRefs.find(_declId); return it != m_slotStorageRefs.end() ? it->second : nullptr; }
+
+	/// Get the AWST variable name for a declaration, handling shadowing.
+	/// If the name is already taken by a different declaration in an outer scope,
+	/// appends "__<id>" to make it unique.
+	std::string resolveVarName(std::string const& _name, int64_t _declId)
+	{
+		auto it = m_varNameToId.find(_name);
+		if (it != m_varNameToId.end() && it->second != _declId)
+		{
+			// Name is shadowed — use unique name
+			std::string unique = _name + "__" + std::to_string(_declId);
+			m_varNameToId[unique] = _declId;
+			return unique;
+		}
+		m_varNameToId[_name] = _declId;
+		return _name;
+	}
+
+	/// Look up the AWST variable name for a referenced declaration.
+	std::string lookupVarName(std::string const& _name, int64_t _declId) const
+	{
+		// Check if this decl was renamed due to shadowing
+		std::string unique = _name + "__" + std::to_string(_declId);
+		auto it = m_varNameToId.find(unique);
+		if (it != m_varNameToId.end() && it->second == _declId)
+			return unique;
+		return _name;
+	}
+
 private:
+
+	/// Maps variable names to declaration IDs for shadowing detection.
+	/// Saved/restored by ScopeGuard.
+	std::map<std::string, int64_t> m_varNameToId;
 
 	/// Function pointer targets: maps a local variable AST ID to the FunctionDefinition
 	/// it was assigned. For `function() ptr = g;`, later `ptr()` resolves to `g()`.
@@ -199,13 +232,15 @@ public:
 			: m_eb(_eb),
 			  m_savedFuncPtrTargets(_eb.m_funcPtrTargets),
 			  m_savedStorageAliases(_eb.m_storageAliases),
-			  m_savedConstantLocals(_eb.m_constantLocals)
+			  m_savedConstantLocals(_eb.m_constantLocals),
+			  m_savedVarNames(_eb.m_varNameToId)
 		{}
 		~ScopeGuard()
 		{
 			m_eb.m_funcPtrTargets = std::move(m_savedFuncPtrTargets);
 			m_eb.m_storageAliases = std::move(m_savedStorageAliases);
 			m_eb.m_constantLocals = std::move(m_savedConstantLocals);
+			m_eb.m_varNameToId = std::move(m_savedVarNames);
 		}
 		ScopeGuard(ScopeGuard const&) = delete;
 		ScopeGuard& operator=(ScopeGuard const&) = delete;
@@ -214,6 +249,7 @@ public:
 		std::map<int64_t, solidity::frontend::FunctionDefinition const*> m_savedFuncPtrTargets;
 		std::map<int64_t, std::shared_ptr<awst::Expression>> m_savedStorageAliases;
 		std::unordered_map<int64_t, unsigned long long> m_savedConstantLocals;
+		std::map<std::string, int64_t> m_savedVarNames;
 	};
 
 	/// Create a scope guard that snapshots and restores mutable context state.

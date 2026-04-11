@@ -419,6 +419,11 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				stmtCtx.functionParamBitWidths = bitWidths;
 			}
 
+				// Register named return variable names so inner scoping detects shadowing
+				for (auto const& rp: returnParams)
+					if (!rp->name().empty())
+						exprBuilder.resolveVarName(rp->name(), rp->id());
+
 			sub->body = sol_ast::buildBlock(stmtCtx, exprBuilder, func->body());
 
 				// Insert zero-initialization for named return variables
@@ -753,6 +758,11 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				stmtCtx.returnType = sub->returnType;
 				stmtCtx.functionParamBitWidths = bitWidths;
 			}
+
+			// Register named return variable names so inner scoping detects shadowing
+			for (auto const& rp: returnParams)
+				if (!rp->name().empty())
+					exprBuilder.resolveVarName(rp->name(), rp->id());
 
 			sub->body = sol_ast::buildBlock(stmtCtx, exprBuilder, func->body());
 
