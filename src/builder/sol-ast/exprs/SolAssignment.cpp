@@ -423,6 +423,42 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 	auto target = buildExpr(m_assignment.leftHandSide());
 	auto value = buildExpr(m_assignment.rightHandSide());
 
+	// Enum range validation: EVM panics (0x21) on assigning invalid enum values
+	if (op == Token::Assign)
+	{
+		auto const* lhsType = m_assignment.leftHandSide().annotation().type;
+		if (auto const* enumType = dynamic_cast<EnumType const*>(lhsType))
+		{
+			unsigned numMembers = enumType->numberOfMembers();
+			auto val = builder::TypeCoercion::implicitNumericCast(value, awst::WType::uint64Type(), m_loc);
+
+			auto maxVal = std::make_shared<awst::IntegerConstant>();
+			maxVal->sourceLocation = m_loc;
+			maxVal->wtype = awst::WType::uint64Type();
+			maxVal->value = std::to_string(numMembers);
+
+			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+			cmp->sourceLocation = m_loc;
+			cmp->wtype = awst::WType::boolType();
+			cmp->lhs = val;
+			cmp->op = awst::NumericComparison::Lt;
+			cmp->rhs = std::move(maxVal);
+
+			auto assertExpr = std::make_shared<awst::AssertExpression>();
+			assertExpr->sourceLocation = m_loc;
+			assertExpr->wtype = awst::WType::voidType();
+			assertExpr->condition = std::move(cmp);
+			assertExpr->errorMessage = "enum out of range";
+
+			auto assertStmt = std::make_shared<awst::ExpressionStatement>();
+			assertStmt->sourceLocation = m_loc;
+			assertStmt->expr = std::move(assertExpr);
+			m_ctx.prePendingStatements.push_back(std::move(assertStmt));
+
+			value = std::move(val);
+		}
+	}
+
 	// Slot-based storage write: target is biguint (slot offset), value is array
 	// Expand to individual __storage_write(slot + j, value[j]) calls
 	if (op == Token::Assign && target->wtype == awst::WType::biguintType())
