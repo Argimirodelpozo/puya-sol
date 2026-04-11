@@ -4,6 +4,7 @@
 
 #include "builder/sol-eb/FunctionPointerBuilder.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 
 namespace puyasol::builder::eb
@@ -14,11 +15,13 @@ using namespace solidity::frontend;
 // Static members
 std::map<int64_t, FuncPtrEntry> FunctionPointerBuilder::s_targets;
 unsigned FunctionPointerBuilder::s_nextId = 1; // 0 = zero-initialized/invalid
+std::map<std::string, solidity::frontend::FunctionType const*> FunctionPointerBuilder::s_neededDispatches;
 
 void FunctionPointerBuilder::reset()
 {
 	s_targets.clear();
 	s_nextId = 1;
+	s_neededDispatches.clear();
 }
 
 // ── Type mapping ──
@@ -145,6 +148,8 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 
 	// Internal: call __funcptr_dispatch_<signature>(id, args...)
 	std::string dname = dispatchName(_funcType);
+	// Track that this dispatch signature is needed (even if no targets registered)
+	s_neededDispatches[dname] = _funcType;
 
 	// Determine return type
 	awst::WType const* retType = awst::WType::voidType();
@@ -172,12 +177,21 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 	idArg.value = std::move(_ptrExpr);
 	call->args.push_back(std::move(idArg));
 
-	// Remaining args: the actual function arguments
+	// Remaining args: coerce to match dispatch parameter types
 	for (size_t i = 0; i < _args.size(); ++i)
 	{
 		awst::CallArg arg;
 		arg.name = "__arg" + std::to_string(i);
 		arg.value = std::move(_args[i]);
+		// Coerce arg type to match dispatch parameter type
+		if (i < _funcType->parameterTypes().size())
+		{
+			auto const* paramSolType = _funcType->parameterTypes()[i];
+			awst::WType const* expectedType = _ctx.typeMapper.map(paramSolType);
+			if (arg.value->wtype != expectedType)
+				arg.value = builder::TypeCoercion::implicitNumericCast(
+					std::move(arg.value), expectedType, _loc);
+		}
 		call->args.push_back(std::move(arg));
 	}
 
@@ -224,7 +238,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 {
 	std::vector<awst::ContractMethod> methods;
 
-	if (s_targets.empty())
+	if (s_targets.empty() && s_neededDispatches.empty())
 		return methods;
 
 	// Group targets by dispatch name (= signature)
@@ -234,11 +248,21 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		std::string dname = dispatchName(entry.funcType);
 		groups[dname].push_back(&entry);
 	}
+	// Ensure all needed dispatch signatures have entries (even if empty)
+	for (auto const& [dname, funcType] : s_neededDispatches)
+	{
+		if (groups.find(dname) == groups.end())
+			groups[dname] = {};
+	}
 
 	for (auto const& [dname, entries] : groups)
 	{
-		if (entries.empty()) continue;
-		auto const* funcType = entries[0]->funcType;
+		// Get the function type from entries or from s_neededDispatches
+		FunctionType const* funcType = nullptr;
+		if (!entries.empty())
+			funcType = entries[0]->funcType;
+		else if (s_neededDispatches.count(dname))
+			funcType = s_neededDispatches.at(dname);
 		if (!funcType) continue;
 
 		awst::ContractMethod dispatch;

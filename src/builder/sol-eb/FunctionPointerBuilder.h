@@ -94,6 +94,9 @@ private:
 	static std::map<int64_t, FuncPtrEntry> s_targets;
 	/// Next available function pointer ID.
 	static unsigned s_nextId;
+	/// Dispatch signatures needed (from buildFunctionPointerCall).
+	/// Maps dispatch name → FunctionType* for generating empty dispatchers.
+	static std::map<std::string, solidity::frontend::FunctionType const*> s_neededDispatches;
 };
 
 } // namespace puyasol::builder::eb
