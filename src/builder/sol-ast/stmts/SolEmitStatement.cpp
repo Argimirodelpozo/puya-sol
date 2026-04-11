@@ -3,6 +3,7 @@
 
 #include "builder/sol-ast/stmts/SolEmitStatement.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 
 namespace puyasol::builder::sol_ast
@@ -71,9 +72,48 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 	auto const& callArgs = eventCall.arguments();
 	auto const& params = eventDef ? eventDef->parameters()
 		: std::vector<std::shared_ptr<VariableDeclaration>>{};
+	std::vector<std::shared_ptr<awst::Statement>> preStatements;
+
 	for (size_t i = 0; i < callArgs.size(); ++i)
 	{
 		auto translated = m_ctx.buildExpr(*callArgs[i]);
+
+		// Enum range validation: EVM panics (0x21) on invalid enum values in events
+		if (i < params.size())
+		{
+			auto const* paramSolType = params[i]->annotation().type;
+			if (auto const* enumType = dynamic_cast<EnumType const*>(paramSolType))
+			{
+				unsigned numMembers = enumType->numberOfMembers();
+				auto val = builder::TypeCoercion::implicitNumericCast(translated, awst::WType::uint64Type(), m_loc);
+
+				auto maxVal = std::make_shared<awst::IntegerConstant>();
+				maxVal->sourceLocation = m_loc;
+				maxVal->wtype = awst::WType::uint64Type();
+				maxVal->value = std::to_string(numMembers);
+
+				auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+				cmp->sourceLocation = m_loc;
+				cmp->wtype = awst::WType::boolType();
+				cmp->lhs = val;
+				cmp->op = awst::NumericComparison::Lt;
+				cmp->rhs = std::move(maxVal);
+
+				auto assertExpr = std::make_shared<awst::AssertExpression>();
+				assertExpr->sourceLocation = m_loc;
+				assertExpr->wtype = awst::WType::voidType();
+				assertExpr->condition = std::move(cmp);
+				assertExpr->errorMessage = "enum out of range";
+
+				auto assertStmt = std::make_shared<awst::ExpressionStatement>();
+				assertStmt->sourceLocation = m_loc;
+				assertStmt->expr = std::move(assertExpr);
+				preStatements.push_back(std::move(assertStmt));
+
+				translated = std::move(val);
+			}
+		}
+
 		auto* arc4Type = m_ctx.typeMapper->mapToARC4Type(translated->wtype);
 
 		std::shared_ptr<awst::Expression> arc4Value;
@@ -159,7 +199,12 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 	auto stmt = std::make_shared<awst::ExpressionStatement>();
 	stmt->sourceLocation = m_loc;
 	stmt->expr = emit;
-	return {stmt};
+
+	std::vector<std::shared_ptr<awst::Statement>> result;
+	for (auto& s: preStatements)
+		result.push_back(std::move(s));
+	result.push_back(std::move(stmt));
+	return result;
 }
 
 } // namespace puyasol::builder::sol_ast
