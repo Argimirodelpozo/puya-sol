@@ -67,6 +67,75 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		return cast;
 	}
 
+	// msg.value → conditional: GroupIndex > 0 ? gtxns Amount (GroupIndex-1) : 0
+	// Handles the case where there's no preceding payment transaction.
+	if (baseName == "msg" && member == "value")
+	{
+		auto groupIdx = std::make_shared<awst::IntrinsicCall>();
+		groupIdx->sourceLocation = m_loc;
+		groupIdx->wtype = awst::WType::uint64Type();
+		groupIdx->opCode = "txn";
+		groupIdx->immediates = {std::string("GroupIndex")};
+
+		auto zero = std::make_shared<awst::IntegerConstant>();
+		zero->sourceLocation = m_loc;
+		zero->wtype = awst::WType::uint64Type();
+		zero->value = "0";
+		auto hasPayment = std::make_shared<awst::NumericComparisonExpression>();
+		hasPayment->sourceLocation = m_loc;
+		hasPayment->wtype = awst::WType::boolType();
+		hasPayment->lhs = groupIdx;
+		hasPayment->op = awst::NumericComparison::Gt;
+		hasPayment->rhs = std::move(zero);
+
+		auto groupIdx2 = std::make_shared<awst::IntrinsicCall>();
+		groupIdx2->sourceLocation = m_loc;
+		groupIdx2->wtype = awst::WType::uint64Type();
+		groupIdx2->opCode = "txn";
+		groupIdx2->immediates = {std::string("GroupIndex")};
+		auto one = std::make_shared<awst::IntegerConstant>();
+		one->sourceLocation = m_loc;
+		one->wtype = awst::WType::uint64Type();
+		one->value = "1";
+		auto payIdx = std::make_shared<awst::UInt64BinaryOperation>();
+		payIdx->sourceLocation = m_loc;
+		payIdx->wtype = awst::WType::uint64Type();
+		payIdx->left = std::move(groupIdx2);
+		payIdx->op = awst::UInt64BinaryOperator::Sub;
+		payIdx->right = std::move(one);
+
+		auto amount = std::make_shared<awst::IntrinsicCall>();
+		amount->sourceLocation = m_loc;
+		amount->wtype = awst::WType::uint64Type();
+		amount->opCode = "gtxns";
+		amount->immediates = {std::string("Amount")};
+		amount->stackArgs.push_back(std::move(payIdx));
+
+		auto zeroVal = std::make_shared<awst::IntegerConstant>();
+		zeroVal->sourceLocation = m_loc;
+		zeroVal->wtype = awst::WType::uint64Type();
+		zeroVal->value = "0";
+
+		auto cond = std::make_shared<awst::ConditionalExpression>();
+		cond->sourceLocation = m_loc;
+		cond->wtype = awst::WType::uint64Type();
+		cond->condition = std::move(hasPayment);
+		cond->trueExpr = std::move(amount);
+		cond->falseExpr = std::move(zeroVal);
+
+		// Promote to biguint
+		auto itob = std::make_shared<awst::IntrinsicCall>();
+		itob->sourceLocation = m_loc;
+		itob->wtype = awst::WType::bytesType();
+		itob->opCode = "itob";
+		itob->stackArgs.push_back(std::move(cond));
+		auto cast = std::make_shared<awst::ReinterpretCast>();
+		cast->sourceLocation = m_loc;
+		cast->wtype = awst::WType::biguintType();
+		cast->expr = std::move(itob);
+		return cast;
+	}
+
 	// Standard intrinsics via IntrinsicMapper
 	auto intrinsic = builder::IntrinsicMapper::tryMapMemberAccess(baseName, member, m_loc);
 	if (intrinsic)

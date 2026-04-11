@@ -24,23 +24,17 @@ std::shared_ptr<awst::IntrinsicCall> IntrinsicMapper::tryMapMemberAccess(
 		}
 		else if (_memberName == "value")
 		{
-			// msg.value → Amount of the preceding payment transaction in the group.
-			// In Solidity, msg.value is the ETH sent with the call. On Algorand,
-			// the caller must group a payment txn before the app call.
-			// Emits: gtxn (GroupIndex - 1) Amount
-			// Runtime asserts check the previous txn is a payment to this app.
-			Logger::instance().warning(
-				"msg.value mapped to preceding payment transaction amount. "
-				"Caller must group a payment txn before the app call.", _loc);
+			// msg.value is now handled in SolIntrinsicAccess.cpp with a
+			// conditional expression for safe GroupIndex access.
+			// This fallback is kept for non-member-access contexts.
+			call->opCode = "gtxns";
+			call->immediates = {std::string("Amount")};
 
-			// txn GroupIndex
 			auto groupIdx = std::make_shared<awst::IntrinsicCall>();
 			groupIdx->sourceLocation = _loc;
 			groupIdx->wtype = awst::WType::uint64Type();
 			groupIdx->opCode = "txn";
 			groupIdx->immediates = {std::string("GroupIndex")};
-
-			// GroupIndex - 1
 			auto one = std::make_shared<awst::IntegerConstant>();
 			one->sourceLocation = _loc;
 			one->wtype = awst::WType::uint64Type();
@@ -52,9 +46,6 @@ std::shared_ptr<awst::IntrinsicCall> IntrinsicMapper::tryMapMemberAccess(
 			payIdx->op = awst::UInt64BinaryOperator::Sub;
 			payIdx->right = std::move(one);
 
-			// gtxns Amount (of payIdx)
-			call->opCode = "gtxns";
-			call->immediates = {std::string("Amount")};
 			call->stackArgs.push_back(std::move(payIdx));
 			call->wtype = awst::WType::uint64Type();
 			return call;
