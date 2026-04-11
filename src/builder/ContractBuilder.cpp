@@ -2401,11 +2401,16 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			method.returnType = awst::WType::biguintType();
 		// For signed integer returns ≤64 bits, promote to biguint for proper
 		// 256-bit two's complement ARC4 encoding.
-		// Unwrap UserDefinedValueType to find the underlying IntegerType.
+		// Unwrap UserDefinedValueType/EnumType to find the underlying IntegerType.
 		auto const* retSolType = returnParams[0]->type();
 		if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(retSolType))
 			retSolType = &udvt->underlyingType();
 		auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(retSolType);
+		// Enums are uint8 in ABI — treat as unsigned 8-bit
+		if (!intType)
+			if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(retSolType))
+				intType = dynamic_cast<solidity::frontend::IntegerType const*>(
+					enumType->encodingType());
 		if (intType && intType->isSigned())
 		{
 			if (intType->numBits() <= 64)
@@ -2427,11 +2432,16 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		{
 			auto const& rp = returnParams[ri];
 			auto* mappedType = m_typeMapper.map(rp->type());
-			// Detect signed integer elements for sign-extension
+			// Detect signed/narrow integer elements for sign-extension/masking
 			auto const* retSolType = rp->type();
 			if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(retSolType))
 				retSolType = &udvt->underlyingType();
-			if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(retSolType))
+			auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(retSolType);
+			if (!intType)
+				if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(retSolType))
+					intType = dynamic_cast<solidity::frontend::IntegerType const*>(
+						enumType->encodingType());
+			if (intType)
 			{
 				if (intType->isSigned())
 				{
@@ -2758,6 +2768,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					retSolType = &udvt->underlyingType();
 				if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(retSolType))
 					retBits = intType->numBits();
+				else if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(retSolType))
+					if (auto const* encType = dynamic_cast<solidity::frontend::IntegerType const*>(
+						enumType->encodingType()))
+						retBits = encType->numBits();
 			}
 			auto const* arc4RetType = m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(retBits));
 
@@ -2995,6 +3009,11 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
 					solType = &udvt->underlyingType();
 				auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(solType);
+				// Enums have uint8 ABI encoding
+				if (!intType)
+					if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(solType))
+						intType = dynamic_cast<solidity::frontend::IntegerType const*>(
+							enumType->encodingType());
 				if (!intType || intType->numBits() >= 64)
 					continue;
 

@@ -81,11 +81,11 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::tryConstantFold()
 			auto* resultType = m_ctx.typeMapper.map(m_binOp.annotation().type);
 			auto val = ratType->literalValue(nullptr);
 			// literalValue() returns u256 (two's complement for negatives).
-			// Truncate to uint64 range or use biguint as needed.
+			// If value exceeds uint64, promote to biguint to preserve full
+			// 256-bit representation (needed for sign extension in biguint contexts).
 			static const solidity::u256 uint64Max("18446744073709551615");
-			static const solidity::u256 pow64("18446744073709551616");   // 2^64
 			if (resultType == awst::WType::uint64Type() && val > uint64Max)
-				val = val % pow64;  // truncate to 64-bit two's complement
+				resultType = awst::WType::biguintType();
 			auto e = std::make_shared<awst::IntegerConstant>();
 			e->sourceLocation = m_loc;
 			e->wtype = resultType;

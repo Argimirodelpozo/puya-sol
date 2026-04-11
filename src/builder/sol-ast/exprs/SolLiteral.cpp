@@ -49,11 +49,11 @@ std::shared_ptr<awst::Expression> SolLiteral::toAwst()
 		{
 			auto val = ratType->literalValue(nullptr);
 			// literalValue() returns u256 (two's complement for negatives).
-			// Truncate to uint64 range or use biguint as needed.
+			// If value exceeds uint64, promote to biguint to preserve full
+			// 256-bit representation.
 			static const solidity::u256 uint64Max("18446744073709551615");
-			static const solidity::u256 pow64("18446744073709551616");   // 2^64
 			if (mappedType == awst::WType::uint64Type() && val > uint64Max)
-				val = val % pow64;  // truncate to 64-bit two's complement
+				mappedType = awst::WType::biguintType();
 			e->value = val.str();
 		}
 		else

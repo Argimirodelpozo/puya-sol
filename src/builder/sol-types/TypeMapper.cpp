@@ -300,6 +300,10 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 
 awst::WType const* TypeMapper::mapSolTypeToARC4(solidity::frontend::Type const* _solType)
 {
+	// Unwrap UserDefinedValueType to underlying type
+	if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(_solType))
+		_solType = &udvt->underlyingType();
+
 	// Preserve exact bit width for integers (don't upcast uint8→uint64)
 	if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(_solType))
 	{
@@ -311,6 +315,11 @@ awst::WType const* TypeMapper::mapSolTypeToARC4(solidity::frontend::Type const* 
 		}
 		return createType<awst::ARC4UIntN>(static_cast<int>(bits));
 	}
+
+	// Enums → ARC4UIntN(8) (enums are always uint8 in Solidity ABI)
+	if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(_solType))
+		return createType<awst::ARC4UIntN>(8);
+
 	// Default: map through raw type → ARC4
 	return mapToARC4Type(map(_solType));
 }
