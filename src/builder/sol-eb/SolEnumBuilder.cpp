@@ -14,11 +14,46 @@ std::unique_ptr<InstanceBuilder> SolEnumBuilder::compare(
 	if (_other.wtype() != awst::WType::uint64Type())
 		return nullptr;
 
+	auto lhs = resolve();
+	auto rhs = _other.resolve();
+
+	// Enum range validation: EVM panics (0x21) when comparing invalid enum values
+	if (m_enumType)
+	{
+		unsigned numMembers = m_enumType->numberOfMembers();
+		auto validateEnum = [&](std::shared_ptr<awst::Expression> val) {
+			auto maxVal = std::make_shared<awst::IntegerConstant>();
+			maxVal->sourceLocation = _loc;
+			maxVal->wtype = awst::WType::uint64Type();
+			maxVal->value = std::to_string(numMembers);
+
+			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+			cmp->sourceLocation = _loc;
+			cmp->wtype = awst::WType::boolType();
+			cmp->lhs = val;
+			cmp->op = awst::NumericComparison::Lt;
+			cmp->rhs = std::move(maxVal);
+
+			auto assertExpr = std::make_shared<awst::AssertExpression>();
+			assertExpr->sourceLocation = _loc;
+			assertExpr->wtype = awst::WType::voidType();
+			assertExpr->condition = std::move(cmp);
+			assertExpr->errorMessage = "enum out of range";
+
+			auto stmt = std::make_shared<awst::ExpressionStatement>();
+			stmt->sourceLocation = _loc;
+			stmt->expr = std::move(assertExpr);
+			m_ctx.prePendingStatements.push_back(std::move(stmt));
+		};
+		validateEnum(lhs);
+		validateEnum(rhs);
+	}
+
 	auto e = std::make_shared<awst::NumericComparisonExpression>();
 	e->sourceLocation = _loc;
 	e->wtype = awst::WType::boolType();
-	e->lhs = resolve();
-	e->rhs = _other.resolve();
+	e->lhs = std::move(lhs);
+	e->rhs = std::move(rhs);
 
 	switch (_op)
 	{

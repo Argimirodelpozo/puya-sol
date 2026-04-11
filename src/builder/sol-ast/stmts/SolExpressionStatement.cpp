@@ -284,6 +284,48 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 	for (auto& p: m_ctx.takePending())
 		result.push_back(std::move(p));
 
+	// Enum range validation on return: EVM panics (0x21) on invalid enum return values
+	if (stmt->value)
+	{
+		auto const& retAnnotation = dynamic_cast<ReturnAnnotation const&>(m_node.annotation());
+		if (retAnnotation.functionReturnParameters)
+		{
+			auto const& retParams = retAnnotation.functionReturnParameters->parameters();
+			if (retParams.size() == 1)
+			{
+				if (auto const* enumType = dynamic_cast<EnumType const*>(retParams[0]->type()))
+				{
+					unsigned numMembers = enumType->numberOfMembers();
+					auto val = builder::TypeCoercion::implicitNumericCast(
+						stmt->value, awst::WType::uint64Type(), m_loc);
+
+					auto maxVal = std::make_shared<awst::IntegerConstant>();
+					maxVal->sourceLocation = m_loc;
+					maxVal->wtype = awst::WType::uint64Type();
+					maxVal->value = std::to_string(numMembers);
+
+					auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+					cmp->sourceLocation = m_loc;
+					cmp->wtype = awst::WType::boolType();
+					cmp->lhs = val;
+					cmp->op = awst::NumericComparison::Lt;
+					cmp->rhs = std::move(maxVal);
+
+					auto assertExpr = std::make_shared<awst::AssertExpression>();
+					assertExpr->sourceLocation = m_loc;
+					assertExpr->wtype = awst::WType::voidType();
+					assertExpr->condition = std::move(cmp);
+					assertExpr->errorMessage = "enum out of range";
+
+					auto assertStmt = std::make_shared<awst::ExpressionStatement>();
+					assertStmt->sourceLocation = m_loc;
+					assertStmt->expr = std::move(assertExpr);
+					result.push_back(std::move(assertStmt));
+				}
+			}
+		}
+	}
+
 	result.push_back(stmt);
 	return result;
 }
