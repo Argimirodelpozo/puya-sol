@@ -58,6 +58,12 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 	auto const* tupleTarget = dynamic_cast<awst::TupleExpression const*>(_target.get());
 	auto const& items = tupleTarget->items;
 
+	// Collect assignments and insert in reverse order (right-to-left)
+	// to match Solidity's tuple assignment semantics where later positions
+	// are assigned first (important when the same target appears twice).
+	std::vector<std::shared_ptr<awst::Statement>> assignStmts;
+	auto pendingBefore = m_ctx.pendingStatements.size();
+
 	for (size_t i = 0; i < items.size(); ++i)
 	{
 		auto item = items[i];
@@ -177,6 +183,16 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 		stmt->expr = e;
 		m_ctx.pendingStatements.push_back(std::move(stmt));
 	}
+
+	// Reverse the assignments added during this call to get right-to-left order.
+	// This matches Solidity's viaYul semantics where tuple stores happen
+	// right-to-left (last element stored first, first element stored last).
+	auto pendingAfter = m_ctx.pendingStatements.size();
+	if (pendingAfter > pendingBefore + 1)
+		std::reverse(
+			m_ctx.pendingStatements.begin() + static_cast<long>(pendingBefore),
+			m_ctx.pendingStatements.end());
+
 	return _value;
 }
 

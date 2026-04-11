@@ -349,6 +349,15 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::compare(
 		}
 	}
 
+	// Ensure both sides have matching types for the comparison
+	if (lhs->wtype != rhs->wtype)
+	{
+		if (lhs->wtype == awst::WType::uint64Type() && rhs->wtype == awst::WType::biguintType())
+			lhs = promoteToBigUInt(std::move(lhs), _loc);
+		else if (rhs->wtype == awst::WType::uint64Type() && lhs->wtype == awst::WType::biguintType())
+			rhs = promoteToBigUInt(std::move(rhs), _loc);
+	}
+
 	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 	cmp->sourceLocation = _loc;
 	cmp->wtype = awst::WType::boolType();
