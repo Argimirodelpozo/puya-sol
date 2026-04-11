@@ -41,11 +41,14 @@ h:
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
-    swap
+    dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 22 4
     pushbytes 0x151f7c75
+    swap
+    concat
     log
     pushint 1
     return

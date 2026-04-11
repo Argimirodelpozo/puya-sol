@@ -1108,7 +1108,7 @@
                           "length": null
                         },
                         "expr": {
-                          "_type": "BytesConstant",
+                          "_type": "ReinterpretCast",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_selector_assignment.sol",
                             "line": 231,
@@ -1119,12 +1119,52 @@
                           },
                           "wtype": {
                             "_type": "BytesWType",
-                            "name": "bytes",
+                            "name": "bytes[4]",
                             "immutable": true,
-                            "length": null
+                            "length": 4
                           },
-                          "value": "",
-                          "encoding": "base16"
+                          "expr": {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_selector_assignment.sol",
+                              "line": 231,
+                              "end_line": 242,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "extract",
+                            "immediates": [
+                              20,
+                              4
+                            ],
+                            "stack_args": [
+                              {
+                                "_type": "VarExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_selector_assignment.sol",
+                                  "line": 231,
+                                  "end_line": 233,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "name": "fp"
+                              }
+                            ]
+                          }
                         }
                       }
                     ]
