@@ -454,6 +454,15 @@ void AssemblyBuilder::buildAssignment(
 					cast->expr = std::move(itob);
 					slotExpr = std::move(cast);
 				}
+				else if (slotExpr->wtype != awst::WType::biguintType())
+				{
+					// bytes[N] or other non-biguint → reinterpret as biguint
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = loc;
+					cast->wtype = awst::WType::biguintType();
+					cast->expr = std::move(slotExpr);
+					slotExpr = std::move(cast);
+				}
 
 				auto target = std::make_shared<awst::VarExpression>();
 				target->sourceLocation = loc;
