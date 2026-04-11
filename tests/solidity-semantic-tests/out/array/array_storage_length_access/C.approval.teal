@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_length_access.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock "storageArray" "__ctor_pending"
+    bytecblock "storageArray" "__ctor_pending" 0x068101
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
@@ -56,6 +56,25 @@ set_get_length:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+
+set_get_length_while_top@6:
+    pushint 170010
+    global OpcodeBudget
+    >
+    bz set_get_length_while_top@2
+    itxn_begin
+    pushint 6 // appl
+    itxn_field TypeEnum
+    pushint 5 // DeleteApplication
+    itxn_field OnCompletion
+    bytec_2 // 0x068101
+    itxn_field ApprovalProgram
+    bytec_2 // 0x068101
+    itxn_field ClearStateProgram
+    intc_2 // 0
+    itxn_field Fee
+    itxn_submit
+    b set_get_length_while_top@6
 
 set_get_length_while_top@2:
     bytec_0 // "storageArray"

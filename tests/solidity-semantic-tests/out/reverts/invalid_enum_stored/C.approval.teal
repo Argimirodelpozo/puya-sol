@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_stored.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 0 1
     bytecblock "x"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
-    intc_1 // 0
+    intc_0 // 0
     app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -36,29 +36,31 @@ main_after_if_else@2:
 test_store:
     load 0
     store 0
+    intc_0 // 0
+    assert // enum out of range
     bytec_0 // "x"
     pushint 5
     app_global_put
     pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_stored.sol.C.test_store_ok[routing]() -> void:
 test_store_ok:
     bytec_0 // "x"
-    intc_1 // 0
+    intc_0 // 0
     app_global_put
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/invalid_enum_stored.sol.C.x[routing]() -> void:
 x:
-    intc_1 // 0
+    intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
@@ -67,5 +69,5 @@ x:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
