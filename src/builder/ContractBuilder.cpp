@@ -2806,6 +2806,89 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			method.returnType = arc4RetType;
 		}
 
+		// For ARC4 methods returning tuples with biguint elements,
+		// wrap each biguint element in ARC4Encode with correct bit width.
+		if (method.arc4MethodConfig.has_value() && method.returnType
+			&& method.returnType->kind() == awst::WTypeKind::WTuple
+			&& signedReturns.empty() && _func.modifiers().empty() && !funcHasInlineAssembly)
+		{
+			auto const* tupleType = static_cast<awst::WTuple const*>(method.returnType);
+			// Only wrap when ALL elements are biguint or uint64/bool (simple scalars).
+			// Mixed tuples with arrays/structs/strings need different handling.
+			bool allScalar = true;
+			bool hasBiguintElement = false;
+			for (auto const* t : tupleType->types())
+			{
+				if (t == awst::WType::biguintType())
+					hasBiguintElement = true;
+				else if (t != awst::WType::uint64Type() && t != awst::WType::boolType())
+					allScalar = false;
+			}
+
+			if (hasBiguintElement && allScalar)
+			{
+				// Build ARC4 type for each element
+				std::vector<awst::WType const*> arc4Types;
+				for (size_t ri = 0; ri < returnParams.size() && ri < tupleType->types().size(); ++ri)
+				{
+					auto const* elemType = tupleType->types()[ri];
+					if (elemType == awst::WType::biguintType())
+					{
+						auto const* retSolType = returnParams[ri]->type();
+						if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(retSolType))
+							retSolType = &udvt->underlyingType();
+						unsigned bits = 256;
+						if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(retSolType))
+							bits = intType->numBits();
+						arc4Types.push_back(m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits)));
+					}
+					else
+						arc4Types.push_back(elemType);
+				}
+
+				// Walk the body and wrap biguint tuple elements in ARC4Encode
+				std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> wrapTupleReturns;
+				wrapTupleReturns = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
+				{
+					for (auto& stmt : stmts)
+					{
+						if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
+						{
+							if (!ret->value) continue;
+							auto* tuple = dynamic_cast<awst::TupleExpression*>(ret->value.get());
+							if (!tuple) continue;
+							for (size_t i = 0; i < tuple->items.size() && i < arc4Types.size(); ++i)
+							{
+								if (tuple->items[i]->wtype == awst::WType::biguintType()
+									&& arc4Types[i]->kind() == awst::WTypeKind::ARC4UIntN)
+								{
+									auto encode = std::make_shared<awst::ARC4Encode>();
+									encode->sourceLocation = tuple->items[i]->sourceLocation;
+									encode->wtype = arc4Types[i];
+									encode->value = std::move(tuple->items[i]);
+									tuple->items[i] = std::move(encode);
+								}
+							}
+							// Update tuple wtype
+							tuple->wtype = new awst::WTuple(
+								std::vector<awst::WType const*>(arc4Types));
+						}
+						else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
+						{
+							if (ifElse->ifBranch) wrapTupleReturns(ifElse->ifBranch->body);
+							if (ifElse->elseBranch) wrapTupleReturns(ifElse->elseBranch->body);
+						}
+						else if (auto* block = dynamic_cast<awst::Block*>(stmt.get()))
+							wrapTupleReturns(block->body);
+						else if (auto* loop = dynamic_cast<awst::WhileLoop*>(stmt.get()))
+							if (loop->loopBody) wrapTupleReturns(loop->loopBody->body);
+					}
+				};
+				wrapTupleReturns(method.body->body);
+				method.returnType = new awst::WTuple(std::vector<awst::WType const*>(arc4Types));
+			}
+		}
+
 		// Sign-extend return values for signed integer types ≤64 bits.
 		if (!signedReturns.empty() && method.arc4MethodConfig.has_value())
 		{
