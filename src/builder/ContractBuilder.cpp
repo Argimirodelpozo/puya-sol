@@ -2660,6 +2660,43 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			{
 				retStmt->value = StorageMapper::makeDefaultValue(method.returnType, method.sourceLocation);
 			}
+
+			// Enum range validation for implicit return of named return variables
+			if (hasNamedReturns && retParams.size() == 1)
+			{
+				if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(retParams[0]->type()))
+				{
+					unsigned numMembers = enumType->numberOfMembers();
+					auto var = std::make_shared<awst::VarExpression>();
+					var->sourceLocation = method.sourceLocation;
+					var->name = retParams[0]->name();
+					var->wtype = awst::WType::uint64Type();
+
+					auto maxVal = std::make_shared<awst::IntegerConstant>();
+					maxVal->sourceLocation = method.sourceLocation;
+					maxVal->wtype = awst::WType::uint64Type();
+					maxVal->value = std::to_string(numMembers);
+
+					auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+					cmp->sourceLocation = method.sourceLocation;
+					cmp->wtype = awst::WType::boolType();
+					cmp->lhs = std::move(var);
+					cmp->op = awst::NumericComparison::Lt;
+					cmp->rhs = std::move(maxVal);
+
+					auto assertExpr = std::make_shared<awst::AssertExpression>();
+					assertExpr->sourceLocation = method.sourceLocation;
+					assertExpr->wtype = awst::WType::voidType();
+					assertExpr->condition = std::move(cmp);
+					assertExpr->errorMessage = "enum out of range";
+
+					auto assertStmt = std::make_shared<awst::ExpressionStatement>();
+					assertStmt->sourceLocation = method.sourceLocation;
+					assertStmt->expr = std::move(assertExpr);
+					method.body->body.push_back(std::move(assertStmt));
+				}
+			}
+
 			method.body->body.push_back(std::move(retStmt));
 		}
 
