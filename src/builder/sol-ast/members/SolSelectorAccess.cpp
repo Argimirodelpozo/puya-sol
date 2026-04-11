@@ -217,7 +217,33 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 		}
 	}
 
-	if (sig.empty()) return nullptr;
+	if (sig.empty())
+	{
+		// Function pointer variable: extract selector from bytes representation.
+		// External function pointers are encoded as address(20) + selector(4) = 24 bytes.
+		if (funcType && funcType->kind() == FunctionType::Kind::External)
+		{
+			auto base = buildExpr(baseExpr);
+			if (base && base->wtype == awst::WType::bytesType())
+			{
+				// extract(base, 20, 4) — selector is last 4 bytes of 24-byte encoding
+				auto extract = std::make_shared<awst::IntrinsicCall>();
+				extract->sourceLocation = m_loc;
+				extract->wtype = awst::WType::bytesType();
+				extract->opCode = "extract";
+				extract->immediates = {20, 4};
+				extract->stackArgs.push_back(std::move(base));
+
+				auto cast = std::make_shared<awst::ReinterpretCast>();
+				cast->sourceLocation = m_loc;
+				auto* targetType = m_ctx.typeMapper.map(m_memberAccess.annotation().type);
+				cast->wtype = targetType ? targetType : awst::WType::bytesType();
+				cast->expr = std::move(extract);
+				return cast;
+			}
+		}
+		return nullptr;
+	}
 
 	Logger::instance().debug("selector: " + sig, m_loc);
 
