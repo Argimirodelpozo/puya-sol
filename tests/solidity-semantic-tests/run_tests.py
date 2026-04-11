@@ -889,12 +889,17 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                     # string/bytes/other: pass as bytes directly
                     args.append(a)
             elif isinstance(a, int) and i in param_sizes:
-                # int → byte[N]: convert large int (EVM left-padded) to N-byte list
+                # int → byte[N]: convert large int to N-byte list
+                # EVM uses left-aligned encoding for bytesN: left(0xABCD) packs
+                # the significant bytes at the start. Take the FIRST N bytes from
+                # the big-endian representation.
                 expected_size = param_sizes[i]
                 byte_len = max(expected_size, (a.bit_length() + 7) // 8) if a else expected_size
-                a_bytes = a.to_bytes(byte_len, 'big')[-expected_size:] if a else b'\x00' * expected_size
+                a_bytes = a.to_bytes(byte_len, 'big') if a else b'\x00' * expected_size
+                # Take first N bytes (left-aligned, matching EVM bytesN encoding)
+                a_bytes = a_bytes[:expected_size]
                 if len(a_bytes) < expected_size:
-                    a_bytes = b'\x00' * (expected_size - len(a_bytes)) + a_bytes
+                    a_bytes = a_bytes + b'\x00' * (expected_size - len(a_bytes))
                 args.append(list(a_bytes))
             elif isinstance(a, int) and param_types.get(i) == 'address':
                 # ABI v2: address values > 2^160 - 1 are invalid (EVM addresses are 20 bytes)
