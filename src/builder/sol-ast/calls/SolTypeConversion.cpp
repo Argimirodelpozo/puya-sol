@@ -67,6 +67,13 @@ std::shared_ptr<awst::Expression> SolTypeConversion::toAwst()
 		// but if not, fall through to generic conversion below.
 		auto argExpr = buildExpr(*m_call.arguments()[0]);
 
+		// address(application) → app address via app_params_get AppAddress
+		if (argExpr->wtype == awst::WType::applicationType())
+		{
+			return TypeCoercion::coerceForAssignment(
+				std::move(argExpr), awst::WType::accountType(), m_loc);
+		}
+
 		if (argExpr->wtype == awst::WType::uint64Type()
 			|| argExpr->wtype == awst::WType::biguintType())
 		{
