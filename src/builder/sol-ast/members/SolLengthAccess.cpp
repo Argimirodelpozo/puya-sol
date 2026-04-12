@@ -84,6 +84,19 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 
 	auto base = buildExpr(baseExpr);
 
+	// bytesN.length → compile-time constant N (fixed-size bytes)
+	if (auto const* fixedBytes = dynamic_cast<awst::BytesWType const*>(base->wtype))
+	{
+		if (fixedBytes->length().has_value())
+		{
+			auto c = std::make_shared<awst::IntegerConstant>();
+			c->sourceLocation = m_loc;
+			c->wtype = awst::WType::uint64Type();
+			c->value = std::to_string(*fixedBytes->length());
+			return c;
+		}
+	}
+
 	// bytes.length → len intrinsic
 	if (base->wtype == awst::WType::bytesType())
 	{
