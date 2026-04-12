@@ -891,9 +891,9 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 				dataExpr = std::move(cast);
 			}
 
-			// Look up the contract's fallback function to know whether to
-			// pass the data bytes. Fallbacks may be declared as
-			// `fallback()` or `fallback(bytes calldata)`; we must match.
+			// Only dispatch to __fallback if the contract actually defines
+			// one. Otherwise emitting `InstanceMethodTarget{"__fallback"}`
+			// leaves an unresolvable reference in the AWST.
 			solidity::frontend::FunctionDefinition const* fallbackFunc = nullptr;
 			if (_ctx.currentContract)
 			{
@@ -911,10 +911,15 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 			}
 			foundFallback:;
 
-			bool fallbackTakesBytes = fallbackFunc && fallbackFunc->parameters().size() == 1;
+			if (!fallbackFunc)
+			{
+				// No fallback in the contract — stub as (true, empty bytes).
+				return std::make_unique<GenericResultBuilder>(_ctx,
+					makeBoolBytesTupleEmpty(_loc));
+			}
 
-			// Call __fallback[(bytes)] directly. Without a currentContract
-			// we conservatively pass no args (matches most fallback tests).
+			bool fallbackTakesBytes = fallbackFunc->parameters().size() == 1;
+
 			auto call = std::make_shared<awst::SubroutineCallExpression>();
 			call->sourceLocation = _loc;
 			call->wtype = awst::WType::voidType();

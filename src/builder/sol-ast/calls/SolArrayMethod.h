@@ -24,6 +24,13 @@ private:
 	std::shared_ptr<awst::Expression> handleMemoryArray(
 		std::string const& _memberName,
 		solidity::frontend::Expression const& _baseExpr);
+
+	/// Handle push/pop on a dynamic array field of a storage struct via
+	/// a copy-on-write pattern (read struct → mutate tmp → write back).
+	std::shared_ptr<awst::Expression> handleStructFieldArrayMethod(
+		std::string const& _memberName,
+		solidity::frontend::MemberAccess const& _fieldAccess,
+		solidity::frontend::VariableDeclaration const& _structVar);
 };
 
 } // namespace puyasol::builder::sol_ast

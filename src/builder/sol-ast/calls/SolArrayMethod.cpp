@@ -289,7 +289,167 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 		}
 	}
 
+	// Struct-field array push/pop: `s.b.push(val)` where s is a storage
+	// struct and b is a dynamic array field. Emit copy-on-write: read the
+	// struct into a temp, mutate tmp.b in place, write the struct back.
+	if (auto const* innerMA = dynamic_cast<MemberAccess const*>(&baseExpr))
+	{
+		if (auto const* outerIdent = dynamic_cast<Identifier const*>(
+				&innerMA->expression()))
+		{
+			if (auto const* outerVar = dynamic_cast<VariableDeclaration const*>(
+					outerIdent->annotation().referencedDeclaration))
+			{
+				if (outerVar->isStateVariable()
+					&& outerVar->type()->category() == Type::Category::Struct
+					&& (memberName == "push" || memberName == "pop"))
+				{
+					return handleStructFieldArrayMethod(
+						memberName, *innerMA, *outerVar);
+				}
+			}
+		}
+	}
+
 	return handleMemoryArray(memberName, baseExpr);
+}
+
+std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
+	std::string const& _memberName,
+	MemberAccess const& _fieldAccess,
+	VariableDeclaration const& _structVar)
+{
+	std::string fieldName = _fieldAccess.memberName();
+	std::string varName = _structVar.name();
+	auto loc = m_loc;
+
+	// Determine the field's array type and element type.
+	auto const* structType = dynamic_cast<StructType const*>(_structVar.type());
+	if (!structType)
+		return nullptr;
+	auto const& structDef = structType->structDefinition();
+
+	ArrayType const* fieldArrayType = nullptr;
+	for (auto const& member : structDef.members())
+	{
+		if (member->name() == fieldName)
+		{
+			fieldArrayType = dynamic_cast<ArrayType const*>(member->type());
+			break;
+		}
+	}
+	if (!fieldArrayType)
+		return nullptr;
+
+	auto* structWType = m_ctx.typeMapper.map(_structVar.type());
+	auto* rawFieldType = m_ctx.typeMapper.map(fieldArrayType);
+	auto* elemType = m_ctx.typeMapper.mapSolTypeToARC4(fieldArrayType->baseType());
+	auto kind = builder::StorageMapper::shouldUseBoxStorage(_structVar)
+		? awst::AppStorageKind::Box
+		: awst::AppStorageKind::AppGlobal;
+
+	// Read the struct (box_get or app_global_get with default).
+	auto structRead = m_ctx.storageMapper.createStateRead(
+		varName, structWType, kind, loc);
+
+	// tmp = structRead
+	static int structPushCounter = 0;
+	std::string tmpName = "__struct_arr_tmp_" + std::to_string(structPushCounter++);
+	auto tmpTarget = std::make_shared<awst::VarExpression>();
+	tmpTarget->sourceLocation = loc;
+	tmpTarget->name = tmpName;
+	tmpTarget->wtype = structWType;
+	auto tmpAssign = std::make_shared<awst::AssignmentStatement>();
+	tmpAssign->sourceLocation = loc;
+	tmpAssign->target = tmpTarget;
+	tmpAssign->value = std::move(structRead);
+	m_ctx.pendingStatements.push_back(std::move(tmpAssign));
+
+	// tmp.field (FieldExpression)
+	auto tmpRead = std::make_shared<awst::VarExpression>();
+	tmpRead->sourceLocation = loc;
+	tmpRead->name = tmpName;
+	tmpRead->wtype = structWType;
+	auto fieldExpr = std::make_shared<awst::FieldExpression>();
+	fieldExpr->sourceLocation = loc;
+	fieldExpr->wtype = rawFieldType;
+	fieldExpr->base = std::move(tmpRead);
+	fieldExpr->name = fieldName;
+
+	// Mutate tmp.field via ArrayExtend / ArrayPop
+	if (_memberName == "push")
+	{
+		std::shared_ptr<awst::Expression> val;
+		if (!m_call.arguments().empty())
+		{
+			val = buildExpr(*m_call.arguments()[0]);
+			// ARC4-encode the value if the element type is ARC4
+			if (elemType && val->wtype != elemType)
+			{
+				val = builder::TypeCoercion::implicitNumericCast(
+					std::move(val), elemType, loc);
+				if (val->wtype != elemType)
+				{
+					auto encode = std::make_shared<awst::ARC4Encode>();
+					encode->sourceLocation = loc;
+					encode->wtype = elemType;
+					encode->value = std::move(val);
+					val = std::move(encode);
+				}
+			}
+		}
+		else
+		{
+			val = builder::TypeCoercion::makeDefaultValue(elemType, loc);
+		}
+
+		auto singleArr = std::make_shared<awst::NewArray>();
+		singleArr->sourceLocation = loc;
+		singleArr->wtype = rawFieldType;
+		singleArr->values.push_back(std::move(val));
+
+		auto extend = std::make_shared<awst::ArrayExtend>();
+		extend->sourceLocation = loc;
+		extend->wtype = awst::WType::voidType();
+		extend->base = fieldExpr;
+		extend->other = std::move(singleArr);
+		auto extendStmt = std::make_shared<awst::ExpressionStatement>();
+		extendStmt->sourceLocation = loc;
+		extendStmt->expr = std::move(extend);
+		m_ctx.pendingStatements.push_back(std::move(extendStmt));
+	}
+	else // pop
+	{
+		auto popExpr = std::make_shared<awst::ArrayPop>();
+		popExpr->sourceLocation = loc;
+		popExpr->wtype = elemType ? elemType : rawFieldType;
+		popExpr->base = fieldExpr;
+		auto popStmt = std::make_shared<awst::ExpressionStatement>();
+		popStmt->sourceLocation = loc;
+		popStmt->expr = std::move(popExpr);
+		m_ctx.pendingStatements.push_back(std::move(popStmt));
+	}
+
+	// Write the struct back (box_put or app_global_put)
+	auto tmpWriteRead = std::make_shared<awst::VarExpression>();
+	tmpWriteRead->sourceLocation = loc;
+	tmpWriteRead->name = tmpName;
+	tmpWriteRead->wtype = structWType;
+
+	auto writeExpr = m_ctx.storageMapper.createStateWrite(
+		varName, std::move(tmpWriteRead), structWType, kind, loc);
+	if (writeExpr)
+	{
+		auto writeStmt = std::make_shared<awst::ExpressionStatement>();
+		writeStmt->sourceLocation = loc;
+		writeStmt->expr = std::move(writeExpr);
+		m_ctx.pendingStatements.push_back(std::move(writeStmt));
+	}
+
+	auto vc = std::make_shared<awst::VoidConstant>();
+	vc->sourceLocation = loc;
+	vc->wtype = awst::WType::voidType();
+	return vc;
 }
 
 std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
