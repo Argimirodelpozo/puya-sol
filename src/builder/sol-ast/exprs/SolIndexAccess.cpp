@@ -62,7 +62,10 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	// For bytes (dynamic byte array) storage, use extract3 instead of
 	// IndexExpression — puya's IR builder rejects indexing on a bytes
 	// value and expects a ReferenceArray/ARC4DynamicArray shape.
-	if (arrType->isByteArrayOrString())
+	// Only applied in READ context; assignment path falls through to the
+	// default IndexExpression (not yet supported — lvalue bytes indexing
+	// would need a separate replace3-based handler).
+	if (arrType->isByteArrayOrString() && !m_indexAccess.annotation().willBeWrittenTo)
 	{
 		// When reading, the base expression is the raw bytes stored in the
 		// box (after stripping the ARC4 length header if any). The state
@@ -71,8 +74,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 		extract->sourceLocation = m_loc;
 		extract->wtype = m_ctx.typeMapper.createType<awst::BytesWType>(1);
 		extract->opCode = "extract3";
-		extract->stackArgs.push_back(
-			m_indexAccess.annotation().willBeWrittenTo ? boxExpr : baseExprForRead);
+		extract->stackArgs.push_back(baseExprForRead);
 		extract->stackArgs.push_back(std::move(idx));
 		auto one = std::make_shared<awst::IntegerConstant>();
 		one->sourceLocation = m_loc;
@@ -354,9 +356,14 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 
 	// bytes / bytesN indexing → extract3(base, index, 1) → bytes[1]
 	// Solidity `bytes[i]` returns a `bytes1` value. Puya doesn't support
-	// IndexExpression on raw bytes, so emit extract3 directly here.
-	if (base->wtype && (base->wtype == awst::WType::bytesType()
-		|| base->wtype->kind() == awst::WTypeKind::Bytes))
+	// IndexExpression on raw bytes. Only applied in read contexts — the
+	// assignment path needs a separate replace3-based lvalue handler which
+	// we don't emit from here.
+	if (base->wtype
+		&& (base->wtype == awst::WType::bytesType()
+			|| base->wtype->kind() == awst::WTypeKind::Bytes)
+		&& !m_indexAccess.annotation().willBeWrittenTo
+		&& index)
 	{
 		auto extract = std::make_shared<awst::IntrinsicCall>();
 		extract->sourceLocation = m_loc;
