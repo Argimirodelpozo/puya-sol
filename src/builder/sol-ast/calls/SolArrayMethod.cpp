@@ -30,6 +30,132 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
 				ident->annotation().referencedDeclaration))
 		{
+			// bytes/string state variable: pop = read + substring + write
+			if (varDecl->isStateVariable()
+				&& varDecl->type()->category() == Type::Category::Array)
+			{
+				auto const* arrType2 = dynamic_cast<ArrayType const*>(varDecl->type());
+				if (arrType2 && arrType2->isByteArrayOrString() && memberName == "pop")
+				{
+					std::string varName = varDecl->name();
+					auto loc = m_loc;
+					auto kind = builder::StorageMapper::shouldUseBoxStorage(*varDecl)
+						? awst::AppStorageKind::Box
+						: awst::AppStorageKind::AppGlobal;
+
+					// Read current value
+					auto readVal = m_ctx.storageMapper.createStateRead(
+						varName, awst::WType::bytesType(), kind, loc);
+
+					// len - 1
+					auto lenCall = std::make_shared<awst::IntrinsicCall>();
+					lenCall->sourceLocation = loc;
+					lenCall->wtype = awst::WType::uint64Type();
+					lenCall->opCode = "len";
+					lenCall->stackArgs.push_back(readVal);
+
+					auto one = std::make_shared<awst::IntegerConstant>();
+					one->sourceLocation = loc;
+					one->wtype = awst::WType::uint64Type();
+					one->value = "1";
+					auto newLen = std::make_shared<awst::UInt64BinaryOperation>();
+					newLen->sourceLocation = loc;
+					newLen->wtype = awst::WType::uint64Type();
+					newLen->left = std::move(lenCall);
+					newLen->op = awst::UInt64BinaryOperator::Sub;
+					newLen->right = std::move(one);
+
+					// extract3(readVal, 0, len-1)
+					auto zero = std::make_shared<awst::IntegerConstant>();
+					zero->sourceLocation = loc;
+					zero->wtype = awst::WType::uint64Type();
+					zero->value = "0";
+
+					auto extract = std::make_shared<awst::IntrinsicCall>();
+					extract->sourceLocation = loc;
+					extract->wtype = awst::WType::bytesType();
+					extract->opCode = "extract3";
+					extract->stackArgs.push_back(readVal);
+					extract->stackArgs.push_back(std::move(zero));
+					extract->stackArgs.push_back(std::move(newLen));
+
+					if (kind == awst::AppStorageKind::Box)
+					{
+						// Box: store shrunk in temp, box_del, box_put
+						static int popTmpCounter = 0;
+						std::string tmpName = "__bytes_pop_tmp_" + std::to_string(popTmpCounter++);
+
+						auto tmpTarget = std::make_shared<awst::VarExpression>();
+						tmpTarget->sourceLocation = loc;
+						tmpTarget->name = tmpName;
+						tmpTarget->wtype = awst::WType::bytesType();
+						auto assignTmp = std::make_shared<awst::AssignmentStatement>();
+						assignTmp->sourceLocation = loc;
+						assignTmp->target = tmpTarget;
+						assignTmp->value = std::move(extract);
+						m_ctx.pendingStatements.push_back(std::move(assignTmp));
+
+						auto delKey = std::make_shared<awst::BytesConstant>();
+						delKey->sourceLocation = loc;
+						delKey->wtype = awst::WType::bytesType();
+						delKey->encoding = awst::BytesEncoding::Utf8;
+						delKey->value = std::vector<uint8_t>(varName.begin(), varName.end());
+						auto del = std::make_shared<awst::IntrinsicCall>();
+						del->sourceLocation = loc;
+						del->wtype = awst::WType::boolType();
+						del->opCode = "box_del";
+						del->stackArgs.push_back(std::move(delKey));
+						auto delStmt = std::make_shared<awst::ExpressionStatement>();
+						delStmt->sourceLocation = loc;
+						delStmt->expr = std::move(del);
+						m_ctx.pendingStatements.push_back(std::move(delStmt));
+
+						auto putKey = std::make_shared<awst::BytesConstant>();
+						putKey->sourceLocation = loc;
+						putKey->wtype = awst::WType::bytesType();
+						putKey->encoding = awst::BytesEncoding::Utf8;
+						putKey->value = std::vector<uint8_t>(varName.begin(), varName.end());
+						auto tmpRead = std::make_shared<awst::VarExpression>();
+						tmpRead->sourceLocation = loc;
+						tmpRead->name = tmpName;
+						tmpRead->wtype = awst::WType::bytesType();
+						auto put = std::make_shared<awst::IntrinsicCall>();
+						put->sourceLocation = loc;
+						put->wtype = awst::WType::voidType();
+						put->opCode = "box_put";
+						put->stackArgs.push_back(std::move(putKey));
+						put->stackArgs.push_back(std::move(tmpRead));
+						auto putStmt = std::make_shared<awst::ExpressionStatement>();
+						putStmt->sourceLocation = loc;
+						putStmt->expr = std::move(put);
+						m_ctx.pendingStatements.push_back(std::move(putStmt));
+					}
+					else
+					{
+						auto key = std::make_shared<awst::BytesConstant>();
+						key->sourceLocation = loc;
+						key->wtype = awst::WType::bytesType();
+						key->encoding = awst::BytesEncoding::Utf8;
+						key->value = std::vector<uint8_t>(varName.begin(), varName.end());
+						auto put = std::make_shared<awst::IntrinsicCall>();
+						put->sourceLocation = loc;
+						put->wtype = awst::WType::voidType();
+						put->opCode = "app_global_put";
+						put->stackArgs.push_back(std::move(key));
+						put->stackArgs.push_back(std::move(extract));
+						auto stmt = std::make_shared<awst::ExpressionStatement>();
+						stmt->sourceLocation = loc;
+						stmt->expr = std::move(put);
+						m_ctx.pendingStatements.push_back(std::move(stmt));
+					}
+
+					auto vc = std::make_shared<awst::VoidConstant>();
+					vc->sourceLocation = loc;
+					vc->wtype = awst::WType::voidType();
+					return vc;
+				}
+			}
+
 			// bytes/string state variable: push = read + concat + write
 			// Must come BEFORE generic box array handler since bytes in box
 			// needs concat-based push, not element-by-element box array ops.
