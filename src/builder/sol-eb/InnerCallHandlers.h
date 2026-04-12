@@ -63,6 +63,13 @@ private:
 		solidity::frontend::FunctionCall const& _encodeCallExpr,
 		awst::SourceLocation const& _loc);
 
+	/// .call(rawBytes) → inner app call with raw bytes as ApplicationArgs[0]
+	static std::unique_ptr<InstanceBuilder> handleCallWithRawData(
+		BuilderContext& _ctx,
+		std::shared_ptr<awst::Expression> _receiver,
+		std::shared_ptr<awst::Expression> _dataBytes,
+		awst::SourceLocation const& _loc);
+
 	/// .staticcall(data) on precompile address
 	static std::unique_ptr<InstanceBuilder> handleStaticCallPrecompile(
 		BuilderContext& _ctx,

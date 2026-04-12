@@ -520,6 +520,67 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 		makeBoolBytesTuple(true, std::move(stripPrefix), _loc));
 }
 
+// ── .call(rawBytes) → inner app call with raw ApplicationArgs[0] ──
+
+std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
+	BuilderContext& _ctx,
+	std::shared_ptr<awst::Expression> _receiver,
+	std::shared_ptr<awst::Expression> _dataBytes,
+	awst::SourceLocation const& _loc)
+{
+	// Coerce string-typed data → bytes for ApplicationArgs encoding.
+	if (_dataBytes->wtype == awst::WType::stringType())
+	{
+		auto cast = std::make_shared<awst::ReinterpretCast>();
+		cast->sourceLocation = _loc;
+		cast->wtype = awst::WType::bytesType();
+		cast->expr = std::move(_dataBytes);
+		_dataBytes = std::move(cast);
+	}
+
+	// Build ApplicationArgs = [rawBytes]
+	auto argsTuple = std::make_shared<awst::TupleExpression>();
+	argsTuple->sourceLocation = _loc;
+	argsTuple->items.push_back(std::move(_dataBytes));
+
+	std::vector<awst::WType const*> argTypes = {awst::WType::bytesType()};
+	argsTuple->wtype = _ctx.typeMapper.createType<awst::WTuple>(
+		std::move(argTypes), std::nullopt);
+
+	auto appId = addressToAppId(std::move(_receiver), _loc);
+
+	static awst::WInnerTransactionFields s_applFieldsType(TxnTypeAppl);
+	auto create = std::make_shared<awst::CreateInnerTransaction>();
+	create->sourceLocation = _loc;
+	create->wtype = &s_applFieldsType;
+	create->fields["TypeEnum"] = makeUint64(std::to_string(TxnTypeAppl), _loc);
+	create->fields["Fee"] = makeUint64("0", _loc);
+	create->fields["ApplicationID"] = std::move(appId);
+	create->fields["OnCompletion"] = makeUint64("0", _loc);
+	create->fields["ApplicationArgs"] = std::move(argsTuple);
+
+	static awst::WInnerTransaction s_applTxnType(TxnTypeAppl);
+	auto submit = std::make_shared<awst::SubmitInnerTransaction>();
+	submit->sourceLocation = _loc;
+	submit->wtype = &s_applTxnType;
+	submit->itxns.push_back(std::move(create));
+
+	auto submitStmt = std::make_shared<awst::ExpressionStatement>();
+	submitStmt->sourceLocation = _loc;
+	submitStmt->expr = std::move(submit);
+	_ctx.prePendingStatements.push_back(std::move(submitStmt));
+
+	// Read itxn LastLog as return data. Raw calls don't strip any prefix.
+	auto readLog = std::make_shared<awst::IntrinsicCall>();
+	readLog->sourceLocation = _loc;
+	readLog->wtype = awst::WType::bytesType();
+	readLog->opCode = "itxn";
+	readLog->immediates = {std::string("LastLog")};
+
+	return std::make_unique<GenericResultBuilder>(_ctx,
+		makeBoolBytesTuple(true, std::move(readLog), _loc));
+}
+
 // ── .staticcall precompile routing ──
 
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
@@ -686,10 +747,12 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 				if (result) return result;
 			}
 		}
-		// Non-encodeCall .call(data) → stub
+		// Non-encodeCall .call(data) → stub. Cannot route via inner txn
+		// because AVM v10 rejects self-calls with "attempt to self-call"
+		// and most Solidity tests use `address(this).call(...)`.
 		Logger::instance().warning(
 			"address.call(data) stubbed — returns (true, empty). "
-			"Cross-contract calls need inner app call translation.", _loc);
+			"Cross-contract raw calls not supported (AVM blocks self-calls).", _loc);
 		for (auto const& arg : _callNode.arguments())
 			_ctx.buildExpr(*arg);
 		return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTupleEmpty(_loc));
