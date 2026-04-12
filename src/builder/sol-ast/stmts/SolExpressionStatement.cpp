@@ -24,25 +24,23 @@ std::vector<std::shared_ptr<awst::Statement>> SolExpressionStatement::toAwst()
 {
 	std::vector<std::shared_ptr<awst::Statement>> result;
 
-	// Type expressions as statements (e.g. `s[7][];`) have no side effects —
-	// they exist purely for parser validation in Solidity. Skip them to
-	// avoid building AWST for a type-valued expression whose semantics we
-	// don't model.
-	if (auto const* typeType = dynamic_cast<solidity::frontend::TypeType const*>(
-			m_node.expression().annotation().type))
-	{
-		(void) typeType;
-		return result;
-	}
+	// Type expressions as statements (e.g. `s[7][];`) resolve to a type
+	// value with no runtime representation. We still need to walk the
+	// expression tree to pick up side effects (e.g. `((flag = true) ? M : M).D;`
+	// needs the assignment to happen) but we must not emit the final value
+	// expression because our type mapper can't model it.
+	bool isTypeType = dynamic_cast<solidity::frontend::TypeType const*>(
+		m_node.expression().annotation().type) != nullptr;
 
 	auto expr = m_ctx.buildExpr(m_node.expression());
 
 	for (auto& p: m_ctx.takePrePending())
 		result.push_back(std::move(p));
 
-	// If buildExpr couldn't produce a value expression, skip emitting the
-	// statement to avoid a null dereference downstream.
-	if (!expr)
+	// If buildExpr couldn't produce a value expression, or the expression
+	// is a type-valued expression, skip emitting the final statement to
+	// avoid a null dereference or invalid AWST.
+	if (!expr || isTypeType)
 	{
 		for (auto& p: m_ctx.takePending())
 			result.push_back(std::move(p));
