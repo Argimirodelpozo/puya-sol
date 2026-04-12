@@ -768,13 +768,44 @@ def _regroup_args(raw_args, method_sig):
                             else:
                                 result.append("" if pt == 'string' else b"")
                         else:
-                            # Dynamic array: collect elements (cap to available args)
-                            n_avail = len(raw_args) - data_start
-                            n_elems = min(int(length), n_avail) if length <= 10000 else n_avail
-                            arr = []
-                            for j in range(n_elems):
-                                arr.append(raw_args[data_start + j])
-                            result.append(arr)
+                            # Dynamic array: collect elements
+                            # Check if it's a nested dynamic array (e.g., uint256[][])
+                            inner_type = _re.sub(r'\[\]$', '', pt)  # strip outermost []
+                            is_nested_dynamic = _is_dynamic(inner_type)
+
+                            if is_nested_dynamic and length > 0:
+                                # Nested dynamic array: each element has an offset
+                                # pointing to its own length + data
+                                n_elems = min(int(length), 100)
+                                arr = []
+                                for j in range(n_elems):
+                                    # Each element's offset is relative to the
+                                    # start of this array's data
+                                    elem_offset = raw_args[data_start + j] if (data_start + j) < len(raw_args) else 0
+                                    if isinstance(elem_offset, int):
+                                        # Offset is in bytes relative to the array data start
+                                        elem_word = word_idx + 1 + elem_offset // 32
+                                        if elem_word < len(raw_args):
+                                            elem_len = raw_args[elem_word]
+                                            if isinstance(elem_len, int):
+                                                elem_data_start = elem_word + 1
+                                                inner_arr = []
+                                                for k in range(min(int(elem_len), len(raw_args) - elem_data_start)):
+                                                    if elem_data_start + k < len(raw_args):
+                                                        inner_arr.append(raw_args[elem_data_start + k])
+                                                arr.append(inner_arr)
+                                            else:
+                                                arr.append([])
+                                    else:
+                                        arr.append([])
+                                result.append(arr)
+                            else:
+                                n_avail = len(raw_args) - data_start
+                                n_elems = min(int(length), n_avail) if length <= 10000 else n_avail
+                                arr = []
+                                for j in range(n_elems):
+                                    arr.append(raw_args[data_start + j])
+                                result.append(arr)
                     else:
                         result.append(raw_args[word_idx])
                 else:
