@@ -308,6 +308,19 @@ def parse_value(val_str: str) -> int | bool | bytes | str | None:
         else:
             return int(inner)
 
+    # right-padded value: right(X) → X right-padded to 32 bytes (standard ABI encoding)
+    # right(true) → 1, right(42) → 42, right(0xAB) → 0xAB
+    if val_str.startswith("right(") and val_str.endswith(")"):
+        inner = val_str[6:-1]
+        if inner == "true":
+            return True
+        elif inner == "false":
+            return False
+        elif inner.startswith("0x"):
+            return int(inner, 16)
+        else:
+            return int(inner)
+
     # Negative numbers → two's complement uint256
     if val_str.startswith("-"):
         try:
