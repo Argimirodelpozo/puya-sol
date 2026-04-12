@@ -493,6 +493,21 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 		return tuple;
 	}
 
+	// ARC4 aggregate return types — reinterpret the raw bytes
+	if (_returnType
+		&& (_returnType->kind() == awst::WTypeKind::ARC4DynamicArray
+			|| _returnType->kind() == awst::WTypeKind::ARC4StaticArray
+			|| _returnType->kind() == awst::WTypeKind::ARC4Struct
+			|| _returnType->kind() == awst::WTypeKind::ARC4UIntN
+			|| _returnType->kind() == awst::WTypeKind::ReferenceArray))
+	{
+		auto cast = std::make_shared<awst::ReinterpretCast>();
+		cast->sourceLocation = m_loc;
+		cast->wtype = _returnType;
+		cast->expr = std::move(stripPrefix);
+		return cast;
+	}
+
 	// Default: return raw bytes
 	return stripPrefix;
 }

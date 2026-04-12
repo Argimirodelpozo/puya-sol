@@ -23,10 +23,31 @@ SolExpressionStatement::SolExpressionStatement(
 std::vector<std::shared_ptr<awst::Statement>> SolExpressionStatement::toAwst()
 {
 	std::vector<std::shared_ptr<awst::Statement>> result;
+
+	// Type expressions as statements (e.g. `s[7][];`) have no side effects —
+	// they exist purely for parser validation in Solidity. Skip them to
+	// avoid building AWST for a type-valued expression whose semantics we
+	// don't model.
+	if (auto const* typeType = dynamic_cast<solidity::frontend::TypeType const*>(
+			m_node.expression().annotation().type))
+	{
+		(void) typeType;
+		return result;
+	}
+
 	auto expr = m_ctx.buildExpr(m_node.expression());
 
 	for (auto& p: m_ctx.takePrePending())
 		result.push_back(std::move(p));
+
+	// If buildExpr couldn't produce a value expression, skip emitting the
+	// statement to avoid a null dereference downstream.
+	if (!expr)
+	{
+		for (auto& p: m_ctx.takePending())
+			result.push_back(std::move(p));
+		return result;
+	}
 
 	auto stmt = std::make_shared<awst::ExpressionStatement>();
 	stmt->sourceLocation = m_loc;
