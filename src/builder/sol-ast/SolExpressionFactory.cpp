@@ -180,7 +180,33 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 
 	case Kind::External:
 	case Kind::DelegateCall:
+	{
+		// Public library functions are marked External (EVM uses delegatecall
+		// for them), but on AVM there's no delegatecall and libraries live in
+		// the same compilation unit. Route through the internal call path so
+		// they're dispatched as regular subroutines.
+		auto const* memberAccess = dynamic_cast<solidity::frontend::MemberAccess const*>(
+			&_node.expression());
+		if (memberAccess)
+		{
+			if (auto const* refDecl = memberAccess->annotation().referencedDeclaration)
+			{
+				if (auto const* funcDef = dynamic_cast<solidity::frontend::FunctionDefinition const*>(refDecl))
+				{
+					if (auto const* scope = funcDef->scope())
+					{
+						if (auto const* contractDef = dynamic_cast<
+								solidity::frontend::ContractDefinition const*>(scope))
+						{
+							if (contractDef->isLibrary())
+								return std::make_unique<SolInternalCall>(m_ctx, _node);
+						}
+					}
+				}
+			}
+		}
 		return std::make_unique<SolExternalCall>(m_ctx, _node);
+	}
 
 	case Kind::Creation:
 		// Contract creation via new Contract(args) — deploy stub inner app
