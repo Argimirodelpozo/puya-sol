@@ -1,5 +1,7 @@
 #include "builder/sol-ast/calls/SolRevert.h"
 
+#include <libsolidity/ast/ASTAnnotations.h>
+
 namespace puyasol::builder::sol_ast
 {
 
@@ -22,31 +24,21 @@ std::shared_ptr<awst::Expression> SolRevert::toAwst()
 	falseLit->value = false;
 	assertExpr->condition = std::move(falseLit);
 
-	if (!m_call.arguments().empty())
+	// Determine error message. For `revert Error(args)`, the callee
+	// identifies the error name. For `revert("msg")`, Solidity treats
+	// this as a FunctionCall whose callee is the identifier `revert`,
+	// and the first argument is the message literal.
+	assertExpr->errorMessage = "revert";
+	auto const& callee = m_call.expression();
+	if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(&callee))
 	{
-		if (auto const* lit = dynamic_cast<solidity::frontend::Literal const*>(
-				m_call.arguments()[0].get()))
-			assertExpr->errorMessage = lit->value();
-		else
-		{
-			// Custom error: extract name from the expression
-			auto const& errExpr = m_call.arguments()[0];
-			if (auto const* errCall = dynamic_cast<solidity::frontend::FunctionCall const*>(errExpr.get()))
-			{
-				auto const& callee = errCall->expression();
-				if (auto const* ma = dynamic_cast<solidity::frontend::MemberAccess const*>(&callee))
-					assertExpr->errorMessage = ma->memberName();
-				else if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(&callee))
-					assertExpr->errorMessage = id->name();
-				else
-					assertExpr->errorMessage = "revert";
-			}
-			else
-				assertExpr->errorMessage = "revert";
-		}
+		if (id->name() != "revert")
+			assertExpr->errorMessage = id->name();
 	}
-	else
-		assertExpr->errorMessage = "revert";
+	else if (auto const* ma = dynamic_cast<solidity::frontend::MemberAccess const*>(&callee))
+	{
+		assertExpr->errorMessage = ma->memberName();
+	}
 
 	return assertExpr;
 }
