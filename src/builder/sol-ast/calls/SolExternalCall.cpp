@@ -255,6 +255,30 @@ std::shared_ptr<awst::Expression> SolExternalCall::addressToAppId(
 	if (_addrExpr->wtype == awst::WType::applicationType())
 		return _addrExpr;
 
+	// Special case: `this` (CurrentApplicationAddress) is a hash, not our
+	// conventional \x00*24 + app_id format. Use CurrentApplicationID directly.
+	if (auto const* intrinsic = dynamic_cast<awst::IntrinsicCall const*>(_addrExpr.get()))
+	{
+		if (intrinsic->opCode == "global" && !intrinsic->immediates.empty())
+		{
+			auto const* imm = std::get_if<std::string>(&intrinsic->immediates[0]);
+			if (imm && *imm == "CurrentApplicationAddress")
+			{
+				auto appId = std::make_shared<awst::IntrinsicCall>();
+				appId->sourceLocation = m_loc;
+				appId->wtype = awst::WType::uint64Type();
+				appId->opCode = "global";
+				appId->immediates = {std::string("CurrentApplicationID")};
+
+				auto cast = std::make_shared<awst::ReinterpretCast>();
+				cast->sourceLocation = m_loc;
+				cast->wtype = awst::WType::applicationType();
+				cast->expr = std::move(appId);
+				return cast;
+			}
+		}
+	}
+
 	std::shared_ptr<awst::Expression> bytesExpr = std::move(_addrExpr);
 	if (bytesExpr->wtype == awst::WType::accountType())
 	{

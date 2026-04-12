@@ -253,21 +253,39 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			submitStmt->expr = std::move(submit);
 			m_ctx.prePendingStatements.push_back(std::move(submitStmt));
 
-			// Read CreatedApplicationID via itxn intrinsic
-			auto createdAppId = std::make_shared<awst::IntrinsicCall>();
+			// Read CreatedApplicationID via itxn intrinsic and save to temp var
+			// because subsequent fund txn would clobber the itxn context.
+			auto createdAppIdCall = std::make_shared<awst::IntrinsicCall>();
+			createdAppIdCall->sourceLocation = m_loc;
+			createdAppIdCall->wtype = awst::WType::uint64Type();
+			createdAppIdCall->opCode = "itxn";
+			createdAppIdCall->immediates = {std::string("CreatedApplicationID")};
+
+			static int newAppIdCounter = 0;
+			std::string newAppIdVarName = "__new_app_id_" + std::to_string(newAppIdCounter++);
+			auto newAppIdTarget = std::make_shared<awst::VarExpression>();
+			newAppIdTarget->sourceLocation = m_loc;
+			newAppIdTarget->name = newAppIdVarName;
+			newAppIdTarget->wtype = awst::WType::uint64Type();
+			auto newAppIdAssign = std::make_shared<awst::AssignmentStatement>();
+			newAppIdAssign->sourceLocation = m_loc;
+			newAppIdAssign->target = newAppIdTarget;
+			newAppIdAssign->value = std::move(createdAppIdCall);
+			m_ctx.prePendingStatements.push_back(std::move(newAppIdAssign));
+
+			// Use the stored app ID from now on
+			auto createdAppId = std::make_shared<awst::VarExpression>();
 			createdAppId->sourceLocation = m_loc;
+			createdAppId->name = newAppIdVarName;
 			createdAppId->wtype = awst::WType::uint64Type();
-			createdAppId->opCode = "itxn";
-			createdAppId->immediates = {std::string("CreatedApplicationID")};
 
 			// Fund the newly created app with minimum balance (200000 microAlgos)
 			{
-				// Get created app's address for the payment
-				auto fundAppId = std::make_shared<awst::IntrinsicCall>();
+				// Use the stored app ID
+				auto fundAppId = std::make_shared<awst::VarExpression>();
 				fundAppId->sourceLocation = m_loc;
+				fundAppId->name = newAppIdVarName;
 				fundAppId->wtype = awst::WType::uint64Type();
-				fundAppId->opCode = "itxn";
-				fundAppId->immediates = {std::string("CreatedApplicationID")};
 
 				auto* fundTupleType = new awst::WTuple(
 					{awst::WType::bytesType(), awst::WType::boolType()});
@@ -340,49 +358,15 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				m_ctx.prePendingStatements.push_back(std::move(fundStmt));
 			}
 
-			// Get the app's address: app_params_get AppAddress
-			// Returns (bytes, bool) tuple
-			auto tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
-				std::vector<awst::WType const*>{awst::WType::bytesType(), awst::WType::boolType()}
-			);
-			auto appParams = std::make_shared<awst::IntrinsicCall>();
-			appParams->sourceLocation = m_loc;
-			appParams->wtype = tupleType;
-			appParams->opCode = "app_params_get";
-			appParams->immediates = {std::string("AppAddress")};
-			appParams->stackArgs.push_back(std::move(createdAppId));
+			// Return CreatedApplicationID as applicationType directly.
+			// This allows subsequent method calls to use the app ID
+			// instead of converting through the hashed address.
+			auto appIdCast = std::make_shared<awst::ReinterpretCast>();
+			appIdCast->sourceLocation = m_loc;
+			appIdCast->wtype = awst::WType::applicationType();
+			appIdCast->expr = std::move(createdAppId);
 
-			// Store tuple result
-			std::string tmpName = "__new_app_result";
-			auto tmpTarget = std::make_shared<awst::VarExpression>();
-			tmpTarget->sourceLocation = m_loc;
-			tmpTarget->name = tmpName;
-			tmpTarget->wtype = tupleType;
-
-			auto assignTuple = std::make_shared<awst::AssignmentStatement>();
-			assignTuple->sourceLocation = m_loc;
-			assignTuple->target = tmpTarget;
-			assignTuple->value = std::move(appParams);
-			m_ctx.prePendingStatements.push_back(std::move(assignTuple));
-
-			// Extract address bytes (index 0) and cast to account
-			auto tupleRead = std::make_shared<awst::VarExpression>();
-			tupleRead->sourceLocation = m_loc;
-			tupleRead->name = tmpName;
-			tupleRead->wtype = tupleType;
-
-			auto addrBytes = std::make_shared<awst::TupleItemExpression>();
-			addrBytes->sourceLocation = m_loc;
-			addrBytes->wtype = awst::WType::bytesType();
-			addrBytes->base = std::move(tupleRead);
-			addrBytes->index = 0;
-
-			auto addrCast = std::make_shared<awst::ReinterpretCast>();
-			addrCast->sourceLocation = m_loc;
-			addrCast->wtype = awst::WType::accountType();
-			addrCast->expr = std::move(addrBytes);
-
-			return addrCast;
+			return appIdCast;
 		}
 	}
 
