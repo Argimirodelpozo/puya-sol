@@ -228,59 +228,26 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 	}
 	else if (_memberName == "push" && m_call.arguments().empty())
 	{
-		// push() with no args — box_resize(key, box_len + elemSize)
-		unsigned elemSize = builder::StorageMapper::computeEncodedElementSize(elemType);
+		// push() with no args — use ArrayExtend with a zero-valued element.
+		// This lets puya handle the ARC4 length header update correctly,
+		// instead of manual box_resize which doesn't update the header.
+		auto defaultElem = builder::TypeCoercion::makeDefaultValue(elemType, m_loc);
 
-		auto boxKeyBytes = std::make_shared<awst::BytesConstant>();
-		boxKeyBytes->sourceLocation = m_loc;
-		boxKeyBytes->wtype = awst::WType::bytesType();
-		boxKeyBytes->encoding = awst::BytesEncoding::Utf8;
-		boxKeyBytes->value = std::vector<uint8_t>(arrayVarName.begin(), arrayVarName.end());
+		auto singleArr = std::make_shared<awst::NewArray>();
+		singleArr->sourceLocation = m_loc;
+		singleArr->wtype = arrWType;
+		singleArr->values.push_back(std::move(defaultElem));
 
-		// box_len(key) → (uint64, bool)
-		auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
-			std::vector<awst::WType const*>{awst::WType::uint64Type(), awst::WType::boolType()});
-		auto boxLen = std::make_shared<awst::IntrinsicCall>();
-		boxLen->sourceLocation = m_loc;
-		boxLen->wtype = tupleType;
-		boxLen->opCode = "box_len";
-		boxLen->stackArgs.push_back(boxKeyBytes);
+		auto e = std::make_shared<awst::ArrayExtend>();
+		e->sourceLocation = m_loc;
+		e->wtype = awst::WType::voidType();
+		e->base = writeExpr;
+		e->other = std::move(singleArr);
 
-		auto curSize = std::make_shared<awst::TupleItemExpression>();
-		curSize->sourceLocation = m_loc;
-		curSize->wtype = awst::WType::uint64Type();
-		curSize->base = std::move(boxLen);
-		curSize->index = 0;
-
-		auto elemSizeConst = std::make_shared<awst::IntegerConstant>();
-		elemSizeConst->sourceLocation = m_loc;
-		elemSizeConst->wtype = awst::WType::uint64Type();
-		elemSizeConst->value = std::to_string(elemSize);
-
-		auto newSize = std::make_shared<awst::UInt64BinaryOperation>();
-		newSize->sourceLocation = m_loc;
-		newSize->wtype = awst::WType::uint64Type();
-		newSize->left = std::move(curSize);
-		newSize->op = awst::UInt64BinaryOperator::Add;
-		newSize->right = std::move(elemSizeConst);
-
-		auto boxKeyBytes2 = std::make_shared<awst::BytesConstant>();
-		boxKeyBytes2->sourceLocation = m_loc;
-		boxKeyBytes2->wtype = awst::WType::bytesType();
-		boxKeyBytes2->encoding = awst::BytesEncoding::Utf8;
-		boxKeyBytes2->value = std::vector<uint8_t>(arrayVarName.begin(), arrayVarName.end());
-
-		auto resize = std::make_shared<awst::IntrinsicCall>();
-		resize->sourceLocation = m_loc;
-		resize->wtype = awst::WType::voidType();
-		resize->opCode = "box_resize";
-		resize->stackArgs.push_back(std::move(boxKeyBytes2));
-		resize->stackArgs.push_back(std::move(newSize));
-
-		auto resizeStmt = std::make_shared<awst::ExpressionStatement>();
-		resizeStmt->sourceLocation = m_loc;
-		resizeStmt->expr = std::move(resize);
-		m_ctx.pendingStatements.push_back(std::move(resizeStmt));
+		auto extendStmt = std::make_shared<awst::ExpressionStatement>();
+		extendStmt->sourceLocation = m_loc;
+		extendStmt->expr = std::move(e);
+		m_ctx.pendingStatements.push_back(std::move(extendStmt));
 
 		auto vc = std::make_shared<awst::VoidConstant>();
 		vc->sourceLocation = m_loc;
