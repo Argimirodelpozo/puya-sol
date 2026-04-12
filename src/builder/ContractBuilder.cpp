@@ -1827,8 +1827,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				boxKey->encoding = awst::BytesEncoding::Utf8;
 				boxKey->value = std::vector<uint8_t>(varName.begin(), varName.end());
 
-				// Compute box size: check for bytes vars with string literal initializers
-				unsigned boxSizeVal = 0;
+				// Compute box size: 2 bytes for ARC4 length header (empty dynamic array),
+				// or string literal size for bytes/string initializers.
+				unsigned boxSizeVal = 2; // ARC4 dynamic array length header
 				std::shared_ptr<awst::Expression> boxInitVal;
 				{
 					auto const& lin = _contract.annotation().linearizedBaseContracts;
