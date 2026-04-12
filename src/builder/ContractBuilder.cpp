@@ -3463,6 +3463,44 @@ void ContractBuilder::inlineModifiers(
 {
 	static int modCounter = 0;
 
+	// Extract named return var init statements from the body and hoist them
+	// BEFORE modifier arg evaluation. Without this, modifier args like
+	// m1(x = 2) m2(y = 3) would have y overwritten by the "y = 0" init
+	// that's inside the innermost placeholder body.
+	std::set<std::string> returnParamNames;
+	for (auto const& rp : _func.returnParameters())
+		if (!rp->name().empty())
+			returnParamNames.insert(rp->name());
+
+	std::vector<std::shared_ptr<awst::Statement>> hoistedInits;
+	if (!returnParamNames.empty() && !_body->body.empty())
+	{
+		auto it = _body->body.begin();
+		while (it != _body->body.end())
+		{
+			if (auto* assign = dynamic_cast<awst::AssignmentStatement*>(it->get()))
+			{
+				auto* target = dynamic_cast<awst::VarExpression*>(assign->target.get());
+				// Only hoist zero-value init assignments for named return vars
+				bool isZeroInit = false;
+				if (auto* intConst = dynamic_cast<awst::IntegerConstant*>(assign->value.get()))
+					isZeroInit = (intConst->value == "0");
+				else if (auto* boolConst = dynamic_cast<awst::BoolConstant*>(assign->value.get()))
+					isZeroInit = !boolConst->value;
+				else if (auto* bytesConst = dynamic_cast<awst::BytesConstant*>(assign->value.get()))
+					isZeroInit = true; // BytesConstant defaults are always zero-value
+
+				if (target && returnParamNames.count(target->name) && isZeroInit)
+				{
+					hoistedInits.push_back(std::move(*it));
+					it = _body->body.erase(it);
+					continue;
+				}
+			}
+			break; // only hoist consecutive inits at the start
+		}
+	}
+
 	// For each modifier invocation, wrap the function body
 	for (auto const& modInvocation: _func.modifiers())
 	{
@@ -3796,6 +3834,15 @@ void ContractBuilder::inlineModifiers(
 			m_exprBuilder->removeParamRemap(declId);
 
 		_body = modBody;
+	}
+
+	// Prepend hoisted return var inits before the modifier chain
+	if (!hoistedInits.empty())
+	{
+		_body->body.insert(
+			_body->body.begin(),
+			std::make_move_iterator(hoistedInits.begin()),
+			std::make_move_iterator(hoistedInits.end()));
 	}
 }
 
