@@ -800,12 +800,37 @@ def _regroup_args(raw_args, method_sig):
                                         arr.append([])
                                 result.append(arr)
                             else:
-                                n_avail = len(raw_args) - data_start
-                                n_elems = min(int(length), n_avail) if length <= 10000 else n_avail
-                                arr = []
-                                for j in range(n_elems):
-                                    arr.append(raw_args[data_start + j])
-                                result.append(arr)
+                                # Check for dynamic array of static arrays (e.g., uint256[3][])
+                                inner_dims = _static_array_dims(inner_type)
+                                inner_size = _static_array_size(inner_type)
+                                if inner_size and inner_size > 1 and length > 0:
+                                    n_elems = int(length)
+                                    # Validate we have enough data
+                                    needed = n_elems * inner_size
+                                    if data_start + needed <= len(raw_args):
+                                        arr = []
+                                        for j in range(n_elems):
+                                            elem_start = data_start + j * inner_size
+                                            if inner_dims and len(inner_dims) > 1:
+                                                nested, _ = _build_nested_array(raw_args, elem_start, inner_dims)
+                                                arr.append(nested)
+                                            else:
+                                                arr.append(raw_args[elem_start:elem_start + inner_size])
+                                        result.append(arr)
+                                    else:
+                                        # Insufficient data — let flat collection handle it
+                                        n_avail = len(raw_args) - data_start
+                                        arr = []
+                                        for j in range(min(int(length), n_avail)):
+                                            arr.append(raw_args[data_start + j])
+                                        result.append(arr)
+                                else:
+                                    n_avail = len(raw_args) - data_start
+                                    n_elems = min(int(length), n_avail) if length <= 10000 else n_avail
+                                    arr = []
+                                    for j in range(n_elems):
+                                        arr.append(raw_args[data_start + j])
+                                    result.append(arr)
                     else:
                         result.append(raw_args[word_idx])
                 else:
