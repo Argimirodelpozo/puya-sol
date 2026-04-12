@@ -187,16 +187,27 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 		// 1. Public library functions — EVM uses delegatecall; AVM has no
 		//    delegatecall and libraries live in the same compilation unit.
 		//
-		// 2. Self-calls via `this.f(...)` — EVM does an external call (so
-		//    storage mods by the callee revert the caller on failure), but
-		//    AVM v10 rejects self-calls with "attempt to self-call". Inline
-		//    as an internal call. This loses cross-function revert
-		//    isolation (a revert in the callee will revert the caller too)
-		//    but is correct for the vast majority of tests that use
-		//    `this.f()` just to work around Solidity visibility (e.g. to
-		//    call an `external` function from within the same contract).
-		auto const* memberAccess = dynamic_cast<solidity::frontend::MemberAccess const*>(
-			&_node.expression());
+		// 2. Self-calls via `this.f(...)`, `this.f{value: X}(...)`, or
+		//    `A(this).f(...)` — EVM does an external call (so storage mods
+		//    by the callee revert the caller on failure), but AVM v10
+		//    rejects self-calls with "attempt to self-call". Inline as an
+		//    internal call. Loses cross-function revert isolation and
+		//    staticcall-forcing semantics, but correct for the vast majority
+		//    of tests that use `this.f()` just to work around Solidity
+		//    visibility.
+
+		// Unwrap FunctionCallOptions (e.g. `this.f{value: X}(args)`):
+		// the outer FunctionCall's expression is a FunctionCallOptions
+		// wrapping the actual MemberAccess we care about.
+		auto const* callExpr = &_node.expression();
+		if (auto const* callOpts = dynamic_cast<
+				solidity::frontend::FunctionCallOptions const*>(callExpr))
+		{
+			callExpr = &callOpts->expression();
+		}
+
+		auto const* memberAccess = dynamic_cast<
+			solidity::frontend::MemberAccess const*>(callExpr);
 		if (memberAccess)
 		{
 			// Case 1: library
@@ -216,10 +227,25 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 				}
 			}
 
-			// Case 2: `this.f(...)`
-			auto const& baseExpr = memberAccess->expression();
+			// Case 2: base expression is (directly or after a type cast)
+			// `this` — `this.f()`, `A(this).f()`, etc.
+			auto const* baseExpr = &memberAccess->expression();
+
+			// Unwrap `A(this)` type conversion.
+			if (auto const* baseCall = dynamic_cast<
+					solidity::frontend::FunctionCall const*>(baseExpr))
+			{
+				if (baseCall->annotation().kind.set()
+					&& *baseCall->annotation().kind
+						== solidity::frontend::FunctionCallKind::TypeConversion
+					&& baseCall->arguments().size() == 1)
+				{
+					baseExpr = baseCall->arguments()[0].get();
+				}
+			}
+
 			if (auto const* ident = dynamic_cast<
-					solidity::frontend::Identifier const*>(&baseExpr))
+					solidity::frontend::Identifier const*>(baseExpr))
 			{
 				if (ident->name() == "this")
 					return std::make_unique<SolInternalCall>(m_ctx, _node);
