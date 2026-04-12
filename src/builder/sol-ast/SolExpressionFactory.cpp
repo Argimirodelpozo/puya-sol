@@ -181,14 +181,25 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 	case Kind::External:
 	case Kind::DelegateCall:
 	{
-		// Public library functions are marked External (EVM uses delegatecall
-		// for them), but on AVM there's no delegatecall and libraries live in
-		// the same compilation unit. Route through the internal call path so
-		// they're dispatched as regular subroutines.
+		// Route External/DelegateCall calls as INTERNAL (regular subroutine
+		// dispatch) in two cases:
+		//
+		// 1. Public library functions — EVM uses delegatecall; AVM has no
+		//    delegatecall and libraries live in the same compilation unit.
+		//
+		// 2. Self-calls via `this.f(...)` — EVM does an external call (so
+		//    storage mods by the callee revert the caller on failure), but
+		//    AVM v10 rejects self-calls with "attempt to self-call". Inline
+		//    as an internal call. This loses cross-function revert
+		//    isolation (a revert in the callee will revert the caller too)
+		//    but is correct for the vast majority of tests that use
+		//    `this.f()` just to work around Solidity visibility (e.g. to
+		//    call an `external` function from within the same contract).
 		auto const* memberAccess = dynamic_cast<solidity::frontend::MemberAccess const*>(
 			&_node.expression());
 		if (memberAccess)
 		{
+			// Case 1: library
 			if (auto const* refDecl = memberAccess->annotation().referencedDeclaration)
 			{
 				if (auto const* funcDef = dynamic_cast<solidity::frontend::FunctionDefinition const*>(refDecl))
@@ -203,6 +214,15 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 						}
 					}
 				}
+			}
+
+			// Case 2: `this.f(...)`
+			auto const& baseExpr = memberAccess->expression();
+			if (auto const* ident = dynamic_cast<
+					solidity::frontend::Identifier const*>(&baseExpr))
+			{
+				if (ident->name() == "this")
+					return std::make_unique<SolInternalCall>(m_ctx, _node);
 			}
 		}
 		return std::make_unique<SolExternalCall>(m_ctx, _node);

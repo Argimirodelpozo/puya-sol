@@ -440,6 +440,122 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 	if (!targetFuncDef)
 		return nullptr;
 
+	// Self-call shortcut: if the receiver resolves to
+	// `global CurrentApplicationAddress` (i.e. the call is on `this`), emit
+	// a direct internal subroutine call rather than an inner txn that AVM
+	// would reject with "attempt to self-call".
+	bool isSelfCall = false;
+	if (auto const* intrinsic = dynamic_cast<awst::IntrinsicCall const*>(_receiver.get()))
+	{
+		if (intrinsic->opCode == "global" && !intrinsic->immediates.empty())
+		{
+			auto const* imm = std::get_if<std::string>(&intrinsic->immediates[0]);
+			if (imm && *imm == "CurrentApplicationAddress")
+				isSelfCall = true;
+		}
+	}
+
+	if (isSelfCall)
+	{
+		// Build args from the encodeCall tuple argument (in native types —
+		// we call the function directly, skipping ARC4 encode/decode).
+		std::vector<ASTPointer<Expression const>> callArgs;
+		auto const& argsExpr = *_encodeCallExpr.arguments()[1];
+		if (auto const* tupleExpr = dynamic_cast<TupleExpression const*>(&argsExpr))
+		{
+			for (auto const& comp : tupleExpr->components())
+				if (comp) callArgs.push_back(comp);
+		}
+		else
+			callArgs.push_back(_encodeCallExpr.arguments()[1]);
+
+		auto call = std::make_shared<awst::SubroutineCallExpression>();
+		call->sourceLocation = _loc;
+		auto* retType = _ctx.typeMapper.map(targetFuncDef->returnParameters().size() > 0
+			? targetFuncDef->returnParameters()[0]->type()
+			: nullptr);
+		if (!retType)
+			retType = awst::WType::voidType();
+		call->wtype = retType;
+		call->target = awst::InstanceMethodTarget{targetFuncDef->name()};
+		for (auto const& arg : callArgs)
+		{
+			awst::CallArg ca;
+			ca.name = std::nullopt;
+			ca.value = _ctx.buildExpr(*arg);
+			call->args.push_back(std::move(ca));
+		}
+
+		// Return (true, returnBytes) — the caller expects a (bool, bytes) tuple.
+		// For a direct internal call we don't have the raw log, so encode the
+		// native return back to bytes if it's a simple scalar, otherwise
+		// return empty bytes. Most callers either ignore the data portion or
+		// abi.decode it — leaving it empty is a known limitation.
+		std::shared_ptr<awst::Expression> dataBytes;
+		if (retType == awst::WType::voidType())
+		{
+			// Still need to emit the call as a statement for its side effects
+			auto stmt = std::make_shared<awst::ExpressionStatement>();
+			stmt->sourceLocation = _loc;
+			stmt->expr = call;
+			_ctx.prePendingStatements.push_back(std::move(stmt));
+			auto empty = std::make_shared<awst::BytesConstant>();
+			empty->sourceLocation = _loc;
+			empty->wtype = awst::WType::bytesType();
+			empty->encoding = awst::BytesEncoding::Base16;
+			empty->value = {};
+			dataBytes = std::move(empty);
+		}
+		else
+		{
+			// Stash the return value so we can encode it to bytes
+			// post-call if needed. For now, encode simple scalars.
+			if (retType == awst::WType::biguintType())
+			{
+				auto cast = std::make_shared<awst::ReinterpretCast>();
+				cast->sourceLocation = _loc;
+				cast->wtype = awst::WType::bytesType();
+				cast->expr = std::move(call);
+				dataBytes = std::move(cast);
+			}
+			else if (retType == awst::WType::uint64Type())
+			{
+				auto itob = std::make_shared<awst::IntrinsicCall>();
+				itob->sourceLocation = _loc;
+				itob->wtype = awst::WType::bytesType();
+				itob->opCode = "itob";
+				itob->stackArgs.push_back(std::move(call));
+				dataBytes = std::move(itob);
+			}
+			else if (retType == awst::WType::bytesType()
+				|| (retType && retType->kind() == awst::WTypeKind::Bytes))
+			{
+				auto cast = std::make_shared<awst::ReinterpretCast>();
+				cast->sourceLocation = _loc;
+				cast->wtype = awst::WType::bytesType();
+				cast->expr = std::move(call);
+				dataBytes = std::move(cast);
+			}
+			else
+			{
+				// Unknown return type — emit as statement, return empty
+				auto stmt = std::make_shared<awst::ExpressionStatement>();
+				stmt->sourceLocation = _loc;
+				stmt->expr = call;
+				_ctx.prePendingStatements.push_back(std::move(stmt));
+				auto empty = std::make_shared<awst::BytesConstant>();
+				empty->sourceLocation = _loc;
+				empty->wtype = awst::WType::bytesType();
+				empty->encoding = awst::BytesEncoding::Base16;
+				empty->value = {};
+				dataBytes = std::move(empty);
+			}
+		}
+
+		return std::make_unique<GenericResultBuilder>(_ctx,
+			makeBoolBytesTuple(true, std::move(dataBytes), _loc));
+	}
+
 	// Build ARC4 method selector
 	std::string methodSel = buildMethodSelector(_ctx, targetFuncDef);
 	auto methodConst = std::make_shared<awst::MethodConstant>();
