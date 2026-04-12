@@ -136,6 +136,54 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		return cast;
 	}
 
+	// msg.data → conditional: NumAppArgs > 0 ? ApplicationArgs[0] : bzero(0)
+	// Handles bare calls where no ApplicationArgs are provided.
+	if (baseName == "msg" && member == "data")
+	{
+		auto numAppArgs = std::make_shared<awst::IntrinsicCall>();
+		numAppArgs->sourceLocation = m_loc;
+		numAppArgs->wtype = awst::WType::uint64Type();
+		numAppArgs->opCode = "txn";
+		numAppArgs->immediates = {std::string("NumAppArgs")};
+
+		auto zero = std::make_shared<awst::IntegerConstant>();
+		zero->sourceLocation = m_loc;
+		zero->wtype = awst::WType::uint64Type();
+		zero->value = "0";
+
+		auto hasData = std::make_shared<awst::NumericComparisonExpression>();
+		hasData->sourceLocation = m_loc;
+		hasData->wtype = awst::WType::boolType();
+		hasData->lhs = std::move(numAppArgs);
+		hasData->op = awst::NumericComparison::Gt;
+		hasData->rhs = std::move(zero);
+
+		auto appArgs0 = std::make_shared<awst::IntrinsicCall>();
+		appArgs0->sourceLocation = m_loc;
+		appArgs0->wtype = awst::WType::bytesType();
+		appArgs0->opCode = "txna";
+		appArgs0->immediates = {std::string("ApplicationArgs"), 0};
+
+		auto bzeroSize = std::make_shared<awst::IntegerConstant>();
+		bzeroSize->sourceLocation = m_loc;
+		bzeroSize->wtype = awst::WType::uint64Type();
+		bzeroSize->value = "0";
+
+		auto emptyBytes = std::make_shared<awst::IntrinsicCall>();
+		emptyBytes->sourceLocation = m_loc;
+		emptyBytes->wtype = awst::WType::bytesType();
+		emptyBytes->opCode = "bzero";
+		emptyBytes->stackArgs.push_back(std::move(bzeroSize));
+
+		auto cond = std::make_shared<awst::ConditionalExpression>();
+		cond->sourceLocation = m_loc;
+		cond->wtype = awst::WType::bytesType();
+		cond->condition = std::move(hasData);
+		cond->trueExpr = std::move(appArgs0);
+		cond->falseExpr = std::move(emptyBytes);
+		return cond;
+	}
+
 	// Standard intrinsics via IntrinsicMapper
 	auto intrinsic = builder::IntrinsicMapper::tryMapMemberAccess(baseName, member, m_loc);
 	if (intrinsic)

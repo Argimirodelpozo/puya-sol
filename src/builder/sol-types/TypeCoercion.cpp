@@ -618,6 +618,66 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 		return cast;
 	}
 
+	// application → account: app_params_get AppAddress
+	// Used when assigning a `new Contract()` result (application type)
+	// to a Solidity contract reference variable (mapped to account).
+	if (_targetType == awst::WType::accountType()
+		&& _expr->wtype == awst::WType::applicationType())
+	{
+		static awst::WTuple s_appParamsTupleType(
+			std::vector<awst::WType const*>{
+				awst::WType::bytesType(), awst::WType::boolType()});
+
+		auto appParams = std::make_shared<awst::IntrinsicCall>();
+		appParams->sourceLocation = _loc;
+		appParams->wtype = &s_appParamsTupleType;
+		appParams->opCode = "app_params_get";
+		appParams->immediates = {std::string("AppAddress")};
+		appParams->stackArgs.push_back(std::move(_expr));
+
+		auto addrItem = std::make_shared<awst::TupleItemExpression>();
+		addrItem->sourceLocation = _loc;
+		addrItem->wtype = awst::WType::bytesType();
+		addrItem->base = std::move(appParams);
+		addrItem->index = 0;
+
+		auto accountCast = std::make_shared<awst::ReinterpretCast>();
+		accountCast->sourceLocation = _loc;
+		accountCast->wtype = _targetType;
+		accountCast->expr = std::move(addrItem);
+		return accountCast;
+	}
+
+	// account → application: extract last 8 bytes (app_id) via btoi
+	// Only meaningful for addresses built from our convention (\x00*24 + app_id).
+	if (_targetType == awst::WType::applicationType()
+		&& _expr->wtype == awst::WType::accountType())
+	{
+		auto toBytes = std::make_shared<awst::ReinterpretCast>();
+		toBytes->sourceLocation = _loc;
+		toBytes->wtype = awst::WType::bytesType();
+		toBytes->expr = std::move(_expr);
+
+		auto extract = std::make_shared<awst::IntrinsicCall>();
+		extract->sourceLocation = _loc;
+		extract->wtype = awst::WType::bytesType();
+		extract->opCode = "extract";
+		extract->immediates = {24, 8};
+		extract->stackArgs.push_back(std::move(toBytes));
+
+		auto btoi = std::make_shared<awst::IntrinsicCall>();
+		btoi->sourceLocation = _loc;
+		btoi->wtype = awst::WType::uint64Type();
+		btoi->opCode = "btoi";
+		btoi->stackArgs.push_back(std::move(extract));
+
+		auto appIdCast = std::make_shared<awst::ReinterpretCast>();
+		appIdCast->sourceLocation = _loc;
+		appIdCast->wtype = _targetType;
+		appIdCast->expr = std::move(btoi);
+		return appIdCast;
+	}
+
 	// uint64 → bool (0/non-0)
 	if (_targetType == awst::WType::boolType()
 		&& _expr->wtype == awst::WType::uint64Type())

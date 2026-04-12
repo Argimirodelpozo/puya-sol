@@ -848,11 +848,20 @@ def _regroup_args(raw_args, method_sig):
 def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
     """Execute a test call and return (passed, detail)."""
     try:
-        # Bare call: () — send ApplicationCall with no args (triggers fallback/receive)
+        # Bare call: () — send raw ApplicationCall with optional data + payment.
+        # The contract's approval program has custom dispatch that routes
+        # unknown selectors to __fallback and bare calls (NumAppArgs=0) to
+        # __receive (if present) else __fallback.
         if call.method_signature == "()":
-            # Bare call — invoke the fallback/receive function.
-            # Our compiler emits fallback as "__fallback()void" and
-            # receive as "__receive()void".
+            from algosdk.transaction import (
+                ApplicationCallTxn as _ACT, OnComplete as _OC, PaymentTxn as _PT,
+            )
+            from algosdk.atomic_transaction_composer import (
+                AtomicTransactionComposer as _ATC,
+                TransactionWithSigner as _TWS,
+            )
+            from algosdk.logic import get_application_address as _get_app_addr
+
             has_fallback = False
             has_receive = False
             if app_spec:
@@ -861,46 +870,92 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                         has_fallback = True
                     elif m.name == "__receive":
                         has_receive = True
-                    elif m.name == "" or "()void" in str(m):
-                        # Legacy: treat unnamed as fallback
-                        has_fallback = True
 
-            has_data = bool(call.args)
+            _algod = app.algorand.client.algod
+            _sender = app._default_sender
+            _signer = app._default_signer or app.algorand.account.get_signer(_sender)
+            _app_id = app.app_id
 
-            # Route: no data → receive (or fallback if no receive)
-            #        with data → fallback only
-            target_method = None
-            if has_data and has_fallback:
-                target_method = "__fallback()void"
-            elif has_data and not has_fallback:
-                # No fallback for data calls — should fail
+            # Parse raw data if present. The assertion args become the raw
+            # calldata bytes (e.g. hex"42ef" → 2 bytes; int 1 → 32-byte BE).
+            # The whole thing becomes ApplicationArgs[0].
+            data_chunks = []
+            if call.args:
+                for arg_str in call.args:
+                    v = parse_value(arg_str)
+                    if isinstance(v, bytes):
+                        data_chunks.append(v)
+                    elif isinstance(v, bool):
+                        data_chunks.append(b'\x00' * 31 + (b'\x01' if v else b'\x00'))
+                    elif isinstance(v, int):
+                        # EVM int → 32-byte big-endian
+                        data_chunks.append((v & ((1 << 256) - 1)).to_bytes(32, 'big'))
+            data_bytes = b"".join(data_chunks) if data_chunks else None
+
+            has_data = data_bytes is not None and len(data_bytes) > 0
+
+            # EVM semantics: if no data and no receive, fallback. If data
+            # and no fallback, the call should revert.
+            if has_data and not has_fallback:
                 if call.expect_failure:
                     return True, "correctly reverted (no fallback for data)"
-                return False, "bare call with data failed (no fallback)"
-            elif not has_data and has_receive:
-                target_method = "__receive()void"
-            elif not has_data and has_fallback:
-                target_method = "__fallback()void"
-
-            if target_method:
-                try:
-                    params = au.AppClientMethodCallParams(
-                        method=target_method, args=None,
-                        extra_fee=au.AlgoAmount(micro_algo=3000),
-                    )
-                    app.send.call(params)
-                    if call.expect_failure:
-                        return False, "expected FAILURE but succeeded"
-                    return True, "bare call ok"
-                except Exception as ex:
-                    if call.expect_failure:
-                        return True, "correctly reverted"
-                    return False, f"exception: {str(ex)[:200]}"
-            else:
-                # No fallback/receive method — bare call should fail on AVM
+                return False, "bare call with data has no fallback"
+            if not has_data and not has_fallback and not has_receive:
                 if call.expect_failure:
-                    return True, "correctly reverted (no fallback)"
-                return False, "bare call failed (no fallback method)"
+                    return True, "correctly reverted (no fallback/receive)"
+                return False, "bare call failed (no fallback/receive)"
+
+            _sp = _algod.suggested_params()
+            _sp.flat_fee = True
+            _sp.fee = 5000  # headroom for inner txns during dispatch
+
+            app_args = [data_bytes] if has_data else None
+
+            # Box refs: include known boxes so dispatched handler can read
+            box_refs = None
+            if hasattr(app, '_box_refs') and app._box_refs:
+                from algosdk.transaction import BoxReference as _BR
+                box_refs = [_BR(app_index=0, name=r[1]) for r in app._box_refs]
+
+            app_call_txn = _ACT(
+                sender=_sender,
+                sp=_sp,
+                index=_app_id,
+                on_complete=_OC.NoOpOC,
+                app_args=app_args,
+                boxes=box_refs,
+            )
+
+            atc = _ATC()
+            if call.value_wei > 0:
+                # Group a payment txn before the app call — emulates msg.value.
+                # Solidity wei values can be huge (1 ether = 1e18 wei) and
+                # would overspend our account. Clamp aggressively so tests
+                # still pass the semantic "nonzero value" check.
+                _pay_sp = _algod.suggested_params()
+                _pay_sp.flat_fee = True
+                _pay_sp.fee = 1000
+                _amt = call.value_wei
+                if _amt > 1000:
+                    _amt = 1000  # cap at 0.001 Algo
+                pay_txn = _PT(
+                    sender=_sender,
+                    sp=_pay_sp,
+                    receiver=_get_app_addr(_app_id),
+                    amt=_amt,
+                )
+                atc.add_transaction(_TWS(pay_txn, _signer))
+            atc.add_transaction(_TWS(app_call_txn, _signer))
+
+            try:
+                atc.execute(_algod, 5)
+                if call.expect_failure:
+                    return False, "expected FAILURE but succeeded"
+                return True, "bare call ok"
+            except Exception as ex:
+                if call.expect_failure:
+                    return True, "correctly reverted"
+                return False, f"exception: {str(ex)[:200]}"
 
         # Build args
         raw_args = []
@@ -988,7 +1043,9 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
             else:
                 args.append(a)
 
-        # Skip payable calls (AVM has no native currency in app calls)
+        # Skip payable calls (non-bare). Bare payable calls are handled above
+        # with direct ATC grouping. Non-bare payable functions would need
+        # more plumbing to compare return values correctly.
         if call.value_wei > 0:
             return None, "payable skipped"
 
