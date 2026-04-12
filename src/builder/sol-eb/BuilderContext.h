@@ -20,6 +20,7 @@ namespace solidity::frontend
 class Expression;
 class FunctionDefinition;
 class Declaration;
+class ContractDefinition;
 }
 
 namespace puyasol::builder
@@ -52,6 +53,10 @@ struct BuilderContext
 	StorageMapper& storageMapper;
 	std::string const& sourceFile;
 	std::string const& contractName;
+	/// The contract currently being built — used e.g. to look up the
+	/// contract's fallback function signature for self-call emulation.
+	/// May be nullptr during free-function translation.
+	solidity::frontend::ContractDefinition const* currentContract = nullptr;
 
 	// ── Function resolution tables ──
 	std::unordered_map<std::string, std::string> const& libraryFunctionIds;

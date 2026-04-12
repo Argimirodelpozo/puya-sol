@@ -863,9 +863,80 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 				if (result) return result;
 			}
 		}
-		// Non-encodeCall .call(data) → stub. Cannot route via inner txn
-		// because AVM v10 rejects self-calls with "attempt to self-call"
-		// and most Solidity tests use `address(this).call(...)`.
+		// Non-encodeCall `address(this).call(data)` self-call: dispatch
+		// directly to the contract's __fallback function. Any data that
+		// isn't a selector-matching ABI call would have been routed to
+		// fallback by our approval program anyway.
+		bool isSelfCall = false;
+		if (auto const* intrinsic = dynamic_cast<awst::IntrinsicCall const*>(_receiver.get()))
+		{
+			if (intrinsic->opCode == "global" && !intrinsic->immediates.empty())
+			{
+				auto const* imm = std::get_if<std::string>(&intrinsic->immediates[0]);
+				if (imm && *imm == "CurrentApplicationAddress")
+					isSelfCall = true;
+			}
+		}
+
+		if (isSelfCall)
+		{
+			// Build the data expression — evaluates any side effects.
+			auto dataExpr = _ctx.buildExpr(dataArg);
+			if (dataExpr->wtype == awst::WType::stringType())
+			{
+				auto cast = std::make_shared<awst::ReinterpretCast>();
+				cast->sourceLocation = _loc;
+				cast->wtype = awst::WType::bytesType();
+				cast->expr = std::move(dataExpr);
+				dataExpr = std::move(cast);
+			}
+
+			// Look up the contract's fallback function to know whether to
+			// pass the data bytes. Fallbacks may be declared as
+			// `fallback()` or `fallback(bytes calldata)`; we must match.
+			solidity::frontend::FunctionDefinition const* fallbackFunc = nullptr;
+			if (_ctx.currentContract)
+			{
+				for (auto const* base : _ctx.currentContract->annotation().linearizedBaseContracts)
+				{
+					for (auto const* func : base->definedFunctions())
+					{
+						if (func->isImplemented() && func->isFallback())
+						{
+							fallbackFunc = func;
+							goto foundFallback;
+						}
+					}
+				}
+			}
+			foundFallback:;
+
+			bool fallbackTakesBytes = fallbackFunc && fallbackFunc->parameters().size() == 1;
+
+			// Call __fallback[(bytes)] directly. Without a currentContract
+			// we conservatively pass no args (matches most fallback tests).
+			auto call = std::make_shared<awst::SubroutineCallExpression>();
+			call->sourceLocation = _loc;
+			call->wtype = awst::WType::voidType();
+			call->target = awst::InstanceMethodTarget{"__fallback"};
+			if (fallbackTakesBytes)
+			{
+				awst::CallArg ca;
+				ca.name = std::nullopt;
+				ca.value = dataExpr;
+				call->args.push_back(std::move(ca));
+			}
+
+			auto stmt = std::make_shared<awst::ExpressionStatement>();
+			stmt->sourceLocation = _loc;
+			stmt->expr = call;
+			_ctx.prePendingStatements.push_back(std::move(stmt));
+
+			return std::make_unique<GenericResultBuilder>(_ctx,
+				makeBoolBytesTuple(true, std::move(dataExpr), _loc));
+		}
+
+		// Non-self raw .call(data) → stub (true, empty bytes).
 		Logger::instance().warning(
 			"address.call(data) stubbed — returns (true, empty). "
 			"Cross-contract raw calls not supported (AVM blocks self-calls).", _loc);

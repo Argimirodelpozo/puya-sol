@@ -261,6 +261,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		m_typeMapper, m_storageMapper, m_sourceFile, contractName,
 		m_libraryFunctionIds, m_overloadedNames, m_freeFunctionById
 	);
+	m_exprBuilder->setCurrentContract(&_contract);
 	// Initialize statement context
 	m_stmtCtx = sol_ast::StatementContext{
 		&*m_exprBuilder, &m_typeMapper, m_sourceFile,

@@ -179,6 +179,7 @@ eb::BuilderContext ExpressionBuilder::makeBuilderContext()
 		/*.storageMapper =*/ m_storageMapper,
 		/*.sourceFile =*/ m_sourceFile,
 		/*.contractName =*/ m_contractName,
+		/*.currentContract =*/ m_currentContract,
 		/*.libraryFunctionIds =*/ m_libraryFunctionIds,
 		/*.overloadedNames =*/ m_overloadedNames,
 		/*.freeFunctionById =*/ m_freeFunctionById,

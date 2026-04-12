@@ -92,6 +92,13 @@ private:
 	std::unique_ptr<sol_ast::SolExpressionFactory> m_factory;
 	std::string m_sourceFile;
 	std::string m_contractName;
+	/// The Solidity contract currently being translated — used by
+	/// BuilderContext consumers (e.g. self-call fallback dispatch).
+	solidity::frontend::ContractDefinition const* m_currentContract = nullptr;
+public:
+	void setCurrentContract(solidity::frontend::ContractDefinition const* _c)
+	{ m_currentContract = _c; }
+private:
 	LibraryFunctionIdMap const& m_libraryFunctionIds;
 	OverloadedNamesSet const& m_overloadedNames;
 	FreeFunctionIdMap const& m_freeFunctionById;
