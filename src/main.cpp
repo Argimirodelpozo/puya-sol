@@ -536,8 +536,60 @@ int main(int _argc, char* _argv[])
 	}
 	compiler.setSources(sources);
 
-	// Configure EVM version — use Cancun to support block.chainid, block.basefee, etc.
+	// Configure EVM version — use Cancun by default, but honour test
+	// directives like `// EVMVersion: <=berlin` when present. A test that
+	// uses names shadowing newer builtins (e.g. a user `basefee` function
+	// on berlin) needs the compiler to pick the older version so the
+	// builtin isn't reserved.
 	auto evmVer = solidity::langutil::EVMVersion::cancun();
+	{
+		// Ordered from oldest to newest.
+		std::vector<std::pair<std::string, solidity::langutil::EVMVersion>> ladder = {
+			{"homestead",        solidity::langutil::EVMVersion::homestead()},
+			{"tangerineWhistle", solidity::langutil::EVMVersion::tangerineWhistle()},
+			{"spuriousDragon",   solidity::langutil::EVMVersion::spuriousDragon()},
+			{"byzantium",        solidity::langutil::EVMVersion::byzantium()},
+			{"constantinople",   solidity::langutil::EVMVersion::constantinople()},
+			{"petersburg",       solidity::langutil::EVMVersion::petersburg()},
+			{"istanbul",         solidity::langutil::EVMVersion::istanbul()},
+			{"berlin",           solidity::langutil::EVMVersion::berlin()},
+			{"london",           solidity::langutil::EVMVersion::london()},
+			{"paris",            solidity::langutil::EVMVersion::paris()},
+			{"shanghai",         solidity::langutil::EVMVersion::shanghai()},
+			{"cancun",           solidity::langutil::EVMVersion::cancun()},
+			{"prague",           solidity::langutil::EVMVersion::prague()},
+		};
+		auto pickIndex = [&](std::string const& _name) -> int {
+			for (size_t i = 0; i < ladder.size(); ++i)
+				if (ladder[i].first == _name) return static_cast<int>(i);
+			return -1;
+		};
+		// Look for `// EVMVersion: <op?><name>` directive in the main source.
+		std::regex directiveRe(R"(//\s*EVMVersion:\s*([<>=!]*)\s*(\w+))");
+		std::smatch m;
+		if (std::regex_search(mainSourceContent, m, directiveRe))
+		{
+			std::string op = m[1].str();
+			std::string name = m[2].str();
+			int idx = pickIndex(name);
+			if (idx >= 0)
+			{
+				// `<=X`, `=X`, bare `X`: pick X
+				// `<X`: pick X-1 (previous version)
+				// `>=X`, `>X`: keep cancun (our default is newer than any
+				//              likely constraint)
+				if (op == "<=" || op.empty() || op == "=" || op == "==")
+				{
+					evmVer = ladder[idx].second;
+				}
+				else if (op == "<")
+				{
+					if (idx > 0)
+						evmVer = ladder[idx - 1].second;
+				}
+			}
+		}
+	}
 	compiler.setEVMVersion(evmVer);
 	logger.info("EVM version set to: " + evmVer.name() + " (hasChainID=" + (evmVer.hasChainID() ? "true" : "false") + ")");
 
