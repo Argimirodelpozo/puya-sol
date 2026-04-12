@@ -957,9 +957,10 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                 if len(a_bytes) < expected_size:
                     a_bytes = a_bytes + b'\x00' * (expected_size - len(a_bytes))
                 args.append(list(a_bytes))
-            elif isinstance(a, int) and param_types.get(i) == 'byte[]':
-                # int → byte[] (dynamic): convert to big-endian bytes
-                # Used for left(0x...) function pointer values
+            elif isinstance(a, int) and param_types.get(i) == 'byte[]' and len(raw_args) == len(param_types):
+                # int → byte[] (dynamic): convert to big-endian bytes.
+                # Only when raw_args already match param count (no regrouping needed).
+                # Used for left(0x...) function pointer values.
                 if a == 0:
                     args.append(b"")
                 else:
