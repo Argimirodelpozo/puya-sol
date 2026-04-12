@@ -957,6 +957,15 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                 if len(a_bytes) < expected_size:
                     a_bytes = a_bytes + b'\x00' * (expected_size - len(a_bytes))
                 args.append(list(a_bytes))
+            elif isinstance(a, int) and param_types.get(i) == 'byte[]':
+                # int → byte[] (dynamic): convert to big-endian bytes
+                # Used for left(0x...) function pointer values
+                if a == 0:
+                    args.append(b"")
+                else:
+                    byte_len = (a.bit_length() + 7) // 8
+                    a_bytes = a.to_bytes(byte_len, 'big')
+                    args.append(a_bytes)
             elif isinstance(a, int) and param_types.get(i) == 'address':
                 # ABI v2: address values > 2^160 - 1 are invalid (EVM addresses are 20 bytes)
                 if not uses_v1 and a > (2**160 - 1):
