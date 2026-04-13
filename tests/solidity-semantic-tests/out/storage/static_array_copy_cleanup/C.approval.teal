@@ -1,0 +1,538 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/static_array_copy_cleanup.sol.C.approval_program() -> uint64:
+main:
+    intcblock 8 1 0 32
+    bytecblock 0x01 "dest" "source" 0x04 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x02 0x03 0x151f7c75 "canary"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 5 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x30df5fb9 0x356d5853 0xa0e79d05 0x8e21369f 0x7f05186a 0x5b6e5e89 0x751fd609 0x805876af // method "__postInit()void", method "fillSource()void", method "fillDest()void", method "copySourceToDest()void", method "deleteSource()void", method "deleteDest()void", method "getSourceAsUint()uint64[20]", method "getDestAsUint()uint64[40]", method "canary()uint512"
+    txna ApplicationArgs 0
+    match __postInit fillSource fillDest copySourceToDest main_deleteSource_route@9 main_deleteDest_route@10 getSourceAsUint getDestAsUint canary
+    err
+
+main_deleteDest_route@10:
+    bytec_1 // "dest"
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    box_put
+    intc_1 // 1
+    return
+
+main_deleteSource_route@9:
+    bytec_2 // "source"
+    bytec 4 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/static_array_copy_cleanup.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec 5 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 5 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_2 // "source"
+    pushint 160
+    box_create
+    pop
+    bytec_1 // "dest"
+    pushint 320
+    box_create
+    pop
+    bytec 10 // "canary"
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/static_array_copy_cleanup.sol.C.fillSource[routing]() -> void:
+fillSource:
+    intc_2 // 0
+    itob
+
+fillSource_while_top@2:
+    dup
+    pushbytes 0x05
+    b<
+    bz fillSource_after_while@4
+    intc_0 // 8
+    bzero
+    dig 1
+    dup
+    cover 2
+    bytec_3 // 0x04
+    b*
+    bytec_0 // 0x01
+    dig 1
+    b+
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    bytec 7 // 0x02
+    dig 2
+    b+
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    bytec 8 // 0x03
+    dig 3
+    b+
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    bytec_3 // 0x04
+    uncover 4
+    b+
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_3 // 32
+    *
+    bytec_2 // "source"
+    swap
+    uncover 2
+    box_replace // on error: index out of bounds
+    bytec_0 // 0x01
+    b+
+    bury 1
+    b fillSource_while_top@2
+
+fillSource_after_while@4:
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/static_array_copy_cleanup.sol.C.fillDest[routing]() -> void:
+fillDest:
+    intc_2 // 0
+    itob
+
+fillDest_while_top@2:
+    dup
+    pushbytes 0x0a
+    b<
+    bz fillDest_after_while@4
+    intc_0 // 8
+    bzero
+    dig 1
+    dup
+    cover 2
+    bytec_3 // 0x04
+    b*
+    pushbytes 0x64
+    dig 1
+    b+
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    pushbytes 0x65
+    dig 2
+    b+
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    pushbytes 0x66
+    dig 3
+    b+
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    pushbytes 0x67
+    uncover 4
+    b+
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_3 // 32
+    *
+    bytec_1 // "dest"
+    swap
+    uncover 2
+    box_replace // on error: index out of bounds
+    bytec_0 // 0x01
+    b+
+    bury 1
+    b fillDest_while_top@2
+
+fillDest_after_while@4:
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/static_array_copy_cleanup.sol.C.copySourceToDest[routing]() -> void:
+copySourceToDest:
+    bytec_2 // "source"
+    box_get
+    bytec 4 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    pushint 160
+    bzero
+    concat
+    bytec_1 // "dest"
+    swap
+    box_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/static_array_copy_cleanup.sol.C.getSourceAsUint[routing]() -> void:
+getSourceAsUint:
+    bytec 4 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    intc_2 // 0
+    itob
+
+getSourceAsUint_while_top@2:
+    dup
+    pushbytes 0x05
+    b<
+    bz getSourceAsUint_after_while@4
+    bytec_2 // "source"
+    box_get
+    bytec 4 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_0 // 8
+    bzero
+    dup
+    dig 3
+    dup
+    cover 3
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_3 // 32
+    *
+    uncover 3
+    swap
+    intc_3 // 32
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 0 8
+    dig 3
+    bytec_3 // 0x04
+    b*
+    dig 3
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_0 // 8
+    *
+    dig 7
+    swap
+    uncover 3
+    replace3 // on error: index access is out of bounds
+    dig 2
+    extract 8 8
+    dig 2
+    bytec_0 // 0x01
+    b+
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_0 // 8
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    dig 2
+    extract 16 8
+    dig 2
+    bytec 7 // 0x02
+    b+
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_0 // 8
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    uncover 2
+    extract 24 8
+    uncover 2
+    bytec 8 // 0x03
+    b+
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_0 // 8
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    bury 3
+    bytec_0 // 0x01
+    b+
+    bury 1
+    b getSourceAsUint_while_top@2
+
+getSourceAsUint_after_while@4:
+    bytec 9 // 0x151f7c75
+    dig 2
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/static_array_copy_cleanup.sol.C.getDestAsUint[routing]() -> void:
+getDestAsUint:
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    intc_2 // 0
+    itob
+
+getDestAsUint_while_top@2:
+    dup
+    pushbytes 0x0a
+    b<
+    bz getDestAsUint_after_while@4
+    bytec_1 // "dest"
+    box_get
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_0 // 8
+    bzero
+    dup
+    dig 3
+    dup
+    cover 3
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_3 // 32
+    *
+    uncover 3
+    swap
+    intc_3 // 32
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 0 8
+    dig 3
+    bytec_3 // 0x04
+    b*
+    dig 3
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_0 // 8
+    *
+    dig 7
+    swap
+    uncover 3
+    replace3 // on error: index access is out of bounds
+    dig 2
+    extract 8 8
+    dig 2
+    bytec_0 // 0x01
+    b+
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_0 // 8
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    dig 2
+    extract 16 8
+    dig 2
+    bytec 7 // 0x02
+    b+
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_0 // 8
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    uncover 2
+    extract 24 8
+    uncover 2
+    bytec 8 // 0x03
+    b+
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc_0 // 8
+    *
+    swap
+    replace3 // on error: index access is out of bounds
+    bury 3
+    bytec_0 // 0x01
+    b+
+    bury 1
+    b getDestAsUint_while_top@2
+
+getDestAsUint_after_while@4:
+    bytec 9 // 0x151f7c75
+    dig 2
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/static_array_copy_cleanup.sol.C.canary[routing]() -> void:
+canary:
+    intc_2 // 0
+    bytec 10 // "canary"
+    app_global_get_ex
+    assert // check canary exists
+    dup
+    len
+    pushint 64
+    <=
+    assert // overflow
+    pushint 64
+    bzero
+    b|
+    bytec 9 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
