@@ -305,25 +305,18 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	r = toBytes(std::move(r));
 	s = toBytes(std::move(s));
 
-	// v is uint8 (27 or 28) → recovery_id = v - 27
-	std::shared_ptr<awst::Expression> recoveryId;
+	// v is uint8 (27 or 28). Normalise to uint64 so we can reference it
+	// multiple times and clamp into the valid recovery range. We persist
+	// v in a temp var because ConditionalExpression duplicates operands
+	// in the serialised AWST.
+	std::shared_ptr<awst::Expression> vUint;
 	if (v->wtype == awst::WType::uint64Type() || v->wtype == awst::WType::boolType())
 	{
-		auto twentySeven = std::make_shared<awst::IntegerConstant>();
-		twentySeven->sourceLocation = _loc;
-		twentySeven->wtype = awst::WType::uint64Type();
-		twentySeven->value = "27";
-		auto sub = std::make_shared<awst::UInt64BinaryOperation>();
-		sub->sourceLocation = _loc;
-		sub->wtype = awst::WType::uint64Type();
-		sub->left = std::move(v);
-		sub->right = std::move(twentySeven);
-		sub->op = awst::UInt64BinaryOperator::Sub;
-		recoveryId = std::move(sub);
+		vUint = std::move(v);
 	}
 	else
 	{
-		// biguint v → bytes → btoi, then subtract 27
+		// biguint v → bytes → btoi
 		auto vBytes = std::make_shared<awst::ReinterpretCast>();
 		vBytes->sourceLocation = _loc;
 		vBytes->wtype = awst::WType::bytesType();
@@ -333,18 +326,69 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 		btoi->wtype = awst::WType::uint64Type();
 		btoi->opCode = "btoi";
 		btoi->stackArgs.push_back(std::move(vBytes));
-		auto twentySeven = std::make_shared<awst::IntegerConstant>();
-		twentySeven->sourceLocation = _loc;
-		twentySeven->wtype = awst::WType::uint64Type();
-		twentySeven->value = "27";
-		auto sub = std::make_shared<awst::UInt64BinaryOperation>();
-		sub->sourceLocation = _loc;
-		sub->wtype = awst::WType::uint64Type();
-		sub->left = std::move(btoi);
-		sub->right = std::move(twentySeven);
-		sub->op = awst::UInt64BinaryOperator::Sub;
-		recoveryId = std::move(sub);
+		vUint = std::move(btoi);
 	}
+
+	// Stash v in a temp so we can read it multiple times.
+	std::string vTmpName = "__ecrecover_v";
+	auto vTmpTarget = std::make_shared<awst::VarExpression>();
+	vTmpTarget->sourceLocation = _loc;
+	vTmpTarget->name = vTmpName;
+	vTmpTarget->wtype = awst::WType::uint64Type();
+	auto vAssign = std::make_shared<awst::AssignmentStatement>();
+	vAssign->sourceLocation = _loc;
+	vAssign->target = vTmpTarget;
+	vAssign->value = std::move(vUint);
+	_ctx.prePendingStatements.push_back(std::move(vAssign));
+
+	auto readV = [&]() -> std::shared_ptr<awst::Expression> {
+		auto r = std::make_shared<awst::VarExpression>();
+		r->sourceLocation = _loc;
+		r->name = vTmpName;
+		r->wtype = awst::WType::uint64Type();
+		return r;
+	};
+
+	auto mkU64 = [&](std::string const& _val) {
+		auto c = std::make_shared<awst::IntegerConstant>();
+		c->sourceLocation = _loc;
+		c->wtype = awst::WType::uint64Type();
+		c->value = _val;
+		return c;
+	};
+
+	// Recovery id: if v ∈ {27,28} then v-27 else 0. The conditional is
+	// important because unguarded `v-27` underflows for v < 27 and crashes.
+	auto vGte27 = std::make_shared<awst::NumericComparisonExpression>();
+	vGte27->sourceLocation = _loc;
+	vGte27->wtype = awst::WType::boolType();
+	vGte27->lhs = readV();
+	vGte27->op = awst::NumericComparison::Gte;
+	vGte27->rhs = mkU64("27");
+
+	auto vMinus27 = std::make_shared<awst::UInt64BinaryOperation>();
+	vMinus27->sourceLocation = _loc;
+	vMinus27->wtype = awst::WType::uint64Type();
+	vMinus27->left = readV();
+	vMinus27->op = awst::UInt64BinaryOperator::Sub;
+	vMinus27->right = mkU64("27");
+
+	auto recIdCond = std::make_shared<awst::ConditionalExpression>();
+	recIdCond->sourceLocation = _loc;
+	recIdCond->wtype = awst::WType::uint64Type();
+	recIdCond->condition = std::move(vGte27);
+	recIdCond->trueExpr = std::move(vMinus27);
+	recIdCond->falseExpr = mkU64("0");
+	// Clamp further: `recovery_id & 1` so the ecdsa opcode doesn't see an
+	// out-of-range value when v is e.g. 29. Combined with the outer result
+	// masking this keeps the TEAL valid for any v.
+	auto recIdClamp = std::make_shared<awst::UInt64BinaryOperation>();
+	recIdClamp->sourceLocation = _loc;
+	recIdClamp->wtype = awst::WType::uint64Type();
+	recIdClamp->left = std::move(recIdCond);
+	recIdClamp->op = awst::UInt64BinaryOperator::BitAnd;
+	recIdClamp->right = mkU64("1");
+	std::shared_ptr<awst::Expression> recoveryId = std::move(recIdClamp);
 
 	// ecdsa_pk_recover Secp256k1 → (pubkey_x: bytes, pubkey_y: bytes)
 	auto tupleType = _ctx.typeMapper.createType<awst::WTuple>(
@@ -445,11 +489,53 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	paddedAddr->stackArgs.push_back(std::move(pad12));
 	paddedAddr->stackArgs.push_back(std::move(addr20));
 
+	// Solidity's ecrecover returns address(0) when v is not 27 or 28
+	// (EVM precompile returns empty data for malformed input; Solidity
+	// converts that to the zero address). We can't short-circuit the
+	// ecdsa_pk_recover opcode itself, so always compute it and mask the
+	// result to bzero(32) when v was out of range.
+	auto isValidV = [&]() -> std::shared_ptr<awst::Expression> {
+		auto gte = std::make_shared<awst::NumericComparisonExpression>();
+		gte->sourceLocation = _loc;
+		gte->wtype = awst::WType::boolType();
+		gte->lhs = readV();
+		gte->op = awst::NumericComparison::Gte;
+		gte->rhs = mkU64("27");
+
+		auto lte = std::make_shared<awst::NumericComparisonExpression>();
+		lte->sourceLocation = _loc;
+		lte->wtype = awst::WType::boolType();
+		lte->lhs = readV();
+		lte->op = awst::NumericComparison::Lte;
+		lte->rhs = mkU64("28");
+
+		auto andOp = std::make_shared<awst::BooleanBinaryOperation>();
+		andOp->sourceLocation = _loc;
+		andOp->wtype = awst::WType::boolType();
+		andOp->left = std::move(gte);
+		andOp->op = awst::BinaryBooleanOperator::And;
+		andOp->right = std::move(lte);
+		return andOp;
+	};
+
+	auto zero32 = std::make_shared<awst::IntrinsicCall>();
+	zero32->sourceLocation = _loc;
+	zero32->wtype = awst::WType::bytesType();
+	zero32->opCode = "bzero";
+	zero32->stackArgs.push_back(mkU64("32"));
+
+	auto maskedAddr = std::make_shared<awst::ConditionalExpression>();
+	maskedAddr->sourceLocation = _loc;
+	maskedAddr->wtype = awst::WType::bytesType();
+	maskedAddr->condition = isValidV();
+	maskedAddr->trueExpr = std::move(paddedAddr);
+	maskedAddr->falseExpr = std::move(zero32);
+
 	// Cast to account type (address return type)
 	auto addrCast = std::make_shared<awst::ReinterpretCast>();
 	addrCast->sourceLocation = _loc;
 	addrCast->wtype = awst::WType::accountType();
-	addrCast->expr = std::move(paddedAddr);
+	addrCast->expr = std::move(maskedAddr);
 
 	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(addrCast));
 }
