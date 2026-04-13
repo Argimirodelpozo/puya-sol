@@ -460,9 +460,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	if (funcName == "chainid")
 	{
 		// AVM has no per-chain identifier; return 1 so that Solidity's
-		// \`block.chainid\` lines up with what semantic tests expect
+		// `block.chainid` lines up with what semantic tests expect
 		// (Ethereum mainnet id). Real-world contracts that need network
-		// differentiation should use \`global GenesisHash\` directly in
+		// differentiation should use `global GenesisHash` directly in
 		// assembly instead.
 		Logger::instance().debug("chainid() stubbed as 1 for AVM", loc);
 		auto c = std::make_shared<awst::IntegerConstant>();
@@ -470,6 +470,71 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		c->wtype = awst::WType::biguintType();
 		c->value = "1";
 		return c;
+	}
+	if (funcName == "clz")
+	{
+		// clz(x) = count leading zeros (256-bit): 256 - bitlen(x).
+		// EIP-7939. AVM's `bitlen` opcode returns the bit length of a
+		// biguint (0 for x==0). Subtract from 256 to get the EVM semantic.
+		if (args.empty())
+		{
+			Logger::instance().warning("clz() called with no args", loc);
+			auto zero = std::make_shared<awst::IntegerConstant>();
+			zero->sourceLocation = loc;
+			zero->wtype = awst::WType::biguintType();
+			zero->value = "256";
+			return zero;
+		}
+		auto x = args[0];
+		// Ensure operand is bytes-like so bitlen sees the full u256 width.
+		if (x->wtype == awst::WType::uint64Type())
+		{
+			auto itob = std::make_shared<awst::IntrinsicCall>();
+			itob->sourceLocation = loc;
+			itob->wtype = awst::WType::bytesType();
+			itob->opCode = "itob";
+			itob->stackArgs.push_back(std::move(x));
+			x = std::move(itob);
+		}
+		else if (x->wtype == awst::WType::biguintType())
+		{
+			auto cast = std::make_shared<awst::ReinterpretCast>();
+			cast->sourceLocation = loc;
+			cast->wtype = awst::WType::bytesType();
+			cast->expr = std::move(x);
+			x = std::move(cast);
+		}
+
+		auto bitlen = std::make_shared<awst::IntrinsicCall>();
+		bitlen->sourceLocation = loc;
+		bitlen->wtype = awst::WType::uint64Type();
+		bitlen->opCode = "bitlen";
+		bitlen->stackArgs.push_back(std::move(x));
+
+		auto c256 = std::make_shared<awst::IntegerConstant>();
+		c256->sourceLocation = loc;
+		c256->wtype = awst::WType::uint64Type();
+		c256->value = "256";
+
+		auto sub = std::make_shared<awst::UInt64BinaryOperation>();
+		sub->sourceLocation = loc;
+		sub->wtype = awst::WType::uint64Type();
+		sub->left = std::move(c256);
+		sub->op = awst::UInt64BinaryOperator::Sub;
+		sub->right = std::move(bitlen);
+
+		// Yul returns a 256-bit value; promote to biguint.
+		auto itob2 = std::make_shared<awst::IntrinsicCall>();
+		itob2->sourceLocation = loc;
+		itob2->wtype = awst::WType::bytesType();
+		itob2->opCode = "itob";
+		itob2->stackArgs.push_back(std::move(sub));
+
+		auto cast = std::make_shared<awst::ReinterpretCast>();
+		cast->sourceLocation = loc;
+		cast->wtype = awst::WType::biguintType();
+		cast->expr = std::move(itob2);
+		return cast;
 	}
 	if (funcName == "calldataload")
 		return handleCalldataload(args, loc);
