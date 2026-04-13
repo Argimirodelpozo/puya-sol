@@ -42,7 +42,26 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 					oss << arrType->length();
 					auto c = std::make_shared<awst::IntegerConstant>();
 					c->sourceLocation = m_loc;
-					c->wtype = awst::WType::uint64Type();
+					// uint256 array sizes (e.g. from erc7201()) don't fit in
+					// uint64 — emit as biguint in that case. The result's
+					// Solidity type is uint256 which maps to biguint anyway.
+					auto solLenType = m_memberAccess.annotation().type;
+					if (solLenType && solLenType->category()
+							== solidity::frontend::Type::Category::Integer)
+					{
+						auto const* intType = dynamic_cast<
+							solidity::frontend::IntegerType const*>(solLenType);
+						if (intType && intType->numBits() > 64)
+							c->wtype = awst::WType::biguintType();
+						else
+							c->wtype = awst::WType::uint64Type();
+					}
+					else
+					{
+						c->wtype = arrType->length() > solidity::u256("18446744073709551615")
+							? awst::WType::biguintType()
+							: awst::WType::uint64Type();
+					}
 					c->value = oss.str();
 					return c;
 				}
