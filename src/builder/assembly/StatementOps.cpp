@@ -166,7 +166,60 @@ void AssemblyBuilder::buildStatement(
 					cast->sourceLocation = loc;
 					cast->wtype = awst::WType::bytesType();
 					cast->expr = switchExpr;
-					switchNode->value = cast;
+
+					// Normalise to a fixed 32-byte big-endian encoding —
+					// biguint ABI decoding may produce 64-byte values (our
+					// uint512 mapping) but the case constants below are 32
+					// bytes. Pattern: b| bzero(32) → ensures at least 32
+					// bytes, then extract the last 32.
+					auto bzero32 = std::make_shared<awst::IntrinsicCall>();
+					bzero32->sourceLocation = loc;
+					bzero32->wtype = awst::WType::bytesType();
+					bzero32->opCode = "bzero";
+					auto size32 = std::make_shared<awst::IntegerConstant>();
+					size32->sourceLocation = loc;
+					size32->wtype = awst::WType::uint64Type();
+					size32->value = "32";
+					bzero32->stackArgs.push_back(size32);
+
+					auto bor = std::make_shared<awst::IntrinsicCall>();
+					bor->sourceLocation = loc;
+					bor->wtype = awst::WType::bytesType();
+					bor->opCode = "b|";
+					bor->stackArgs.push_back(std::move(bzero32));
+					bor->stackArgs.push_back(std::move(cast));
+
+					auto lenCall = std::make_shared<awst::IntrinsicCall>();
+					lenCall->sourceLocation = loc;
+					lenCall->wtype = awst::WType::uint64Type();
+					lenCall->opCode = "len";
+					lenCall->stackArgs.push_back(bor);
+
+					auto minus = std::make_shared<awst::UInt64BinaryOperation>();
+					minus->sourceLocation = loc;
+					minus->wtype = awst::WType::uint64Type();
+					minus->left = std::move(lenCall);
+					minus->op = awst::UInt64BinaryOperator::Sub;
+					auto thirtyTwo = std::make_shared<awst::IntegerConstant>();
+					thirtyTwo->sourceLocation = loc;
+					thirtyTwo->wtype = awst::WType::uint64Type();
+					thirtyTwo->value = "32";
+					minus->right = thirtyTwo;
+
+					auto width = std::make_shared<awst::IntegerConstant>();
+					width->sourceLocation = loc;
+					width->wtype = awst::WType::uint64Type();
+					width->value = "32";
+
+					auto extract = std::make_shared<awst::IntrinsicCall>();
+					extract->sourceLocation = loc;
+					extract->wtype = awst::WType::bytesType();
+					extract->opCode = "extract3";
+					extract->stackArgs.push_back(std::move(bor));
+					extract->stackArgs.push_back(std::move(minus));
+					extract->stackArgs.push_back(std::move(width));
+
+					switchNode->value = std::move(extract);
 				}
 				else
 				{
