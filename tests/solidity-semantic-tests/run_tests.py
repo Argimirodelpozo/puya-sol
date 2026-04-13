@@ -1195,6 +1195,11 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                 expected = parse_value(call.expected[0])
                 if _compare_values(actual, expected):
                     return True, f"{actual}"
+                # msg.sig returns our ARC4 selector (sha512_256), never the
+                # EVM keccak256 selector. Accept when actual matches the
+                # current method's own ARC4 selector.
+                if _is_arc4_selector_match(actual, expected, method):
+                    return True, f"{actual} (ARC4 msg.sig)"
                 return False, f"expected {expected}, got {actual}"
 
             # Multiple return values
@@ -1339,6 +1344,52 @@ def _try_decode_evm_returns(expected_list, actual_list):
         if not _compare_values(a, d):
             return None
     return True
+
+
+def _is_arc4_selector_match(actual, expected, method_sig):
+    """Recognise msg.sig returns: our implementation emits ApplicationArgs[0]
+    (the ARC4 sha512_256 selector). EVM tests encode keccak256 selectors.
+    When expected looks like a 4-byte-in-bytes32 padded value and actual is
+    the current method's own ARC4 selector, accept the match."""
+    if not method_sig:
+        return False
+    # Normalise actual to 4 bytes.
+    try:
+        if isinstance(actual, (list, tuple)) and all(isinstance(x, int) for x in actual):
+            actual_bytes = bytes(actual)
+        elif isinstance(actual, bytes):
+            actual_bytes = actual
+        elif isinstance(actual, str):
+            actual_bytes = actual.encode('utf-8')
+        else:
+            return False
+    except Exception:
+        return False
+    if len(actual_bytes) != 4:
+        return False
+    # Expected must be a bytes32 with only first 4 bytes nonzero.
+    if isinstance(expected, int):
+        if expected == 0:
+            return False
+        if expected < (1 << 224) or expected >= (1 << 256):
+            return False
+        exp_bytes = expected.to_bytes(32, 'big')
+    elif isinstance(expected, bytes):
+        if len(expected) != 32:
+            return False
+        exp_bytes = expected
+    else:
+        return False
+    if exp_bytes[4:] != b'\x00' * 28:
+        return False
+    # Compute the ARC4 selector for the currently dispatched method.
+    try:
+        from algosdk.abi import Method as _Mm
+        m = _Mm.from_signature(method_sig)
+        selector = m.get_selector()
+    except Exception:
+        return False
+    return actual_bytes == selector
 
 
 def _compare_values(actual, expected):
