@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/abi_decode_fixed_arrays.sol.C.approval_program() -> uint64:
 main:
-    intcblock 8 32 1 2
+    intcblock 32 8 1 2
     txn ApplicationID
     bnz main_after_if_else@2
     intc_2 // 1
@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xa41c2788 // method "f(uint16[3],uint16[2][3],uint256,uint256,uint256)(uint512,uint512)"
+    pushbytes 0xdbc47505 // method "f(uint16[3],uint16[2][3],uint256,uint256,uint256)(uint256,uint256)"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -48,29 +48,29 @@ f:
     txna ApplicationArgs 3
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 5
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_0 // 8
+    intc_1 // 8
     bzero
     dup
     uncover 4
     concat
     dup
     len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
     intc_3 // 2
@@ -79,26 +79,31 @@ f:
     swap
     extract_uint16
     itob
+    intc_0 // 32
+    bzero
+    swap
     dig 1
+    b|
+    dig 2
+    uncover 5
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 3
     uncover 4
     concat
     dup
     len
-    intc_0 // 8
-    -
-    extract_uint64
-    uncover 2
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 8
+    intc_1 // 8
     -
     extract_uint64
     swap
     pushint 4
     *
-    uncover 3
+    uncover 4
     swap
     pushint 4
     extract3 // on error: index access is out of bounds
@@ -107,12 +112,7 @@ f:
     *
     extract_uint16
     itob
-    pushint 64
-    bzero
     uncover 2
-    dig 1
-    b|
-    cover 2
     b|
     concat
     pushbytes 0x151f7c75

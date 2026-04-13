@@ -742,7 +742,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "value": 0,
+                    "value": 2,
                     "teal_alias": null
                   }
                 ]
@@ -1683,7 +1683,7 @@
                               "immutable": true
                             },
                             "left": {
-                              "_type": "TupleItemExpression",
+                              "_type": "UInt64BinaryOperation",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
                                 "line": 254,
@@ -1697,8 +1697,8 @@
                                 "name": "uint64",
                                 "immutable": true
                               },
-                              "base": {
-                                "_type": "IntrinsicCall",
+                              "left": {
+                                "_type": "TupleItemExpression",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
                                   "line": 254,
@@ -1708,49 +1708,84 @@
                                   "end_column": null
                                 },
                                 "wtype": {
-                                  "_type": "WTuple",
-                                  "name": "tuple",
-                                  "immutable": true,
-                                  "types": [
-                                    {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    {
-                                      "_type": "WType",
-                                      "name": "bool",
-                                      "immutable": true
-                                    }
-                                  ],
-                                  "names": null,
-                                  "source_location": null
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
                                 },
-                                "op_code": "box_len",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "BytesConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                                      "line": 254,
-                                      "end_line": 265,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "value": "WMOn+",
-                                    "encoding": "utf8"
-                                  }
-                                ]
+                                "base": {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                    "line": 254,
+                                    "end_line": 265,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WTuple",
+                                    "name": "tuple",
+                                    "immutable": true,
+                                    "types": [
+                                      {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      {
+                                        "_type": "WType",
+                                        "name": "bool",
+                                        "immutable": true
+                                      }
+                                    ],
+                                    "names": null,
+                                    "source_location": null
+                                  },
+                                  "op_code": "box_len",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "BytesConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                        "line": 254,
+                                        "end_line": 265,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "value": "WMOn+",
+                                      "encoding": "utf8"
+                                    }
+                                  ]
+                                },
+                                "index": 0
                               },
-                              "index": 0
+                              "op": "-",
+                              "right": {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                  "line": 254,
+                                  "end_line": 265,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 2,
+                                "teal_alias": null
+                              }
                             },
                             "op": "//",
                             "right": {
@@ -1813,23 +1848,23 @@
                             "immutable": true
                           },
                           "lhs": {
-                            "_type": "ARC4Decode",
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
                               "line": 288,
-                              "end_line": 295,
+                              "end_line": 308,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
                             },
                             "wtype": {
                               "_type": "BytesWType",
-                              "name": "bytes[1]",
+                              "name": "bytes",
                               "immutable": true,
-                              "length": 1
+                              "length": null
                             },
-                            "value": {
-                              "_type": "IndexExpression",
+                            "expr": {
+                              "_type": "IntrinsicCall",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
                                 "line": 288,
@@ -1839,33 +1874,16 @@
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "ARC4StaticArray",
-                                "name": "arc4.static_array<arc4.uint8, 1>",
-                                "immutable": false,
-                                "element_type": {
-                                  "_type": "ARC4UIntN",
-                                  "name": "arc4.uint8",
-                                  "immutable": true,
-                                  "n": 8,
-                                  "arc4_alias": null,
-                                  "source_location": null
-                                },
-                                "array_size": 1,
-                                "arc4_alias": null,
-                                "source_location": null
+                                "_type": "BytesWType",
+                                "name": "bytes[1]",
+                                "immutable": true,
+                                "length": 1
                               },
-                              "base": {
-                                "_type": "StateGet",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                                  "line": 288,
-                                  "end_line": 295,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "field": {
-                                  "_type": "BoxValueExpression",
+                              "op_code": "extract3",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "StateGet",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
                                     "line": 288,
@@ -1874,13 +1892,43 @@
                                     "column": null,
                                     "end_column": null
                                   },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
+                                  "field": {
+                                    "_type": "BoxValueExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                      "line": 288,
+                                      "end_line": 295,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "key": {
+                                      "_type": "BytesConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                        "line": 288,
+                                        "end_line": 295,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "box_key",
+                                        "immutable": true
+                                      },
+                                      "value": "WMOn+",
+                                      "encoding": "utf8"
+                                    },
+                                    "exists_assertion_message": null
                                   },
-                                  "key": {
+                                  "default": {
                                     "_type": "BytesConstant",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
@@ -1891,135 +1939,21 @@
                                       "end_column": null
                                     },
                                     "wtype": {
-                                      "_type": "WType",
-                                      "name": "box_key",
-                                      "immutable": true
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
                                     },
-                                    "value": "WMOn+",
-                                    "encoding": "utf8"
-                                  },
-                                  "exists_assertion_message": null
-                                },
-                                "default": {
-                                  "_type": "BytesConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                                    "line": 288,
-                                    "end_line": 295,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "value": "",
-                                  "encoding": "base16"
-                                }
-                              },
-                              "index": {
-                                "_type": "VarExpression",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                                  "line": 293,
-                                  "end_line": 294,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "name": "i__29"
-                              }
-                            },
-                            "error_message": null
-                          },
-                          "operator": "!=",
-                          "rhs": {
-                            "_type": "ReinterpretCast",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                              "line": 299,
-                              "end_line": 308,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes[1]",
-                              "immutable": true,
-                              "length": 1
-                            },
-                            "expr": {
-                              "_type": "IntrinsicCall",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                                "line": 299,
-                                "end_line": 308,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "op_code": "extract3",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "IntrinsicCall",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                                    "line": 299,
-                                    "end_line": 308,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "op_code": "itob",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "VarExpression",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                                        "line": 306,
-                                        "end_line": 307,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "uint64",
-                                        "immutable": true
-                                      },
-                                      "name": "i__29"
-                                    }
-                                  ]
+                                    "value": "",
+                                    "encoding": "base16"
+                                  }
                                 },
                                 {
-                                  "_type": "IntegerConstant",
+                                  "_type": "VarExpression",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                                    "line": 299,
-                                    "end_line": 308,
+                                    "line": 293,
+                                    "end_line": 294,
                                     "comment_lines": 0,
                                     "column": null,
                                     "end_column": null
@@ -2029,15 +1963,14 @@
                                     "name": "uint64",
                                     "immutable": true
                                   },
-                                  "value": 7,
-                                  "teal_alias": null
+                                  "name": "i__29"
                                 },
                                 {
                                   "_type": "IntegerConstant",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                                    "line": 299,
-                                    "end_line": 308,
+                                    "line": 288,
+                                    "end_line": 295,
                                     "comment_lines": 0,
                                     "column": null,
                                     "end_column": null
@@ -2051,6 +1984,136 @@
                                   "teal_alias": null
                                 }
                               ]
+                            }
+                          },
+                          "operator": "!=",
+                          "rhs": {
+                            "_type": "ReinterpretCast",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                              "line": 288,
+                              "end_line": 308,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "expr": {
+                              "_type": "ReinterpretCast",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                "line": 299,
+                                "end_line": 308,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes[1]",
+                                "immutable": true,
+                                "length": 1
+                              },
+                              "expr": {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                  "line": 299,
+                                  "end_line": 308,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "extract3",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                      "line": 299,
+                                      "end_line": 308,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "itob",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "VarExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                          "line": 306,
+                                          "end_line": 307,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "name": "i__29"
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                      "line": 299,
+                                      "end_line": 308,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 7,
+                                    "teal_alias": null
+                                  },
+                                  {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                      "line": 299,
+                                      "end_line": 308,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 1,
+                                    "teal_alias": null
+                                  }
+                                ]
+                              }
                             }
                           }
                         },
@@ -2333,7 +2396,34 @@
                 "end_column": null
               },
               "expr": {
-                "_type": "ARC4Decode",
+                "_type": "VoidConstant",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                  "line": 328,
+                  "end_line": 338,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "void",
+                  "immutable": true
+                }
+              }
+            },
+            {
+              "_type": "AssignmentStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                "line": 328,
+                "end_line": 338,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "target": {
+                "_type": "VarExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
                   "line": 328,
@@ -2344,38 +2434,269 @@
                 },
                 "wtype": {
                   "_type": "BytesWType",
-                  "name": "bytes[1]",
+                  "name": "bytes",
                   "immutable": true,
-                  "length": 1
+                  "length": null
                 },
-                "value": {
-                  "_type": "ArrayPop",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                    "line": 328,
-                    "end_line": 338,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "ARC4StaticArray",
-                    "name": "arc4.static_array<arc4.uint8, 1>",
-                    "immutable": false,
-                    "element_type": {
-                      "_type": "ARC4UIntN",
-                      "name": "arc4.uint8",
-                      "immutable": true,
-                      "n": 8,
-                      "arc4_alias": null,
-                      "source_location": null
+                "name": "__bytes_pop_tmp_0"
+              },
+              "value": {
+                "_type": "IntrinsicCall",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                  "line": 328,
+                  "end_line": 338,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "BytesWType",
+                  "name": "bytes",
+                  "immutable": true,
+                  "length": null
+                },
+                "op_code": "extract3",
+                "immediates": [],
+                "stack_args": [
+                  {
+                    "_type": "StateGet",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                      "line": 328,
+                      "end_line": 338,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
                     },
-                    "array_size": 1,
-                    "arc4_alias": null,
-                    "source_location": null
+                    "field": {
+                      "_type": "BoxValueExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                        "line": 328,
+                        "end_line": 338,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "key": {
+                        "_type": "BytesConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                          "line": 328,
+                          "end_line": 338,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "box_key",
+                          "immutable": true
+                        },
+                        "value": "WMOn+",
+                        "encoding": "utf8"
+                      },
+                      "exists_assertion_message": null
+                    },
+                    "default": {
+                      "_type": "BytesConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                        "line": 328,
+                        "end_line": 338,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "value": "",
+                      "encoding": "base16"
+                    }
                   },
-                  "base": {
-                    "_type": "BoxValueExpression",
+                  {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                      "line": 328,
+                      "end_line": 338,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 0,
+                    "teal_alias": null
+                  },
+                  {
+                    "_type": "UInt64BinaryOperation",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                      "line": 328,
+                      "end_line": 338,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "left": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                        "line": 328,
+                        "end_line": 338,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "op_code": "len",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "StateGet",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                            "line": 328,
+                            "end_line": 338,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "field": {
+                            "_type": "BoxValueExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                              "line": 328,
+                              "end_line": 338,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "key": {
+                              "_type": "BytesConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                "line": 328,
+                                "end_line": 338,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "box_key",
+                                "immutable": true
+                              },
+                              "value": "WMOn+",
+                              "encoding": "utf8"
+                            },
+                            "exists_assertion_message": null
+                          },
+                          "default": {
+                            "_type": "BytesConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                              "line": 328,
+                              "end_line": 338,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "value": "",
+                            "encoding": "base16"
+                          }
+                        }
+                      ]
+                    },
+                    "op": "-",
+                    "right": {
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                        "line": 328,
+                        "end_line": 338,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "value": 1,
+                      "teal_alias": null
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "_type": "ExpressionStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                "line": 328,
+                "end_line": 338,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "expr": {
+                "_type": "IntrinsicCall",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                  "line": 328,
+                  "end_line": 338,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "bool",
+                  "immutable": true
+                },
+                "op_code": "box_del",
+                "immediates": [],
+                "stack_args": [
+                  {
+                    "_type": "BytesConstant",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
                       "line": 328,
@@ -2390,28 +2711,78 @@
                       "immutable": true,
                       "length": null
                     },
-                    "key": {
-                      "_type": "BytesConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                        "line": 328,
-                        "end_line": 338,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "box_key",
-                        "immutable": true
-                      },
-                      "value": "WMOn+",
-                      "encoding": "utf8"
-                    },
-                    "exists_assertion_message": null
+                    "value": "WMOn+",
+                    "encoding": "utf8"
                   }
+                ]
+              }
+            },
+            {
+              "_type": "ExpressionStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                "line": 328,
+                "end_line": 338,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "expr": {
+                "_type": "IntrinsicCall",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                  "line": 328,
+                  "end_line": 338,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
                 },
-                "error_message": null
+                "wtype": {
+                  "_type": "WType",
+                  "name": "void",
+                  "immutable": true
+                },
+                "op_code": "box_put",
+                "immediates": [],
+                "stack_args": [
+                  {
+                    "_type": "BytesConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                      "line": 328,
+                      "end_line": 338,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "value": "WMOn+",
+                    "encoding": "utf8"
+                  },
+                  {
+                    "_type": "VarExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                      "line": 328,
+                      "end_line": 338,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "name": "__bytes_pop_tmp_0"
+                  }
+                ]
               }
             },
             {
@@ -2425,7 +2796,34 @@
                 "end_column": null
               },
               "expr": {
-                "_type": "ARC4Decode",
+                "_type": "VoidConstant",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                  "line": 348,
+                  "end_line": 358,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "void",
+                  "immutable": true
+                }
+              }
+            },
+            {
+              "_type": "AssignmentStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                "line": 348,
+                "end_line": 358,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "target": {
+                "_type": "VarExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
                   "line": 348,
@@ -2436,38 +2834,269 @@
                 },
                 "wtype": {
                   "_type": "BytesWType",
-                  "name": "bytes[1]",
+                  "name": "bytes",
                   "immutable": true,
-                  "length": 1
+                  "length": null
                 },
-                "value": {
-                  "_type": "ArrayPop",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                    "line": 348,
-                    "end_line": 358,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "ARC4StaticArray",
-                    "name": "arc4.static_array<arc4.uint8, 1>",
-                    "immutable": false,
-                    "element_type": {
-                      "_type": "ARC4UIntN",
-                      "name": "arc4.uint8",
-                      "immutable": true,
-                      "n": 8,
-                      "arc4_alias": null,
-                      "source_location": null
+                "name": "__bytes_pop_tmp_1"
+              },
+              "value": {
+                "_type": "IntrinsicCall",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                  "line": 348,
+                  "end_line": 358,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "BytesWType",
+                  "name": "bytes",
+                  "immutable": true,
+                  "length": null
+                },
+                "op_code": "extract3",
+                "immediates": [],
+                "stack_args": [
+                  {
+                    "_type": "StateGet",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                      "line": 348,
+                      "end_line": 358,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
                     },
-                    "array_size": 1,
-                    "arc4_alias": null,
-                    "source_location": null
+                    "field": {
+                      "_type": "BoxValueExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                        "line": 348,
+                        "end_line": 358,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "key": {
+                        "_type": "BytesConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                          "line": 348,
+                          "end_line": 358,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "box_key",
+                          "immutable": true
+                        },
+                        "value": "WMOn+",
+                        "encoding": "utf8"
+                      },
+                      "exists_assertion_message": null
+                    },
+                    "default": {
+                      "_type": "BytesConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                        "line": 348,
+                        "end_line": 358,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "value": "",
+                      "encoding": "base16"
+                    }
                   },
-                  "base": {
-                    "_type": "BoxValueExpression",
+                  {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                      "line": 348,
+                      "end_line": 358,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 0,
+                    "teal_alias": null
+                  },
+                  {
+                    "_type": "UInt64BinaryOperation",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                      "line": 348,
+                      "end_line": 358,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "left": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                        "line": 348,
+                        "end_line": 358,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "op_code": "len",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "StateGet",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                            "line": 348,
+                            "end_line": 358,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "field": {
+                            "_type": "BoxValueExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                              "line": 348,
+                              "end_line": 358,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "key": {
+                              "_type": "BytesConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                "line": 348,
+                                "end_line": 358,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "box_key",
+                                "immutable": true
+                              },
+                              "value": "WMOn+",
+                              "encoding": "utf8"
+                            },
+                            "exists_assertion_message": null
+                          },
+                          "default": {
+                            "_type": "BytesConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                              "line": 348,
+                              "end_line": 358,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "value": "",
+                            "encoding": "base16"
+                          }
+                        }
+                      ]
+                    },
+                    "op": "-",
+                    "right": {
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                        "line": 348,
+                        "end_line": 358,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "value": 1,
+                      "teal_alias": null
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "_type": "ExpressionStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                "line": 348,
+                "end_line": 358,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "expr": {
+                "_type": "IntrinsicCall",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                  "line": 348,
+                  "end_line": 358,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "bool",
+                  "immutable": true
+                },
+                "op_code": "box_del",
+                "immediates": [],
+                "stack_args": [
+                  {
+                    "_type": "BytesConstant",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
                       "line": 348,
@@ -2482,28 +3111,78 @@
                       "immutable": true,
                       "length": null
                     },
-                    "key": {
-                      "_type": "BytesConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                        "line": 348,
-                        "end_line": 358,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "box_key",
-                        "immutable": true
-                      },
-                      "value": "WMOn+",
-                      "encoding": "utf8"
-                    },
-                    "exists_assertion_message": null
+                    "value": "WMOn+",
+                    "encoding": "utf8"
                   }
+                ]
+              }
+            },
+            {
+              "_type": "ExpressionStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                "line": 348,
+                "end_line": 358,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "expr": {
+                "_type": "IntrinsicCall",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                  "line": 348,
+                  "end_line": 358,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
                 },
-                "error_message": null
+                "wtype": {
+                  "_type": "WType",
+                  "name": "void",
+                  "immutable": true
+                },
+                "op_code": "box_put",
+                "immediates": [],
+                "stack_args": [
+                  {
+                    "_type": "BytesConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                      "line": 348,
+                      "end_line": 358,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "value": "WMOn+",
+                    "encoding": "utf8"
+                  },
+                  {
+                    "_type": "VarExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                      "line": 348,
+                      "end_line": 358,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "name": "__bytes_pop_tmp_1"
+                  }
+                ]
               }
             },
             {
@@ -2693,7 +3372,7 @@
                               "immutable": true
                             },
                             "left": {
-                              "_type": "TupleItemExpression",
+                              "_type": "UInt64BinaryOperation",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
                                 "line": 390,
@@ -2707,8 +3386,8 @@
                                 "name": "uint64",
                                 "immutable": true
                               },
-                              "base": {
-                                "_type": "IntrinsicCall",
+                              "left": {
+                                "_type": "TupleItemExpression",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
                                   "line": 390,
@@ -2718,49 +3397,84 @@
                                   "end_column": null
                                 },
                                 "wtype": {
-                                  "_type": "WTuple",
-                                  "name": "tuple",
-                                  "immutable": true,
-                                  "types": [
-                                    {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    {
-                                      "_type": "WType",
-                                      "name": "bool",
-                                      "immutable": true
-                                    }
-                                  ],
-                                  "names": null,
-                                  "source_location": null
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
                                 },
-                                "op_code": "box_len",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "BytesConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                                      "line": 390,
-                                      "end_line": 401,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "value": "WMOn+",
-                                    "encoding": "utf8"
-                                  }
-                                ]
+                                "base": {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                    "line": 390,
+                                    "end_line": 401,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WTuple",
+                                    "name": "tuple",
+                                    "immutable": true,
+                                    "types": [
+                                      {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      {
+                                        "_type": "WType",
+                                        "name": "bool",
+                                        "immutable": true
+                                      }
+                                    ],
+                                    "names": null,
+                                    "source_location": null
+                                  },
+                                  "op_code": "box_len",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "BytesConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                        "line": 390,
+                                        "end_line": 401,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "value": "WMOn+",
+                                      "encoding": "utf8"
+                                    }
+                                  ]
+                                },
+                                "index": 0
                               },
-                              "index": 0
+                              "op": "-",
+                              "right": {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                  "line": 390,
+                                  "end_line": 401,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 2,
+                                "teal_alias": null
+                              }
                             },
                             "op": "//",
                             "right": {
@@ -2823,23 +3537,23 @@
                             "immutable": true
                           },
                           "lhs": {
-                            "_type": "ARC4Decode",
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
                               "line": 424,
-                              "end_line": 431,
+                              "end_line": 444,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
                             },
                             "wtype": {
                               "_type": "BytesWType",
-                              "name": "bytes[1]",
+                              "name": "bytes",
                               "immutable": true,
-                              "length": 1
+                              "length": null
                             },
-                            "value": {
-                              "_type": "IndexExpression",
+                            "expr": {
+                              "_type": "IntrinsicCall",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
                                 "line": 424,
@@ -2849,33 +3563,16 @@
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "ARC4StaticArray",
-                                "name": "arc4.static_array<arc4.uint8, 1>",
-                                "immutable": false,
-                                "element_type": {
-                                  "_type": "ARC4UIntN",
-                                  "name": "arc4.uint8",
-                                  "immutable": true,
-                                  "n": 8,
-                                  "arc4_alias": null,
-                                  "source_location": null
-                                },
-                                "array_size": 1,
-                                "arc4_alias": null,
-                                "source_location": null
+                                "_type": "BytesWType",
+                                "name": "bytes[1]",
+                                "immutable": true,
+                                "length": 1
                               },
-                              "base": {
-                                "_type": "StateGet",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                                  "line": 424,
-                                  "end_line": 431,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "field": {
-                                  "_type": "BoxValueExpression",
+                              "op_code": "extract3",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "StateGet",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
                                     "line": 424,
@@ -2884,13 +3581,43 @@
                                     "column": null,
                                     "end_column": null
                                   },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
+                                  "field": {
+                                    "_type": "BoxValueExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                      "line": 424,
+                                      "end_line": 431,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "key": {
+                                      "_type": "BytesConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                        "line": 424,
+                                        "end_line": 431,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "box_key",
+                                        "immutable": true
+                                      },
+                                      "value": "WMOn+",
+                                      "encoding": "utf8"
+                                    },
+                                    "exists_assertion_message": null
                                   },
-                                  "key": {
+                                  "default": {
                                     "_type": "BytesConstant",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
@@ -2901,135 +3628,21 @@
                                       "end_column": null
                                     },
                                     "wtype": {
-                                      "_type": "WType",
-                                      "name": "box_key",
-                                      "immutable": true
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
                                     },
-                                    "value": "WMOn+",
-                                    "encoding": "utf8"
-                                  },
-                                  "exists_assertion_message": null
-                                },
-                                "default": {
-                                  "_type": "BytesConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                                    "line": 424,
-                                    "end_line": 431,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "value": "",
-                                  "encoding": "base16"
-                                }
-                              },
-                              "index": {
-                                "_type": "VarExpression",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                                  "line": 429,
-                                  "end_line": 430,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "name": "i__62"
-                              }
-                            },
-                            "error_message": null
-                          },
-                          "operator": "!=",
-                          "rhs": {
-                            "_type": "ReinterpretCast",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                              "line": 435,
-                              "end_line": 444,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes[1]",
-                              "immutable": true,
-                              "length": 1
-                            },
-                            "expr": {
-                              "_type": "IntrinsicCall",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                                "line": 435,
-                                "end_line": 444,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "op_code": "extract3",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "IntrinsicCall",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                                    "line": 435,
-                                    "end_line": 444,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "op_code": "itob",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "VarExpression",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                                        "line": 442,
-                                        "end_line": 443,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "uint64",
-                                        "immutable": true
-                                      },
-                                      "name": "i__62"
-                                    }
-                                  ]
+                                    "value": "",
+                                    "encoding": "base16"
+                                  }
                                 },
                                 {
-                                  "_type": "IntegerConstant",
+                                  "_type": "VarExpression",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                                    "line": 435,
-                                    "end_line": 444,
+                                    "line": 429,
+                                    "end_line": 430,
                                     "comment_lines": 0,
                                     "column": null,
                                     "end_column": null
@@ -3039,15 +3652,14 @@
                                     "name": "uint64",
                                     "immutable": true
                                   },
-                                  "value": 7,
-                                  "teal_alias": null
+                                  "name": "i__62"
                                 },
                                 {
                                   "_type": "IntegerConstant",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
-                                    "line": 435,
-                                    "end_line": 444,
+                                    "line": 424,
+                                    "end_line": 431,
                                     "comment_lines": 0,
                                     "column": null,
                                     "end_column": null
@@ -3061,6 +3673,136 @@
                                   "teal_alias": null
                                 }
                               ]
+                            }
+                          },
+                          "operator": "!=",
+                          "rhs": {
+                            "_type": "ReinterpretCast",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                              "line": 424,
+                              "end_line": 444,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "expr": {
+                              "_type": "ReinterpretCast",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                "line": 435,
+                                "end_line": 444,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes[1]",
+                                "immutable": true,
+                                "length": 1
+                              },
+                              "expr": {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                  "line": 435,
+                                  "end_line": 444,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "extract3",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                      "line": 435,
+                                      "end_line": 444,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "itob",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "VarExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                          "line": 442,
+                                          "end_line": 443,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "name": "i__62"
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                      "line": 435,
+                                      "end_line": 444,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 7,
+                                    "teal_alias": null
+                                  },
+                                  {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/byte_array_transitional_2.sol",
+                                      "line": 435,
+                                      "end_line": 444,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 1,
+                                    "teal_alias": null
+                                  }
+                                ]
+                              }
                             }
                           }
                         },

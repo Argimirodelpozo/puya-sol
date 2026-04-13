@@ -1,0 +1,77 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/int.sol.test.approval_program() -> uint64:
+main:
+    intcblock 1
+    bytecblock 0x151f7c7580
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xd1360398 0x464ef50c 0x62a0ddee 0x2fffa523 0x4be25097 0xfec43a1b 0x048b5886 0xd3e69cb3 // method "intMinA()bool", method "intMinB()bool", method "intMinC()bool", method "intMinD()bool", method "intMaxA()bool", method "intMaxB()bool", method "intMaxC()bool", method "intMaxD()bool"
+    txna ApplicationArgs 0
+    match main_intMinA_route@5 main_intMinB_route@6 main_intMinC_route@7 main_intMinD_route@8 main_intMaxA_route@9 main_intMaxB_route@10 main_intMaxC_route@11 main_intMaxD_route@12
+    err
+
+main_intMaxD_route@12:
+    bytec_0 // 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+main_intMaxC_route@11:
+    bytec_0 // 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+main_intMaxB_route@10:
+    bytec_0 // 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+main_intMaxA_route@9:
+    bytec_0 // 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+main_intMinD_route@8:
+    bytec_0 // 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+main_intMinC_route@7:
+    bytec_0 // 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+main_intMinB_route@6:
+    bytec_0 // 0x151f7c7580
+    log
+    intc_0 // 1
+    return
+
+main_intMinA_route@5:
+    bytec_0 // 0x151f7c7580
+    log
+    intc_0 // 1
+    return

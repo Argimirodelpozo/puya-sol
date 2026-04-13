@@ -5,11 +5,14 @@
 main:
     intcblock 0 6 32 1
     bytecblock "c" 0x7c1072af 0x151f7c75 0x0a8101 0x88035e71
-    intc_0 // 0
+    pushbytes ""
     txn ApplicationID
     bnz main_after_if_else@2
+    dup
+    app_params_get AppAddress
+    pop
     bytec_0 // "c"
-    dig 1
+    swap
     app_global_put
     intc_3 // 1
     return

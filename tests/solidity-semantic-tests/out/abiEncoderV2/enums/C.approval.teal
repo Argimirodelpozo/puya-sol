@@ -3,9 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/enums.sol.C.approval_program() -> uint64:
 main:
+    intcblock 1 255
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -40,7 +41,13 @@ f:
     assert // invalid number of bytes for arc4.uint64
     btoi
     dup
-    pushint 1
+    intc_1 // 255
+    <=
+    assert // ABI validation
+    intc_1 // 255
+    &
+    dup
+    intc_0 // 1
     <=
     assert // ABI enum validation
     load 0
@@ -55,5 +62,5 @@ f:
     swap
     concat
     log
-    pushint 1
+    intc_0 // 1
     return

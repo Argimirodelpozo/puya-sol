@@ -4,11 +4,13 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/falback_return.sol.A.approval_program() -> uint64:
 main:
     intcblock 1 0 64
-    bytecblock "x"
+    bytecblock "x" 0x
+    bytec_1 // ""
+    dup
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
-    pushbytes 0x
+    bytec_1 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -21,39 +23,60 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
+    txn NumAppArgs
+    bnz main_after_if_else@4
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/falback_return.sol.A.__fallback
+    intc_0 // 1
+    return
+
+main_after_if_else@4:
+    intc_1 // 0
+    bury 2
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    assert
+    bz main_create_NoOp@12
     pushbytess 0x1bf9882b 0x3f4abdfd // method "__fallback()void", method "x()uint512"
     txna ApplicationArgs 0
-    match /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/falback_return.sol.A.[routing] x
-    err
+    match main___fallback_route@9 main_x_route@10
 
+main_switch_case_next@11:
+    dig 1
+    bury 1
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/falback_return.sol.A.[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/falback_return.sol.A.[routing]:
-    intc_1 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
-    pushbytes 0x02
-    b==
-    bnz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/falback_return.sol.A.[routing]_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/falback_return.sol.A.@4
-    intc_1 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
-    pushbytes 0x01
-    b+
-    bytec_0 // "x"
-    swap
-    app_global_put
-
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/falback_return.sol.A.[routing]_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/falback_return.sol.A.@4:
+main_after_if_else@13:
+    dup
+    bnz main_after_if_else@6
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/falback_return.sol.A.__fallback
     intc_0 // 1
+    bury 1
+
+main_after_if_else@6:
     return
+
+main_x_route@10:
+    callsub x
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@11
+
+main___fallback_route@9:
+    callsub __fallback
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@11
+
+main_create_NoOp@12:
+    dig 1
+    bury 1
+    b main_after_if_else@13
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/falback_return.sol.A.__fallback[routing]() -> void:
+__fallback:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/falback_return.sol.A.__fallback
+    retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/falback_return.sol.A.x[routing]() -> void:
@@ -74,5 +97,28 @@ x:
     swap
     concat
     log
-    intc_0 // 1
-    return
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/falback_return.sol.A.__fallback() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/falback_return.sol.A.__fallback:
+    intc_1 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    pushbytes 0x02
+    b==
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/falback_return.sol.A.__fallback_after_if_else@2
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/falback_return.sol.A.__fallback_after_if_else@2:
+    intc_1 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    pushbytes 0x01
+    b+
+    bytec_0 // "x"
+    swap
+    app_global_put
+    retsub

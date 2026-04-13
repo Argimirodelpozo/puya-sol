@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/simple_assignment.sol.C.approval_program() -> uint64:
 main:
-    intcblock 64 1 32
+    intcblock 32 1
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x59640aed // method "f(uint256,uint256)(uint512,uint512)"
+    pushbytes 0x2169a7ad // method "f(uint256,uint256)(uint256,uint256)"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -37,27 +37,27 @@ f:
     dup
     len
     dup
-    intc_2 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
     dup
-    intc_2 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     uncover 2
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     uncover 3
     dig 1
     b|
     uncover 2
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
     cover 2

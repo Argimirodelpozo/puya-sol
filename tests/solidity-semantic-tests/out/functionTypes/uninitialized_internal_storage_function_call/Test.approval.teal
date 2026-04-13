@@ -30,4 +30,14 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    err // uninitialized function pointer
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/uninitialized_internal_storage_function_call.sol.Test.f[routing]() -> void:
+f:
+    pushint 0
+    pushbytes "x"
+    app_global_get_ex
+    bury 1
+    assert // check x exists
+    err // invalid function pointer

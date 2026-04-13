@@ -3,16 +3,21 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 0 6 1 64 200000
+    intcblock 0 6 1 32 200000
     bytecblock "a" "b" 0x0a8101 0x75d12918 0x151f7c75
-    intc_0 // 0
+    pushbytes ""
+    dup
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "a"
-    dig 1
     dup
-    cover 2
+    app_params_get AppAddress
+    pop
+    bytec_0 // "a"
+    swap
     app_global_put
+    dig 1
+    app_params_get AppAddress
+    pop
     bytec_1 // "b"
     swap
     app_global_put
@@ -32,7 +37,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xed8e9f74 0xb4c043f4 0x370ca471 // method "testDelegate()(uint512,uint512)", method "testCall()(uint512,uint512)", method "testStatic()bool"
+    pushbytess 0x3953a74d 0xfe0a5fac 0x370ca471 // method "testDelegate()(uint256,uint256)", method "testCall()(uint256,uint256)", method "testStatic()bool"
     txna ApplicationArgs 0
     match testDelegate testCall testStatic
     err
@@ -138,24 +143,24 @@ testDelegate:
     itxn_submit
     itxn LastLog
     extract 4 0
-    itxn LastLog
-    extract 4 0
-    dig 1
+    dup
     len
-    intc_3 // 64
+    intc_3 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_3 // 32
     bzero
-    uncover 2
+    swap
     dig 1
     b|
-    dig 2
+    itxn LastLog
+    extract 4 0
+    dup
     len
-    intc_3 // 64
+    intc_3 // 32
     <=
     assert // overflow
-    cover 2
+    uncover 2
     b|
     concat
     bytec 4 // 0x151f7c75
@@ -222,24 +227,24 @@ testCall:
     itxn_submit
     itxn LastLog
     extract 4 0
-    itxn LastLog
-    extract 4 0
-    dig 1
+    dup
     len
-    intc_3 // 64
+    intc_3 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_3 // 32
     bzero
-    uncover 2
+    swap
     dig 1
     b|
-    dig 2
+    itxn LastLog
+    extract 4 0
+    dup
     len
-    intc_3 // 64
+    intc_3 // 32
     <=
     assert // overflow
-    cover 2
+    uncover 2
     b|
     concat
     bytec 4 // 0x151f7c75

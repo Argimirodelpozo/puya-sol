@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak256_optimizer_cache_bug.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 8
+    intcblock 32 1 8 0
     bytecblock "__ctor_pending" "data" 0x7b "__dyn_storage"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,10 +38,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_2 // 0
+    intc_3 // 0
     app_global_put
     bytec_1 // "data"
-    intc_2 // 0
+    pushint 2
     box_create
     pop
     intc_1 // 1
@@ -51,9 +51,9 @@ __postInit:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/keccak256_optimizer_cache_bug.sol.C.val[routing]() -> void:
 val:
     load 0
-    intc_3 // 8
+    intc_2 // 8
     bzero
-    intc_2 // 0
+    intc_3 // 0
     pushbytes 0x02
     callsub __storage_write
     swap
@@ -67,7 +67,7 @@ val:
     concat
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     -
     extract_uint64
     pushbytes 0xea
@@ -84,7 +84,7 @@ val:
     concat
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     -
     extract_uint64
     bytec_2 // 0x7b

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 6 24 200000
-    bytecblock 0x0a8101 0x151f7c7580 0x7cb116cd 0xf08d7860
+    intcblock 0 1 6 200000
+    bytecblock 0x0a8101 0x151f7c7580
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -44,13 +44,12 @@ set:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.get[routing]() -> void:
 get:
-    pushint 160
-    bzero
-    load 0
-    swap
-    extract 0 32
-    swap
-    store 0
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.get
+    dup
+    len
+    pushint 64
+    <=
+    assert // overflow
     pushint 64
     bzero
     b|
@@ -64,23 +63,8 @@ get:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.testDelegateCall[routing]() -> void:
 testDelegateCall:
-    itxn_begin
-    pushint 5
-    itob
-    global CurrentApplicationAddress
-    intc_3 // 24
-    extract_uint64
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_2 // method "set(uint256)void"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
+    load 0
+    store 0
     itxn_begin
     intc_2 // 6
     itxn_field TypeEnum
@@ -100,25 +84,10 @@ testDelegateCall:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc 4 // 200000
+    intc_3 // 200000
     itxn_field Amount
     itxn_submit
-    itxn_begin
-    global CurrentApplicationAddress
-    intc_3 // 24
-    extract_uint64
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_3 // method "get()uint256"
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.get
     pushbytes 0x06
     b==
     assert
@@ -130,23 +99,8 @@ testDelegateCall:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.testCall[routing]() -> void:
 testCall:
-    itxn_begin
-    pushint 5
-    itob
-    global CurrentApplicationAddress
-    intc_3 // 24
-    extract_uint64
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_2 // method "set(uint256)void"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
+    load 0
+    store 0
     itxn_begin
     intc_2 // 6
     itxn_field TypeEnum
@@ -158,6 +112,7 @@ testCall:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -166,14 +121,13 @@ testCall:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc 4 // 200000
+    intc_3 // 200000
     itxn_field Amount
     itxn_submit
-    itxn CreatedApplicationID
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_3 // 24
+    pushint 24
     extract_uint64
     intc_2 // 6
     itxn_field TypeEnum
@@ -194,7 +148,7 @@ testCall:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_3 // method "get()uint256"
+    pushbytes 0xf08d7860 // method "get()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -210,23 +164,8 @@ testCall:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.tloadAllowedStaticCall[routing]() -> void:
 tloadAllowedStaticCall:
-    itxn_begin
-    pushint 5
-    itob
-    global CurrentApplicationAddress
-    intc_3 // 24
-    extract_uint64
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_2 // method "set(uint256)void"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
+    load 0
+    store 0
     itxn_begin
     intc_2 // 6
     itxn_field TypeEnum
@@ -246,7 +185,7 @@ tloadAllowedStaticCall:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc 4 // 200000
+    intc_3 // 200000
     itxn_field Amount
     itxn_submit
     bytec_1 // 0x151f7c7580
@@ -276,7 +215,7 @@ tstoreNotAllowedStaticCall:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc 4 // 200000
+    intc_3 // 200000
     itxn_field Amount
     itxn_submit
     intc_0 // 0
@@ -285,3 +224,15 @@ tstoreNotAllowedStaticCall:
     log
     intc_1 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.get() -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_low_level_calls.sol.C.get:
+    pushint 160
+    bzero
+    load 0
+    swap
+    extract 0 32
+    swap
+    store 0
+    retsub

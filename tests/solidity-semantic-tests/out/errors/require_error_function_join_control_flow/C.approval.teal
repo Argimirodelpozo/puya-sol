@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/require_error_function_join_control_flow.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 64
+    intcblock 0 1 32
     bytecblock "x" "y"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -28,7 +28,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x2d0e5428 // method "f(bool)(uint512,uint512,uint512)"
+    pushbytes 0x6b8380f7 // method "f(bool)(uint256,uint256,uint256)"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -89,31 +89,33 @@ f_after_if_else@4:
     assert // check x exists
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     swap
     dig 1
     b|
     dig 2
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
     uncover 2
     dig 2
     b|
-    concat
-    dig 2
+    dig 3
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    uncover 2
+    uncover 3
     b|
+    cover 2
+    concat
+    swap
     concat
     pushbytes 0x151f7c75
     swap

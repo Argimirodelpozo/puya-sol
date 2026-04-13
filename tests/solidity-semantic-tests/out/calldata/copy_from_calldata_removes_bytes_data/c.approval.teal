@@ -3,8 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "data" "__ctor_pending"
+    intcblock 1 0 2
+    bytecblock "data" "__ctor_pending" 0x
+    bytec_2 // ""
+    dup
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
@@ -21,21 +23,72 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
+    txn NumAppArgs
+    bnz main_after_if_else@4
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.__fallback
+    intc_0 // 1
+    return
+
+main_after_if_else@4:
+    intc_1 // 0
+    bury 2
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    assert
+    bz main_create_NoOp@15
     pushbytess 0xbacc49e3 0x22656f1d 0xc96cbcc1 0x70a62364 0x1bf9882b // method "__postInit()void", method "set()bool", method "checkIfDataIsEmpty()bool", method "sendMessage()(bool,byte[])", method "__fallback()void"
     txna ApplicationArgs 0
-    match __postInit set checkIfDataIsEmpty main_sendMessage_route@8 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.[routing]
-    err
+    match main___postInit_route@9 main_set_route@10 main_checkIfDataIsEmpty_route@11 main_sendMessage_route@12 main___fallback_route@13
 
-main_sendMessage_route@8:
-    pushbytes 0x151f7c758000030000
-    log
+main_switch_case_next@14:
+    dig 1
+    bury 1
+
+main_after_if_else@16:
+    dup
+    bnz main_after_if_else@6
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.__fallback
     intc_0 // 1
+    bury 1
+
+main_after_if_else@6:
     return
+
+main___fallback_route@13:
+    callsub __fallback
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@14
+
+main_sendMessage_route@12:
+    callsub sendMessage
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@14
+
+main_checkIfDataIsEmpty_route@11:
+    callsub checkIfDataIsEmpty
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@14
+
+main_set_route@10:
+    callsub set
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@14
+
+main___postInit_route@9:
+    callsub __postInit
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@14
+
+main_create_NoOp@15:
+    dig 1
+    bury 1
+    b main_after_if_else@16
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.__postInit[routing]() -> void:
@@ -47,16 +100,19 @@ __postInit:
     intc_1 // 0
     app_global_put
     bytec_0 // "data"
-    intc_1 // 0
+    intc_2 // 2
     box_create
     pop
-    intc_0 // 1
-    return
+    retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.set[routing]() -> void:
 set:
+    txn NumAppArgs
+    bz set_ternary_false@3
     txna ApplicationArgs 0
+
+set_ternary_merge@4:
     bytec_0 // "data"
     box_del
     pop
@@ -65,8 +121,12 @@ set:
     box_put
     pushbytes 0x151f7c7580
     log
-    intc_0 // 1
-    return
+    retsub
+
+set_ternary_false@3:
+    intc_1 // 0
+    bzero
+    b set_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.checkIfDataIsEmpty[routing]() -> void:
@@ -74,8 +134,10 @@ checkIfDataIsEmpty:
     bytec_0 // "data"
     box_len
     pop
+    intc_2 // 2
+    -
     itob
-    pushbytes 0x
+    bytec_2 // 0x
     b==
     pushbytes 0x00
     intc_1 // 0
@@ -85,18 +147,39 @@ checkIfDataIsEmpty:
     swap
     concat
     log
-    intc_0 // 1
-    return
+    retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.[routing]:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.sendMessage[routing]() -> void:
+sendMessage:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.__fallback
+    pushbytes 0x151f7c758000030000
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.__fallback[routing]() -> void:
+__fallback:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.__fallback
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.__fallback() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.__fallback:
+    txn NumAppArgs
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.__fallback_ternary_false@2
     txna ApplicationArgs 0
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.__fallback_ternary_merge@3:
     bytec_0 // "data"
     box_del
     pop
     bytec_0 // "data"
     swap
     box_put
-    intc_0 // 1
-    return
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.__fallback_ternary_false@2:
+    intc_1 // 0
+    bzero
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/copy_from_calldata_removes_bytes_data.sol.c.__fallback_ternary_merge@3

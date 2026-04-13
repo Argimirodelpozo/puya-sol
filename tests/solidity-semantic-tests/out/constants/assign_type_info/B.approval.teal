@@ -3,10 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/assign_type_info.sol.B.approval_program() -> uint64:
 main:
-    intcblock 1 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    pushint 1
     return
 
 main_after_if_else@2:
@@ -28,39 +27,7 @@ main_nonEmptyCode_route@4:
     txn ApplicationID
     &&
     assert
-    b nonEmptyCode
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/assign_type_info.sol.B.nonEmptyCode[routing]() -> void:
-nonEmptyCode:
-    pushbytes "creationCode"
-    box_len
-    pop
-    itob
-    pushbytes 0x
-    b>
-    bz nonEmptyCode_bool_false@4
-    pushbytes "runtimeCode"
-    box_len
-    pop
-    itob
-    pushbytes 0x
-    b>
-    bz nonEmptyCode_bool_false@4
-    intc_0 // 1
-
-nonEmptyCode_bool_merge@5:
-    pushbytes 0x00
-    intc_1 // 0
-    uncover 2
-    setbit
-    pushbytes 0x151f7c75
-    swap
-    concat
+    pushbytes 0x151f7c7580
     log
-    intc_0 // 1
+    pushint 1
     return
-
-nonEmptyCode_bool_false@4:
-    intc_1 // 0
-    b nonEmptyCode_bool_merge@5

@@ -949,7 +949,7 @@
                         "immediates": [],
                         "stack_args": [
                           {
-                            "_type": "IntrinsicCall",
+                            "_type": "ConditionalExpression",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/optimizer/unused_store_storage_removal_bug.sol",
                               "line": 229,
@@ -964,12 +964,124 @@
                               "immutable": true,
                               "length": null
                             },
-                            "op_code": "txna",
-                            "immediates": [
-                              "ApplicationArgs",
-                              0
-                            ],
-                            "stack_args": []
+                            "condition": {
+                              "_type": "NumericComparisonExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/optimizer/unused_store_storage_removal_bug.sol",
+                                "line": 229,
+                                "end_line": 237,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "bool",
+                                "immutable": true
+                              },
+                              "lhs": {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/optimizer/unused_store_storage_removal_bug.sol",
+                                  "line": 229,
+                                  "end_line": 237,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "op_code": "txn",
+                                "immediates": [
+                                  "NumAppArgs"
+                                ],
+                                "stack_args": []
+                              },
+                              "operator": ">",
+                              "rhs": {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/optimizer/unused_store_storage_removal_bug.sol",
+                                  "line": 229,
+                                  "end_line": 237,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 0,
+                                "teal_alias": null
+                              }
+                            },
+                            "true_expr": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/optimizer/unused_store_storage_removal_bug.sol",
+                                "line": 229,
+                                "end_line": 237,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "txna",
+                              "immediates": [
+                                "ApplicationArgs",
+                                0
+                              ],
+                              "stack_args": []
+                            },
+                            "false_expr": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/optimizer/unused_store_storage_removal_bug.sol",
+                                "line": 229,
+                                "end_line": 237,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "bzero",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntegerConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/optimizer/unused_store_storage_removal_bug.sol",
+                                    "line": 229,
+                                    "end_line": 237,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "value": 0,
+                                  "teal_alias": null
+                                }
+                              ]
+                            }
                           }
                         ]
                       }

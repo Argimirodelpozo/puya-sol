@@ -18,6 +18,7 @@ main:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -29,7 +30,6 @@ main:
     pushint 200000
     itxn_field Amount
     itxn_submit
-    itxn CreatedApplicationID
     app_params_get AppAddress
     pop
     bytec_0 // "h"
@@ -51,7 +51,7 @@ main_after_if_else@4:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xafa0ab92 0xd1b41813 0x0fd4ef80 // method "sendAmount(uint256)uint256", method "outOfGas()bool", method "checkState()(bool,uint512)"
+    pushbytess 0xafa0ab92 0xd1b41813 0x1cded7a1 // method "sendAmount(uint256)uint256", method "outOfGas()bool", method "checkState()(bool,uint256)"
     txna ApplicationArgs 0
     match sendAmount outOfGas checkState
     err
@@ -153,14 +153,14 @@ checkState:
     acct_params_get AcctBalance
     pop
     itob
+    intc_3 // 32
+    bzero
+    b|
     pushbytes 0x00
     intc_0 // 0
     uncover 3
     setbit
-    pushint 64
-    bzero
-    uncover 2
-    b|
+    swap
     concat
     bytec_2 // 0x151f7c75
     swap

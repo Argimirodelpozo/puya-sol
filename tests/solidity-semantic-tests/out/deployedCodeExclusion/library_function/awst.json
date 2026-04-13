@@ -812,7 +812,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "value": 0,
+                    "value": 2,
                     "teal_alias": null
                   }
                 ]
@@ -1172,7 +1172,7 @@
                   "name": "biguint",
                   "immutable": true
                 },
-                "value": 0,
+                "value": 50,
                 "teal_alias": null
               }
             },
@@ -1320,7 +1320,7 @@
                           "immutable": true
                         },
                         "left": {
-                          "_type": "TupleItemExpression",
+                          "_type": "UInt64BinaryOperation",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/deployedCodeExclusion/library_function.sol",
                             "line": 1464,
@@ -1334,8 +1334,8 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "base": {
-                            "_type": "IntrinsicCall",
+                          "left": {
+                            "_type": "TupleItemExpression",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/deployedCodeExclusion/library_function.sol",
                               "line": 1464,
@@ -1345,49 +1345,84 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "WTuple",
-                              "name": "tuple",
-                              "immutable": true,
-                              "types": [
-                                {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                {
-                                  "_type": "WType",
-                                  "name": "bool",
-                                  "immutable": true
-                                }
-                              ],
-                              "names": null,
-                              "source_location": null
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
                             },
-                            "op_code": "box_len",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "BytesConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/deployedCodeExclusion/library_function.sol",
-                                  "line": 1464,
-                                  "end_line": 1475,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "value": "WMOn+",
-                                "encoding": "utf8"
-                              }
-                            ]
+                            "base": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/deployedCodeExclusion/library_function.sol",
+                                "line": 1464,
+                                "end_line": 1475,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WTuple",
+                                "name": "tuple",
+                                "immutable": true,
+                                "types": [
+                                  {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  {
+                                    "_type": "WType",
+                                    "name": "bool",
+                                    "immutable": true
+                                  }
+                                ],
+                                "names": null,
+                                "source_location": null
+                              },
+                              "op_code": "box_len",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "BytesConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/deployedCodeExclusion/library_function.sol",
+                                    "line": 1464,
+                                    "end_line": 1475,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "value": "WMOn+",
+                                  "encoding": "utf8"
+                                }
+                              ]
+                            },
+                            "index": 0
                           },
-                          "index": 0
+                          "op": "-",
+                          "right": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/deployedCodeExclusion/library_function.sol",
+                              "line": 1464,
+                              "end_line": 1475,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 2,
+                            "teal_alias": null
+                          }
                         },
                         "op": "//",
                         "right": {

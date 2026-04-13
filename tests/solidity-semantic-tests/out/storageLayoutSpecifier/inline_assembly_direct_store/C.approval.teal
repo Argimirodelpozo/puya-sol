@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inline_assembly_direct_store.sol.C.approval_program() -> uint64:
 main:
-    intcblock 64 1 0
-    bytecblock "x" "__dyn_storage" 0x151f7c75
+    intcblock 1 64
+    bytecblock "x"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
     pushbytes 0x
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -35,52 +35,33 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inline_assembly_direct_store.sol.C.f[routing]() -> void:
 f:
     load 0
-    bytec_1 // "__dyn_storage"
-    pushint 8192
-    box_create
-    pop
-    bytec_1 // "__dyn_storage"
-    pushint 1344
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000010
-    box_replace
-    store 0
-    intc_2 // 0
     bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
-    dup
-    len
-    intc_0 // 64
-    <=
-    assert // overflow
-    intc_0 // 64
-    bzero
-    b|
-    bytec_2 // 0x151f7c75
-    swap
-    concat
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000010
+    app_global_put
+    store 0
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inline_assembly_direct_store.sol.C.x[routing]() -> void:
 x:
-    intc_2 // 0
+    pushint 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     dup
     len
-    intc_0 // 64
+    intc_1 // 64
     <=
     assert // overflow
-    intc_0 // 64
+    intc_1 // 64
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return

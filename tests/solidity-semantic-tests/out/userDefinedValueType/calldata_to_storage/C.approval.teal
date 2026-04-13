@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata_to_storage.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 2
-    bytecblock 0x151f7c75 "small" "l" "__ctor_pending"
+    intcblock 1 2 8 0
+    bytecblock 0x151f7c75 "small" "l" "__ctor_pending" 0x0000
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_3 // "__ctor_pending"
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x55274694 0x4acc92c3 0xc1043203 0xfc9b39cb 0x846fb64c 0xeaaf51d7 // method "__postInit()void", method "f((uint64,uint64,uint8[2],uint64))void", method "g(uint64[])uint64[]", method "h(uint8[2][])uint8[2][]", method "s()(uint64,uint64,byte[2],uint64)", method "small(uint512)uint64", method "l(uint512)byte[2]"
+    pushbytess 0xbacc49e3 0x55274694 0xb1e95096 0xc1043203 0xfc9b39cb 0x7e7f32eb 0xea2a632a // method "__postInit()void", method "f((uint64,uint64,uint8[2],uint64))void", method "g(uint16[])uint16[]", method "h(uint8[2][])uint8[2][]", method "s()(uint64,uint64,byte[2],uint64)", method "small(uint256)uint64", method "l(uint256)byte[2]"
     txna ApplicationArgs 0
     match __postInit f g h s small l
     err
@@ -38,14 +38,14 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_3 // "__ctor_pending"
-    intc_1 // 0
+    intc_3 // 0
     app_global_put
     bytec_1 // "small"
-    intc_1 // 0
+    intc_1 // 2
     box_create
     pop
     bytec_2 // "l"
-    intc_1 // 0
+    intc_1 // 2
     box_create
     pop
     intc_0 // 1
@@ -71,16 +71,16 @@ f:
 g:
     txna ApplicationArgs 1
     dup
-    intc_1 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 8
+    intc_1 // 2
     *
-    intc_3 // 2
+    intc_1 // 2
     +
     dig 1
     len
     ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint64>
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint16>
     bytec_1 // "small"
     box_del
     pop
@@ -99,11 +99,11 @@ g:
 h:
     txna ApplicationArgs 1
     dup
-    intc_1 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    intc_1 // 2
     *
-    intc_3 // 2
+    intc_1 // 2
     +
     dig 1
     len
@@ -158,30 +158,29 @@ small:
     txna ApplicationArgs 1
     dup
     len
-    pushint 64
+    pushint 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    intc_2 // 32
+    assert // invalid number of bytes for arc4.uint256
+    bytec_1 // "small"
+    box_get
+    bytec 4 // 0x0000
+    cover 2
+    select
+    intc_2 // 8
     bzero
-    swap
+    uncover 2
     concat
     dup
     len
-    intc_2 // 32
+    intc_2 // 8
     -
-    intc_2 // 32
-    extract3
-    sha256
-    bytec_1 // "small"
+    extract_uint64
     swap
-    concat
-    box_get
+    extract 2 0
     swap
-    btoi
-    intc_1 // 0
-    swap
-    uncover 2
-    select
+    intc_1 // 2
+    *
+    extract_uint16
     itob
     bytec_0 // 0x151f7c75
     swap
@@ -196,27 +195,30 @@ l:
     txna ApplicationArgs 1
     dup
     len
-    pushint 64
+    pushint 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    intc_2 // 32
+    assert // invalid number of bytes for arc4.uint256
+    bytec_2 // "l"
+    box_get
+    bytec 4 // 0x0000
+    cover 2
+    select
+    intc_2 // 8
     bzero
-    swap
+    uncover 2
     concat
     dup
     len
-    intc_2 // 32
+    intc_2 // 8
     -
-    intc_2 // 32
-    extract3
-    sha256
-    bytec_2 // "l"
+    extract_uint64
     swap
-    concat
-    box_get
-    pushbytes 0x0000
-    cover 2
-    select
+    extract 2 0
+    swap
+    intc_1 // 2
+    *
+    intc_1 // 2
+    extract3 // on error: index access is out of bounds
     bytec_0 // 0x151f7c75
     swap
     concat

@@ -3,10 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_out_of_range_2.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    pushint 1
     return
 
 main_after_if_else@2:
@@ -31,23 +30,23 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_out_of_range_2.sol.C.dyn[routing]() -> void:
 dyn:
     txna ApplicationArgs 1
+    dup
     len
     pushint 64
     ==
     assert // invalid number of bytes for arc4.uint512
-    load 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000020
-    replace2 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000021
-    replace2 32
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_out_of_range_2.sol.C.dyn
     dup
-    store 0
-    extract 0 32
-    pushbytes 0x151f7c750020
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    pushint 1
     return
 
 
@@ -56,35 +55,26 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    itxn_begin
-    intc_0 // 32
-    bzero
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    global CurrentApplicationAddress
-    pushint 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_2 // 0
-    itxn_field OnCompletion
-    intc_2 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    pushbytes 0xede71d09 // method "dyn(uint256)byte[]"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_out_of_range_2.sol.C.dyn
+    pop
     pushbytes 0x151f7c7580
     log
-    intc_1 // 1
+    pushint 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_out_of_range_2.sol.C.dyn(x: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/return_dynamic_types_cross_call_out_of_range_2.sol.C.dyn:
+    proto 1 1
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000020
+    replace2 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000021
+    replace2 32
+    dup
+    store 0
+    extract 0 32
+    retsub

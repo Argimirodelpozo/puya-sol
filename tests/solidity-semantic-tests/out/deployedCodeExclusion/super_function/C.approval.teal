@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/deployedCodeExclusion/super_function.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 0 2
     bytecblock "data" "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -41,7 +41,7 @@ __postInit:
     intc_1 // 0
     app_global_put
     bytec_0 // "data"
-    intc_1 // 0
+    intc_2 // 2
     box_create
     pop
     bytec_0 // "data"
@@ -61,8 +61,10 @@ test:
     bytec_0 // "data"
     box_len
     pop
+    intc_2 // 2
+    -
     itob
-    pushbytes 0x
+    pushbytes 0x32
     b>
     pushbytes 0x00
     intc_1 // 0

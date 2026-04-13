@@ -1,0 +1,106 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_as_return_type.sol.B.approval_program() -> uint64:
+main:
+    intcblock 0 1 6
+    bytecblock 0x0a8101 0x34d86182
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0xb334c156 // method "f()(uint16[5],uint16[5])"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_as_return_type.sol.B.f[routing]() -> void:
+f:
+    itxn_begin
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field Fee
+    bytec_0 // 0x0a8101
+    itxn_field ClearStateProgram
+    bytec_0 // 0x0a8101
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    pushint 200000
+    itxn_field Amount
+    itxn_submit
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    pushint 2
+    itob
+    swap
+    pushint 24
+    extract_uint64
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec_1 // method "f(uint64)uint16[5]"
+    itxn_field ApplicationArgs
+    swap
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    itxn_begin
+    pushint 1000
+    itob
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    uncover 2
+    itxn_field ApplicationID
+    bytec_1 // method "f(uint64)uint16[5]"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

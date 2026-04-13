@@ -30,7 +30,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x9c901fc6 // method "test()(uint512,uint512,uint512,uint512)"
+    pushbytes 0x8ef91fdb // method "test()(uint256,uint256,uint256,uint256)"
     txna ApplicationArgs 0
     match main_test_route@4
     err
@@ -115,7 +115,7 @@ test:
     app_global_get_ex
     assert // check d exists
     itob
-    pushint 64
+    pushint 32
     bzero
     uncover 4
     dig 1
@@ -123,13 +123,18 @@ test:
     uncover 4
     dig 2
     b|
-    concat
+    uncover 4
+    dig 3
+    b|
+    uncover 4
+    uncover 4
+    b|
     uncover 3
-    dig 2
-    b|
+    uncover 3
     concat
-    cover 2
-    b|
+    uncover 2
+    concat
+    swap
     concat
     pushbytes 0x151f7c75
     swap

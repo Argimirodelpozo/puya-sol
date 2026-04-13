@@ -1,0 +1,49 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/malformed_panic_3.sol.C.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xacb9e794 0xb5251388 0xddb04781 0x311e3db1 0x4075f398 // method "f(uint512)void", method "a()uint256", method "b()uint256", method "c()uint256", method "d()uint256"
+    txna ApplicationArgs 0
+    match f main_a_route@6 main_b_route@7 main_c_route@8 main_d_route@9
+    err
+
+main_d_route@9:
+    err // revert
+
+main_c_route@8:
+    err // revert
+
+main_b_route@7:
+    err // revert
+
+main_a_route@6:
+    err // revert
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/tryCatch/malformed_panic_3.sol.C.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    err // revert

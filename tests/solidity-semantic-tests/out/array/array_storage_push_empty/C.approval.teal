@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_push_empty.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 1 8
+    intcblock 0 32 1 2
     bytecblock "storageArray" "__ctor_pending" 0x068101
     txn ApplicationID
     bnz main_after_if_else@2
@@ -41,7 +41,7 @@ __postInit:
     intc_0 // 0
     app_global_put
     bytec_0 // "storageArray"
-    intc_0 // 0
+    intc_3 // 2
     box_create
     pop
     intc_2 // 1
@@ -58,7 +58,7 @@ pushEmpty:
     ==
     assert // invalid number of bytes for arc4.uint256
 
-pushEmpty_while_top@9:
+pushEmpty_while_top@11:
     pushint 170010
     global OpcodeBudget
     >
@@ -75,18 +75,25 @@ pushEmpty_while_top@9:
     intc_0 // 0
     itxn_field Fee
     itxn_submit
-    b pushEmpty_while_top@9
+    b pushEmpty_while_top@11
 
 pushEmpty_while_top@2:
     bytec_0 // "storageArray"
     box_len
     pop
+    intc_3 // 2
+    -
     intc_1 // 32
     /
     itob
     dig 1
     b<
     bz pushEmpty_after_while@4
+    bytec_0 // "storageArray"
+    intc_0 // 0
+    intc_3 // 2
+    box_extract
+    btoi
     bytec_0 // "storageArray"
     box_len
     pop
@@ -95,6 +102,24 @@ pushEmpty_while_top@2:
     bytec_0 // "storageArray"
     swap
     box_resize
+    dup
+    intc_2 // 1
+    +
+    itob
+    extract 6 2
+    bytec_0 // "storageArray"
+    intc_0 // 0
+    uncover 2
+    box_replace
+    intc_1 // 32
+    *
+    intc_3 // 2
+    +
+    bytec_0 // "storageArray"
+    swap
+    intc_0 // 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    box_splice
     b pushEmpty_while_top@2
 
 pushEmpty_after_while@4:
@@ -111,7 +136,7 @@ pushEmpty_while_top@5:
     pushbytes 0x0000
     cover 2
     select
-    intc_3 // 8
+    pushint 8
     bzero
     dig 3
     dup
@@ -119,7 +144,7 @@ pushEmpty_while_top@5:
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     swap

@@ -18,6 +18,7 @@ main:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -29,7 +30,6 @@ main:
     pushint 200000
     itxn_field Amount
     itxn_submit
-    itxn CreatedApplicationID
     app_params_get AppAddress
     pop
     bytec_0 // "h"
@@ -52,7 +52,7 @@ main_after_if_else@4:
     txn ApplicationID
     assert
     bytec_3 // method "getFlag()bool"
-    pushbytess 0x0a5c26e3 0xcfab3acc // method "getName()byte[3]", method "getBalances()(uint512,uint512)"
+    pushbytess 0x0a5c26e3 0x482b5f7f // method "getName()byte[3]", method "getBalances()(uint256,uint256)"
     txna ApplicationArgs 0
     match getFlag getName getBalances
     err
@@ -137,7 +137,7 @@ getBalances:
     acct_params_get AcctBalance
     pop
     itob
-    pushint 64
+    pushint 32
     bzero
     uncover 2
     dig 1

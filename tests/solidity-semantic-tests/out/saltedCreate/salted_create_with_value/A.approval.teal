@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/saltedCreate/salted_create_with_value.sol.A.approval_program() -> uint64:
 main:
-    intcblock 0 6 1 64 200000
+    intcblock 0 6 1 32 200000
     bytecblock 0x0a8101 0xad7db34f
     txn ApplicationID
     bnz main_after_if_else@2
@@ -18,7 +18,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xcc388e13 // method "f()(uint512,uint512,uint512)"
+    pushbytes 0xb34b38c7 // method "f()(uint256,uint256,uint256)"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -45,6 +45,7 @@ f:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -56,7 +57,6 @@ f:
     intc 4 // 200000
     itxn_field Amount
     itxn_submit
-    itxn CreatedApplicationID
     app_params_get AppAddress
     pop
     itxn_begin
@@ -70,6 +70,7 @@ f:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -81,7 +82,6 @@ f:
     intc 4 // 200000
     itxn_field Amount
     itxn_submit
-    itxn CreatedApplicationID
     app_params_get AppAddress
     pop
     itxn_begin
@@ -95,6 +95,7 @@ f:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -106,7 +107,6 @@ f:
     intc 4 // 200000
     itxn_field Amount
     itxn_submit
-    itxn CreatedApplicationID
     app_params_get AppAddress
     pop
     itxn_begin
@@ -152,36 +152,37 @@ f:
     itxn_submit
     itxn LastLog
     extract 4 0
-    itxn LastLog
-    extract 4 0
-    itxn LastLog
-    extract 4 0
-    dig 2
+    dup
     len
-    intc_3 // 64
+    intc_3 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_3 // 32
     bzero
-    uncover 3
+    swap
     dig 1
     b|
-    dig 3
+    itxn LastLog
+    extract 4 0
+    dup
     len
-    intc_3 // 64
+    intc_3 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    itxn LastLog
+    extract 4 0
+    dup
+    len
+    intc_3 // 32
     <=
     assert // overflow
     uncover 3
-    dig 2
     b|
-    concat
-    dig 2
-    len
-    intc_3 // 64
-    <=
-    assert // overflow
     cover 2
-    b|
+    concat
+    swap
     concat
     pushbytes 0x151f7c75
     swap

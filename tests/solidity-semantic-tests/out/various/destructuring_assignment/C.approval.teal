@@ -1,0 +1,291 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.approval_program() -> uint64:
+main:
+    intcblock 2 1 0 32
+    bytecblock "arrayData" "y" 0x0000 "data" "x" "__ctor_pending" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000002 0x0000000000000000000000000000000000000000000000000000000000000004 0x0000000000000000000000000000000000000000000000000000000000000005
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 5 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x34d579df 0x4e631e90 // method "__postInit()void", method "returnsArray()uint256[]", method "f(byte[])uint256"
+    txna ApplicationArgs 0
+    match __postInit returnsArray f
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec 5 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec 5 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_3 // "data"
+    intc_0 // 2
+    box_create
+    pop
+    bytec_1 // "y"
+    intc_0 // 2
+    box_create
+    pop
+    bytec_0 // "arrayData"
+    intc_0 // 2
+    box_create
+    pop
+    pushint 7
+    itob
+    bytec 4 // "x"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray[routing]() -> void:
+returnsArray:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    dupn 2
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray
+    pop
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray
+    pop
+    bytec_0 // "arrayData"
+    pushint 98
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    box_replace // on error: index out of bounds
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray
+    pop
+    bytec_3 // "data"
+    box_del
+    pop
+    bytec_3 // "data"
+    swap
+    box_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray
+    bytec_1 // "y"
+    box_del
+    pop
+    bytec_1 // "y"
+    swap
+    box_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray
+    pop
+    pushint 4
+    itob
+    bytec 4 // "x"
+    swap
+    app_global_put
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray
+    pop
+    intc_2 // 0
+    bytec 4 // "x"
+    app_global_get_ex
+    assert // check x exists
+    pushbytes 0x04
+    b!=
+    bz f_after_if_else@5
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000002
+
+f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@26:
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+f_after_if_else@5:
+    bytec_1 // "y"
+    box_len
+    pop
+    intc_0 // 2
+    -
+    intc_3 // 32
+    /
+    itob
+    pushbytes 0x09
+    b!=
+    bz f_after_if_else@7
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@26
+
+f_after_if_else@7:
+    bytec_1 // "y"
+    box_get
+    bytec_2 // 0x0000
+    cover 2
+    select
+    extract 66 32
+    pushbytes 0x05
+    b!=
+    bz f_after_if_else@9
+    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000004
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@26
+
+f_after_if_else@9:
+    bytec_1 // "y"
+    box_get
+    bytec_2 // 0x0000
+    cover 2
+    select
+    extract 226 32
+    pushbytes 0x04
+    b!=
+    bz f_after_if_else@11
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000005
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@26
+
+f_after_if_else@11:
+    bytec_3 // "data"
+    box_len
+    pop
+    intc_0 // 2
+    -
+    itob
+    dig 1
+    len
+    itob
+    b!=
+    bz f_after_if_else@13
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000006
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@26
+
+f_after_if_else@13:
+    bytec_3 // "data"
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    extract 3 1
+    dig 2
+    extract 5 1
+    !=
+    bz f_after_if_else@15
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@26
+
+f_after_if_else@15:
+    bytec_0 // "arrayData"
+    box_get
+    bytec_2 // 0x0000
+    cover 2
+    select
+    extract 98 32
+    pushbytes 0x02
+    b!=
+    bz f_after_if_else@17
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@26
+
+f_after_if_else@17:
+    bytec_0 // "arrayData"
+    box_get
+    bytec_2 // 0x0000
+    cover 2
+    select
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    bytec_0 // "arrayData"
+    box_len
+    pop
+    intc_0 // 2
+    -
+    intc_3 // 32
+    /
+    itob
+    b!=
+    bz f_after_if_else@21
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@26
+
+f_after_if_else@21:
+    bytec_1 // "y"
+    pushint 66
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000315
+    box_replace // on error: index out of bounds
+    pushint 456
+    itob
+    bytec 4 // "x"
+    swap
+    app_global_put
+    bytec_1 // "y"
+    box_get
+    bytec_2 // 0x0000
+    cover 2
+    select
+    extract 66 32
+    pushbytes 0x0315
+    b!=
+    bz f_after_if_else@25
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000b
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@26
+
+f_after_if_else@25:
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.f@26
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray() -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/destructuring_assignment.sol.C.returnsArray:
+    bytec_0 // "arrayData"
+    box_del
+    pop
+    bytec_0 // "arrayData"
+    pushbytes 0x0009000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    box_put
+    bytec_0 // "arrayData"
+    pushint 66
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000005
+    box_replace // on error: index out of bounds
+    bytec_0 // "arrayData"
+    pushint 226
+    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000004
+    box_replace // on error: index out of bounds
+    bytec_0 // "arrayData"
+    box_get
+    bytec_2 // 0x0000
+    cover 2
+    select
+    retsub

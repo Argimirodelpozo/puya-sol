@@ -1,0 +1,544 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_array_index_range_access.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 8 0 1
+    bytecblock 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_3 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x3c6bdc19 0x6d04dc63 0x4504643d 0xda358375 0x006f8448 0x44063b70 0xc6137b99 0xb7f80c94 // method "f(uint256[],uint256,uint256)uint256", method "f(uint256[],uint256,uint256,uint256,uint256)uint256", method "f_s_only(uint256[],uint256)uint256", method "f_e_only(uint256[],uint256)uint256", method "g(uint256[],uint256,uint256,uint256)uint256", method "gg(uint256[],uint256,uint256,uint256)uint256", method "gg_s_only(uint256[],uint256,uint256)uint256", method "gg_e_only(uint256[],uint256,uint256)uint256"
+    txna ApplicationArgs 0
+    match f(4,u256,u256) f(27,u256,u256,u256,u256) f_s_only f_e_only g gg gg_s_only gg_e_only
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_array_index_range_access.sol.C.f(4,u256,u256)[routing]() -> void:
+f(4,u256,u256):
+    txna ApplicationArgs 1
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 8
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    substring3
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_array_index_range_access.sol.C.f(27,u256,u256,u256,u256)[routing]() -> void:
+f(27,u256,u256,u256,u256):
+    txna ApplicationArgs 1
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 5
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 8
+    bzero
+    dup
+    uncover 5
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dig 1
+    uncover 5
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 5
+    cover 2
+    substring3
+    dig 1
+    uncover 4
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 2
+    uncover 3
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    substring3
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_array_index_range_access.sol.C.f_s_only[routing]() -> void:
+f_s_only:
+    txna ApplicationArgs 1
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    pushint 2
+    +
+    dig 1
+    len
+    dup
+    uncover 2
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    swap
+    substring3
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_array_index_range_access.sol.C.f_e_only[routing]() -> void:
+f_e_only:
+    txna ApplicationArgs 1
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_2 // 0
+    swap
+    substring3
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_array_index_range_access.sol.C.g[routing]() -> void:
+g:
+    txna ApplicationArgs 1
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 8
+    bzero
+    dup
+    uncover 4
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dig 1
+    uncover 4
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 4
+    cover 2
+    substring3
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    swap
+    extract 2 0
+    swap
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_array_index_range_access.sol.C.gg[routing]() -> void:
+gg:
+    txna ApplicationArgs 1
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 8
+    bzero
+    dup
+    uncover 4
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dig 1
+    uncover 4
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 4
+    cover 2
+    substring3
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_3 // 1
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_array_index_range_access.sol.C.gg_s_only[routing]() -> void:
+gg_s_only:
+    txna ApplicationArgs 1
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    pushint 2
+    +
+    dig 1
+    len
+    dup
+    uncover 2
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 8
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 4
+    swap
+    uncover 4
+    substring3
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_3 // 1
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_array_index_range_access.sol.C.gg_e_only[routing]() -> void:
+gg_e_only:
+    txna ApplicationArgs 1
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 8
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    uncover 3
+    intc_2 // 0
+    uncover 2
+    substring3
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    intc_3 // 1
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return

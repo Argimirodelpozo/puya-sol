@@ -16,7 +16,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x9685f8b6 // method "f((uint256,uint256,(uint256,uint256),uint256))(uint512,uint512,uint512,uint512,uint512)"
+    pushbytes 0x2a9ca550 // method "f((uint256,uint256,(uint256,uint256),uint256))(uint256,uint256,uint256,uint256,uint256)"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -40,35 +40,37 @@ f:
     assert // invalid number of bytes for S2
     dup
     extract 0 32
+    pushint 32
+    bzero
+    swap
     dig 1
+    b|
+    dig 2
     extract 32 32
     dig 2
+    b|
+    dig 3
     extract 64 64
     dup
     extract 0 32
+    dig 4
+    b|
     swap
     extract 32 32
-    uncover 4
+    dig 4
+    b|
+    uncover 5
     extract 128 32
-    pushint 64
-    bzero
     uncover 5
-    dig 1
     b|
-    uncover 5
-    dig 2
-    b|
-    concat
     uncover 4
-    dig 2
-    b|
+    uncover 4
     concat
     uncover 3
-    dig 2
-    b|
     concat
-    cover 2
-    b|
+    uncover 2
+    concat
+    swap
     concat
     pushbytes 0x151f7c75
     swap

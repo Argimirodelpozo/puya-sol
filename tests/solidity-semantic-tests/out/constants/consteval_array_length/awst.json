@@ -466,14 +466,20 @@
           "immutable": true,
           "types": [
             {
-              "_type": "WType",
-              "name": "biguint",
-              "immutable": true
+              "_type": "ARC4UIntN",
+              "name": "arc4.uint256",
+              "immutable": true,
+              "n": 256,
+              "arc4_alias": null,
+              "source_location": null
             },
             {
-              "_type": "WType",
-              "name": "biguint",
-              "immutable": true
+              "_type": "ARC4UIntN",
+              "name": "arc4.uint256",
+              "immutable": true,
+              "n": 256,
+              "arc4_alias": null,
+              "source_location": null
             }
           ],
           "names": null,
@@ -584,14 +590,20 @@
                   "immutable": true,
                   "types": [
                     {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint256",
+                      "immutable": true,
+                      "n": 256,
+                      "arc4_alias": null,
+                      "source_location": null
                     },
                     {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint256",
+                      "immutable": true,
+                      "n": 256,
+                      "arc4_alias": null,
+                      "source_location": null
                     }
                   ],
                   "names": null,
@@ -599,7 +611,7 @@
                 },
                 "items": [
                   {
-                    "_type": "ReinterpretCast",
+                    "_type": "ARC4Encode",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/consteval_array_length.sol",
                       "line": 162,
@@ -609,12 +621,15 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint256",
+                      "immutable": true,
+                      "n": 256,
+                      "arc4_alias": null,
+                      "source_location": null
                     },
-                    "expr": {
-                      "_type": "IntrinsicCall",
+                    "value": {
+                      "_type": "ReinterpretCast",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/consteval_array_length.sol",
                         "line": 162,
@@ -624,63 +639,80 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
                       },
-                      "op_code": "itob",
-                      "immediates": [],
-                      "stack_args": [
-                        {
-                          "_type": "ArrayLength",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/consteval_array_length.sol",
-                            "line": 170,
-                            "end_line": 178,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "array": {
-                            "_type": "VarExpression",
+                      "expr": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/consteval_array_length.sol",
+                          "line": 162,
+                          "end_line": 192,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "itob",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "ArrayLength",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/consteval_array_length.sol",
                               "line": 170,
-                              "end_line": 171,
+                              "end_line": 178,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "ARC4StaticArray",
-                              "name": "arc4.static_array<arc4.uint256, 10>",
-                              "immutable": false,
-                              "element_type": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint256",
-                                "immutable": true,
-                                "n": 256,
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "array": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/consteval_array_length.sol",
+                                "line": 170,
+                                "end_line": 171,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "ARC4StaticArray",
+                                "name": "arc4.static_array<arc4.uint256, 10>",
+                                "immutable": false,
+                                "element_type": {
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint256",
+                                  "immutable": true,
+                                  "n": 256,
+                                  "arc4_alias": null,
+                                  "source_location": null
+                                },
+                                "array_size": 10,
                                 "arc4_alias": null,
                                 "source_location": null
                               },
-                              "array_size": 10,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "name": "x"
+                              "name": "x"
+                            }
                           }
-                        }
-                      ]
-                    }
+                        ]
+                      }
+                    },
+                    "error_message": null
                   },
                   {
-                    "_type": "BigUIntBinaryOperation",
+                    "_type": "ARC4Encode",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/consteval_array_length.sol",
                       "line": 180,
@@ -690,66 +722,15 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint256",
+                      "immutable": true,
+                      "n": 256,
+                      "arc4_alias": null,
+                      "source_location": null
                     },
-                    "left": {
+                    "value": {
                       "_type": "BigUIntBinaryOperation",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/consteval_array_length.sol",
-                        "line": 181,
-                        "end_line": 186,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
-                      },
-                      "left": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/consteval_array_length.sol",
-                          "line": 181,
-                          "end_line": 186,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "biguint",
-                          "immutable": true
-                        },
-                        "value": 12,
-                        "teal_alias": null
-                      },
-                      "op": "//",
-                      "right": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/consteval_array_length.sol",
-                          "line": 181,
-                          "end_line": 186,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "biguint",
-                          "immutable": true
-                        },
-                        "value": 10,
-                        "teal_alias": null
-                      }
-                    },
-                    "op": "*",
-                    "right": {
-                      "_type": "IntegerConstant",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/consteval_array_length.sol",
                         "line": 180,
@@ -763,9 +744,80 @@
                         "name": "biguint",
                         "immutable": true
                       },
-                      "value": 10,
-                      "teal_alias": null
-                    }
+                      "left": {
+                        "_type": "BigUIntBinaryOperation",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/consteval_array_length.sol",
+                          "line": 181,
+                          "end_line": 186,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "left": {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/consteval_array_length.sol",
+                            "line": 181,
+                            "end_line": 186,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "biguint",
+                            "immutable": true
+                          },
+                          "value": 12,
+                          "teal_alias": null
+                        },
+                        "op": "//",
+                        "right": {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/consteval_array_length.sol",
+                            "line": 181,
+                            "end_line": 186,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "biguint",
+                            "immutable": true
+                          },
+                          "value": 10,
+                          "teal_alias": null
+                        }
+                      },
+                      "op": "*",
+                      "right": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/consteval_array_length.sol",
+                          "line": 180,
+                          "end_line": 191,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "value": 10,
+                        "teal_alias": null
+                      }
+                    },
+                    "error_message": null
                   }
                 ]
               }

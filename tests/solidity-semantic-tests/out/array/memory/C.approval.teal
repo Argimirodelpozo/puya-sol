@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/memory.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 128 0
-    bytecblock 0xbc2684ff 0x151f7c75
+    intcblock 32 1 128
+    bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -23,8 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    bytec_0 // method "h(uint256[4])uint256"
-    pushbytes 0xd0415e18 // method "i(uint256[4])uint256"
+    pushbytess 0xbc2684ff 0xd0415e18 // method "h(uint256[4])uint256", method "i(uint256[4])uint256"
     txna ApplicationArgs 0
     match h i
     err
@@ -38,26 +37,9 @@ h:
     intc_2 // 128
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 4>
-    dup
-    extract 0 32 // on error: index access is out of bounds
-    dig 1
-    extract 32 32 // on error: index access is out of bounds
-    b+
-    dig 1
-    extract 64 32 // on error: index access is out of bounds
-    b+
-    swap
-    extract 96 32 // on error: index access is out of bounds
-    b+
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec_1 // 0x151f7c75
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/memory.sol.C.h
+    pop
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -73,23 +55,8 @@ i:
     intc_2 // 128
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 4>
-    itxn_begin
-    global CurrentApplicationAddress
-    pushint 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_3 // 0
-    itxn_field OnCompletion
-    intc_3 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_0 // method "h(uint256[4])uint256"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/memory.sol.C.h
+    pop
     pushbytes 0x02
     b*
     dup
@@ -100,9 +67,35 @@ i:
     intc_0 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/memory.sol.C.h(n: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/memory.sol.C.h:
+    proto 1 2
+    frame_dig -1
+    extract 0 32 // on error: index access is out of bounds
+    frame_dig -1
+    extract 32 32 // on error: index access is out of bounds
+    b+
+    frame_dig -1
+    extract 64 32 // on error: index access is out of bounds
+    b+
+    frame_dig -1
+    extract 96 32 // on error: index access is out of bounds
+    b+
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    frame_dig -1
+    retsub

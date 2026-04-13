@@ -16,15 +16,17 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
+    txn NumAppArgs
+    assert // revert
     pushbytes 0xc599eb05 // method "__receive()void"
     txna ApplicationArgs 0
-    match main___receive_route@4
+    match main___receive_route@6
     err
 
-main___receive_route@4:
+main___receive_route@6:
     txn OnCompletion
     !
     txn ApplicationID
     &&
     assert
-    err // no_receive
+    err // revert

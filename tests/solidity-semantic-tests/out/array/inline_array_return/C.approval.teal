@@ -1,0 +1,109 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/inline_array_return.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 255 2
+    bytecblock 0x00050102030405 "__ctor_pending" "tester"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x2b20dd5c 0x493ab179 // method "__postInit()void", method "f()uint8[5]", method "test()(uint64,uint64,uint64,uint64,uint64)"
+    txna ApplicationArgs 0
+    match __postInit main_f_route@6 test
+    err
+
+main_f_route@6:
+    pushbytes 0x151f7c750102030405
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/inline_array_return.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    pushint 0
+    app_global_put
+    bytec_2 // "tester"
+    intc_2 // 2
+    box_create
+    pop
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/inline_array_return.sol.C.test[routing]() -> void:
+test:
+    bytec_2 // "tester"
+    box_del
+    pop
+    bytec_2 // "tester"
+    bytec_0 // 0x00050102030405
+    box_put
+    bytec_0 // 0x00050102030405
+    intc_2 // 2
+    getbyte
+    intc_1 // 255
+    &
+    bytec_0 // 0x00050102030405
+    pushint 3
+    getbyte
+    intc_1 // 255
+    &
+    bytec_0 // 0x00050102030405
+    pushint 4
+    getbyte
+    intc_1 // 255
+    &
+    bytec_0 // 0x00050102030405
+    pushint 5
+    getbyte
+    intc_1 // 255
+    &
+    bytec_0 // 0x00050102030405
+    pushint 6
+    getbyte
+    intc_1 // 255
+    &
+    uncover 4
+    itob
+    uncover 4
+    itob
+    concat
+    uncover 3
+    itob
+    concat
+    uncover 2
+    itob
+    concat
+    swap
+    itob
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

@@ -4,11 +4,12 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/receive/inherited.sol.A.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "data"
+    bytecblock "data" 0x
+    bytec_1 // ""
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "data"
-    pushbytes 0x
+    bytec_1 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -21,30 +22,48 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
+    txn NumAppArgs
+    bnz main_after_if_else@4
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/receive/inherited.sol.A.__receive
+    intc_0 // 1
+    return
+
+main_after_if_else@4:
+    intc_1 // 0
+    bury 1
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    assert
+    bz main_create_NoOp@10
     pushbytess 0xc599eb05 0xe1e64a74 // method "__receive()void", method "getData()uint256"
     txna ApplicationArgs 0
-    match /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/receive/inherited.sol.A.[routing] getData
-    err
+    match main___receive_route@7 main_getData_route@8
 
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/receive/inherited.sol.A.[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/receive/inherited.sol.A.[routing]:
-    intc_1 // 0
-    bytec_0 // "data"
-    app_global_get_ex
-    assert // check data exists
-    pushbytes 0x01
-    b+
-    bytec_0 // "data"
-    swap
-    app_global_put
-    intc_0 // 1
+main_switch_case_next@9:
     return
+
+main_getData_route@8:
+    callsub getData
+    intc_0 // 1
+    bury 1
+    b main_switch_case_next@9
+
+main___receive_route@7:
+    callsub __receive
+    intc_0 // 1
+    bury 1
+    b main_switch_case_next@9
+
+main_create_NoOp@10:
+    dup
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/receive/inherited.sol.A.__receive[routing]() -> void:
+__receive:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/receive/inherited.sol.A.__receive
+    retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/receive/inherited.sol.A.getData[routing]() -> void:
@@ -65,5 +84,18 @@ getData:
     swap
     concat
     log
-    intc_0 // 1
-    return
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/receive/inherited.sol.A.__receive() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/receive/inherited.sol.A.__receive:
+    intc_1 // 0
+    bytec_0 // "data"
+    app_global_get_ex
+    assert // check data exists
+    pushbytes 0x01
+    b+
+    bytec_0 // "data"
+    swap
+    app_global_put
+    retsub

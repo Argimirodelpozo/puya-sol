@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 24 6 1
-    bytecblock 0x96f3d936 0x 0x76a2115c 0x15
+    intcblock 1 64 0 42
+    bytecblock 0x 0x15
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_3 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -34,13 +34,123 @@ get:
     txna ApplicationArgs 1
     dup
     len
-    pushint 64
+    intc_1 // 64
     ==
     assert // invalid number of bytes for arc4.uint512
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.get
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.set[routing]() -> void:
+set:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 2
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    load 0
+    store 0
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.test[routing]() -> void:
+test:
+    intc_2 // 0
+    dup
+    itob
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.get
+    bytec_0 // 0x
+    b==
+    bz test_bool_false@4
+    intc_3 // 42
+    itob
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.get
+    bytec_0 // 0x
+    b==
+    bz test_bool_false@4
+    intc_0 // 1
+
+test_bool_merge@5:
+    assert
+    load 0
+    store 0
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.get
+    bytec_1 // 0x15
+    b==
+    bz test_bool_false@8
+    intc_3 // 42
+    itob
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.get
+    bytec_0 // 0x
+    b==
+    bz test_bool_false@8
+    intc_0 // 1
+
+test_bool_merge@9:
+    assert
+    intc_3 // 42
+    itob
+    bury 2
+    load 0
+    store 0
+    dup
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.get
+    bytec_1 // 0x15
+    b==
+    bz test_bool_false@12
+    dig 1
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.get
+    pushbytes 0x83
+    b==
+    bz test_bool_false@12
+    intc_0 // 1
+
+test_bool_merge@13:
+    assert
+    intc_0 // 1
+    return
+
+test_bool_false@12:
+    intc_2 // 0
+    b test_bool_merge@13
+
+test_bool_false@8:
+    intc_2 // 0
+    b test_bool_merge@9
+
+test_bool_false@4:
+    intc_2 // 0
+    b test_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.get(addr: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.get:
+    proto 1 1
     pushint 160
     bzero
     load 0
-    uncover 2
+    frame_dig -1
     btoi
     pushint 32
     *
@@ -50,235 +160,4 @@ get:
     extract3
     swap
     store 0
-    dup
-    len
-    pushint 64
-    <=
-    assert // overflow
-    pushint 64
-    bzero
-    b|
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_3 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.set[routing]() -> void:
-set:
-    txna ApplicationArgs 1
-    len
-    pushint 64
-    ==
-    assert // invalid number of bytes for arc4.uint512
-    txna ApplicationArgs 2
-    len
-    pushint 64
-    ==
-    assert // invalid number of bytes for arc4.uint512
-    load 0
-    store 0
-    intc_3 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_multiple_calls_different_transactions.sol.C.test[routing]() -> void:
-test:
-    itxn_begin
-    intc_0 // 0
-    itob
-    dup
-    global CurrentApplicationAddress
-    intc_1 // 24
-    extract_uint64
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_0 // method "get(uint256)uint256"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn_begin
-    pushint 42
-    itob
-    dup
-    global CurrentApplicationAddress
-    intc_1 // 24
-    extract_uint64
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_0 // method "get(uint256)uint256"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    bytec_1 // 0x
-    b==
-    bz test_bool_false@6
-    itxn LastLog
-    extract 4 0
-    bytec_1 // 0x
-    b==
-    bz test_bool_false@6
-    intc_3 // 1
-
-test_bool_merge@7:
-    assert
-    itxn_begin
-    pushint 21
-    itob
-    global CurrentApplicationAddress
-    intc_1 // 24
-    extract_uint64
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_2 // method "set(uint256,uint256)void"
-    itxn_field ApplicationArgs
-    dig 2
-    dup
-    cover 2
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn_begin
-    global CurrentApplicationAddress
-    intc_1 // 24
-    extract_uint64
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_0 // method "get(uint256)uint256"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn_begin
-    global CurrentApplicationAddress
-    intc_1 // 24
-    extract_uint64
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_0 // method "get(uint256)uint256"
-    itxn_field ApplicationArgs
-    dup
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    bytec_3 // 0x15
-    b==
-    bz test_bool_false@13
-    itxn LastLog
-    extract 4 0
-    bytec_1 // 0x
-    b==
-    bz test_bool_false@13
-    intc_3 // 1
-
-test_bool_merge@14:
-    assert
-    itxn_begin
-    pushint 131
-    itob
-    global CurrentApplicationAddress
-    intc_1 // 24
-    extract_uint64
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_2 // method "set(uint256,uint256)void"
-    itxn_field ApplicationArgs
-    dig 1
-    dup
-    cover 2
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn_begin
-    global CurrentApplicationAddress
-    intc_1 // 24
-    extract_uint64
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_0 // method "get(uint256)uint256"
-    itxn_field ApplicationArgs
-    dig 2
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn_begin
-    global CurrentApplicationAddress
-    intc_1 // 24
-    extract_uint64
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_0 // method "get(uint256)uint256"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    bytec_3 // 0x15
-    b==
-    bz test_bool_false@20
-    itxn LastLog
-    extract 4 0
-    pushbytes 0x83
-    b==
-    bz test_bool_false@20
-    intc_3 // 1
-
-test_bool_merge@21:
-    assert
-    intc_3 // 1
-    return
-
-test_bool_false@20:
-    intc_0 // 0
-    b test_bool_merge@21
-
-test_bool_false@13:
-    intc_0 // 0
-    b test_bool_merge@14
-
-test_bool_false@6:
-    intc_0 // 0
-    b test_bool_merge@7
+    retsub

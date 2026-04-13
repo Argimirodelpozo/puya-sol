@@ -1,9 +1,9 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_0r6ino8v/B.sol.C.approval_program() -> uint64:
+// /tmp/multisource_5vus094b/B.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1
+    intcblock 0 1 32
     bytecblock "data"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -21,7 +21,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x13ac5132 // method "f(uint256)(uint512,uint512)"
+    pushbytes 0xc65797c8 // method "f(uint256)(uint256,uint256)"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -35,18 +35,18 @@ main_f_route@4:
     b f
 
 
-// /tmp/multisource_0r6ino8v/B.sol.set(a: bytes, v: bytes) -> void:
+// /tmp/multisource_5vus094b/B.sol.set(a: bytes, v: bytes) -> void:
 set:
     proto 2 0
     retsub
 
 
-// /tmp/multisource_0r6ino8v/B.sol.C.f[routing]() -> void:
+// /tmp/multisource_5vus094b/B.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
     dup
     len
-    pushint 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     intc_0 // 0
@@ -72,7 +72,7 @@ f:
     app_global_get_ex
     assert // check data exists
     extract 0 32
-    pushint 64
+    intc_2 // 32
     bzero
     uncover 2
     dig 1

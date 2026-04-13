@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/memory_structs_as_function_args.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 64 1
+    intcblock 32 1
     bytecblock 0x000000000000000100000000000000020000000000000000000000000000000000000000000000000000000000000003
     txn ApplicationID
     bnz main_after_if_else@2
@@ -18,7 +18,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x93948aa7 // method "test()(uint512,uint512,uint512)"
+    pushbytes 0x34914231 // method "test()(uint256,uint256,uint256)"
     txna ApplicationArgs 0
     match main_test_route@4
     err
@@ -38,43 +38,46 @@ test:
     itob
     pushint 2
     itob
+    intc_0 // 32
+    bzero
     pushint 0
     itob
     bytec_0 // 0x000000000000000100000000000000020000000000000000000000000000000000000000000000000000000000000003
     swap
     callsub extract
     bytec_0 // 0x000000000000000100000000000000020000000000000000000000000000000000000000000000000000000000000003
-    uncover 3
+    uncover 4
     callsub extract
     bytec_0 // 0x000000000000000100000000000000020000000000000000000000000000000000000000000000000000000000000003
-    uncover 3
+    uncover 4
     callsub extract
     dig 2
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
-    bzero
-    uncover 3
-    dig 1
-    b|
+    uncover 2
     dig 3
+    b|
+    dig 2
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
+    uncover 2
+    dig 3
+    b|
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
     uncover 3
-    dig 2
     b|
-    concat
-    dig 2
-    len
-    intc_0 // 64
-    <=
-    assert // overflow
     cover 2
-    b|
+    concat
+    swap
     concat
     pushbytes 0x151f7c75
     swap

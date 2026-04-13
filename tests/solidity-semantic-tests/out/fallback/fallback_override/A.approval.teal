@@ -3,9 +3,12 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_override.sol.A.approval_program() -> uint64:
 main:
+    intcblock 1 0
+    pushbytes ""
+    dup
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -16,25 +19,46 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
+    txn NumAppArgs
+    bnz main_after_if_else@4
+    intc_0 // 1
+    return
+
+main_after_if_else@4:
+    intc_1 // 0
+    bury 2
     pushbytes 0x9509a93a // method "__fallback(byte[])byte[]"
     txna ApplicationArgs 0
-    match main___fallback_route@4
-    err
+    match main___fallback_route@10
+    dig 1
+    bury 1
 
-main___fallback_route@4:
+main_switch_case_next@11:
+    dup
+    bnz main_after_if_else@6
+    intc_0 // 1
+    bury 1
+
+main_after_if_else@6:
+    return
+
+main___fallback_route@10:
     txn OnCompletion
     !
     txn ApplicationID
     &&
     assert
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_override.sol.A.[routing]
+    callsub __fallback
+    intc_0 // 1
+    bury 1
+    b main_switch_case_next@11
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_override.sol.A.[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_override.sol.A.[routing]:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_override.sol.A.__fallback[routing]() -> void:
+__fallback:
     txna ApplicationArgs 1
     dup
-    pushint 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -46,5 +70,4 @@ main___fallback_route@4:
     swap
     concat
     log
-    pushint 1
-    return
+    retsub

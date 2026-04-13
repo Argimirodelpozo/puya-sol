@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/nested_calldata_storage2.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 2
+    intcblock 32 1 2 0
     bytecblock "tmp_i" "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
-    intc_0 // 1
+    intc_1 // 1
     app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0xc5713858 0x0302c87b // method "__postInit()void", method "i(uint256[][])void", method "tmp_i(uint512,uint512)uint512"
+    pushbytess 0xbacc49e3 0xc5713858 0x12c1c6a7 // method "__postInit()void", method "i(uint256[][])void", method "tmp_i(uint256,uint256)uint512"
     txna ApplicationArgs 0
     match __postInit i tmp_i
     err
@@ -38,13 +38,13 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_2 // 0
+    intc_3 // 0
     app_global_put
     bytec_0 // "tmp_i"
-    intc_2 // 0
+    intc_2 // 2
     box_create
     pop
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
@@ -52,18 +52,18 @@ __postInit:
 i:
     txna ApplicationArgs 1
     dupn 2
-    intc_2 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
     dup
     cover 2
-    intc_3 // 2
+    intc_2 // 2
     *
     swap
     dup
     len
     swap
     extract 2 0
-    intc_2 // 0
+    intc_3 // 0
 
 i_for_header@1:
     dup
@@ -71,7 +71,7 @@ i_for_header@1:
     <
     bz i_after_for@4
     dupn 2
-    intc_3 // 2
+    intc_2 // 2
     *
     dig 3
     dup
@@ -86,22 +86,22 @@ i_for_header@1:
     dig 1
     len
     substring3
-    intc_2 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
-    intc_1 // 32
+    intc_0 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     +
     bury 5
-    intc_0 // 1
+    intc_1 // 1
     +
     bury 1
     b i_for_header@1
 
 i_after_for@4:
     dig 3
-    intc_3 // 2
+    intc_2 // 2
     +
     dig 3
     ==
@@ -112,7 +112,7 @@ i_after_for@4:
     bytec_0 // "tmp_i"
     dig 6
     box_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
@@ -121,34 +121,34 @@ tmp_i:
     txna ApplicationArgs 1
     dup
     len
-    pushint 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    pushint 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    intc_1 // 32
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
     bzero
     dup
     uncover 3
     concat
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    intc_0 // 32
     extract3
     swap
     uncover 2
     concat
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    intc_0 // 32
     extract3
     concat
     sha256
@@ -171,5 +171,5 @@ tmp_i:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/return_storage_pointers.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "__ctor_pending" "arr1" "arr2"
+    intcblock 1 2 32
+    bytecblock "__ctor_pending" "arr1"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0xdd4ba0fa // method "__postInit()void", method "g()(uint512,uint512)"
+    pushbytess 0xbacc49e3 0x595e23e2 // method "__postInit()void", method "g()(uint256,uint256)"
     txna ApplicationArgs 0
     match __postInit g
     err
@@ -38,14 +38,14 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_1 // 0
+    pushint 0
     app_global_put
     bytec_1 // "arr1"
-    intc_1 // 0
+    intc_1 // 2
     box_create
     pop
-    bytec_2 // "arr2"
-    intc_1 // 0
+    pushbytes "arr2"
+    intc_1 // 2
     box_create
     pop
     intc_0 // 1
@@ -57,22 +57,15 @@ g:
     bytec_1 // "arr1"
     box_len
     pop
-    pushint 32
+    intc_1 // 2
+    -
+    intc_2 // 32
     /
     itob
-    bytec_2 // "arr2"
-    box_len
-    pop
-    intc_1 // 0
-    /
-    itob
-    pushint 64
+    intc_2 // 32
     bzero
-    uncover 2
-    dig 1
     b|
-    cover 2
-    b|
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
     pushbytes 0x151f7c75
     swap

@@ -3,11 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tstore_hidden_staticcall.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock 0xf2b65f27
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    pushint 1
     return
 
 main_after_if_else@2:
@@ -23,8 +21,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    bytec_0 // method "g()void"
-    pushbytes 0xa78000de // method "test()void"
+    pushbytess 0xf2b65f27 0xa78000de // method "g()void", method "test()void"
     txna ApplicationArgs 0
     match g test
     err
@@ -32,29 +29,22 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tstore_hidden_staticcall.sol.C.g[routing]() -> void:
 g:
-    load 0
-    store 0
-    load 0
-    store 0
-    intc_0 // 1
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tstore_hidden_staticcall.sol.C.g
+    pushint 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tstore_hidden_staticcall.sol.C.test[routing]() -> void:
 test:
-    itxn_begin
-    global CurrentApplicationAddress
-    pushint 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_1 // 0
-    itxn_field OnCompletion
-    intc_1 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_0 // method "g()void"
-    itxn_field ApplicationArgs
-    itxn_submit
-    intc_0 // 1
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tstore_hidden_staticcall.sol.C.g
+    pushint 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tstore_hidden_staticcall.sol.C.g() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tstore_hidden_staticcall.sol.C.g:
+    load 0
+    store 0
+    load 0
+    store 0
+    retsub

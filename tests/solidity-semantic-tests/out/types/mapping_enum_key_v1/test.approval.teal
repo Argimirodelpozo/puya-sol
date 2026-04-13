@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_v1.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 0 8 255
+    intcblock 1 255 8 0
     bytecblock "__ctor_pending" "table"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,10 +38,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_1 // 0
+    intc_3 // 0
     app_global_put
     bytec_1 // "table"
-    intc_1 // 0
+    pushint 2
     box_create
     pop
     intc_0 // 1
@@ -57,6 +57,8 @@ get:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    intc_1 // 255
+    &
     itob
     sha256
     bytec_1 // "table"
@@ -65,11 +67,11 @@ get:
     box_get
     swap
     btoi
-    intc_1 // 0
+    intc_3 // 0
     swap
     uncover 2
     select
-    intc_3 // 255
+    intc_1 // 255
     &
     itob
     pushbytes 0x151f7c75
@@ -96,7 +98,11 @@ set:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    intc_3 // 255
+    swap
+    intc_1 // 255
+    &
+    swap
+    intc_1 // 255
     &
     swap
     itob

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/struct_accessor.sol.test.approval_program() -> uint64:
 main:
-    intcblock 0 1 40 336
+    intcblock 0 1 32 40 336
     bytecblock 0x6461746148428bdb7ddd829410d6bbb924fdeb3a3d7e88c2577bffae073b990c6f061d08 0x00 "__ctor_pending" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000002b0000 "data" 0x002b 0x6366687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0xd1345777 // method "__postInit()void", method "data(uint512)(uint512,uint64,bool)"
+    pushbytess 0xbacc49e3 0x86481d13 // method "__postInit()void", method "data(uint256)(uint512,uint64,bool)"
     txna ApplicationArgs 0
     match __postInit data
     err
@@ -41,7 +41,7 @@ __postInit:
     intc_0 // 0
     app_global_put
     bytec 4 // "data"
-    intc_0 // 0
+    pushint 2
     box_create
     pop
     bytec_0 // 0x6461746148428bdb7ddd829410d6bbb924fdeb3a3d7e88c2577bffae073b990c6f061d08
@@ -52,7 +52,7 @@ __postInit:
     dup
     extract 32 8
     dig 1
-    intc_2 // 40
+    intc_3 // 40
     extract_uint16
     dig 2
     len
@@ -61,7 +61,7 @@ __postInit:
     substring3
     extract 2 0
     uncover 2
-    intc_3 // 336
+    intc 4 // 336
     getbit
     bytec_1 // 0x00
     intc_0 // 0
@@ -94,7 +94,7 @@ __postInit:
     pushint 2
     itob
     dig 2
-    intc_2 // 40
+    intc_3 // 40
     extract_uint16
     dig 3
     len
@@ -103,7 +103,7 @@ __postInit:
     substring3
     extract 2 0
     uncover 3
-    intc_3 // 336
+    intc 4 // 336
     getbit
     bytec_1 // 0x00
     intc_0 // 0
@@ -149,7 +149,7 @@ __postInit:
     dig 1
     extract 32 8
     dig 2
-    intc_2 // 40
+    intc_3 // 40
     extract_uint16
     dig 3
     len
@@ -185,18 +185,18 @@ data:
     txna ApplicationArgs 1
     dup
     len
-    pushint 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    pushint 32
+    assert // invalid number of bytes for arc4.uint256
+    intc_2 // 32
     bzero
     swap
     concat
     dup
     len
-    pushint 32
+    intc_2 // 32
     -
-    pushint 32
+    intc_2 // 32
     extract3
     sha256
     bytec 4 // "data"
@@ -211,7 +211,7 @@ data:
     dig 1
     extract 32 8
     uncover 2
-    intc_3 // 336
+    intc 4 // 336
     getbit
     bytec_1 // 0x00
     intc_0 // 0

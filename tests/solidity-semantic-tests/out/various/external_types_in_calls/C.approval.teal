@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/external_types_in_calls.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 6 24
-    bytecblock 0x1f8fcaf3 0x0a8101 0x151f7c75
+    intcblock 1 0 6
+    bytecblock 0x0a8101 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -23,9 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytes 0x1cdf30bf // method "test()(address,address)"
-    bytec_0 // method "t1(address)address"
-    pushbytes 0x9759faee // method "t2()address"
+    pushbytess 0x1cdf30bf 0x1f8fcaf3 0x9759faee // method "test()(address,address)", method "t1(address)address", method "t2()address"
     txna ApplicationArgs 0
     match test t1 main_t2_route@7
     err
@@ -33,7 +31,7 @@ main_after_if_else@2:
 main_t2_route@7:
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000009
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -42,36 +40,36 @@ test:
     itxn_begin
     intc_2 // 6
     itxn_field TypeEnum
-    intc_0 // 0
+    intc_1 // 0
     itxn_field Fee
-    bytec_1 // 0x0a8101
+    bytec_0 // 0x0a8101
     itxn_field ClearStateProgram
-    bytec_1 // 0x0a8101
+    bytec_0 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_1 // 1
+    intc_0 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_0 // 0
+    intc_1 // 0
     itxn_field Fee
     pushint 200000
     itxn_field Amount
     itxn_submit
-    itxn CreatedApplicationID
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_3 // 24
+    pushint 24
     extract_uint64
     intc_2 // 6
     itxn_field TypeEnum
-    intc_0 // 0
+    intc_1 // 0
     itxn_field OnCompletion
-    intc_0 // 0
+    intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationID
     pushbytes 0xd9420734 // method "bla()address"
@@ -79,30 +77,13 @@ test:
     itxn_submit
     itxn LastLog
     extract 4 0
-    itxn_begin
-    global CurrentApplicationAddress
-    intc_3 // 24
-    extract_uint64
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_0 // method "t1(address)address"
-    itxn_field ApplicationArgs
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
     concat
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -114,9 +95,9 @@ t1:
     pushint 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return

@@ -2111,10 +2111,10 @@
                 "end_column": null
               },
               "value": {
-                "_type": "IndexExpression",
+                "_type": "ReinterpretCast",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
-                  "line": 636,
+                  "line": 629,
                   "end_line": 661,
                   "comment_lines": 0,
                   "column": null,
@@ -2126,43 +2126,7 @@
                   "immutable": true,
                   "length": 1
                 },
-                "base": {
-                  "_type": "AppStateExpression",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
-                    "line": 652,
-                    "end_line": 653,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes[2]",
-                    "immutable": true,
-                    "length": 2
-                  },
-                  "key": {
-                    "_type": "BytesConstant",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
-                      "line": 652,
-                      "end_line": 653,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "state_key",
-                      "immutable": true
-                    },
-                    "value": "Vg",
-                    "encoding": "utf8"
-                  },
-                  "exists_assertion_message": "check b exists"
-                },
-                "index": {
+                "expr": {
                   "_type": "IntrinsicCall",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
@@ -2173,13 +2137,50 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "uint64",
-                    "immutable": true
+                    "_type": "BytesWType",
+                    "name": "bytes[1]",
+                    "immutable": true,
+                    "length": 1
                   },
-                  "op_code": "btoi",
+                  "op_code": "extract3",
                   "immediates": [],
                   "stack_args": [
+                    {
+                      "_type": "AppStateExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
+                        "line": 652,
+                        "end_line": 653,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes[2]",
+                        "immutable": true,
+                        "length": 2
+                      },
+                      "key": {
+                        "_type": "BytesConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
+                          "line": 652,
+                          "end_line": 653,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "state_key",
+                          "immutable": true
+                        },
+                        "value": "Vg",
+                        "encoding": "utf8"
+                      },
+                      "exists_assertion_message": "check b exists"
+                    },
                     {
                       "_type": "IntrinsicCall",
                       "source_location": {
@@ -2191,12 +2192,11 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
                       },
-                      "op_code": "extract3",
+                      "op_code": "btoi",
                       "immediates": [],
                       "stack_args": [
                         {
@@ -2215,7 +2215,7 @@
                             "immutable": true,
                             "length": null
                           },
-                          "op_code": "concat",
+                          "op_code": "extract3",
                           "immediates": [],
                           "stack_args": [
                             {
@@ -2234,11 +2234,11 @@
                                 "immutable": true,
                                 "length": null
                               },
-                              "op_code": "bzero",
+                              "op_code": "concat",
                               "immediates": [],
                               "stack_args": [
                                 {
-                                  "_type": "IntegerConstant",
+                                  "_type": "IntrinsicCall",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
                                     "line": 636,
@@ -2248,17 +2248,72 @@
                                     "end_column": null
                                   },
                                   "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
                                   },
-                                  "value": 8,
-                                  "teal_alias": null
+                                  "op_code": "bzero",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
+                                        "line": 636,
+                                        "end_line": 661,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 8,
+                                      "teal_alias": null
+                                    }
+                                  ]
+                                },
+                                {
+                                  "_type": "ReinterpretCast",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
+                                    "line": 636,
+                                    "end_line": 661,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "expr": {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
+                                      "line": 655,
+                                      "end_line": 660,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "name": "index"
+                                  }
                                 }
                               ]
                             },
                             {
-                              "_type": "ReinterpretCast",
+                              "_type": "UInt64BinaryOperation",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
                                 "line": 636,
@@ -2268,65 +2323,11 @@
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
                               },
-                              "expr": {
-                                "_type": "VarExpression",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
-                                  "line": 655,
-                                  "end_line": 660,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "biguint",
-                                  "immutable": true
-                                },
-                                "name": "index"
-                              }
-                            }
-                          ]
-                        },
-                        {
-                          "_type": "UInt64BinaryOperation",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
-                            "line": 636,
-                            "end_line": 661,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "left": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
-                              "line": 636,
-                              "end_line": 661,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "op_code": "len",
-                            "immediates": [],
-                            "stack_args": [
-                              {
+                              "left": {
                                 "_type": "IntrinsicCall",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
@@ -2337,12 +2338,11 @@
                                   "end_column": null
                                 },
                                 "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
                                 },
-                                "op_code": "concat",
+                                "op_code": "len",
                                 "immediates": [],
                                 "stack_args": [
                                   {
@@ -2361,11 +2361,11 @@
                                       "immutable": true,
                                       "length": null
                                     },
-                                    "op_code": "bzero",
+                                    "op_code": "concat",
                                     "immediates": [],
                                     "stack_args": [
                                       {
-                                        "_type": "IntegerConstant",
+                                        "_type": "IntrinsicCall",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
                                           "line": 636,
@@ -2375,92 +2375,131 @@
                                           "end_column": null
                                         },
                                         "wtype": {
-                                          "_type": "WType",
-                                          "name": "uint64",
-                                          "immutable": true
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
                                         },
-                                        "value": 8,
-                                        "teal_alias": null
+                                        "op_code": "bzero",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
+                                              "line": 636,
+                                              "end_line": 661,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 8,
+                                            "teal_alias": null
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "_type": "ReinterpretCast",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
+                                          "line": 636,
+                                          "end_line": 661,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "expr": {
+                                          "_type": "VarExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
+                                            "line": 655,
+                                            "end_line": 660,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "name": "index"
+                                        }
                                       }
                                     ]
-                                  },
-                                  {
-                                    "_type": "ReinterpretCast",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
-                                      "line": 636,
-                                      "end_line": 661,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "expr": {
-                                      "_type": "VarExpression",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
-                                        "line": 655,
-                                        "end_line": 660,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "biguint",
-                                        "immutable": true
-                                      },
-                                      "name": "index"
-                                    }
                                   }
                                 ]
+                              },
+                              "op": "-",
+                              "right": {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
+                                  "line": 636,
+                                  "end_line": 661,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 8,
+                                "teal_alias": null
                               }
-                            ]
-                          },
-                          "op": "-",
-                          "right": {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
-                              "line": 636,
-                              "end_line": 661,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
                             },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 8,
-                            "teal_alias": null
-                          }
-                        },
-                        {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
-                            "line": 636,
-                            "end_line": 661,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 8,
-                          "teal_alias": null
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
+                                "line": 636,
+                                "end_line": 661,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 8,
+                              "teal_alias": null
+                            }
+                          ]
                         }
                       ]
+                    },
+                    {
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/dirty_slot.sol",
+                        "line": 636,
+                        "end_line": 661,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "value": 1,
+                      "teal_alias": null
                     }
                   ]
                 }

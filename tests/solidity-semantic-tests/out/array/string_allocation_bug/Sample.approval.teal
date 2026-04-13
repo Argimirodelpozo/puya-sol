@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol.Sample.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 32
+    intcblock 1 32 0 2
     bytecblock "p" "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0xf9fded41 // method "__postInit()void", method "p(uint512)(uint64,uint64,string,string)"
+    pushbytess 0xbacc49e3 0x7b2184b3 // method "__postInit()void", method "p(uint256)(uint64,uint64,string,string)"
     txna ApplicationArgs 0
     match __postInit p
     err
@@ -38,18 +38,22 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_1 // 0
+    intc_2 // 0
     app_global_put
     bytec_0 // "p"
+    pushint 64
+    box_create
+    pop
+    bytec_0 // "p"
     box_get
-    assert // box exists
+    pop
     dup
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16
-    intc_2 // 2
+    intc_3 // 2
     cover 2
     dig 1
-    intc_2 // 2
+    intc_3 // 2
     extract_uint16
     dig 2
     len
@@ -58,7 +62,7 @@ __postInit:
     -
     cover 5
     dig 3
-    intc_1 // 0
+    intc_2 // 0
     uncover 4
     substring3
     pushbytes 0x000000000000bbbb000000000000cccc0014001b000568656c6c6f0005776f726c64
@@ -89,7 +93,7 @@ __postInit_for_header@2:
     swap
     replace3
     bury 3
-    intc_2 // 2
+    intc_3 // 2
     +
     bury 1
     b __postInit_for_header@2
@@ -110,18 +114,18 @@ p:
     txna ApplicationArgs 1
     dup
     len
-    pushint 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    intc_3 // 32
+    assert // invalid number of bytes for arc4.uint256
+    intc_1 // 32
     bzero
     swap
     concat
     dup
     len
-    intc_3 // 32
+    intc_1 // 32
     -
-    intc_3 // 32
+    intc_1 // 32
     extract3
     sha256
     bytec_0 // "p"

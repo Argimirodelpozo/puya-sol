@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/multi_creation.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 6 1 64 200000
+    intcblock 0 6 1 200000
     bytecblock 0x0a8101 0xcd78b354 "a" 0x "x" "y" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@8
@@ -32,6 +32,7 @@ main:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -40,15 +41,10 @@ main:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc 4 // 200000
+    intc_3 // 200000
     itxn_field Amount
     itxn_submit
-    itxn CreatedApplicationID
-    app_params_get AppAddress
-    pop
     itxn_begin
-    pushint 24
-    extract_uint64
     intc_1 // 6
     itxn_field TypeEnum
     intc_0 // 0
@@ -75,6 +71,7 @@ main:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -83,15 +80,10 @@ main:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc 4 // 200000
+    intc_3 // 200000
     itxn_field Amount
     itxn_submit
-    itxn CreatedApplicationID
-    app_params_get AppAddress
-    pop
     itxn_begin
-    pushint 24
-    extract_uint64
     intc_1 // 6
     itxn_field TypeEnum
     intc_0 // 0
@@ -123,7 +115,7 @@ main_after_if_else@8:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xcc388e13 0x3f4abdfd 0x60d68bc1 // method "f()(uint512,uint512,uint512)", method "x()uint512", method "y()uint512"
+    pushbytess 0xb34b38c7 0x3f4abdfd 0x60d68bc1 // method "f()(uint256,uint256,uint256)", method "x()uint512", method "y()uint512"
     txna ApplicationArgs 0
     match f x y
     err
@@ -142,6 +134,7 @@ f:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -150,15 +143,10 @@ f:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc 4 // 200000
+    intc_3 // 200000
     itxn_field Amount
     itxn_submit
-    itxn CreatedApplicationID
-    app_params_get AppAddress
-    pop
     itxn_begin
-    pushint 24
-    extract_uint64
     intc_1 // 6
     itxn_field TypeEnum
     intc_0 // 0
@@ -180,6 +168,7 @@ f:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -188,15 +177,10 @@ f:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc 4 // 200000
+    intc_3 // 200000
     itxn_field Amount
     itxn_submit
-    itxn CreatedApplicationID
-    app_params_get AppAddress
-    pop
     itxn_begin
-    pushint 24
-    extract_uint64
     intc_1 // 6
     itxn_field TypeEnum
     intc_0 // 0
@@ -211,36 +195,37 @@ f:
     bytec_2 // "a"
     app_global_get_ex
     assert // check a exists
-    itxn LastLog
-    extract 4 0
-    itxn LastLog
-    extract 4 0
-    dig 2
+    dup
     len
-    intc_3 // 64
+    pushint 32
     <=
     assert // overflow
-    intc_3 // 64
+    pushint 32
     bzero
-    uncover 3
+    swap
     dig 1
     b|
-    dig 3
+    itxn LastLog
+    extract 4 0
+    dup
     len
-    intc_3 // 64
+    pushint 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    itxn LastLog
+    extract 4 0
+    dup
+    len
+    pushint 32
     <=
     assert // overflow
     uncover 3
-    dig 2
     b|
-    concat
-    dig 2
-    len
-    intc_3 // 64
-    <=
-    assert // overflow
     cover 2
-    b|
+    concat
+    swap
     concat
     bytec 6 // 0x151f7c75
     swap
@@ -258,10 +243,10 @@ x:
     assert // check x exists
     dup
     len
-    intc_3 // 64
+    pushint 64
     <=
     assert // overflow
-    intc_3 // 64
+    pushint 64
     bzero
     b|
     bytec 6 // 0x151f7c75
@@ -280,10 +265,10 @@ y:
     assert // check y exists
     dup
     len
-    intc_3 // 64
+    pushint 64
     <=
     assert // overflow
-    intc_3 // 64
+    pushint 64
     bzero
     b|
     bytec 6 // 0x151f7c75

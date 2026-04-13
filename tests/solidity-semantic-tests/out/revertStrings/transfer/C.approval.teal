@@ -5,11 +5,15 @@
 main:
     intcblock 1 0
     bytecblock "a" 0x0a8101
-    intc_1 // 0
+    pushbytes ""
+    dup
     txn ApplicationID
     bnz main_after_if_else@2
+    dup
+    app_params_get AppAddress
+    pop
     bytec_0 // "a"
-    dig 1
+    swap
     app_global_put
     intc_0 // 1
     return
@@ -22,18 +26,52 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
+    txn NumAppArgs
+    bnz main_after_if_else@4
+    intc_0 // 1
+    return
+
+main_after_if_else@4:
+    intc_1 // 0
+    bury 2
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    assert
+    bz main_create_NoOp@12
     pushbytess 0xc599eb05 0x2d4970c7 0x0a449f0b 0x4b2c0376 // method "__receive()void", method "f()void", method "h()void", method "g()uint256"
     txna ApplicationArgs 0
-    match main___receive_route@5 f h g
-    err
+    match main___receive_route@7 main_f_route@8 main_h_route@9 main_g_route@10
 
-main___receive_route@5:
+main_switch_case_next@11:
+    dig 1
+    return
+
+main_g_route@10:
+    callsub g
     intc_0 // 1
+    bury 2
+    b main_switch_case_next@11
+
+main_h_route@9:
+    callsub h
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@11
+
+main_f_route@8:
+    callsub f
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@11
+
+main___receive_route@7:
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@11
+
+main_create_NoOp@12:
+    dig 1
     return
 
 
@@ -74,8 +112,7 @@ f:
     intc_0 // 1
     itxn_field Amount
     itxn_submit
-    intc_0 // 1
-    return
+    retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/transfer.sol.C.h[routing]() -> void:
@@ -93,8 +130,7 @@ h:
     pushint 7766279631452241920
     itxn_field Amount
     itxn_submit
-    intc_0 // 1
-    return
+    retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/transfer.sol.C.g[routing]() -> void:
@@ -110,5 +146,4 @@ g:
     swap
     concat
     log
-    intc_0 // 1
-    return
+    retsub

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/slot_access_via_mapping_pointer.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 64
+    intcblock 0 1 64 2
     bytecblock "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -41,15 +41,15 @@ __postInit:
     intc_0 // 0
     app_global_put
     pushbytes "m0"
-    intc_0 // 0
+    intc_3 // 2
     box_create
     pop
     pushbytes "m1"
-    intc_0 // 0
+    intc_3 // 2
     box_create
     pop
     pushbytes "m2"
-    intc_0 // 0
+    intc_3 // 2
     box_create
     pop
     intc_1 // 1
@@ -78,6 +78,15 @@ f:
     swap
     load 0
     swap
+    pushint 32
+    bzero
+    b|
+    dup
+    len
+    pushint 32
+    -
+    pushint 32
+    extract3
     pushbytess 0x0000000000000000000000000000000000000000000000000000000000000001 0x0000000000000000000000000000000000000000000000000000000000000002
     uncover 2
     match f_switch_case_0@2 f_switch_case_1@3

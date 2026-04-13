@@ -1,0 +1,291 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/function_type_copy.sol.Test.approval_program() -> uint64:
+main:
+    intcblock 0 2 1 6 200000
+    bytecblock 0x 0x0a8101 0x0000
+    bytec_0 // ""
+    txn ApplicationID
+    bnz main_after_if_else@2
+    dup
+    app_params_get AppAddress
+    pop
+    pushbytes "c"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xf59e3cc4 0x21f5b0f3 0x79c18c5e 0x769c4dc6 // method "test()bool", method "random1()void", method "random2()void", method "random3()void"
+    txna ApplicationArgs 0
+    match test main_random1_route@6 main_random2_route@7 main_random3_route@8
+    err
+
+main_random3_route@8:
+    intc_2 // 1
+    return
+
+main_random2_route@7:
+    intc_2 // 1
+    return
+
+main_random1_route@6:
+    intc_2 // 1
+    return
+
+
+// _puya_lib.arc4.dynamic_array_replace_byte_length_head(array: bytes, new_item: bytes, index: uint64) -> bytes:
+dynamic_array_replace_byte_length_head:
+    proto 3 1
+    frame_dig -3
+    substring 0 2
+    dup
+    btoi
+    frame_dig -3
+    extract 2 0
+    frame_dig -1
+    dig 2
+    <
+    assert // Index out of bounds
+    frame_dig -1
+    intc_1 // 2
+    *
+    dup2
+    extract_uint16
+    dig 2
+    dig 1
+    extract_uint16
+    dig 1
+    +
+    intc_1 // 2
+    +
+    dig 3
+    intc_0 // 0
+    uncover 3
+    substring3
+    frame_dig -2
+    concat
+    dig 3
+    len
+    uncover 4
+    uncover 3
+    uncover 2
+    substring3
+    concat
+    dup
+    cover 3
+    uncover 2
+    intc_1 // 2
+    *
+    dup
+    cover 2
+    cover 3
+    dig 2
+    extract_uint16
+    frame_dig -1
+    select
+    swap
+
+dynamic_array_replace_byte_length_head_for_header@2:
+    frame_dig 4
+    frame_dig 2
+    <
+    bz dynamic_array_replace_byte_length_head_after_for@4
+    frame_dig 3
+    dup
+    itob
+    extract 6 2
+    frame_dig 1
+    frame_dig 4
+    dup
+    cover 4
+    uncover 2
+    replace3
+    dup
+    frame_bury 1
+    dig 1
+    extract_uint16
+    intc_1 // 2
+    +
+    +
+    frame_bury 3
+    intc_1 // 2
+    +
+    frame_bury 4
+    b dynamic_array_replace_byte_length_head_for_header@2
+
+dynamic_array_replace_byte_length_head_after_for@4:
+    frame_dig 0
+    frame_dig 1
+    concat
+    frame_bury 0
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/function_type_copy.sol.Test.test[routing]() -> void:
+test:
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field Fee
+    bytec_1 // 0x0a8101
+    itxn_field ClearStateProgram
+    bytec_1 // 0x0a8101
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_2 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    intc 4 // 200000
+    itxn_field Amount
+    itxn_submit
+    pushbytes 0x000300060008000a000000000000
+    bytec_2 // 0x0000
+    intc_0 // 0
+    callsub dynamic_array_replace_byte_length_head
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 1
+    >
+    assert // index access is out of bounds
+    bytec_2 // 0x0000
+    intc_2 // 1
+    callsub dynamic_array_replace_byte_length_head
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    >
+    assert // index access is out of bounds
+    bytec_2 // 0x0000
+    intc_1 // 2
+    callsub dynamic_array_replace_byte_length_head
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field Fee
+    bytec_1 // 0x0a8101
+    itxn_field ClearStateProgram
+    bytec_1 // 0x0a8101
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_2 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    intc 4 // 200000
+    itxn_field Amount
+    itxn_submit
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0xb7c4ff64 // method "f(byte[][])(byte[][])"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    intc_0 // 0
+    extract_uint16
+    dig 1
+    len
+    substring3
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    itob
+    pushbytes 0x03
+    b==
+    assert
+    swap
+    extract 2 0
+    dig 1
+    assert // index access is out of bounds
+    dup
+    intc_0 // 0
+    extract_uint16
+    dup2
+    extract_uint16
+    intc_1 // 2
+    +
+    dig 2
+    cover 2
+    extract3
+    extract 2 0
+    bytec_0 // 0x
+    ==
+    assert
+    intc_2 // 1
+    dig 2
+    <
+    assert // index access is out of bounds
+    dup
+    intc_1 // 2
+    extract_uint16
+    dup2
+    extract_uint16
+    intc_1 // 2
+    +
+    dig 2
+    cover 2
+    extract3
+    extract 2 0
+    bytec_0 // 0x
+    ==
+    assert
+    intc_1 // 2
+    uncover 2
+    <
+    assert // index access is out of bounds
+    dup
+    pushint 4
+    extract_uint16
+    dup2
+    extract_uint16
+    intc_1 // 2
+    +
+    extract3
+    extract 2 0
+    bytec_0 // 0x
+    ==
+    assert
+    pushbytes 0x151f7c7580
+    log
+    intc_2 // 1
+    return

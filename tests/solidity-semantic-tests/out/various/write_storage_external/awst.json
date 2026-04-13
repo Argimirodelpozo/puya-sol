@@ -1007,7 +1007,7 @@
                 "end_column": null
               },
               "expr": {
-                "_type": "SubmitInnerTransaction",
+                "_type": "SubroutineCallExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
                   "line": 194,
@@ -1017,31 +1017,34 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WInnerTransaction",
-                  "name": "inner_transaction_appl",
-                  "immutable": true,
-                  "transaction_type": 6
+                  "_type": "WType",
+                  "name": "void",
+                  "immutable": true
                 },
-                "itxns": [
+                "target": {
+                  "_type": "InstanceMethodTarget",
+                  "member_name": "g"
+                },
+                "args": [
                   {
-                    "_type": "CreateInnerTransaction",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
-                      "line": 194,
-                      "end_line": 204,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WInnerTransactionFields",
-                      "name": "inner_transaction_fields_appl",
-                      "immutable": true,
-                      "transaction_type": 6
-                    },
-                    "fields": {
-                      "ApplicationArgs": {
-                        "_type": "TupleExpression",
+                    "name": null,
+                    "value": {
+                      "_type": "ReinterpretCast",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
+                        "line": 194,
+                        "end_line": 204,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "expr": {
+                        "_type": "IntrinsicCall",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
                           "line": 194,
@@ -1051,248 +1054,33 @@
                           "end_column": null
                         },
                         "wtype": {
-                          "_type": "WTuple",
-                          "name": "tuple",
+                          "_type": "BytesWType",
+                          "name": "bytes",
                           "immutable": true,
-                          "types": [
-                            {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            }
-                          ],
-                          "names": null,
-                          "source_location": null
+                          "length": null
                         },
-                        "items": [
+                        "op_code": "itob",
+                        "immediates": [],
+                        "stack_args": [
                           {
-                            "_type": "MethodConstant",
+                            "_type": "IntegerConstant",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
-                              "line": 194,
-                              "end_line": 204,
+                              "line": 201,
+                              "end_line": 203,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
                             },
-                            "value": {
-                              "_type": "MethodSignatureString",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
-                                "line": 194,
-                                "end_line": 204,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "value": "g(uint256)void"
-                            }
-                          },
-                          {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
-                              "line": 194,
-                              "end_line": 204,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "op_code": "itob",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
-                                  "line": 201,
-                                  "end_line": 203,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "value": 12,
-                                "teal_alias": null
-                              }
-                            ]
+                            "value": 12,
+                            "teal_alias": null
                           }
                         ]
-                      },
-                      "ApplicationID": {
-                        "_type": "ReinterpretCast",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
-                          "line": 194,
-                          "end_line": 204,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "application",
-                          "immutable": true
-                        },
-                        "expr": {
-                          "_type": "IntrinsicCall",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
-                            "line": 194,
-                            "end_line": 204,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "op_code": "btoi",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "IntrinsicCall",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
-                                "line": 194,
-                                "end_line": 204,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "op_code": "extract",
-                              "immediates": [
-                                24,
-                                8
-                              ],
-                              "stack_args": [
-                                {
-                                  "_type": "ReinterpretCast",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
-                                    "line": 194,
-                                    "end_line": 204,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "expr": {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
-                                      "line": 194,
-                                      "end_line": 198,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "account",
-                                      "immutable": true
-                                    },
-                                    "op_code": "global",
-                                    "immediates": [
-                                      "CurrentApplicationAddress"
-                                    ],
-                                    "stack_args": []
-                                  }
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      },
-                      "Fee": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
-                          "line": 194,
-                          "end_line": 204,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      },
-                      "OnCompletion": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
-                          "line": 194,
-                          "end_line": 204,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 0,
-                        "teal_alias": null
-                      },
-                      "TypeEnum": {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
-                          "line": 194,
-                          "end_line": 204,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 6,
-                        "teal_alias": null
                       }
                     }
                   }
@@ -3387,8 +3175,8 @@
                         "_type": "ReinterpretCast",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
-                          "line": 239,
-                          "end_line": 246,
+                          "line": 216,
+                          "end_line": 523,
                           "comment_lines": 0,
                           "column": null,
                           "end_column": null
@@ -3402,8 +3190,8 @@
                           "_type": "TupleItemExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
-                            "line": 239,
-                            "end_line": 246,
+                            "line": 216,
+                            "end_line": 523,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
@@ -3415,11 +3203,11 @@
                             "length": null
                           },
                           "base": {
-                            "_type": "VarExpression",
+                            "_type": "IntrinsicCall",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
-                              "line": 239,
-                              "end_line": 246,
+                              "line": 216,
+                              "end_line": 523,
                               "comment_lines": 0,
                               "column": null,
                               "end_column": null
@@ -3444,7 +3232,45 @@
                               "names": null,
                               "source_location": null
                             },
-                            "name": "__new_app_result"
+                            "op_code": "app_params_get",
+                            "immediates": [
+                              "AppAddress"
+                            ],
+                            "stack_args": [
+                              {
+                                "_type": "ReinterpretCast",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
+                                  "line": 239,
+                                  "end_line": 246,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "application",
+                                  "immutable": true
+                                },
+                                "expr": {
+                                  "_type": "VarExpression",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
+                                    "line": 239,
+                                    "end_line": 246,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "name": "__new_app_id_0"
+                                }
+                              }
+                            ]
                           },
                           "index": 0
                         }
@@ -3958,6 +3784,55 @@
                   "end_column": null
                 },
                 "wtype": {
+                  "_type": "WType",
+                  "name": "uint64",
+                  "immutable": true
+                },
+                "name": "__new_app_id_0"
+              },
+              "value": {
+                "_type": "IntrinsicCall",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
+                  "line": 239,
+                  "end_line": 246,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "uint64",
+                  "immutable": true
+                },
+                "op_code": "itxn",
+                "immediates": [
+                  "CreatedApplicationID"
+                ],
+                "stack_args": []
+              }
+            },
+            {
+              "_type": "AssignmentStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
+                "line": 239,
+                "end_line": 246,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "target": {
+                "_type": "VarExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
+                  "line": 239,
+                  "end_line": 246,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
                   "_type": "WTuple",
                   "name": "tuple",
                   "immutable": true,
@@ -4015,7 +3890,7 @@
                 ],
                 "stack_args": [
                   {
-                    "_type": "IntrinsicCall",
+                    "_type": "VarExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
                       "line": 239,
@@ -4029,11 +3904,7 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "op_code": "itxn",
-                    "immediates": [
-                      "CreatedApplicationID"
-                    ],
-                    "stack_args": []
+                    "name": "__new_app_id_0"
                   }
                 ]
               }
@@ -4203,107 +4074,6 @@
                         "teal_alias": null
                       }
                     }
-                  }
-                ]
-              }
-            },
-            {
-              "_type": "AssignmentStatement",
-              "source_location": {
-                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
-                "line": 239,
-                "end_line": 246,
-                "comment_lines": 0,
-                "column": null,
-                "end_column": null
-              },
-              "target": {
-                "_type": "VarExpression",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
-                  "line": 239,
-                  "end_line": 246,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "WTuple",
-                  "name": "tuple",
-                  "immutable": true,
-                  "types": [
-                    {
-                      "_type": "BytesWType",
-                      "name": "bytes",
-                      "immutable": true,
-                      "length": null
-                    },
-                    {
-                      "_type": "WType",
-                      "name": "bool",
-                      "immutable": true
-                    }
-                  ],
-                  "names": null,
-                  "source_location": null
-                },
-                "name": "__new_app_result"
-              },
-              "value": {
-                "_type": "IntrinsicCall",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
-                  "line": 239,
-                  "end_line": 246,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "WTuple",
-                  "name": "tuple",
-                  "immutable": true,
-                  "types": [
-                    {
-                      "_type": "BytesWType",
-                      "name": "bytes",
-                      "immutable": true,
-                      "length": null
-                    },
-                    {
-                      "_type": "WType",
-                      "name": "bool",
-                      "immutable": true
-                    }
-                  ],
-                  "names": null,
-                  "source_location": null
-                },
-                "op_code": "app_params_get",
-                "immediates": [
-                  "AppAddress"
-                ],
-                "stack_args": [
-                  {
-                    "_type": "IntrinsicCall",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol",
-                      "line": 239,
-                      "end_line": 246,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "uint64",
-                      "immutable": true
-                    },
-                    "op_code": "itxn",
-                    "immediates": [
-                      "CreatedApplicationID"
-                    ],
-                    "stack_args": []
                   }
                 ]
               }

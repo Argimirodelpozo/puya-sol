@@ -3,11 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/memory_params_in_external_function.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 2 64
-    bytecblock 0x151f7c75
+    intcblock 1 0 2
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -25,15 +24,21 @@ main_after_if_else@2:
     assert
     pushbytess 0x49712b6a 0x980a6fb9 // method "f(byte[],byte[],uint256[])(uint512,byte[1],uint512,byte[1],uint512,uint512)", method "g()(uint512,byte[1],uint512,byte[1],uint512,uint512)"
     txna ApplicationArgs 0
-    match f g
+    match f main_g_route@6
     err
+
+main_g_route@6:
+    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000036200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003660000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007
+    log
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/memory_params_in_external_function.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
     dup
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_2 // 2
     +
@@ -45,7 +50,7 @@ f:
     extract 2 0
     txna ApplicationArgs 2
     dup
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_2 // 2
     +
@@ -57,7 +62,7 @@ f:
     extract 2 0
     txna ApplicationArgs 3
     dup
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
     pushint 32
@@ -82,7 +87,7 @@ f:
     itob
     uncover 5
     extract 98 32
-    intc_3 // 64
+    pushint 64
     bzero
     uncover 6
     dig 1
@@ -102,71 +107,9 @@ f:
     cover 2
     b|
     concat
-    bytec_0 // 0x151f7c75
+    pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/memory_params_in_external_function.sol.C.g[routing]() -> void:
-g:
-    itxn_begin
-    global CurrentApplicationAddress
-    pushint 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    pushbytes 0xff7d9eac // method "f(byte[],byte[],uint256[])(uint256,uint8[1],uint256,uint8[1],uint256,uint256)"
-    itxn_field ApplicationArgs
-    pushbytes "abc"
-    itxn_field ApplicationArgs
-    pushbytes "def"
-    itxn_field ApplicationArgs
-    pushbytes 0x00040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 32
-    itxn LastLog
-    extract 36 1
-    itxn LastLog
-    extract 37 32
-    itxn LastLog
-    extract 69 1
-    itxn LastLog
-    extract 70 32
-    itxn LastLog
-    extract 102 32
-    intc_3 // 64
-    bzero
-    uncover 6
-    dig 1
-    b|
-    uncover 6
-    concat
-    uncover 5
-    dig 2
-    b|
-    concat
-    uncover 4
-    concat
-    uncover 3
-    dig 2
-    b|
-    concat
-    cover 2
-    b|
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
+    intc_0 // 1
     return

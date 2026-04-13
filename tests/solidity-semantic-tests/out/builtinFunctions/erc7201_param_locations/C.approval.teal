@@ -1,0 +1,195 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_locations.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 1 32 2
+    bytecblock 0x00 0x151f7c75 0x "example.contract" "example.main" 0x010000000000000000000000000000000000000000000000000000000000000000
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytes "storageVarStr"
+    bytec_3 // "example.contract"
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x4ade10b8 0xd7e1d5ca 0x653319fc 0x6b2dbba1 0x7ee49c34 0xa1a6742d // method "storageVar()bool", method "constStorageVar()bool", method "memoryVar()bool", method "calldataParam(string)bool", method "calldataSlice(byte[])bool", method "literalParam()bool"
+    txna ApplicationArgs 0
+    match storageVar constStorageVar memoryVar calldataParam calldataSlice literalParam
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_locations.sol.erc7201Mock(id: bytes) -> bytes:
+erc7201Mock:
+    proto 1 1
+    frame_dig -1
+    keccak256
+    btoi
+    itob
+    dup
+    pushbytes 0x01
+    b>=
+    assert // underflow
+    intc_2 // 32
+    bzero
+    swap
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    pushbytes 0x01
+    b-
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    keccak256
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b&
+    btoi
+    itob
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_locations.sol.C.storageVar[routing]() -> void:
+storageVar:
+    bytec_3 // "example.contract"
+    callsub erc7201Mock
+    bytec_2 // 0x
+    b==
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_locations.sol.C.constStorageVar[routing]() -> void:
+constStorageVar:
+    bytec_3 // "example.contract"
+    callsub erc7201Mock
+    pushbytes 0x3900f6bf9776dcf7feeb475cf1a84528427ce740b518e42c213bbb76e98e6700
+    b==
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_locations.sol.C.memoryVar[routing]() -> void:
+memoryVar:
+    bytec 4 // "example.main"
+    callsub erc7201Mock
+    bytec_2 // 0x
+    b==
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_locations.sol.C.calldataParam[routing]() -> void:
+calldataParam:
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    bytec 4 // "example.main"
+    callsub erc7201Mock
+    bytec_2 // 0x
+    b==
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_locations.sol.C.calldataSlice[routing]() -> void:
+calldataSlice:
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    pushbytes "amp"
+    callsub erc7201Mock
+    bytec_2 // 0x
+    b==
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_locations.sol.C.literalParam[routing]() -> void:
+literalParam:
+    bytec 4 // "example.main"
+    callsub erc7201Mock
+    pushbytes 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500
+    b==
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

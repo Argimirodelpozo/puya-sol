@@ -4,16 +4,16 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_assign_reference_to_struct.sol.test.approval_program() -> uint64:
 main:
     intcblock 0 1
-    bytecblock "data1" 0x0000000000000000000000000000000000000000000000000000000000000000 "data2" "data3" 0x0000000000000000000000000000000000000000000000000000000000000003
+    bytecblock "data1" 0x0000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000003 "data2" "data3"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "data1"
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    bytec_2 // "data2"
+    bytec_3 // "data2"
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    bytec_3 // "data3"
+    bytec 4 // "data3"
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     bytec_0 // "data1"
@@ -30,7 +30,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x5d12d357 // method "assign()(uint512,uint512,uint512,uint512)"
+    pushbytes 0x2da33b3d // method "assign()(uint256,uint256,uint256,uint256)"
     txna ApplicationArgs 0
     match main_assign_route@4
     err
@@ -50,7 +50,7 @@ assign:
     bytec_0 // "data1"
     app_global_get_ex
     assert // check data1 exists
-    bytec_2 // "data2"
+    bytec_3 // "data2"
     dig 1
     app_global_put
     intc_0 // 0
@@ -62,30 +62,33 @@ assign:
     extract 0 32
     swap
     extract 0 32
+    pushint 32
+    bzero
     bytec_0 // "data1"
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000003
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000003
     app_global_put
-    bytec_3 // "data3"
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000003
+    bytec 4 // "data3"
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000003
     app_global_put
     intc_0 // 0
     bytec_0 // "data1"
     app_global_get_ex
     assert // check data1 exists
     extract 0 32
-    pushint 64
-    bzero
-    uncover 3
-    dig 1
-    b|
     uncover 3
     dig 2
     b|
-    concat
-    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003
-    concat
-    cover 2
+    uncover 3
+    dig 3
     b|
+    uncover 2
+    uncover 3
+    b|
+    cover 2
+    concat
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000003
+    concat
+    swap
     concat
     pushbytes 0x151f7c75
     swap

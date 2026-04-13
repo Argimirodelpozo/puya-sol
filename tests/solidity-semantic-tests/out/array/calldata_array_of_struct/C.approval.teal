@@ -3,10 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/calldata_array_of_struct.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    pushint 1
     return
 
 main_after_if_else@2:
@@ -17,7 +16,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xb928de13 // method "f((uint256,uint256)[])(uint512,uint512,uint512,uint512,uint512)"
+    pushbytes 0x735ce471 // method "f((uint256,uint256)[])(uint256,uint256,uint256,uint256,uint256)"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -38,7 +37,7 @@ f:
     pushint 0
     extract_uint16 // on error: invalid array length header
     dup
-    intc_1 // 64
+    pushint 64
     *
     pushint 2
     +
@@ -59,7 +58,7 @@ f:
     extract 0 32
     swap
     extract 32 32
-    intc_1 // 64
+    pushint 32
     bzero
     uncover 5
     dig 1
@@ -67,21 +66,27 @@ f:
     uncover 5
     dig 2
     b|
-    concat
-    uncover 4
-    dig 2
+    uncover 5
+    dig 3
     b|
+    uncover 5
+    dig 4
+    b|
+    uncover 5
+    uncover 5
+    b|
+    uncover 4
+    uncover 4
     concat
     uncover 3
-    dig 2
-    b|
     concat
-    cover 2
-    b|
+    uncover 2
+    concat
+    swap
     concat
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    pushint 1
     return

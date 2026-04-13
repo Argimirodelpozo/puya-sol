@@ -3,14 +3,18 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/check_var_init.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64
+    intcblock 1 0 64
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 "x"
     txn ApplicationID
-    bnz main_after_if_else@2
+    bnz main_after_if_else@5
+    txn GroupIndex
+    bz main_ternary_false@3
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
+
+main_ternary_merge@4:
     itob
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
@@ -24,7 +28,11 @@ main:
     intc_0 // 1
     return
 
-main_after_if_else@2:
+main_ternary_false@3:
+    intc_1 // 0
+    b main_ternary_merge@4
+
+main_after_if_else@5:
     pushint 4096
     bzero
     store 0
@@ -34,10 +42,10 @@ main_after_if_else@2:
     store 0
     pushbytes 0x3f4abdfd // method "x()uint512"
     txna ApplicationArgs 0
-    match main_x_route@4
+    match main_x_route@7
     err
 
-main_x_route@4:
+main_x_route@7:
     txn OnCompletion
     !
     txn ApplicationID
@@ -48,16 +56,16 @@ main_x_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/check_var_init.sol.C.x[routing]() -> void:
 x:
-    pushint 0
+    intc_1 // 0
     bytec_1 // "x"
     app_global_get_ex
     assert // check x exists
     dup
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x151f7c75

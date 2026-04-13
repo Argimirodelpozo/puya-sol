@@ -3,9 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_storage_to_memory.sol.C.approval_program() -> uint64:
 main:
+    intcblock 1 0
+    bytecblock "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -16,18 +21,31 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x98f7019c // method "f()(uint64,uint512,uint512)"
-    txna ApplicationArgs 0
-    match main_f_route@4
-    err
-
-main_f_route@4:
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
-    b f
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xdb4bd076 // method "__postInit()void", method "f()(uint64,uint128,uint256)"
+    txna ApplicationArgs 0
+    match __postInit f
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_storage_to_memory.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    pushbytes "arr"
+    pushint 2528
+    box_create
+    pop
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/struct_storage_to_memory.sol.C.f[routing]() -> void:
@@ -39,30 +57,31 @@ f:
     select
     extract 8 72
     dup
-    pushint 0
+    intc_1 // 0
     extract_uint64
     pushint 4294967295
     &
     dig 1
     extract 8 32
+    intc_1 // 0
+    assert // overflow
+    pushint 16
+    bzero
+    b|
     uncover 2
     extract 40 32
+    pushint 32
+    bzero
+    b|
     uncover 2
     itob
-    pushint 64
-    bzero
-    uncover 3
-    dig 1
-    b|
     uncover 2
-    swap
     concat
-    cover 2
-    b|
+    swap
     concat
     pushbytes 0x151f7c75
     swap
     concat
     log
-    pushint 1
+    intc_0 // 1
     return

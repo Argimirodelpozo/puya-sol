@@ -347,7 +347,7 @@
                         },
                         "values": {
                           "x": {
-                            "_type": "IntegerConstant",
+                            "_type": "BytesConstant",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_storage_structs.sol",
                               "line": 135,
@@ -364,8 +364,8 @@
                               "arc4_alias": null,
                               "source_location": null
                             },
-                            "value": 0,
-                            "teal_alias": null
+                            "value": "0000000000000000000000000000000000000000",
+                            "encoding": "base16"
                           }
                         }
                       }
@@ -862,14 +862,20 @@
           "immutable": true,
           "types": [
             {
-              "_type": "WType",
-              "name": "biguint",
-              "immutable": true
+              "_type": "ARC4UIntN",
+              "name": "arc4.uint256",
+              "immutable": true,
+              "n": 256,
+              "arc4_alias": null,
+              "source_location": null
             },
             {
-              "_type": "WType",
-              "name": "biguint",
-              "immutable": true
+              "_type": "ARC4UIntN",
+              "name": "arc4.uint256",
+              "immutable": true,
+              "n": 256,
+              "arc4_alias": null,
+              "source_location": null
             }
           ],
           "names": null,
@@ -1146,14 +1152,20 @@
                   "immutable": true,
                   "types": [
                     {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint256",
+                      "immutable": true,
+                      "n": 256,
+                      "arc4_alias": null,
+                      "source_location": null
                     },
                     {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint256",
+                      "immutable": true,
+                      "n": 256,
+                      "arc4_alias": null,
+                      "source_location": null
                     }
                   ],
                   "names": null,
@@ -1161,7 +1173,7 @@
                 },
                 "items": [
                   {
-                    "_type": "SubroutineCallExpression",
+                    "_type": "ARC4Encode",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_storage_structs.sol",
                       "line": 383,
@@ -1171,48 +1183,37 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint256",
+                      "immutable": true,
+                      "n": 256,
+                      "arc4_alias": null,
+                      "source_location": null
                     },
-                    "target": {
-                      "_type": "SubroutineID",
-                      "target": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_storage_structs.sol.L.f"
-                    },
-                    "args": [
-                      {
-                        "name": null,
-                        "value": {
-                          "_type": "AppStateExpression",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_storage_structs.sol",
-                            "line": 383,
-                            "end_line": 384,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "ARC4Struct",
-                            "name": "Struct",
-                            "immutable": true,
-                            "fields": {
-                              "x": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint256",
-                                "immutable": true,
-                                "n": 256,
-                                "arc4_alias": null,
-                                "source_location": null
-                              }
-                            },
-                            "frozen": true,
-                            "arc4_alias": null,
-                            "source_location": null,
-                            "desc": null
-                          },
-                          "key": {
-                            "_type": "BytesConstant",
+                    "value": {
+                      "_type": "SubroutineCallExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_storage_structs.sol",
+                        "line": 383,
+                        "end_line": 388,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "target": {
+                        "_type": "SubroutineID",
+                        "target": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_storage_structs.sol.L.f"
+                      },
+                      "args": [
+                        {
+                          "name": null,
+                          "value": {
+                            "_type": "AppStateExpression",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_storage_structs.sol",
                               "line": 383,
@@ -1222,20 +1223,51 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "WType",
-                              "name": "state_key",
-                              "immutable": true
+                              "_type": "ARC4Struct",
+                              "name": "Struct",
+                              "immutable": true,
+                              "fields": {
+                                "x": {
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint256",
+                                  "immutable": true,
+                                  "n": 256,
+                                  "arc4_alias": null,
+                                  "source_location": null
+                                }
+                              },
+                              "frozen": true,
+                              "arc4_alias": null,
+                              "source_location": null,
+                              "desc": null
                             },
-                            "value": "a{",
-                            "encoding": "utf8"
-                          },
-                          "exists_assertion_message": "check s exists"
+                            "key": {
+                              "_type": "BytesConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_storage_structs.sol",
+                                "line": 383,
+                                "end_line": 384,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "state_key",
+                                "immutable": true
+                              },
+                              "value": "a{",
+                              "encoding": "utf8"
+                            },
+                            "exists_assertion_message": "check s exists"
+                          }
                         }
-                      }
-                    ]
+                      ]
+                    },
+                    "error_message": null
                   },
                   {
-                    "_type": "SubroutineCallExpression",
+                    "_type": "ARC4Encode",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_storage_structs.sol",
                       "line": 390,
@@ -1245,48 +1277,37 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "WType",
-                      "name": "biguint",
-                      "immutable": true
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint256",
+                      "immutable": true,
+                      "n": 256,
+                      "arc4_alias": null,
+                      "source_location": null
                     },
-                    "target": {
-                      "_type": "InstanceMethodTarget",
-                      "member_name": "h"
-                    },
-                    "args": [
-                      {
-                        "name": null,
-                        "value": {
-                          "_type": "AppStateExpression",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_storage_structs.sol",
-                            "line": 392,
-                            "end_line": 393,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "ARC4Struct",
-                            "name": "Struct",
-                            "immutable": true,
-                            "fields": {
-                              "x": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint256",
-                                "immutable": true,
-                                "n": 256,
-                                "arc4_alias": null,
-                                "source_location": null
-                              }
-                            },
-                            "frozen": true,
-                            "arc4_alias": null,
-                            "source_location": null,
-                            "desc": null
-                          },
-                          "key": {
-                            "_type": "BytesConstant",
+                    "value": {
+                      "_type": "SubroutineCallExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_storage_structs.sol",
+                        "line": 390,
+                        "end_line": 394,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "biguint",
+                        "immutable": true
+                      },
+                      "target": {
+                        "_type": "InstanceMethodTarget",
+                        "member_name": "h"
+                      },
+                      "args": [
+                        {
+                          "name": null,
+                          "value": {
+                            "_type": "AppStateExpression",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_storage_structs.sol",
                               "line": 392,
@@ -1296,17 +1317,48 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "WType",
-                              "name": "state_key",
-                              "immutable": true
+                              "_type": "ARC4Struct",
+                              "name": "Struct",
+                              "immutable": true,
+                              "fields": {
+                                "x": {
+                                  "_type": "ARC4UIntN",
+                                  "name": "arc4.uint256",
+                                  "immutable": true,
+                                  "n": 256,
+                                  "arc4_alias": null,
+                                  "source_location": null
+                                }
+                              },
+                              "frozen": true,
+                              "arc4_alias": null,
+                              "source_location": null,
+                              "desc": null
                             },
-                            "value": "a{",
-                            "encoding": "utf8"
-                          },
-                          "exists_assertion_message": "check s exists"
+                            "key": {
+                              "_type": "BytesConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_storage_structs.sol",
+                                "line": 392,
+                                "end_line": 393,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "state_key",
+                                "immutable": true
+                              },
+                              "value": "a{",
+                              "encoding": "utf8"
+                            },
+                            "exists_assertion_message": "check s exists"
+                          }
                         }
-                      }
-                    ]
+                      ]
+                    },
+                    "error_message": null
                   }
                 ]
               }

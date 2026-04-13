@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event.sol.ClientReceipt.approval_program() -> uint64:
 main:
-    intcblock 1 32
+    intcblock 1 32 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -33,6 +33,7 @@ main_deposit_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event.sol.ClientReceipt.deposit[routing]() -> void:
 deposit:
+    intc_2 // 0
     txna ApplicationArgs 1
     dup
     len
@@ -45,17 +46,21 @@ deposit:
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    pushint 0
+    intc_2 // 0
     getbit
     dup
     intc_0 // 1
     <=
     assert // ABI bool validation
-    bz deposit_else_body@3
+    bz deposit_else_body@6
+    txn GroupIndex
+    bz deposit_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
+
+deposit_ternary_merge@5:
     itob
     load 0
     intc_1 // 32
@@ -71,18 +76,30 @@ deposit:
     replace2 0
     store 0
 
-deposit_after_if_else@4:
+deposit_after_if_else@10:
     intc_0 // 1
     return
 
-deposit_else_body@3:
+deposit_ternary_false@4:
+    intc_2 // 0
+    b deposit_ternary_merge@5
+
+deposit_else_body@6:
     txn Sender
+    bury 2
+    txn GroupIndex
+    bz deposit_ternary_false@8
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
+
+deposit_ternary_merge@9:
     itob
-    swap
+    intc_1 // 32
+    bzero
+    b|
+    dig 2
     dig 2
     concat
     swap
@@ -91,4 +108,8 @@ deposit_else_body@3:
     swap
     concat
     log
-    b deposit_after_if_else@4
+    b deposit_after_if_else@10
+
+deposit_ternary_false@8:
+    intc_2 // 0
+    b deposit_ternary_merge@9

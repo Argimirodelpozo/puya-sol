@@ -32,7 +32,11 @@ main_deposit_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_really_lots_of_data.sol.ClientReceipt.deposit[routing]() -> void:
 deposit:
+    txn NumAppArgs
+    bz deposit_ternary_false@3
     txna ApplicationArgs 0
+
+deposit_ternary_merge@4:
     dup
     len
     itob
@@ -45,3 +49,8 @@ deposit:
     log
     pushint 1
     return
+
+deposit_ternary_false@3:
+    pushint 0
+    bzero
+    b deposit_ternary_merge@4

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/storage_calldata_refs.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 1 2
+    intcblock 32 0 1 2
     bytecblock "data" "__ctor_pending" 0x0000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x5147181a // method "__postInit()void", method "f(uint256,uint256[])(uint512,uint512)"
+    pushbytess 0xbacc49e3 0x7a2e6430 // method "__postInit()void", method "f(uint256,uint256[])(uint256,uint256)"
     txna ApplicationArgs 0
     match __postInit f
     err
@@ -49,10 +49,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_0 // 0
+    intc_1 // 0
     app_global_put
     bytec_0 // "data"
-    intc_0 // 0
+    intc_3 // 2
     box_create
     pop
     intc_2 // 1
@@ -65,14 +65,14 @@ f:
     dup
     len
     dup
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_1 // 32
+    intc_0 // 32
     *
     intc_3 // 2
     +
@@ -81,12 +81,13 @@ f:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
     swap
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     uncover 2
+    dig 1
     b|
     pushbytes 0x0001
     swap
@@ -94,10 +95,10 @@ f:
     dup
     extract 2 0
     swap
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     bytec_0 // "data"
-    intc_0 // 0
+    intc_1 // 0
     intc_3 // 2
     box_extract
     btoi
@@ -105,7 +106,7 @@ f:
     box_len
     pop
     dig 2
-    intc_1 // 32
+    intc_0 // 32
     *
     +
     bytec_0 // "data"
@@ -117,16 +118,16 @@ f:
     itob
     extract 6 2
     bytec_0 // "data"
-    intc_0 // 0
+    intc_1 // 0
     uncover 2
     box_replace
-    intc_1 // 32
+    intc_0 // 32
     *
     intc_3 // 2
     +
     bytec_0 // "data"
     swap
-    intc_0 // 0
+    intc_1 // 0
     uncover 3
     box_splice
     bytec_0 // "data"
@@ -134,6 +135,8 @@ f:
     bytec_2 // 0x0000
     cover 2
     select
+    uncover 2
+    swap
     callsub fun
     pop
     cover 2
@@ -147,18 +150,17 @@ f:
     callsub fun
     popn 2
     bury 1
-    extract 34 32
     dig 1
     len
-    pushint 64
+    intc_0 // 32
     <=
     assert // overflow
-    pushint 64
-    bzero
-    uncover 2
-    dig 1
+    swap
+    dig 2
     b|
-    cover 2
+    swap
+    extract 34 32
+    uncover 2
     b|
     concat
     pushbytes 0x151f7c75

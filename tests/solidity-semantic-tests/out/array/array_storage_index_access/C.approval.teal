@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_access.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 8
+    intcblock 32 0 2 1
     bytecblock "storageArray" "__ctor_pending" 0x068101 0x01
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
-    intc_2 // 1
+    intc_3 // 1
     app_global_put
-    intc_2 // 1
+    intc_3 // 1
     return
 
 main_after_if_else@2:
@@ -41,10 +41,10 @@ __postInit:
     intc_1 // 0
     app_global_put
     bytec_0 // "storageArray"
-    intc_1 // 0
+    intc_2 // 2
     box_create
     pop
-    intc_2 // 1
+    intc_3 // 1
     return
 
 
@@ -59,7 +59,7 @@ test_indices:
     ==
     assert // invalid number of bytes for arc4.uint256
 
-test_indices_while_top@17:
+test_indices_while_top@19:
     pushint 170010
     global OpcodeBudget
     >
@@ -76,18 +76,25 @@ test_indices_while_top@17:
     intc_1 // 0
     itxn_field Fee
     itxn_submit
-    b test_indices_while_top@17
+    b test_indices_while_top@19
 
 test_indices_while_top@2:
     bytec_0 // "storageArray"
     box_len
     pop
+    intc_2 // 2
+    -
     intc_0 // 32
     /
     itob
     dig 1
     b<
     bz test_indices_while_top@5
+    bytec_0 // "storageArray"
+    intc_1 // 0
+    intc_2 // 2
+    box_extract
+    btoi
     bytec_0 // "storageArray"
     box_len
     pop
@@ -96,12 +103,32 @@ test_indices_while_top@2:
     bytec_0 // "storageArray"
     swap
     box_resize
+    dup
+    intc_3 // 1
+    +
+    itob
+    extract 6 2
+    bytec_0 // "storageArray"
+    intc_1 // 0
+    uncover 2
+    box_replace
+    intc_0 // 32
+    *
+    intc_2 // 2
+    +
+    bytec_0 // "storageArray"
+    swap
+    intc_1 // 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    box_splice
     b test_indices_while_top@2
 
 test_indices_while_top@5:
     bytec_0 // "storageArray"
     box_len
     pop
+    intc_2 // 2
+    -
     intc_0 // 32
     /
     itob
@@ -110,10 +137,10 @@ test_indices_while_top@5:
     bz test_indices_after_while@7
     bytec_0 // "storageArray"
     intc_1 // 0
-    pushint 2
+    intc_2 // 2
     box_extract
     btoi
-    intc_2 // 1
+    intc_3 // 1
     -
     dup
     itob
@@ -124,7 +151,7 @@ test_indices_while_top@5:
     box_replace
     intc_0 // 32
     *
-    pushint 2
+    intc_2 // 2
     +
     bytec_0 // "storageArray"
     swap
@@ -166,18 +193,18 @@ test_indices_while_top@8:
     bzero
     dig 1
     b|
-    intc_3 // 8
+    pushint 8
     bzero
     uncover 3
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     intc_0 // 32
     *
-    pushint 2
+    intc_2 // 2
     +
     bytec_0 // "storageArray"
     swap
@@ -199,7 +226,7 @@ test_indices_while_top@11:
     pushbytes 0x0000
     cover 2
     select
-    intc_3 // 8
+    pushint 8
     bzero
     dig 3
     dup
@@ -207,7 +234,7 @@ test_indices_while_top@11:
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     swap
@@ -227,5 +254,5 @@ test_indices_while_top@11:
     b test_indices_while_top@11
 
 test_indices_after_while@13:
-    intc_2 // 1
+    intc_3 // 1
     return

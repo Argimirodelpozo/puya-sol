@@ -1,0 +1,118 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_as_return_type.sol.A.approval_program() -> uint64:
+main:
+    intcblock 1 16 65535
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0x34d86182 // method "f(uint64)uint16[5]"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_as_return_type.sol.A.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    dup
+    intc_2 // 65535
+    <=
+    assert // ABI validation
+    intc_2 // 65535
+    &
+    dup
+    itob
+    dup
+    bitlen
+    intc_1 // 16
+    <=
+    assert // overflow
+    extract 6 2
+    pushbytes 0x00000000000000000000
+    swap
+    replace2 0 // on error: index access is out of bounds
+    swap
+    intc_0 // 1
+    +
+    dup
+    itob
+    dup
+    bitlen
+    intc_1 // 16
+    <=
+    assert // overflow
+    extract 6 2
+    uncover 2
+    swap
+    replace2 2 // on error: index access is out of bounds
+    swap
+    intc_0 // 1
+    +
+    dup
+    itob
+    dup
+    bitlen
+    intc_1 // 16
+    <=
+    assert // overflow
+    extract 6 2
+    uncover 2
+    swap
+    replace2 4 // on error: index access is out of bounds
+    swap
+    intc_0 // 1
+    +
+    dup
+    itob
+    dup
+    bitlen
+    intc_1 // 16
+    <=
+    assert // overflow
+    extract 6 2
+    uncover 2
+    swap
+    replace2 6 // on error: index access is out of bounds
+    swap
+    intc_0 // 1
+    +
+    itob
+    dup
+    bitlen
+    intc_1 // 16
+    <=
+    assert // overflow
+    extract 6 2
+    replace2 8 // on error: index access is out of bounds
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

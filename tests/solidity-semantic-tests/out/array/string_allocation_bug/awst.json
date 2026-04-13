@@ -681,6 +681,74 @@
               }
             },
             {
+              "_type": "ExpressionStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol",
+                "line": 1,
+                "end_line": 286,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "expr": {
+                "_type": "IntrinsicCall",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol",
+                  "line": 1,
+                  "end_line": 286,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "bool",
+                  "immutable": true
+                },
+                "op_code": "box_create",
+                "immediates": [],
+                "stack_args": [
+                  {
+                    "_type": "BytesConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol",
+                      "line": 1,
+                      "end_line": 286,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "value": "Z~",
+                    "encoding": "utf8"
+                  },
+                  {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol",
+                      "line": 1,
+                      "end_line": 286,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "value": 64,
+                    "teal_alias": null
+                  }
+                ]
+              }
+            },
+            {
               "_type": "AssignmentStatement",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol",
@@ -884,7 +952,7 @@
                     "encoding": "base16"
                   },
                   "x": {
-                    "_type": "IntegerConstant",
+                    "_type": "BytesConstant",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol",
                       "line": 159,
@@ -901,11 +969,11 @@
                       "arc4_alias": null,
                       "source_location": null
                     },
-                    "value": 0,
-                    "teal_alias": null
+                    "value": "0000000000",
+                    "encoding": "base16"
                   },
                   "y": {
-                    "_type": "IntegerConstant",
+                    "_type": "BytesConstant",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol",
                       "line": 159,
@@ -922,8 +990,8 @@
                       "arc4_alias": null,
                       "source_location": null
                     },
-                    "value": 0,
-                    "teal_alias": null
+                    "value": "0000000000",
+                    "encoding": "base16"
                   }
                 }
               }
@@ -3612,7 +3680,7 @@
         "args": [
           {
             "_type": "SubroutineArgument",
-            "name": "key0",
+            "name": "__arc4_key0",
             "source_location": {
               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol",
               "line": 115,
@@ -3622,9 +3690,12 @@
               "end_column": null
             },
             "wtype": {
-              "_type": "WType",
-              "name": "biguint",
-              "immutable": true
+              "_type": "ARC4UIntN",
+              "name": "arc4.uint256",
+              "immutable": true,
+              "n": 256,
+              "arc4_alias": null,
+              "source_location": null
             }
           }
         ],
@@ -3673,6 +3744,71 @@
             "end_column": null
           },
           "body": [
+            {
+              "_type": "AssignmentStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol",
+                "line": 115,
+                "end_line": 128,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "target": {
+                "_type": "VarExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol",
+                  "line": 115,
+                  "end_line": 128,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
+                },
+                "name": "key0"
+              },
+              "value": {
+                "_type": "ARC4Decode",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol",
+                  "line": 115,
+                  "end_line": 128,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "biguint",
+                  "immutable": true
+                },
+                "value": {
+                  "_type": "VarExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol",
+                    "line": 115,
+                    "end_line": 128,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
+                  },
+                  "name": "__arc4_key0"
+                },
+                "error_message": null
+              }
+            },
             {
               "_type": "ReturnStatement",
               "source_location": {
@@ -4305,7 +4441,7 @@
                               "encoding": "base16"
                             },
                             "x": {
-                              "_type": "IntegerConstant",
+                              "_type": "BytesConstant",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol",
                                 "line": 115,
@@ -4322,11 +4458,11 @@
                                 "arc4_alias": null,
                                 "source_location": null
                               },
-                              "value": 0,
-                              "teal_alias": null
+                              "value": "0000000000",
+                              "encoding": "base16"
                             },
                             "y": {
-                              "_type": "IntegerConstant",
+                              "_type": "BytesConstant",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol",
                                 "line": 115,
@@ -4343,8 +4479,8 @@
                                 "arc4_alias": null,
                                 "source_location": null
                               },
-                              "value": 0,
-                              "teal_alias": null
+                              "value": "0000000000",
+                              "encoding": "base16"
                             }
                           }
                         }
@@ -4930,7 +5066,7 @@
                               "encoding": "base16"
                             },
                             "x": {
-                              "_type": "IntegerConstant",
+                              "_type": "BytesConstant",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol",
                                 "line": 115,
@@ -4947,11 +5083,11 @@
                                 "arc4_alias": null,
                                 "source_location": null
                               },
-                              "value": 0,
-                              "teal_alias": null
+                              "value": "0000000000",
+                              "encoding": "base16"
                             },
                             "y": {
-                              "_type": "IntegerConstant",
+                              "_type": "BytesConstant",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol",
                                 "line": 115,
@@ -4968,8 +5104,8 @@
                                 "arc4_alias": null,
                                 "source_location": null
                               },
-                              "value": 0,
-                              "teal_alias": null
+                              "value": "0000000000",
+                              "encoding": "base16"
                             }
                           }
                         }
@@ -5562,7 +5698,7 @@
                               "encoding": "base16"
                             },
                             "x": {
-                              "_type": "IntegerConstant",
+                              "_type": "BytesConstant",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol",
                                 "line": 115,
@@ -5579,11 +5715,11 @@
                                 "arc4_alias": null,
                                 "source_location": null
                               },
-                              "value": 0,
-                              "teal_alias": null
+                              "value": "0000000000",
+                              "encoding": "base16"
                             },
                             "y": {
-                              "_type": "IntegerConstant",
+                              "_type": "BytesConstant",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol",
                                 "line": 115,
@@ -5600,8 +5736,8 @@
                                 "arc4_alias": null,
                                 "source_location": null
                               },
-                              "value": 0,
-                              "teal_alias": null
+                              "value": "0000000000",
+                              "encoding": "base16"
                             }
                           }
                         }
@@ -6194,7 +6330,7 @@
                               "encoding": "base16"
                             },
                             "x": {
-                              "_type": "IntegerConstant",
+                              "_type": "BytesConstant",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol",
                                 "line": 115,
@@ -6211,11 +6347,11 @@
                                 "arc4_alias": null,
                                 "source_location": null
                               },
-                              "value": 0,
-                              "teal_alias": null
+                              "value": "0000000000",
+                              "encoding": "base16"
                             },
                             "y": {
-                              "_type": "IntegerConstant",
+                              "_type": "BytesConstant",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_allocation_bug.sol",
                                 "line": 115,
@@ -6232,8 +6368,8 @@
                                 "arc4_alias": null,
                                 "source_location": null
                               },
-                              "value": 0,
-                              "teal_alias": null
+                              "value": "0000000000",
+                              "encoding": "base16"
                             }
                           }
                         }

@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x9bd2c6b0 0x58028f6b // method "g(uint256[])(uint512,uint512)", method "h(uint256[],uint256,uint256)(uint512,uint512)"
+    pushbytess 0xedeb9018 0x9f7b4b37 // method "g(uint256[])(uint256,uint256)", method "h(uint256[],uint256,uint256)(uint256,uint256)"
     txna ApplicationArgs 0
     match g h
     err
@@ -47,13 +47,6 @@ g:
     itob
     swap
     extract 2 32
-    pushint 64
-    bzero
-    uncover 2
-    dig 1
-    b|
-    cover 2
-    b|
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -114,13 +107,6 @@ h:
     itob
     swap
     extract 2 32
-    pushint 64
-    bzero
-    uncover 2
-    dig 1
-    b|
-    cover 2
-    b|
     concat
     bytec_0 // 0x151f7c75
     swap

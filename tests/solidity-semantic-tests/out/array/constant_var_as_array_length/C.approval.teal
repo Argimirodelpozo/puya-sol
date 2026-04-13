@@ -3,13 +3,13 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/constant_var_as_array_length.sol.C.approval_program() -> uint64:
 main:
-    intcblock 64 32 1
+    intcblock 32 1 64
     txn ApplicationID
     bnz main_after_if_else@2
     pushbytes "a"
     txna ApplicationArgs 0
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -20,7 +20,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x2536e4ab // method "a(uint512)uint512"
+    pushbytes 0x62dde4bc // method "a(uint256)uint512"
     txna ApplicationArgs 0
     match main_a_route@4
     err
@@ -39,18 +39,18 @@ a:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    intc_1 // 32
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
     bzero
     swap
     concat
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    intc_0 // 32
     extract3
     sha256
     pushbytes "a"
@@ -62,15 +62,15 @@ a:
     select
     dup
     len
-    intc_0 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_0 // 64
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return

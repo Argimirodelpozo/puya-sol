@@ -70,6 +70,7 @@ g:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -81,12 +82,7 @@ g:
     intc_3 // 200000
     itxn_field Amount
     itxn_submit
-    itxn CreatedApplicationID
-    app_params_get AppAddress
-    pop
     itxn_begin
-    pushint 24
-    extract_uint64
     intc_2 // 6
     itxn_field TypeEnum
     intc_0 // 0

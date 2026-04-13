@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_contract_key.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 0 255 32
+    intcblock 1 255 0 32
     bytecblock "__ctor_pending" "table"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,10 +38,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_1 // 0
+    intc_2 // 0
     app_global_put
     bytec_1 // "table"
-    intc_1 // 0
+    pushint 2
     box_create
     pop
     intc_0 // 1
@@ -63,11 +63,11 @@ get:
     box_get
     swap
     btoi
-    intc_1 // 0
+    intc_2 // 0
     swap
     uncover 2
     select
-    intc_2 // 255
+    intc_1 // 255
     &
     itob
     pushbytes 0x151f7c75
@@ -94,10 +94,10 @@ set:
     assert // invalid number of bytes for arc4.uint64
     btoi
     dup
-    intc_2 // 255
+    intc_1 // 255
     <=
     assert // ABI validation
-    intc_2 // 255
+    intc_1 // 255
     &
     swap
     sha256

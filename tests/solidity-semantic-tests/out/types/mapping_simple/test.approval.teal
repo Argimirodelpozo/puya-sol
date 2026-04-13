@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_simple.sol.test.approval_program() -> uint64:
 main:
-    intcblock 255 1 0 8
+    intcblock 255 1 8 0
     bytecblock "__ctor_pending" "table"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,10 +38,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_2 // 0
+    intc_3 // 0
     app_global_put
     bytec_1 // "table"
-    intc_2 // 0
+    pushint 2
     box_create
     pop
     intc_1 // 1
@@ -53,7 +53,7 @@ get:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
@@ -71,7 +71,7 @@ get:
     box_get
     swap
     btoi
-    intc_2 // 0
+    intc_3 // 0
     swap
     uncover 2
     select
@@ -91,14 +91,14 @@ set:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi

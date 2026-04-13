@@ -46,17 +46,25 @@ __postInit:
     intc_1 // 0
     app_global_put
     bytec_0 // "s"
-    intc_1 // 0
+    pushint 2
     box_create
     pop
+    txn NumAppArgs
+    bz __postInit_ternary_false@3
     txna ApplicationArgs 0
+
+__postInit_ternary_merge@4:
     bytec_0 // "s"
     box_del
     pop
     bytec_0 // "s"
     swap
     box_put
+    txn NumAppArgs
+    bz __postInit_ternary_false@6
     txna ApplicationArgs 0
+
+__postInit_ternary_merge@7:
     len
     itob
     bytec_2 // 0x
@@ -64,6 +72,16 @@ __postInit:
     assert
     intc_0 // 1
     return
+
+__postInit_ternary_false@6:
+    intc_1 // 0
+    bzero
+    b __postInit_ternary_merge@7
+
+__postInit_ternary_false@3:
+    intc_1 // 0
+    bzero
+    b __postInit_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/create_calldata.sol.C.s[routing]() -> void:

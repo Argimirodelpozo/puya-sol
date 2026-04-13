@@ -34,11 +34,18 @@ main_after_if_else@2:
     assert
     pushbytess 0xa6ff944a 0x1db3c594 0x3f4abdfd // method "run()void", method "z()void", method "x()uint512"
     txna ApplicationArgs 0
-    match main_run_route@5 z x
+    match run z x
     err
 
-main_run_route@5:
-    err // uninitialized function pointer
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/store2.sol.InvalidTest.run[routing]() -> void:
+run:
+    intc_0 // 0
+    bytec_1 // "storedFn"
+    app_global_get_ex
+    bury 1
+    assert // check storedFn exists
+    err // invalid function pointer
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/store2.sol.InvalidTest.z[routing]() -> void:

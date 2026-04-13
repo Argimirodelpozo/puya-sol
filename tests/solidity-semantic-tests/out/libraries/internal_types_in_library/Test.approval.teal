@@ -1,0 +1,184 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_types_in_library.sol.Test.approval_program() -> uint64:
+main:
+    intcblock 0 1 32 8
+    bytecblock 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad "__ctor_pending" 0x0000 0x068101
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x219b312e // method "__postInit()void", method "f()(uint256,uint256)"
+    txna ApplicationArgs 0
+    match __postInit f
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_types_in_library.sol.Lib.find(_haystack: bytes, _needle: uint64) -> bytes, bytes:
+Lib.find:
+    proto 2 2
+    intc_0 // 0
+    itob
+
+Lib.find_while_top@1:
+    frame_dig -2
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    frame_dig 0
+    b>
+    bz Lib.find_after_while@5
+    intc_3 // 8
+    bzero
+    frame_dig 0
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    frame_dig -2
+    extract 2 0
+    swap
+    pushint 2
+    *
+    extract_uint16
+    frame_dig -1
+    ==
+    bz Lib.find_after_if_else@4
+    frame_dig 0
+    frame_dig -2
+    uncover 2
+    retsub
+
+Lib.find_after_if_else@4:
+    frame_dig 0
+    pushbytes 0x01
+    b+
+    frame_bury 0
+    b Lib.find_while_top@1
+
+Lib.find_after_while@5:
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    frame_dig -2
+    uncover 2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_types_in_library.sol.Test.__postInit[routing]() -> void:
+__postInit:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    pushbytes "data"
+    pushint 2
+    box_create
+    pop
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_types_in_library.sol.Test.f[routing]() -> void:
+f:
+
+f_while_top@6:
+    pushint 170010
+    global OpcodeBudget
+    >
+    bz f_while_top@2
+    itxn_begin
+    pushint 6 // appl
+    itxn_field TypeEnum
+    pushint 5 // DeleteApplication
+    itxn_field OnCompletion
+    bytec_3 // 0x068101
+    itxn_field ApprovalProgram
+    bytec_3 // 0x068101
+    itxn_field ClearStateProgram
+    intc_0 // 0
+    itxn_field Fee
+    itxn_submit
+    b f_while_top@6
+
+f_while_top@2:
+    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    box_get
+    bytec_2 // 0x0000
+    cover 2
+    select
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    pushbytes 0x14
+    b<
+    bnz f_while_top@2
+    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    pushint 10
+    pushbytes 0x0009
+    box_replace // on error: index out of bounds
+    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    pushint 36
+    pushbytes 0x0003
+    box_replace // on error: index out of bounds
+    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    box_get
+    bytec_2 // 0x0000
+    cover 2
+    select
+    pushint 9
+    callsub Lib.find
+    pop
+    bytec_0 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    box_get
+    bytec_2 // 0x0000
+    cover 2
+    select
+    pushint 3
+    callsub Lib.find
+    pop
+    swap
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    dig 2
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

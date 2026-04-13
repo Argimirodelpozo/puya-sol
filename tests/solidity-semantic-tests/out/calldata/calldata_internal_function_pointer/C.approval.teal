@@ -44,14 +44,8 @@ h:
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    intc_1 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
-    intc_0 // 1
-    ==
-    assert // invalid function pointer
-    extract 4 1
+    extract 2 0
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_function_pointer.sol.C.h
     bytec_1 // 0x151f7c75
     swap
     concat
@@ -62,27 +56,26 @@ h:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_function_pointer.sol.C.g[routing]() -> void:
 g:
-    itxn_begin
-    global CurrentApplicationAddress
-    pushint 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_1 // 0
-    itxn_field OnCompletion
-    intc_1 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    pushbytes 0xdb4056d2 // method "h(byte[])uint8[1]"
-    itxn_field ApplicationArgs
-    pushbytes 0x002200000700000000000000000000000000000000000000000000000000000000000000
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
+    pushbytes 0x00000700000000000000000000000000000000000000000000000000000000000000
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_function_pointer.sol.C.h
     bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_function_pointer.sol.C.h(b: bytes) -> bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/calldata_internal_function_pointer.sol.C.h:
+    proto 1 1
+    intc_1 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    intc_0 // 1
+    ==
+    assert // invalid function pointer
+    frame_dig -1
+    extract 2 1
+    retsub

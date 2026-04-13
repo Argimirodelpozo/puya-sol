@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/storage_array_encoding.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "__ctor_pending" "tmp_h" 0x151f7c75
+    intcblock 1 0 2 64
+    bytecblock "__ctor_pending" "tmp_h" "tmp_i" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
@@ -41,7 +41,11 @@ __postInit:
     intc_1 // 0
     app_global_put
     bytec_1 // "tmp_h"
-    intc_1 // 0
+    intc_2 // 2
+    box_create
+    pop
+    bytec_2 // "tmp_i"
+    intc_3 // 64
     box_create
     pop
     intc_0 // 1
@@ -54,9 +58,9 @@ h:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 64
+    intc_3 // 64
     *
-    pushint 2
+    intc_2 // 2
     +
     dig 1
     len
@@ -77,7 +81,7 @@ h:
     extract 6 2
     swap
     concat
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -93,7 +97,7 @@ i:
     pushint 128
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.static_array<arc4.uint256, 2>, 2>
-    pushbytes "tmp_i"
+    bytec_2 // "tmp_i"
     dig 1
     box_put
     dup
@@ -107,7 +111,7 @@ i:
     extract 6 2
     swap
     concat
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log

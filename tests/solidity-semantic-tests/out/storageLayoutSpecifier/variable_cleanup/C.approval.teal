@@ -1,0 +1,158 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/variable_cleanup.sol.C.approval_program() -> uint64:
+main:
+    intcblock 0 64 8 1
+    bytecblock "y" "x" "b" 0xffffffff
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "x"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "y"
+    intc_0 // 0
+    app_global_put
+    bytec_2 // "b"
+    pushbytes 0x
+    app_global_put
+    intc_3 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0xf2ec358e // method "f(uint256,uint512,byte[3])(uint64,uint512,byte[32])"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/variable_cleanup.sol.C.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 64
+    ==
+    assert // invalid number of bytes for arc4.uint512
+    txna ApplicationArgs 3
+    dup
+    len
+    pushint 3
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 3>
+    intc_2 // 8
+    bzero
+    dup
+    uncover 4
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    pushint 255
+    &
+    bytec_1 // "x"
+    swap
+    app_global_put
+    uncover 2
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    extract_uint64
+    bytec_0 // "y"
+    swap
+    app_global_put
+    extract 0 2
+    bytec_2 // "b"
+    dig 1
+    app_global_put
+    pushbytes "ab"
+    ==
+    assert
+    intc_0 // 0
+    bytec_1 // "x"
+    app_global_get_ex
+    assert // check x exists
+    pushint 65535
+    &
+    intc_0 // 0
+    bytec_0 // "y"
+    app_global_get_ex
+    assert // check y exists
+    itob
+    bytec_3 // 0xffffffff
+    b&
+    pushbytes 0x80000000
+    b>=
+    bz f_ternary_false@3
+    intc_0 // 0
+    bytec_0 // "y"
+    app_global_get_ex
+    assert // check y exists
+    itob
+    bytec_3 // 0xffffffff
+    b&
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000
+    b+
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+f_ternary_merge@4:
+    intc_0 // 0
+    bytec_2 // "b"
+    app_global_get_ex
+    assert // check b exists
+    dig 2
+    itob
+    uncover 2
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    concat
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+f_ternary_false@3:
+    intc_0 // 0
+    bytec_0 // "y"
+    app_global_get_ex
+    assert // check y exists
+    itob
+    bytec_3 // 0xffffffff
+    b&
+    b f_ternary_merge@4

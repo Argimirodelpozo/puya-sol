@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/calldata_array_two_dimensional.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 2 0 1
-    bytecblock 0x151f7c75 0xf777aa9c
+    intcblock 2 32 1 0
+    bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_3 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -23,9 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x8de3861a 0x32515d63 // method "test(uint256[][2])uint256", method "test(uint256[][2],uint256)uint256"
-    bytec_1 // method "test(uint256[][2],uint256,uint256)uint256"
-    pushbytes 0x27a3ca1a // method "reenc(uint256[][2],uint256,uint256)uint256"
+    pushbytess 0x8de3861a 0x32515d63 0xf777aa9c 0x27a3ca1a // method "test(uint256[][2])uint256", method "test(uint256[][2],uint256)uint256", method "test(uint256[][2],uint256,uint256)uint256", method "reenc(uint256[][2],uint256,uint256)uint256"
     txna ApplicationArgs 0
     match test(6) test(20,u256) test(38,u256,u256) reenc
     err
@@ -35,15 +33,15 @@ main_after_if_else@2:
 test(6):
     txna ApplicationArgs 1
     pushint 4
-    intc_2 // 0
+    intc_3 // 0
 
 test(6)_for_header@1:
     dup
-    intc_1 // 2
+    intc_0 // 2
     <
     bz test(6)_after_for@4
     dupn 2
-    intc_1 // 2
+    intc_0 // 2
     *
     dig 4
     dup
@@ -58,15 +56,15 @@ test(6)_for_header@1:
     dig 1
     len
     substring3
-    intc_2 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     +
     bury 3
-    intc_3 // 1
+    intc_2 // 1
     +
     bury 1
     b test(6)_for_header@1
@@ -79,7 +77,7 @@ test(6)_after_for@4:
     assert // invalid number of bytes for arc4.static_array<arc4.dynamic_array<arc4.uint256>, 2>
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
 
@@ -87,15 +85,15 @@ test(6)_after_for@4:
 test(20,u256):
     txna ApplicationArgs 1
     pushint 4
-    intc_2 // 0
+    intc_3 // 0
 
 test(20,u256)_for_header@1:
     dup
-    intc_1 // 2
+    intc_0 // 2
     <
     bz test(20,u256)_after_for@4
     dupn 2
-    intc_1 // 2
+    intc_0 // 2
     *
     dig 4
     dup
@@ -110,15 +108,15 @@ test(20,u256)_for_header@1:
     dig 1
     len
     substring3
-    intc_2 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     +
     bury 3
-    intc_3 // 1
+    intc_2 // 1
     +
     bury 1
     b test(20,u256)_for_header@1
@@ -133,7 +131,7 @@ test(20,u256)_after_for@4:
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     pushint 8
@@ -146,32 +144,32 @@ test(20,u256)_after_for@4:
     -
     extract_uint64
     dup
-    intc_1 // 2
+    intc_0 // 2
     <
     assert // index access is out of bounds
-    intc_1 // 2
+    intc_0 // 2
     *
     dig 1
     swap
     extract_uint16
     dup2
     extract_uint16
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     extract3
-    intc_2 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
     itob
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
 
@@ -179,15 +177,15 @@ test(20,u256)_after_for@4:
 test(38,u256,u256):
     txna ApplicationArgs 1
     pushint 4
-    intc_2 // 0
+    intc_3 // 0
 
 test(38,u256,u256)_for_header@1:
     dup
-    intc_1 // 2
+    intc_0 // 2
     <
     bz test(38,u256,u256)_after_for@4
     dupn 2
-    intc_1 // 2
+    intc_0 // 2
     *
     dig 4
     dup
@@ -202,15 +200,15 @@ test(38,u256,u256)_for_header@1:
     dig 1
     len
     substring3
-    intc_2 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     +
     bury 3
-    intc_3 // 1
+    intc_2 // 1
     +
     bury 1
     b test(38,u256,u256)_for_header@1
@@ -225,72 +223,22 @@ test(38,u256,u256)_after_for@4:
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    pushint 8
-    bzero
-    dup
-    uncover 3
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    swap
-    uncover 2
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    dig 1
-    intc_1 // 2
-    <
-    assert // index access is out of bounds
-    swap
-    intc_1 // 2
-    *
-    dig 2
-    swap
-    extract_uint16
-    dig 2
-    dig 1
-    extract_uint16
-    intc_0 // 32
-    *
-    intc_1 // 2
-    +
-    uncover 3
-    cover 2
-    extract3
-    extract 2 0
-    swap
-    intc_0 // 32
-    *
-    intc_0 // 32
-    extract3 // on error: index access is out of bounds
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/calldata_array_two_dimensional.sol.C.test(38,u256,u256)
+    pop
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
 
@@ -298,15 +246,15 @@ test(38,u256,u256)_after_for@4:
 reenc:
     txna ApplicationArgs 1
     pushint 4
-    intc_2 // 0
+    intc_3 // 0
 
 reenc_for_header@1:
     dup
-    intc_1 // 2
+    intc_0 // 2
     <
     bz reenc_after_for@4
     dupn 2
-    intc_1 // 2
+    intc_0 // 2
     *
     dig 4
     dup
@@ -321,15 +269,15 @@ reenc_for_header@1:
     dig 1
     len
     substring3
-    intc_2 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     +
     bury 3
-    intc_3 // 1
+    intc_2 // 1
     +
     bury 1
     b reenc_for_header@1
@@ -344,65 +292,87 @@ reenc_after_for@4:
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    itxn_begin
-    intc_0 // 32
-    bzero
-    dup
-    uncover 3
-    concat
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/calldata_array_two_dimensional.sol.C.test(38,u256,u256)
+    pop
     dup
     len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 1
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    global CurrentApplicationAddress
-    pushint 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_2 // 0
-    itxn_field OnCompletion
-    intc_2 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_1 // method "test(uint256[][2],uint256,uint256)uint256"
-    itxn_field ApplicationArgs
-    uncover 3
-    itxn_field ApplicationArgs
-    swap
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    dup
-    len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
+    intc_1 // 32
+    bzero
     b|
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/calldata_array_two_dimensional.sol.C.test(38,u256,u256)(a: bytes, __arc4_i: bytes, __arc4_j: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/calldata_array_two_dimensional.sol.C.test(38,u256,u256):
+    proto 3 2
+    pushint 8
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 1
+    intc_0 // 2
+    <
+    assert // index access is out of bounds
+    swap
+    intc_0 // 2
+    *
+    frame_dig -3
+    swap
+    extract_uint16
+    frame_dig -3
+    dig 1
+    extract_uint16
+    intc_1 // 32
+    *
+    intc_0 // 2
+    +
+    frame_dig -3
+    cover 2
+    extract3
+    extract 2 0
+    swap
+    intc_1 // 32
+    *
+    intc_1 // 32
+    extract3 // on error: index access is out of bounds
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    frame_dig -3
+    retsub

@@ -3,12 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/inherited.sol.B.approval_program() -> uint64:
 main:
-    intcblock 1 32
-    bytecblock "data"
+    intcblock 1 0 32
+    bytecblock "data" 0x
+    bytec_1 // ""
+    dup
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "data"
-    pushbytes 0x
+    bytec_1 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -21,19 +23,8 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x1bf9882b 0xe1e64a74 // method "__fallback()void", method "getData()uint256"
-    txna ApplicationArgs 0
-    match /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/inherited.sol.B.[routing] getData
-    err
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/inherited.sol.B.[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/inherited.sol.B.[routing]:
+    txn NumAppArgs
+    bnz main_after_if_else@4
     intc_0 // 1
     itob
     bytec_0 // "data"
@@ -42,24 +33,80 @@ main_after_if_else@2:
     intc_0 // 1
     return
 
+main_after_if_else@4:
+    intc_1 // 0
+    bury 2
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    bz main_create_NoOp@12
+    pushbytess 0x1bf9882b 0xe1e64a74 // method "__fallback()void", method "getData()uint256"
+    txna ApplicationArgs 0
+    match main___fallback_route@9 main_getData_route@10
+
+main_switch_case_next@11:
+    dig 1
+    bury 1
+
+main_after_if_else@13:
+    dup
+    bnz main_after_if_else@6
+    intc_0 // 1
+    itob
+    bytec_0 // "data"
+    swap
+    app_global_put
+    intc_0 // 1
+    bury 1
+
+main_after_if_else@6:
+    return
+
+main_getData_route@10:
+    callsub getData
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@11
+
+main___fallback_route@9:
+    callsub __fallback
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@11
+
+main_create_NoOp@12:
+    dig 1
+    bury 1
+    b main_after_if_else@13
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/inherited.sol.B.__fallback[routing]() -> void:
+__fallback:
+    intc_0 // 1
+    itob
+    bytec_0 // "data"
+    swap
+    app_global_put
+    retsub
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/inherited.sol.B.getData[routing]() -> void:
 getData:
-    pushint 0
+    intc_1 // 0
     bytec_0 // "data"
     app_global_get_ex
     assert // check data exists
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
-    return
+    retsub

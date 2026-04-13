@@ -24,8 +24,14 @@ main_after_if_else@2:
     assert
     pushbytess 0x64c701ca 0x6dd6bff0 // method "callMeMaybe((uint256[],uint256,string,byte[],uint64),uint512,string)void", method "callExternal()bool"
     txna ApplicationArgs 0
-    match callMeMaybe callExternal
+    match callMeMaybe main_callExternal_route@6
     err
+
+main_callExternal_route@6:
+    pushbytes 0x151f7c7580
+    log
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call.sol.C.callMeMaybe[routing]() -> void:
@@ -41,8 +47,8 @@ callMeMaybe:
     ==
     assert // invalid tail pointer at index 0 of ((len+uint256[]),uint256,(len+utf8[]),(len+uint8[]),uint64)
     dig 2
-    dig 1
-    dig 3
+    swap
+    dig 2
     substring3
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
@@ -50,46 +56,41 @@ callMeMaybe:
     *
     pushint 48
     +
-    dig 3
+    dig 2
     pushint 34
     extract_uint16 // on error: invalid tuple encoding
     dup
     dig 2
     ==
     assert // invalid tail pointer at index 2 of ((len+uint256[]),uint256,(len+utf8[]),(len+uint8[]),uint64)
-    dig 4
-    dig 1
-    dig 5
+    dig 3
+    swap
+    dig 3
     substring3
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     intc_2 // 2
     +
-    uncover 2
     +
-    dig 4
+    dig 2
     pushint 36
     extract_uint16 // on error: invalid tuple encoding
     dup
     dig 2
     ==
     assert // invalid tail pointer at index 3 of ((len+uint256[]),uint256,(len+utf8[]),(len+uint8[]),uint64)
-    dig 5
-    dig 1
-    dig 6
+    uncover 3
+    swap
+    dig 3
     substring3
-    dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     intc_2 // 2
     +
-    uncover 3
     +
-    uncover 5
     ==
     assert // invalid number of bytes for Struct
     txna ApplicationArgs 2
-    dup
     len
     pushint 64
     ==
@@ -100,100 +101,9 @@ callMeMaybe:
     extract_uint16 // on error: invalid array length header
     intc_2 // 2
     +
-    dig 1
+    swap
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    extract 2 0
-    dig 6
-    uncover 6
-    dig 6
-    substring3
-    dup
-    intc_0 // 0
-    extract_uint16 // on error: invalid array length header
-    itob
-    pushbytes 0x03
-    b==
-    assert
-    dup
-    extract 2 32
-    pushbytes 0x
-    b==
-    assert
-    dup
-    extract 34 32
-    pushbytes 0x01
-    b==
-    assert
-    extract 66 32
-    pushbytes 0x02
-    b==
-    assert
-    dig 5
-    extract 2 32
-    pushbytes 0x06
-    b==
-    assert
-    dig 5
-    uncover 5
-    uncover 5
-    substring3
-    extract 2 0
-    keccak256
-    pushbytes 0x11ce95a13e5b883da5f0f79593758519cc5e26f9a173963da8261265dfb9a2d6
-    ==
-    assert
-    uncover 2
-    extract 2 0
-    keccak256
-    pushbytes 0x387a8233c96e1fc0ad5e284353276177af2186e7afa85296f106336e376669f7
-    ==
-    assert
-    uncover 2
-    pushint 38
-    extract_uint64
-    dup
-    pushint 3
-    <
-    assert // enum out of range
-    intc_1 // 1
-    ==
-    assert
-    swap
-    pushbytes 0x05
-    b==
-    assert
-    keccak256
-    pushbytes 0x746c32bd76400aea458889122fc934ee4dbd66d1fce294f5a05a66cf3d2a6d53
-    ==
-    assert
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call.sol.C.callExternal[routing]() -> void:
-callExternal:
-    itxn_begin
-    pushint 5
-    itob
-    global CurrentApplicationID
-    pushint 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    pushbytes 0xc1d06ec1 // method "callMeMaybe(struct Struct,int256,string)void"
-    itxn_field ApplicationArgs
-    pushbytes 0x002e00000000000000000000000000000000000000000000000000000000000000060090009c00000000000000010003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002000a5374727563744e616d65000431323334
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    pushbytes "TestName"
-    itxn_field ApplicationArgs
-    itxn_submit
-    pushbytes 0x151f7c7580
-    log
     intc_1 // 1
     return

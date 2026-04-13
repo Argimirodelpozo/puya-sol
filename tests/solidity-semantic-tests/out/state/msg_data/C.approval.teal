@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/msg_data.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -31,7 +31,11 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/msg_data.sol.C.f[routing]() -> void:
 f:
+    txn NumAppArgs
+    bz f_ternary_false@3
     txna ApplicationArgs 0
+
+f_ternary_merge@4:
     dup
     len
     itob
@@ -44,6 +48,11 @@ f:
     log
     intc_0 // 1
     return
+
+f_ternary_false@3:
+    intc_1 // 0
+    bzero
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/msg_data.sol.C.g[routing]() -> void:
@@ -62,7 +71,11 @@ g:
     intc_0 // 1
     <=
     assert // ABI bool validation
+    txn NumAppArgs
+    bz g_ternary_false@3
     txna ApplicationArgs 0
+
+g_ternary_merge@4:
     dup
     len
     itob
@@ -75,3 +88,8 @@ g:
     log
     intc_0 // 1
     return
+
+g_ternary_false@3:
+    intc_1 // 0
+    bzero
+    b g_ternary_merge@4

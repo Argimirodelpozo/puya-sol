@@ -22,7 +22,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x7b7e2103 0xb4c7f21c 0x1ea87231 // method "testHighLevel()bool", method "testHighLevel2()(uint512,uint512,uint512)", method "testLowLevel()uint256"
+    pushbytess 0x7b7e2103 0x60c57321 0x1ea87231 // method "testHighLevel()bool", method "testHighLevel2()(uint256,uint256,uint256)", method "testLowLevel()uint256"
     txna ApplicationArgs 0
     match testHighLevel testHighLevel2 main_testLowLevel_route@7
     err
@@ -76,21 +76,22 @@ testHighLevel2:
     itxn_submit
     itxn LastLog
     extract 4 32
-    itxn LastLog
-    extract 36 32
-    itxn LastLog
-    extract 68 32
-    pushint 64
+    pushint 32
     bzero
-    uncover 3
+    swap
     dig 1
     b|
-    uncover 3
+    itxn LastLog
+    extract 36 32
     dig 2
     b|
-    concat
-    cover 2
+    itxn LastLog
+    extract 68 32
+    uncover 3
     b|
+    cover 2
+    concat
+    swap
     concat
     pushbytes 0x151f7c75
     swap

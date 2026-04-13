@@ -1,9 +1,9 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_5ic4uq7n/C.sol.C.approval_program() -> uint64:
+// /tmp/multisource_3i0chgw_/C.sol.C.approval_program() -> uint64:
 main:
-    intcblock 64 1 32
+    intcblock 32 1
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xad94e4a0 // method "test(uint256,uint256)(uint512,uint512)"
+    pushbytes 0xef8d5f92 // method "test(uint256,uint256)(uint256,uint256)"
     txna ApplicationArgs 0
     match main_test_route@4
     err
@@ -31,7 +31,7 @@ main_test_route@4:
     b test
 
 
-// /tmp/multisource_5ic4uq7n/C.sol.f(x: bytes) -> bytes:
+// /tmp/multisource_3i0chgw_/C.sol.f(x: bytes) -> bytes:
 f:
     proto 1 1
     frame_dig -1
@@ -40,7 +40,7 @@ f:
     retsub
 
 
-// /tmp/multisource_5ic4uq7n/C.sol.g(x: bytes) -> bytes:
+// /tmp/multisource_3i0chgw_/C.sol.g(x: bytes) -> bytes:
 g:
     proto 1 1
     frame_dig -1
@@ -49,40 +49,40 @@ g:
     retsub
 
 
-// /tmp/multisource_5ic4uq7n/C.sol.C.test[routing]() -> void:
+// /tmp/multisource_3i0chgw_/C.sol.C.test[routing]() -> void:
 test:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_2 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     swap
     callsub g
-    swap
-    callsub f
-    dig 1
+    dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
-    uncover 2
+    swap
     dig 1
     b|
-    dig 2
+    uncover 2
+    callsub f
+    dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    cover 2
+    uncover 2
     b|
     concat
     pushbytes 0x151f7c75

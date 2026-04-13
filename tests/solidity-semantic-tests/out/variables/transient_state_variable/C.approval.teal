@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 64
-    bytecblock "x" 0x2d4970c7 0x151f7c75
+    intcblock 1 8 0 32
+    bytecblock "x" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
@@ -26,8 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    bytec_1 // method "f()void"
-    pushbytess 0x4b2c0376 0xafedb2e5 0x3f4abdfd // method "g()uint256", method "h()uint256", method "x()uint512"
+    pushbytess 0x2d4970c7 0x4b2c0376 0xafedb2e5 0x3f4abdfd // method "f()void", method "g()uint256", method "h()uint256", method "x()uint512"
     txna ApplicationArgs 0
     match f g h x
     err
@@ -35,7 +34,7 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable.sol.C.f[routing]() -> void:
 f:
-    pushint 8
+    intc_1 // 8
     itob
     bytec_0 // "x"
     swap
@@ -46,26 +45,12 @@ f:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable.sol.C.g[routing]() -> void:
 g:
-    intc_1 // 0
+    intc_1 // 8
     itob
     bytec_0 // "x"
     swap
     app_global_put
-    itxn_begin
-    global CurrentApplicationAddress
-    pushint 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_1 // 0
-    itxn_field OnCompletion
-    intc_1 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_1 // method "f()void"
-    itxn_field ApplicationArgs
-    itxn_submit
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000008
     log
     intc_0 // 1
     return
@@ -73,19 +58,19 @@ g:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable.sol.C.h[routing]() -> void:
 h:
-    intc_1 // 0
+    intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     dup
     len
-    intc_2 // 32
+    intc_3 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_3 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -95,19 +80,19 @@ h:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable.sol.C.x[routing]() -> void:
 x:
-    intc_1 // 0
+    intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     dup
     len
-    intc_3 // 64
+    pushint 64
     <=
     assert // overflow
-    intc_3 // 64
+    pushint 64
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log

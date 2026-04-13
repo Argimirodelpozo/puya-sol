@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_before_storage_mapping_delete_same_value_type.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
+    intcblock 1 32
     bytecblock 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925 "__ctor_pending" 0x "t"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,10 +38,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_1 // 0
+    pushint 0
     app_global_put
     pushbytes "m"
-    intc_1 // 0
+    pushint 2
     box_create
     pop
     bytec_3 // "t"
@@ -80,10 +80,10 @@ getM:
     select
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     pushbytes 0x151f7c75

@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0xe73e719d // method "__postInit()void", method "x(string,uint512)uint64"
+    pushbytess 0xbacc49e3 0x934a493a // method "__postInit()void", method "x(string,uint256)uint64"
     txna ApplicationArgs 0
     match __postInit x
     err
@@ -41,7 +41,7 @@ __postInit:
     intc_1 // 0
     app_global_put
     bytec_2 // "x"
-    intc_1 // 0
+    intc_3 // 2
     box_create
     pop
     bytec_1 // 0x78ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
@@ -80,9 +80,9 @@ x:
     txna ApplicationArgs 2
     dup
     len
-    pushint 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     intc_2 // 32
     bzero
     swap

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 2
-    bytecblock "s" "__ctor_pending" 0x151f7c754000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    intcblock 1 0 2 32
+    bytecblock "s" "__ctor_pending" 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
@@ -26,19 +26,19 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x2ae42285 0xaad134cd 0xf4dd25d1 // method "__postInit()void", method "f()(bool,bool,uint512)", method "g()(bool,bool,uint512)", method "h()(bool,bool,uint512)"
+    pushbytess 0xbacc49e3 0x48202399 0xaad134cd 0xfd6894cd // method "__postInit()void", method "f()(bool,bool,uint256)", method "g()(bool,bool,uint512)", method "h()(bool,bool,uint256)"
     txna ApplicationArgs 0
     match __postInit main_f_route@6 g main_h_route@8
     err
 
 main_h_route@8:
-    bytec_2 // 0x151f7c754000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
 
 main_f_route@6:
-    bytec_2 // 0x151f7c754000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
@@ -53,7 +53,7 @@ __postInit:
     intc_1 // 0
     app_global_put
     bytec_0 // "s"
-    intc_1 // 0
+    intc_2 // 2
     box_create
     pop
 
@@ -61,7 +61,9 @@ __postInit_while_top@2:
     bytec_0 // "s"
     box_len
     pop
-    intc_2 // 32
+    intc_2 // 2
+    -
+    intc_3 // 32
     /
     itob
     pushbytes 0x2a
@@ -69,13 +71,13 @@ __postInit_while_top@2:
     bz __postInit_after_while@4
     bytec_0 // "s"
     intc_1 // 0
-    intc_3 // 2
+    intc_2 // 2
     box_extract
     btoi
     bytec_0 // "s"
     box_len
     pop
-    intc_2 // 32
+    intc_3 // 32
     +
     bytec_0 // "s"
     swap
@@ -89,9 +91,9 @@ __postInit_while_top@2:
     intc_1 // 0
     uncover 2
     box_replace
-    intc_2 // 32
+    intc_3 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     bytec_0 // "s"
     swap
@@ -109,7 +111,7 @@ __postInit_after_while@4:
 g:
     load 0
     store 0
-    bytec_2 // 0x151f7c754000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x151f7c754000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return

@@ -41,7 +41,7 @@ __postInit:
     intc_1 // 0
     app_global_put
     bytec_1 // "savedData"
-    intc_1 // 0
+    pushint 2
     box_create
     pop
     intc_0 // 1
@@ -50,7 +50,11 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/store_bytes.sol.C.save[routing]() -> void:
 save:
+    txn NumAppArgs
+    bz save_ternary_false@3
     txna ApplicationArgs 0
+
+save_ternary_merge@4:
     bytec_1 // "savedData"
     box_del
     pop
@@ -61,3 +65,8 @@ save:
     log
     intc_0 // 1
     return
+
+save_ternary_false@3:
+    intc_1 // 0
+    bzero
+    b save_ternary_merge@4

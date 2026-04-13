@@ -1,0 +1,59 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_with_selectorv2.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1
+    bytecblock 0x151f7c75000712345678616263
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x329c8739 0x3f35ad11 0x12d76492 0xce183000 0x6be4a9d9 // method "f0()byte[]", method "f1()byte[]", method "f2()byte[]", method "f3()byte[]", method "f4()byte[]"
+    txna ApplicationArgs 0
+    match main_f0_route@5 main_f1_route@6 main_f2_route@7 main_f3_route@8 main_f4_route@9
+    err
+
+main_f4_route@9:
+    pushbytes 0x151f7c7500b612345678ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000001234567002a000000000000123400264c6f72656d20697073756d20646f6c6f722073697420657468657265756d2e2e2e2e2e2e2e2e
+    log
+    intc_0 // 1
+    return
+
+main_f3_route@8:
+    pushbytes 0x151f7c75002412345678ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    log
+    intc_0 // 1
+    return
+
+main_f2_route@7:
+    bytec_0 // 0x151f7c75000712345678616263
+    log
+    intc_0 // 1
+    return
+
+main_f1_route@6:
+    bytec_0 // 0x151f7c75000712345678616263
+    log
+    intc_0 // 1
+    return
+
+main_f0_route@5:
+    pushbytes 0x151f7c75000412345678
+    log
+    intc_0 // 1
+    return

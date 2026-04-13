@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/if.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 64
+    intcblock 1 32 0 23
     bytecblock 0x151f7c75 0x000000000000000000000000000000000000000000000000000000000000002a 0x0000000000000000000000000000000000000000000000000000000000000017 0x0a
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xb168d7ea 0xfbc085e1 0x635e25a6 0x3883154d 0xd5ed398f 0xaadd55e3 // method "f(bool)uint256", method "g(bool)uint256", method "h(bool)uint256", method "i(bool)uint256", method "j(uint256,uint256)(uint512,uint512)", method "k(uint256,uint256)(uint512,uint512)"
+    pushbytess 0xb168d7ea 0xfbc085e1 0x635e25a6 0x3883154d 0x5a05f225 0x40ea0e17 // method "f(bool)uint256", method "g(bool)uint256", method "h(bool)uint256", method "i(bool)uint256", method "j(uint256,uint256)(uint256,uint256)", method "k(uint256,uint256)(uint256,uint256)"
     txna ApplicationArgs 0
     match f g h i j k
     err
@@ -43,7 +43,7 @@ f:
     intc_0 // 1
     <=
     assert // ABI bool validation
-    pushint 23
+    intc_3 // 23
     itob
     swap
     bz f_after_if_else@3
@@ -103,7 +103,7 @@ g_after_if_else@4:
     return
 
 g_else_body@3:
-    pushint 23
+    intc_3 // 23
     itob
     b g_after_if_else@4
 
@@ -193,13 +193,13 @@ j:
 j_after_if_else@4:
     dup
     len
-    intc_3 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_1 // 32
     bzero
     b|
-    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000064
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000064
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -245,10 +245,10 @@ k:
 k_after_while@15:
     dup
     len
-    intc_3 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_1 // 32
     bzero
     swap
     dig 1
@@ -256,7 +256,7 @@ k_after_while@15:
     dig 4
     dup
     len
-    intc_3 // 64
+    intc_1 // 32
     <=
     assert // overflow
     uncover 2

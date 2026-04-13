@@ -16,7 +16,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x468b533b // method "f(uint64[])void"
+    pushbytes 0xa5f56b3f // method "f(uint8[])void"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -36,13 +36,11 @@ f:
     dup
     pushint 0
     extract_uint16 // on error: invalid array length header
-    pushint 8
-    *
     pushint 2
     +
     swap
     len
     ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint64>
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     pushint 1
     return

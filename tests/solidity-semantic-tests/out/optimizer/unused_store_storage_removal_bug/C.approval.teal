@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/optimizer/unused_store_storage_removal_bug.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 64
+    intcblock 1 0 64
     bytecblock "x"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -39,16 +39,20 @@ f:
     bytec_0 // "x"
     swap
     app_global_put
+    txn NumAppArgs
+    bz f_ternary_false@3
     txna ApplicationArgs 0
+
+f_ternary_merge@4:
     len
     itob
     pushbytes 0x04
     b>
-    bnz f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/optimizer/unused_store_storage_removal_bug.sol.C.g@4
+    bnz f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/optimizer/unused_store_storage_removal_bug.sol.C.g@7
     load 0
     store 0
 
-f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/optimizer/unused_store_storage_removal_bug.sol.C.g@4:
+f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/optimizer/unused_store_storage_removal_bug.sol.C.g@7:
     pushint 2
     itob
     bytec_0 // "x"
@@ -57,19 +61,24 @@ f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tes
     intc_0 // 1
     return
 
+f_ternary_false@3:
+    intc_1 // 0
+    bzero
+    b f_ternary_merge@4
+
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/optimizer/unused_store_storage_removal_bug.sol.C.x[routing]() -> void:
 x:
-    pushint 0
+    intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     dup
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     pushbytes 0x151f7c75

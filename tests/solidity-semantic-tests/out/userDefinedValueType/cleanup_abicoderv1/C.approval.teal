@@ -32,7 +32,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x27439992 0x0fe30569 0xaf16a343 0xc37f81de // method "ret()uint64", method "f(uint64)uint64", method "mem()uint64[]", method "stor()(uint64,uint64,uint64)"
+    pushbytess 0x27439992 0x0fe30569 0x8bee4680 0xc37f81de // method "ret()uint64", method "f(uint64)uint64", method "mem()uint8[]", method "stor()(uint64,uint64,uint64)"
     txna ApplicationArgs 0
     match ret f mem stor
     err
@@ -109,22 +109,34 @@ mem:
     itob
     callsub wrap
     itob
-    pushbytes 0x000200000000000000000000000000000000
+    dup
+    bitlen
+    intc_3 // 8
+    <=
+    assert // overflow
+    extract 7 1
+    pushbytes 0x00020000
     swap
     replace2 2 // on error: index access is out of bounds
     intc_1 // 255
     itob
     callsub wrap
     itob
-    replace2 10 // on error: index access is out of bounds
+    dup
+    bitlen
+    intc_3 // 8
+    <=
+    assert // overflow
+    extract 7 1
+    replace2 3 // on error: index access is out of bounds
     dup
     pushint 2
-    extract_uint64
+    getbyte
     dup
     callsub unwrap
     dig 2
-    pushint 10
-    extract_uint64
+    pushint 3
+    getbyte
     dup
     callsub unwrap
     uncover 2

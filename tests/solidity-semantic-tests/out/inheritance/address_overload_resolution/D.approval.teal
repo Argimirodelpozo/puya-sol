@@ -42,6 +42,7 @@ f:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -53,12 +54,7 @@ f:
     intc 4 // 200000
     itxn_field Amount
     itxn_submit
-    itxn CreatedApplicationID
-    app_params_get AppAddress
-    pop
     itxn_begin
-    pushint 24
-    extract_uint64
     intc_2 // 6
     itxn_field TypeEnum
     intc_0 // 0
@@ -100,6 +96,7 @@ g:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -111,21 +108,16 @@ g:
     intc 4 // 200000
     itxn_field Amount
     itxn_submit
-    itxn CreatedApplicationID
-    app_params_get AppAddress
-    pop
     itxn_begin
     pushint 5
     itob
-    swap
-    pushint 24
-    extract_uint64
     intc_2 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
     intc_0 // 0
     itxn_field Fee
+    swap
     itxn_field ApplicationID
     pushbytes 0x7ec2df0b // method "transfer(uint256)uint256"
     itxn_field ApplicationArgs

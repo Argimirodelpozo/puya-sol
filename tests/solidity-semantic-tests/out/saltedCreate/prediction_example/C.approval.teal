@@ -70,6 +70,9 @@ createDSalted:
     -
     intc_0 // 32
     extract3
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    swap
+    concat
     keccak256
     dig 3
     swap
@@ -120,6 +123,7 @@ createDSalted:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -131,7 +135,6 @@ createDSalted:
     pushint 200000
     itxn_field Amount
     itxn_submit
-    itxn CreatedApplicationID
     app_params_get AppAddress
     pop
     ==

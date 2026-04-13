@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_push_pop.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
+    intcblock 32 2 0 1
     bytecblock "storageArray" "__ctor_pending" 0x068101 0x
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
-    intc_1 // 1
+    intc_3 // 1
     app_global_put
-    intc_1 // 1
+    intc_3 // 1
     return
 
 main_after_if_else@2:
@@ -41,10 +41,10 @@ __postInit:
     intc_2 // 0
     app_global_put
     bytec_0 // "storageArray"
-    intc_2 // 0
+    intc_1 // 2
     box_create
     pop
-    intc_1 // 1
+    intc_3 // 1
     return
 
 
@@ -57,7 +57,7 @@ set_get_length:
     ==
     assert // invalid number of bytes for arc4.uint256
 
-set_get_length_while_top@11:
+set_get_length_while_top@13:
     pushint 170010
     global OpcodeBudget
     >
@@ -74,18 +74,25 @@ set_get_length_while_top@11:
     intc_2 // 0
     itxn_field Fee
     itxn_submit
-    b set_get_length_while_top@11
+    b set_get_length_while_top@13
 
 set_get_length_while_top@2:
     bytec_0 // "storageArray"
     box_len
     pop
+    intc_1 // 2
+    -
     intc_0 // 32
     /
     itob
     dig 1
     b<
     bz set_get_length_while_top@5
+    bytec_0 // "storageArray"
+    intc_2 // 0
+    intc_1 // 2
+    box_extract
+    btoi
     bytec_0 // "storageArray"
     box_len
     pop
@@ -94,12 +101,32 @@ set_get_length_while_top@2:
     bytec_0 // "storageArray"
     swap
     box_resize
+    dup
+    intc_3 // 1
+    +
+    itob
+    extract 6 2
+    bytec_0 // "storageArray"
+    intc_2 // 0
+    uncover 2
+    box_replace
+    intc_0 // 32
+    *
+    intc_1 // 2
+    +
+    bytec_0 // "storageArray"
+    swap
+    intc_2 // 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    box_splice
     b set_get_length_while_top@2
 
 set_get_length_while_top@5:
     bytec_0 // "storageArray"
     box_len
     pop
+    intc_1 // 2
+    -
     intc_0 // 32
     /
     itob
@@ -108,10 +135,10 @@ set_get_length_while_top@5:
     bz set_get_length_after_while@7
     bytec_0 // "storageArray"
     intc_2 // 0
-    intc_3 // 2
+    intc_1 // 2
     box_extract
     btoi
-    intc_1 // 1
+    intc_3 // 1
     -
     dup
     itob
@@ -122,7 +149,7 @@ set_get_length_while_top@5:
     box_replace
     intc_0 // 32
     *
-    intc_3 // 2
+    intc_1 // 2
     +
     bytec_0 // "storageArray"
     swap
@@ -143,6 +170,8 @@ set_get_length_after_while@7:
     bytec_0 // "storageArray"
     box_len
     pop
+    intc_1 // 2
+    -
     intc_0 // 32
     /
     itob
@@ -153,5 +182,5 @@ set_get_length_after_while@7:
     swap
     concat
     log
-    intc_1 // 1
+    intc_3 // 1
     return

@@ -3,19 +3,27 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 0 1 6 200000
+    intcblock 0 1 6 32 200000
     bytecblock 0x0a8101 0x151f7c75 "a" "b"
-    intc_0 // 0
+    pushbytes ""
+    dupn 2
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "a"
-    dig 1
     dup
-    cover 2
+    app_params_get AppAddress
+    pop
+    bytec_2 // "a"
+    swap
     app_global_put
-    bytec_3 // "b"
     dig 1
+    app_params_get AppAddress
+    pop
+    bytec_3 // "b"
+    swap
     app_global_put
+    dig 2
+    app_params_get AppAddress
+    pop
     pushbytes "c"
     swap
     app_global_put
@@ -35,7 +43,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xe31d0326 0x1c7be9ed 0x56a3323f // method "contractASlots()uint256", method "contractBSlots()(uint512,uint512)", method "contractCSlots()(uint512,uint512)"
+    pushbytess 0xe31d0326 0x06a1523a 0x1f0087c2 // method "contractASlots()uint256", method "contractBSlots()(uint256,uint256)", method "contractCSlots()(uint256,uint256)"
     txna ApplicationArgs 0
     match contractASlots contractBSlots contractCSlots
     err
@@ -62,7 +70,7 @@ contractASlots:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc_3 // 200000
+    intc 4 // 200000
     itxn_field Amount
     itxn_submit
     itxn_begin
@@ -84,7 +92,7 @@ contractASlots:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc_3 // 200000
+    intc 4 // 200000
     itxn_field Amount
     itxn_submit
     itxn_begin
@@ -106,7 +114,7 @@ contractASlots:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc_3 // 200000
+    intc 4 // 200000
     itxn_field Amount
     itxn_submit
     itxn_begin
@@ -130,10 +138,10 @@ contractASlots:
     extract 4 0
     dup
     len
-    pushint 32
+    intc_3 // 32
     <=
     assert // overflow
-    pushint 32
+    intc_3 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
@@ -165,14 +173,14 @@ contractBSlots:
     itxn_submit
     itxn LastLog
     extract 4 32
-    itxn LastLog
-    extract 36 32
-    pushint 64
+    intc_3 // 32
     bzero
-    uncover 2
+    swap
     dig 1
     b|
-    cover 2
+    itxn LastLog
+    extract 36 32
+    uncover 2
     b|
     concat
     bytec_1 // 0x151f7c75
@@ -204,14 +212,14 @@ contractCSlots:
     itxn_submit
     itxn LastLog
     extract 4 32
-    itxn LastLog
-    extract 36 32
-    pushint 64
+    intc_3 // 32
     bzero
-    uncover 2
+    swap
     dig 1
     b|
-    cover 2
+    itxn LastLog
+    extract 36 32
+    uncover 2
     b|
     concat
     bytec_1 // 0x151f7c75

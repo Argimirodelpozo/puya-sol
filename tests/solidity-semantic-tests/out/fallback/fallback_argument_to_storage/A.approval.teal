@@ -3,11 +3,13 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_argument_to_storage.sol.A.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "x" "__ctor_pending"
+    intcblock 1 0 2
+    bytecblock "x" 0x "__ctor_pending"
+    bytec_1 // ""
+    dup
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -21,46 +23,101 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
+    txn NumAppArgs
+    bnz main_after_if_else@4
+    bytec_0 // "x"
+    box_del
+    pop
+    bytec_0 // "x"
+    bytec_1 // 0x
+    box_put
+    intc_0 // 1
+    return
+
+main_after_if_else@4:
+    intc_1 // 0
+    bury 2
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    assert
+    bz main_create_NoOp@14
     pushbytess 0xbacc49e3 0x9509a93a 0x856fee35 0x0bdce004 // method "__postInit()void", method "__fallback(byte[])byte[]", method "f()(bool,byte[])", method "x()byte[]"
     txna ApplicationArgs 0
-    match __postInit /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_argument_to_storage.sol.A.[routing] main_f_route@7 x
-    err
+    match main___postInit_route@9 main___fallback_route@10 main_f_route@11 main_x_route@12
 
-main_f_route@7:
-    pushbytes 0x151f7c758000030000
-    log
+main_switch_case_next@13:
+    dig 1
+    bury 1
+
+main_after_if_else@15:
+    dup
+    bnz main_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_0 // "x"
+    box_del
+    pop
+    bytec_0 // "x"
+    swap
+    box_put
     intc_0 // 1
+    bury 1
+
+main_after_if_else@6:
     return
+
+main_x_route@12:
+    callsub x
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@13
+
+main_f_route@11:
+    callsub f
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@13
+
+main___fallback_route@10:
+    callsub __fallback
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@13
+
+main___postInit_route@9:
+    callsub __postInit
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@13
+
+main_create_NoOp@14:
+    dig 1
+    bury 1
+    b main_after_if_else@15
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_argument_to_storage.sol.A.__postInit[routing]() -> void:
 __postInit:
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_1 // 0
     app_global_put
     bytec_0 // "x"
-    intc_1 // 0
+    intc_2 // 2
     box_create
     pop
-    intc_0 // 1
-    return
+    retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_argument_to_storage.sol.A.[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_argument_to_storage.sol.A.[routing]:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_argument_to_storage.sol.A.__fallback[routing]() -> void:
+__fallback:
     txna ApplicationArgs 1
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 2
+    intc_2 // 2
     +
     dig 1
     len
@@ -75,15 +132,27 @@ __postInit:
     box_put
     pushbytes 0x151f7c750000
     log
-    intc_0 // 1
-    return
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_argument_to_storage.sol.A.f[routing]() -> void:
+f:
+    bytec_0 // "x"
+    box_del
+    pop
+    bytec_0 // "x"
+    pushbytes "abc"
+    box_put
+    pushbytes 0x151f7c758000030003616263
+    log
+    retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_argument_to_storage.sol.A.x[routing]() -> void:
 x:
     bytec_0 // "x"
     box_get
-    pushbytes 0x
+    bytec_1 // 0x
     cover 2
     select
     dup
@@ -96,5 +165,4 @@ x:
     swap
     concat
     log
-    intc_0 // 1
-    return
+    retsub

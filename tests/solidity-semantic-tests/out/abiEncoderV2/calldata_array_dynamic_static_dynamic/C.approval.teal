@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 2 1 32
-    bytecblock 0x 0x151f7c75 0x00010002 0x00010000000000000000000000000000000000000000000000000000000000000000 0x000000000000000000000000000000000000000000000000000000000000002a 0xdaaf46e9 0xc4bce5b0 0x0969d4b6 0x67de67d1 0x000100
+    bytecblock 0x 0x151f7c75 0x00010002 0x00010000000000000000000000000000000000000000000000000000000000000000 0x000000000000000000000000000000000000000000000000000000000000002a 0x000100
     txn ApplicationID
     bnz main_after_if_else@2
     intc_2 // 1
@@ -23,11 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    bytec 5 // method "f(uint8[][1][])byte[]"
-    bytec 6 // method "f2(uint256[][2][])byte[]"
-    bytec 7 // method "reenc_f(uint8[][1][])byte[]"
-    bytec 8 // method "reenc_f2(uint256[][2][])byte[]"
-    pushbytess 0x4b25d408 0x1f6cd751 0xba05598b 0xd9924787 // method "g()byte[]", method "h()byte[]", method "i()byte[]", method "j()byte[]"
+    pushbytess 0xdaaf46e9 0xc4bce5b0 0x0969d4b6 0x67de67d1 0x4b25d408 0x1f6cd751 0xba05598b 0xd9924787 // method "f(uint8[][1][])byte[]", method "f2(uint256[][2][])byte[]", method "reenc_f(uint8[][1][])byte[]", method "reenc_f2(uint256[][2][])byte[]", method "g()byte[]", method "h()byte[]", method "i()byte[]", method "j()byte[]"
     txna ApplicationArgs 0
     match f f2 reenc_f reenc_f2 g h i j
     err
@@ -295,7 +291,7 @@ f:
     bytec_0 // ""
     dup
     txna ApplicationArgs 1
-    dup
+    dupn 2
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     dup
@@ -328,27 +324,27 @@ f_for_header@1:
     dig 1
     len
     substring3
-    bury 8
+    bury 9
     intc_1 // 2
-    bury 6
-    intc_0 // 0
     bury 7
+    intc_0 // 0
+    bury 8
 
 f_for_header@3:
-    dig 6
+    dig 7
     intc_2 // 1
     <
     bz f_after_for@6
-    dig 6
+    dig 7
     dup
     intc_1 // 2
     *
-    dig 9
+    dig 10
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 9
+    dig 10
     dup
     cover 4
     ==
@@ -361,15 +357,15 @@ f_for_header@3:
     intc_1 // 2
     +
     +
-    bury 7
+    bury 8
     intc_2 // 1
     +
-    bury 7
+    bury 8
     b f_for_header@3
 
 f_after_for@6:
     dig 3
-    dig 6
+    dig 7
     +
     bury 4
     dup
@@ -385,7 +381,9 @@ f_after_for@8:
     dig 3
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint8>, 1>>
-    txna ApplicationArgs 0
+    dig 5
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.f
+    pop
     dup
     len
     itob
@@ -406,7 +404,7 @@ f2:
     bytec_0 // ""
     dup
     txna ApplicationArgs 1
-    dup
+    dupn 2
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     dup
@@ -439,27 +437,27 @@ f2_for_header@1:
     dig 1
     len
     substring3
-    bury 8
+    bury 9
     pushint 4
-    bury 6
-    intc_0 // 0
     bury 7
+    intc_0 // 0
+    bury 8
 
 f2_for_header@3:
-    dig 6
+    dig 7
     intc_1 // 2
     <
     bz f2_after_for@6
-    dig 6
+    dig 7
     dup
     intc_1 // 2
     *
-    dig 9
+    dig 10
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 9
+    dig 10
     dup
     cover 4
     ==
@@ -474,15 +472,15 @@ f2_for_header@3:
     intc_1 // 2
     +
     +
-    bury 7
+    bury 8
     intc_2 // 1
     +
-    bury 7
+    bury 8
     b f2_for_header@3
 
 f2_after_for@6:
     dig 3
-    dig 6
+    dig 7
     +
     bury 4
     dup
@@ -498,7 +496,9 @@ f2_after_for@8:
     dig 3
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint256>, 2>>
-    txna ApplicationArgs 0
+    dig 5
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.f2
+    pop
     dup
     len
     itob
@@ -609,24 +609,9 @@ reenc_f_after_for@8:
     dig 3
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint8>, 1>>
-    itxn_begin
-    global CurrentApplicationAddress
-    pushint 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec 5 // method "f(uint8[][1][])byte[]"
-    itxn_field ApplicationArgs
     dig 5
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.f
+    pop
     dup
     len
     itob
@@ -739,24 +724,9 @@ reenc_f2_after_for@8:
     dig 3
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint256>, 2>>
-    itxn_begin
-    global CurrentApplicationAddress
-    pushint 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec 6 // method "f2(uint256[][2][])byte[]"
-    itxn_field ApplicationArgs
     dig 5
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.f2
+    pop
     dup
     len
     itob
@@ -774,7 +744,7 @@ reenc_f2_after_for@8:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.g[routing]() -> void:
 g:
     bytec_0 // 0x
-    bytec 9 // 0x000100
+    bytec 5 // 0x000100
     intc_0 // 0
     intc_2 // 1
     callsub static_array_replace_byte_length_head
@@ -822,23 +792,8 @@ g:
     assert // index access is out of bounds
     intc_0 // 0
     callsub dynamic_array_replace_dynamic_element
-    itxn_begin
-    global CurrentApplicationAddress
-    pushint 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec 5 // method "f(uint8[][1][])byte[]"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.f
+    pop
     dup
     len
     itob
@@ -856,7 +811,7 @@ g:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.h[routing]() -> void:
 h:
     bytec_0 // 0x
-    bytec 9 // 0x000100
+    bytec 5 // 0x000100
     intc_0 // 0
     intc_2 // 1
     callsub static_array_replace_byte_length_head
@@ -904,23 +859,8 @@ h:
     assert // index access is out of bounds
     intc_0 // 0
     callsub dynamic_array_replace_dynamic_element
-    itxn_begin
-    global CurrentApplicationAddress
-    pushint 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec 7 // method "reenc_f(uint8[][1][])byte[]"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.f
+    pop
     dup
     len
     itob
@@ -1059,23 +999,8 @@ i:
     assert // index access is out of bounds
     intc_0 // 0
     callsub dynamic_array_replace_dynamic_element
-    itxn_begin
-    global CurrentApplicationAddress
-    pushint 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec 6 // method "f2(uint256[][2][])byte[]"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.f2
+    pop
     dup
     len
     itob
@@ -1214,23 +1139,8 @@ j:
     assert // index access is out of bounds
     intc_0 // 0
     callsub dynamic_array_replace_dynamic_element
-    itxn_begin
-    global CurrentApplicationAddress
-    pushint 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec 8 // method "reenc_f2(uint256[][2][])byte[]"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.f2
+    pop
     dup
     len
     itob
@@ -1243,3 +1153,37 @@ j:
     log
     intc_2 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.f(s: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.f:
+    proto 1 2
+    txn NumAppArgs
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.f_ternary_false@2
+    txna ApplicationArgs 0
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.f_ternary_merge@3:
+    frame_dig -1
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.f_ternary_false@2:
+    intc_0 // 0
+    bzero
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.f_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.f2(s: bytes) -> bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.f2:
+    proto 1 2
+    txn NumAppArgs
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.f2_ternary_false@2
+    txna ApplicationArgs 0
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.f2_ternary_merge@3:
+    frame_dig -1
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.f2_ternary_false@2:
+    intc_0 // 0
+    bzero
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_array_dynamic_static_dynamic.sol.C.f2_ternary_merge@3

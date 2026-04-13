@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x55f1e5e4 0x29467590 0x4c608446 0x208819f3 0x128772ff 0x2df1c367 0x912c722b 0xceb67ae4 // method "__postInit()void", method "f_memory(uint256[])uint256[]", method "f_encode(uint256[])byte[]", method "f_storage(uint256[])byte[]", method "f_index(uint256[],uint256)uint256", method "g_memory(uint256[],uint256[2])(uint256[],uint256[2])", method "g_encode(uint256[],uint256[2])byte[]", method "g_storage(uint256[],uint256[2])byte[]", method "g_index(uint256[],uint256[2],uint256)(uint512,uint512)"
+    pushbytess 0xbacc49e3 0x55f1e5e4 0x29467590 0x4c608446 0x208819f3 0x128772ff 0x2df1c367 0x912c722b 0x3cac460c // method "__postInit()void", method "f_memory(uint256[])uint256[]", method "f_encode(uint256[])byte[]", method "f_storage(uint256[])byte[]", method "f_index(uint256[],uint256)uint256", method "g_memory(uint256[],uint256[2])(uint256[],uint256[2])", method "g_encode(uint256[],uint256[2])byte[]", method "g_storage(uint256[],uint256[2])byte[]", method "g_index(uint256[],uint256[2],uint256)(uint256,uint256)"
     txna ApplicationArgs 0
     match __postInit f_memory f_encode f_storage f_index g_memory g_encode g_storage g_index
     err
@@ -41,7 +41,7 @@ __postInit:
     intc_2 // 0
     app_global_put
     bytec_1 // "aTmp"
-    intc_2 // 0
+    intc_3 // 2
     box_create
     pop
     bytec_3 // "bTmp"
@@ -355,19 +355,19 @@ g_index:
     *
     intc_0 // 32
     extract3 // on error: index access is out of bounds
-    swap
-    extract 0 32 // on error: index access is out of bounds
-    dig 1
+    dup
     len
-    pushint 64
+    intc_0 // 32
     <=
     assert // overflow
-    pushint 64
+    intc_0 // 32
     bzero
-    uncover 2
+    swap
     dig 1
     b|
-    cover 2
+    uncover 2
+    extract 0 32 // on error: index access is out of bounds
+    uncover 2
     b|
     concat
     bytec_0 // 0x151f7c75

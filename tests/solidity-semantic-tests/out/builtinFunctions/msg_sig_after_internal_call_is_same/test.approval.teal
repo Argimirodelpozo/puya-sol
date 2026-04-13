@@ -24,11 +24,15 @@ main_after_if_else@2:
     assert
     pushbytess 0x6b878efb 0x233716f1 // method "boo()byte[4]", method "foo(uint256)byte[4]"
     txna ApplicationArgs 0
-    match main_boo_route@5 foo
+    match boo foo
     err
 
-main_boo_route@5:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/msg_sig_after_internal_call_is_same.sol.test.boo[routing]() -> void:
+boo:
     bytec_0 // 0x151f7c75
+    txna ApplicationArgs 0
+    concat
     log
     pushint 1
     return
@@ -42,6 +46,8 @@ foo:
     ==
     assert // invalid number of bytes for arc4.uint256
     bytec_0 // 0x151f7c75
+    txna ApplicationArgs 0
+    concat
     log
     pushint 1
     return

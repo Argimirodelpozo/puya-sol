@@ -1,0 +1,71 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tload_tstore_not_reserved_before_cancun.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 64
+    bytecblock "__dyn_storage"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xe03b32a4 0x5ed33a7f // method "f()uint512", method "g()uint512"
+    txna ApplicationArgs 0
+    match f g
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tload_tstore_not_reserved_before_cancun.sol.C.f[routing]() -> void:
+f:
+    load 0
+    bytec_0 // "__dyn_storage"
+    pushint 8192
+    box_create
+    pop
+    bytec_0 // "__dyn_storage"
+    pushints 0 32
+    box_extract
+    pushbytes 0x01
+    b+
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    swap
+    store 0
+    dup
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/tload_tstore_not_reserved_before_cancun.sol.C.g[routing]() -> void:
+g:
+    load 0
+    store 0
+    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005
+    log
+    intc_0 // 1
+    return

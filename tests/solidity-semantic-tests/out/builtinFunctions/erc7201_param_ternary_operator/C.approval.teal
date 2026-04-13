@@ -1,0 +1,123 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_ternary_operator.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 32
+    bytecblock 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 "x" 0x 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x8b22da5f 0x2aae1d87 // method "simple()bool", method "compounded(bool,bool)bool"
+    txna ApplicationArgs 0
+    match simple compounded
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_ternary_operator.sol.erc7201Mock(id: bytes) -> bytes:
+erc7201Mock:
+    proto 1 1
+    frame_dig -1
+    keccak256
+    btoi
+    itob
+    dup
+    bytec_0 // 0x01
+    b>=
+    assert // underflow
+    intc_2 // 32
+    bzero
+    swap
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec_0 // 0x01
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    keccak256
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b&
+    btoi
+    itob
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_ternary_operator.sol.C.simple[routing]() -> void:
+simple:
+    bytec_2 // "x"
+    callsub erc7201Mock
+    bytec_3 // 0x
+    b==
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_ternary_operator.sol.C.compounded[routing]() -> void:
+compounded:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    swap
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
+    intc_0 // 1
+    <=
+    assert // ABI bool validation
+    bytec_2 // "x"
+    callsub erc7201Mock
+    bytec_3 // 0x
+    b==
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

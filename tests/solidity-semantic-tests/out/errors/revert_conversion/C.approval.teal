@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/revert_conversion.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 2 32
+    intcblock 1 0 2 32
     bytecblock "x" "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
-    intc_1 // 1
+    intc_0 // 1
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -38,20 +38,20 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_0 // 0
+    intc_1 // 0
     app_global_put
     bytec_0 // "x"
-    intc_0 // 0
+    intc_2 // 2
     box_create
     pop
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/revert_conversion.sol.C.f[routing]() -> void:
 f:
     bytec_0 // "x"
-    intc_0 // 0
+    intc_1 // 0
     intc_2 // 2
     box_extract
     btoi
@@ -64,12 +64,12 @@ f:
     swap
     box_resize
     dup
-    intc_1 // 1
+    intc_0 // 1
     +
     itob
     extract 6 2
     bytec_0 // "x"
-    intc_0 // 0
+    intc_1 // 0
     uncover 2
     box_replace
     intc_3 // 32
@@ -78,7 +78,7 @@ f:
     +
     bytec_0 // "x"
     swap
-    intc_0 // 0
+    intc_1 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
     box_splice
     err // E

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_storage_structs.sol.C.approval_program() -> uint64:
 main:
-    intcblock 64 1
+    intcblock 32 1
     bytecblock "s" 0x0000000000000000000000000000000000000000000000000000000000000007
     txn ApplicationID
     bnz main_after_if_else@2
@@ -21,7 +21,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xdd4ba0fa // method "g()(uint512,uint512)"
+    pushbytes 0x595e23e2 // method "g()(uint256,uint256)"
     txna ApplicationArgs 0
     match main_g_route@4
     err
@@ -45,32 +45,31 @@ L.f:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_for_storage_structs.sol.C.g[routing]() -> void:
 g:
+    intc_0 // 32
+    bzero
     bytec_0 // "s"
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000007
     app_global_put
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000007
     callsub L.f
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
     pushint 0
     bytec_0 // "s"
     app_global_get_ex
     assert // check s exists
     callsub L.f
-    dig 1
+    dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
-    bzero
     uncover 2
-    dig 1
-    b|
-    dig 2
-    len
-    intc_0 // 64
-    <=
-    assert // overflow
-    cover 2
     b|
     concat
     pushbytes 0x151f7c75

@@ -17,7 +17,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x6e14a09e // method "f(uint256[][2][],uint256,uint256,uint256)(uint512,uint512,uint512,uint512)"
+    pushbytes 0xa686646c // method "f(uint256[][2][],uint256,uint256,uint256)(uint256,uint256,uint256,uint256)"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -232,24 +232,28 @@ f_after_for@8:
     *
     intc_1 // 32
     extract3 // on error: index access is out of bounds
-    pushint 64
+    intc_1 // 32
     bzero
     uncover 3
     dig 1
     b|
-    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002
-    concat
     uncover 3
     dig 2
     b|
-    concat
-    dig 2
+    dig 3
     len
-    pushint 64
+    intc_1 // 32
     <=
     assert // overflow
-    cover 2
+    uncover 3
+    uncover 3
     b|
+    uncover 2
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    concat
+    uncover 2
+    concat
+    swap
     concat
     pushbytes 0x151f7c75
     swap

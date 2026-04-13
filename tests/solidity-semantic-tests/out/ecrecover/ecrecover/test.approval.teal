@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/ecrecover.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 1 255
+    intcblock 32 1 0 255
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -33,6 +33,8 @@ main_a_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/ecrecover.sol.test.a[routing]() -> void:
 a:
+    intc_2 // 0
+    dup
     txna ApplicationArgs 1
     dup
     len
@@ -48,40 +50,71 @@ a:
     btoi
     txna ApplicationArgs 3
     dup
+    cover 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 4
     dup
+    cover 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    dig 2
-    intc_2 // 255
+    dup
+    intc_3 // 255
     <=
     assert // ABI validation
-    uncover 2
-    intc_2 // 255
+    intc_3 // 255
     &
+    dup
+    pushint 27
+    >=
+    dup
+    bz a_ternary_false@3
+    dig 1
     pushint 27
     -
-    uncover 3
+
+a_ternary_merge@4:
+    intc_1 // 1
+    &
+    dig 5
     swap
-    uncover 3
-    uncover 3
+    dig 5
+    dig 5
     ecdsa_pk_recover Secp256k1
+    bury 7
+    bury 7
+    dup
+    bz a_ternary_false@7
+    dig 1
+    pushint 28
+    <=
+    bz a_ternary_false@7
     pushint 12
     bzero
-    cover 2
+    dig 7
+    dig 7
     concat
     keccak256
     extract 12 20
     concat
+
+a_ternary_merge@8:
     pushbytes 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
+
+a_ternary_false@7:
+    intc_0 // 32
+    bzero
+    b a_ternary_merge@8
+
+a_ternary_false@3:
+    intc_2 // 0
+    b a_ternary_merge@4

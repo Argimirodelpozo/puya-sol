@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/mapping_to_struct.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 64 0
+    intcblock 32 1
     bytecblock "__ctor_pending" "x" 0x78d6ba9329f8932c12192b37849f772104d20048f76434a3290512d9d814e4116f 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x453ad39e // method "__postInit()void", method "x(uint512,uint512)(uint64,uint64,uint512,uint512)"
+    pushbytess 0xbacc49e3 0x6c0103b2 // method "__postInit()void", method "x(uint256,uint256)(uint64,uint64,uint512,uint512)"
     txna ApplicationArgs 0
     match __postInit x
     err
@@ -38,10 +38,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_3 // 0
+    pushint 0
     app_global_put
     bytec_1 // "x"
-    intc_3 // 0
+    pushint 2
     box_create
     pop
     pushint 3
@@ -115,15 +115,15 @@ x:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_2 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     intc_0 // 32
     bzero
     dup
@@ -164,7 +164,7 @@ x:
     uncover 3
     uncover 3
     concat
-    intc_2 // 64
+    pushint 64
     bzero
     uncover 3
     dig 1

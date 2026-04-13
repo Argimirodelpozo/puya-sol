@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/dynamic_out_of_bounds_array_access.sol.c.approval_program() -> uint64:
 main:
-    intcblock 32 1 8 0
+    intcblock 32 1 2 0
     bytecblock "data" "__ctor_pending" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -41,7 +41,7 @@ __postInit:
     intc_3 // 0
     app_global_put
     bytec_0 // "data"
-    intc_3 // 0
+    intc_2 // 2
     box_create
     pop
     intc_1 // 1
@@ -61,12 +61,19 @@ enlarge_while_top@2:
     bytec_0 // "data"
     box_len
     pop
+    intc_2 // 2
+    -
     intc_0 // 32
     /
     itob
     dig 1
     b<
     bz enlarge_after_while@4
+    bytec_0 // "data"
+    intc_3 // 0
+    intc_2 // 2
+    box_extract
+    btoi
     bytec_0 // "data"
     box_len
     pop
@@ -75,12 +82,32 @@ enlarge_while_top@2:
     bytec_0 // "data"
     swap
     box_resize
+    dup
+    intc_1 // 1
+    +
+    itob
+    extract 6 2
+    bytec_0 // "data"
+    intc_3 // 0
+    uncover 2
+    box_replace
+    intc_0 // 32
+    *
+    intc_2 // 2
+    +
+    bytec_0 // "data"
+    swap
+    intc_3 // 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    box_splice
     b enlarge_while_top@2
 
 enlarge_after_while@4:
     bytec_0 // "data"
     box_len
     pop
+    intc_2 // 2
+    -
     intc_0 // 32
     /
     itob
@@ -116,18 +143,18 @@ set:
     intc_0 // 32
     bzero
     b|
-    intc_2 // 8
+    pushint 8
     bzero
     uncover 2
     concat
     dup
     len
-    intc_2 // 8
+    pushint 8
     -
     extract_uint64
     intc_0 // 32
     *
-    pushint 2
+    intc_2 // 2
     +
     bytec_0 // "data"
     swap
@@ -152,13 +179,13 @@ get:
     pushbytes 0x0000
     cover 2
     select
-    intc_2 // 8
+    pushint 8
     bzero
     uncover 2
     concat
     dup
     len
-    intc_2 // 8
+    pushint 8
     -
     extract_uint64
     swap
@@ -189,6 +216,8 @@ length:
     bytec_0 // "data"
     box_len
     pop
+    intc_2 // 2
+    -
     intc_0 // 32
     /
     itob

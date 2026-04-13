@@ -1,0 +1,66 @@
+#pragma version 10
+#pragma typetrack false
+
+// /tmp/multisource_ws3u38l3/B.sol.B.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0xa7cfec26 // method "foo(address)uint256"
+    txna ApplicationArgs 0
+    match main_foo_route@4
+    err
+
+main_foo_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b foo
+
+
+// /tmp/multisource_ws3u38l3/B.sol.B.foo[routing]() -> void:
+foo:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    itxn_begin
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x6e3892c1 // method "get()(uint256,uint256[2],uint256)"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 36 64
+    extract 32 32 // on error: index access is out of bounds
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return

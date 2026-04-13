@@ -30,7 +30,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x052c135e 0xa65b0a28 0xbadc1488 0x6840c918 0x1d6433cd 0x1ad81721 0x978d552f // method "direct()uint512", method "indirect()uint512", method "toMemDirect()uint64[1]", method "toMemIndirect()int16[1]", method "div()uint512", method "viaasm()byte[32]", method "a()uint512"
+    pushbytess 0x052c135e 0xa65b0a28 0xd6d04fab 0x6840c918 0x1d6433cd 0x1ad81721 0x978d552f // method "direct()uint512", method "indirect()uint512", method "toMemDirect()int16[1]", method "toMemIndirect()int16[1]", method "div()uint512", method "viaasm()byte[32]", method "a()uint512"
     txna ApplicationArgs 0
     match direct indirect toMemDirect toMemIndirect div viaasm a
     err
@@ -145,6 +145,7 @@ toMemDirect:
     app_global_get_ex
     assert // check a exists
     itob
+    extract 6 2
     bytec 5 // 0x151f7c75
     swap
     concat

@@ -35,18 +35,22 @@ main_getOne_route@4:
 getOne:
     pushbytes 0x
     txn GroupIndex
+    bz getOne_ternary_false@5
+    txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
+
+getOne_ternary_merge@6:
     itob
     pushbytes 0x
     b>
-    bz getOne_after_if_else@5
+    bz getOne_after_if_else@8
     intc_0 // 1
     itob
     bury 1
 
-getOne_after_if_else@5:
+getOne_after_if_else@8:
     dupn 2
     len
     intc_1 // 64
@@ -61,3 +65,7 @@ getOne_after_if_else@5:
     log
     intc_0 // 1
     return
+
+getOne_ternary_false@5:
+    pushint 0
+    b getOne_ternary_merge@6

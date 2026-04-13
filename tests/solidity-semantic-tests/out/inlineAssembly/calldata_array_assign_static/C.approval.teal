@@ -1,0 +1,45 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/calldata_array_assign_static.sol.C.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0x65346137 // method "f(uint256[2][2])uint256[2][2]"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/calldata_array_assign_static.sol.C.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    len
+    pushint 128
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.static_array<arc4.uint256, 2>, 2>
+    load 0
+    store 0
+    pushbytes 0x151f7c7524
+    log
+    pushint 1
+    return

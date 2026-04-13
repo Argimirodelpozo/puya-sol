@@ -4,7 +4,9 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.approval_program() -> uint64:
 main:
     intcblock 1 0 6 32
-    bytecblock "savedData" "__ctor_pending" 0x151f7c7580 0x0a8101 "rec"
+    bytecblock "savedData" "__ctor_pending" 0x 0x151f7c7580 0x0a8101 "rec"
+    bytec_2 // ""
+    dup
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
@@ -21,21 +23,73 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
+    txn NumAppArgs
+    bnz main_after_if_else@4
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback
+    intc_0 // 1
+    return
+
+main_after_if_else@4:
+    intc_1 // 0
+    bury 2
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    assert
+    bz main_create_NoOp@15
     pushbytess 0xbacc49e3 0x1bf9882b 0x0d0be52f 0xf321bc3d 0x70b65ae3 // method "__postInit()void", method "__fallback()void", method "forward()bool", method "clear()bool", method "val()uint256"
     txna ApplicationArgs 0
-    match __postInit /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.[routing] main_forward_route@7 clear val
-    err
+    match main___postInit_route@9 main___fallback_route@10 main_forward_route@11 main_clear_route@12 main_val_route@13
 
-main_forward_route@7:
-    bytec_2 // 0x151f7c7580
+main_switch_case_next@14:
+    dig 1
+    bury 1
+
+main_after_if_else@16:
+    dup
+    bnz main_after_if_else@6
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback
+    intc_0 // 1
+    bury 1
+
+main_after_if_else@6:
+    return
+
+main_val_route@13:
+    callsub val
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@14
+
+main_clear_route@12:
+    callsub clear
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@14
+
+main_forward_route@11:
+    bytec_3 // 0x151f7c7580
     log
     intc_0 // 1
-    return
+    bury 2
+    b main_switch_case_next@14
+
+main___fallback_route@10:
+    callsub __fallback
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@14
+
+main___postInit_route@9:
+    callsub __postInit
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@14
+
+main_create_NoOp@15:
+    dig 1
+    bury 1
+    b main_after_if_else@16
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__postInit[routing]() -> void:
@@ -47,7 +101,7 @@ __postInit:
     intc_1 // 0
     app_global_put
     bytec_0 // "savedData"
-    intc_1 // 0
+    pushint 2
     box_create
     pop
     itxn_begin
@@ -55,12 +109,13 @@ __postInit:
     itxn_field TypeEnum
     intc_1 // 0
     itxn_field Fee
-    bytec_3 // 0x0a8101
+    bytec 4 // 0x0a8101
     itxn_field ClearStateProgram
-    bytec_3 // 0x0a8101
+    bytec 4 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -72,27 +127,18 @@ __postInit:
     pushint 200000
     itxn_field Amount
     itxn_submit
-    itxn CreatedApplicationID
     app_params_get AppAddress
     pop
-    bytec 4 // "rec"
+    bytec 5 // "rec"
     swap
     app_global_put
-    intc_0 // 1
-    return
+    retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.[routing]:
-    txna ApplicationArgs 0
-    bytec_0 // "savedData"
-    box_del
-    pop
-    bytec_0 // "savedData"
-    swap
-    box_put
-    intc_0 // 1
-    return
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback[routing]() -> void:
+__fallback:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback
+    retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.clear[routing]() -> void:
@@ -101,19 +147,18 @@ clear:
     box_del
     pop
     bytec_0 // "savedData"
-    pushbytes 0x
+    bytec_2 // 0x
     box_put
-    bytec_2 // 0x151f7c7580
+    bytec_3 // 0x151f7c7580
     log
-    intc_0 // 1
-    return
+    retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.val[routing]() -> void:
 val:
     itxn_begin
     intc_1 // 0
-    bytec 4 // "rec"
+    bytec 5 // "rec"
     app_global_get_ex
     assert // check rec exists
     pushint 24
@@ -142,5 +187,25 @@ val:
     swap
     concat
     log
-    intc_0 // 1
-    return
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback() -> void:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback:
+    txn NumAppArgs
+    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@2
+    txna ApplicationArgs 0
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@3:
+    bytec_0 // "savedData"
+    box_del
+    pop
+    bytec_0 // "savedData"
+    swap
+    box_put
+    retsub
+
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_false@2:
+    intc_1 // 0
+    bzero
+    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.__fallback_ternary_merge@3

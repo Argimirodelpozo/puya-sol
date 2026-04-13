@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/exponentiation/literal_base.sol.test.approval_program() -> uint64:
 main:
     intcblock 64 1
-    bytecblock 0x 0x02 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x 0x010000000000000000000000000000000000000000000000000000000000000000 0x02 0x01
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -41,9 +41,9 @@ f:
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_2 // 0x01
+    bytec_3 // 0x01
     swap
-    bytec_1 // 0x02
+    bytec_2 // 0x02
     swap
 
 f_while_top@2:
@@ -52,7 +52,7 @@ f_while_top@2:
     b>
     bz f_after_while@6
     dup
-    bytec_2 // 0x01
+    bytec_3 // 0x01
     b&
     bytec_0 // 0x
     b!=
@@ -60,23 +60,27 @@ f_while_top@2:
     dig 2
     dig 2
     b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     bury 3
 
 f_after_if_else@5:
     dup
-    bytec_1 // 0x02
+    bytec_2 // 0x02
     b/
     bury 1
     dig 1
     dup
     b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     bury 2
     b f_while_top@2
 
 f_after_while@6:
-    bytec_2 // 0x01
+    bytec_3 // 0x01
     bury 5
-    bytec_1 // 0x02
+    bytec_2 // 0x02
     bury 2
     dig 3
     bury 1
@@ -87,7 +91,7 @@ f_while_top@10:
     b>
     bz f_after_while@14
     dup
-    bytec_2 // 0x01
+    bytec_3 // 0x01
     b&
     bytec_0 // 0x
     b!=
@@ -95,22 +99,26 @@ f_while_top@10:
     dig 4
     dig 2
     b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     bury 5
 
 f_after_if_else@13:
     dup
-    bytec_1 // 0x02
+    bytec_2 // 0x02
     b/
     bury 1
     dig 1
     dup
     b*
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     bury 2
     b f_while_top@10
 
 f_after_while@14:
     dig 3
-    bytec_1 // 0x02
+    bytec_2 // 0x02
     b%
     bytec_0 // 0x
     b!=
@@ -119,10 +127,10 @@ f_after_while@14:
     bytec_0 // 0x
     b==
     bnz f_ternary_false@18
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     dig 5
     b-
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 f_ternary_merge@19:

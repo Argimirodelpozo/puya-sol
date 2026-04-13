@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/public_state_overridding_mapping_to_dynamic_struct.sol.X.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 64
+    intcblock 32 1
     bytecblock 0x746573740a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf "__ctor_pending" "test" 0x000000000000000000000000000000000000000000000000000000000000000000220000
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
-    intc_0 // 1
+    intc_1 // 1
     app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x0f76205a 0xd4bbe53c // method "__postInit()void", method "set()void", method "test(uint512)(uint512,string)"
+    pushbytess 0xbacc49e3 0x0f76205a 0xb18bef07 // method "__postInit()void", method "set()void", method "test(uint256)(uint512,string)"
     txna ApplicationArgs 0
     match __postInit set test
     err
@@ -38,13 +38,13 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_2 // 0
+    pushint 0
     app_global_put
     bytec_2 // "test"
-    intc_2 // 0
+    pushint 2
     box_create
     pop
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
@@ -56,7 +56,7 @@ set:
     cover 2
     select
     dup
-    intc_1 // 32
+    intc_0 // 32
     extract_uint16
     dig 1
     len
@@ -79,7 +79,7 @@ set:
     bytec_0 // 0x746573740a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
     swap
     box_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
@@ -88,18 +88,18 @@ test:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    intc_1 // 32
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
     bzero
     swap
     concat
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    intc_0 // 32
     extract3
     sha256
     bytec_2 // "test"
@@ -112,7 +112,7 @@ test:
     dup
     extract 0 32
     dig 1
-    intc_1 // 32
+    intc_0 // 32
     extract_uint16
     dig 2
     len
@@ -120,7 +120,7 @@ test:
     cover 2
     substring3
     extract 2 0
-    intc_3 // 64
+    pushint 64
     bzero
     uncover 2
     b|
@@ -139,5 +139,5 @@ test:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return

@@ -3,12 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.approval_program() -> uint64:
 main:
-    intcblock 1 0 64
-    bytecblock "received"
+    intcblock 1 128 0 64
+    bytecblock "received" 0x
+    bytec_1 // ""
+    dup
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "received"
-    pushbytes 0x
+    bytec_1 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -21,15 +23,68 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
+    txn NumAppArgs
+    bnz main_after_if_else@4
+    intc_1 // 128
+    itob
+    bytec_0 // "received"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@4:
+    intc_2 // 0
+    bury 2
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    assert
+    bz main_create_NoOp@13
     pushbytess 0x3bd31555 0x1bf9882b 0x87cd28bc // method "recv(uint256)void", method "__fallback()void", method "received()uint512"
     txna ApplicationArgs 0
-    match recv /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.[routing] received
-    err
+    match main_recv_route@9 main___fallback_route@10 main_received_route@11
+
+main_switch_case_next@12:
+    dig 1
+    bury 1
+
+main_after_if_else@14:
+    dup
+    bnz main_after_if_else@6
+    intc_1 // 128
+    itob
+    bytec_0 // "received"
+    swap
+    app_global_put
+    intc_0 // 1
+    bury 1
+
+main_after_if_else@6:
+    return
+
+main_received_route@11:
+    callsub received
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@12
+
+main___fallback_route@10:
+    callsub __fallback
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@12
+
+main_recv_route@9:
+    callsub recv
+    intc_0 // 1
+    bury 2
+    b main_switch_case_next@12
+
+main_create_NoOp@13:
+    dig 1
+    bury 1
+    b main_after_if_else@14
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.recv[routing]() -> void:
@@ -40,7 +95,7 @@ recv:
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_1 // 0
+    intc_2 // 0
     bytec_0 // "received"
     app_global_get_ex
     assert // check received exists
@@ -51,38 +106,35 @@ recv:
     bytec_0 // "received"
     swap
     app_global_put
-    intc_0 // 1
-    return
+    retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.[routing]() -> void:
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.[routing]:
-    pushint 128
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.__fallback[routing]() -> void:
+__fallback:
+    intc_1 // 128
     itob
     bytec_0 // "received"
     swap
     app_global_put
-    intc_0 // 1
-    return
+    retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.receiver.received[routing]() -> void:
 received:
-    intc_1 // 0
+    intc_2 // 0
     bytec_0 // "received"
     app_global_get_ex
     assert // check received exists
     dup
     len
-    intc_2 // 64
+    intc_3 // 64
     <=
     assert // overflow
-    intc_2 // 64
+    intc_3 // 64
     bzero
     b|
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
-    return
+    retsub

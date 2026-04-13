@@ -1,0 +1,69 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_library_function.sol.A.approval_program() -> uint64:
+main:
+    intcblock 0 1
+    bytecblock "s" 0x00
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "s"
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0xcc8c5ad8 // method "s()(uint512,bool)"
+    txna ApplicationArgs 0
+    match main_s_route@4
+    err
+
+main_s_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b s
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/storage_reference_library_function.sol.A.s[routing]() -> void:
+s:
+    intc_0 // 0
+    bytec_0 // "s"
+    app_global_get_ex
+    assert // check s exists
+    dup
+    extract 0 32
+    swap
+    pushint 256
+    getbit
+    bytec_1 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    intc_0 // 0
+    getbit
+    pushint 64
+    bzero
+    uncover 2
+    b|
+    bytec_1 // 0x00
+    intc_0 // 0
+    uncover 3
+    setbit
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

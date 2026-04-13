@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/msg_data_to_struct_member_copy.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 32 1 0
     bytecblock 0x151f7c750002
     txn ApplicationID
     bnz main_after_if_else@2
@@ -37,7 +37,11 @@ main_hashes_route@7:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/msg_data_to_struct_member_copy.sol.C.f[routing]() -> void:
 f:
+    txn NumAppArgs
+    bz f_ternary_false@3
     txna ApplicationArgs 0
+
+f_ternary_merge@4:
     dup
     len
     itob
@@ -50,11 +54,20 @@ f:
     log
     intc_1 // 1
     return
+
+f_ternary_false@3:
+    intc_2 // 0
+    bzero
+    b f_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/msg_data_to_struct_member_copy.sol.C.g[routing]() -> void:
 g:
+    txn NumAppArgs
+    bz g_ternary_false@3
     txna ApplicationArgs 0
+
+g_ternary_merge@4:
     dup
     len
     itob
@@ -67,6 +80,11 @@ g:
     log
     intc_1 // 1
     return
+
+g_ternary_false@3:
+    intc_2 // 0
+    bzero
+    b g_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/msg_data_to_struct_member_copy.sol.C.large[routing]() -> void:
@@ -91,7 +109,11 @@ large:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn NumAppArgs
+    bz large_ternary_false@3
     txna ApplicationArgs 0
+
+large_ternary_merge@4:
     dup
     len
     itob
@@ -104,6 +126,11 @@ large:
     log
     intc_1 // 1
     return
+
+large_ternary_false@3:
+    intc_2 // 0
+    bzero
+    b large_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/msg_data_to_struct_member_copy.sol.C.another_large[routing]() -> void:
@@ -128,7 +155,11 @@ another_large:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn NumAppArgs
+    bz another_large_ternary_false@3
     txna ApplicationArgs 0
+
+another_large_ternary_merge@4:
     dup
     len
     itob
@@ -141,3 +172,8 @@ another_large:
     log
     intc_1 // 1
     return
+
+another_large_ternary_false@3:
+    intc_2 // 0
+    bzero
+    b another_large_ternary_merge@4

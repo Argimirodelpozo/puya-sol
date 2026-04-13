@@ -41,7 +41,7 @@ __postInit:
     intc_2 // 0
     app_global_put
     bytec_1 // "map"
-    intc_2 // 0
+    pushint 2
     box_create
     pop
     intc_1 // 1
@@ -87,6 +87,7 @@ f:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -98,12 +99,7 @@ f:
     pushint 200000
     itxn_field Amount
     itxn_submit
-    itxn CreatedApplicationID
-    app_params_get AppAddress
-    pop
     itxn_begin
-    pushint 24
-    extract_uint64
     intc_3 // 6
     itxn_field TypeEnum
     intc_2 // 0

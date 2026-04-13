@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/accessors_mapping_for_array.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 64 1 0
+    intcblock 32 1 64 0
     bytecblock "__ctor_pending" "data" "dynamicData" 0x0000000000000000000000000000000000000000000000000000000000000008 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
-    intc_2 // 1
+    intc_1 // 1
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0xc54bf67f 0x8fc7ecc3 // method "__postInit()void", method "data(uint512,uint512)uint512", method "dynamicData(uint512,uint512)uint512"
+    pushbytess 0xbacc49e3 0x5c5fb070 0xdd596ada // method "__postInit()void", method "data(uint256,uint256)uint512", method "dynamicData(uint256,uint256)uint512"
     txna ApplicationArgs 0
     match __postInit data dynamicData
     err
@@ -41,15 +41,15 @@ __postInit:
     intc_3 // 0
     app_global_put
     bytec_1 // "data"
-    intc_3 // 0
+    pushint 2
     box_create
     pop
     bytec_2 // "dynamicData"
-    intc_3 // 0
+    pushint 2
     box_create
     pop
     pushbytes 0x646174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
-    intc_1 // 64
+    intc_2 // 64
     bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000008
     box_replace // on error: index out of bounds
     intc_3 // 0
@@ -71,7 +71,7 @@ __postInit_after_while@4:
     pushint 66
     bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000008
     box_replace // on error: index out of bounds
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -80,15 +80,15 @@ data:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     intc_0 // 32
     bzero
     dup
@@ -120,17 +120,17 @@ data:
     select
     dup
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     bytec 4 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -139,15 +139,15 @@ dynamicData:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     intc_0 // 32
     bzero
     dup
@@ -179,15 +179,15 @@ dynamicData:
     select
     dup
     len
-    intc_1 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_2 // 64
     bzero
     b|
     bytec 4 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return

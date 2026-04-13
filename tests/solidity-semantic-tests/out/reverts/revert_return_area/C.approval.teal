@@ -3,6 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/revert_return_area.sol.C.approval_program() -> uint64:
 main:
+    pushbytes ""
     txn ApplicationID
     bnz main_after_if_else@2
     pushint 1
@@ -16,18 +17,39 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
+    txn NumAppArgs
+    assert // revert
+    pushint 0
+    bury 1
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    assert
+    bz main_create_NoOp@14
     pushbytess 0x1bf9882b 0x6acb2994 // method "__fallback()void", method "f()(uint512,uint512)"
     txna ApplicationArgs 0
-    match main___fallback_route@5 f
-    err
+    match main___fallback_route@11 main_f_route@12
 
-main___fallback_route@5:
-    err // abc
+main_switch_case_next@13:
+    dup
+
+main_after_if_else@15:
+    dup
+    assert // revert
+    return
+
+main_f_route@12:
+    callsub f
+    pushint 1
+    bury 1
+    b main_switch_case_next@13
+
+main___fallback_route@11:
+    err // revert
+
+main_create_NoOp@14:
+    dup
+    b main_after_if_else@15
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/revert_return_area.sol.C.f[routing]() -> void:
@@ -46,5 +68,4 @@ f:
     swap
     concat
     log
-    pushint 1
-    return
+    retsub
