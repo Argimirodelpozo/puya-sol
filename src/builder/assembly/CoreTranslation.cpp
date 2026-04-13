@@ -282,6 +282,28 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	for (auto const& arg: _call.arguments)
 		args.push_back(buildExpression(arg));
 
+	// User-defined assembly functions take precedence over builtins.
+	// This matches Yul's scoping rules: a user `function basefee() -> r { ... }`
+	// shadows the builtin `basefee()` opcode when called.
+	if (m_asmFunctions.count(funcName))
+	{
+		auto const& funcDef = *m_asmFunctions[funcName];
+		std::vector<std::shared_ptr<awst::Statement>> inlinedStmts;
+		handleUserFunctionCall(funcName, args, loc, inlinedStmts);
+		for (auto& s: inlinedStmts)
+			m_pendingStatements.push_back(std::move(s));
+		if (!funcDef.returnVariables.empty())
+		{
+			std::string retName = funcDef.returnVariables[0].name.str();
+			auto retVar = std::make_shared<awst::VarExpression>();
+			retVar->sourceLocation = loc;
+			retVar->name = retName;
+			retVar->wtype = awst::WType::biguintType();
+			return retVar;
+		}
+		return std::make_shared<awst::VoidConstant>();
+	}
+
 	// Builtin dispatch
 	if (funcName == "mulmod")
 		return handleMulmod(args, loc);
