@@ -659,6 +659,25 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			auto body = std::make_shared<awst::Block>();
 			body->sourceLocation = _loc;
 
+			// In unchecked mode, Solidity wraps exponentiation modulo 2^256
+			// so that huge exponents (e.g. 2**1113) don't overflow biguint.
+			// Take each intermediate result mod 2^256 inside the loop.
+			bool const wrapMod = m_inUncheckedBlock;
+			static const std::string kPow256 =
+				"115792089237316195423570985008687907853269984665640564039457584007913129639936";
+			auto wrapMod256 = [&](std::shared_ptr<awst::Expression> v)
+				-> std::shared_ptr<awst::Expression>
+			{
+				if (!wrapMod) return v;
+				auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
+				mod->sourceLocation = _loc;
+				mod->wtype = awst::WType::biguintType();
+				mod->left = std::move(v);
+				mod->op = awst::BigUIntBinaryOperator::Mod;
+				mod->right = makeConst(kPow256);
+				return mod;
+			};
+
 			// if exp & 1 != 0: result = result * base
 			{
 				auto expAnd1 = makeBinOp(makeVar(expVar), awst::BigUIntBinaryOperator::BitAnd, makeConst("1"));
@@ -669,7 +688,9 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 				isOdd->op = awst::NumericComparison::Ne;
 				isOdd->rhs = makeConst("0");
 
-				auto product = makeBinOp(makeVar(resultVar), awst::BigUIntBinaryOperator::Mult, makeVar(baseVar));
+				std::shared_ptr<awst::Expression> product =
+					makeBinOp(makeVar(resultVar), awst::BigUIntBinaryOperator::Mult, makeVar(baseVar));
+				product = wrapMod256(std::move(product));
 
 				auto ifBlock = std::make_shared<awst::Block>();
 				ifBlock->sourceLocation = _loc;
@@ -687,9 +708,13 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			body->body.push_back(makeAssign(expVar,
 				makeBinOp(makeVar(expVar), awst::BigUIntBinaryOperator::FloorDiv, makeConst("2"))));
 
-			// base = base * base
-			body->body.push_back(makeAssign(baseVar,
-				makeBinOp(makeVar(baseVar), awst::BigUIntBinaryOperator::Mult, makeVar(baseVar))));
+			// base = base * base (wrapped mod 2^256 in unchecked mode)
+			{
+				std::shared_ptr<awst::Expression> baseSq =
+					makeBinOp(makeVar(baseVar), awst::BigUIntBinaryOperator::Mult, makeVar(baseVar));
+				baseSq = wrapMod256(std::move(baseSq));
+				body->body.push_back(makeAssign(baseVar, std::move(baseSq)));
+			}
 
 			loop->loopBody = std::move(body);
 			m_prePendingStatements.push_back(std::move(loop));
