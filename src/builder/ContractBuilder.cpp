@@ -3621,7 +3621,11 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				auto const* modDef = dynamic_cast<
 					solidity::frontend::ModifierDefinition const*>(
 					modInvocation->name().annotation().referencedDeclaration);
-				if (modDef && hasInlineAsmInBlock(modDef->body()))
+				// Virtual modifiers without a body (e.g. `modifier mod virtual;`)
+				// have no statements to walk — skip them, otherwise modDef->body()
+				// will trip a Solidity internal assertion.
+				if (modDef && modDef->isImplemented()
+					&& hasInlineAsmInBlock(modDef->body()))
 				{
 					hasInlineAsm = true;
 					break;
