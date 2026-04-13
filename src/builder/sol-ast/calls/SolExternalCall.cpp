@@ -531,34 +531,48 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 	// bytes (no log) and trips the itxn LastLog extraction. If we can see
 	// the member is a public state/immutable var with a literal initialiser,
 	// fold the call to that literal directly.
-	if (auto const* outerFuncCall = dynamic_cast<FunctionCall const*>(&memberAccess->expression()))
 	{
-		if (auto const* newExpr = dynamic_cast<NewExpression const*>(&outerFuncCall->expression()))
+		// Parentheses in the source become 1-element TupleExpressions in
+		// the AST (e.g. `(new C())` is Tuple(FunctionCall(NewExpression))),
+		// so peel them before looking for `new C()`. Without this the
+		// fold never fires for the common parenthesised form.
+		Expression const* base = &memberAccess->expression();
+		while (auto const* tup = dynamic_cast<TupleExpression const*>(base))
 		{
-			auto const* refDecl = memberAccess->annotation().referencedDeclaration;
-			auto const* varDecl = dynamic_cast<VariableDeclaration const*>(refDecl);
-			if (newExpr && varDecl && varDecl->isStateVariable()
-				&& varDecl->value()
-				&& m_call.arguments().empty())
+			if (tup->components().size() == 1 && tup->components()[0])
+				base = tup->components()[0].get();
+			else
+				break;
+		}
+		if (auto const* outerFuncCall = dynamic_cast<FunctionCall const*>(base))
+		{
+			if (auto const* newExpr = dynamic_cast<NewExpression const*>(&outerFuncCall->expression()))
 			{
-				auto val = buildExpr(*varDecl->value());
-				if (val)
+				auto const* refDecl = memberAccess->annotation().referencedDeclaration;
+				auto const* varDecl = dynamic_cast<VariableDeclaration const*>(refDecl);
+				if (newExpr && varDecl && varDecl->isStateVariable()
+					&& varDecl->value()
+					&& m_call.arguments().empty())
 				{
-					auto const* retType = m_ctx.typeMapper.map(
-						m_call.annotation().type);
-					if (retType)
-						val = builder::TypeCoercion::implicitNumericCast(
-							std::move(val), retType, m_loc);
-					Logger::instance().warning(
-						"folded \`(new " + (
-							dynamic_cast<ContractType const*>(
-								newExpr->typeName().annotation().type)
-							? dynamic_cast<ContractType const*>(
-								newExpr->typeName().annotation().type
-							)->contractDefinition().name()
-							: std::string("C"))
-						+ ").stateVar()\` to compile-time initial value", m_loc);
-					return val;
+					auto val = buildExpr(*varDecl->value());
+					if (val)
+					{
+						auto const* retType = m_ctx.typeMapper.map(
+							m_call.annotation().type);
+						if (retType)
+							val = builder::TypeCoercion::implicitNumericCast(
+								std::move(val), retType, m_loc);
+						Logger::instance().warning(
+							"folded `(new " + (
+								dynamic_cast<ContractType const*>(
+									newExpr->typeName().annotation().type)
+								? dynamic_cast<ContractType const*>(
+									newExpr->typeName().annotation().type
+								)->contractDefinition().name()
+								: std::string("C"))
+							+ ").stateVar()` to compile-time initial value", m_loc);
+						return val;
+					}
 				}
 			}
 		}
