@@ -558,6 +558,7 @@ int main(int _argc, char* _argv[])
 			{"shanghai",         solidity::langutil::EVMVersion::shanghai()},
 			{"cancun",           solidity::langutil::EVMVersion::cancun()},
 			{"prague",           solidity::langutil::EVMVersion::prague()},
+			{"osaka",            solidity::langutil::EVMVersion::osaka()},
 		};
 		auto pickIndex = [&](std::string const& _name) -> int {
 			for (size_t i = 0; i < ladder.size(); ++i)
@@ -576,8 +577,9 @@ int main(int _argc, char* _argv[])
 			{
 				// `<=X`, `=X`, bare `X`: pick X
 				// `<X`: pick X-1 (previous version)
-				// `>=X`, `>X`: keep cancun (our default is newer than any
-				//              likely constraint)
+				// `>=X`, `>X`: bump to that version (or one above) so that
+				//              tests requiring newer features (e.g. clz which
+				//              needs osaka) can be parsed.
 				if (op == "<=" || op.empty() || op == "=" || op == "==")
 				{
 					evmVer = ladder[idx].second;
@@ -586,6 +588,13 @@ int main(int _argc, char* _argv[])
 				{
 					if (idx > 0)
 						evmVer = ladder[idx - 1].second;
+				}
+				else if (op == ">=" || op == ">")
+				{
+					int curIdx = pickIndex(evmVer.name());
+					int targetIdx = (op == ">") ? idx + 1 : idx;
+					if (targetIdx > curIdx && targetIdx < static_cast<int>(ladder.size()))
+						evmVer = ladder[targetIdx].second;
 				}
 			}
 		}

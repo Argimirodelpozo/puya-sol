@@ -68,33 +68,86 @@ def setup_localnet():
 def _split_multi_source(sol_path):
     """Split multi-source test files (==== Source: name ====) into temp files.
 
+    Also resolves `==== ExternalSource: path/file.sol ====` directives by
+    copying the named files from the upstream solidity test fixture tree
+    (solidity/test/libsolidity/semanticTests/...) into the temp dir so
+    relative imports can be resolved.
+
     Returns (main_source_path, [all_source_paths], import_dir) or (sol_path, [sol_path], None).
     """
     import tempfile
+    import shutil
     content = sol_path.read_text()
-    if "==== Source:" not in content:
-        return sol_path, [sol_path], None
-
-    parts = re.split(r'^==== Source: (.+?) ====$', content, flags=re.MULTILINE)
-    if len(parts) < 3:
+    has_source = "==== Source:" in content
+    has_ext_source = "==== ExternalSource:" in content
+    if not has_source and not has_ext_source:
         return sol_path, [sol_path], None
 
     tmp_dir = Path(tempfile.mkdtemp(prefix="multisource_"))
     all_sources = []
     last_name = None
-    for i in range(1, len(parts), 2):
-        name = parts[i].strip()
-        body = parts[i + 1] if i + 1 < len(parts) else ""
-        if "// ----" in body:
-            body = body[:body.index("// ----")]
-        file_name = name if name.endswith(".sol") else name + ".sol"
-        (tmp_dir / name).write_text(body)
-        (tmp_dir / file_name).write_text(body)
-        all_sources.append(tmp_dir / file_name)
-        last_name = name
 
-    main = last_name + ".sol" if not last_name.endswith(".sol") else last_name
-    return tmp_dir / main, all_sources, tmp_dir
+    # Resolve ExternalSource directives first by copying upstream files.
+    # The upstream tree is rooted at solidity/test/libsolidity/semanticTests/
+    # at the same project depth — find it relative to this script.
+    if has_ext_source:
+        script_dir = Path(__file__).resolve().parent
+        # Walk up to find the project root containing 'solidity/' fixture
+        upstream_root = None
+        cur = script_dir
+        for _ in range(5):
+            cand = cur / "solidity" / "test" / "libsolidity" / "semanticTests"
+            if cand.exists():
+                upstream_root = cand
+                break
+            cur = cur.parent
+        if upstream_root is not None:
+            # Test category from sol_path: e.g. tests/X/Y/Z.sol → X/Y
+            try:
+                tests_root = sol_path.parent
+                rel_dir_parts = []
+                walker = tests_root
+                while walker.name and walker.name != "tests":
+                    rel_dir_parts.append(walker.name)
+                    walker = walker.parent
+                rel_dir = Path(*reversed(rel_dir_parts)) if rel_dir_parts else Path()
+                upstream_test_dir = upstream_root / rel_dir
+            except Exception:
+                upstream_test_dir = upstream_root
+
+            ext_re = re.compile(r'^==== ExternalSource: (.+?) ====$', re.MULTILINE)
+            for m in ext_re.finditer(content):
+                ext_path = m.group(1).strip()
+                src = upstream_test_dir / ext_path
+                if src.exists():
+                    dest = tmp_dir / ext_path
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy(src, dest)
+                    all_sources.append(dest)
+
+    if has_source:
+        parts = re.split(r'^==== Source: (.+?) ====$', content, flags=re.MULTILINE)
+        if len(parts) < 3:
+            # Only ExternalSource, no inline Source: use the original file
+            (tmp_dir / sol_path.name).write_text(content)
+            return tmp_dir / sol_path.name, all_sources + [tmp_dir / sol_path.name], tmp_dir
+        for i in range(1, len(parts), 2):
+            name = parts[i].strip()
+            body = parts[i + 1] if i + 1 < len(parts) else ""
+            if "// ----" in body:
+                body = body[:body.index("// ----")]
+            file_name = name if name.endswith(".sol") else name + ".sol"
+            (tmp_dir / file_name).parent.mkdir(parents=True, exist_ok=True)
+            (tmp_dir / file_name).write_text(body)
+            all_sources.append(tmp_dir / file_name)
+            last_name = name
+        main = last_name + ".sol" if not last_name.endswith(".sol") else last_name
+        return tmp_dir / main, all_sources, tmp_dir
+    else:
+        # ExternalSource only — use the first external as main
+        if all_sources:
+            return all_sources[-1], all_sources, tmp_dir
+        return sol_path, [sol_path], None
 
 
 def compile_test(sol_path: Path, out_dir: Path, ensure_budget: dict = None, via_yul_behavior: bool = False) -> dict | None:

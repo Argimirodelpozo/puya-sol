@@ -1545,9 +1545,14 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					auto* wtype = m_typeMapper.map(var->type());
 					if (!wtype)
 						continue;
-					// Collect dynamic arrays AND dynamic bytes for box creation
+					// Collect dynamic arrays AND dynamic bytes for box creation,
+					// PLUS fixed-size ARC4 static arrays (uint[N]) which are
+					// stored in a single box of fixed length and need box_create
+					// at deploy time so the contract can write to slots without
+					// hitting "no such box" at runtime.
 					bool isBoxType = wtype->kind() == awst::WTypeKind::ReferenceArray
 						|| wtype->kind() == awst::WTypeKind::ARC4DynamicArray
+						|| wtype->kind() == awst::WTypeKind::ARC4StaticArray
 						|| wtype == awst::WType::bytesType()
 						|| (wtype->kind() == awst::WTypeKind::Bytes
 							&& !dynamic_cast<awst::BytesWType const*>(wtype)->length().has_value());
@@ -1947,34 +1952,63 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				boxKey->value = std::vector<uint8_t>(varName.begin(), varName.end());
 
 				// Compute box size: 2 bytes for ARC4 length header (empty dynamic array),
-				// or string literal size for bytes/string initializers.
+				// or string literal size for bytes/string initializers, or
+				// elementSize*N for fixed-size ARC4 static arrays (e.g. uint[20]).
 				unsigned boxSizeVal = 2; // ARC4 dynamic array length header
 				std::shared_ptr<awst::Expression> boxInitVal;
 				{
 					auto const& lin = _contract.annotation().linearizedBaseContracts;
 					for (auto const* base: lin)
 						for (auto const* var: base->stateVariables())
-							if (var->name() == varName && !var->isConstant() && var->value())
+						{
+							if (var->name() != varName || var->isConstant())
+								continue;
+							// ARC4StaticArray (uint[N], int[N], etc.): allocate
+							// elementSize * arraySize bytes so the contract can
+							// write to slot indices without "no such box".
+							auto* varWtype = m_typeMapper.map(var->type());
+							if (varWtype && varWtype->kind() == awst::WTypeKind::ARC4StaticArray)
 							{
-								auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(var->type());
-								if (arrType && arrType->isByteArrayOrString())
+								auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(varWtype);
+								if (sa && sa->arraySize() > 0)
 								{
-									if (auto const* lit = dynamic_cast<solidity::frontend::Literal const*>(var->value().get()))
-										boxSizeVal = static_cast<unsigned>(lit->value().size());
-									if (boxSizeVal > 0)
+									unsigned elemSize = 32; // default for uint256
+									auto const* elemT = sa->elementType();
+									if (elemT)
 									{
-										boxInitVal = m_exprBuilder->build(*var->value());
-										if (boxInitVal && boxInitVal->wtype == awst::WType::stringType())
+										if (auto const* uintN = dynamic_cast<awst::ARC4UIntN const*>(elemT))
+											elemSize = std::max(1u, uintN->n() / 8);
+										else if (elemT->kind() == awst::WTypeKind::Bytes)
 										{
-											auto cast = std::make_shared<awst::ReinterpretCast>();
-											cast->sourceLocation = method.sourceLocation;
-											cast->wtype = awst::WType::bytesType();
-											cast->expr = std::move(boxInitVal);
-											boxInitVal = std::move(cast);
+											auto const* bw = dynamic_cast<awst::BytesWType const*>(elemT);
+											if (bw && bw->length().has_value())
+												elemSize = *bw->length();
 										}
+									}
+									boxSizeVal = elemSize * static_cast<unsigned>(sa->arraySize());
+								}
+							}
+							if (!var->value())
+								continue;
+							auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(var->type());
+							if (arrType && arrType->isByteArrayOrString())
+							{
+								if (auto const* lit = dynamic_cast<solidity::frontend::Literal const*>(var->value().get()))
+									boxSizeVal = static_cast<unsigned>(lit->value().size());
+								if (boxSizeVal > 0)
+								{
+									boxInitVal = m_exprBuilder->build(*var->value());
+									if (boxInitVal && boxInitVal->wtype == awst::WType::stringType())
+									{
+										auto cast = std::make_shared<awst::ReinterpretCast>();
+										cast->sourceLocation = method.sourceLocation;
+										cast->wtype = awst::WType::bytesType();
+										cast->expr = std::move(boxInitVal);
+										boxInitVal = std::move(cast);
 									}
 								}
 							}
+						}
 				}
 				auto boxSize = std::make_shared<awst::IntegerConstant>();
 				boxSize->sourceLocation = method.sourceLocation;
