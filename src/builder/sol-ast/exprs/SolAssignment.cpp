@@ -58,6 +58,66 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 	auto const* tupleTarget = dynamic_cast<awst::TupleExpression const*>(_target.get());
 	auto const& items = tupleTarget->items;
 
+	// If the RHS is a literal tuple of VarExpressions (local variables),
+	// snapshot each item into a temporary variable first so later element
+	// reads see the pre-assignment value — otherwise `(a, b) = (b, a)` would
+	// be evaluated as `a = b; b = a;` (lazy refs), breaking the swap.
+	// We limit the snapshot to pure VarExpression items so that storage
+	// variable tuples keep the (EVM-documented, intentionally broken)
+	// in-place assignment semantics that tests like swap_in_storage_overwrite
+	// rely on.
+	if (auto const* rhsTuple = dynamic_cast<awst::TupleExpression const*>(_value.get()))
+	{
+		bool allLocalVars = !rhsTuple->items.empty();
+		for (auto const& it : rhsTuple->items)
+		{
+			auto const* ve = dynamic_cast<awst::VarExpression const*>(it.get());
+			if (!ve || ve->name.empty())
+			{
+				allLocalVars = false;
+				break;
+			}
+		}
+		if (allLocalVars)
+		{
+			std::vector<awst::WType const*> tmpTypes;
+			auto newTuple = std::make_shared<awst::TupleExpression>();
+			newTuple->sourceLocation = _value->sourceLocation;
+			for (size_t i = 0; i < rhsTuple->items.size(); ++i)
+			{
+				auto const& rhsItem = rhsTuple->items[i];
+				std::string tmpName = "__tuple_tmp_" + std::to_string(m_loc.line)
+					+ "_" + std::to_string(i);
+
+				auto tmpTarget = std::make_shared<awst::VarExpression>();
+				tmpTarget->sourceLocation = _value->sourceLocation;
+				tmpTarget->name = tmpName;
+				tmpTarget->wtype = rhsItem->wtype;
+
+				auto tmpAssign = std::make_shared<awst::AssignmentExpression>();
+				tmpAssign->sourceLocation = _value->sourceLocation;
+				tmpAssign->wtype = rhsItem->wtype;
+				tmpAssign->target = tmpTarget;
+				tmpAssign->value = rhsItem;
+
+				auto stmt = std::make_shared<awst::ExpressionStatement>();
+				stmt->sourceLocation = _value->sourceLocation;
+				stmt->expr = std::move(tmpAssign);
+				m_ctx.pendingStatements.push_back(std::move(stmt));
+
+				auto tmpRead = std::make_shared<awst::VarExpression>();
+				tmpRead->sourceLocation = _value->sourceLocation;
+				tmpRead->name = tmpName;
+				tmpRead->wtype = rhsItem->wtype;
+				newTuple->items.push_back(std::move(tmpRead));
+				tmpTypes.push_back(rhsItem->wtype);
+			}
+			newTuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
+				std::move(tmpTypes), std::nullopt);
+			_value = std::move(newTuple);
+		}
+	}
+
 	// Collect assignments and insert in reverse order (right-to-left)
 	// to match Solidity's tuple assignment semantics where later positions
 	// are assigned first (important when the same target appears twice).
