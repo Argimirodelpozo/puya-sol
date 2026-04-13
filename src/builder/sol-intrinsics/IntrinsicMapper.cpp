@@ -58,6 +58,15 @@ std::shared_ptr<awst::IntrinsicCall> IntrinsicMapper::tryMapMemberAccess(
 			call->wtype = awst::WType::bytesType();
 			return call;
 		}
+		else if (_memberName == "sig")
+		{
+			// msg.sig → first 4 bytes of msg.data (ARC4 selector).
+			// Routed through SolIntrinsicAccess for a bytes[4]-typed result.
+			call->opCode = "txna";
+			call->immediates = {std::string("ApplicationArgs"), 0};
+			call->wtype = awst::WType::bytesType();
+			return call;
+		}
 	}
 	else if (_objectName == "block")
 	{
