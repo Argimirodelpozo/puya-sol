@@ -49,12 +49,36 @@ std::shared_ptr<awst::Expression> SolLiteral::toAwst()
 		{
 			auto val = ratType->literalValue(nullptr);
 			// literalValue() returns u256 (two's complement for negatives).
-			// If value exceeds uint64, promote to biguint to preserve full
-			// 256-bit representation.
 			static const solidity::u256 uint64Max("18446744073709551615");
 			if (mappedType == awst::WType::uint64Type() && val > uint64Max)
-				mappedType = awst::WType::biguintType();
-			e->value = val.str();
+			{
+				// Huge u256 values always promote to biguint so the full
+				// 256-bit representation is preserved. *Except* for
+				// negative signed integers whose storage slot is uint64
+				// (signed types with bits ≤ 64): there we want the 64-bit
+				// two's complement form (`val mod 2^64`) so that compiled
+				// comparisons against `type(intN).min` and other uint64
+				// stored variables line up. Without this, -128 would be
+				// biguint(2^256 - 128) while int8_min is uint64 0xff..80,
+				// and the coerced equality fails.
+				bool signedSmall = false;
+				if (auto const* intType = dynamic_cast<IntegerType const*>(m_solType))
+					signedSmall = intType->isSigned() && intType->numBits() <= 64;
+				static const solidity::u256 twoPow64("18446744073709551616");
+				if (signedSmall)
+				{
+					// Wrap to 64 bits: val mod 2^64.
+					solidity::u256 wrapped = val % twoPow64;
+					e->value = wrapped.str();
+				}
+				else
+				{
+					mappedType = awst::WType::biguintType();
+					e->value = val.str();
+				}
+			}
+			else
+				e->value = val.str();
 		}
 		else
 			e->value = m_literal.value();

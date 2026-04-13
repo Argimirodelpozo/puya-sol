@@ -57,25 +57,30 @@ std::shared_ptr<awst::Expression> SolMetaTypeAccess::toAwst()
 			{
 				if (intType->isSigned())
 				{
-					// type(intN).min = -2^(N-1). Solidity's
-					// `literalValue()` returns the two's complement form
-					// in full 256-bit width for negative literals, so the
-					// right-hand side of a comparison like
-					//     int8_min == -2**7
-					// is a biguint holding 2^256 - 2^7.
+					// type(intN).min = -2^(N-1). Encode as two's complement
+					// in the storage slot width (uint64 for N<=64, biguint
+					// for N>64), matching how SolLiteral encodes negative
+					// integer literals for the same context. Without this
+					// mirroring the comparison `intN_min == -2**(N-1)`
+					// would have operands of different widths that never
+					// reinterpret-cast to equal biguint values.
 					//
-					// To make equality work for every signed width we
-					// promote type(intN).min to biguint and encode the
-					// same 256-bit two's complement value (2^256 - 2^(N-1)).
-					// For bits == 256 this simplifies to 2^255.
-					wtype = awst::WType::biguintType();
+					//   bits <= 64:  2^64  - 2^(bits-1)   (uint64 slot)
+					//   bits  > 64:  2^256 - 2^(bits-1)   (biguint slot)
+					//   bits == 256: simplifies to 2^255.
 					solidity::u256 twoPowBitsMinus1 = solidity::u256(1) << (bits - 1);
 					solidity::u256 minVal;
-					if (bits == 256)
+					if (bits <= 64)
+					{
+						// u64 wrap: 2^64 - 2^(bits-1) fits in u256 range.
+						solidity::u256 twoPow64 = solidity::u256(1) << 64;
+						minVal = twoPow64 - twoPowBitsMinus1;
+					}
+					else if (bits == 256)
 						minVal = twoPowBitsMinus1;
 					else
-						// u256 subtraction wraps modulo 2^256 so this
-						// yields 2^256 - 2^(bits-1).
+						// u256 subtraction wraps modulo 2^256, yielding
+						// 2^256 - 2^(bits-1) — the 256-bit two's complement.
 						minVal = solidity::u256(0) - twoPowBitsMinus1;
 					std::ostringstream oss;
 					oss << minVal;
