@@ -532,8 +532,83 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSelector(
 	auto const& args = _callNode.arguments();
 	if (args.empty()) return nullptr;
 
-	// selector (4 bytes) + abi.encode(remaining args)
+	// selector (4 bytes) + abi.encode(remaining args).
+	// The selector argument is `bytes4` in Solidity (integer literals are
+	// implicitly cast). Our buildExpr may return a uint64 or biguint for
+	// integer literals, so coerce to exactly 4 bytes here.
 	auto selector = _ctx.buildExpr(*args[0]);
+	auto const* selType = args[0]->annotation().type;
+	bool selIsBytesN = false;
+	if (auto const* fb = dynamic_cast<solidity::frontend::FixedBytesType const*>(selType))
+		selIsBytesN = fb->numBytes() == 4;
+	if (!selIsBytesN)
+	{
+		// Integer/biguint → itob → take last 4 bytes (big-endian, so the
+		// low-order 4 bytes hold the selector value).
+		std::shared_ptr<awst::Expression> asBytes = selector;
+		if (selector->wtype == awst::WType::uint64Type())
+		{
+			auto itob = std::make_shared<awst::IntrinsicCall>();
+			itob->sourceLocation = _loc;
+			itob->wtype = awst::WType::bytesType();
+			itob->opCode = "itob";
+			itob->stackArgs.push_back(std::move(selector));
+			asBytes = std::move(itob);
+		}
+		else if (selector->wtype == awst::WType::biguintType())
+		{
+			auto cast = std::make_shared<awst::ReinterpretCast>();
+			cast->sourceLocation = _loc;
+			cast->wtype = awst::WType::bytesType();
+			cast->expr = std::move(selector);
+			asBytes = std::move(cast);
+		}
+
+		// Left-pad to ≥4 bytes then extract the last 4 bytes.
+		auto bzeroSize = std::make_shared<awst::IntegerConstant>();
+		bzeroSize->sourceLocation = _loc;
+		bzeroSize->wtype = awst::WType::uint64Type();
+		bzeroSize->value = "4";
+		auto zeros = std::make_shared<awst::IntrinsicCall>();
+		zeros->sourceLocation = _loc;
+		zeros->wtype = awst::WType::bytesType();
+		zeros->opCode = "bzero";
+		zeros->stackArgs.push_back(std::move(bzeroSize));
+
+		auto cat = std::make_shared<awst::IntrinsicCall>();
+		cat->sourceLocation = _loc;
+		cat->wtype = awst::WType::bytesType();
+		cat->opCode = "concat";
+		cat->stackArgs.push_back(std::move(zeros));
+		cat->stackArgs.push_back(std::move(asBytes));
+
+		auto lenCall = std::make_shared<awst::IntrinsicCall>();
+		lenCall->sourceLocation = _loc;
+		lenCall->wtype = awst::WType::uint64Type();
+		lenCall->opCode = "len";
+		lenCall->stackArgs.push_back(cat);
+
+		auto four = std::make_shared<awst::IntegerConstant>();
+		four->sourceLocation = _loc;
+		four->wtype = awst::WType::uint64Type();
+		four->value = "4";
+
+		auto offset = std::make_shared<awst::IntrinsicCall>();
+		offset->sourceLocation = _loc;
+		offset->wtype = awst::WType::uint64Type();
+		offset->opCode = "-";
+		offset->stackArgs.push_back(std::move(lenCall));
+		offset->stackArgs.push_back(four);
+
+		auto extract = std::make_shared<awst::IntrinsicCall>();
+		extract->sourceLocation = _loc;
+		extract->wtype = awst::WType::bytesType();
+		extract->opCode = "extract3";
+		extract->stackArgs.push_back(std::move(cat));
+		extract->stackArgs.push_back(std::move(offset));
+		extract->stackArgs.push_back(std::move(four));
+		selector = std::move(extract);
+	}
 
 	if (args.size() == 1)
 		return std::make_unique<GenericAbiResult>(_ctx, std::move(selector));
