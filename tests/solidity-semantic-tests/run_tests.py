@@ -1398,6 +1398,27 @@ def _compare_values(actual, expected):
         return False
     if isinstance(actual, str) and isinstance(expected, str):
         return actual == expected
+    # _try_decode_evm_returns decodes dynamic bytes data into a str;
+    # the corresponding `actual` may be raw bytes or list-of-ints.
+    # Allow the str<->bytes bridge here so the common "string is
+    # equal to these bytes" case compares cleanly.
+    if isinstance(expected, str) and not isinstance(actual, str):
+        try:
+            if isinstance(actual, (list, tuple)) and all(isinstance(x, int) for x in actual):
+                actual_bytes = bytes(actual)
+            elif isinstance(actual, bytes):
+                actual_bytes = actual
+            else:
+                actual_bytes = None
+            if actual_bytes is not None:
+                exp_bytes = expected.encode('utf-8', errors='replace')
+                if actual_bytes == exp_bytes:
+                    return True
+                if actual_bytes.rstrip(b'\x00') == exp_bytes.rstrip(b'\x00'):
+                    return True
+        except Exception:
+            pass
+        return False
     return str(actual) == str(expected)
 
 
