@@ -9,15 +9,19 @@ main:
     dup
     txn ApplicationID
     bnz main_after_if_else@2
-    dup
-    app_params_get AppAddress
-    pop
+    pushint 24
+    bzero
+    dig 1
+    itob
+    dig 1
+    swap
+    concat
     bytec_1 // "a"
     swap
     app_global_put
-    dig 1
-    app_params_get AppAddress
-    pop
+    dig 2
+    itob
+    concat
     bytec_2 // "b"
     swap
     app_global_put

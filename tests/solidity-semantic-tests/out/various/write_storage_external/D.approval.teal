@@ -8,9 +8,11 @@ main:
     pushbytes ""
     txn ApplicationID
     bnz main_after_if_else@2
-    dup
-    app_params_get AppAddress
-    pop
+    pushint 24
+    bzero
+    dig 1
+    itob
+    concat
     bytec_0 // "c"
     swap
     app_global_put

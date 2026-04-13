@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_as_return_type.sol.B.approval_program() -> uint64:
 main:
-    intcblock 0 1 6
+    intcblock 0 1 6 24
     bytecblock 0x0a8101 0x34d86182
     txn ApplicationID
     bnz main_after_if_else@2
@@ -57,13 +57,16 @@ f:
     pushint 200000
     itxn_field Amount
     itxn_submit
-    app_params_get AppAddress
-    pop
+    intc_3 // 24
+    bzero
+    swap
+    itob
+    concat
     itxn_begin
     pushint 2
     itob
     swap
-    pushint 24
+    intc_3 // 24
     extract_uint64
     intc_2 // 6
     itxn_field TypeEnum

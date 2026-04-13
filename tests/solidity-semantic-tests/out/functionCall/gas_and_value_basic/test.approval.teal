@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/gas_and_value_basic.sol.test.approval_program() -> uint64:
 main:
-    intcblock 0 1 6 32
+    intcblock 0 1 6 24
     bytecblock "h" 0x0a8101 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@4
@@ -30,8 +30,11 @@ main:
     pushint 200000
     itxn_field Amount
     itxn_submit
-    app_params_get AppAddress
-    pop
+    intc_3 // 24
+    bzero
+    swap
+    itob
+    concat
     bytec_0 // "h"
     swap
     app_global_put
@@ -61,7 +64,7 @@ main_after_if_else@4:
 sendAmount:
     txna ApplicationArgs 1
     len
-    intc_3 // 32
+    pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
     itxn_begin
@@ -69,7 +72,7 @@ sendAmount:
     bytec_0 // "h"
     app_global_get_ex
     assert // check h exists
-    pushint 24
+    intc_3 // 24
     extract_uint64
     intc_2 // 6
     itxn_field TypeEnum
@@ -85,10 +88,10 @@ sendAmount:
     extract 4 0
     dup
     len
-    intc_3 // 32
+    pushint 32
     <=
     assert // overflow
-    intc_3 // 32
+    pushint 32
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -106,7 +109,7 @@ outOfGas:
     bytec_0 // "h"
     app_global_get_ex
     assert // check h exists
-    pushint 24
+    intc_3 // 24
     extract_uint64
     intc_2 // 6
     itxn_field TypeEnum
@@ -131,7 +134,7 @@ checkState:
     bytec_0 // "h"
     app_global_get_ex
     assert // check h exists
-    pushint 24
+    intc_3 // 24
     extract_uint64
     intc_2 // 6
     itxn_field TypeEnum
@@ -153,7 +156,7 @@ checkState:
     acct_params_get AcctBalance
     pop
     itob
-    intc_3 // 32
+    pushint 32
     bzero
     b|
     pushbytes 0x00

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_selfdestruct.sol.D.approval_program() -> uint64:
 main:
-    intcblock 0 6 1 200000
+    intcblock 0 6 1 24 200000
     bytecblock 0x0a8101 "c" 0x7cb116cd 0xb30e2ea6 0xf08d7860
     txn ApplicationID
     bnz main_after_if_else@4
@@ -27,11 +27,14 @@ main:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc_3 // 200000
+    intc 4 // 200000
     itxn_field Amount
     itxn_submit
-    app_params_get AppAddress
-    pop
+    intc_3 // 24
+    bzero
+    swap
+    itob
+    concat
     bytec_1 // "c"
     swap
     app_global_put
@@ -66,7 +69,7 @@ destroy:
     bytec_1 // "c"
     app_global_get_ex
     assert // check c exists
-    pushint 24
+    intc_3 // 24
     extract_uint64
     intc_1 // 6
     itxn_field TypeEnum
@@ -137,11 +140,14 @@ createAndDestroy:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc_3 // 200000
+    intc 4 // 200000
     itxn_field Amount
     itxn_submit
-    app_params_get AppAddress
-    pop
+    intc_3 // 24
+    bzero
+    swap
+    itob
+    concat
     bytec_1 // "c"
     dig 1
     app_global_put
@@ -149,7 +155,7 @@ createAndDestroy:
     pushint 42
     itob
     swap
-    pushint 24
+    intc_3 // 24
     extract_uint64
     intc_1 // 6
     itxn_field TypeEnum

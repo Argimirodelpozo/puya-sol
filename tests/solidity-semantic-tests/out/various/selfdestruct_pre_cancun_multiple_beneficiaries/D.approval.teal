@@ -142,8 +142,11 @@ c:
     pushint 200000
     itxn_field Amount
     itxn_submit
-    app_params_get AppAddress
-    pop
+    intc_2 // 24
+    bzero
+    swap
+    itob
+    concat
     bytec_0 // "c"
     swap
     app_global_put

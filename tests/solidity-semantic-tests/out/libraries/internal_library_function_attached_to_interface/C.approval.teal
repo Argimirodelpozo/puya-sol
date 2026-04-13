@@ -65,8 +65,11 @@ test:
     pushint 200000
     itxn_field Amount
     itxn_submit
-    app_params_get AppAddress
-    pop
+    pushint 24
+    bzero
+    swap
+    itob
+    concat
     callsub L.foo
     dup
     len

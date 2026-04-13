@@ -3,27 +3,33 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 0 1 6 32 200000
+    intcblock 0 1 6 24 200000
     bytecblock 0x0a8101 0x151f7c75 "a" "b"
     pushbytes ""
     dupn 2
     txn ApplicationID
     bnz main_after_if_else@2
-    dup
-    app_params_get AppAddress
-    pop
+    intc_3 // 24
+    bzero
+    dig 1
+    itob
+    dig 1
+    swap
+    concat
     bytec_2 // "a"
     swap
     app_global_put
+    dig 2
+    itob
     dig 1
-    app_params_get AppAddress
-    pop
+    swap
+    concat
     bytec_3 // "b"
     swap
     app_global_put
-    dig 2
-    app_params_get AppAddress
-    pop
+    dig 3
+    itob
+    concat
     pushbytes "c"
     swap
     app_global_put
@@ -122,7 +128,7 @@ contractASlots:
     bytec_2 // "a"
     app_global_get_ex
     assert // check a exists
-    pushint 24
+    intc_3 // 24
     extract_uint64
     intc_2 // 6
     itxn_field TypeEnum
@@ -138,10 +144,10 @@ contractASlots:
     extract 4 0
     dup
     len
-    intc_3 // 32
+    pushint 32
     <=
     assert // overflow
-    intc_3 // 32
+    pushint 32
     bzero
     b|
     bytec_1 // 0x151f7c75
@@ -159,7 +165,7 @@ contractBSlots:
     bytec_3 // "b"
     app_global_get_ex
     assert // check b exists
-    pushint 24
+    intc_3 // 24
     extract_uint64
     intc_2 // 6
     itxn_field TypeEnum
@@ -173,7 +179,7 @@ contractBSlots:
     itxn_submit
     itxn LastLog
     extract 4 32
-    intc_3 // 32
+    pushint 32
     bzero
     swap
     dig 1
@@ -198,7 +204,7 @@ contractCSlots:
     pushbytes "c"
     app_global_get_ex
     assert // check c exists
-    pushint 24
+    intc_3 // 24
     extract_uint64
     intc_2 // 6
     itxn_field TypeEnum
@@ -212,7 +218,7 @@ contractCSlots:
     itxn_submit
     itxn LastLog
     extract 4 32
-    intc_3 // 32
+    pushint 32
     bzero
     swap
     dig 1

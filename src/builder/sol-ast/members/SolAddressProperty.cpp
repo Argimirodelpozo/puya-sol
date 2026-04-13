@@ -55,10 +55,31 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 		appParamsGet->immediates = {std::string("AppApprovalProgram")};
 		appParamsGet->stackArgs.push_back(std::move(appId));
 
+		// Stash the (bytes, bool) tuple into a fresh temp before pulling
+		// out the bytes element. Puya's TupleItemExpression lowering for a
+		// raw IntrinsicCall miscompiles the pop ordering of app_params_get;
+		// going through a VarExpression matches the pattern that
+		// SolNewExpression already uses successfully.
+		std::string tmpName = "__app_program_result";
+		auto tmpTarget = std::make_shared<awst::VarExpression>();
+		tmpTarget->sourceLocation = m_loc;
+		tmpTarget->name = tmpName;
+		tmpTarget->wtype = tupleType;
+		auto assign = std::make_shared<awst::AssignmentStatement>();
+		assign->sourceLocation = m_loc;
+		assign->target = tmpTarget;
+		assign->value = std::move(appParamsGet);
+		m_ctx.prePendingStatements.push_back(std::move(assign));
+
+		auto tupleRead = std::make_shared<awst::VarExpression>();
+		tupleRead->sourceLocation = m_loc;
+		tupleRead->name = tmpName;
+		tupleRead->wtype = tupleType;
+
 		auto item = std::make_shared<awst::TupleItemExpression>();
 		item->sourceLocation = m_loc;
 		item->wtype = awst::WType::bytesType();
-		item->base = std::move(appParamsGet);
+		item->base = std::move(tupleRead);
 		item->index = 0;
 		return item;
 	}

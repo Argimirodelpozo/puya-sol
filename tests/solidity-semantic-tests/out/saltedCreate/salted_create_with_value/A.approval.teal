@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/saltedCreate/salted_create_with_value.sol.A.approval_program() -> uint64:
 main:
-    intcblock 0 6 1 32 200000
+    intcblock 0 6 1 24 200000
     bytecblock 0x0a8101 0xad7db34f
     txn ApplicationID
     bnz main_after_if_else@2
@@ -57,8 +57,13 @@ f:
     intc 4 // 200000
     itxn_field Amount
     itxn_submit
-    app_params_get AppAddress
-    pop
+    intc_3 // 24
+    bzero
+    swap
+    itob
+    dig 1
+    swap
+    concat
     itxn_begin
     intc_1 // 6
     itxn_field TypeEnum
@@ -82,8 +87,10 @@ f:
     intc 4 // 200000
     itxn_field Amount
     itxn_submit
-    app_params_get AppAddress
-    pop
+    itob
+    dig 2
+    swap
+    concat
     itxn_begin
     intc_1 // 6
     itxn_field TypeEnum
@@ -107,11 +114,13 @@ f:
     intc 4 // 200000
     itxn_field Amount
     itxn_submit
-    app_params_get AppAddress
-    pop
+    itob
+    uncover 3
+    swap
+    concat
     itxn_begin
     uncover 2
-    pushint 24
+    intc_3 // 24
     extract_uint64
     intc_1 // 6
     itxn_field TypeEnum
@@ -125,7 +134,7 @@ f:
     itxn_submit
     itxn_begin
     swap
-    pushint 24
+    intc_3 // 24
     extract_uint64
     intc_1 // 6
     itxn_field TypeEnum
@@ -138,7 +147,7 @@ f:
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
-    pushint 24
+    intc_3 // 24
     extract_uint64
     intc_1 // 6
     itxn_field TypeEnum
@@ -154,10 +163,10 @@ f:
     extract 4 0
     dup
     len
-    intc_3 // 32
+    pushint 32
     <=
     assert // overflow
-    intc_3 // 32
+    pushint 32
     bzero
     swap
     dig 1
@@ -166,7 +175,7 @@ f:
     extract 4 0
     dup
     len
-    intc_3 // 32
+    pushint 32
     <=
     assert // overflow
     dig 2
@@ -175,7 +184,7 @@ f:
     extract 4 0
     dup
     len
-    intc_3 // 32
+    pushint 32
     <=
     assert // overflow
     uncover 3

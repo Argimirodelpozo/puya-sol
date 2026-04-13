@@ -607,6 +607,58 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 		}
 	}
 
+	// ARC4StaticArray<T, M> → ARC4StaticArray<T, N> with M < N: Solidity
+	// allows assigning a smaller fixed-size array into a larger one,
+	// zero-filling the trailing slots. Puya's encoder rejects the
+	// length-mismatched encoding outright, so we synthesise the wider
+	// encoded value as `concat(src_bytes, bzero(diff))` and reinterpret
+	// to the wider ARC4StaticArray type.
+	if (auto const* targetStat = dynamic_cast<awst::ARC4StaticArray const*>(_targetType))
+	{
+		if (auto const* srcStat = dynamic_cast<awst::ARC4StaticArray const*>(_expr->wtype))
+		{
+			if (srcStat->elementType() && targetStat->elementType()
+				&& srcStat->elementType()->name() == targetStat->elementType()->name()
+				&& srcStat->arraySize() < targetStat->arraySize())
+			{
+				int elemSize = computeEncodedElementSize(srcStat->elementType());
+				if (elemSize > 0)
+				{
+					int64_t diffElems = targetStat->arraySize() - srcStat->arraySize();
+					int64_t diffBytes = diffElems * elemSize;
+
+					auto srcBytes = std::make_shared<awst::ReinterpretCast>();
+					srcBytes->sourceLocation = _loc;
+					srcBytes->wtype = awst::WType::bytesType();
+					srcBytes->expr = std::move(_expr);
+
+					auto padSize = std::make_shared<awst::IntegerConstant>();
+					padSize->sourceLocation = _loc;
+					padSize->wtype = awst::WType::uint64Type();
+					padSize->value = std::to_string(diffBytes);
+					auto pad = std::make_shared<awst::IntrinsicCall>();
+					pad->sourceLocation = _loc;
+					pad->wtype = awst::WType::bytesType();
+					pad->opCode = "bzero";
+					pad->stackArgs.push_back(std::move(padSize));
+
+					auto cat = std::make_shared<awst::IntrinsicCall>();
+					cat->sourceLocation = _loc;
+					cat->wtype = awst::WType::bytesType();
+					cat->opCode = "concat";
+					cat->stackArgs.push_back(std::move(srcBytes));
+					cat->stackArgs.push_back(std::move(pad));
+
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = _loc;
+					cast->wtype = _targetType;
+					cast->expr = std::move(cat);
+					return cast;
+				}
+			}
+		}
+	}
+
 	// IntegerConstant → BytesConstant(bytes[N])
 	if (_targetType->kind() == awst::WTypeKind::Bytes)
 	{
@@ -655,10 +707,58 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 				return padded;
 		}
 
-		// String/bytes-compatible → bytes via ReinterpretCast
+		// String/bytes-compatible → bytes via ReinterpretCast.
+		// For fixed-size bytes[N] targets coming from a narrower fixed
+		// bytes[M] (M < N), Solidity right-pads the source with zeros to
+		// produce N bytes. A bare ReinterpretCast leaves the source's M
+		// bytes labelled as bytes[N], which decodes to the wrong width
+		// at the call boundary; build the padded value explicitly.
 		if (_expr->wtype == awst::WType::stringType()
 			|| _expr->wtype->kind() == awst::WTypeKind::Bytes)
 		{
+			if (auto const* tw = dynamic_cast<awst::BytesWType const*>(_targetType))
+			{
+				if (tw->length().has_value())
+				{
+					int targetWidth = static_cast<int>(*tw->length());
+					int sourceWidth = 0;
+					if (auto const* sw = dynamic_cast<awst::BytesWType const*>(_expr->wtype))
+						if (sw->length().has_value())
+							sourceWidth = static_cast<int>(*sw->length());
+					if (sourceWidth > 0 && sourceWidth < targetWidth)
+					{
+						auto srcBytes = std::make_shared<awst::ReinterpretCast>();
+						srcBytes->sourceLocation = _loc;
+						srcBytes->wtype = awst::WType::bytesType();
+						srcBytes->expr = std::move(_expr);
+
+						int padBytes = targetWidth - sourceWidth;
+						auto padSize = std::make_shared<awst::IntegerConstant>();
+						padSize->sourceLocation = _loc;
+						padSize->wtype = awst::WType::uint64Type();
+						padSize->value = std::to_string(padBytes);
+						auto pad = std::make_shared<awst::IntrinsicCall>();
+						pad->sourceLocation = _loc;
+						pad->wtype = awst::WType::bytesType();
+						pad->opCode = "bzero";
+						pad->stackArgs.push_back(std::move(padSize));
+
+						auto cat = std::make_shared<awst::IntrinsicCall>();
+						cat->sourceLocation = _loc;
+						cat->wtype = awst::WType::bytesType();
+						cat->opCode = "concat";
+						cat->stackArgs.push_back(std::move(srcBytes));
+						cat->stackArgs.push_back(std::move(pad));
+
+						auto cast = std::make_shared<awst::ReinterpretCast>();
+						cast->sourceLocation = _loc;
+						cast->wtype = _targetType;
+						cast->expr = std::move(cat);
+						return cast;
+					}
+				}
+			}
+
 			auto cast = std::make_shared<awst::ReinterpretCast>();
 			cast->sourceLocation = _loc;
 			cast->wtype = _targetType;

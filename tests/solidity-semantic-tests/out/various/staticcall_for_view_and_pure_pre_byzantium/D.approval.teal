@@ -132,8 +132,11 @@ fview:
     itxn_field Amount
     itxn_submit
     itxn_begin
-    app_params_get AppAddress
-    pop
+    pushint 24
+    bzero
+    swap
+    itob
+    concat
     pushint 24
     extract_uint64
     intc_2 // 6
@@ -212,8 +215,11 @@ fpure:
     itxn_field Amount
     itxn_submit
     itxn_begin
-    app_params_get AppAddress
-    pop
+    pushint 24
+    bzero
+    swap
+    itob
+    concat
     pushint 24
     extract_uint64
     intc_2 // 6

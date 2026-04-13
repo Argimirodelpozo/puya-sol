@@ -103,8 +103,11 @@ g:
     intc 4 // 200000
     itxn_field Amount
     itxn_submit
-    app_params_get AppAddress
-    pop
+    pushint 24
+    bzero
+    swap
+    itob
+    concat
     itxn_begin
     pushint 24
     extract_uint64
