@@ -471,6 +471,21 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		c->value = "1";
 		return c;
 	}
+	if (funcName == "codesize")
+	{
+		// EVM codesize() returns the deployed contract's bytecode length.
+		// AVM has no direct opcode exposing the TEAL program size, and
+		// `type(C).creationCode` is stubbed as 32 zero bytes elsewhere.
+		// Return a sentinel (4096) so `codesize() > creationCode.length`
+		// style checks evaluate truthy without crashing.
+		Logger::instance().warning(
+			"codesize() stubbed as 4096 (no AVM equivalent)", loc);
+		auto c = std::make_shared<awst::IntegerConstant>();
+		c->sourceLocation = loc;
+		c->wtype = awst::WType::biguintType();
+		c->value = "4096";
+		return c;
+	}
 	if (funcName == "clz")
 	{
 		// clz(x) = count leading zeros (256-bit): 256 - bitlen(x).
