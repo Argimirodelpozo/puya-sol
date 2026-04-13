@@ -55,8 +55,36 @@ std::shared_ptr<awst::Expression> SolMetaTypeAccess::toAwst()
 			{
 				if (intType->isSigned())
 				{
-					// type(intN).min = 2^(N-1) in two's complement biguint
-					solidity::u256 minVal = solidity::u256(1) << (bits - 1);
+					// type(intN).min = -2^(N-1), stored as two's complement
+					// in the storage slot width. Our type mapping uses a
+					// uint64 slot for bits<=64 and a biguint (32-byte)
+					// slot for bits>64, so:
+					//
+					//   bits <= 64:  2^64  - 2^(bits-1)
+					//   bits  > 64:  2^256 - 2^(bits-1)
+					//
+					// This matches how our compiler encodes negative
+					// literals (unary minus on a uint wraps modulo the
+					// storage width), so comparisons like
+					// `int8_min == -2**7` resolve to equal operands.
+					solidity::u256 twoPowBitsMinus1 = solidity::u256(1) << (bits - 1);
+					solidity::u256 minVal;
+					if (bits <= 64)
+					{
+						// slot width 64 bits: 2^64 - 2^(bits-1)
+						solidity::u256 twoPow64 = solidity::u256(1) << 64;
+						minVal = twoPow64 - twoPowBitsMinus1;
+					}
+					else
+					{
+						// slot width 256 bits: 2^256 - 2^(bits-1).
+						// For bits==256 this simplifies to 2^255, which
+						// matches the previous behaviour.
+						if (bits == 256)
+							minVal = twoPowBitsMinus1;
+						else
+							minVal = solidity::u256(0) - twoPowBitsMinus1; // mod 2^256
+					}
 					std::ostringstream oss;
 					oss << minVal;
 					val = oss.str();
