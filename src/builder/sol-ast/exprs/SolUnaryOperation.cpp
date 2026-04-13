@@ -272,7 +272,12 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		if (auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(_operand.get()))
 		{
 			solidity::u256 val(intConst->value);
-			if (val > 0 && val < (solidity::u256(1) << 255))
+			// Allow val == 2^255 (the largest positive value whose negation
+			// is a valid signed int256: -2^255 = type(int256).min). The strict
+			// less-than missed this, so `-2**255` fell through to runtime
+			// `0 - 2^255`, which crashes with "byte math would have negative
+			// result" since AVM `b-` rejects negative results.
+			if (val > 0 && val <= (solidity::u256(1) << 255))
 			{
 				// 2^256 - val (two's complement negation)
 				static const std::string pow256Str =
@@ -302,7 +307,10 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		e->right = std::move(_operand);
 		return e;
 	}
-	// For uint64 constant negation, produce two's complement biguint
+	// For uint64 constant negation, produce two's complement matching the
+	// uint64 storage slot so that comparisons with small signed int variables
+	// (int8..int64 → uint64 slot) line up. Producing a 32-byte biguint here
+	// would compare unequal to the 8-byte uint64 storage of the variable.
 	if (_operand->wtype == awst::WType::uint64Type())
 	{
 		if (auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(_operand.get()))
@@ -310,6 +318,20 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			solidity::u256 val(intConst->value);
 			if (val > 0)
 			{
+				static const solidity::u256 twoPow64("18446744073709551616");
+				if (val <= (twoPow64 >> 1))  // val ≤ 2^63 → wraps inside uint64
+				{
+					solidity::u256 negVal = twoPow64 - val;
+					std::ostringstream oss;
+					oss << negVal;
+					auto result = std::make_shared<awst::IntegerConstant>();
+					result->sourceLocation = m_loc;
+					result->wtype = awst::WType::uint64Type();
+					result->value = oss.str();
+					return result;
+				}
+				// val > 2^63: the magnitude is too large for a uint64 slot,
+				// so produce the 256-bit two's complement biguint.
 				static const std::string pow256Str =
 					"115792089237316195423570985008687907853269984665640564039457584007913129639936";
 				solidity::u256 pow256(pow256Str);

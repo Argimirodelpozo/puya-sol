@@ -85,7 +85,37 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::tryConstantFold()
 			// 256-bit representation (needed for sign extension in biguint contexts).
 			static const solidity::u256 uint64Max("18446744073709551615");
 			if (resultType == awst::WType::uint64Type() && val > uint64Max)
+			{
+				// "Negative" rational that maps to a small signed int slot
+				// (int8..int64 → uint64). The 256-bit two's complement
+				// representation needs to wrap to 64-bit so it lines up with
+				// the uint64 storage of int8..int64 variables. Without this
+				// wrap, comparisons like `int8 x = type(int8).min;
+				// require(x == -2**7)` fail because the LHS is uint64
+				// 0xFFFFFFFFFFFFFF80 and the RHS becomes biguint
+				// 2^256 - 128, which compare unequal even after
+				// implicit cast to biguint.
+				auto const* mobile = ratType->mobileType();
+				bool signedSmall = false;
+				if (auto const* mobIntType = dynamic_cast<IntegerType const*>(mobile))
+					signedSmall = mobIntType->isSigned() && mobIntType->numBits() <= 64;
+				static const solidity::u256 twoPow256(
+					"115792089237316195423570985008687907853269984665640564039457584007913129639936");
+				static const solidity::u256 twoPow64("18446744073709551616");
+				if (signedSmall)
+				{
+					// val is the 256-bit two's complement of a negative
+					// small-int value. Wrap to 64-bit two's complement:
+					// val mod 2^64.
+					solidity::u256 wrapped = val % twoPow64;
+					auto e = std::make_shared<awst::IntegerConstant>();
+					e->sourceLocation = m_loc;
+					e->wtype = awst::WType::uint64Type();
+					e->value = wrapped.str();
+					return e;
+				}
 				resultType = awst::WType::biguintType();
+			}
 			auto e = std::make_shared<awst::IntegerConstant>();
 			e->sourceLocation = m_loc;
 			e->wtype = resultType;
