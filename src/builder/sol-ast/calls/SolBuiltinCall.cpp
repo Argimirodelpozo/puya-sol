@@ -1,4 +1,5 @@
 #include "builder/sol-ast/calls/SolBuiltinCall.h"
+#include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 
@@ -24,6 +25,37 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 	// blockhash is AVM-specific, handle separately
 	if (m_builtinName == "blockhash")
 		return handleBlockhash();
+
+	// blobhash(n) — EIP-4844 transaction blob hash. AVM has no blob
+	// transactions, so return bytes32(0) and warn.
+	if (m_builtinName == "blobhash")
+	{
+		Logger::instance().warning(
+			"blobhash() has no AVM equivalent — returning bytes32(0).", m_loc);
+		auto bc = std::make_shared<awst::BytesConstant>();
+		bc->sourceLocation = m_loc;
+		bc->wtype = m_ctx.typeMapper.createType<awst::BytesWType>(32);
+		bc->encoding = awst::BytesEncoding::Base16;
+		bc->value = std::vector<uint8_t>(32, 0);
+		return bc;
+	}
+
+	// ripemd160(bytes memory) — AVM has no RIPEMD-160 opcode. Return the
+	// 20-byte zero hash as a stub. Tests that treat the digest as opaque
+	// (e.g. comparing with another ripemd160 call on the same input) still
+	// compile, though most cryptographic uses will produce wrong output.
+	if (m_builtinName == "ripemd160")
+	{
+		Logger::instance().warning(
+			"ripemd160() has no AVM equivalent — returning bytes20(0); "
+			"cryptographic uses will misbehave.", m_loc);
+		auto bc = std::make_shared<awst::BytesConstant>();
+		bc->sourceLocation = m_loc;
+		bc->wtype = m_ctx.typeMapper.createType<awst::BytesWType>(20);
+		bc->encoding = awst::BytesEncoding::Base16;
+		bc->value = std::vector<uint8_t>(20, 0);
+		return bc;
+	}
 
 	// erc7201 — evaluate the ERC-7201 namespace slot at compile time when
 	// possible (the Solidity front-end does the heavy lifting via

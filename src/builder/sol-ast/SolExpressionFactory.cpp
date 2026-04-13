@@ -261,12 +261,20 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 		// Contract creation via new Contract(args) — deploy stub inner app
 		return std::make_unique<SolNewExpression>(m_ctx, _node);
 
+	case Kind::BlobHash:
+		// blobhash(n) — EIP-4844. AVM has no blob-carrying transactions,
+		// so route to SolBuiltinCall, which returns bzero(32) as a stub.
+		return std::make_unique<SolBuiltinCall>(m_ctx, _node, "blobhash");
+	case Kind::RIPEMD160:
+		// AVM lacks a RIPEMD-160 opcode. Stub via SolBuiltinCall which
+		// returns zero bytes20 — Solidity tests that use ripemd160 as an
+		// opaque digest won't pass, but compilation at least succeeds.
+		return std::make_unique<SolBuiltinCall>(m_ctx, _node, "ripemd160");
+
 	// ── Misc ──
 	case Kind::SetGas:
 	case Kind::SetValue:
 	case Kind::Declaration:
-	case Kind::BlobHash:
-	case Kind::RIPEMD160:
 	case Kind::BytesConcat:
 	case Kind::StringConcat:
 		return std::make_unique<SolBytesConcat>(m_ctx, _node);
