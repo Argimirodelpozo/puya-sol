@@ -2405,6 +2405,50 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		body->body.push_back(std::move(fmpStmt));
 	}
 
+	// Reset transient state vars at the top of the approval program.
+	// On AVM transient state lives in app-global storage (sol-ast builders
+	// don't route through TransientStorage), so we have to clear it once
+	// per outer call to match Solidity's EIP-1153 semantics. The approval
+	// program preamble runs exactly once per app call (before method
+	// dispatch), so the reset doesn't recur for inner subroutine
+	// invocations like `this.f()`. The reset runs after the constructor
+	// `if (create)` branch above so it doesn't interfere with the initial
+	// constructor state writes (those happen inside the create branch).
+	if (m_transientStorage.hasTransientVars())
+	{
+		std::set<std::string> seen;
+		for (auto const* base: _contract.annotation().linearizedBaseContracts)
+		{
+			for (auto const* var: base->stateVariables())
+			{
+				if (var->isConstant() || var->immutable())
+					continue;
+				if (var->referenceLocation()
+					!= solidity::frontend::VariableDeclaration::Location::Transient)
+					continue;
+				if (!seen.insert(var->name()).second)
+					continue;
+				auto* varType = m_typeMapper.map(var->type());
+				if (!varType)
+					continue;
+				auto kind = builder::StorageMapper::shouldUseBoxStorage(*var)
+					? awst::AppStorageKind::Box
+					: awst::AppStorageKind::AppGlobal;
+				auto zero = StorageMapper::makeDefaultValue(
+					varType, method.sourceLocation);
+				auto write = m_storageMapper.createStateWrite(
+					var->name(), std::move(zero), varType, kind,
+					method.sourceLocation);
+				if (!write)
+					continue;
+				auto stmt = std::make_shared<awst::ExpressionStatement>();
+				stmt->sourceLocation = method.sourceLocation;
+				stmt->expr = std::move(write);
+				body->body.push_back(std::move(stmt));
+			}
+		}
+	}
+
 	// Detect fallback and receive functions across the MRO.
 	// Solidity allows only one of each in the linearized hierarchy.
 	solidity::frontend::FunctionDefinition const* fallbackFunc = nullptr;
@@ -3747,6 +3791,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			auto initStmt = m_transientStorage.buildInit(method.sourceLocation);
 			method.body->body.insert(method.body->body.begin(), std::move(initStmt));
 		}
+
 
 		// Modifier inlining strategy depends on codegen mode:
 		// - Legacy (default): textual _ expansion, shared local variables

@@ -122,7 +122,19 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		call->args.push_back(std::move(ca));
 	}
 
-	// Storage write-back for using-for calls on box-backed storage
+	// Storage write-back for using-for calls on box/global-state backed storage.
+	//
+	// When a library function signature is `f(T storage self, ...) → R`, our
+	// library translator augments the return type to `WTuple(R, T)` so the
+	// modified self can be written back (see AWSTBuilder buildLibraries). The
+	// call site needs to match that augmented return: unpack the tuple, write
+	// element 1 to the storage source, and return element 0.
+	//
+	// Two receiver shapes are supported:
+	//  1. Box-backed state (StateGet → BoxValueExpression), optionally with
+	//     a single-level FieldExpression (`x.field.method(...)`).
+	//  2. Direct AppStateExpression (`x.method(...)` where x is a non-box
+	//     state variable — the common case for small struct state vars).
 	if (_isUsingForCall && _funcDef && !call->args.empty()
 		&& _funcDef->stateMutability() != StateMutability::View
 		&& _funcDef->stateMutability() != StateMutability::Pure
@@ -132,15 +144,16 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	{
 		auto const* receiverExpr = call->args[0].value.get();
 		std::shared_ptr<awst::BoxValueExpression> rootBox;
+		std::shared_ptr<awst::AppStateExpression> rootAppState;
 		std::vector<std::string> fieldPath;
 
-		std::function<void(awst::Expression const*)> traceToBox;
-		traceToBox = [&](awst::Expression const* e) {
+		std::function<void(awst::Expression const*)> traceToRoot;
+		traceToRoot = [&](awst::Expression const* e) {
 			if (auto const* field = dynamic_cast<awst::FieldExpression const*>(e)) {
 				fieldPath.push_back(field->name);
-				traceToBox(field->base.get());
+				traceToRoot(field->base.get());
 			} else if (auto const* sg = dynamic_cast<awst::StateGet const*>(e)) {
-				traceToBox(sg->field.get());
+				traceToRoot(sg->field.get());
 			} else if (auto const* box = dynamic_cast<awst::BoxValueExpression const*>(e)) {
 				auto b = std::make_shared<awst::BoxValueExpression>();
 				b->sourceLocation = box->sourceLocation;
@@ -148,14 +161,23 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 				b->key = box->key;
 				b->existsAssertionMessage = std::nullopt;
 				rootBox = b;
+			} else if (auto const* app = dynamic_cast<awst::AppStateExpression const*>(e)) {
+				auto a = std::make_shared<awst::AppStateExpression>();
+				a->sourceLocation = app->sourceLocation;
+				a->wtype = app->wtype;
+				a->key = app->key;
+				a->existsAssertionMessage = std::nullopt;
+				rootAppState = a;
 			}
 		};
-		traceToBox(receiverExpr);
+		traceToRoot(receiverExpr);
 
-		if (rootBox && !fieldPath.empty())
+		bool hasRoot = (rootBox != nullptr) || (rootAppState != nullptr);
+		if (hasRoot)
 		{
 			auto* origRetType = call->wtype;
 			auto* storageArgType = call->args[0].value->wtype;
+			auto* rootType = rootBox ? rootBox->wtype : rootAppState->wtype;
 
 			auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
 				std::vector<awst::WType const*>{origRetType, storageArgType});
@@ -189,38 +211,77 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 
 			std::reverse(fieldPath.begin(), fieldPath.end());
 
-			auto readStruct = std::make_shared<awst::StateGet>();
-			readStruct->sourceLocation = m_loc;
-			readStruct->wtype = rootBox->wtype;
-			readStruct->field = rootBox;
-			readStruct->defaultValue = builder::StorageMapper::makeDefaultValue(rootBox->wtype, m_loc);
-
-			auto const* structType = dynamic_cast<awst::ARC4Struct const*>(rootBox->wtype);
-			if (structType && fieldPath.size() == 1)
+			// Value to write back to the root state. When fieldPath is empty
+			// (receiver IS the root struct), it's the modifiedArg directly.
+			// When fieldPath has a single field (receiver is `root.field`),
+			// we have to read the other fields of root and build a NewStruct
+			// so the final assignment replaces only the touched field.
+			std::shared_ptr<awst::Expression> writeValue = modifiedArg;
+			if (!fieldPath.empty())
 			{
-				auto newStruct = std::make_shared<awst::NewStruct>();
-				newStruct->sourceLocation = m_loc;
-				newStruct->wtype = structType;
-				for (auto const& [fn, ft]: structType->fields())
+				if (fieldPath.size() == 1)
 				{
-					if (fn == fieldPath[0])
-						newStruct->values[fn] = modifiedArg;
+					auto const* structType =
+						dynamic_cast<awst::ARC4Struct const*>(rootType);
+					if (structType)
+					{
+						std::shared_ptr<awst::Expression> readStruct;
+						if (rootBox)
+						{
+							auto sg = std::make_shared<awst::StateGet>();
+							sg->sourceLocation = m_loc;
+							sg->wtype = rootType;
+							sg->field = rootBox;
+							sg->defaultValue =
+								builder::StorageMapper::makeDefaultValue(rootType, m_loc);
+							readStruct = std::move(sg);
+						}
+						else
+						{
+							readStruct = rootAppState;
+						}
+
+						auto newStruct = std::make_shared<awst::NewStruct>();
+						newStruct->sourceLocation = m_loc;
+						newStruct->wtype = structType;
+						for (auto const& [fn, ft]: structType->fields())
+						{
+							if (fn == fieldPath[0])
+								newStruct->values[fn] = modifiedArg;
+							else
+							{
+								auto fieldRead = std::make_shared<awst::FieldExpression>();
+								fieldRead->sourceLocation = m_loc;
+								fieldRead->wtype = ft;
+								fieldRead->base = readStruct;
+								fieldRead->name = fn;
+								newStruct->values[fn] = std::move(fieldRead);
+							}
+						}
+						writeValue = std::move(newStruct);
+					}
 					else
 					{
-						auto fieldRead = std::make_shared<awst::FieldExpression>();
-						fieldRead->sourceLocation = m_loc;
-						fieldRead->wtype = ft;
-						fieldRead->base = readStruct;
-						fieldRead->name = fn;
-						newStruct->values[fn] = std::move(fieldRead);
+						writeValue = nullptr;
 					}
 				}
+				else
+				{
+					writeValue = nullptr;
+				}
+			}
+
+			if (writeValue)
+			{
+				std::shared_ptr<awst::Expression> writeTarget =
+					rootBox ? std::static_pointer_cast<awst::Expression>(rootBox)
+							: std::static_pointer_cast<awst::Expression>(rootAppState);
 
 				auto writeBack = std::make_shared<awst::AssignmentExpression>();
 				writeBack->sourceLocation = m_loc;
-				writeBack->wtype = rootBox->wtype;
-				writeBack->target = rootBox;
-				writeBack->value = std::move(newStruct);
+				writeBack->wtype = rootType;
+				writeBack->target = std::move(writeTarget);
+				writeBack->value = std::move(writeValue);
 
 				auto stmt = std::make_shared<awst::ExpressionStatement>();
 				stmt->sourceLocation = m_loc;
