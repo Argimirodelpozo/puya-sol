@@ -195,6 +195,7 @@ eb::BuilderContext ExpressionBuilder::makeBuilderContext()
 		/*.varNameToId =*/ m_varNameToId,
 		/*.inConstructor =*/ m_inConstructor,
 		/*.inUncheckedBlock =*/ m_inUncheckedBlock,
+		/*.pendingArrayPushValue =*/ m_pendingArrayPushValue,
 		/*.buildExpr =*/ [this](solidity::frontend::Expression const& _expr) {
 			return this->build(_expr);
 		},

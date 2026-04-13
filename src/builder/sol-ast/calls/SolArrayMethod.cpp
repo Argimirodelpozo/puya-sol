@@ -517,18 +517,40 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 		// push() with no args — use ArrayExtend with a zero-valued element.
 		// This lets puya handle the ARC4 length header update correctly,
 		// instead of manual box_resize which doesn't update the header.
-		auto defaultElem = builder::TypeCoercion::makeDefaultValue(elemType, m_loc);
+		// When SolAssignment stashed a pending push value (pattern
+		// `arr.push() = value`), use that as the element and return the
+		// ArrayExtend directly so the assignment returns a real void
+		// expression (not a VoidConstant target, which puya rejects).
+		std::shared_ptr<awst::Expression> elem;
+		bool fromAssign = static_cast<bool>(m_ctx.pendingArrayPushValue);
+		if (fromAssign)
+		{
+			auto coerced = builder::TypeCoercion::coerceForAssignment(
+				std::move(m_ctx.pendingArrayPushValue), rawElemType, m_loc);
+			auto encoded = std::make_shared<awst::ARC4Encode>();
+			encoded->sourceLocation = m_loc;
+			encoded->wtype = elemType;
+			encoded->value = std::move(coerced);
+			elem = std::move(encoded);
+		}
+		else
+		{
+			elem = builder::TypeCoercion::makeDefaultValue(elemType, m_loc);
+		}
 
 		auto singleArr = std::make_shared<awst::NewArray>();
 		singleArr->sourceLocation = m_loc;
 		singleArr->wtype = arrWType;
-		singleArr->values.push_back(std::move(defaultElem));
+		singleArr->values.push_back(std::move(elem));
 
 		auto e = std::make_shared<awst::ArrayExtend>();
 		e->sourceLocation = m_loc;
 		e->wtype = awst::WType::voidType();
 		e->base = writeExpr;
 		e->other = std::move(singleArr);
+
+		if (fromAssign)
+			return e;
 
 		auto extendStmt = std::make_shared<awst::ExpressionStatement>();
 		extendStmt->sourceLocation = m_loc;

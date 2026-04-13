@@ -1594,25 +1594,30 @@ def _compare_values(actual, expected):
             if len(actual) == 1 and isinstance(actual[0], int):
                 if _compare_values(actual[0], expected):
                     return True
-            try:
-                actual_bytes = bytes(actual)
-                actual_int = int.from_bytes(actual_bytes, 'big')
-                if actual_int == expected:
-                    return True
-                # EVM bytesN returns are right-padded to 32 bytes.
-                # ARC4 returns raw N bytes. Right-pad actual to 32 and compare.
-                if len(actual_bytes) < 32:
-                    padded = actual_bytes + b'\x00' * (32 - len(actual_bytes))
-                    if int.from_bytes(padded, 'big') == expected:
+            # Only try the byte-pack interpretation when the list is a
+            # flat sequence of small ints — nested lists come from
+            # aggregate returns (e.g. dynamic-array-of-struct) and should
+            # be handled separately.
+            if all(isinstance(x, int) and 0 <= x < 256 for x in actual):
+                try:
+                    actual_bytes = bytes(actual)
+                    actual_int = int.from_bytes(actual_bytes, 'big')
+                    if actual_int == expected:
                         return True
-                # Recurse with the int form so the signed sign-extension
-                # bridge above (positive twos-complement at differing widths)
-                # also kicks in when the runtime returned us a bytesN value.
-                if _compare_values(actual_int, expected):
-                    return True
+                    # EVM bytesN returns are right-padded to 32 bytes.
+                    # ARC4 returns raw N bytes. Right-pad actual to 32 and compare.
+                    if len(actual_bytes) < 32:
+                        padded = actual_bytes + b'\x00' * (32 - len(actual_bytes))
+                        if int.from_bytes(padded, 'big') == expected:
+                            return True
+                    # Recurse with the int form so the signed sign-extension
+                    # bridge above (positive twos-complement at differing widths)
+                    # also kicks in when the runtime returned us a bytesN value.
+                    if _compare_values(actual_int, expected):
+                        return True
+                except (ValueError, OverflowError):
+                    pass
                 return False
-            except (ValueError, OverflowError):
-                pass
     if isinstance(expected, bytes):
         if isinstance(actual, str):
             actual = actual.encode('utf-8')
@@ -1623,6 +1628,8 @@ def _compare_values(actual, expected):
                 return True
             return False
         if isinstance(actual, (list, tuple)):
+            if not all(isinstance(x, int) and 0 <= x < 256 for x in actual):
+                return False
             actual_bytes = bytes(actual)
             if actual_bytes == expected:
                 return True

@@ -504,7 +504,43 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 {
 	Token op = m_assignment.assignmentOperator();
+
+	// Rewrite `arr.push() = value` as `arr.push(value)`. Solidity's
+	// arg-less push() returns a reference to the new slot; we don't
+	// have a reference type, so stash the RHS as a pending "push
+	// value" in the build context before translating the LHS.
+	// SolArrayMethod::push() picks it up and uses it as the new
+	// element instead of emitting a default-valued push as a pending
+	// statement and returning VoidConstant.
+	bool pushAssignRewrite = false;
+	if (op == Token::Assign)
+	{
+		if (auto const* lhsCall = dynamic_cast<FunctionCall const*>(&m_assignment.leftHandSide()))
+		{
+			if (lhsCall->arguments().empty())
+			{
+				if (auto const* member = dynamic_cast<MemberAccess const*>(&lhsCall->expression()))
+				{
+					if (member->memberName() == "push")
+					{
+						m_ctx.pendingArrayPushValue = buildExpr(m_assignment.rightHandSide());
+						pushAssignRewrite = true;
+					}
+				}
+			}
+		}
+	}
+
 	auto target = buildExpr(m_assignment.leftHandSide());
+	if (pushAssignRewrite)
+	{
+		m_ctx.pendingArrayPushValue.reset();
+		// `target` is now the ArrayExtend expression emitted by
+		// SolArrayMethod. Return it directly as the assignment
+		// result — the assignment's effect is already encoded in the
+		// ArrayExtend.
+		return target;
+	}
 	auto value = buildExpr(m_assignment.rightHandSide());
 
 	// Enum range validation: EVM panics (0x21) on assigning invalid enum values

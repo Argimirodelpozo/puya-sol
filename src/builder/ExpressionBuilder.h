@@ -225,6 +225,12 @@ private:
 	/// Whether currently translating expressions inside a Solidity `unchecked` block.
 	/// When true, arithmetic operations wrap mod 2^256 (e.g., multiplication results truncated).
 	bool m_inUncheckedBlock = false;
+
+	/// Scratch slot for the `arr.push() = value` rewrite: SolAssignment
+	/// stashes the RHS here before the LHS build, and SolArrayMethod's
+	/// push() handler consumes it. Shared across all child BuilderContexts
+	/// via a reference so per-builder contexts see the same slot.
+	std::shared_ptr<awst::Expression> m_pendingArrayPushValue;
 public:
 	void setInUncheckedBlock(bool _v) { m_inUncheckedBlock = _v; }
 	bool inUncheckedBlock() const { return m_inUncheckedBlock; }

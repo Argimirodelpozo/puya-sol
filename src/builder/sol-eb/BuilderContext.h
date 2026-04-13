@@ -83,6 +83,12 @@ struct BuilderContext
 	bool inConstructor;
 	bool inUncheckedBlock;
 
+	/// Reference into ExpressionBuilder: set by SolAssignment when
+	/// translating `arr.push() = value`; the push() handler in
+	/// SolArrayMethod consumes it as the pushed element instead of a
+	/// default value, and returns the ArrayExtend expression directly.
+	std::shared_ptr<awst::Expression>& pendingArrayPushValue;
+
 	// ── Recursive build callback (delegates back to ExpressionBuilder) ──
 	/// Build a child Solidity expression into an AWST Expression.
 	std::function<std::shared_ptr<awst::Expression>(
