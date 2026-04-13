@@ -317,13 +317,15 @@ std::unique_ptr<SolMemberAccess> SolExpressionFactory::createMemberAccess(
 	}
 
 	// 5. type(X).max / type(X).min / type(C).name / type(I).interfaceId
+	//    type(C).creationCode / type(C).runtimeCode (stubbed as 32 zero bytes)
 	if (baseType)
 	{
 		bool isMagicOrTypeType = dynamic_cast<MagicType const*>(baseType)
 			|| dynamic_cast<TypeType const*>(baseType);
 		if (isMagicOrTypeType
 			&& (member == "max" || member == "min" || member == "name"
-				|| member == "interfaceId"))
+				|| member == "interfaceId"
+				|| member == "creationCode" || member == "runtimeCode"))
 			return std::make_unique<SolMetaTypeAccess>(m_ctx, _node);
 	}
 

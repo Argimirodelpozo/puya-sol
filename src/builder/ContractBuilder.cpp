@@ -3173,7 +3173,30 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						arc4Types.push_back(elemType);
 				}
 
-				// Walk the body and wrap biguint tuple elements in ARC4Encode
+				// Helper: wrap biguint items inside a single TupleExpression with
+				// ARC4Encode, and update the tuple's wtype to the ARC4 tuple type.
+				auto wrapTupleItems = [&](awst::TupleExpression* tuple)
+				{
+					if (!tuple) return;
+					for (size_t i = 0; i < tuple->items.size() && i < arc4Types.size(); ++i)
+					{
+						if (tuple->items[i]->wtype == awst::WType::biguintType()
+							&& arc4Types[i]->kind() == awst::WTypeKind::ARC4UIntN)
+						{
+							auto encode = std::make_shared<awst::ARC4Encode>();
+							encode->sourceLocation = tuple->items[i]->sourceLocation;
+							encode->wtype = arc4Types[i];
+							encode->value = std::move(tuple->items[i]);
+							tuple->items[i] = std::move(encode);
+						}
+					}
+					tuple->wtype = new awst::WTuple(
+						std::vector<awst::WType const*>(arc4Types));
+				};
+
+				// Walk the body and wrap biguint tuple elements in ARC4Encode.
+				// Handles direct tuple returns and conditional expressions whose
+				// branches are tuple literals.
 				std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> wrapTupleReturns;
 				wrapTupleReturns = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
 				{
@@ -3182,23 +3205,15 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
 						{
 							if (!ret->value) continue;
-							auto* tuple = dynamic_cast<awst::TupleExpression*>(ret->value.get());
-							if (!tuple) continue;
-							for (size_t i = 0; i < tuple->items.size() && i < arc4Types.size(); ++i)
+							if (auto* tuple = dynamic_cast<awst::TupleExpression*>(ret->value.get()))
+								wrapTupleItems(tuple);
+							else if (auto* cond = dynamic_cast<awst::ConditionalExpression*>(ret->value.get()))
 							{
-								if (tuple->items[i]->wtype == awst::WType::biguintType()
-									&& arc4Types[i]->kind() == awst::WTypeKind::ARC4UIntN)
-								{
-									auto encode = std::make_shared<awst::ARC4Encode>();
-									encode->sourceLocation = tuple->items[i]->sourceLocation;
-									encode->wtype = arc4Types[i];
-									encode->value = std::move(tuple->items[i]);
-									tuple->items[i] = std::move(encode);
-								}
+								wrapTupleItems(dynamic_cast<awst::TupleExpression*>(cond->trueExpr.get()));
+								wrapTupleItems(dynamic_cast<awst::TupleExpression*>(cond->falseExpr.get()));
+								cond->wtype = new awst::WTuple(
+									std::vector<awst::WType const*>(arc4Types));
 							}
-							// Update tuple wtype
-							tuple->wtype = new awst::WTuple(
-								std::vector<awst::WType const*>(arc4Types));
 						}
 						else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
 						{

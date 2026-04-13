@@ -24,6 +24,8 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 				ident->annotation().referencedDeclaration))
 		{
 			if (varDecl->isStateVariable()
+				&& !varDecl->isConstant()
+				&& !varDecl->immutable()
 				&& builder::StorageMapper::shouldUseBoxStorage(*varDecl)
 				&& dynamic_cast<ArrayType const*>(varDecl->type()))
 			{

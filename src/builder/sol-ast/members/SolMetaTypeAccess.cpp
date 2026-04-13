@@ -5,6 +5,7 @@
 #include "builder/sol-ast/members/SolMetaTypeAccess.h"
 #include "builder/ExpressionUtils.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
 #include <sstream>
@@ -99,6 +100,27 @@ std::shared_ptr<awst::Expression> SolMetaTypeAccess::toAwst()
 		strConst->encoding = awst::BytesEncoding::Utf8;
 		strConst->value = std::vector<uint8_t>(typeName.begin(), typeName.end());
 		return strConst;
+	}
+
+	// type(C).creationCode / type(C).runtimeCode: EVM concept of contract
+	// bytecode. No direct AVM analog — contracts are deployed as AVM
+	// applications and don't expose their TEAL bytecode as a value.
+	// Stub as a 32-byte placeholder so Solidity patterns that only check
+	// `.length > 0` or use the bytes as an opaque hash input still compile.
+	// Any code that actually depends on the content of EVM bytecode will
+	// silently produce wrong results.
+	if (member == "creationCode" || member == "runtimeCode")
+	{
+		Logger::instance().warning(
+			"type(C)." + member + " has no AVM analog — stubbed as 32 zero bytes;"
+			" code that depends on the actual bytecode will misbehave",
+			m_loc);
+		auto bc = std::make_shared<awst::BytesConstant>();
+		bc->sourceLocation = m_loc;
+		bc->wtype = awst::WType::bytesType();
+		bc->encoding = awst::BytesEncoding::Base16;
+		bc->value = std::vector<uint8_t>(32, 0);
+		return bc;
 	}
 
 	// type(Interface).interfaceId → bytes4 ERC165 ID
