@@ -269,6 +269,15 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 	if (it != m_cache.end())
 		return it->second;
 
+	// Recursion guard: if we're already mapping this struct (recursive
+	// reference like `struct R { R[] children; }`), return a placeholder
+	// to break the cycle. ARC4 has no cycle support, so the recursive
+	// field becomes a bytes blob — semantics will be wrong but the
+	// compiler won't infinite-recurse into a stack overflow.
+	if (m_inProgressStructs.count(structDef.id()))
+		return awst::WType::bytesType();
+	m_inProgressStructs.insert(structDef.id());
+
 	// Build ARC4Struct with fields in declaration order
 	std::vector<std::pair<std::string, awst::WType const*>> fields;
 
@@ -295,6 +304,7 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 	);
 
 	m_cache[cacheKey] = result;
+	m_inProgressStructs.erase(structDef.id());
 	return result;
 }
 

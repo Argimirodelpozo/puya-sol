@@ -6,6 +6,7 @@
 
 #include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -47,6 +48,11 @@ private:
 
 	/// Cache: Solidity type string → WType.
 	std::map<std::string, awst::WType const*> m_cache;
+
+	/// Recursion guard for mapStruct: holds AST IDs of structs that are
+	/// currently being mapped, so a recursive struct field returns a
+	/// placeholder instead of stack-overflowing.
+	std::set<int64_t> m_inProgressStructs;
 };
 
 } // namespace puyasol::builder
