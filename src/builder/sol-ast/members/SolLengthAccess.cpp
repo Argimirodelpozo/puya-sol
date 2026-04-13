@@ -56,6 +56,20 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 				lenVal->base = std::move(boxLen);
 				lenVal->index = 0;
 
+				// Elements with unknown fixed size (e.g. nested dynamic arrays)
+				// can't use the `(box_len - 2) / elemSize` trick. Puya's backend
+				// doesn't yet model this storage shape — return 0 as a
+				// conservative fallback so the AWST at least compiles and
+				// the common empty-array case works.
+				if (elemSize == 0)
+				{
+					auto zeroLen = std::make_shared<awst::IntegerConstant>();
+					zeroLen->sourceLocation = m_loc;
+					zeroLen->wtype = awst::WType::uint64Type();
+					zeroLen->value = "0";
+					return zeroLen;
+				}
+
 				auto elemSizeConst = std::make_shared<awst::IntegerConstant>();
 				elemSizeConst->sourceLocation = m_loc;
 				elemSizeConst->wtype = awst::WType::uint64Type();
