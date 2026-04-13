@@ -3561,10 +3561,28 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 		// Initialize transient storage blob at method entry
 		// Needed for Solidity transient vars AND assembly tload/tstore
-		bool hasInlineAsm = !_func.body().statements().empty() && std::any_of(
-			_func.body().statements().begin(), _func.body().statements().end(),
-			[](auto const& s) { return dynamic_cast<solidity::frontend::InlineAssembly const*>(s.get()) != nullptr; }
-		);
+		// (in the function body *or* any modifier body).
+		auto hasInlineAsmInBlock = [](solidity::frontend::Block const& _blk) {
+			for (auto const& s : _blk.statements())
+				if (dynamic_cast<solidity::frontend::InlineAssembly const*>(s.get()))
+					return true;
+			return false;
+		};
+		bool hasInlineAsm = hasInlineAsmInBlock(_func.body());
+		if (!hasInlineAsm)
+		{
+			for (auto const& modInvocation : _func.modifiers())
+			{
+				auto const* modDef = dynamic_cast<
+					solidity::frontend::ModifierDefinition const*>(
+					modInvocation->name().annotation().referencedDeclaration);
+				if (modDef && hasInlineAsmInBlock(modDef->body()))
+				{
+					hasInlineAsm = true;
+					break;
+				}
+			}
+		}
 		if (method.arc4MethodConfig.has_value()
 			&& (m_transientStorage.hasTransientVars() || hasInlineAsm))
 		{
