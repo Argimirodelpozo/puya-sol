@@ -121,12 +121,94 @@ static std::vector<std::shared_ptr<awst::Statement>> dispatchStatementImpl(
 		}
 		return {};
 	}
-	if (dynamic_cast<TryStatement const*>(&_stmt))
+	if (auto const* tryStmt = dynamic_cast<TryStatement const*>(&_stmt))
 	{
-		Logger::instance().error(
-			"try/catch is not supported on AVM. "
-			"AVM errors are not catchable — they abort the entire transaction group.", loc);
-		return {};
+		Logger::instance().warning(
+			"try/catch stubbed as success path: AVM cannot catch runtime errors,"
+			" catch clauses are dropped — behavior differs from EVM when the try"
+			" call reverts", loc);
+
+		std::vector<std::shared_ptr<awst::Statement>> result;
+
+		// 1. Evaluate the external call.
+		auto callExpr = _exprBuilder.build(tryStmt->externalCall());
+
+		// 2. Find the success clause and assign return values to its named
+		//    parameters (declaring locals first).
+		auto const* successClause = tryStmt->successClause();
+		if (successClause && successClause->parameters())
+		{
+			auto const& params = successClause->parameters()->parameters();
+			if (!params.empty() && callExpr)
+			{
+				// Emit: declare each param as a local, then assign from the call.
+				// If multiple returns: value is a tuple, unpack element-by-element.
+				if (params.size() == 1)
+				{
+					auto* paramType = _ctx.typeMapper->map(params[0]->type());
+					auto target = std::make_shared<awst::VarExpression>();
+					target->sourceLocation = loc;
+					target->name = params[0]->name();
+					target->wtype = paramType;
+
+					auto assign = std::make_shared<awst::AssignmentStatement>();
+					assign->sourceLocation = loc;
+					assign->target = std::move(target);
+					assign->value = std::move(callExpr);
+					result.push_back(std::move(assign));
+				}
+				else
+				{
+					auto tupleTarget = std::make_shared<awst::TupleExpression>();
+					tupleTarget->sourceLocation = loc;
+					std::vector<awst::WType const*> tupleTypes;
+					for (auto const& p : params)
+					{
+						auto* paramType = _ctx.typeMapper->map(p->type());
+						auto v = std::make_shared<awst::VarExpression>();
+						v->sourceLocation = loc;
+						v->name = p->name();
+						v->wtype = paramType;
+						tupleTarget->items.push_back(std::move(v));
+						tupleTypes.push_back(paramType);
+					}
+					tupleTarget->wtype = _ctx.typeMapper->createType<awst::WTuple>(
+						std::move(tupleTypes), std::nullopt);
+
+					auto assign = std::make_shared<awst::AssignmentStatement>();
+					assign->sourceLocation = loc;
+					assign->target = std::move(tupleTarget);
+					assign->value = std::move(callExpr);
+					result.push_back(std::move(assign));
+				}
+			}
+			else if (callExpr)
+			{
+				// No return params: call as an expression statement for side effects.
+				auto exprStmt = std::make_shared<awst::ExpressionStatement>();
+				exprStmt->sourceLocation = loc;
+				exprStmt->expr = std::move(callExpr);
+				result.push_back(std::move(exprStmt));
+			}
+
+			// 3. Emit the success-clause block inline.
+			SolBlock successHandler(
+				_ctx, successClause->block(),
+				_ctx.makeLoc(successClause->block().location()), _exprBuilder);
+			auto successBlock = successHandler.toAwstBlock();
+			for (auto& s : successBlock->body)
+				result.push_back(std::move(s));
+		}
+		else if (callExpr)
+		{
+			// No success clause (unusual) — just execute the call for its side effects.
+			auto exprStmt = std::make_shared<awst::ExpressionStatement>();
+			exprStmt->sourceLocation = loc;
+			exprStmt->expr = std::move(callExpr);
+			result.push_back(std::move(exprStmt));
+		}
+
+		return result;
 	}
 	if (auto const* node = dynamic_cast<Block const*>(&_stmt))
 	{
