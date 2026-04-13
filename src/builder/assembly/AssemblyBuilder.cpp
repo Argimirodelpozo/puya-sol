@@ -55,6 +55,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	m_arrayParamName.clear();
 	m_arrayParamType = nullptr;
 	m_arrayParamSize = 0;
+	m_haltEmitted = false;
 
 	// Register function parameters as known locals (so they resolve with proper types)
 	for (auto const& [name, type]: _params)
@@ -112,7 +113,10 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 		buildStatement(stmt, result);
 	}
 
-	// Flush memory blob back to scratch at block end
+	// Flush memory blob back to scratch at block end. Skip if the block
+	// already emitted a `return` or `revert` halt intrinsic — any trailing
+	// store would be flagged as unreachable code by puya.
+	if (!m_haltEmitted)
 	{
 		awst::SourceLocation loc;
 		loc.file = m_sourceFile;
@@ -122,6 +126,8 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	// Coerce upgraded variables back to their original types at block end.
 	// Within the assembly block, variables may be promoted to biguint for 256-bit
 	// Yul semantics. After the block, Solidity code expects the original types.
+	if (m_haltEmitted)
+		m_upgradedLocals.clear();
 	for (auto const& [name, origType]: m_upgradedLocals)
 	{
 		awst::SourceLocation loc;

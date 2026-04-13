@@ -536,6 +536,12 @@ private:
 
 	// ── Variable tracking ───────────────────────────────────────────────
 
+	/// Set when the assembly block emitted a terminating `return` or
+	/// `revert` intrinsic. Tells the block-end handler to skip the
+	/// trailing flushMemoryToScratch + local-upgrade coercions so puya
+	/// doesn't flag them as unreachable code after the halt.
+	bool m_haltEmitted = false;
+
 	std::map<std::string, awst::WType const*> m_locals;
 	/// Variables that were upgraded from uint64 to biguint within the assembly block.
 	/// Maps variable name to original type so we can emit coercion back at block end.

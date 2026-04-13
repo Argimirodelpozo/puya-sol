@@ -561,6 +561,11 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
 
         # Store box refs on the client for use in subsequent calls
         app_client._box_refs = box_refs
+        # Record the AVM baseline (min-balance + box reserves + ctor value)
+        # so _compare_values can subtract it when tests read
+        # `address(this).balance`.
+        app_client._balance_baseline = min_balance
+        app_client._ctor_fund = fund_amount
         return app_client
     except Exception as e:
         # Store error on a module-level variable for the caller
@@ -1376,6 +1381,18 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                         if isinstance(actual, (list, tuple)) and len(actual) == 0:
                             return True, f"{actual}"
                     elif len(collapsed) >= 1:
+                        # Dynamic-array-of-scalar path: EVM encodes each
+                        # element as a full 32-byte word. ARC4 returns a
+                        # raw list of the element values. Match element
+                        # count and compare pointwise first.
+                        if (isinstance(actual, (list, tuple))
+                            and len(actual) == exp_len
+                            and len(collapsed) >= exp_len
+                            and all(isinstance(c, int) for c in collapsed[:exp_len])
+                            and all(isinstance(a, int) for a in actual)):
+                            if all(_compare_values(a, c)
+                                   for a, c in zip(actual, collapsed[:exp_len])):
+                                return True, f"{actual}"
                         # Concatenate multi-word data
                         data = b""
                         for c in collapsed:
@@ -1578,8 +1595,15 @@ def _compare_values(actual, expected):
                 # fund (≥ ~6.3 ALGO) for min-balance, box storage and
                 # inner-app reserves. When a Solidity test reads
                 # `address(this).balance`, the real balance is
-                # expected_value + EXTRA_FUND. Treat the two as equal
-                # when the diff matches the runner's funding constant.
+                # expected_value + baseline. Treat the two as equal
+                # when the diff matches a plausible baseline.
+                # Prefer the baseline recorded at deploy time (box
+                # overhead varies per test); fall back to the common
+                # no-box value for older code paths.
+                baseline = getattr(_compare_values, "_baseline", None)
+                if baseline is not None:
+                    if actual - expected == baseline:
+                        return True
                 EXTRA_FUND = 6_356_000
                 if -actual == diff and expected == 0:
                     if actual == EXTRA_FUND:
@@ -1731,6 +1755,9 @@ def run_test(test: SemanticTest, localnet, account, verbose=False, _budget_retry
     if not app:
         err = getattr(deploy_contract, '_last_error', '')
         return "DEPLOY_ERROR", f"deployment failed: {err[:200]}" if err else "deployment failed"
+
+    # Expose the AVM baseline for `address(this).balance` comparisons
+    _compare_values._baseline = getattr(app, "_balance_baseline", None)
 
     # On budget retry, set fee hint so execute_call uses enough fee for OpUp inner txns
     if ensure_budget:

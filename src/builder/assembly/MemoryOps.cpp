@@ -376,14 +376,29 @@ void AssemblyBuilder::handleReturn(
 
 		if (!returnOffset || !returnSize || *returnSize == 0)
 		{
-			Logger::instance().warning(
-				"assembly return() in void function with dynamic/zero size — skipping", _loc
-			);
+			// `assembly { return(_, 0) }` halts the entire program with
+			// success. Emit the raw AVM `return 1` intrinsic so puya lowers
+			// it to an unconditional program-exit (not just a subroutine
+			// return). Needed for Yul helpers that use the EVM `return`
+			// opcode as a hard exit from inside a nested call.
 			flushMemoryToScratch(_loc, _out);
-			auto ret = std::make_shared<awst::ReturnStatement>();
-			ret->sourceLocation = _loc;
-			ret->value = nullptr;
-			_out.push_back(std::move(ret));
+
+			auto one = std::make_shared<awst::BoolConstant>();
+			one->sourceLocation = _loc;
+			one->wtype = awst::WType::boolType();
+			one->value = true;
+
+			auto returnOp = std::make_shared<awst::IntrinsicCall>();
+			returnOp->sourceLocation = _loc;
+			returnOp->wtype = awst::WType::voidType();
+			returnOp->opCode = "return";
+			returnOp->stackArgs.push_back(std::move(one));
+
+			auto exitStmt = std::make_shared<awst::ExpressionStatement>();
+			exitStmt->sourceLocation = _loc;
+			exitStmt->expr = std::move(returnOp);
+			_out.push_back(std::move(exitStmt));
+			m_haltEmitted = true;
 			return;
 		}
 
