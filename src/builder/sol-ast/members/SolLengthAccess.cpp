@@ -8,6 +8,8 @@
 
 #include <libsolidity/ast/AST.h>
 
+#include <sstream>
+
 namespace puyasol::builder::sol_ast
 {
 
@@ -30,6 +32,20 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 				&& dynamic_cast<ArrayType const*>(varDecl->type()))
 			{
 				auto const* arrType = dynamic_cast<ArrayType const*>(varDecl->type());
+
+				// Statically-sized state arrays: `.length` is a compile-time
+				// constant, not a box read. Avoid emitting (box_len - 2) /
+				// elemSize, which underflows for empty boxes.
+				if (!arrType->isDynamicallySized() && !arrType->isByteArrayOrString())
+				{
+					std::ostringstream oss;
+					oss << arrType->length();
+					auto c = std::make_shared<awst::IntegerConstant>();
+					c->sourceLocation = m_loc;
+					c->wtype = awst::WType::uint64Type();
+					c->value = oss.str();
+					return c;
+				}
 				auto* rawElemType = m_ctx.typeMapper.map(arrType->baseType());
 				auto* arc4ElemType = m_ctx.typeMapper.mapToARC4Type(rawElemType);
 				unsigned elemSize = builder::StorageMapper::computeEncodedElementSize(arc4ElemType);
