@@ -524,6 +524,46 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 		return vc;
 	}
 
+	// Optimise `(new C()).stateVar()` (or .immutable()) to the compile-time
+	// initial value of the state variable. Our `new C()` stub only deploys
+	// a tiny approval program that doesn't actually include the contract's
+	// state initialisers, so any call on the resulting app returns zero
+	// bytes (no log) and trips the itxn LastLog extraction. If we can see
+	// the member is a public state/immutable var with a literal initialiser,
+	// fold the call to that literal directly.
+	if (auto const* outerFuncCall = dynamic_cast<FunctionCall const*>(&memberAccess->expression()))
+	{
+		if (auto const* newExpr = dynamic_cast<NewExpression const*>(&outerFuncCall->expression()))
+		{
+			auto const* refDecl = memberAccess->annotation().referencedDeclaration;
+			auto const* varDecl = dynamic_cast<VariableDeclaration const*>(refDecl);
+			if (newExpr && varDecl && varDecl->isStateVariable()
+				&& varDecl->value()
+				&& m_call.arguments().empty())
+			{
+				auto val = buildExpr(*varDecl->value());
+				if (val)
+				{
+					auto const* retType = m_ctx.typeMapper.map(
+						m_call.annotation().type);
+					if (retType)
+						val = builder::TypeCoercion::implicitNumericCast(
+							std::move(val), retType, m_loc);
+					Logger::instance().warning(
+						"folded \`(new " + (
+							dynamic_cast<ContractType const*>(
+								newExpr->typeName().annotation().type)
+							? dynamic_cast<ContractType const*>(
+								newExpr->typeName().annotation().type
+							)->contractDefinition().name()
+							: std::string("C"))
+						+ ").stateVar()\` to compile-time initial value", m_loc);
+					return val;
+				}
+			}
+		}
+	}
+
 	// Detect delegatecall to library functions — not supported on AVM
 	if (auto const* refDecl = memberAccess->annotation().referencedDeclaration)
 	{
