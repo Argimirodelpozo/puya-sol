@@ -288,7 +288,10 @@ std::unique_ptr<SolMemberAccess> SolExpressionFactory::createMemberAccess(
 	if (auto const* baseId = dynamic_cast<Identifier const*>(&baseExpr))
 	{
 		std::string baseName = baseId->name();
-		if (baseName == "block" && (member == "difficulty" || member == "prevrandao"))
+		if (baseName == "block"
+			&& (member == "difficulty" || member == "prevrandao"
+				|| member == "basefee" || member == "blobbasefee"
+				|| member == "gaslimit"))
 			return std::make_unique<SolIntrinsicAccess>(m_ctx, _node);
 
 		if (builder::IntrinsicMapper::tryMapMemberAccess(baseName, member,

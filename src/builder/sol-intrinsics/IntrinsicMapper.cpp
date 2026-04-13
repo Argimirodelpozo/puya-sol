@@ -96,6 +96,21 @@ std::shared_ptr<awst::IntrinsicCall> IntrinsicMapper::tryMapMemberAccess(
 			call->wtype = awst::WType::bytesType();
 			return call;
 		}
+		else if (_memberName == "coinbase")
+		{
+			// block.coinbase is the miner address on EVM. AVM has no miner
+			// concept — blocks are produced by rotating validators chosen by
+			// VRF. Return the current application's address as a harmless
+			// non-zero placeholder so Solidity patterns that check
+			// `coinbase != address(0)` still work.
+			Logger::instance().warning(
+				"block.coinbase has no AVM analog — returning CurrentApplicationAddress. "
+				"EVM miner address is not a meaningful concept on Algorand.", _loc);
+			call->opCode = "global";
+			call->immediates = {std::string("CurrentApplicationAddress")};
+			call->wtype = awst::WType::accountType();
+			return call;
+		}
 	}
 	else if (_objectName == "tx")
 	{

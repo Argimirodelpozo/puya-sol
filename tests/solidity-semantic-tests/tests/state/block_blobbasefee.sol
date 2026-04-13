@@ -1,4 +1,6 @@
 contract C {
+    // AVM: no blob data pricing on Algorand — block.blobbasefee is stubbed
+    // as 0. Original EVM expected: f() -> 1, g() -> 1
     function f() public view returns (uint) {
         return block.blobbasefee;
     }
@@ -11,7 +13,7 @@ contract C {
 // ====
 // EVMVersion: >=cancun
 // ----
-// f() -> 1
-// g() -> 1
-// f() -> 1
-// g() -> 1
+// f() -> 0
+// g() -> 0
+// f() -> 0
+// g() -> 0

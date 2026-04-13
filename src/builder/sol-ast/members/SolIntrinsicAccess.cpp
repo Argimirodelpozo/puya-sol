@@ -42,6 +42,38 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		return zero;
 	}
 
+	// block.basefee / block.blobbasefee → 0.
+	// AVM has a flat per-transaction fee (typically 1000 microAlgos); no
+	// EIP-1559 base fee concept and no blob pricing. Callers that gate
+	// behaviour on `basefee > 0` will see the no-fee path, which is the
+	// safer default on AVM.
+	if (baseName == "block" && (member == "basefee" || member == "blobbasefee"))
+	{
+		Logger::instance().warning(
+			"block." + member + " returns 0 on AVM — no EIP-1559 base fee concept.", m_loc);
+		auto zero = std::make_shared<awst::IntegerConstant>();
+		zero->sourceLocation = m_loc;
+		zero->wtype = awst::WType::biguintType();
+		zero->value = "0";
+		return zero;
+	}
+
+	// block.gaslimit → a large sentinel (70000). AVM has no gas, only a
+	// fixed opcode budget (700 per app call, poolable across a 16-txn
+	// group). Returning 70000 is enough that gaslimit-based bounds in
+	// Solidity libraries (common pattern: `for (uint i = 0; gasleft() > X;
+	// ++i)`) don't prematurely abort.
+	if (baseName == "block" && member == "gaslimit")
+	{
+		Logger::instance().warning(
+			"block.gaslimit returns 70000 on AVM — no direct analog for EVM block gas limit.", m_loc);
+		auto val = std::make_shared<awst::IntegerConstant>();
+		val->sourceLocation = m_loc;
+		val->wtype = awst::WType::biguintType();
+		val->value = "70000";
+		return val;
+	}
+
 	// block.prevrandao → block BlkSeed (Round - 2)
 	if (baseName == "block" && member == "prevrandao")
 	{
