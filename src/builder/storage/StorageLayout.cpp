@@ -5,6 +5,7 @@
 #include "builder/storage/StorageLayout.h"
 #include "Logger.h"
 
+#include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/Types.h>
 
 namespace puyasol::builder
@@ -24,7 +25,20 @@ void StorageLayout::computeLayout(
 	m_slotByNumber.clear();
 	m_totalSlots = 0;
 
-	unsigned currentSlot = 0;
+	// `contract C layout at N` shifts the base storage slot to N. When the
+	// annotation is present, Solidity stores the evaluated base in
+	// storageLayoutSpecifier()->annotation().baseSlot (a SetOnce).
+	unsigned baseSlot = 0;
+	if (auto const* spec = _contract.storageLayoutSpecifier())
+	{
+		if (spec->annotation().baseSlot.set())
+		{
+			auto const& v = *spec->annotation().baseSlot;
+			if (v <= std::numeric_limits<unsigned>::max())
+				baseSlot = static_cast<unsigned>(v);
+		}
+	}
+	unsigned currentSlot = baseSlot;
 	unsigned currentOffset = 0; // bytes used in current slot
 
 	// Walk linearized base contracts (most-base first = reverse of linearization)
