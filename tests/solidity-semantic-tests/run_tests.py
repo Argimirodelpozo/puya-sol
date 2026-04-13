@@ -1536,12 +1536,27 @@ def _compare_values(actual, expected):
             # → uint<N> in the spec). Treat the two as equivalent when
             # `actual` is the unsigned twos-complement of `expected` for
             # any standard signed Solidity bit width.
+            _STANDARD_BIT_WIDTHS = (8, 16, 24, 32, 40, 48, 56, 64,
+                                    72, 80, 88, 96, 104, 112, 120, 128,
+                                    136, 144, 152, 160, 168, 176, 184, 192,
+                                    200, 208, 216, 224, 232, 240, 248, 256)
             if expected < 0:
-                for bits in (8, 16, 24, 32, 40, 48, 56, 64,
-                             72, 80, 88, 96, 104, 112, 120, 128,
-                             136, 144, 152, 160, 168, 176, 184, 192,
-                             200, 208, 216, 224, 232, 240, 248, 256):
+                for bits in _STANDARD_BIT_WIDTHS:
                     if actual == expected + (1 << bits):
+                        return True
+            else:
+                # Both sides are positive twos-complement encodings, but
+                # at potentially different bit widths. parse_value() always
+                # widens negatives to int256 (so `-27` becomes 2**256-27),
+                # while the AVM-decoded actual may be at the narrower
+                # declared return width. Two positive values represent
+                # the same negative number iff:
+                #   expected - actual == 2**256 - 2**N
+                # for some N. Iterate the standard signed widths and
+                # check the relationship.
+                diff = expected - actual
+                for bits in _STANDARD_BIT_WIDTHS:
+                    if diff == (1 << 256) - (1 << bits):
                         return True
             return False
         if isinstance(actual, (list, tuple)):

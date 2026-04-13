@@ -688,33 +688,47 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 		return cast;
 	}
 
-	// application → account: app_params_get AppAddress
-	// Used when assigning a `new Contract()` result (application type)
-	// to a Solidity contract reference variable (mapped to account).
+	// application → account: encode the app id into a fake address of
+	// the form (24 zero bytes ++ itob(app_id)). This round-trips
+	// losslessly through the inverse `extract 24 8; btoi` we use in the
+	// account→application path below, so `A a = new A(); a.f();` keeps
+	// the original app id rather than the SHA512_256 on-chain address
+	// (which is opaque and can't be recovered).
 	if (_targetType == awst::WType::accountType()
 		&& _expr->wtype == awst::WType::applicationType())
 	{
-		static awst::WTuple s_appParamsTupleType(
-			std::vector<awst::WType const*>{
-				awst::WType::bytesType(), awst::WType::boolType()});
+		auto idBytes = std::make_shared<awst::ReinterpretCast>();
+		idBytes->sourceLocation = _loc;
+		idBytes->wtype = awst::WType::uint64Type();
+		idBytes->expr = std::move(_expr);
 
-		auto appParams = std::make_shared<awst::IntrinsicCall>();
-		appParams->sourceLocation = _loc;
-		appParams->wtype = &s_appParamsTupleType;
-		appParams->opCode = "app_params_get";
-		appParams->immediates = {std::string("AppAddress")};
-		appParams->stackArgs.push_back(std::move(_expr));
+		auto itob = std::make_shared<awst::IntrinsicCall>();
+		itob->sourceLocation = _loc;
+		itob->wtype = awst::WType::bytesType();
+		itob->opCode = "itob";
+		itob->stackArgs.push_back(std::move(idBytes));
 
-		auto addrItem = std::make_shared<awst::TupleItemExpression>();
-		addrItem->sourceLocation = _loc;
-		addrItem->wtype = awst::WType::bytesType();
-		addrItem->base = std::move(appParams);
-		addrItem->index = 0;
+		auto padSize = std::make_shared<awst::IntegerConstant>();
+		padSize->sourceLocation = _loc;
+		padSize->wtype = awst::WType::uint64Type();
+		padSize->value = "24";
+		auto pad = std::make_shared<awst::IntrinsicCall>();
+		pad->sourceLocation = _loc;
+		pad->wtype = awst::WType::bytesType();
+		pad->opCode = "bzero";
+		pad->stackArgs.push_back(std::move(padSize));
+
+		auto cat = std::make_shared<awst::IntrinsicCall>();
+		cat->sourceLocation = _loc;
+		cat->wtype = awst::WType::bytesType();
+		cat->opCode = "concat";
+		cat->stackArgs.push_back(std::move(pad));
+		cat->stackArgs.push_back(std::move(itob));
 
 		auto accountCast = std::make_shared<awst::ReinterpretCast>();
 		accountCast->sourceLocation = _loc;
 		accountCast->wtype = _targetType;
-		accountCast->expr = std::move(addrItem);
+		accountCast->expr = std::move(cat);
 		return accountCast;
 	}
 
