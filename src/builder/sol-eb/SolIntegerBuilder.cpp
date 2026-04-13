@@ -349,7 +349,45 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::compare(
 		}
 	}
 
-	// Ensure both sides have matching types for the comparison
+	// Ensure both sides have matching types for the comparison.
+	//
+	// Width-mismatch sign extension: when comparing a uint64 (small int)
+	// against a biguint constant whose magnitude doesn't fit in uint64
+	// (val > 2^63), the biguint side is the 256-bit two's complement of
+	// a "negative" small int (e.g. -128 → biguint(2^256 - 128)). Promoting
+	// the uint64 side to biguint via itob produces biguint(2^64 - 128),
+	// which doesn't match the 32-byte encoding. Instead, narrow the
+	// biguint constant to uint64 by modular reduction so both sides line
+	// up in the small int slot's 64-bit two's complement form.
+	auto narrowConstIfNegative = [&](std::shared_ptr<awst::Expression>& wide,
+		std::shared_ptr<awst::Expression> const& other)
+	{
+		if (other->wtype != awst::WType::uint64Type()) return;
+		if (wide->wtype != awst::WType::biguintType()) return;
+		auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(wide.get());
+		if (!intConst) return;
+		try
+		{
+			solidity::u256 val(intConst->value);
+			static const solidity::u256 twoPow63("9223372036854775808");
+			static const solidity::u256 twoPow64("18446744073709551616");
+			if (val < twoPow63) return;
+			solidity::u256 wrapped = val % twoPow64;
+			auto e = std::make_shared<awst::IntegerConstant>();
+			e->sourceLocation = _loc;
+			e->wtype = awst::WType::uint64Type();
+			e->value = wrapped.str();
+			wide = std::move(e);
+		}
+		catch (...) {}
+	};
+
+	if (lhs->wtype != rhs->wtype && !needsBigUInt)
+	{
+		narrowConstIfNegative(lhs, rhs);
+		narrowConstIfNegative(rhs, lhs);
+	}
+
 	if (lhs->wtype != rhs->wtype)
 	{
 		if (lhs->wtype == awst::WType::uint64Type() && rhs->wtype == awst::WType::biguintType())

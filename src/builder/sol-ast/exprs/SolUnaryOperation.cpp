@@ -307,10 +307,13 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		e->right = std::move(_operand);
 		return e;
 	}
-	// For uint64 constant negation, produce two's complement matching the
-	// uint64 storage slot so that comparisons with small signed int variables
-	// (int8..int64 → uint64 slot) line up. Producing a 32-byte biguint here
-	// would compare unequal to the 8-byte uint64 storage of the variable.
+	// For uint64 constant negation, produce two's complement biguint.
+	// We can't safely narrow to uint64 here — the surrounding context
+	// might be int256 (biguint storage) and a uint64 result would
+	// sign-extend wrong (uint64(2^64-1) → biguint(2^64-1) instead of
+	// biguint(2^256-1)). The wide-form constant survives narrowing
+	// to uint64 slots correctly via `extract3 + btoi`, while uint64
+	// constants don't survive widening to biguint slots.
 	if (_operand->wtype == awst::WType::uint64Type())
 	{
 		if (auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(_operand.get()))
@@ -318,20 +321,6 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			solidity::u256 val(intConst->value);
 			if (val > 0)
 			{
-				static const solidity::u256 twoPow64("18446744073709551616");
-				if (val <= (twoPow64 >> 1))  // val ≤ 2^63 → wraps inside uint64
-				{
-					solidity::u256 negVal = twoPow64 - val;
-					std::ostringstream oss;
-					oss << negVal;
-					auto result = std::make_shared<awst::IntegerConstant>();
-					result->sourceLocation = m_loc;
-					result->wtype = awst::WType::uint64Type();
-					result->value = oss.str();
-					return result;
-				}
-				// val > 2^63: the magnitude is too large for a uint64 slot,
-				// so produce the 256-bit two's complement biguint.
 				static const std::string pow256Str =
 					"115792089237316195423570985008687907853269984665640564039457584007913129639936";
 				solidity::u256 pow256(pow256Str);
