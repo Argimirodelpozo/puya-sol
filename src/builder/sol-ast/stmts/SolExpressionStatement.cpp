@@ -226,6 +226,18 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 						// bytes[M] → bytes[N]: right-pad (M<N) or truncate (M>N).
 						auto const* srcBytes = dynamic_cast<awst::BytesWType const*>(stmt->value->wtype);
 						int srcLen = (srcBytes && srcBytes->length()) ? *srcBytes->length() : 0;
+						// If the source type has no length info (generic bytes)
+						// but the expression is a BytesConstant, use its actual
+						// byte count. Hex-string literals `hex"aabb00ff"` arrive
+						// as unsized BytesConstants even when they need to be
+						// right-padded into a fixed bytes32 return.
+						if (srcLen == 0)
+						{
+							auto const* byteConst = dynamic_cast<awst::BytesConstant const*>(
+								stmt->value.get());
+							if (byteConst)
+								srcLen = static_cast<int>(byteConst->value.size());
+						}
 						int dstLen = (bytesType && bytesType->length()) ? *bytesType->length() : 0;
 						if (srcLen > 0 && dstLen > 0 && srcLen != dstLen)
 						{
