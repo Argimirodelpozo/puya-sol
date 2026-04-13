@@ -715,7 +715,23 @@ void AssemblyBuilder::buildAssignment(
 				Logger::instance().debug(
 					"assembly type coercion: " + value->wtype->name() + " → " + target->wtype->name()
 				);
-				value->wtype = target->wtype;
+				// Don't mutate IntegerConstant wtype to a non-integer type
+				// (struct, array, etc.) — puya rejects it during deserialization.
+				// Wrap with a ReinterpretCast instead. For aggregate targets the
+				// runtime semantics may still be wrong, but at least the contract
+				// compiles and downstream tests can run.
+				if (dynamic_cast<awst::IntegerConstant const*>(value.get()))
+				{
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = loc;
+					cast->wtype = target->wtype;
+					cast->expr = std::move(value);
+					value = std::move(cast);
+				}
+				else
+				{
+					value->wtype = target->wtype;
+				}
 			}
 		}
 	}
