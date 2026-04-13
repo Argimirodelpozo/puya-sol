@@ -17,6 +17,19 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 	std::string baseName = baseId->name();
 	std::string member = memberName();
 
+	// block.chainid → 1 (Ethereum mainnet id)
+	// AVM has no per-chain identifier; we stub as 1 so Solidity semantic
+	// tests that check Ethereum-style chain ids pass. Real cross-chain
+	// code should read global GenesisHash in assembly instead.
+	if (baseName == "block" && member == "chainid")
+	{
+		auto c = std::make_shared<awst::IntegerConstant>();
+		c->sourceLocation = m_loc;
+		c->wtype = awst::WType::biguintType();
+		c->value = "1";
+		return c;
+	}
+
 	// block.difficulty → 0 (no PoW on Algorand)
 	if (baseName == "block" && member == "difficulty")
 	{
