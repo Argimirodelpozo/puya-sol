@@ -33,6 +33,8 @@ std::shared_ptr<awst::Expression> SolMetaTypeAccess::toAwst()
 		if (auto const* intType = dynamic_cast<IntegerType const*>(typeArg))
 		{
 			unsigned bits = intType->numBits();
+			// Default slot: uint64 for ≤64 bits, biguint otherwise — matches
+			// how we map integer types elsewhere.
 			auto* wtype = (bits <= 64)
 				? awst::WType::uint64Type()
 				: awst::WType::biguintType();
@@ -55,36 +57,26 @@ std::shared_ptr<awst::Expression> SolMetaTypeAccess::toAwst()
 			{
 				if (intType->isSigned())
 				{
-					// type(intN).min = -2^(N-1), stored as two's complement
-					// in the storage slot width. Our type mapping uses a
-					// uint64 slot for bits<=64 and a biguint (32-byte)
-					// slot for bits>64, so:
+					// type(intN).min = -2^(N-1). Solidity's
+					// `literalValue()` returns the two's complement form
+					// in full 256-bit width for negative literals, so the
+					// right-hand side of a comparison like
+					//     int8_min == -2**7
+					// is a biguint holding 2^256 - 2^7.
 					//
-					//   bits <= 64:  2^64  - 2^(bits-1)
-					//   bits  > 64:  2^256 - 2^(bits-1)
-					//
-					// This matches how our compiler encodes negative
-					// literals (unary minus on a uint wraps modulo the
-					// storage width), so comparisons like
-					// `int8_min == -2**7` resolve to equal operands.
+					// To make equality work for every signed width we
+					// promote type(intN).min to biguint and encode the
+					// same 256-bit two's complement value (2^256 - 2^(N-1)).
+					// For bits == 256 this simplifies to 2^255.
+					wtype = awst::WType::biguintType();
 					solidity::u256 twoPowBitsMinus1 = solidity::u256(1) << (bits - 1);
 					solidity::u256 minVal;
-					if (bits <= 64)
-					{
-						// slot width 64 bits: 2^64 - 2^(bits-1)
-						solidity::u256 twoPow64 = solidity::u256(1) << 64;
-						minVal = twoPow64 - twoPowBitsMinus1;
-					}
+					if (bits == 256)
+						minVal = twoPowBitsMinus1;
 					else
-					{
-						// slot width 256 bits: 2^256 - 2^(bits-1).
-						// For bits==256 this simplifies to 2^255, which
-						// matches the previous behaviour.
-						if (bits == 256)
-							minVal = twoPowBitsMinus1;
-						else
-							minVal = solidity::u256(0) - twoPowBitsMinus1; // mod 2^256
-					}
+						// u256 subtraction wraps modulo 2^256 so this
+						// yields 2^256 - 2^(bits-1).
+						minVal = solidity::u256(0) - twoPowBitsMinus1;
 					std::ostringstream oss;
 					oss << minVal;
 					val = oss.str();
