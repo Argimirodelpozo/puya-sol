@@ -1315,7 +1315,7 @@ def _try_decode_evm_returns(expected_list, actual_list):
                 return None
             data_start = slot_idx + 1
             if length == 0:
-                decoded.append("")
+                decoded.append(b"")
             else:
                 data = b""
                 n_words = (length + 31) // 32
@@ -1328,10 +1328,7 @@ def _try_decode_evm_returns(expected_list, actual_list):
                     elif isinstance(val, int):
                         data += val.to_bytes(32, 'big')
                 data = data[:length]
-                try:
-                    decoded.append(data.decode('utf-8', errors='replace'))
-                except Exception:
-                    decoded.append(data)
+                decoded.append(data)
         else:
             # Static value — use as-is
             decoded.append(v)
