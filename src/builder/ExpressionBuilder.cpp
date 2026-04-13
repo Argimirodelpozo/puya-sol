@@ -177,6 +177,7 @@ eb::BuilderContext ExpressionBuilder::makeBuilderContext()
 	return eb::BuilderContext{
 		/*.typeMapper =*/ m_typeMapper,
 		/*.storageMapper =*/ m_storageMapper,
+		/*.transientStorage =*/ m_transientStorage,
 		/*.sourceFile =*/ m_sourceFile,
 		/*.contractName =*/ m_contractName,
 		/*.currentContract =*/ m_currentContract,

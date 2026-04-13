@@ -223,11 +223,70 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 					}
 					else if (stmt->value->wtype && stmt->value->wtype->kind() == awst::WTypeKind::Bytes)
 					{
-						auto cast = std::make_shared<awst::ReinterpretCast>();
-						cast->sourceLocation = m_loc;
-						cast->wtype = expectedType;
-						cast->expr = std::move(stmt->value);
-						stmt->value = std::move(cast);
+						// bytes[M] → bytes[N]: right-pad (M<N) or truncate (M>N).
+						auto const* srcBytes = dynamic_cast<awst::BytesWType const*>(stmt->value->wtype);
+						int srcLen = (srcBytes && srcBytes->length()) ? *srcBytes->length() : 0;
+						int dstLen = (bytesType && bytesType->length()) ? *bytesType->length() : 0;
+						if (srcLen > 0 && dstLen > 0 && srcLen != dstLen)
+						{
+							auto expr = std::move(stmt->value);
+							auto toBytes = std::make_shared<awst::ReinterpretCast>();
+							toBytes->sourceLocation = m_loc;
+							toBytes->wtype = awst::WType::bytesType();
+							toBytes->expr = std::move(expr);
+							std::shared_ptr<awst::Expression> result;
+							if (dstLen > srcLen)
+							{
+								auto padSize = std::make_shared<awst::IntegerConstant>();
+								padSize->sourceLocation = m_loc;
+								padSize->wtype = awst::WType::uint64Type();
+								padSize->value = std::to_string(dstLen - srcLen);
+								auto pad = std::make_shared<awst::IntrinsicCall>();
+								pad->sourceLocation = m_loc;
+								pad->wtype = awst::WType::bytesType();
+								pad->opCode = "bzero";
+								pad->stackArgs.push_back(std::move(padSize));
+								auto cat = std::make_shared<awst::IntrinsicCall>();
+								cat->sourceLocation = m_loc;
+								cat->wtype = awst::WType::bytesType();
+								cat->opCode = "concat";
+								cat->stackArgs.push_back(std::move(toBytes));
+								cat->stackArgs.push_back(std::move(pad));
+								result = std::move(cat);
+							}
+							else
+							{
+								auto zero = std::make_shared<awst::IntegerConstant>();
+								zero->sourceLocation = m_loc;
+								zero->wtype = awst::WType::uint64Type();
+								zero->value = "0";
+								auto width = std::make_shared<awst::IntegerConstant>();
+								width->sourceLocation = m_loc;
+								width->wtype = awst::WType::uint64Type();
+								width->value = std::to_string(dstLen);
+								auto extract = std::make_shared<awst::IntrinsicCall>();
+								extract->sourceLocation = m_loc;
+								extract->wtype = awst::WType::bytesType();
+								extract->opCode = "extract3";
+								extract->stackArgs.push_back(std::move(toBytes));
+								extract->stackArgs.push_back(std::move(zero));
+								extract->stackArgs.push_back(std::move(width));
+								result = std::move(extract);
+							}
+							auto finalCast = std::make_shared<awst::ReinterpretCast>();
+							finalCast->sourceLocation = m_loc;
+							finalCast->wtype = expectedType;
+							finalCast->expr = std::move(result);
+							stmt->value = std::move(finalCast);
+						}
+						else
+						{
+							auto cast = std::make_shared<awst::ReinterpretCast>();
+							cast->sourceLocation = m_loc;
+							cast->wtype = expectedType;
+							cast->expr = std::move(stmt->value);
+							stmt->value = std::move(cast);
+						}
 					}
 					else if (stmt->value->wtype == awst::WType::stringType())
 					{

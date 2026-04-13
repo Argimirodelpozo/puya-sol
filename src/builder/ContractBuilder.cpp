@@ -1040,6 +1040,51 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 			body->body.push_back(std::move(ret));
 
 			getter.body = body;
+
+			// Remap biguint (uint256) getter parameters to ARC4UIntN(256) so the
+			// ABI selector encodes as "uint256" (not "uint512"). Rename the arg to
+			// __arc4_<name> and insert a decode statement at the top of the body.
+			{
+				std::vector<std::shared_ptr<awst::Statement>> decodeStmts;
+				for (auto& garg: getter.args)
+				{
+					if (garg.wtype != awst::WType::biguintType())
+						continue;
+					auto const* arc4Type = m_typeMapper.createType<awst::ARC4UIntN>(256);
+					std::string origName = garg.name;
+					std::string arc4Name = "__arc4_" + origName;
+					garg.wtype = arc4Type;
+					garg.name = arc4Name;
+
+					auto arc4Var = std::make_shared<awst::VarExpression>();
+					arc4Var->sourceLocation = loc;
+					arc4Var->name = arc4Name;
+					arc4Var->wtype = arc4Type;
+
+					auto decode = std::make_shared<awst::ARC4Decode>();
+					decode->sourceLocation = loc;
+					decode->wtype = awst::WType::biguintType();
+					decode->value = std::move(arc4Var);
+
+					auto target = std::make_shared<awst::VarExpression>();
+					target->sourceLocation = loc;
+					target->name = origName;
+					target->wtype = awst::WType::biguintType();
+
+					auto assign = std::make_shared<awst::AssignmentStatement>();
+					assign->sourceLocation = loc;
+					assign->target = std::move(target);
+					assign->value = std::move(decode);
+					decodeStmts.push_back(std::move(assign));
+				}
+				if (!decodeStmts.empty())
+					getter.body->body.insert(
+						getter.body->body.begin(),
+						std::make_move_iterator(decodeStmts.begin()),
+						std::make_move_iterator(decodeStmts.end())
+					);
+			}
+
 			contract->methods.push_back(std::move(getter));
 		}
 	}

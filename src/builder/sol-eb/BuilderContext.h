@@ -27,6 +27,7 @@ namespace puyasol::builder
 {
 class TypeMapper;
 class StorageMapper;
+class TransientStorage;
 }
 
 namespace puyasol::builder::eb
@@ -51,6 +52,10 @@ struct BuilderContext
 	// ── Compiler services ──
 	TypeMapper& typeMapper;
 	StorageMapper& storageMapper;
+	/// Transient storage manager — non-null only when the current contract
+	/// has transient state variables. Used to route reads/writes of
+	/// `transient` state vars to a per-transaction blob.
+	TransientStorage* transientStorage = nullptr;
 	std::string const& sourceFile;
 	std::string const& contractName;
 	/// The contract currently being built — used e.g. to look up the
