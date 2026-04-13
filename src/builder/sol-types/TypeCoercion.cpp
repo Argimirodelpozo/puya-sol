@@ -409,10 +409,15 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 		return arr;
 	}
 
-	// ARC4StaticArray → BytesConstant of correct encoded size (zero-filled)
+	// ARC4StaticArray → BytesConstant of correct encoded size (zero-filled).
+	// Puya's pushbytes has a ~4KB cap; for anything bigger, emit bzero(N) so
+	// the zero region is allocated at runtime instead of baked into the bytecode.
 	if (_type->kind() == awst::WTypeKind::ARC4StaticArray)
 	{
 		int encodedSize = computeEncodedElementSize(_type);
+		if (encodedSize > kLargeBytesRuntimeThreshold)
+			return makeZeroBytesRuntime(encodedSize, _type, _loc);
+
 		auto val = std::make_shared<awst::BytesConstant>();
 		val->sourceLocation = _loc;
 		val->wtype = _type;
@@ -446,7 +451,12 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 	else if (auto const* bytesType = dynamic_cast<awst::BytesWType const*>(_type))
 	{
 		if (bytesType->length().has_value())
-			val->value = std::vector<uint8_t>(static_cast<size_t>(bytesType->length().value()), 0);
+		{
+			int n = static_cast<int>(*bytesType->length());
+			if (n > kLargeBytesRuntimeThreshold)
+				return makeZeroBytesRuntime(n, _type, _loc);
+			val->value = std::vector<uint8_t>(static_cast<size_t>(n), 0);
+		}
 		else
 			val->value = {};
 	}
@@ -454,6 +464,49 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 		val->value = {};
 
 	return val;
+}
+
+std::shared_ptr<awst::Expression> TypeCoercion::makeZeroBytesRuntime(
+	int _n,
+	awst::WType const* _targetType,
+	awst::SourceLocation const& _loc)
+{
+	auto size = std::make_shared<awst::IntegerConstant>();
+	size->sourceLocation = _loc;
+	size->wtype = awst::WType::uint64Type();
+	size->value = std::to_string(_n);
+
+	auto bzero = std::make_shared<awst::IntrinsicCall>();
+	bzero->sourceLocation = _loc;
+	bzero->wtype = awst::WType::bytesType();
+	bzero->opCode = "bzero";
+	bzero->stackArgs.push_back(std::move(size));
+
+	if (_targetType == awst::WType::bytesType())
+		return bzero;
+
+	auto cast = std::make_shared<awst::ReinterpretCast>();
+	cast->sourceLocation = _loc;
+	cast->wtype = _targetType;
+	cast->expr = std::move(bzero);
+	return cast;
+}
+
+std::shared_ptr<awst::Expression> TypeCoercion::prependArc4LengthHeader(
+	std::shared_ptr<awst::Expression> _expr,
+	int64_t /*_length*/,
+	awst::WType const* _targetType,
+	awst::SourceLocation const& _loc)
+{
+	// Delegate to puya's ConvertArray lowering — it already knows how to add
+	// the uint16 length header when going from ARC4StaticArray to
+	// ARC4DynamicArray (and how to strip it in the reverse direction),
+	// so we don't need to synthesise concat+reinterpret by hand.
+	auto convert = std::make_shared<awst::ConvertArray>();
+	convert->sourceLocation = _loc;
+	convert->wtype = _targetType;
+	convert->expr = std::move(_expr);
+	return convert;
 }
 
 int TypeCoercion::computeEncodedElementSize(awst::WType const* _type)
@@ -536,6 +589,23 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 	_expr = implicitNumericCast(std::move(_expr), _targetType, _loc);
 	if (_expr->wtype == _targetType)
 		return _expr;
+
+	// ARC4StaticArray<T, N> → ARC4DynamicArray<T>: prepend 2-byte length header.
+	// Solidity allows implicit static→dynamic array conversions on assignment
+	// (e.g. `uint8[] storage x = new uint8[5]`). Puya's ARC4 pipeline keeps
+	// these as distinct types, so we materialise the conversion via a
+	// ConvertArray node — puya lowers it to the right header+body layout.
+	if (auto const* dynArr = dynamic_cast<awst::ARC4DynamicArray const*>(_targetType))
+	{
+		if (auto const* statArr = dynamic_cast<awst::ARC4StaticArray const*>(_expr->wtype))
+		{
+			// Element types aren't interned between TypeMapper calls, so we
+			// compare structurally on the element name rather than pointer.
+			if (statArr->elementType() && dynArr->elementType()
+				&& statArr->elementType()->name() == dynArr->elementType()->name())
+				return prependArc4LengthHeader(std::move(_expr), statArr->arraySize(), _targetType, _loc);
+		}
+	}
 
 	// IntegerConstant → BytesConstant(bytes[N])
 	if (_targetType->kind() == awst::WTypeKind::Bytes)

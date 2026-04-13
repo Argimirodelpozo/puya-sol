@@ -90,6 +90,33 @@ public:
 	/// Compute the fixed encoded byte size of an ARC4 type.
 	/// Returns 0 for variable-length types.
 	static int computeEncodedElementSize(awst::WType const* _type);
+
+private:
+	/// Emit `bzero(_n)` wrapped in a ReinterpretCast to _targetType so the
+	/// zero region is allocated at runtime instead of baked into a pushbytes
+	/// constant. Used for default values of large ARC4 static arrays and
+	/// fixed-size byte arrays, whose bytecode-inlined form would exceed
+	/// puya's ~4KB bytes constant limit.
+	static std::shared_ptr<awst::Expression> makeZeroBytesRuntime(
+		int _n,
+		awst::WType const* _targetType,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Convert a fixed-size ARC4 static array to a dynamic ARC4 array by
+	/// prepending a 2-byte big-endian length header with the statically
+	/// known element count.
+	static std::shared_ptr<awst::Expression> prependArc4LengthHeader(
+		std::shared_ptr<awst::Expression> _expr,
+		int64_t _length,
+		awst::WType const* _targetType,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Threshold (bytes) above which default zero values are emitted as
+	/// runtime `bzero(N)` instead of a baked-in BytesConstant. Chosen under
+	/// the AVM/puya ~4KB pushbytes cap with headroom for surrounding ops.
+	static constexpr int kLargeBytesRuntimeThreshold = 2048;
 };
 
 } // namespace puyasol::builder

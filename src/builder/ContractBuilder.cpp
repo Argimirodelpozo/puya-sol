@@ -1977,7 +1977,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 									if (elemT)
 									{
 										if (auto const* uintN = dynamic_cast<awst::ARC4UIntN const*>(elemT))
-											elemSize = std::max(1u, uintN->n() / 8);
+											elemSize = std::max(1u, static_cast<unsigned>(uintN->n() / 8));
 										else if (elemT->kind() == awst::WTypeKind::Bytes)
 										{
 											auto const* bw = dynamic_cast<awst::BytesWType const*>(elemT);

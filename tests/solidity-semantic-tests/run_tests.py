@@ -139,6 +139,13 @@ def _split_multi_source(sol_path):
             file_name = name if name.endswith(".sol") else name + ".sol"
             (tmp_dir / file_name).parent.mkdir(parents=True, exist_ok=True)
             (tmp_dir / file_name).write_text(body)
+            # Solidity `import "A"` resolves to the literal name first. If the
+            # declared section is `==== Source: A ====` (no .sol suffix), imports
+            # reference it as just "A" — write a second copy under the bare name
+            # so the FileReader finds it either way.
+            if not name.endswith(".sol"):
+                (tmp_dir / name).parent.mkdir(parents=True, exist_ok=True)
+                (tmp_dir / name).write_text(body)
             all_sources.append(tmp_dir / file_name)
             last_name = name
         main = last_name + ".sol" if not last_name.endswith(".sol") else last_name
@@ -345,6 +352,19 @@ def _encode_ctor_arg(val_str: str) -> bytes:
     return s.encode('utf-8')
 
 
+_INT_TYPE_RE = re.compile(r'\bint(\d+)\b')
+
+
+def _abi_safe_type(type_str: str) -> str:
+    """Rewrite signed int<N> → uint<N> so algosdk's ABIType parser accepts it.
+    Signed and unsigned ints share identical ABI structure (same byte width);
+    only the value decoder needs the sign distinction, which callers handle
+    separately. Used when we only need the structural information (array
+    dimensions, tuple layout) rather than value semantics.
+    """
+    return _INT_TYPE_RE.sub(lambda m: 'uint' + m.group(1), type_str)
+
+
 def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0) -> au.AppClient | None:
     """Deploy a compiled contract. Returns AppClient or None.
     ctor_args: list of raw string args from constructor() call, or None.
@@ -443,7 +463,12 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
                     flat_vals = [parse_value(a) for a in ctor_args]
                     flat_idx = 0
                     for arg_spec in _postinit_method.args:
-                        arg_type = _abi.ABIType.from_string(str(arg_spec.type))
+                        # algosdk's ABIType rejects signed int<N> types (supports
+                        # only uint<N> even though the ARC-4 spec allows both).
+                        # Swap int<N> → uint<N> purely for structural parsing;
+                        # the value encoding is identical.
+                        _type_str = _abi_safe_type(str(arg_spec.type))
+                        arg_type = _abi.ABIType.from_string(_type_str)
                         if isinstance(arg_type, _abi.ArrayStaticType):
                             n = arg_type.static_length
                             arr_vals = flat_vals[flat_idx:flat_idx + n]
@@ -603,7 +628,7 @@ def _call_with_extra_budget(app, method, args, extra_calls=15):
     if hasattr(app, '_box_refs') and app._box_refs:
         box_refs = [AlgoBoxRef(app_index=0, name=ref[1]) for ref in app._box_refs]
 
-    abi_method = Method.from_signature(method)
+    abi_method = Method.from_signature(_abi_safe_type(method))
     sim_atc.add_method_call(
         app_id=app_id, method=abi_method, sender=sender,
         sp=sim_sp, signer=signer, method_args=args if args else [],
@@ -1159,7 +1184,7 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                 _sim_sp.fee = _fee
                 _sim_atc = _ATC()
                 _sim_atc.add_method_call(
-                    app_id=app.app_id, method=_AbiMethod.from_signature(method),
+                    app_id=app.app_id, method=_AbiMethod.from_signature(_abi_safe_type(method)),
                     sender=_sender, sp=_sim_sp, signer=_signer,
                     method_args=args if args else [],
                     note=_os.urandom(8), boxes=_boxes,
@@ -1181,7 +1206,7 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                 _sp.fee = _fee
                 _atc = _ATC()
                 _atc.add_method_call(
-                    app_id=app.app_id, method=_AbiMethod.from_signature(method),
+                    app_id=app.app_id, method=_AbiMethod.from_signature(_abi_safe_type(method)),
                     sender=_sender, sp=_sp, signer=_signer,
                     method_args=args if args else [],
                     note=_os.urandom(8), boxes=_boxes,
@@ -1438,7 +1463,7 @@ def _is_arc4_selector_match(actual, expected, method_sig):
     # Compute the ARC4 selector for the currently dispatched method.
     try:
         from algosdk.abi import Method as _Mm
-        m = _Mm.from_signature(method_sig)
+        m = _Mm.from_signature(_abi_safe_type(method_sig))
         selector = m.get_selector()
     except Exception:
         return False
