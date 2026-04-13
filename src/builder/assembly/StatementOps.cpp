@@ -137,10 +137,18 @@ void AssemblyBuilder::buildStatement(
 			}
 			else if constexpr (std::is_same_v<T, solidity::yul::Leave>)
 			{
-				// Leave = return from assembly function; handled as a return
-				auto ret = std::make_shared<awst::ReturnStatement>();
-				ret->sourceLocation = makeLoc(_node.debugData);
-				_out.push_back(std::move(ret));
+				// Leave = early exit from a Yul function. We inline Yul
+				// functions wrapped in `while true { … break }`, so a
+				// `leave` is just a break out of that wrapper loop.
+				// Outside of an inlined function it has no meaningful
+				// translation — emit a no-op (Solidity wouldn't even
+				// parse this case).
+				if (m_inlineDepth > 0)
+				{
+					auto stmt = std::make_shared<awst::LoopExit>();
+					stmt->sourceLocation = makeLoc(_node.debugData);
+					_out.push_back(std::move(stmt));
+				}
 			}
 			else if constexpr (std::is_same_v<T, solidity::yul::Switch>)
 			{
@@ -981,9 +989,75 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 		_out.push_back(std::move(assign));
 	}
 
-	// Translate the function body inline
+	// Translate the function body inline. Yul allows `leave` to early-exit
+	// the function; we wrap the body in a single-iteration `while true { … }`
+	// loop so that `leave` (translated to LoopExit) breaks out of just the
+	// inlined body, without affecting any enclosing Solidity-level loops.
+	bool hasLeave = false;
+	std::function<void(std::vector<solidity::yul::Statement> const&)> scanLeave =
+		[&](std::vector<solidity::yul::Statement> const& stmts)
+	{
+		for (auto const& s: stmts)
+		{
+			if (hasLeave) return;
+			if (std::holds_alternative<solidity::yul::Leave>(s))
+			{
+				hasLeave = true;
+				return;
+			}
+			if (auto const* blk = std::get_if<solidity::yul::Block>(&s))
+				scanLeave(blk->statements);
+			else if (auto const* iff = std::get_if<solidity::yul::If>(&s))
+				scanLeave(iff->body.statements);
+			else if (auto const* sw = std::get_if<solidity::yul::Switch>(&s))
+				for (auto const& c: sw->cases)
+					scanLeave(c.body.statements);
+		}
+	};
+	scanLeave(funcDef.body.statements);
+
+	std::vector<std::shared_ptr<awst::Statement>> bodyStmts;
+	++m_inlineDepth;
 	for (auto const& stmt: funcDef.body.statements)
-		buildStatement(stmt, _out);
+	{
+		buildStatement(stmt, bodyStmts);
+		// Top-level `leave` makes the rest of the function body
+		// unreachable; puya rejects unreachable code outright. Stop
+		// translating once we see the top-level leave (nested leaves
+		// inside if/switch keep emitting subsequent statements).
+		if (std::holds_alternative<solidity::yul::Leave>(stmt))
+			break;
+	}
+	--m_inlineDepth;
+
+	if (hasLeave)
+	{
+		// Wrap in `while true { body; break; }` so leave→LoopExit works.
+		auto loop = std::make_shared<awst::WhileLoop>();
+		loop->sourceLocation = _loc;
+
+		auto cond = std::make_shared<awst::BoolConstant>();
+		cond->sourceLocation = _loc;
+		cond->wtype = awst::WType::boolType();
+		cond->value = true;
+		loop->condition = std::move(cond);
+
+		auto block = std::make_shared<awst::Block>();
+		block->sourceLocation = _loc;
+		block->body = std::move(bodyStmts);
+
+		auto exit = std::make_shared<awst::LoopExit>();
+		exit->sourceLocation = _loc;
+		block->body.push_back(std::move(exit));
+
+		loop->loopBody = std::move(block);
+		_out.push_back(std::move(loop));
+	}
+	else
+	{
+		for (auto& s: bodyStmts)
+			_out.push_back(std::move(s));
+	}
 
 	return nullptr;
 }

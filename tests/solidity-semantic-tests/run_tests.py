@@ -115,12 +115,28 @@ def _split_multi_source(sol_path):
             except Exception:
                 upstream_test_dir = upstream_root
 
+            # Two forms:
+            #   ==== ExternalSource: path/file.sol ====
+            #   ==== ExternalSource: alias.sol=path/file.sol ====
+            # In the alias form, the file is copied so that the current
+            # test compiles with `import "alias.sol"`.
             ext_re = re.compile(r'^==== ExternalSource: (.+?) ====$', re.MULTILINE)
             for m in ext_re.finditer(content):
-                ext_path = m.group(1).strip()
+                raw = m.group(1).strip()
+                if "=" in raw:
+                    alias, ext_path = raw.split("=", 1)
+                    alias = alias.strip()
+                    ext_path = ext_path.strip()
+                else:
+                    alias = raw
+                    ext_path = raw
                 src = upstream_test_dir / ext_path
                 if src.exists():
-                    dest = tmp_dir / ext_path
+                    # Aliases like "/ExtSource.sol" would resolve to the
+                    # filesystem root if joined naïvely; strip the leading
+                    # slash so the destination lands inside tmp_dir.
+                    rel_alias = alias.lstrip("/")
+                    dest = tmp_dir / rel_alias
                     dest.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy(src, dest)
                     all_sources.append(dest)
@@ -129,7 +145,9 @@ def _split_multi_source(sol_path):
         parts = re.split(r'^==== Source: (.+?) ====$', content, flags=re.MULTILINE)
         if len(parts) < 3:
             # Only ExternalSource, no inline Source: use the original file
-            (tmp_dir / sol_path.name).write_text(content)
+            stripped = re.sub(
+                r'^==== ExternalSource: .+? ====\n', '', content, flags=re.MULTILINE)
+            (tmp_dir / sol_path.name).write_text(stripped)
             return tmp_dir / sol_path.name, all_sources + [tmp_dir / sol_path.name], tmp_dir
         for i in range(1, len(parts), 2):
             name = parts[i].strip()
@@ -151,10 +169,14 @@ def _split_multi_source(sol_path):
         main = last_name + ".sol" if not last_name.endswith(".sol") else last_name
         return tmp_dir / main, all_sources, tmp_dir
     else:
-        # ExternalSource only — use the first external as main
-        if all_sources:
-            return all_sources[-1], all_sources, tmp_dir
-        return sol_path, [sol_path], None
+        # ExternalSource only — write the original source (with directives
+        # stripped) as the main file, so any `import` / `contract` code in
+        # the fixture body is what actually compiles.
+        stripped = re.sub(
+            r'^==== ExternalSource: .+? ====\n', '', content, flags=re.MULTILINE)
+        (tmp_dir / sol_path.name).write_text(stripped)
+        main_path = tmp_dir / sol_path.name
+        return main_path, all_sources + [main_path], tmp_dir
 
 
 def compile_test(sol_path: Path, out_dir: Path, ensure_budget: dict = None, via_yul_behavior: bool = False) -> dict | None:
@@ -1558,6 +1580,23 @@ def _compare_values(actual, expected):
                 return True
             if actual_bytes.rstrip(b'\x00') == expected.rstrip(b'\x00'):
                 return True
+            return False
+        if isinstance(actual, int):
+            # bytesN return values come back through algosdk decoded as
+            # an unsigned integer (the spec rewrites them to uintN). The
+            # raw bytes the contract emitted compare bit-for-bit to the
+            # expected payload; reinterpret both sides as integers.
+            try:
+                expected_int = int.from_bytes(expected, 'big')
+                if expected_int == actual:
+                    return True
+                # Right-pad the smaller side to 32 bytes if widths differ.
+                if len(expected) < 32:
+                    padded = expected + b'\x00' * (32 - len(expected))
+                    if int.from_bytes(padded, 'big') == actual:
+                        return True
+            except Exception:
+                pass
             return False
     if isinstance(expected, int) and isinstance(actual, str):
         # Address return: Algorand address string → decode to 32 bytes → int

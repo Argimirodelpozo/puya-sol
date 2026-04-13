@@ -564,6 +564,13 @@ private:
 	/// Collected assembly function definitions (populated during first pass).
 	std::map<std::string, solidity::yul::FunctionDefinition const*> m_asmFunctions;
 
+	/// Depth counter incremented while inlining a user-defined Yul function.
+	/// When > 0, `leave` statements are translated as `LoopExit` (so they
+	/// break out of the surrounding while-true loop wrapping the inlined
+	/// body) instead of as a Solidity `return`, which would exit the outer
+	/// function with no value and crash the puya backend.
+	int m_inlineDepth = 0;
+
 	/// Handle a call to a user-defined assembly function by inlining it.
 	std::shared_ptr<awst::Expression> handleUserFunctionCall(
 		std::string const& _name,

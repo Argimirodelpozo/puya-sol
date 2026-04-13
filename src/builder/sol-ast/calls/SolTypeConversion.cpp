@@ -337,7 +337,11 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 		return arr;
 	}
 
-	// bytes[M] → bytes[N]: pad or truncate
+	// bytes[M] → bytes[N]: pad or truncate. Also handles dynamic `bytes`
+	// → bytes[N] (sourceWidth == 0 means runtime length); we need to
+	// extract3 the first N bytes at runtime instead of falling through
+	// to a plain ReinterpretCast (which produces a length mismatch in
+	// puya for fixed bytes targets).
 	if (sourceIsBytes && targetIsBytes)
 	{
 		int sourceWidth = 0, targetWidth = 0;
@@ -349,6 +353,68 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 		if (!targetWidth)
 			if (auto const* tw = dynamic_cast<awst::BytesWType const*>(_targetType))
 				targetWidth = tw->length() ? *tw->length() : 0;
+
+		// Dynamic bytes → fixed bytes[N]: Solidity right-pads if the source
+		// has fewer than N bytes and truncates otherwise. Build:
+		//   let m = min(len(src), N)
+		//   extract3(concat(src, bzero(N)), 0, N)
+		// `concat(src, bzero(N))` guarantees there is always at least N
+		// bytes available so the extract3 doesn't go out of bounds when
+		// the input is shorter than the target width. The leading N bytes
+		// of the result are exactly the source's first N bytes (zero-padded
+		// on the right if the source was shorter), matching Solidity's
+		// `bytesN(bytes_dynamic)` semantics.
+		if (targetWidth > 0 && sourceWidth == 0)
+		{
+			auto srcBytes = std::move(converted);
+			if (srcBytes->wtype != awst::WType::bytesType())
+			{
+				auto toBytes = std::make_shared<awst::ReinterpretCast>();
+				toBytes->sourceLocation = m_loc;
+				toBytes->wtype = awst::WType::bytesType();
+				toBytes->expr = std::move(srcBytes);
+				srcBytes = std::move(toBytes);
+			}
+
+			auto padSize = std::make_shared<awst::IntegerConstant>();
+			padSize->sourceLocation = m_loc;
+			padSize->wtype = awst::WType::uint64Type();
+			padSize->value = std::to_string(targetWidth);
+			auto pad = std::make_shared<awst::IntrinsicCall>();
+			pad->sourceLocation = m_loc;
+			pad->wtype = awst::WType::bytesType();
+			pad->opCode = "bzero";
+			pad->stackArgs.push_back(std::move(padSize));
+
+			auto cat = std::make_shared<awst::IntrinsicCall>();
+			cat->sourceLocation = m_loc;
+			cat->wtype = awst::WType::bytesType();
+			cat->opCode = "concat";
+			cat->stackArgs.push_back(std::move(srcBytes));
+			cat->stackArgs.push_back(std::move(pad));
+
+			auto zero = std::make_shared<awst::IntegerConstant>();
+			zero->sourceLocation = m_loc;
+			zero->wtype = awst::WType::uint64Type();
+			zero->value = "0";
+			auto width = std::make_shared<awst::IntegerConstant>();
+			width->sourceLocation = m_loc;
+			width->wtype = awst::WType::uint64Type();
+			width->value = std::to_string(targetWidth);
+			auto extract = std::make_shared<awst::IntrinsicCall>();
+			extract->sourceLocation = m_loc;
+			extract->wtype = awst::WType::bytesType();
+			extract->opCode = "extract3";
+			extract->stackArgs.push_back(std::move(cat));
+			extract->stackArgs.push_back(std::move(zero));
+			extract->stackArgs.push_back(std::move(width));
+
+			auto finalCast = std::make_shared<awst::ReinterpretCast>();
+			finalCast->sourceLocation = m_loc;
+			finalCast->wtype = _targetType;
+			finalCast->expr = std::move(extract);
+			return finalCast;
+		}
 
 		if (targetWidth > 0 && sourceWidth > 0 && targetWidth != sourceWidth)
 		{
