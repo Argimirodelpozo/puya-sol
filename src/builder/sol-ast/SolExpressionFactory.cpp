@@ -125,6 +125,9 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 	case Kind::ECRecover:
 		return std::make_unique<SolBuiltinCall>(m_ctx, _node, "ecrecover");
 
+	case Kind::ERC7201:
+		return std::make_unique<SolBuiltinCall>(m_ctx, _node, "erc7201");
+
 	// ── ABI ──
 	case Kind::ABIEncode:
 	case Kind::ABIEncodePacked:

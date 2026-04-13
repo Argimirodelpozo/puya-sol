@@ -2,6 +2,11 @@
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 
+#include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTUtils.h>
+
+#include <sstream>
+
 namespace puyasol::builder::sol_ast
 {
 
@@ -19,6 +24,33 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 	// blockhash is AVM-specific, handle separately
 	if (m_builtinName == "blockhash")
 		return handleBlockhash();
+
+	// erc7201 — evaluate the ERC-7201 namespace slot at compile time when
+	// possible (the Solidity front-end does the heavy lifting via
+	// erc7201CompileTimeValue).  Emit the resulting u256 as a biguint
+	// IntegerConstant; anything non-constant is unreachable because
+	// `erc7201(<non-literal>)` isn't allowed.
+	if (m_builtinName == "erc7201")
+	{
+		if (auto slotOpt = solidity::frontend::erc7201CompileTimeValue(m_call))
+		{
+			std::ostringstream oss;
+			oss << *slotOpt;
+			auto ic = std::make_shared<awst::IntegerConstant>();
+			ic->sourceLocation = m_loc;
+			ic->wtype = awst::WType::biguintType();
+			ic->value = oss.str();
+			return ic;
+		}
+		Logger::instance().warning(
+			"erc7201() with a non-constant argument is not supported; "
+			"returning 0", m_loc);
+		auto ic = std::make_shared<awst::IntegerConstant>();
+		ic->sourceLocation = m_loc;
+		ic->wtype = awst::WType::biguintType();
+		ic->value = "0";
+		return ic;
+	}
 
 	// All other builtins: delegate to BuiltinCallableRegistry
 	eb::BuiltinCallableRegistry registry;
