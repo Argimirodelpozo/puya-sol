@@ -1214,12 +1214,22 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncode(
 		return std::make_unique<GenericAbiResult>(_ctx, std::move(e));
 	}
 
-	// Check if any argument is dynamically encoded
+	// Check if any argument is dynamically encoded.
+	// StringLiteralType is static per Solidity's type system, but its
+	// mobileType (`string memory`) is dynamic. abi.encode("...") treats
+	// the literal as a string and emits head/tail encoding, so we classify
+	// string literals as dynamic here.
+	auto isDynArg = [](solidity::frontend::Type const* _t) -> bool {
+		if (!_t) return false;
+		if (_t->isDynamicallyEncoded()) return true;
+		if (_t->category() == solidity::frontend::Type::Category::StringLiteral)
+			return true;
+		return false;
+	};
 	bool hasDynamic = false;
 	for (auto const& arg : args)
 	{
-		auto const* solType = arg->annotation().type;
-		if (solType && solType->isDynamicallyEncoded())
+		if (isDynArg(arg->annotation().type))
 		{
 			hasDynamic = true;
 			break;
@@ -1258,7 +1268,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncode(
 	for (size_t i = 0; i < numArgs; ++i)
 	{
 		auto const* solType = args[i]->annotation().type;
-		bool isDyn = solType && solType->isDynamicallyEncoded();
+		bool isDyn = isDynArg(solType);
 		auto expr = _ctx.buildExpr(*args[i]);
 
 		if (!isDyn)
@@ -1268,8 +1278,13 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncode(
 		}
 		else
 		{
-			// Dynamic: tail data + placeholder for offset
-			auto tail = encodeDynamicTail(_ctx, std::move(expr), solType, _loc);
+			// Dynamic: tail data + placeholder for offset.
+			// String literals need their mobile type (string memory) for
+			// encodeDynamicTail's ArrayType dispatch.
+			solidity::frontend::Type const* tailSolType = solType;
+			if (solType && solType->category() == solidity::frontend::Type::Category::StringLiteral)
+				tailSolType = solType->mobileType();
+			auto tail = encodeDynamicTail(_ctx, std::move(expr), tailSolType, _loc);
 			argInfos.push_back({true, nullptr, tail});
 		}
 	}
