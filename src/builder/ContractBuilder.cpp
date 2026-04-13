@@ -742,6 +742,66 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 					);
 				}
 			}
+			else if (dynamic_cast<solidity::frontend::ArrayType const*>(var->type())
+				&& dynamic_cast<solidity::frontend::ArrayType const*>(var->type())->isDynamicallySized()
+				&& !dynamic_cast<solidity::frontend::ArrayType const*>(var->type())->isByteArrayOrString()
+				&& getter.args.size() == 1)
+			{
+				// Dynamic array state var `T[] public array` → getter(uint256 i).
+				// The backing store is a SINGLE box containing the packed ARC4
+				// dynamic array (with length header); reading element i should
+				// use IndexExpression on the box, NOT a sha256-based mapping key.
+				auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(var->type());
+				auto* arrWType = m_typeMapper.map(arrType);
+				auto* elemARC4 = m_typeMapper.mapSolTypeToARC4(arrType->baseType());
+
+				auto boxKey = std::make_shared<awst::BytesConstant>();
+				boxKey->sourceLocation = loc;
+				boxKey->wtype = awst::WType::boxKeyType();
+				boxKey->encoding = awst::BytesEncoding::Utf8;
+				std::string vn = var->name();
+				boxKey->value = std::vector<uint8_t>(vn.begin(), vn.end());
+
+				auto boxExpr = std::make_shared<awst::BoxValueExpression>();
+				boxExpr->sourceLocation = loc;
+				boxExpr->wtype = arrWType;
+				boxExpr->key = boxKey;
+				boxExpr->existsAssertionMessage = std::nullopt;
+
+				auto defaultVal = builder::TypeCoercion::makeDefaultValue(arrWType, loc);
+				auto sg = std::make_shared<awst::StateGet>();
+				sg->sourceLocation = loc;
+				sg->wtype = arrWType;
+				sg->field = boxExpr;
+				sg->defaultValue = defaultVal;
+
+				auto idxRef = std::make_shared<awst::VarExpression>();
+				idxRef->sourceLocation = loc;
+				idxRef->wtype = getter.args[0].wtype;
+				idxRef->name = getter.args[0].name;
+				auto idx = ExpressionBuilder::implicitNumericCast(
+					idxRef, awst::WType::uint64Type(), loc);
+
+				auto indexExpr = std::make_shared<awst::IndexExpression>();
+				indexExpr->sourceLocation = loc;
+				indexExpr->wtype = elemARC4;
+				indexExpr->base = std::move(sg);
+				indexExpr->index = std::move(idx);
+
+				// Decode ARC4 element back to native type (e.g. arc4.uint256 → biguint)
+				auto* nativeElem = m_typeMapper.map(arrType->baseType());
+				std::shared_ptr<awst::Expression> result = std::move(indexExpr);
+				if (elemARC4 != nativeElem && elemARC4->name() != nativeElem->name())
+				{
+					auto decode = std::make_shared<awst::ARC4Decode>();
+					decode->sourceLocation = loc;
+					decode->wtype = nativeElem;
+					decode->value = std::move(result);
+					result = std::move(decode);
+				}
+
+				readExpr = std::move(result);
+			}
 			else
 			{
 				// Mapping/array getter — build box read with key from arguments.
