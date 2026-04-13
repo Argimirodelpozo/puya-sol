@@ -352,29 +352,48 @@ def _encode_ctor_arg(val_str: str) -> bytes:
     return s.encode('utf-8')
 
 
-_INT_TYPE_RE = re.compile(r'\bint(\d+)\b')
+def _install_signed_int_abi_support() -> None:
+    """Teach algosdk's ABIType parser about signed `int<N>` types.
 
+    ARC-4 allows both signed and unsigned int<N>, but algosdk's
+    `ABIType.from_string` only handles `uint<N>`. Without this patch
+    every contract that has an `int<N>` parameter or return type
+    breaks at deploy time with "cannot convert intN to an ABI type",
+    and the selector hash for `f(int16[])` can't be computed.
 
-def _abi_safe_type(type_str: str) -> str:
-    """Rewrite signed int<N> → uint<N> so algosdk's ABIType parser accepts it.
-    Signed and unsigned ints share identical ABI structure (same byte width);
-    only the value decoder needs the sign distinction, which callers handle
-    separately. Used when we only need the structural information (array
-    dimensions, tuple layout) rather than value semantics.
+    The encoding for a signed int is identical to its unsigned twin
+    (N bytes, two's-complement), so we subclass `UintType` and only
+    override `__str__` so the round-trip retains the `int` spelling.
+    The runner's `_compare_values` handles sign interpretation
+    separately when comparing returned values.
     """
-    return _INT_TYPE_RE.sub(lambda m: 'uint' + m.group(1), type_str)
+    from algosdk.abi import base_type as _base
+    from algosdk.abi.uint_type import UintType as _UintType
+
+    class _SignedIntType(_UintType):
+        def __str__(self) -> str:  # noqa: D401
+            return f"int{self.bit_size}"
+
+    _orig_from_string = _base.ABIType.from_string
+
+    @staticmethod
+    def _patched_from_string(s: str):
+        if isinstance(s, str) and s.startswith("int") and len(s) > 3 and s[3:].isdecimal():
+            return _SignedIntType(int(s[3:]))
+        return _orig_from_string(s)
+
+    _base.ABIType.from_string = _patched_from_string  # type: ignore[method-assign]
+
+
+_install_signed_int_abi_support()
 
 
 def _load_arc56(arc56_path: Path) -> au.Arc56Contract:
-    """Load an ARC56 contract spec, normalising signed int<N> → uint<N>.
-    algokit_utils' Arc56Contract.from_json calls into algosdk's ABIType
-    parser, which rejects signed int<N> types even though ARC-4 allows them.
-    Swap them in the source string before parsing; values are encoded
-    identically and the test runner handles the sign distinction in
-    `_compare_values` separately.
+    """Load an ARC56 contract spec — `_install_signed_int_abi_support`
+    above teaches algosdk to round-trip `int<N>` types so signatures and
+    selectors stay accurate.
     """
-    raw = arc56_path.read_text()
-    return au.Arc56Contract.from_json(_abi_safe_type(raw))
+    return au.Arc56Contract.from_json(arc56_path.read_text())
 
 
 def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0) -> au.AppClient | None:
@@ -475,12 +494,7 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
                     flat_vals = [parse_value(a) for a in ctor_args]
                     flat_idx = 0
                     for arg_spec in _postinit_method.args:
-                        # algosdk's ABIType rejects signed int<N> types (supports
-                        # only uint<N> even though the ARC-4 spec allows both).
-                        # Swap int<N> → uint<N> purely for structural parsing;
-                        # the value encoding is identical.
-                        _type_str = _abi_safe_type(str(arg_spec.type))
-                        arg_type = _abi.ABIType.from_string(_type_str)
+                        arg_type = _abi.ABIType.from_string(str(arg_spec.type))
                         if isinstance(arg_type, _abi.ArrayStaticType):
                             n = arg_type.static_length
                             arr_vals = flat_vals[flat_idx:flat_idx + n]
@@ -640,7 +654,7 @@ def _call_with_extra_budget(app, method, args, extra_calls=15):
     if hasattr(app, '_box_refs') and app._box_refs:
         box_refs = [AlgoBoxRef(app_index=0, name=ref[1]) for ref in app._box_refs]
 
-    abi_method = Method.from_signature(_abi_safe_type(method))
+    abi_method = Method.from_signature(method)
     sim_atc.add_method_call(
         app_id=app_id, method=abi_method, sender=sender,
         sp=sim_sp, signer=signer, method_args=args if args else [],
@@ -1196,7 +1210,7 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                 _sim_sp.fee = _fee
                 _sim_atc = _ATC()
                 _sim_atc.add_method_call(
-                    app_id=app.app_id, method=_AbiMethod.from_signature(_abi_safe_type(method)),
+                    app_id=app.app_id, method=_AbiMethod.from_signature(method),
                     sender=_sender, sp=_sim_sp, signer=_signer,
                     method_args=args if args else [],
                     note=_os.urandom(8), boxes=_boxes,
@@ -1218,7 +1232,7 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                 _sp.fee = _fee
                 _atc = _ATC()
                 _atc.add_method_call(
-                    app_id=app.app_id, method=_AbiMethod.from_signature(_abi_safe_type(method)),
+                    app_id=app.app_id, method=_AbiMethod.from_signature(method),
                     sender=_sender, sp=_sp, signer=_signer,
                     method_args=args if args else [],
                     note=_os.urandom(8), boxes=_boxes,
@@ -1475,7 +1489,7 @@ def _is_arc4_selector_match(actual, expected, method_sig):
     # Compute the ARC4 selector for the currently dispatched method.
     try:
         from algosdk.abi import Method as _Mm
-        m = _Mm.from_signature(_abi_safe_type(method_sig))
+        m = _Mm.from_signature(method_sig)
         selector = m.get_selector()
     except Exception:
         return False
@@ -1509,6 +1523,12 @@ def _compare_values(actual, expected):
                         return True
             return False
         if isinstance(actual, (list, tuple)):
+            # Single-element static array (e.g. `int16[1]` decoded to [n])
+            # compares as the scalar `n`. Recurse so the negative
+            # twos-complement fallback above also applies to such arrays.
+            if len(actual) == 1 and isinstance(actual[0], int):
+                if _compare_values(actual[0], expected):
+                    return True
             try:
                 actual_bytes = bytes(actual)
                 actual_int = int.from_bytes(actual_bytes, 'big')
