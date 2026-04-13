@@ -136,6 +136,19 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		return cast;
 	}
 
+	// msg.sig → first 4 bytes of msg.data. In ARC4 routing the selector is
+	// always ApplicationArgs[0], which is already 4 bytes, so we emit the
+	// same txna read and type it as bytes4.
+	if (baseName == "msg" && member == "sig")
+	{
+		auto appArgs0 = std::make_shared<awst::IntrinsicCall>();
+		appArgs0->sourceLocation = m_loc;
+		appArgs0->wtype = m_ctx.typeMapper.createType<awst::BytesWType>(4);
+		appArgs0->opCode = "txna";
+		appArgs0->immediates = {std::string("ApplicationArgs"), 0};
+		return appArgs0;
+	}
+
 	// msg.data → conditional: NumAppArgs > 0 ? ApplicationArgs[0] : bzero(0)
 	// Handles bare calls where no ApplicationArgs are provided.
 	if (baseName == "msg" && member == "data")
