@@ -365,12 +365,24 @@ def _abi_safe_type(type_str: str) -> str:
     return _INT_TYPE_RE.sub(lambda m: 'uint' + m.group(1), type_str)
 
 
+def _load_arc56(arc56_path: Path) -> au.Arc56Contract:
+    """Load an ARC56 contract spec, normalising signed int<N> → uint<N>.
+    algokit_utils' Arc56Contract.from_json calls into algosdk's ABIType
+    parser, which rejects signed int<N> types even though ARC-4 allows them.
+    Swap them in the source string before parsing; values are encoded
+    identically and the test runner handles the sign distinction in
+    `_compare_values` separately.
+    """
+    raw = arc56_path.read_text()
+    return au.Arc56Contract.from_json(_abi_safe_type(raw))
+
+
 def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0) -> au.AppClient | None:
     """Deploy a compiled contract. Returns AppClient or None.
     ctor_args: list of raw string args from constructor() call, or None.
     fund_amount: value in wei/microAlgos to fund beyond minimum balance."""
     try:
-        app_spec = au.Arc56Contract.from_json(artifacts["arc56"].read_text())
+        app_spec = _load_arc56(artifacts["arc56"])
         algod = localnet.client.algod
 
         approval_bin = encoding.base64.b64decode(
@@ -1480,7 +1492,22 @@ def _compare_values(actual, expected):
         if isinstance(actual, bool):
             return (1 if actual else 0) == expected
         if isinstance(actual, int):
-            return actual == expected
+            if actual == expected:
+                return True
+            # Signed-int test fixtures encode negative expected values as
+            # Python negatives (e.g. -1) but the runtime decodes the slot
+            # as an unsigned integer (since `_load_arc56` rewrites int<N>
+            # → uint<N> in the spec). Treat the two as equivalent when
+            # `actual` is the unsigned twos-complement of `expected` for
+            # any standard signed Solidity bit width.
+            if expected < 0:
+                for bits in (8, 16, 24, 32, 40, 48, 56, 64,
+                             72, 80, 88, 96, 104, 112, 120, 128,
+                             136, 144, 152, 160, 168, 176, 184, 192,
+                             200, 208, 216, 224, 232, 240, 248, 256):
+                    if actual == expected + (1 << bits):
+                        return True
+            return False
         if isinstance(actual, (list, tuple)):
             try:
                 actual_bytes = bytes(actual)
@@ -1572,7 +1599,7 @@ def run_test(test: SemanticTest, localnet, account, verbose=False, _budget_retry
     artifacts = deployable[contract_name]
 
     # Load app spec for method resolution
-    app_spec = au.Arc56Contract.from_json(artifacts["arc56"].read_text())
+    app_spec = _load_arc56(artifacts["arc56"])
 
     # Extract constructor args and value if present
     ctor_args = None
