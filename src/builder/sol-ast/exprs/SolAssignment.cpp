@@ -319,11 +319,30 @@ std::shared_ptr<awst::Expression> SolAssignment::handleBytesElementAssignment(
 	replace->stackArgs.push_back(_indexExpr->index);
 	replace->stackArgs.push_back(std::move(_value));
 
+	// AssignmentExpression.target must be an Lvalue (VarExpression,
+	// FieldExpression, IndexExpression, TupleExpression, or a storage
+	// expression). For `bytes(x)[i] = …` the IndexExpression base is a
+	// ReinterpretCast wrapping the actual storage expression; unwrap it
+	// so puya sees a plain lvalue, and adapt the target/value wtype to
+	// match the underlying storage type (string ↔ bytes).
+	auto target = _indexExpr->base;
+	std::shared_ptr<awst::Expression> replaceValue = replace;
+	while (auto const* cast = dynamic_cast<awst::ReinterpretCast const*>(target.get()))
+		target = cast->expr;
+	if (target->wtype != replaceValue->wtype)
+	{
+		auto adaptCast = std::make_shared<awst::ReinterpretCast>();
+		adaptCast->sourceLocation = m_loc;
+		adaptCast->wtype = target->wtype;
+		adaptCast->expr = std::move(replaceValue);
+		replaceValue = std::move(adaptCast);
+	}
+
 	auto e = std::make_shared<awst::AssignmentExpression>();
 	e->sourceLocation = m_loc;
-	e->wtype = _indexExpr->base->wtype;
-	e->target = _indexExpr->base;
-	e->value = std::move(replace);
+	e->wtype = target->wtype;
+	e->target = target;
+	e->value = std::move(replaceValue);
 	return e;
 }
 
