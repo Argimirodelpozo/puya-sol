@@ -1,5 +1,6 @@
 #include "Logger.h"
 #include "builder/AWSTBuilder.h"
+#include "builder/assembly/AssemblyBuilder.h"
 #include "json/AWSTSerializer.h"
 #include "json/OptionsWriter.h"
 #include "runner/PuyaRunner.h"
@@ -600,6 +601,7 @@ int main(int _argc, char* _argv[])
 		}
 	}
 	compiler.setEVMVersion(evmVer);
+	puyasol::builder::setCompileEVMVersion(evmVer);
 	logger.info("EVM version set to: " + evmVer.name() + " (hasChainID=" + (evmVer.hasChainID() ? "true" : "false") + ")");
 
 	// Apply import remappings (Foundry-style: prefix=target)

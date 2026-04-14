@@ -3,6 +3,7 @@
 #include "awst/Node.h"
 #include "builder/sol-types/TypeMapper.h"
 
+#include <liblangutil/EVMVersion.h>
 #include <libyul/AST.h>
 #include <libyul/ASTForward.h>
 
@@ -13,6 +14,12 @@
 
 namespace puyasol::builder
 {
+
+// Record the compile-target EVM version so AssemblyBuilder::getFunctionName
+// can resolve BuiltinHandle through the dialect that parsed the Yul AST.
+// Called once at startup from main.cpp after compiler.setEVMVersion.
+void setCompileEVMVersion(solidity::langutil::EVMVersion _v);
+
 
 /// Builds AWST nodes from Yul inline assembly blocks.
 ///
