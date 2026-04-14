@@ -531,73 +531,33 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
                             if flat_idx < len(flat_vals):
                                 _postinit_args.append(flat_vals[flat_idx])
                                 flat_idx += 1
-                # Simulate manually with a large opcode budget so we can
-                # discover dynamic box refs (e.g. string-keyed mapping
-                # constructors) without being blocked by the default 700
-                # budget. Then apply those refs + the static ones to the
-                # real execution.
-                from algosdk.v2client.models import SimulateRequest
-                _sim_atc = AtomicTransactionComposer()
-                _sim_atc.add_method_call(
-                    app_id=app_id, method=_postinit_method, sender=_sender,
-                    sp=_sp, signer=_signer, method_args=_postinit_args,
-                    note=_os.urandom(8),
-                )
-                _discovered = []
-                try:
-                    _sim_req = SimulateRequest(
-                        txn_groups=[],
-                        allow_unnamed_resources=True,
-                        extra_opcode_budget=320000,
-                    )
-                    _sim_res = _sim_atc.simulate(_algod, _sim_req)
-                    _tg = _sim_res.simulate_response.get("txn-groups", [{}])[0]
-                    _ur = _tg.get("unnamed-resources-accessed", {})
-                    import base64 as _b64
-                    for _b in _ur.get("boxes", []):
-                        _nb64 = _b.get("name")
-                        if _nb64:
-                            try:
-                                _discovered.append(
-                                    AlgoBoxRef(app_index=0, name=_b64.b64decode(_nb64)))
-                            except Exception:
-                                pass
-                    for _tr in _tg.get("txn-results", []):
-                        _tr_ur = _tr.get("unnamed-resources-accessed", {})
-                        for _b in _tr_ur.get("boxes", []):
-                            _nb64 = _b.get("name")
-                            if _nb64:
-                                try:
-                                    _discovered.append(
-                                        AlgoBoxRef(app_index=0, name=_b64.b64decode(_nb64)))
-                                except Exception:
-                                    pass
-                except Exception:
-                    pass
-
-                # Build refs list: static + discovered, deduped.
-                _static_refs = [AlgoBoxRef(app_index=0, name=ref[1]) for ref in box_refs]
-                _ref_names = {r.name for r in _static_refs}
-                for _r in _discovered:
-                    if _r.name not in _ref_names:
-                        _static_refs.append(_r)
-                        _ref_names.add(_r.name)
+                # First try without static box refs — let populate discover exact keys.
+                # This avoids wasting the 8-ref limit on mapping prefix strings.
                 _atc.add_method_call(
                     app_id=app_id, method=_postinit_method, sender=_sender,
                     sp=_sp, signer=_signer, method_args=_postinit_args,
-                    boxes=_static_refs if _static_refs else None,
                     note=_os.urandom(8),
                 )
-                _atc.execute(_algod, wait_rounds=4)
-                # Merge discovered refs into the long-lived box_refs list so
-                # subsequent method calls also carry them.
-                for _r in _discovered:
-                    _rt = (0, _r.name)
-                    if _rt not in box_refs:
-                        box_refs.append(_rt)
+                try:
+                    _atc = au.populate_app_call_resources(_atc, _algod)
+                    _atc.execute(_algod, wait_rounds=4)
+                except Exception:
+                    # Fall back: retry with static box refs for non-mapping cases
+                    _atc2 = AtomicTransactionComposer()
+                    _atc2.add_method_call(
+                        app_id=app_id, method=_postinit_method, sender=_sender,
+                        sp=_sp, signer=_signer, method_args=_postinit_args,
+                        boxes=[AlgoBoxRef(app_index=0, name=ref[1]) for ref in box_refs] if box_refs else None,
+                        note=_os.urandom(8),
+                    )
+                    try:
+                        _atc2 = au.populate_app_call_resources(_atc2, _algod)
+                    except Exception:
+                        pass
+                    _atc2.execute(_algod, wait_rounds=4)
             except Exception as e:
                 import sys
-                print(f"  [warn] __postInit failed: {str(e)[:400]}", file=sys.stderr)
+                print(f"  [warn] __postInit failed: {str(e)[:100]}", file=sys.stderr)
 
         # Store box refs on the client for use in subsequent calls
         app_client._box_refs = box_refs
