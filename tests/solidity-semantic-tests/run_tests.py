@@ -531,33 +531,73 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
                             if flat_idx < len(flat_vals):
                                 _postinit_args.append(flat_vals[flat_idx])
                                 flat_idx += 1
-                # First try without static box refs — let populate discover exact keys.
-                # This avoids wasting the 8-ref limit on mapping prefix strings.
-                _atc.add_method_call(
+                # Simulate manually with a large opcode budget so we can
+                # discover dynamic box refs (e.g. string-keyed mapping
+                # constructors) without being blocked by the default 700
+                # budget. Then apply those refs + the static ones to the
+                # real execution.
+                from algosdk.v2client.models import SimulateRequest
+                _sim_atc = AtomicTransactionComposer()
+                _sim_atc.add_method_call(
                     app_id=app_id, method=_postinit_method, sender=_sender,
                     sp=_sp, signer=_signer, method_args=_postinit_args,
                     note=_os.urandom(8),
                 )
+                _discovered = []
                 try:
-                    _atc = au.populate_app_call_resources(_atc, _algod)
-                    _atc.execute(_algod, wait_rounds=4)
-                except Exception:
-                    # Fall back: retry with static box refs for non-mapping cases
-                    _atc2 = AtomicTransactionComposer()
-                    _atc2.add_method_call(
-                        app_id=app_id, method=_postinit_method, sender=_sender,
-                        sp=_sp, signer=_signer, method_args=_postinit_args,
-                        boxes=[AlgoBoxRef(app_index=0, name=ref[1]) for ref in box_refs] if box_refs else None,
-                        note=_os.urandom(8),
+                    _sim_req = SimulateRequest(
+                        txn_groups=[],
+                        allow_unnamed_resources=True,
+                        extra_opcode_budget=320000,
                     )
-                    try:
-                        _atc2 = au.populate_app_call_resources(_atc2, _algod)
-                    except Exception:
-                        pass
-                    _atc2.execute(_algod, wait_rounds=4)
+                    _sim_res = _sim_atc.simulate(_algod, _sim_req)
+                    _tg = _sim_res.simulate_response.get("txn-groups", [{}])[0]
+                    _ur = _tg.get("unnamed-resources-accessed", {})
+                    import base64 as _b64
+                    for _b in _ur.get("boxes", []):
+                        _nb64 = _b.get("name")
+                        if _nb64:
+                            try:
+                                _discovered.append(
+                                    AlgoBoxRef(app_index=0, name=_b64.b64decode(_nb64)))
+                            except Exception:
+                                pass
+                    for _tr in _tg.get("txn-results", []):
+                        _tr_ur = _tr.get("unnamed-resources-accessed", {})
+                        for _b in _tr_ur.get("boxes", []):
+                            _nb64 = _b.get("name")
+                            if _nb64:
+                                try:
+                                    _discovered.append(
+                                        AlgoBoxRef(app_index=0, name=_b64.b64decode(_nb64)))
+                                except Exception:
+                                    pass
+                except Exception:
+                    pass
+
+                # Build refs list: static + discovered, deduped.
+                _static_refs = [AlgoBoxRef(app_index=0, name=ref[1]) for ref in box_refs]
+                _ref_names = {r.name for r in _static_refs}
+                for _r in _discovered:
+                    if _r.name not in _ref_names:
+                        _static_refs.append(_r)
+                        _ref_names.add(_r.name)
+                _atc.add_method_call(
+                    app_id=app_id, method=_postinit_method, sender=_sender,
+                    sp=_sp, signer=_signer, method_args=_postinit_args,
+                    boxes=_static_refs if _static_refs else None,
+                    note=_os.urandom(8),
+                )
+                _atc.execute(_algod, wait_rounds=4)
+                # Merge discovered refs into the long-lived box_refs list so
+                # subsequent method calls also carry them.
+                for _r in _discovered:
+                    _rt = (0, _r.name)
+                    if _rt not in box_refs:
+                        box_refs.append(_rt)
             except Exception as e:
                 import sys
-                print(f"  [warn] __postInit failed: {str(e)[:100]}", file=sys.stderr)
+                print(f"  [warn] __postInit failed: {str(e)[:400]}", file=sys.stderr)
 
         # Store box refs on the client for use in subsequent calls
         app_client._box_refs = box_refs
@@ -697,18 +737,50 @@ def _call_with_extra_budget(app, method, args, extra_calls=15):
         txn.fee = 0
         sim_atc.add_transaction(TransactionWithSigner(txn, signer))
 
-    # Simulate to discover resources (allow extra budget and unnamed resources)
+    # Simulate to discover resources (allow extra budget and unnamed resources).
+    # Pull dynamic box refs (e.g. string-keyed mapping runtime-computed box keys)
+    # out of the sim response so they're passed to the real execute.
+    discovered_box_refs = []
     try:
         from algosdk.v2client.models import SimulateRequest
         sim_req = SimulateRequest(
             txn_groups=[],
-            allow_more_logging=True,
             allow_unnamed_resources=True,
             extra_opcode_budget=320000,
         )
         sim_result = sim_atc.simulate(algod, sim_req)
+        _tg = sim_result.simulate_response.get("txn-groups", [{}])[0]
+        _group_ur = _tg.get("unnamed-resources-accessed", {})
+        import base64 as _b64
+        for _box in _group_ur.get("boxes", []):
+            _name_b64 = _box.get("name")
+            if _name_b64:
+                try:
+                    _raw = _b64.b64decode(_name_b64)
+                    discovered_box_refs.append(AlgoBoxRef(app_index=0, name=_raw))
+                except Exception:
+                    pass
+        for _txn_res in _tg.get("txn-results", []):
+            _tr_ur = _txn_res.get("unnamed-resources-accessed", {})
+            for _box in _tr_ur.get("boxes", []):
+                _name_b64 = _box.get("name")
+                if _name_b64:
+                    try:
+                        _raw = _b64.b64decode(_name_b64)
+                        _ref = AlgoBoxRef(app_index=0, name=_raw)
+                        if all(r.name != _raw for r in discovered_box_refs):
+                            discovered_box_refs.append(_ref)
+                    except Exception:
+                        pass
     except Exception:
         sim_result = None
+
+    # Merge static + discovered box refs (dedupe by name)
+    _seen_names = {r.name for r in box_refs}
+    for _r in discovered_box_refs:
+        if _r.name not in _seen_names:
+            box_refs.append(_r)
+            _seen_names.add(_r.name)
 
     # Step 2: Build the real ATC with discovered resources + budget pooling
     sp = algod.suggested_params()
@@ -1245,7 +1317,6 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                 try:
                     _sim_req = SimulateRequest(
                         txn_groups=[],
-                        allow_more_logging=True,
                         allow_unnamed_resources=True,
                         extra_opcode_budget=320000,
                     )
