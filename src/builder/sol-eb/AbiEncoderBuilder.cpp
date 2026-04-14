@@ -613,12 +613,22 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSelector(
 	if (args.size() == 1)
 		return std::make_unique<GenericAbiResult>(_ctx, std::move(selector));
 
-	// Check if trailing args have any dynamic types
+	// Check if trailing args have any dynamic types. StringLiteralType is
+	// static under Solidity's TypeSystem, but its mobileType `string memory`
+	// is dynamically encoded — abi.encodeWithSelector(sel, "") should emit
+	// the head/tail layout, not just the bare selector.
+	auto isDynArg = [](solidity::frontend::Type const* _t) -> bool {
+		if (!_t) return false;
+		if (_t->isDynamicallyEncoded()) return true;
+		if (_t->category() == solidity::frontend::Type::Category::StringLiteral)
+			return true;
+		return false;
+	};
 	bool hasDynamic = false;
 	for (size_t i = 1; i < args.size(); ++i)
 	{
 		auto const* solType = args[i]->annotation().type;
-		if (solType && solType->isDynamicallyEncoded())
+		if (isDynArg(solType))
 			hasDynamic = true;
 	}
 
@@ -644,7 +654,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSelector(
 		for (size_t i = 1; i < args.size(); ++i)
 		{
 			auto const* solType = args[i]->annotation().type;
-			bool isDyn = solType && solType->isDynamicallyEncoded();
+			bool isDyn = isDynArg(solType);
 			auto expr = _ctx.buildExpr(*args[i]);
 
 			if (!isDyn)
@@ -1144,10 +1154,15 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 {
 	using namespace solidity::frontend;
 
+	// StringLiteralType: treat like bytes/string for encoding purposes.
+	bool isStringLiteral = _solType
+		&& _solType->category() == Type::Category::StringLiteral;
+
 	// For bytes/string: [length][data padded to 32]
-	if (auto const* arrType = dynamic_cast<ArrayType const*>(_solType))
+	if (isStringLiteral
+		|| (dynamic_cast<ArrayType const*>(_solType) != nullptr
+			&& dynamic_cast<ArrayType const*>(_solType)->isByteArrayOrString()))
 	{
-		if (arrType->isByteArrayOrString())
 		{
 			// Convert to bytes
 			auto bytesExpr = std::move(_expr);
