@@ -671,21 +671,41 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 	}
 	else
 	{
-		auto singleEval = std::make_shared<awst::SingleEvaluation>();
-		singleEval->sourceLocation = m_loc;
-		singleEval->wtype = _operand->wtype;
-		singleEval->source = _operand;
-		singleEval->id = static_cast<int>(m_unaryOp.id());
+		// Post-increment/decrement: capture the old value in a temp var,
+		// emit the variable update as a *pre-pending* statement so it
+		// happens before any sibling reads of the same variable, then
+		// return the saved old value.
+		//
+		// Without this, `return a++ + a` evaluates `a` (2nd operand)
+		// against the *old* value of `a` because the post-inc assignment
+		// sat in pendingStatements — which only fires at the end of the
+		// enclosing statement.
+		static int postIncCounter = 0;
+		std::string tempName = "__postinc_" + std::to_string(postIncCounter++);
 
-		auto newValue = makeNewValue(singleEval);
+		auto tempVar = std::make_shared<awst::VarExpression>();
+		tempVar->sourceLocation = m_loc;
+		tempVar->wtype = _operand->wtype;
+		tempVar->name = tempName;
 
+		// Save old value: temp = a
+		auto saveStmt = std::make_shared<awst::AssignmentStatement>();
+		saveStmt->sourceLocation = m_loc;
+		saveStmt->target = tempVar;
+		saveStmt->value = _operand;
+		m_ctx.prePendingStatements.push_back(std::move(saveStmt));
+
+		// Compute new value from the saved temp (not re-reading a)
+		auto newValue = makeNewValue(tempVar);
+
+		// a = temp + 1 (for inc) or temp - 1 (for dec)
 		auto incrStmt = std::make_shared<awst::AssignmentStatement>();
 		incrStmt->sourceLocation = m_loc;
 		incrStmt->target = buildExpr(m_unaryOp.subExpression());
 		incrStmt->value = std::move(newValue);
-		m_ctx.pendingStatements.push_back(std::move(incrStmt));
+		m_ctx.prePendingStatements.push_back(std::move(incrStmt));
 
-		return singleEval;
+		return tempVar;
 	}
 }
 
