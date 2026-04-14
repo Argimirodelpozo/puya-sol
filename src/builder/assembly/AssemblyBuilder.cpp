@@ -2,9 +2,11 @@
 #include "Logger.h"
 
 #include <liblangutil/DebugData.h>
+#include <liblangutil/EVMVersion.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libevmasm/Instruction.h>
 
+#include <array>
 #include <sstream>
 
 namespace puyasol::builder
@@ -16,9 +18,42 @@ std::string AssemblyBuilder::getFunctionName(solidity::yul::FunctionName const& 
 		return ident->name.str();
 	if (auto const* builtin = std::get_if<solidity::yul::BuiltinName>(&_name))
 	{
-		// Resolve builtin name through the EVM dialect
-		auto const& dialect = solidity::yul::EVMDialect::strictAssemblyForEVMObjects(solidity::langutil::EVMVersion{}, std::nullopt);
-		return std::string(dialect.builtin(builtin->handle).name);
+		// The BuiltinHandle encodes a dialect-specific index. Walk the EVM
+		// ladder (oldest→newest) looking for a dialect that accepts the
+		// handle — Yul's internal check throws a YulAssertion if the handle
+		// is wrong, which would otherwise take down the whole translation.
+		// The AST was parsed with the same dialect the Solidity frontend
+		// chose from our EVMVersion, so at least one of these will match.
+		using solidity::langutil::EVMVersion;
+		static const std::array<EVMVersion, 13> versions = {
+			EVMVersion::homestead(),
+			EVMVersion::tangerineWhistle(),
+			EVMVersion::spuriousDragon(),
+			EVMVersion::byzantium(),
+			EVMVersion::constantinople(),
+			EVMVersion::petersburg(),
+			EVMVersion::istanbul(),
+			EVMVersion::berlin(),
+			EVMVersion::london(),
+			EVMVersion::paris(),
+			EVMVersion::shanghai(),
+			EVMVersion::cancun(),
+			EVMVersion::prague(),
+		};
+		for (auto const& ver: versions)
+		{
+			try
+			{
+				auto const& dialect = solidity::yul::EVMDialect::strictAssemblyForEVMObjects(ver, std::nullopt);
+				auto const& b = dialect.builtin(builtin->handle);
+				return std::string(b.name);
+			}
+			catch (...)
+			{
+				continue;
+			}
+		}
+		return "<unknown_builtin>";
 	}
 	return "<unknown>";
 }
