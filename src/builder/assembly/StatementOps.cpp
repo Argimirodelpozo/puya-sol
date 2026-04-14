@@ -923,6 +923,21 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
+	// Recursion guard: Yul function inlining expands each call at the AST
+	// level. Recursive Yul functions (e.g. `function fac(n) -> nf { ... fac(sub(n,1)) ... }`)
+	// otherwise recurse forever here and blow the C++ stack. Emit an error
+	// and bail out of the call path so the rest of the contract at least
+	// compiles far enough to report a meaningful diagnostic.
+	if (m_inlineDepth > 64)
+	{
+		Logger::instance().error(
+			"assembly function '" + _name + "' recurses deeper than the inlining "
+			"limit (64 frames); recursive Yul functions are not supported on AVM",
+			_loc
+		);
+		return nullptr;
+	}
+
 	auto it = m_asmFunctions.find(_name);
 	if (it == m_asmFunctions.end())
 	{
