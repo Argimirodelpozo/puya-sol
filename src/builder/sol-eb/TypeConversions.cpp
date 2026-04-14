@@ -127,9 +127,13 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToInteger(
 	if (srcWType && srcWType->kind() == awst::WTypeKind::Bytes)
 	{
 		auto const* bytesWType = dynamic_cast<awst::BytesWType const*>(srcWType);
-		if (bytesWType && bytesWType->length().has_value() && *bytesWType->length() > 8)
+		// Dynamic-length bytes (unsized) or fixed-size > 8 bytes → biguint path.
+		// btoi only handles ≤8 bytes; an unsized `bytes` from e.g. `keccak256`
+		// is a 32-byte digest at runtime and must NOT go through btoi.
+		bool knownSmall =
+			bytesWType && bytesWType->length().has_value() && *bytesWType->length() <= 8;
+		if (!knownSmall)
 		{
-			// bytes[N>8] → biguint
 			auto cast = std::make_shared<awst::ReinterpretCast>();
 			cast->sourceLocation = _loc;
 			cast->wtype = awst::WType::biguintType();

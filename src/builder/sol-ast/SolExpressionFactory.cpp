@@ -209,6 +209,15 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 			callExpr = &callOpts->expression();
 		}
 
+		// Unwrap single-element TupleExpression (parenthesized expression)
+		// so `(x.mul)({x: a})` is recognized as a library call on `x.mul`.
+		if (auto const* tuple = dynamic_cast<
+				solidity::frontend::TupleExpression const*>(callExpr))
+		{
+			if (tuple->components().size() == 1 && tuple->components()[0])
+				callExpr = tuple->components()[0].get();
+		}
+
 		auto const* memberAccess = dynamic_cast<
 			solidity::frontend::MemberAccess const*>(callExpr);
 		if (memberAccess)

@@ -227,15 +227,20 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 	using Token = solidity::frontend::Token;
 
 	// Helper to coerce bytes[N] operands to a numeric type when used in numeric context.
-	// For bytes[N] where N > 8, promotes to biguint (btoi only handles ≤8 bytes).
-	// For smaller bytes, uses btoi → uint64.
+	// For bytes[N] where N > 8 — or bytes of unknown length (e.g. keccak256
+	// output, which is a 32-byte digest but comes back typed as `bytes`) —
+	// promotes to biguint via ReinterpretCast. btoi only handles ≤8 bytes
+	// and fails at runtime for anything longer, so unknown-length bytes
+	// must take the biguint path.
+	// For fixed bytes[N≤8], uses btoi → uint64.
 	auto coerceBytesToUint = [&](std::shared_ptr<awst::Expression>& operand) {
 		if (operand->wtype && operand->wtype->kind() == awst::WTypeKind::Bytes)
 		{
 			auto const* bytesWType = dynamic_cast<awst::BytesWType const*>(operand->wtype);
-			if (bytesWType && bytesWType->length().has_value() && *bytesWType->length() > 8)
+			bool knownSmall =
+				bytesWType && bytesWType->length().has_value() && *bytesWType->length() <= 8;
+			if (!knownSmall)
 			{
-				// bytes[N>8] → biguint via ReinterpretCast (btoi can't handle >8 bytes)
 				auto cast = std::make_shared<awst::ReinterpretCast>();
 				cast->sourceLocation = _loc;
 				cast->wtype = awst::WType::biguintType();
@@ -243,7 +248,6 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 				operand = std::move(cast);
 				return;
 			}
-			// bytes[N≤8] or unsized bytes → bytes → btoi → uint64
 			auto expr = std::move(operand);
 			if (expr->wtype != awst::WType::bytesType())
 			{

@@ -57,11 +57,15 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		return bc;
 	}
 
-	// erc7201 — evaluate the ERC-7201 namespace slot at compile time when
-	// possible (the Solidity front-end does the heavy lifting via
-	// erc7201CompileTimeValue).  Emit the resulting u256 as a biguint
-	// IntegerConstant; anything non-constant is unreachable because
-	// `erc7201(<non-literal>)` isn't allowed.
+	// erc7201 — ERC-7201 namespace slot.
+	//
+	//     slot = uint256(
+	//         keccak256(abi.encode(uint256(keccak256(bytes(id))) - 1))
+	//     ) & ~bytes32(uint256(0xff))
+	//
+	// When the argument is a compile-time string literal, use the Solidity
+	// frontend's erc7201CompileTimeValue to fold to an IntegerConstant.
+	// Otherwise build the runtime expression.
 	if (m_builtinName == "erc7201")
 	{
 		if (auto slotOpt = solidity::frontend::erc7201CompileTimeValue(m_call))
@@ -74,14 +78,115 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 			ic->value = oss.str();
 			return ic;
 		}
-		Logger::instance().warning(
-			"erc7201() with a non-constant argument is not supported; "
-			"returning 0", m_loc);
-		auto ic = std::make_shared<awst::IntegerConstant>();
-		ic->sourceLocation = m_loc;
-		ic->wtype = awst::WType::biguintType();
-		ic->value = "0";
-		return ic;
+
+		// Runtime implementation.
+		auto idExpr = buildExpr(*m_call.arguments()[0]);
+		// Cast string → bytes if needed (same underlying storage).
+		if (idExpr && idExpr->wtype != awst::WType::bytesType())
+		{
+			auto cast = std::make_shared<awst::ReinterpretCast>();
+			cast->sourceLocation = m_loc;
+			cast->wtype = awst::WType::bytesType();
+			cast->expr = std::move(idExpr);
+			idExpr = std::move(cast);
+		}
+
+		// h1 = keccak256(id)
+		auto h1 = std::make_shared<awst::IntrinsicCall>();
+		h1->sourceLocation = m_loc;
+		h1->wtype = awst::WType::bytesType();
+		h1->opCode = "keccak256";
+		h1->stackArgs.push_back(idExpr);
+
+		// h1_int = biguint(h1)
+		auto h1Int = std::make_shared<awst::ReinterpretCast>();
+		h1Int->sourceLocation = m_loc;
+		h1Int->wtype = awst::WType::biguintType();
+		h1Int->expr = std::move(h1);
+
+		// minus1 = h1_int - 1
+		auto one = std::make_shared<awst::IntegerConstant>();
+		one->sourceLocation = m_loc;
+		one->wtype = awst::WType::biguintType();
+		one->value = "1";
+
+		auto sub = std::make_shared<awst::BigUIntBinaryOperation>();
+		sub->sourceLocation = m_loc;
+		sub->wtype = awst::WType::biguintType();
+		sub->left = std::move(h1Int);
+		sub->op = awst::BigUIntBinaryOperator::Sub;
+		sub->right = std::move(one);
+
+		// minus1_bytes = 32-byte big-endian via b|(sub, bzero(32))
+		auto minusBytesCast = std::make_shared<awst::ReinterpretCast>();
+		minusBytesCast->sourceLocation = m_loc;
+		minusBytesCast->wtype = awst::WType::bytesType();
+		minusBytesCast->expr = std::move(sub);
+
+		auto padLen = std::make_shared<awst::IntegerConstant>();
+		padLen->sourceLocation = m_loc;
+		padLen->wtype = awst::WType::uint64Type();
+		padLen->value = "32";
+
+		auto padBytes = std::make_shared<awst::IntrinsicCall>();
+		padBytes->sourceLocation = m_loc;
+		padBytes->wtype = awst::WType::bytesType();
+		padBytes->opCode = "bzero";
+		padBytes->stackArgs.push_back(std::move(padLen));
+
+		auto minus1Bytes = std::make_shared<awst::BytesBinaryOperation>();
+		minus1Bytes->sourceLocation = m_loc;
+		minus1Bytes->wtype = awst::WType::bytesType();
+		minus1Bytes->left = std::move(padBytes);
+		minus1Bytes->op = awst::BytesBinaryOperator::BitOr;
+		minus1Bytes->right = std::move(minusBytesCast);
+
+		// h2 = keccak256(minus1_bytes)
+		auto h2 = std::make_shared<awst::IntrinsicCall>();
+		h2->sourceLocation = m_loc;
+		h2->wtype = awst::WType::bytesType();
+		h2->opCode = "keccak256";
+		h2->stackArgs.push_back(std::move(minus1Bytes));
+
+		// Top 31 bytes of h2
+		auto top31Start = std::make_shared<awst::IntegerConstant>();
+		top31Start->sourceLocation = m_loc;
+		top31Start->wtype = awst::WType::uint64Type();
+		top31Start->value = "0";
+
+		auto top31Len = std::make_shared<awst::IntegerConstant>();
+		top31Len->sourceLocation = m_loc;
+		top31Len->wtype = awst::WType::uint64Type();
+		top31Len->value = "31";
+
+		auto top31 = std::make_shared<awst::IntrinsicCall>();
+		top31->sourceLocation = m_loc;
+		top31->wtype = awst::WType::bytesType();
+		top31->opCode = "extract3";
+		top31->stackArgs.push_back(std::move(h2));
+		top31->stackArgs.push_back(std::move(top31Start));
+		top31->stackArgs.push_back(std::move(top31Len));
+
+		// Concat with 0x00 to zero the last byte.
+		auto zeroByte = std::make_shared<awst::BytesConstant>();
+		zeroByte->sourceLocation = m_loc;
+		zeroByte->wtype = awst::WType::bytesType();
+		zeroByte->encoding = awst::BytesEncoding::Base16;
+		zeroByte->value = std::vector<uint8_t>{0};
+
+		auto masked = std::make_shared<awst::IntrinsicCall>();
+		masked->sourceLocation = m_loc;
+		masked->wtype = awst::WType::bytesType();
+		masked->opCode = "concat";
+		masked->stackArgs.push_back(std::move(top31));
+		masked->stackArgs.push_back(std::move(zeroByte));
+
+		// Cast to biguint
+		auto result = std::make_shared<awst::ReinterpretCast>();
+		result->sourceLocation = m_loc;
+		result->wtype = awst::WType::biguintType();
+		result->expr = std::move(masked);
+		return result;
 	}
 
 	// All other builtins: delegate to BuiltinCallableRegistry
