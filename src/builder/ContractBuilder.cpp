@@ -1496,12 +1496,19 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				}
 				else
 				{
-					// bytes or other → empty bytes
+					// Fixed-size bytes (bytes1..bytes32) → N zero bytes so the
+					// auto-getter ABI emits the declared width. Dynamic bytes /
+					// string keep the empty default.
+					int bytesLen = 0;
+					if (auto const* bw = dynamic_cast<awst::BytesWType const*>(wtype))
+						if (bw->length().has_value() && *bw->length() > 0)
+							bytesLen = static_cast<int>(*bw->length());
 					auto val = std::make_shared<awst::BytesConstant>();
 					val->sourceLocation = method.sourceLocation;
-					val->wtype = awst::WType::bytesType();
+					val->wtype = wtype && wtype->kind() == awst::WTypeKind::Bytes
+						? wtype : awst::WType::bytesType();
 					val->encoding = awst::BytesEncoding::Base16;
-					val->value = {};
+					val->value = std::vector<uint8_t>(static_cast<size_t>(bytesLen), 0);
 					defaultVal = val;
 				}
 				} // end if (!defaultVal)
