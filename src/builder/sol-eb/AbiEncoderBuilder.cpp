@@ -866,7 +866,9 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 		return std::make_unique<GenericAbiResult>(_ctx, std::move(cmp));
 	}
 
-	// uint64 decode: btoi
+	// uint64 decode: ABI-encoded value is a 32-byte big-endian word, so
+	// take the last 8 bytes and btoi those — bare btoi on the full word
+	// fails at runtime with "btoi arg too long, got 32 bytes".
 	if (targetType == awst::WType::uint64Type())
 	{
 		auto bytesExpr = std::move(decoded);
@@ -878,12 +880,17 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 			toBytes->expr = std::move(bytesExpr);
 			bytesExpr = std::move(toBytes);
 		}
-		auto btoi = std::make_shared<awst::IntrinsicCall>();
-		btoi->sourceLocation = _loc;
-		btoi->wtype = awst::WType::uint64Type();
-		btoi->opCode = "btoi";
-		btoi->stackArgs.push_back(std::move(bytesExpr));
-		return std::make_unique<GenericAbiResult>(_ctx, std::move(btoi));
+		// Pull out the first 32 bytes (the head word) — handles ABIv2
+		// inputs that prefix with offsets etc. uint64FromAbiWord then
+		// extracts the low 8 bytes.
+		auto head = std::make_shared<awst::IntrinsicCall>();
+		head->sourceLocation = _loc;
+		head->wtype = awst::WType::bytesType();
+		head->opCode = "extract3";
+		head->stackArgs.push_back(std::move(bytesExpr));
+		head->stackArgs.push_back(makeUint64("0", _loc));
+		head->stackArgs.push_back(makeUint64("32", _loc));
+		return std::make_unique<GenericAbiResult>(_ctx, uint64FromAbiWord(std::move(head), _loc));
 	}
 
 	// ── Generic ABI decode using decodeAbiValue ──
