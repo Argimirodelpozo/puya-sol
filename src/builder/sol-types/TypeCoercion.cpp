@@ -110,6 +110,30 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 		return btoi;
 	}
 
+	// String / bytes constant → fixed-size bytes[N]: right-pad to N bytes.
+	if (auto const* fbType = dynamic_cast<awst::BytesWType const*>(_targetType))
+	{
+		if (fbType->length().has_value() && *fbType->length() > 0)
+		{
+			int n = static_cast<int>(*fbType->length());
+			if (auto padded = stringToBytesN(_expr.get(), _targetType, n, _loc))
+				return padded;
+			if (auto const* bc = dynamic_cast<awst::BytesConstant const*>(_expr.get()))
+			{
+				if (static_cast<int>(bc->value.size()) <= n)
+				{
+					auto out = std::make_shared<awst::BytesConstant>();
+					out->sourceLocation = _loc;
+					out->wtype = _targetType;
+					out->encoding = awst::BytesEncoding::Base16;
+					out->value = bc->value;
+					out->value.resize(static_cast<size_t>(n), 0);
+					return out;
+				}
+			}
+		}
+	}
+
 	return _expr;
 }
 
