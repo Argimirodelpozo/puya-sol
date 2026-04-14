@@ -23,6 +23,24 @@ awst::WType const* SolInternalCall::returnTypeFrom(FunctionDefinition const* _fu
 		return m_ctx.typeMapper.map(m_call.annotation().type);
 	if (_funcDef->returnParameters().empty())
 		return awst::WType::voidType();
+
+	// Unwrap UDVT / enum to locate a signed integer type for biguint promotion.
+	// ContractBuilder upgrades signed int ≤64 bit returns to biguint so sign
+	// extension works; we mirror that here so call-site wtypes match.
+	auto mapReturnType = [&](solidity::frontend::Type const* solType) -> awst::WType const* {
+		auto* mapped = m_ctx.typeMapper.map(solType);
+		auto const* t = solType;
+		if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(t))
+			t = &udvt->underlyingType();
+		auto const* intType = dynamic_cast<IntegerType const*>(t);
+		if (!intType)
+			if (auto const* enumType = dynamic_cast<EnumType const*>(t))
+				intType = dynamic_cast<IntegerType const*>(enumType->encodingType());
+		if (intType && intType->isSigned() && intType->numBits() <= 64)
+			return awst::WType::biguintType();
+		return mapped;
+	};
+
 	if (_funcDef->returnParameters().size() == 1)
 	{
 		// Storage reference return with .slot assembly → biguint (slot number)
@@ -31,12 +49,12 @@ awst::WType const* SolInternalCall::returnTypeFrom(FunctionDefinition const* _fu
 			&& std::any_of(_funcDef->body().statements().begin(), _funcDef->body().statements().end(),
 				[](auto const& s) { return dynamic_cast<InlineAssembly const*>(s.get()); }))
 			return awst::WType::biguintType();
-		return m_ctx.typeMapper.map(_funcDef->returnParameters()[0]->type());
+		return mapReturnType(_funcDef->returnParameters()[0]->type());
 	}
 
 	std::vector<awst::WType const*> retTypes;
 	for (auto const& param: _funcDef->returnParameters())
-		retTypes.push_back(m_ctx.typeMapper.map(param->type()));
+		retTypes.push_back(mapReturnType(param->type()));
 	return m_ctx.typeMapper.createType<awst::WTuple>(std::move(retTypes), std::nullopt);
 }
 
@@ -122,20 +140,20 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		call->args.push_back(std::move(ca));
 	}
 
-	// Storage write-back for using-for calls on box/global-state backed storage.
-	//
-	// When a library function signature is `f(T storage self, ...) → R`, our
-	// library translator augments the return type to `WTuple(R, T)` so the
-	// modified self can be written back (see AWSTBuilder buildLibraries). The
-	// call site needs to match that augmented return: unpack the tuple, write
-	// element 1 to the storage source, and return element 0.
+	// Storage write-back for library/free calls whose first parameter is a
+	// storage reference. When the receiver is `using-for` the first element of
+	// call->args is the implicit receiver; for direct library calls (`L.f(x, ...)`)
+	// the first explicit arg is already the storage source. Either way, when the
+	// library function is non-pure/non-view and its first param has storage
+	// location, we need to unpack the augmented WTuple(R, T) return and write
+	// element 1 back to the root storage expression.
 	//
 	// Two receiver shapes are supported:
 	//  1. Box-backed state (StateGet → BoxValueExpression), optionally with
 	//     a single-level FieldExpression (`x.field.method(...)`).
 	//  2. Direct AppStateExpression (`x.method(...)` where x is a non-box
 	//     state variable — the common case for small struct state vars).
-	if (_isUsingForCall && _funcDef && !call->args.empty()
+	if (_funcDef && !call->args.empty()
 		&& _funcDef->stateMutability() != StateMutability::View
 		&& _funcDef->stateMutability() != StateMutability::Pure
 		&& !_funcDef->parameters().empty()
@@ -179,35 +197,72 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			auto* storageArgType = call->args[0].value->wtype;
 			auto* rootType = rootBox ? rootBox->wtype : rootAppState->wtype;
 
-			auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
-				std::vector<awst::WType const*>{origRetType, storageArgType});
-			call->wtype = tupleType;
+			// AWSTBuilder augments library function returns:
+			//   (R, T) when the solidity function has a return type R
+			//   (T,)  when the solidity function returns void — in which case
+			//         the augmented single-element return is just storage_type T
+			//         itself (not wrapped in a tuple).
+			bool voidReturn = (origRetType == awst::WType::voidType());
 
 			static int storageWriteBackCounter = 0;
 			std::string tempName = "__storage_wb_" + std::to_string(storageWriteBackCounter++);
 
-			auto tempVar = std::make_shared<awst::VarExpression>();
-			tempVar->sourceLocation = m_loc;
-			tempVar->wtype = tupleType;
-			tempVar->name = tempName;
+			std::shared_ptr<awst::VarExpression> tempVar;
+			std::shared_ptr<awst::Expression> origRet;
+			std::shared_ptr<awst::Expression> modifiedArg;
 
-			auto assignTemp = std::make_shared<awst::AssignmentStatement>();
-			assignTemp->sourceLocation = m_loc;
-			assignTemp->target = tempVar;
-			assignTemp->value = std::shared_ptr<awst::Expression>(call);
-			m_ctx.prePendingStatements.push_back(std::move(assignTemp));
+			if (voidReturn)
+			{
+				// Augmented signature: () → storage_type. No tuple needed.
+				call->wtype = storageArgType;
 
-			auto origRet = std::make_shared<awst::TupleItemExpression>();
-			origRet->sourceLocation = m_loc;
-			origRet->wtype = origRetType;
-			origRet->base = tempVar;
-			origRet->index = 0;
+				tempVar = std::make_shared<awst::VarExpression>();
+				tempVar->sourceLocation = m_loc;
+				tempVar->wtype = storageArgType;
+				tempVar->name = tempName;
 
-			auto modifiedArg = std::make_shared<awst::TupleItemExpression>();
-			modifiedArg->sourceLocation = m_loc;
-			modifiedArg->wtype = storageArgType;
-			modifiedArg->base = tempVar;
-			modifiedArg->index = 1;
+				auto assignTemp = std::make_shared<awst::AssignmentStatement>();
+				assignTemp->sourceLocation = m_loc;
+				assignTemp->target = tempVar;
+				assignTemp->value = std::shared_ptr<awst::Expression>(call);
+				m_ctx.prePendingStatements.push_back(std::move(assignTemp));
+
+				modifiedArg = tempVar;
+				origRet = std::make_shared<awst::VoidConstant>();
+				origRet->sourceLocation = m_loc;
+				origRet->wtype = awst::WType::voidType();
+			}
+			else
+			{
+				auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
+					std::vector<awst::WType const*>{origRetType, storageArgType});
+				call->wtype = tupleType;
+
+				tempVar = std::make_shared<awst::VarExpression>();
+				tempVar->sourceLocation = m_loc;
+				tempVar->wtype = tupleType;
+				tempVar->name = tempName;
+
+				auto assignTemp = std::make_shared<awst::AssignmentStatement>();
+				assignTemp->sourceLocation = m_loc;
+				assignTemp->target = tempVar;
+				assignTemp->value = std::shared_ptr<awst::Expression>(call);
+				m_ctx.prePendingStatements.push_back(std::move(assignTemp));
+
+				auto origTup = std::make_shared<awst::TupleItemExpression>();
+				origTup->sourceLocation = m_loc;
+				origTup->wtype = origRetType;
+				origTup->base = tempVar;
+				origTup->index = 0;
+				origRet = std::move(origTup);
+
+				auto modTup = std::make_shared<awst::TupleItemExpression>();
+				modTup->sourceLocation = m_loc;
+				modTup->wtype = storageArgType;
+				modTup->base = tempVar;
+				modTup->index = 1;
+				modifiedArg = std::move(modTup);
+			}
 
 			std::reverse(fieldPath.begin(), fieldPath.end());
 
@@ -399,6 +454,29 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 	MemberAccess const& _memberAccess)
 {
 	auto* retType = m_ctx.typeMapper.map(m_call.annotation().type);
+
+	// `this.x()` where x is a public state variable for a signed integer
+	// ≤64 bits: ContractBuilder's auto-generated getter sets its return
+	// type to biguint so it can sign-extend the stored bytes. Mirror that
+	// here so the InstanceMethodTarget call's wtype matches.
+	if (auto const* refDecl = _memberAccess.annotation().referencedDeclaration)
+	{
+		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(refDecl))
+		{
+			if (varDecl->isStateVariable() && !varDecl->isConstant())
+			{
+				auto const* solType = varDecl->type();
+				if (auto const* udvt =
+					dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
+					solType = &udvt->underlyingType();
+				if (auto const* intType =
+					dynamic_cast<solidity::frontend::IntegerType const*>(solType))
+					if (intType->isSigned() && intType->numBits() <= 64)
+						retType = awst::WType::biguintType();
+			}
+		}
+	}
+
 	FunctionDefinition const* resolvedFuncDef = nullptr;
 	bool isUsingForCall = false;
 
@@ -483,13 +561,23 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 		resolvedFuncDef = funcDef;
 		retType = returnTypeFrom(funcDef);
 
+		// Classify the receiver expression to decide if this is a using-for
+		// call (prepend receiver) or a direct `L.f(x, ...)` call.
+		auto classifyUsingFor = [&]() -> bool {
+			auto const* bt = _memberAccess.expression().annotation().type;
+			if (!bt) return true;
+			// `import "M" as N; N.f(x)` — N is a Module.
+			if (bt->category() == Type::Category::Module) return false;
+			// `L.f(x)` where L is a library/contract — TypeType referring to a contract.
+			if (bt->category() == Type::Category::TypeType) return false;
+			return true;
+		};
+
 		// Try AST ID lookup
 		auto byId = m_ctx.freeFunctionById.find(funcDef->id());
 		if (byId != m_ctx.freeFunctionById.end())
 		{
-			auto const* bt = _memberAccess.expression().annotation().type;
-			bool isModCall = bt && bt->category() == Type::Category::Module;
-			isUsingForCall = !isModCall;
+			isUsingForCall = classifyUsingFor();
 			return buildSubroutineCall(
 				awst::SubroutineID{byId->second}, retType, funcDef, isUsingForCall);
 		}
@@ -510,9 +598,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 					}
 					if (it != m_ctx.libraryFunctionIds.end())
 					{
-						auto const* bt = _memberAccess.expression().annotation().type;
-						bool isModCall = bt && bt->category() == Type::Category::Module;
-						isUsingForCall = !isModCall;
+						isUsingForCall = classifyUsingFor();
 						return buildSubroutineCall(
 							awst::SubroutineID{it->second}, retType, funcDef, isUsingForCall);
 					}
