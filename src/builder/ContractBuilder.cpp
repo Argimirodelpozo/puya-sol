@@ -2913,8 +2913,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 			// Remap biguint args to ARC4UIntN with the original Solidity bit width.
 			// Without this, puya maps biguint→uint512 (AVM max) instead of uint256.
-			// Skip signed integers — they need different ABI names (int256 vs uint256)
-			// and are handled by sign-extension logic elsewhere.
+			// Signed integers use the same 256-bit two's complement encoding —
+			// we keep ARC4UIntN(256) and let the test runner's _abi_safe_type
+			// helper map int<N>→uint<N> so encode/decode line up.
 			// Skip when function has modifiers or inline assembly — both reference
 			// params by their original names and would break on rename.
 			if (arg.wtype == awst::WType::biguintType() && pi < solParams.size()
@@ -2925,9 +2926,6 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				if (!intType && solType)
 					if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
 						intType = dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
-				// Only wrap unsigned integers — signed use different ABI type names
-				if (intType && intType->isSigned())
-					continue;
 				unsigned bits = intType ? intType->numBits() : 256;
 				auto const* arc4Type = m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
 				paramDecodes.push_back({arg.name, arg.wtype, arc4Type, arg.sourceLocation});
@@ -3309,9 +3307,35 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			}
 		}
 
-		// Sign-extend return values for signed integer types ≤64 bits.
+		// Sign-extend return values for signed integer types ≤64 bits, and
+		// for ≤256-bit signed returns wrap the result in an ARC4Encode of
+		// ARC4UIntN(256) so the ABI output is uint256 (32 bytes) rather
+		// than puya's default biguint→uint512 (64 bytes).
 		if (!signedReturns.empty() && method.arc4MethodConfig.has_value())
 		{
+			// All signed returns are wrapped to 256 bits by signExtendToUint256,
+			// so the ABI element is uint256 in every case.
+			auto const* arc4SignedType =
+				m_typeMapper.createType<awst::ARC4UIntN>(256);
+
+			auto wrapArc4 = [&](std::shared_ptr<awst::Expression> val,
+				awst::SourceLocation const& loc) -> std::shared_ptr<awst::Expression> {
+				if (val->wtype != awst::WType::biguintType())
+					return val;
+				auto encode = std::make_shared<awst::ARC4Encode>();
+				encode->sourceLocation = loc;
+				encode->wtype = arc4SignedType;
+				encode->value = std::move(val);
+				return encode;
+			};
+
+			bool wrapSingleReturn = (signedReturns.size() == 1
+				&& signedReturns[0].index == 0
+				&& returnParams.size() == 1
+				&& method.returnType == awst::WType::biguintType()
+				&& _func.modifiers().empty()
+				&& !funcHasInlineAssembly);
+
 			std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> walk;
 			walk = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
 			{
@@ -3328,6 +3352,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 							// Single return — sign-extend directly
 							ret->value = signExtendToUint256(
 								std::move(ret->value), signedReturns[0].bits, srcLoc);
+							if (wrapSingleReturn)
+								ret->value = wrapArc4(std::move(ret->value), srcLoc);
 						}
 						else if (auto* tuple = dynamic_cast<awst::TupleExpression*>(ret->value.get()))
 						{
@@ -3353,6 +3379,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				}
 			};
 			walk(method.body->body);
+
+			if (wrapSingleReturn)
+				method.returnType = arc4SignedType;
 		}
 
 		// Mask unsigned sub-word return values to their declared bit width.
