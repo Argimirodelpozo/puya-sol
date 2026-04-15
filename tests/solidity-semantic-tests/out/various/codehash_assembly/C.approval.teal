@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/codehash_assembly.sol.C.approval_program() -> uint64:
 main:
     intcblock 1
-    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000000 0x
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -52,8 +52,32 @@ g:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/codehash_assembly.sol.C.h[routing]() -> void:
 h:
     load 0
+    global CurrentApplicationAddress
+    pushbytes 0x64
+    b>
+    bz h_ternary_false@3
+    global CurrentApplicationID
+    app_params_get AppApprovalProgram
+    pop
+    keccak256
+
+h_ternary_merge@4:
+    bytec_1 // 0x
+    b==
+    !
+    dig 1
     store 0
-    pushbytes 0x151f7c7500
+    pushbytes 0x00
+    pushint 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
+
+h_ternary_false@3:
+    bytec_1 // 0x
+    b h_ternary_merge@4
