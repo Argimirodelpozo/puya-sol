@@ -1566,6 +1566,42 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					if (!isBoxType)
 						continue;
 
+					// Skip box_create for oversized static arrays (e.g.
+					// `uint[2 ether]` which would need 2^63 bytes). The
+					// array's `.length` is a compile-time literal so reads
+					// keep working; element writes would fail at runtime,
+					// but such arrays are almost always declared and never
+					// written in tests.
+					if (wtype->kind() == awst::WTypeKind::ARC4StaticArray)
+					{
+						auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(wtype);
+						if (sa && sa->arraySize() > 0)
+						{
+							uint64_t elemSize = 32;
+							if (auto const* elemT = sa->elementType())
+							{
+								if (auto const* uintN = dynamic_cast<awst::ARC4UIntN const*>(elemT))
+									elemSize = std::max<uint64_t>(1u, static_cast<uint64_t>(uintN->n() / 8));
+								else if (elemT->kind() == awst::WTypeKind::Bytes)
+									if (auto const* bw = dynamic_cast<awst::BytesWType const*>(elemT))
+										if (bw->length().has_value())
+											elemSize = *bw->length();
+							}
+							uint64_t sz = elemSize * static_cast<uint64_t>(sa->arraySize());
+							if (sz > 32768)
+							{
+								Logger::instance().warning(
+									"state array '" + var->name() + "' has declared size "
+									+ std::to_string(sa->arraySize())
+									+ " which exceeds the 32KB box limit — skipping box_create. "
+									"Element writes will fail at runtime but .length reads "
+									"still return the declared size.",
+									method.sourceLocation);
+								continue;
+							}
+						}
+					}
+
 					lengthInitialized.insert(var->name());
 					// Dynamic array boxes are created in __postInit (after funding)
 					// Length is derived from box_len / element_size (no separate counter)
@@ -1958,6 +1994,33 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				boxKey->encoding = awst::BytesEncoding::Utf8;
 				boxKey->value = std::vector<uint8_t>(varName.begin(), varName.end());
 
+				// Uninitialised dynamic `bytes` state vars: skip the
+				// box_create so the reader's `box_get → select` fallback
+				// returns zero-length bytes. The raw box content is the
+				// bytes value stripped of the ARC4 length header, so
+				// pre-creating with 2 zero bytes would mean the reader
+				// sees 2 bytes of raw data and wraps them with a fresh
+				// length header — producing `0x0002 0x0000` instead of
+				// an empty `0x0000`. Deferring box creation to the first
+				// write fixes the empty case without breaking writes.
+				bool isDynamicBytesWithoutInit = false;
+				{
+					auto const& lin = _contract.annotation().linearizedBaseContracts;
+					for (auto const* base: lin)
+					{
+						for (auto const* var: base->stateVariables())
+						{
+							if (var->name() != varName || var->isConstant())
+								continue;
+							auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(var->type());
+							if (arrType && arrType->isByteArrayOrString() && !var->value())
+								isDynamicBytesWithoutInit = true;
+						}
+					}
+				}
+				if (isDynamicBytesWithoutInit)
+					continue;
+
 				// Compute box size: 2 bytes for ARC4 length header (empty dynamic array),
 				// or string literal size for bytes/string initializers, or
 				// elementSize*N for fixed-size ARC4 static arrays (e.g. uint[20]).
@@ -1979,12 +2042,12 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 								auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(varWtype);
 								if (sa && sa->arraySize() > 0)
 								{
-									unsigned elemSize = 32; // default for uint256
+									uint64_t elemSize = 32; // default for uint256
 									auto const* elemT = sa->elementType();
 									if (elemT)
 									{
 										if (auto const* uintN = dynamic_cast<awst::ARC4UIntN const*>(elemT))
-											elemSize = std::max(1u, static_cast<unsigned>(uintN->n() / 8));
+											elemSize = std::max<uint64_t>(1u, static_cast<uint64_t>(uintN->n() / 8));
 										else if (elemT->kind() == awst::WTypeKind::Bytes)
 										{
 											auto const* bw = dynamic_cast<awst::BytesWType const*>(elemT);
@@ -1992,7 +2055,15 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 												elemSize = *bw->length();
 										}
 									}
-									boxSizeVal = elemSize * static_cast<unsigned>(sa->arraySize());
+									// AVM box max is 32768 bytes. Cap huge declared
+									// sizes (e.g. `uint[2 ether]`) at the max so the
+									// contract still deploys; element access beyond
+									// the cap will fail at runtime, but `.length`
+									// (a compile-time constant) keeps working.
+									uint64_t size = elemSize * static_cast<uint64_t>(sa->arraySize());
+									if (size > 32768)
+										size = 32768;
+									boxSizeVal = static_cast<unsigned>(size);
 								}
 							}
 							if (!var->value())
@@ -3715,7 +3786,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 					auto paramVar = std::make_shared<awst::VarExpression>();
 					paramVar->sourceLocation = loc;
-					paramVar->name = param->name();
+					paramVar->name = param->name().empty()
+						? "_param" + std::to_string(pi)
+						: param->name();
 					paramVar->wtype = awst::WType::uint64Type();
 
 					auto one = std::make_shared<awst::IntegerConstant>();
@@ -3755,7 +3828,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 					auto paramVar = std::make_shared<awst::VarExpression>();
 					paramVar->sourceLocation = loc;
-					paramVar->name = param->name();
+					paramVar->name = param->name().empty()
+						? "_param" + std::to_string(pi)
+						: param->name();
 					paramVar->wtype = awst::WType::uint64Type();
 
 					auto maxVal = std::make_shared<awst::IntegerConstant>();

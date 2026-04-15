@@ -6,6 +6,8 @@
 #include "builder/sol-types/TypeMapper.h"
 #include "Logger.h"
 
+#include <variant>
+
 namespace puyasol::builder::sol_ast
 {
 
@@ -17,33 +19,64 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 	{
 		auto addrExpr = buildExpr(baseExpression());
 
-		std::shared_ptr<awst::Expression> bytesExpr = std::move(addrExpr);
-		if (bytesExpr->wtype == awst::WType::accountType())
+		// Fast path: if the receiver is `address(this)` — which AWSTBuilder
+		// lowers to `global CurrentApplicationAddress` — swap in
+		// `global CurrentApplicationID` so `app_params_get` gets the right
+		// app id. Deriving the id from the last 8 bytes of the address only
+		// works for some app-derived addresses and breaks under different
+		// network configurations.
+		std::shared_ptr<awst::Expression> appId;
+		if (auto const* ic = dynamic_cast<awst::IntrinsicCall const*>(addrExpr.get()))
 		{
-			auto toBytes = std::make_shared<awst::ReinterpretCast>();
-			toBytes->sourceLocation = m_loc;
-			toBytes->wtype = awst::WType::bytesType();
-			toBytes->expr = std::move(bytesExpr);
-			bytesExpr = std::move(toBytes);
+			if (ic->opCode == "global"
+				&& !ic->immediates.empty()
+				&& std::holds_alternative<std::string>(ic->immediates[0])
+				&& std::get<std::string>(ic->immediates[0]) == "CurrentApplicationAddress")
+			{
+				auto idCall = std::make_shared<awst::IntrinsicCall>();
+				idCall->sourceLocation = m_loc;
+				idCall->wtype = awst::WType::uint64Type();
+				idCall->opCode = "global";
+				idCall->immediates = {std::string("CurrentApplicationID")};
+				auto cast = std::make_shared<awst::ReinterpretCast>();
+				cast->sourceLocation = m_loc;
+				cast->wtype = awst::WType::applicationType();
+				cast->expr = std::move(idCall);
+				appId = std::move(cast);
+			}
 		}
 
-		auto extract = std::make_shared<awst::IntrinsicCall>();
-		extract->sourceLocation = m_loc;
-		extract->wtype = awst::WType::bytesType();
-		extract->opCode = "extract";
-		extract->immediates = {24, 8};
-		extract->stackArgs.push_back(std::move(bytesExpr));
+		if (!appId)
+		{
+			std::shared_ptr<awst::Expression> bytesExpr = std::move(addrExpr);
+			if (bytesExpr->wtype == awst::WType::accountType())
+			{
+				auto toBytes = std::make_shared<awst::ReinterpretCast>();
+				toBytes->sourceLocation = m_loc;
+				toBytes->wtype = awst::WType::bytesType();
+				toBytes->expr = std::move(bytesExpr);
+				bytesExpr = std::move(toBytes);
+			}
 
-		auto btoi = std::make_shared<awst::IntrinsicCall>();
-		btoi->sourceLocation = m_loc;
-		btoi->wtype = awst::WType::uint64Type();
-		btoi->opCode = "btoi";
-		btoi->stackArgs.push_back(std::move(extract));
+			auto extract = std::make_shared<awst::IntrinsicCall>();
+			extract->sourceLocation = m_loc;
+			extract->wtype = awst::WType::bytesType();
+			extract->opCode = "extract";
+			extract->immediates = {24, 8};
+			extract->stackArgs.push_back(std::move(bytesExpr));
 
-		auto appId = std::make_shared<awst::ReinterpretCast>();
-		appId->sourceLocation = m_loc;
-		appId->wtype = awst::WType::applicationType();
-		appId->expr = std::move(btoi);
+			auto btoi = std::make_shared<awst::IntrinsicCall>();
+			btoi->sourceLocation = m_loc;
+			btoi->wtype = awst::WType::uint64Type();
+			btoi->opCode = "btoi";
+			btoi->stackArgs.push_back(std::move(extract));
+
+			auto castId = std::make_shared<awst::ReinterpretCast>();
+			castId->sourceLocation = m_loc;
+			castId->wtype = awst::WType::applicationType();
+			castId->expr = std::move(btoi);
+			appId = std::move(castId);
+		}
 
 		auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
 			std::vector<awst::WType const*>{
