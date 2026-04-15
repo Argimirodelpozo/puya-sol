@@ -189,6 +189,12 @@ public:
 	/// appends "__<id>" to make it unique.
 	std::string resolveVarName(std::string const& _name, int64_t _declId)
 	{
+		// Honour explicit remaps (used by modifier inliner when the same
+		// modifier — with its own local vars — is applied multiple times).
+		auto remapIt = m_paramRemaps.find(_declId);
+		if (remapIt != m_paramRemaps.end())
+			return remapIt->second.name;
+
 		auto it = m_varNameToId.find(_name);
 		if (it != m_varNameToId.end() && it->second != _declId)
 		{

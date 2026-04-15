@@ -72,6 +72,38 @@ private:
 	bool m_found = false;
 };
 
+/// Collects local variable declarations inside a statement subtree (e.g. a
+/// modifier body) so the inliner can rename them uniquely per application.
+/// Without this, `modifier mod(uint x) { uint b = x; _; assert(b == x); }`
+/// applied twice shares a single `b` slot across both instances.
+class LocalVarDeclCollector: public solidity::frontend::ASTConstVisitor
+{
+public:
+	std::vector<solidity::frontend::VariableDeclaration const*> decls;
+
+	bool visit(solidity::frontend::VariableDeclaration const& _node) override
+	{
+		if (!_node.isStateVariable() && !_node.isConstant())
+			decls.push_back(&_node);
+		return true;
+	}
+};
+
+/// Detects whether a statement subtree contains any `assembly { ... }` block.
+/// Used to skip modifier local-var renaming when the body has inline assembly:
+/// Yul identifiers reference their original Solidity names, and renaming would
+/// produce a mismatch between the declaration slot and the assembly slot.
+class InlineAssemblyDetector: public solidity::frontend::ASTConstVisitor
+{
+public:
+	bool found = false;
+	bool visit(solidity::frontend::InlineAssembly const&) override
+	{
+		found = true;
+		return false;
+	}
+};
+
 /// Collects AST IDs of base functions that are called via `super.method()`.
 /// These need to be emitted as separate subroutines with distinct names.
 class SuperCallCollector: public solidity::frontend::ASTConstVisitor
@@ -743,37 +775,25 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				}
 			}
 			else if (dynamic_cast<solidity::frontend::ArrayType const*>(var->type())
-				&& dynamic_cast<solidity::frontend::ArrayType const*>(var->type())->isDynamicallySized()
 				&& !dynamic_cast<solidity::frontend::ArrayType const*>(var->type())->isByteArrayOrString()
 				&& getter.args.size() == 1)
 			{
-				// Dynamic array state var `T[] public array` → getter(uint256 i).
-				// The backing store is a SINGLE box containing the packed ARC4
-				// dynamic array (with length header); reading element i should
-				// use IndexExpression on the box, NOT a sha256-based mapping key.
+				// Array state var `T[]` / `T[N] public array` → getter(uint256 i).
+				// The backing store is a single state slot (box for dynamic /
+				// oversized static, AppGlobal otherwise) containing the packed
+				// ARC4 array; reading element i uses IndexExpression on that
+				// slot, NOT a sha256-based mapping key.
 				auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(var->type());
 				auto* arrWType = m_typeMapper.map(arrType);
 				auto* elemARC4 = m_typeMapper.mapSolTypeToARC4(arrType->baseType());
 
-				auto boxKey = std::make_shared<awst::BytesConstant>();
-				boxKey->sourceLocation = loc;
-				boxKey->wtype = awst::WType::boxKeyType();
-				boxKey->encoding = awst::BytesEncoding::Utf8;
-				std::string vn = var->name();
-				boxKey->value = std::vector<uint8_t>(vn.begin(), vn.end());
+				auto storageKind = StorageMapper::shouldUseBoxStorage(*var)
+					? awst::AppStorageKind::Box
+					: awst::AppStorageKind::AppGlobal;
 
-				auto boxExpr = std::make_shared<awst::BoxValueExpression>();
-				boxExpr->sourceLocation = loc;
-				boxExpr->wtype = arrWType;
-				boxExpr->key = boxKey;
-				boxExpr->existsAssertionMessage = std::nullopt;
-
-				auto defaultVal = builder::TypeCoercion::makeDefaultValue(arrWType, loc);
-				auto sg = std::make_shared<awst::StateGet>();
-				sg->sourceLocation = loc;
-				sg->wtype = arrWType;
-				sg->field = boxExpr;
-				sg->defaultValue = defaultVal;
+				auto arrayRead = m_storageMapper.createStateRead(
+					var->name(), arrWType, storageKind, loc
+				);
 
 				auto idxRef = std::make_shared<awst::VarExpression>();
 				idxRef->sourceLocation = loc;
@@ -785,7 +805,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				auto indexExpr = std::make_shared<awst::IndexExpression>();
 				indexExpr->sourceLocation = loc;
 				indexExpr->wtype = elemARC4;
-				indexExpr->base = std::move(sg);
+				indexExpr->base = std::move(arrayRead);
 				indexExpr->index = std::move(idx);
 
 				// Decode ARC4 element back to native type (e.g. arc4.uint256 → biguint)
@@ -4015,6 +4035,7 @@ void ContractBuilder::inlineModifiers(
 )
 {
 	static int modCounter = 0;
+	static int modRetvalCounter = 0;
 
 	// Extract named return var init statements from the body and hoist them
 	// BEFORE modifier arg evaluation. Without this, modifier args like
@@ -4024,6 +4045,22 @@ void ContractBuilder::inlineModifiers(
 	for (auto const& rp : _func.returnParameters())
 		if (!rp->name().empty())
 			returnParamNames.insert(rp->name());
+
+	// Unnamed single-return: synthesise a return var so `return expr;` can be
+	// rewritten into `__mod_retval_N = expr;` (in placeholder) + deferred
+	// `return __mod_retval_N;` — otherwise the expr would evaluate *after*
+	// post-`_` modifier code has run (e.g. `a -= b;` in `mod(x)`), returning
+	// a stale value.
+	awst::WType const* syntheticRetType = nullptr;
+	std::string syntheticRetName;
+	if (returnParamNames.empty()
+		&& _func.returnParameters().size() == 1
+		&& _func.returnParameters()[0]->name().empty())
+	{
+		syntheticRetType = m_typeMapper.map(_func.returnParameters()[0]->type());
+		syntheticRetName = "__mod_retval_" + std::to_string(modRetvalCounter++);
+		returnParamNames.insert(syntheticRetName);
+	}
 
 	std::vector<std::shared_ptr<awst::Statement>> hoistedInits;
 	if (!returnParamNames.empty() && !_body->body.empty())
@@ -4052,6 +4089,22 @@ void ContractBuilder::inlineModifiers(
 			}
 			break; // only hoist consecutive inits at the start
 		}
+	}
+
+	// Default-init the synthetic return var so the deferred `return` always
+	// reads a valid value, even on execution paths that don't reach the split
+	// assignment (e.g. early revert inside the modifier).
+	if (!syntheticRetName.empty())
+	{
+		auto synthInit = std::make_shared<awst::AssignmentStatement>();
+		synthInit->sourceLocation = makeLoc(_func.location());
+		auto target = std::make_shared<awst::VarExpression>();
+		target->sourceLocation = synthInit->sourceLocation;
+		target->name = syntheticRetName;
+		target->wtype = syntheticRetType;
+		synthInit->target = std::move(target);
+		synthInit->value = StorageMapper::makeDefaultValue(syntheticRetType, synthInit->sourceLocation);
+		hoistedInits.push_back(std::move(synthInit));
 	}
 
 	// For each modifier invocation, wrap the function body
@@ -4127,6 +4180,33 @@ void ContractBuilder::inlineModifiers(
 			}
 		}
 
+		// Rename modifier-body local variables uniquely per application so that
+		// the same modifier applied multiple times (e.g. `mod(2) mod(5)`) does
+		// not share storage slots for its own local variables.
+		//
+		// Skip the rename when the modifier body contains inline assembly:
+		// Yul identifiers reference their original Solidity names (see
+		// SolInlineAssembly.cpp and AssemblyBuilder::buildIdentifier), so a
+		// renamed declaration would decouple the assembly's writes from the
+		// surrounding Solidity reads.
+		{
+			InlineAssemblyDetector asmDetector;
+			modDef->body().accept(asmDetector);
+			if (!asmDetector.found)
+			{
+				LocalVarDeclCollector localCollector;
+				modDef->body().accept(localCollector);
+				for (auto const* localDecl: localCollector.decls)
+				{
+					std::string uniqueName
+						= "__mod_local_" + localDecl->name() + "_" + std::to_string(modCounter++);
+					auto* localType = m_typeMapper.map(localDecl->type());
+					m_exprBuilder->addParamRemap(localDecl->id(), uniqueName, localType);
+					remappedDeclIds.push_back(localDecl->id());
+				}
+			}
+		}
+
 		// Separate the function body into:
 		// 1. Named return var initializations (hoisted before modifier)
 		// 2. Placeholder body (the `_;` replacement)
@@ -4138,12 +4218,6 @@ void ContractBuilder::inlineModifiers(
 		auto placeholderBody = std::make_shared<awst::Block>();
 		placeholderBody->sourceLocation = _body->sourceLocation;
 		std::shared_ptr<awst::Statement> deferredReturn;
-
-		// Collect named return parameter names
-		std::set<std::string> returnParamNames;
-		for (auto const& retParam: _func.returnParameters())
-			if (!retParam->name().empty())
-				returnParamNames.insert(retParam->name());
 
 		// Track which named return vars have already been hoisted (only hoist
 		// the first assignment — the default init — not subsequent assignments
