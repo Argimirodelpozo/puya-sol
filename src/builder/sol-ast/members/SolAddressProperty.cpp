@@ -17,6 +17,29 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 
 	if (member == "code")
 	{
+		// Compile-time literal bridge: address(N).code for integer N
+		// returns empty bytes. Precompile addresses (1..10) and EOAs
+		// have no code on EVM. Skip the app_params_get path for these
+		// since it panics with "unavailable App N" on non-existent
+		// app ids.
+		{
+			auto const* fc = dynamic_cast<solidity::frontend::FunctionCall const*>(&baseExpression());
+			if (fc && *fc->annotation().kind == solidity::frontend::FunctionCallKind::TypeConversion
+				&& fc->arguments().size() == 1)
+			{
+				auto const* lit = dynamic_cast<solidity::frontend::Literal const*>(fc->arguments()[0].get());
+				if (lit && lit->token() == solidity::frontend::Token::Number)
+				{
+					auto empty = std::make_shared<awst::BytesConstant>();
+					empty->sourceLocation = m_loc;
+					empty->wtype = awst::WType::bytesType();
+					empty->encoding = awst::BytesEncoding::Base16;
+					empty->value = {};
+					return empty;
+				}
+			}
+		}
+
 		auto addrExpr = buildExpr(baseExpression());
 
 		// Fast path: if the receiver is `address(this)` — which AWSTBuilder
