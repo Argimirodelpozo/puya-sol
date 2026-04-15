@@ -1061,7 +1061,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 			// Sign-extend getter return for signed integer types
 			if (signedGetterBits > 0 && readExpr)
 			{
-				readExpr = signExtendToUint256(std::move(readExpr), signedGetterBits, loc);
+				readExpr = TypeCoercion::signExtendToUint256(std::move(readExpr), signedGetterBits, loc);
 			}
 
 			// ABI v2 validation for getter params (enum keys in mappings)
@@ -3502,7 +3502,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 							&& returnParams.size() == 1)
 						{
 							// Single return — sign-extend directly
-							ret->value = signExtendToUint256(
+							ret->value = TypeCoercion::signExtendToUint256(
 								std::move(ret->value), signedReturns[0].bits, srcLoc);
 							if (wrapSingleReturn)
 								ret->value = wrapArc4(std::move(ret->value), srcLoc);
@@ -3514,7 +3514,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 							{
 								if (sr.index < tuple->items.size())
 								{
-									tuple->items[sr.index] = signExtendToUint256(
+									tuple->items[sr.index] = TypeCoercion::signExtendToUint256(
 										std::move(tuple->items[sr.index]), sr.bits, srcLoc);
 								}
 							}
@@ -4035,15 +4035,6 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	}
 
 	return method;
-}
-
-std::shared_ptr<awst::Expression> ContractBuilder::signExtendToUint256(
-	std::shared_ptr<awst::Expression> _value,
-	unsigned _bits,
-	awst::SourceLocation const& _loc
-)
-{
-	return TypeCoercion::signExtendToUint256(std::move(_value), _bits, _loc);
 }
 
 
