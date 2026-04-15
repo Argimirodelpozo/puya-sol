@@ -463,24 +463,64 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 			cast->expr = std::move(itob);
 			addrExpr = std::move(cast);
 		}
-		auto isLarge = std::make_shared<awst::NumericComparisonExpression>();
-		isLarge->sourceLocation = loc;
-		isLarge->wtype = awst::WType::boolType();
-		isLarge->lhs = std::move(addrExpr);
-		isLarge->op = awst::NumericComparison::Gt;
-		isLarge->rhs = std::move(threshold);
+		// Compute three-way: addr == 0 → 0, 0 < addr ≤ 100 → keccak256(""),
+		// else → keccak256(this.approval). EVM convention: precompile
+		// addresses (1..10) have no code and return keccak256("").
+		auto addrExprForZero = addrExpr;
+		auto addrExprForLarge = addrExpr;
 
 		auto zero = std::make_shared<awst::IntegerConstant>();
 		zero->sourceLocation = loc;
 		zero->wtype = awst::WType::biguintType();
 		zero->value = "0";
 
+		// keccak256 of empty bytes (EVM constant)
+		auto emptyHash = std::make_shared<awst::BytesConstant>();
+		emptyHash->sourceLocation = loc;
+		emptyHash->wtype = awst::WType::bytesType();
+		emptyHash->encoding = awst::BytesEncoding::Base16;
+		emptyHash->value = std::vector<uint8_t>{
+			0xc5, 0xd2, 0x46, 0x01, 0x86, 0xf7, 0x23, 0x3c,
+			0x92, 0x7e, 0x7d, 0xb2, 0xdc, 0xc7, 0x03, 0xc0,
+			0xe5, 0x00, 0xb6, 0x53, 0xca, 0x82, 0x27, 0x3b,
+			0x7b, 0xfa, 0xd8, 0x04, 0x5d, 0x85, 0xa4, 0x70};
+		auto emptyHashBigUint = std::make_shared<awst::ReinterpretCast>();
+		emptyHashBigUint->sourceLocation = loc;
+		emptyHashBigUint->wtype = awst::WType::biguintType();
+		emptyHashBigUint->expr = std::move(emptyHash);
+
+		auto isLarge = std::make_shared<awst::NumericComparisonExpression>();
+		isLarge->sourceLocation = loc;
+		isLarge->wtype = awst::WType::boolType();
+		isLarge->lhs = std::move(addrExprForLarge);
+		isLarge->op = awst::NumericComparison::Gt;
+		isLarge->rhs = std::move(threshold);
+
+		auto zeroLit = std::make_shared<awst::IntegerConstant>();
+		zeroLit->sourceLocation = loc;
+		zeroLit->wtype = awst::WType::biguintType();
+		zeroLit->value = "0";
+		auto isZero = std::make_shared<awst::NumericComparisonExpression>();
+		isZero->sourceLocation = loc;
+		isZero->wtype = awst::WType::boolType();
+		isZero->lhs = std::move(addrExprForZero);
+		isZero->op = awst::NumericComparison::Eq;
+		isZero->rhs = std::move(zeroLit);
+
+		// small (0 < addr <= 100) → emptyHash; large (addr > 100) → hash(self); addr == 0 → 0
+		auto smallOrLarge = std::make_shared<awst::ConditionalExpression>();
+		smallOrLarge->sourceLocation = loc;
+		smallOrLarge->wtype = awst::WType::biguintType();
+		smallOrLarge->condition = std::move(isLarge);
+		smallOrLarge->trueExpr = std::move(hashBigUint);
+		smallOrLarge->falseExpr = std::move(emptyHashBigUint);
+
 		auto cond = std::make_shared<awst::ConditionalExpression>();
 		cond->sourceLocation = loc;
 		cond->wtype = awst::WType::biguintType();
-		cond->condition = std::move(isLarge);
-		cond->trueExpr = std::move(hashBigUint);
-		cond->falseExpr = std::move(zero);
+		cond->condition = std::move(isZero);
+		cond->trueExpr = std::move(zero);
+		cond->falseExpr = std::move(smallOrLarge);
 		return cond;
 	}
 	if (funcName == "address")

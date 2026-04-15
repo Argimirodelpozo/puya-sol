@@ -166,9 +166,43 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 		// On AVM we can fetch the current app's approval program via
 		// `app_params_get AppApprovalProgram (global CurrentApplicationID)`
 		// and hash it with keccak256. For non-current addresses there is
-		// no cheap way to dereference the address → app id, so the fast
-		// path only handles `address(this).codehash`. Arbitrary addresses
-		// fall through to the generic stub (bytes32(0)).
+		// no cheap way to dereference the address → app id.
+		//
+		// Compile-time literal bridge: if the base expression is a
+		// FunctionCall that wraps an integer literal in `address(...)`,
+		// resolve it at compile time. address(0) → 0, small non-zero
+		// addresses → keccak256("") (matches EVM precompile convention
+		// where addresses 1..10 have no code), larger literals → 0.
+		{
+			auto const* fc = dynamic_cast<solidity::frontend::FunctionCall const*>(&baseExpression());
+			if (fc && *fc->annotation().kind == solidity::frontend::FunctionCallKind::TypeConversion
+				&& fc->arguments().size() == 1)
+			{
+				auto const* lit = dynamic_cast<solidity::frontend::Literal const*>(fc->arguments()[0].get());
+				if (lit && lit->token() == solidity::frontend::Token::Number)
+				{
+					auto litVal = lit->annotation().type->literalValue(lit);
+					auto zeroHash = std::make_shared<awst::BytesConstant>();
+					zeroHash->sourceLocation = m_loc;
+					zeroHash->wtype = m_ctx.typeMapper.createType<awst::BytesWType>(32);
+					zeroHash->encoding = awst::BytesEncoding::Base16;
+					if (litVal == 0)
+					{
+						zeroHash->value = std::vector<uint8_t>(32, 0);
+					}
+					else
+					{
+						// keccak256 of empty bytes
+						zeroHash->value = std::vector<uint8_t>{
+							0xc5, 0xd2, 0x46, 0x01, 0x86, 0xf7, 0x23, 0x3c,
+							0x92, 0x7e, 0x7d, 0xb2, 0xdc, 0xc7, 0x03, 0xc0,
+							0xe5, 0x00, 0xb6, 0x53, 0xca, 0x82, 0x27, 0x3b,
+							0x7b, 0xfa, 0xd8, 0x04, 0x5d, 0x85, 0xa4, 0x70};
+					}
+					return zeroHash;
+				}
+			}
+		}
 		auto addrExpr = buildExpr(baseExpression());
 		if (auto const* ic = dynamic_cast<awst::IntrinsicCall const*>(addrExpr.get()))
 		{
