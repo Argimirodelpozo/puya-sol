@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/increment_decrement.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 0 1 64
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 "x" "y" 0x8000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     itob
     bytec_1 // "x"
     swap
@@ -17,7 +17,7 @@ main:
     bytec_2 // "y"
     swap
     app_global_put
-    intc_1 // 0
+    intc_0 // 0
     bytec_1 // "x"
     app_global_get_ex
     assert // check x exists
@@ -40,7 +40,7 @@ main:
     bytec_1 // "x"
     swap
     app_global_put
-    intc_1 // 0
+    intc_0 // 0
     bytec_2 // "y"
     app_global_get_ex
     assert // check y exists
@@ -71,7 +71,7 @@ main:
     bytec_2 // "y"
     swap
     app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -93,7 +93,40 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/increment_decrement.sol.C.f[routing]() -> void:
+f:
+    intc_0 // 0
+    bytec_1 // "x"
+    app_global_get_ex
+    assert // check x exists
+    intc_0 // 0
+    bytec_2 // "y"
+    app_global_get_ex
+    assert // check y exists
+    dig 1
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    uncover 2
+    dig 1
+    b|
+    dig 2
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return

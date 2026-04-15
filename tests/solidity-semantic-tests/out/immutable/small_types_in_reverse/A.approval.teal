@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/small_types_in_reverse.sol.A.approval_program() -> uint64:
 main:
-    intcblock 0 1 32
+    intcblock 0 1 8
     bytecblock "b" "c" 0x151f7c75 "a" "x"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -120,30 +120,25 @@ x:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_2 // 32
+    intc_0 // 0
+    bytec 4 // "x"
+    app_global_get_ex
+    assert // check x exists
+    intc_2 // 8
     bzero
-    swap
+    uncover 2
     concat
     dup
     len
-    intc_2 // 32
+    intc_2 // 8
     -
-    intc_2 // 32
-    extract3
-    sha256
-    bytec 4 // "x"
-    swap
-    concat
-    box_get
-    swap
-    btoi
-    intc_0 // 0
-    swap
-    uncover 2
-    select
+    extract_uint64
+    pushint 2
+    *
+    extract_uint16
     itob
     bytec_2 // 0x151f7c75
     swap

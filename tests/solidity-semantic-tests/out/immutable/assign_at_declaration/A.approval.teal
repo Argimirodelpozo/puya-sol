@@ -30,7 +30,22 @@ main_f_route@4:
     txn ApplicationID
     &&
     assert
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
+    b f
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/assign_at_declaration.sol.A.f[routing]() -> void:
+f:
+    pushint 0
+    pushbytes "a"
+    app_global_get_ex
+    assert // check a exists
+    itob
+    pushint 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
     pushint 1
     return

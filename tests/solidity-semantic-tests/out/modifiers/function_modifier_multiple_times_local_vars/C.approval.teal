@@ -46,50 +46,47 @@ f:
     assert // check a exists
     dig 1
     b+
+    pushint 5
+    itob
     pushint 2
     itob
-    swap
+    uncover 2
     pushbytes 0x07
     b+
     dup
     dig 2
     b>=
     assert // underflow
+    dup
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    dig 1
+    uncover 2
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    dig 2
+    dig 3
     b>=
     assert // underflow
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    dig 1
+    uncover 2
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    intc_2 // 0
-    assert
     dup
-    dig 2
+    dig 3
     b>=
     assert // underflow
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    dig 1
+    uncover 2
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bytec_1 // "a"
-    dig 1
-    app_global_put
     swap
-    uncover 2
-    b==
-    assert
+    app_global_put
     dup
     len
     intc_0 // 64

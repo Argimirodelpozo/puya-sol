@@ -33,29 +33,27 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/function_modifier_loop_viair.sol.C.f[routing]() -> void:
 f:
-    pushbytes 0x
     pushint 10
     itob
+    pushbytes 0x
     pushint 0
     itob
 
-f_while_top@4:
+f_while_top@2:
     dup
-    dig 2
+    dig 3
     b<
-    bz f_after_while@6
-    dig 2
+    bz f_after_while@4
     pushbytes 0x01
-    b+
-    bury 3
+    bury 2
     dup
     pushbytes 0x01
     b+
     bury 1
-    b f_while_top@4
+    b f_while_top@2
 
-f_after_while@6:
-    dig 2
+f_after_while@4:
+    dig 1
     dup
     len
     intc_1 // 64

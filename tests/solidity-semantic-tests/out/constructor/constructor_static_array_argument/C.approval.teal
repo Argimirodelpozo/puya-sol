@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_static_array_argument.sol.C.approval_program() -> uint64:
 main:
-    intcblock 64 32 1
-    bytecblock "a" "b" 0x 0x151f7c75
+    intcblock 64 1 32 0
+    bytecblock "a" "b" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     txna ApplicationArgs 0
     txna ApplicationArgs 1
     bytec_0 // "a"
-    bytec_2 // 0x
+    pushbytes 0x
     app_global_put
     bytec_1 // "b"
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -21,7 +21,7 @@ main:
     bytec_1 // "b"
     swap
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -45,7 +45,7 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_static_array_argument.sol.C.a[routing]() -> void:
 a:
-    pushint 0
+    intc_3 // 0
     bytec_0 // "a"
     app_global_get_ex
     assert // check a exists
@@ -57,11 +57,11 @@ a:
     intc_0 // 64
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -70,27 +70,26 @@ b:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_1 // 32
+    intc_3 // 0
+    bytec_1 // "b"
+    app_global_get_ex
+    assert // check b exists
+    pushint 8
     bzero
-    swap
+    uncover 2
     concat
     dup
     len
-    intc_1 // 32
+    pushint 8
     -
-    intc_1 // 32
-    extract3
-    sha256
-    bytec_1 // "b"
-    swap
-    concat
-    box_get
-    bytec_2 // 0x
-    cover 2
-    select
+    extract_uint64
+    intc_2 // 32
+    *
+    intc_2 // 32
+    extract3 // on error: index access is out of bounds
     dup
     len
     intc_0 // 64
@@ -99,9 +98,9 @@ b:
     intc_0 // 64
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
