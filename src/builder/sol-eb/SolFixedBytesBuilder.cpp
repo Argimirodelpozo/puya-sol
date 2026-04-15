@@ -2,6 +2,7 @@
 /// Solidity fixed-size bytes type builder (bytes1..bytes32).
 
 #include "builder/sol-eb/SolFixedBytesBuilder.h"
+#include "builder/sol-types/TypeMapper.h"
 
 namespace puyasol::builder::eb
 {
@@ -68,6 +69,41 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::compare(
 	{
 		auto lhs = resolve();
 		auto rhs = _other.resolve();
+
+		// EVM stores bytesN as 32-byte words, left-aligned. Comparing
+		// bytes3("abc") to bytes4("abc") is true on EVM because both
+		// pad to "abc + zeros" in 32-byte form. On AVM our BytesConstants
+		// hold N raw bytes, so a 3-byte vs 4-byte comparison is always
+		// false. Right-pad any literal whose underlying constant is
+		// shorter than the other side so the byte-level == matches EVM.
+		auto padConstant = [&](std::shared_ptr<awst::Expression>& expr, size_t targetLen) {
+			auto* bc = dynamic_cast<awst::BytesConstant*>(expr.get());
+			if (!bc) return;
+			if (bc->value.size() >= targetLen) return;
+			auto* newType = m_ctx.typeMapper.createType<awst::BytesWType>(
+				static_cast<int>(targetLen));
+			auto out = std::make_shared<awst::BytesConstant>();
+			out->sourceLocation = bc->sourceLocation;
+			out->wtype = newType;
+			out->encoding = bc->encoding;
+			out->value = bc->value;
+			out->value.resize(targetLen, 0);
+			expr = std::move(out);
+		};
+		auto bytesLen = [](awst::Expression const& e) -> size_t {
+			if (auto const* bw = dynamic_cast<awst::BytesWType const*>(e.wtype))
+				if (bw->length().has_value())
+					return *bw->length();
+			return 0;
+		};
+		size_t lhsLen = bytesLen(*lhs);
+		size_t rhsLen = bytesLen(*rhs);
+		size_t common = std::max(lhsLen, rhsLen);
+		if (common > 0)
+		{
+			padConstant(lhs, common);
+			padConstant(rhs, common);
+		}
 
 		// Coerce to same wtype if needed
 		auto coerceToBytes = [&](std::shared_ptr<awst::Expression>& expr) {

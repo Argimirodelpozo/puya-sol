@@ -433,6 +433,13 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 						indexExpr->wtype = _ctx.typeMapper.map(elemSolType);
 
 					auto elemBytes = toPackedBytes(_ctx, std::move(indexExpr), elemSolType, _isPacked, _loc);
+					// abi.encode (non-packed) requires each element in
+					// arrays to occupy a full 32-byte word, but the ARC4
+					// element access for small uintN returns only N/8 raw
+					// bytes. Left-pad to 32 so the resulting blob matches
+					// EVM's head/tail layout.
+					if (!_isPacked && elemBytes)
+						elemBytes = leftPadBytes(std::move(elemBytes), 32, _loc);
 					if (!packed)
 						packed = std::move(elemBytes);
 					else
@@ -717,41 +724,41 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSignature(
 	std::vector<std::shared_ptr<awst::Expression>> parts;
 	auto sigExpr = _ctx.buildExpr(*args[0]);
 
-	if (auto const* strConst = dynamic_cast<awst::BytesConstant const*>(sigExpr.get()))
-	{
-		auto methodConst = std::make_shared<awst::MethodConstant>();
-		methodConst->sourceLocation = _loc;
-		methodConst->wtype = awst::WType::bytesType();
-		methodConst->value = std::string(strConst->value.begin(), strConst->value.end());
-		parts.push_back(std::move(methodConst));
-	}
-	else
-	{
-		// Use sha512_256 for function selectors (AVM's native hash)
-		auto hash = std::make_shared<awst::IntrinsicCall>();
-		hash->sourceLocation = _loc;
-		hash->wtype = awst::WType::bytesType();
-		hash->opCode = "sha512_256";
-		hash->stackArgs.push_back(std::move(sigExpr));
+	// Solidity's abi.encodeWithSignature uses keccak256 (EVM selector); AVM
+	// has a native keccak256 opcode so we emit it directly. For literal
+	// signatures we still call keccak256 at runtime — we could fold at compile
+	// time but runtime keeps the code simpler and fits in the 700-op budget.
+	auto hash = std::make_shared<awst::IntrinsicCall>();
+	hash->sourceLocation = _loc;
+	hash->wtype = awst::WType::bytesType();
+	hash->opCode = "keccak256";
+	hash->stackArgs.push_back(std::move(sigExpr));
 
-		auto extract4 = std::make_shared<awst::IntrinsicCall>();
-		extract4->sourceLocation = _loc;
-		extract4->wtype = awst::WType::bytesType();
-		extract4->opCode = "extract";
-		extract4->immediates = {0, 4};
-		extract4->stackArgs.push_back(std::move(hash));
-		parts.push_back(std::move(extract4));
-	}
+	auto extract4 = std::make_shared<awst::IntrinsicCall>();
+	extract4->sourceLocation = _loc;
+	extract4->wtype = awst::WType::bytesType();
+	extract4->opCode = "extract";
+	extract4->immediates = {0, 4};
+	extract4->stackArgs.push_back(std::move(hash));
+	parts.push_back(std::move(extract4));
 
 	if (args.size() == 1)
 		return std::make_unique<GenericAbiResult>(_ctx, concatByteExprs(std::move(parts), _loc));
 
-	// Check if trailing args have dynamic types
+	// Check if trailing args have dynamic types. StringLiteralType is
+	// static per Solidity's type system, but its encoding is exactly
+	// what ABI dynamic encoding expects (a bytes blob), so we treat it
+	// as dynamic here to match Solidity's head/tail layout.
+	auto isDynArg = [](solidity::frontend::Type const* _t) -> bool {
+		if (!_t) return false;
+		if (_t->isDynamicallyEncoded()) return true;
+		return dynamic_cast<solidity::frontend::StringLiteralType const*>(_t) != nullptr;
+	};
 	bool hasDynamic = false;
 	for (size_t i = 1; i < args.size(); ++i)
 	{
 		auto const* solType = args[i]->annotation().type;
-		if (solType && solType->isDynamicallyEncoded())
+		if (isDynArg(solType))
 			hasDynamic = true;
 	}
 
@@ -772,7 +779,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSignature(
 		for (size_t i = 1; i < args.size(); ++i)
 		{
 			auto const* solType = args[i]->annotation().type;
-			bool isDyn = solType && solType->isDynamicallyEncoded();
+			bool isDyn = isDynArg(solType);
 			auto expr = _ctx.buildExpr(*args[i]);
 
 			if (!isDyn)
@@ -1208,8 +1215,102 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 			concat->stackArgs.push_back(std::move(dataPadded));
 			return concat;
 		}
-		// For T[]: [count][elem0][elem1]... each element 32-byte padded
-		// TODO: implement dynamic array encoding
+	}
+
+	// Dynamic T[] array (non-byte elements): [count as uint256][elem0..elemN]
+	// where each element is the EVM ABI word encoding of T. On AVM we
+	// store dynamic arrays as ARC4 with a 2-byte length header + raw
+	// element data. To match Solidity's head/tail layout we:
+	//  - compute count = (byte_len - 2) / elem_byte_size
+	//  - emit [count_as_uint256] [raw_element_bytes]
+	// This only matches EVM when the ARC4 element width equals the
+	// abi.encode word width (32 bytes) — i.e. only uint256[], bytes32[]
+	// and similar. For smaller element types (uint8[]) the concatenated
+	// raw data is still packed rather than per-element 32-byte padded,
+	// so the test harness will still diff. A fully general dynamic
+	// array encoder would need a runtime loop which puya's AWST doesn't
+	// currently allow as a sub-expression.
+	if (auto const* arrType = dynamic_cast<ArrayType const*>(_solType))
+	{
+		if (arrType->isDynamicallySized() && !arrType->isByteArrayOrString())
+		{
+			auto const* elemSolType = arrType->baseType();
+			unsigned elemByteSize = 32;
+			if (auto const* intType = dynamic_cast<IntegerType const*>(elemSolType))
+				elemByteSize = std::max(1u, intType->numBits() / 8);
+			else if (auto const* fbType = dynamic_cast<FixedBytesType const*>(elemSolType))
+				elemByteSize = std::max(1u, (unsigned) fbType->numBytes());
+
+			// Only enable for 32-byte elements (uint256[], bytes32[]).
+			// Smaller elements need per-element padding which requires
+			// loops we can't emit as a sub-expression.
+			if (elemByteSize == 32)
+			{
+				auto arrayExpr = _expr;
+				auto asBytes = std::make_shared<awst::ReinterpretCast>();
+				asBytes->sourceLocation = _loc;
+				asBytes->wtype = awst::WType::bytesType();
+				asBytes->expr = arrayExpr;
+
+				auto rawLen = std::make_shared<awst::IntrinsicCall>();
+				rawLen->sourceLocation = _loc;
+				rawLen->wtype = awst::WType::uint64Type();
+				rawLen->opCode = "len";
+				rawLen->stackArgs.push_back(asBytes);
+
+				auto two = std::make_shared<awst::IntegerConstant>();
+				two->sourceLocation = _loc;
+				two->wtype = awst::WType::uint64Type();
+				two->value = "2";
+
+				auto contentBytes = std::make_shared<awst::UInt64BinaryOperation>();
+				contentBytes->sourceLocation = _loc;
+				contentBytes->wtype = awst::WType::uint64Type();
+				contentBytes->left = std::move(rawLen);
+				contentBytes->op = awst::UInt64BinaryOperator::Sub;
+				contentBytes->right = std::move(two);
+
+				auto elemSize = std::make_shared<awst::IntegerConstant>();
+				elemSize->sourceLocation = _loc;
+				elemSize->wtype = awst::WType::uint64Type();
+				elemSize->value = std::to_string(elemByteSize);
+
+				auto lenExpr = std::make_shared<awst::UInt64BinaryOperation>();
+				lenExpr->sourceLocation = _loc;
+				lenExpr->wtype = awst::WType::uint64Type();
+				lenExpr->left = std::move(contentBytes);
+				lenExpr->op = awst::UInt64BinaryOperator::FloorDiv;
+				lenExpr->right = std::move(elemSize);
+
+				auto lenItob = std::make_shared<awst::IntrinsicCall>();
+				lenItob->sourceLocation = _loc;
+				lenItob->wtype = awst::WType::bytesType();
+				lenItob->opCode = "itob";
+				lenItob->stackArgs.push_back(std::move(lenExpr));
+				auto lenPadded = leftPadBytes(std::move(lenItob), 32, _loc);
+
+				auto stripHeader = std::make_shared<awst::IntrinsicCall>();
+				stripHeader->sourceLocation = _loc;
+				stripHeader->wtype = awst::WType::bytesType();
+				stripHeader->opCode = "extract";
+				stripHeader->immediates = {2, 0};
+				{
+					auto bytesCast = std::make_shared<awst::ReinterpretCast>();
+					bytesCast->sourceLocation = _loc;
+					bytesCast->wtype = awst::WType::bytesType();
+					bytesCast->expr = arrayExpr;
+					stripHeader->stackArgs.push_back(std::move(bytesCast));
+				}
+
+				auto concatArr = std::make_shared<awst::IntrinsicCall>();
+				concatArr->sourceLocation = _loc;
+				concatArr->wtype = awst::WType::bytesType();
+				concatArr->opCode = "concat";
+				concatArr->stackArgs.push_back(std::move(lenPadded));
+				concatArr->stackArgs.push_back(std::move(stripHeader));
+				return concatArr;
+			}
+		}
 	}
 
 	// Fallback: just pad to 32
