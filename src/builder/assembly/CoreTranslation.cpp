@@ -439,6 +439,30 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		threshold->value = "100";
 
 		auto addrExpr = args[0];
+		// addrExpr may be account / application / biguint — coerce to
+		// biguint for the comparison. NumericComparisonExpression only
+		// accepts uint64/biguint/bool/asset/application.
+		if (addrExpr->wtype == awst::WType::accountType())
+		{
+			auto cast = std::make_shared<awst::ReinterpretCast>();
+			cast->sourceLocation = loc;
+			cast->wtype = awst::WType::biguintType();
+			cast->expr = std::move(addrExpr);
+			addrExpr = std::move(cast);
+		}
+		else if (addrExpr->wtype == awst::WType::uint64Type())
+		{
+			auto itob = std::make_shared<awst::IntrinsicCall>();
+			itob->sourceLocation = loc;
+			itob->wtype = awst::WType::bytesType();
+			itob->opCode = "itob";
+			itob->stackArgs.push_back(std::move(addrExpr));
+			auto cast = std::make_shared<awst::ReinterpretCast>();
+			cast->sourceLocation = loc;
+			cast->wtype = awst::WType::biguintType();
+			cast->expr = std::move(itob);
+			addrExpr = std::move(cast);
+		}
 		auto isLarge = std::make_shared<awst::NumericComparisonExpression>();
 		isLarge->sourceLocation = loc;
 		isLarge->wtype = awst::WType::boolType();
