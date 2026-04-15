@@ -194,8 +194,14 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		return appArgs0;
 	}
 
-	// msg.data → conditional: NumAppArgs > 0 ? ApplicationArgs[0] : bzero(0)
-	// Handles bare calls where no ApplicationArgs are provided.
+	// msg.data → reconstruct EVM-style calldata: selector (4 bytes from
+	// ApplicationArgs[0]) followed by each subsequent ApplicationArgs slot
+	// concatenated. Each ARC4 arg is already left-padded to its declared
+	// width, so the concatenation lands close to the EVM head encoding for
+	// simple scalar args. Bare calls with no ApplicationArgs return bzero(0).
+	//
+	// We only inspect up to 16 slots — Algorand's hard cap is 16
+	// ApplicationArgs (slot 0 is the selector, so 15 actual params).
 	if (baseName == "msg" && member == "data")
 	{
 		auto numAppArgs = std::make_shared<awst::IntrinsicCall>();
@@ -216,29 +222,88 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		hasData->op = awst::NumericComparison::Gt;
 		hasData->rhs = std::move(zero);
 
-		auto appArgs0 = std::make_shared<awst::IntrinsicCall>();
-		appArgs0->sourceLocation = m_loc;
-		appArgs0->wtype = awst::WType::bytesType();
-		appArgs0->opCode = "txna";
-		appArgs0->immediates = {std::string("ApplicationArgs"), 0};
+		// Build concatenated calldata from slot 0 (selector) onwards.
+		std::shared_ptr<awst::Expression> calldataConcat;
+		for (int slot = 0; slot < 16; ++slot)
+		{
+			auto slotIdx = std::make_shared<awst::IntegerConstant>();
+			slotIdx->sourceLocation = m_loc;
+			slotIdx->wtype = awst::WType::uint64Type();
+			slotIdx->value = std::to_string(slot);
 
-		auto bzeroSize = std::make_shared<awst::IntegerConstant>();
-		bzeroSize->sourceLocation = m_loc;
-		bzeroSize->wtype = awst::WType::uint64Type();
-		bzeroSize->value = "0";
+			auto numArgsCheck = std::make_shared<awst::IntrinsicCall>();
+			numArgsCheck->sourceLocation = m_loc;
+			numArgsCheck->wtype = awst::WType::uint64Type();
+			numArgsCheck->opCode = "txn";
+			numArgsCheck->immediates = {std::string("NumAppArgs")};
 
-		auto emptyBytes = std::make_shared<awst::IntrinsicCall>();
-		emptyBytes->sourceLocation = m_loc;
-		emptyBytes->wtype = awst::WType::bytesType();
-		emptyBytes->opCode = "bzero";
-		emptyBytes->stackArgs.push_back(std::move(bzeroSize));
+			auto slotIdxCmp = std::make_shared<awst::IntegerConstant>();
+			slotIdxCmp->sourceLocation = m_loc;
+			slotIdxCmp->wtype = awst::WType::uint64Type();
+			slotIdxCmp->value = std::to_string(slot);
+
+			auto slotPresent = std::make_shared<awst::NumericComparisonExpression>();
+			slotPresent->sourceLocation = m_loc;
+			slotPresent->wtype = awst::WType::boolType();
+			slotPresent->lhs = std::move(numArgsCheck);
+			slotPresent->op = awst::NumericComparison::Gt;
+			slotPresent->rhs = std::move(slotIdxCmp);
+
+			auto slotBytes = std::make_shared<awst::IntrinsicCall>();
+			slotBytes->sourceLocation = m_loc;
+			slotBytes->wtype = awst::WType::bytesType();
+			slotBytes->opCode = "txna";
+			slotBytes->immediates = {std::string("ApplicationArgs"), slot};
+
+			auto bzeroSize = std::make_shared<awst::IntegerConstant>();
+			bzeroSize->sourceLocation = m_loc;
+			bzeroSize->wtype = awst::WType::uint64Type();
+			bzeroSize->value = "0";
+			auto emptyBytes = std::make_shared<awst::IntrinsicCall>();
+			emptyBytes->sourceLocation = m_loc;
+			emptyBytes->wtype = awst::WType::bytesType();
+			emptyBytes->opCode = "bzero";
+			emptyBytes->stackArgs.push_back(std::move(bzeroSize));
+
+			auto slotChoice = std::make_shared<awst::ConditionalExpression>();
+			slotChoice->sourceLocation = m_loc;
+			slotChoice->wtype = awst::WType::bytesType();
+			slotChoice->condition = std::move(slotPresent);
+			slotChoice->trueExpr = std::move(slotBytes);
+			slotChoice->falseExpr = std::move(emptyBytes);
+
+			if (!calldataConcat)
+			{
+				calldataConcat = std::move(slotChoice);
+			}
+			else
+			{
+				auto cat = std::make_shared<awst::IntrinsicCall>();
+				cat->sourceLocation = m_loc;
+				cat->wtype = awst::WType::bytesType();
+				cat->opCode = "concat";
+				cat->stackArgs.push_back(std::move(calldataConcat));
+				cat->stackArgs.push_back(std::move(slotChoice));
+				calldataConcat = std::move(cat);
+			}
+		}
+
+		auto bzeroSize2 = std::make_shared<awst::IntegerConstant>();
+		bzeroSize2->sourceLocation = m_loc;
+		bzeroSize2->wtype = awst::WType::uint64Type();
+		bzeroSize2->value = "0";
+		auto emptyAll = std::make_shared<awst::IntrinsicCall>();
+		emptyAll->sourceLocation = m_loc;
+		emptyAll->wtype = awst::WType::bytesType();
+		emptyAll->opCode = "bzero";
+		emptyAll->stackArgs.push_back(std::move(bzeroSize2));
 
 		auto cond = std::make_shared<awst::ConditionalExpression>();
 		cond->sourceLocation = m_loc;
 		cond->wtype = awst::WType::bytesType();
 		cond->condition = std::move(hasData);
-		cond->trueExpr = std::move(appArgs0);
-		cond->falseExpr = std::move(emptyBytes);
+		cond->trueExpr = std::move(calldataConcat);
+		cond->falseExpr = std::move(emptyAll);
 		return cond;
 	}
 
