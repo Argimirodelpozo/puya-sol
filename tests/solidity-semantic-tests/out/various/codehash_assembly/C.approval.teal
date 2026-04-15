@@ -4,7 +4,6 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/codehash_assembly.sol.C.approval_program() -> uint64:
 main:
     intcblock 1
-    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000000 0x
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -33,7 +32,7 @@ main_after_if_else@2:
 f:
     load 0
     store 0
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
@@ -43,7 +42,7 @@ f:
 g:
     load 0
     store 0
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x151f7c75c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
     log
     intc_0 // 1
     return
@@ -53,16 +52,13 @@ g:
 h:
     load 0
     global CurrentApplicationAddress
-    pushbytes 0x64
-    b>
+    pushbytes 0x
+    b==
     bz h_ternary_false@3
-    global CurrentApplicationID
-    app_params_get AppApprovalProgram
-    pop
-    keccak256
+    pushbytes 0x
 
-h_ternary_merge@4:
-    bytec_1 // 0x
+h_ternary_merge@7:
+    pushbytes 0x
     b==
     !
     dig 1
@@ -79,5 +75,16 @@ h_ternary_merge@4:
     return
 
 h_ternary_false@3:
-    bytec_1 // 0x
-    b h_ternary_merge@4
+    global CurrentApplicationAddress
+    pushbytes 0x64
+    b>
+    bz h_ternary_false@5
+    global CurrentApplicationID
+    app_params_get AppApprovalProgram
+    pop
+    keccak256
+    b h_ternary_merge@7
+
+h_ternary_false@5:
+    pushbytes 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
+    b h_ternary_merge@7
