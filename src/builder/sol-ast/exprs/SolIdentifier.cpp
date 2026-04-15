@@ -60,9 +60,12 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 	// Variable references
 	if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(decl))
 	{
-		// Constants/immutables: inline the value
-		if ((varDecl->isConstant() || (varDecl->immutable() && !m_ctx.inConstructor))
-			&& varDecl->value())
+		// Constants: inline the value (known at compile time).
+		// Immutables: DO NOT inline — the constructor may mutate them
+		// (e.g. `int immutable x = 1; constructor() { x--; }`), so the
+		// declaration's initial value is not necessarily what will be in
+		// state after deployment.
+		if (varDecl->isConstant() && varDecl->value())
 		{
 			auto val = buildExpr(*varDecl->value());
 
@@ -144,12 +147,10 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 				return placeholder;
 			}
 
-			// Constants/immutables (redundant check for safety)
-			if (varDecl->isConstant() || (varDecl->immutable() && !m_ctx.inConstructor))
-			{
-				if (varDecl->value())
-					return buildExpr(*varDecl->value());
-			}
+			// Constants (redundant check for safety) — immutables must
+			// always read from state; see above.
+			if (varDecl->isConstant() && varDecl->value())
+				return buildExpr(*varDecl->value());
 
 			return m_ctx.storageMapper.createStateRead(name, type, kind, m_loc);
 		}

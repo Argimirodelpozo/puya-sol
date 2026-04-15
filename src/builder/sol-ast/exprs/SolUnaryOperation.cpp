@@ -659,13 +659,24 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		}
 	};
 
+	// Re-read the subexpression for the assignment target. State vars come
+	// back wrapped in StateGet, which is a read — unwrap so the assignment
+	// lands on the writable BoxValueExpression / AppStateExpression.
+	auto makeWriteTarget = [&]() -> std::shared_ptr<awst::Expression>
+	{
+		auto target = buildExpr(m_unaryOp.subExpression());
+		if (auto const* sg = dynamic_cast<awst::StateGet const*>(target.get()))
+			target = sg->field;
+		return target;
+	};
+
 	if (isPrefix)
 	{
 		auto newValue = makeNewValue(_operand);
 		auto assignExpr = std::make_shared<awst::AssignmentExpression>();
 		assignExpr->sourceLocation = m_loc;
 		assignExpr->wtype = _operand->wtype;
-		assignExpr->target = buildExpr(m_unaryOp.subExpression());
+		assignExpr->target = makeWriteTarget();
 		assignExpr->value = std::move(newValue);
 		return assignExpr;
 	}
@@ -701,7 +712,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		// a = temp + 1 (for inc) or temp - 1 (for dec)
 		auto incrStmt = std::make_shared<awst::AssignmentStatement>();
 		incrStmt->sourceLocation = m_loc;
-		incrStmt->target = buildExpr(m_unaryOp.subExpression());
+		incrStmt->target = makeWriteTarget();
 		incrStmt->value = std::move(newValue);
 		m_ctx.prePendingStatements.push_back(std::move(incrStmt));
 
