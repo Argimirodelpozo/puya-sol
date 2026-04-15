@@ -460,6 +460,19 @@ int main(int _argc, char* _argv[])
 		rawMainSource = ss.str();
 	}
 
+	// Auto-detect `// compileViaYul: true` directive in semantic test files
+	// so we match Solidity's viaIR codegen semantics (modifier `_` invocations
+	// get fresh locals) without requiring the test runner to pass a flag.
+	if (!opts.viaYulBehavior)
+	{
+		static std::regex const viaYulRe(R"(//\s*compileViaYul\s*:\s*true\b)");
+		if (std::regex_search(rawMainSource, viaYulRe))
+		{
+			opts.viaYulBehavior = true;
+			logger.debug("Detected compileViaYul:true directive — enabling viaIR codegen");
+		}
+	}
+
 	// Pre-scan: collect event signatures from imported interface files
 	// so we can remove duplicate event declarations from the contract source.
 	std::set<std::string> interfaceEvents;
