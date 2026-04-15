@@ -524,6 +524,44 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 {
 	Token op = m_assignment.assignmentOperator();
 
+	// Storage pointer reassignment: `mapping storage m = m1; ...; m = m2;`
+	// The LHS is a local with Storage reference location. There is no
+	// runtime write — just update the compile-time alias so that later
+	// `m[k]` accesses resolve to the new state variable. The new alias
+	// is the *same* expression we already built for the RHS, wrapped in
+	// StateGet if necessary so subsequent reads through the alias still
+	// return a value.
+	if (op == Token::Assign)
+	{
+		if (auto const* lhsIdent = dynamic_cast<Identifier const*>(&m_assignment.leftHandSide()))
+		{
+			auto const* lhsDecl = dynamic_cast<VariableDeclaration const*>(
+				lhsIdent->annotation().referencedDeclaration);
+			if (lhsDecl
+				&& lhsDecl->referenceLocation() == VariableDeclaration::Location::Storage
+				&& !lhsDecl->isStateVariable())
+			{
+				auto rhsExpr = buildExpr(m_assignment.rightHandSide());
+				auto aliasExpr = rhsExpr;
+				if (dynamic_cast<awst::BoxValueExpression const*>(rhsExpr.get())
+					|| dynamic_cast<awst::AppStateExpression const*>(rhsExpr.get()))
+				{
+					auto sg = std::make_shared<awst::StateGet>();
+					sg->sourceLocation = m_loc;
+					sg->wtype = rhsExpr->wtype;
+					sg->field = rhsExpr;
+					sg->defaultValue = StorageMapper::makeDefaultValue(rhsExpr->wtype, m_loc);
+					aliasExpr = sg;
+				}
+				m_ctx.storageAliases[lhsDecl->id()] = std::move(aliasExpr);
+				auto voidExpr = std::make_shared<awst::VoidConstant>();
+				voidExpr->sourceLocation = m_loc;
+				voidExpr->wtype = awst::WType::voidType();
+				return voidExpr;
+			}
+		}
+	}
+
 	// Rewrite `arr.push() = value` as `arr.push(value)`. Solidity's
 	// arg-less push() returns a reference to the new slot; we don't
 	// have a reference type, so stash the RHS as a pending "push

@@ -125,6 +125,34 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 	{
 		varName = ident->name();
 		rootMappingType = ident->annotation().type;
+
+		// Storage pointer alias: `mapping storage m = m1; m[k] = v;`
+		// The identifier resolves to a local with a registered alias;
+		// the box prefix must match the underlying state variable, not
+		// the local's name, or writes land under the wrong key.
+		if (auto const* decl = ident->annotation().referencedDeclaration)
+		{
+			auto aliasIt = m_ctx.storageAliases.find(decl->id());
+			if (aliasIt != m_ctx.storageAliases.end())
+			{
+				auto const* expr = aliasIt->second.get();
+				// Unwrap StateGet → underlying state expression
+				if (auto const* sg = dynamic_cast<awst::StateGet const*>(expr))
+					expr = sg->field.get();
+				// Peel off FieldExpressions so we pick the *root* state var
+				// name; key synthesis works for root-level mapping aliases,
+				// not nested field mappings.
+				while (auto const* fe = dynamic_cast<awst::FieldExpression const*>(expr))
+					expr = fe->base.get();
+				std::shared_ptr<awst::Expression> keyExpr;
+				if (auto const* appState = dynamic_cast<awst::AppStateExpression const*>(expr))
+					keyExpr = appState->key;
+				else if (auto const* boxVal = dynamic_cast<awst::BoxValueExpression const*>(expr))
+					keyExpr = boxVal->key;
+				if (auto const* bc = dynamic_cast<awst::BytesConstant const*>(keyExpr.get()))
+					varName = std::string(bc->value.begin(), bc->value.end());
+			}
+		}
 	}
 	else if (auto const* ma = dynamic_cast<MemberAccess const*>(cursor))
 	{

@@ -5,6 +5,8 @@
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
 
+#include <libsolidity/ast/AST.h>
+
 namespace puyasol::builder::eb
 {
 
@@ -54,16 +56,67 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 			|| elemType->kind() == awst::WTypeKind::ARC4UIntN
 			|| elemType->kind() == awst::WTypeKind::ARC4DynamicArray
 			|| elemType->kind() == awst::WTypeKind::ARC4Struct);
+
+	std::shared_ptr<awst::Expression> result = std::move(e);
 	if (needsDecode)
 	{
 		auto decode = std::make_shared<awst::ARC4Decode>();
 		decode->sourceLocation = _loc;
 		decode->wtype = expectedType;
-		decode->value = std::move(e);
-		return std::make_unique<SolArrayBuilder>(m_ctx, m_arrayType, std::move(decode));
+		decode->value = std::move(result);
+		result = std::move(decode);
 	}
 
-	return std::make_unique<SolArrayBuilder>(m_ctx, m_arrayType, std::move(e));
+	// Enum element validation: Solidity panics (0x21) when reading an out-
+	// of-range enum from an array. Spill the read to a local so the assert
+	// sees the same value and survives DCE on `arr[i];` expression statements.
+	if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(
+			m_arrayType->baseType()))
+	{
+		unsigned numMembers = enumType->numberOfMembers();
+		static int enumCheckCounter = 0;
+		std::string tmpName = "__enum_idx_" + std::to_string(enumCheckCounter++);
+
+		auto tmpVar = std::make_shared<awst::VarExpression>();
+		tmpVar->sourceLocation = _loc;
+		tmpVar->wtype = result->wtype;
+		tmpVar->name = tmpName;
+
+		auto assignTmp = std::make_shared<awst::AssignmentStatement>();
+		assignTmp->sourceLocation = _loc;
+		assignTmp->target = tmpVar;
+		assignTmp->value = result;
+		m_ctx.prePendingStatements.push_back(std::move(assignTmp));
+
+		auto cmpLhs = TypeCoercion::implicitNumericCast(
+			tmpVar, awst::WType::uint64Type(), _loc);
+		auto maxVal = std::make_shared<awst::IntegerConstant>();
+		maxVal->sourceLocation = _loc;
+		maxVal->wtype = awst::WType::uint64Type();
+		maxVal->value = std::to_string(numMembers);
+
+		auto cmp = std::make_shared<awst::NumericComparisonExpression>();
+		cmp->sourceLocation = _loc;
+		cmp->wtype = awst::WType::boolType();
+		cmp->lhs = std::move(cmpLhs);
+		cmp->op = awst::NumericComparison::Lt;
+		cmp->rhs = std::move(maxVal);
+
+		auto assertExpr = std::make_shared<awst::AssertExpression>();
+		assertExpr->sourceLocation = _loc;
+		assertExpr->wtype = awst::WType::voidType();
+		assertExpr->condition = std::move(cmp);
+		assertExpr->errorMessage = "Enum out of range";
+
+		auto assertStmt = std::make_shared<awst::ExpressionStatement>();
+		assertStmt->sourceLocation = _loc;
+		assertStmt->expr = std::move(assertExpr);
+		m_ctx.prePendingStatements.push_back(std::move(assertStmt));
+
+		result = tmpVar;
+	}
+
+	return std::make_unique<SolArrayBuilder>(m_ctx, m_arrayType, std::move(result));
 }
 
 std::unique_ptr<NodeBuilder> SolArrayBuilder::member_access(
