@@ -628,6 +628,81 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 			if (statArr->elementType() && dynArr->elementType()
 				&& statArr->elementType()->name() == dynArr->elementType()->name())
 				return prependArc4LengthHeader(std::move(_expr), statArr->arraySize(), _targetType, _loc);
+
+			// Narrower inline array literal (e.g. `[7,8,9]` typed uint8[3])
+			// assigned into a wider-element dynamic target (e.g. `uint256[]`).
+			// Widen each element via decode+encode, concat the widened bytes,
+			// prepend the uint16 length header, reinterpret as the dynamic
+			// target. NewArray-only to avoid re-evaluating impure sources.
+			auto const* srcArc4 = dynamic_cast<awst::ARC4UIntN const*>(statArr->elementType());
+			auto const* tgtArc4 = dynamic_cast<awst::ARC4UIntN const*>(dynArr->elementType());
+			auto* newArr = dynamic_cast<awst::NewArray*>(_expr.get());
+			if (newArr && srcArc4 && tgtArc4
+				&& srcArc4->n() < tgtArc4->n()
+				&& srcArc4->arc4Alias().empty() && tgtArc4->arc4Alias().empty())
+			{
+				auto const* widerNative = tgtArc4->n() <= 64
+					? awst::WType::uint64Type()
+					: awst::WType::biguintType();
+
+				std::shared_ptr<awst::Expression> bodyBytes;
+				for (auto const& elem : newArr->values)
+				{
+					auto decode = std::make_shared<awst::ARC4Decode>();
+					decode->sourceLocation = _loc;
+					decode->wtype = awst::WType::uint64Type();
+					decode->value = elem;
+					std::shared_ptr<awst::Expression> nativeVal = std::move(decode);
+					if (widerNative != awst::WType::uint64Type())
+						nativeVal = implicitNumericCast(std::move(nativeVal), widerNative, _loc);
+
+					auto encode = std::make_shared<awst::ARC4Encode>();
+					encode->sourceLocation = _loc;
+					encode->wtype = dynArr->elementType();
+					encode->value = std::move(nativeVal);
+
+					auto encBytes = std::make_shared<awst::ReinterpretCast>();
+					encBytes->sourceLocation = _loc;
+					encBytes->wtype = awst::WType::bytesType();
+					encBytes->expr = std::move(encode);
+
+					if (!bodyBytes)
+						bodyBytes = std::move(encBytes);
+					else
+					{
+						auto cat = std::make_shared<awst::IntrinsicCall>();
+						cat->sourceLocation = _loc;
+						cat->wtype = awst::WType::bytesType();
+						cat->opCode = "concat";
+						cat->stackArgs.push_back(std::move(bodyBytes));
+						cat->stackArgs.push_back(std::move(encBytes));
+						bodyBytes = std::move(cat);
+					}
+				}
+
+				int N = static_cast<int>(statArr->arraySize());
+				auto header = std::make_shared<awst::BytesConstant>();
+				header->sourceLocation = _loc;
+				header->wtype = awst::WType::bytesType();
+				header->encoding = awst::BytesEncoding::Base16;
+				header->value = {
+					static_cast<uint8_t>((N >> 8) & 0xFF),
+					static_cast<uint8_t>(N & 0xFF)
+				};
+
+				auto withHeader = std::make_shared<awst::IntrinsicCall>();
+				withHeader->sourceLocation = _loc;
+				withHeader->wtype = awst::WType::bytesType();
+				withHeader->opCode = "concat";
+				withHeader->stackArgs.push_back(std::move(header));
+				withHeader->stackArgs.push_back(std::move(bodyBytes));
+
+				auto cast = std::make_shared<awst::ReinterpretCast>();
+				cast->sourceLocation = _loc;
+				cast->wtype = _targetType;
+				cast->expr = std::move(withHeader);
+				return cast;
+			}
 		}
 	}
 
@@ -679,6 +754,48 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 					cast->expr = std::move(cat);
 					return cast;
 				}
+			}
+
+			// Same-length inline array literal with narrower element type —
+			// Solidity infers the common-type of `[1,2,3,4]` as uint8[4],
+			// but the target (e.g. `uint256[4] storage`) is wider. Only the
+			// NewArray literal case is handled here to avoid re-evaluating
+			// impure source expressions; other sources fall through to the
+			// encoder which will fail with a clear type-mismatch error.
+			auto const* srcArc4 = dynamic_cast<awst::ARC4UIntN const*>(srcStat->elementType());
+			auto const* tgtArc4 = dynamic_cast<awst::ARC4UIntN const*>(targetStat->elementType());
+			auto* newArr = dynamic_cast<awst::NewArray*>(_expr.get());
+			if (newArr && srcArc4 && tgtArc4
+				&& srcStat->arraySize() == targetStat->arraySize()
+				&& srcArc4->n() < tgtArc4->n()
+				&& srcArc4->arc4Alias().empty() && tgtArc4->arc4Alias().empty())
+			{
+				auto const* widerNative = tgtArc4->n() <= 64
+					? awst::WType::uint64Type()
+					: awst::WType::biguintType();
+
+				auto widened = std::make_shared<awst::NewArray>();
+				widened->sourceLocation = _loc;
+				widened->wtype = _targetType;
+				for (auto const& elem : newArr->values)
+				{
+					// Decode narrow ARC4 → uint64 (narrow types always ≤ 64 bits here)
+					auto decode = std::make_shared<awst::ARC4Decode>();
+					decode->sourceLocation = _loc;
+					decode->wtype = awst::WType::uint64Type();
+					decode->value = elem;
+
+					std::shared_ptr<awst::Expression> nativeVal = std::move(decode);
+					if (widerNative != awst::WType::uint64Type())
+						nativeVal = implicitNumericCast(std::move(nativeVal), widerNative, _loc);
+
+					auto encode = std::make_shared<awst::ARC4Encode>();
+					encode->sourceLocation = _loc;
+					encode->wtype = targetStat->elementType();
+					encode->value = std::move(nativeVal);
+					widened->values.push_back(std::move(encode));
+				}
+				return widened;
 			}
 		}
 	}
