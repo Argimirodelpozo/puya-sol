@@ -66,6 +66,24 @@ testArray:
     assert // invalid number of bytes for arc4.uint256
     callsub L.reverse
     pop
+    swap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -102,6 +120,24 @@ testSlice:
     extract 0 0
     callsub L.reverse
     pop
+    swap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
     concat
     bytec_0 // 0x151f7c75
     swap
