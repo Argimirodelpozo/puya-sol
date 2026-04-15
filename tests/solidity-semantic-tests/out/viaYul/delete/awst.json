@@ -675,7 +675,7 @@
                   },
                   "wtype": {
                     "_type": "WType",
-                    "name": "uint64",
+                    "name": "biguint",
                     "immutable": true
                   },
                   "target": {
@@ -697,7 +697,7 @@
                   },
                   "wtype": {
                     "_type": "WType",
-                    "name": "uint64",
+                    "name": "biguint",
                     "immutable": true
                   },
                   "target": {
@@ -960,29 +960,41 @@
                   "immutable": true
                 },
                 "lhs": {
-                  "_type": "SubroutineCallExpression",
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/delete.sol",
                     "line": 416,
-                    "end_line": 422,
+                    "end_line": 441,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
                   },
                   "wtype": {
                     "_type": "WType",
-                    "name": "uint64",
+                    "name": "biguint",
                     "immutable": true
                   },
-                  "target": {
-                    "_type": "InstanceMethodTarget",
-                    "member_name": "__funcptr_dispatch_ret_u8"
-                  },
-                  "args": [
-                    {
-                      "name": "__funcptr_id",
-                      "value": {
-                        "_type": "VarExpression",
+                  "expr": {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/delete.sol",
+                      "line": 416,
+                      "end_line": 441,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
+                    },
+                    "op_code": "itob",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "SubroutineCallExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/delete.sol",
                           "line": 416,
@@ -996,10 +1008,35 @@
                           "name": "uint64",
                           "immutable": true
                         },
-                        "name": "func"
+                        "target": {
+                          "_type": "InstanceMethodTarget",
+                          "member_name": "__funcptr_dispatch_ret_u8"
+                        },
+                        "args": [
+                          {
+                            "name": "__funcptr_id",
+                            "value": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/delete.sol",
+                                "line": 416,
+                                "end_line": 422,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "name": "func"
+                            }
+                          }
+                        ]
                       }
-                    }
-                  ]
+                    ]
+                  }
                 },
                 "operator": "==",
                 "rhs": {
@@ -1014,7 +1051,7 @@
                   },
                   "wtype": {
                     "_type": "WType",
-                    "name": "uint64",
+                    "name": "biguint",
                     "immutable": true
                   },
                   "target": {

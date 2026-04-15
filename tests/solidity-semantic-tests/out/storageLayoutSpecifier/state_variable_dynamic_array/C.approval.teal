@@ -285,26 +285,13 @@ arrayALength:
     box_len
     pop
     intc_2 // 2
-    -
-    intc_0 // 32
-    /
-    itob
-    intc_0 // 32
-    bzero
-    b|
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_dynamic_array.sol.C.arrayCLength[routing]() -> void:
-arrayCLength:
-    bytec_1 // "arrayC"
+    >=
+    bz arrayALength_ternary_false@3
+    bytec_0 // "arrayA"
     box_len
     pop
+
+arrayALength_ternary_merge@4:
     intc_2 // 2
     -
     intc_0 // 32
@@ -319,6 +306,43 @@ arrayCLength:
     log
     intc_1 // 1
     return
+
+arrayALength_ternary_false@3:
+    intc_2 // 2
+    b arrayALength_ternary_merge@4
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_dynamic_array.sol.C.arrayCLength[routing]() -> void:
+arrayCLength:
+    bytec_1 // "arrayC"
+    box_len
+    pop
+    intc_2 // 2
+    >=
+    bz arrayCLength_ternary_false@3
+    bytec_1 // "arrayC"
+    box_len
+    pop
+
+arrayCLength_ternary_merge@4:
+    intc_2 // 2
+    -
+    intc_0 // 32
+    /
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+arrayCLength_ternary_false@3:
+    intc_2 // 2
+    b arrayCLength_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_dynamic_array.sol.C.arrayC[routing]() -> void:

@@ -3,12 +3,12 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_unicode_string_variable.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
-    bytecblock "Hello \xf0\x9f\x98\x83" 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
+    intcblock 32 1 0
+    bytecblock 0x01 "unicodeStr" "Hello \xf0\x9f\x98\x83" 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytes "unicodeStr"
-    bytec_0 // "Hello \xf0\x9f\x98\x83"
+    bytec_1 // "unicodeStr"
+    bytec_2 // "Hello \xf0\x9f\x98\x83"
     app_global_put
     intc_1 // 1
     return
@@ -40,20 +40,18 @@ erc7201Mock:
     proto 1 1
     frame_dig -1
     keccak256
-    btoi
-    itob
     dup
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b>=
     assert // underflow
     intc_0 // 32
     bzero
     swap
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b-
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     concat
     dup
@@ -65,19 +63,30 @@ erc7201Mock:
     keccak256
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b&
-    btoi
-    itob
     retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_unicode_string_variable.sol.C.builtinMatchesSolidityImplementation[routing]() -> void:
 builtinMatchesSolidityImplementation:
-    bytec_0 // "Hello \xf0\x9f\x98\x83"
+    intc_0 // 32
+    bzero
+    intc_2 // 0
+    bytec_1 // "unicodeStr"
+    app_global_get_ex
+    assert // check unicodeStr exists
+    keccak256
+    bytec_0 // 0x01
+    b-
+    b|
+    keccak256
+    extract 0 31
+    pushbytes 0x00
+    concat
+    bytec_2 // "Hello \xf0\x9f\x98\x83"
     callsub erc7201Mock
-    pushbytes 0x
     b==
     pushbytes 0x00
-    pushint 0
+    intc_2 // 0
     uncover 2
     setbit
     pushbytes 0x151f7c75

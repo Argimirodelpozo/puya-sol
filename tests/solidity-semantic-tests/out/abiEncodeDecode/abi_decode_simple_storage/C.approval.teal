@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_decode_simple_storage.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 24
+    intcblock 1 0 24 32
     bytecblock "__ctor_pending" "data"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -40,10 +40,6 @@ __postInit:
     bytec_0 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    bytec_1 // "data"
-    intc_2 // 2
-    box_create
-    pop
     intc_0 // 1
     return
 
@@ -54,7 +50,7 @@ f:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_2 // 2
+    pushint 2
     +
     dig 1
     len
@@ -72,16 +68,16 @@ f:
     extract 2 32
     uncover 2
     extract 34 32
-    intc_3 // 24
+    intc_2 // 24
     extract_uint64
     dup
-    pushint 32
+    intc_3 // 32
     +
     dig 3
     uncover 2
-    pushint 32
+    intc_3 // 32
     extract3
-    intc_3 // 24
+    intc_2 // 24
     extract_uint64
     uncover 3
     cover 2

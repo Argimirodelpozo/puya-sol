@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_push_with_arg.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
+    intcblock 32 1 2 0
     bytecblock "storageArray" "__ctor_pending" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,10 +38,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_2 // 0
+    intc_3 // 0
     app_global_put
     bytec_0 // "storageArray"
-    intc_3 // 2
+    intc_2 // 2
     box_create
     pop
     intc_1 // 1
@@ -69,11 +69,11 @@ test:
     dup
     extract 2 0
     swap
-    intc_2 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
     bytec_0 // "storageArray"
-    intc_2 // 0
-    intc_3 // 2
+    intc_3 // 0
+    intc_2 // 2
     box_extract
     btoi
     bytec_0 // "storageArray"
@@ -92,16 +92,16 @@ test:
     itob
     extract 6 2
     bytec_0 // "storageArray"
-    intc_2 // 0
+    intc_3 // 0
     uncover 2
     box_replace
     intc_0 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     bytec_0 // "storageArray"
     swap
-    intc_2 // 0
+    intc_3 // 0
     uncover 3
     box_splice
     intc_1 // 1
@@ -113,7 +113,15 @@ getLength:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_3 // 2
+    intc_2 // 2
+    >=
+    bz getLength_ternary_false@3
+    bytec_0 // "storageArray"
+    box_len
+    pop
+
+getLength_ternary_merge@4:
+    intc_2 // 2
     -
     intc_0 // 32
     /
@@ -127,6 +135,10 @@ getLength:
     log
     intc_1 // 1
     return
+
+getLength_ternary_false@3:
+    intc_2 // 2
+    b getLength_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_push_with_arg.sol.C.fetch[routing]() -> void:

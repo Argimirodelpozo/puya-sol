@@ -4,16 +4,16 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/transient_state_variable_slot_offset.sol.C.approval_program() -> uint64:
 main:
     intcblock 1
-    bytecblock 0x
+    bytecblock 0x "x" "w"
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytes "x"
+    bytec_1 // "x"
     bytec_0 // 0x
     app_global_put
     pushbytes "y"
     bytec_0 // 0x
     app_global_put
-    pushbytes "w"
+    bytec_2 // "w"
     bytec_0 // 0x
     app_global_put
     pushbytes "z"
@@ -30,6 +30,12 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
+    bytec_1 // "x"
+    bytec_0 // 0x
+    app_global_put
+    bytec_2 // "w"
+    bytec_0 // 0x
+    app_global_put
     txn OnCompletion
     !
     assert

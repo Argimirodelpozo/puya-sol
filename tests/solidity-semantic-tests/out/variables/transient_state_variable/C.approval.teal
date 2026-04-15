@@ -4,11 +4,11 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 8 0 32
-    bytecblock "x" 0x151f7c75
+    bytecblock "x" 0x 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
-    pushbytes 0x
+    bytec_1 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -21,6 +21,9 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
+    bytec_0 // "x"
+    bytec_1 // 0x
+    app_global_put
     txn OnCompletion
     !
     assert
@@ -70,7 +73,7 @@ h:
     intc_3 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -92,7 +95,7 @@ x:
     pushint 64
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log

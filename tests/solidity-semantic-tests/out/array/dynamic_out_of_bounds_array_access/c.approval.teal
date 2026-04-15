@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/dynamic_out_of_bounds_array_access.sol.c.approval_program() -> uint64:
 main:
-    intcblock 32 1 2 0
+    intcblock 32 2 1 0
     bytecblock "data" "__ctor_pending" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
-    intc_1 // 1
+    intc_2 // 1
     app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -41,10 +41,10 @@ __postInit:
     intc_3 // 0
     app_global_put
     bytec_0 // "data"
-    intc_2 // 2
+    intc_1 // 2
     box_create
     pop
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
@@ -61,17 +61,25 @@ enlarge_while_top@2:
     bytec_0 // "data"
     box_len
     pop
-    intc_2 // 2
+    intc_1 // 2
+    >=
+    bz enlarge_ternary_false@4
+    bytec_0 // "data"
+    box_len
+    pop
+
+enlarge_ternary_merge@5:
+    intc_1 // 2
     -
     intc_0 // 32
     /
     itob
     dig 1
     b<
-    bz enlarge_after_while@4
+    bz enlarge_after_while@7
     bytec_0 // "data"
     intc_3 // 0
-    intc_2 // 2
+    intc_1 // 2
     box_extract
     btoi
     bytec_0 // "data"
@@ -83,7 +91,7 @@ enlarge_while_top@2:
     swap
     box_resize
     dup
-    intc_1 // 1
+    intc_2 // 1
     +
     itob
     extract 6 2
@@ -93,7 +101,7 @@ enlarge_while_top@2:
     box_replace
     intc_0 // 32
     *
-    intc_2 // 2
+    intc_1 // 2
     +
     bytec_0 // "data"
     swap
@@ -102,11 +110,19 @@ enlarge_while_top@2:
     box_splice
     b enlarge_while_top@2
 
-enlarge_after_while@4:
+enlarge_after_while@7:
     bytec_0 // "data"
     box_len
     pop
-    intc_2 // 2
+    intc_1 // 2
+    >=
+    bz enlarge_ternary_false@9
+    bytec_0 // "data"
+    box_len
+    pop
+
+enlarge_ternary_merge@10:
+    intc_1 // 2
     -
     intc_0 // 32
     /
@@ -118,8 +134,16 @@ enlarge_after_while@4:
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
+
+enlarge_ternary_false@9:
+    intc_1 // 2
+    b enlarge_ternary_merge@10
+
+enlarge_ternary_false@4:
+    intc_1 // 2
+    b enlarge_ternary_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/dynamic_out_of_bounds_array_access.sol.c.set[routing]() -> void:
@@ -154,7 +178,7 @@ set:
     extract_uint64
     intc_0 // 32
     *
-    intc_2 // 2
+    intc_1 // 2
     +
     bytec_0 // "data"
     swap
@@ -162,7 +186,7 @@ set:
     box_replace // on error: index out of bounds
     pushbytes 0x151f7c7580
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
@@ -207,7 +231,7 @@ get:
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
@@ -216,7 +240,15 @@ length:
     bytec_0 // "data"
     box_len
     pop
-    intc_2 // 2
+    intc_1 // 2
+    >=
+    bz length_ternary_false@3
+    bytec_0 // "data"
+    box_len
+    pop
+
+length_ternary_merge@4:
+    intc_1 // 2
     -
     intc_0 // 32
     /
@@ -228,5 +260,9 @@ length:
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
+
+length_ternary_false@3:
+    intc_1 // 2
+    b length_ternary_merge@4

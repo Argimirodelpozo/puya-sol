@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_bytes_conversion.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 32
-    bytecblock "__ctor_pending" "b" "s" 0x151f7c75
+    intcblock 1 0 32 8
+    bytecblock "__ctor_pending" "s" "b" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
@@ -40,11 +40,7 @@ __postInit:
     bytec_0 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    bytec_1 // "b"
-    intc_2 // 2
-    box_create
-    pop
-    bytec_2 // "s"
+    bytec_1 // "s"
     pushbytes 0x
     app_global_put
     intc_0 // 1
@@ -57,7 +53,7 @@ f:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_2 // 2
+    pushint 2
     +
     dig 1
     len
@@ -67,25 +63,25 @@ f:
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_1 // "b"
+    bytec_2 // "b"
     box_del
     pop
-    bytec_1 // "b"
+    bytec_2 // "b"
     dig 2
     box_put
-    bytec_2 // "s"
+    bytec_1 // "s"
     dig 2
     app_global_put
-    pushint 8
+    intc_3 // 8
     bzero
     swap
     concat
     dup
     len
-    pushint 8
+    intc_3 // 8
     -
     extract_uint64
     intc_0 // 1
@@ -101,12 +97,12 @@ f:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/string_bytes_conversion.sol.Test.l[routing]() -> void:
 l:
     intc_1 // 0
-    bytec_2 // "s"
+    bytec_1 // "s"
     app_global_get_ex
     assert // check s exists
     len
     itob
-    intc_3 // 32
+    intc_2 // 32
     bzero
     b|
     bytec_3 // 0x151f7c75

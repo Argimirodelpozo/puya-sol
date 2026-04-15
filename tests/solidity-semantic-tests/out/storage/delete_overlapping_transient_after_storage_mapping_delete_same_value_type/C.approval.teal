@@ -4,10 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_mapping_delete_same_value_type.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32
-    bytecblock 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925 "__ctor_pending" 0x "t"
+    bytecblock 0x 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925 "__ctor_pending" "t"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -21,6 +21,9 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
+    bytec_3 // "t"
+    bytec_0 // 0x
+    app_global_put
     txn OnCompletion
     !
     assert
@@ -34,10 +37,10 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_mapping_delete_same_value_type.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     pushint 0
     app_global_put
     pushbytes "m"
@@ -45,7 +48,7 @@ __postInit:
     box_create
     pop
     bytec_3 // "t"
-    bytec_2 // 0x
+    bytec_0 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -55,17 +58,17 @@ __postInit:
 setAndClear:
     intc_0 // 1
     itob
-    bytec_0 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    bytec_1 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
     box_del
     pop
-    bytec_0 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    bytec_1 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
     swap
     box_put
-    bytec_0 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    bytec_1 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
     box_del
     pop
     bytec_3 // "t"
-    bytec_2 // 0x
+    bytec_0 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -73,9 +76,9 @@ setAndClear:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/delete_overlapping_transient_after_storage_mapping_delete_same_value_type.sol.C.getM[routing]() -> void:
 getM:
-    bytec_0 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    bytec_1 // 0x6d66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
     box_get
-    bytec_2 // 0x
+    bytec_0 // 0x
     cover 2
     select
     dup

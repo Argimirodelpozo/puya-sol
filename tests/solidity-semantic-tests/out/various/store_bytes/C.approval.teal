@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/store_bytes.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 0 1
     bytecblock "__ctor_pending" "savedData"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
-    intc_0 // 1
+    intc_1 // 1
     app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -38,23 +38,190 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_1 // 0
+    intc_0 // 0
     app_global_put
-    bytec_1 // "savedData"
-    pushint 2
-    box_create
-    pop
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/store_bytes.sol.C.save[routing]() -> void:
 save:
+    intc_0 // 0
+    dupn 14
     txn NumAppArgs
-    bz save_ternary_false@3
+    bz save_ternary_false@51
+    txn NumAppArgs
+    bz save_ternary_false@4
     txna ApplicationArgs 0
+    bury 15
 
-save_ternary_merge@4:
+save_ternary_merge@5:
+    txn NumAppArgs
+    intc_1 // 1
+    >
+    bz save_ternary_false@7
+    txna ApplicationArgs 1
+
+save_ternary_merge@8:
+    dig 15
+    swap
+    concat
+    bury 2
+    txn NumAppArgs
+    pushint 2
+    >
+    bz save_ternary_false@10
+    txna ApplicationArgs 2
+
+save_ternary_merge@11:
+    dig 2
+    swap
+    concat
+    bury 1
+    txn NumAppArgs
+    pushint 3
+    >
+    bz save_ternary_false@13
+    txna ApplicationArgs 3
+
+save_ternary_merge@14:
+    dig 1
+    swap
+    concat
+    bury 14
+    txn NumAppArgs
+    pushint 4
+    >
+    bz save_ternary_false@16
+    txna ApplicationArgs 4
+
+save_ternary_merge@17:
+    dig 14
+    swap
+    concat
+    bury 13
+    txn NumAppArgs
+    pushint 5
+    >
+    bz save_ternary_false@19
+    txna ApplicationArgs 5
+
+save_ternary_merge@20:
+    dig 13
+    swap
+    concat
+    bury 12
+    txn NumAppArgs
+    pushint 6
+    >
+    bz save_ternary_false@22
+    txna ApplicationArgs 6
+
+save_ternary_merge@23:
+    dig 12
+    swap
+    concat
+    bury 11
+    txn NumAppArgs
+    pushint 7
+    >
+    bz save_ternary_false@25
+    txna ApplicationArgs 7
+
+save_ternary_merge@26:
+    dig 11
+    swap
+    concat
+    bury 10
+    txn NumAppArgs
+    pushint 8
+    >
+    bz save_ternary_false@28
+    txna ApplicationArgs 8
+
+save_ternary_merge@29:
+    dig 10
+    swap
+    concat
+    bury 9
+    txn NumAppArgs
+    pushint 9
+    >
+    bz save_ternary_false@31
+    txna ApplicationArgs 9
+
+save_ternary_merge@32:
+    dig 9
+    swap
+    concat
+    bury 8
+    txn NumAppArgs
+    pushint 10
+    >
+    bz save_ternary_false@34
+    txna ApplicationArgs 10
+
+save_ternary_merge@35:
+    dig 8
+    swap
+    concat
+    bury 7
+    txn NumAppArgs
+    pushint 11
+    >
+    bz save_ternary_false@37
+    txna ApplicationArgs 11
+
+save_ternary_merge@38:
+    dig 7
+    swap
+    concat
+    bury 6
+    txn NumAppArgs
+    pushint 12
+    >
+    bz save_ternary_false@40
+    txna ApplicationArgs 12
+
+save_ternary_merge@41:
+    dig 6
+    swap
+    concat
+    bury 5
+    txn NumAppArgs
+    pushint 13
+    >
+    bz save_ternary_false@43
+    txna ApplicationArgs 13
+
+save_ternary_merge@44:
+    dig 5
+    swap
+    concat
+    bury 4
+    txn NumAppArgs
+    pushint 14
+    >
+    bz save_ternary_false@46
+    txna ApplicationArgs 14
+
+save_ternary_merge@47:
+    dig 4
+    swap
+    concat
+    bury 3
+    txn NumAppArgs
+    pushint 15
+    >
+    bz save_ternary_false@49
+    txna ApplicationArgs 15
+
+save_ternary_merge@50:
+    dig 3
+    swap
+    concat
+
+save_ternary_merge@52:
     bytec_1 // "savedData"
     box_del
     pop
@@ -63,10 +230,91 @@ save_ternary_merge@4:
     box_put
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000018
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
-save_ternary_false@3:
-    intc_1 // 0
+save_ternary_false@49:
+    intc_0 // 0
     bzero
-    b save_ternary_merge@4
+    b save_ternary_merge@50
+
+save_ternary_false@46:
+    intc_0 // 0
+    bzero
+    b save_ternary_merge@47
+
+save_ternary_false@43:
+    intc_0 // 0
+    bzero
+    b save_ternary_merge@44
+
+save_ternary_false@40:
+    intc_0 // 0
+    bzero
+    b save_ternary_merge@41
+
+save_ternary_false@37:
+    intc_0 // 0
+    bzero
+    b save_ternary_merge@38
+
+save_ternary_false@34:
+    intc_0 // 0
+    bzero
+    b save_ternary_merge@35
+
+save_ternary_false@31:
+    intc_0 // 0
+    bzero
+    b save_ternary_merge@32
+
+save_ternary_false@28:
+    intc_0 // 0
+    bzero
+    b save_ternary_merge@29
+
+save_ternary_false@25:
+    intc_0 // 0
+    bzero
+    b save_ternary_merge@26
+
+save_ternary_false@22:
+    intc_0 // 0
+    bzero
+    b save_ternary_merge@23
+
+save_ternary_false@19:
+    intc_0 // 0
+    bzero
+    b save_ternary_merge@20
+
+save_ternary_false@16:
+    intc_0 // 0
+    bzero
+    b save_ternary_merge@17
+
+save_ternary_false@13:
+    intc_0 // 0
+    bzero
+    b save_ternary_merge@14
+
+save_ternary_false@10:
+    intc_0 // 0
+    bzero
+    b save_ternary_merge@11
+
+save_ternary_false@7:
+    intc_0 // 0
+    bzero
+    b save_ternary_merge@8
+
+save_ternary_false@4:
+    intc_0 // 0
+    bzero
+    bury 15
+    b save_ternary_merge@5
+
+save_ternary_false@51:
+    intc_0 // 0
+    bzero
+    b save_ternary_merge@52

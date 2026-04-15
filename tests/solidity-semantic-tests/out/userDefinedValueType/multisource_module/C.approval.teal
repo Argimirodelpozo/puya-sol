@@ -1,9 +1,9 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_sg8lyfan/s2.sol.C.approval_program() -> uint64:
+// /tmp/multisource_d1kvkxpn/s2.sol.C.approval_program() -> uint64:
 main:
-    intcblock 64 1
+    intcblock 32 1
     bytecblock 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,25 +23,25 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xf3d5e499 0x484a762a // method "f(uint512)uint512", method "g(uint512)uint512"
+    pushbytess 0x1928cd24 0xc14ad39f // method "f(uint256)uint256", method "g(uint256)uint256"
     txna ApplicationArgs 0
     match f g
     err
 
 
-// /tmp/multisource_sg8lyfan/s2.sol.C.f[routing]() -> void:
+// /tmp/multisource_d1kvkxpn/s2.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
     dup
     len
     dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    intc_0 // 64
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -52,19 +52,19 @@ f:
     return
 
 
-// /tmp/multisource_sg8lyfan/s2.sol.C.g[routing]() -> void:
+// /tmp/multisource_d1kvkxpn/s2.sol.C.g[routing]() -> void:
 g:
     txna ApplicationArgs 1
     dup
     len
     dup
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    intc_0 // 64
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75

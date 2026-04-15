@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/abi_encode_call.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 2
+    intcblock 0 1 2 32
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -22,7 +22,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x64c701ca 0x6dd6bff0 // method "callMeMaybe((uint256[],uint256,string,byte[],uint64),uint512,string)void", method "callExternal()bool"
+    pushbytess 0x025ff000 0x6dd6bff0 // method "callMeMaybe((uint256[],uint256,string,byte[],uint64),uint256,string)void", method "callExternal()bool"
     txna ApplicationArgs 0
     match callMeMaybe main_callExternal_route@6
     err
@@ -52,7 +52,7 @@ callMeMaybe:
     substring3
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 32
+    intc_3 // 32
     *
     pushint 48
     +
@@ -92,9 +92,9 @@ callMeMaybe:
     assert // invalid number of bytes for Struct
     txna ApplicationArgs 2
     len
-    pushint 64
+    intc_3 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     intc_0 // 0

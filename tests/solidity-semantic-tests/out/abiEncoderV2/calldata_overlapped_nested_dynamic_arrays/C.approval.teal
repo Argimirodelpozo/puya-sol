@@ -119,7 +119,7 @@ f_memory_after_for@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_overlapped_nested_dynamic_arrays.sol.C.f_encode[routing]() -> void:
 f_encode:
     txna ApplicationArgs 1
-    dupn 2
+    dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
@@ -172,10 +172,29 @@ f_encode_after_for@4:
     intc_0 // 2
     +
     dig 3
+    dup
+    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>
+    intc_3 // 32
+    bzero
+    swap
+    intc_0 // 2
+    -
+    intc_3 // 32
+    /
+    itob
+    concat
+    dup
+    len
+    intc_3 // 32
+    -
+    intc_3 // 32
+    extract3
+    dig 2
+    concat
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000020
-    dig 6
+    swap
     concat
     dup
     len

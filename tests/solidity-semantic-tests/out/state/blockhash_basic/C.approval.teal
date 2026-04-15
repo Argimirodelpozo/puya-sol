@@ -3,27 +3,31 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/blockhash_basic.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 8
-    bytecblock "genesisHash" "currentHash" 0x151f7c75 0x
+    intcblock 1 2 0
+    bytecblock "genesisHash" "currentHash" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "genesisHash"
-    bytec_3 // 0x
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     bytec_1 // "currentHash"
-    bytec_3 // 0x
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     global Round
     itob
     pushbytes 0x01
     b==
     assert
-    intc_1 // 0
+    global Round
+    intc_1 // 2
+    -
     block BlkSeed
     bytec_0 // "genesisHash"
     swap
     app_global_put
-    intc_0 // 1
+    global Round
+    intc_1 // 2
+    -
     block BlkSeed
     bytec_1 // "currentHash"
     swap
@@ -53,20 +57,13 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/blockhash_basic.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
-    dup
     len
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_2 // 8
-    bzero
-    swap
-    concat
-    dup
-    len
-    intc_2 // 8
+    global Round
+    intc_1 // 2
     -
-    extract_uint64
     block BlkSeed
     bytec_2 // 0x151f7c75
     swap
@@ -78,7 +75,7 @@ f:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/blockhash_basic.sol.C.genesisHash[routing]() -> void:
 genesisHash:
-    intc_1 // 0
+    intc_2 // 0
     bytec_0 // "genesisHash"
     app_global_get_ex
     assert // check genesisHash exists
@@ -92,7 +89,7 @@ genesisHash:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/blockhash_basic.sol.C.currentHash[routing]() -> void:
 currentHash:
-    intc_1 // 0
+    intc_2 // 0
     bytec_1 // "currentHash"
     app_global_get_ex
     assert // check currentHash exists

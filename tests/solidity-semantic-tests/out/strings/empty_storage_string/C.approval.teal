@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32 31
-    bytecblock 0x151f7c75 "emptyBytes" "uninitializedString" "emptyString" "nonEmptyString" "__ctor_pending" 0x0004 0x0000000000000000000000000000000000000000000000000000000000000020 "uninitializedBytes" "nonEmptyString2"
+    bytecblock 0x151f7c75 "emptyBytes" "uninitializedString" "emptyString" "nonEmptyString" "__ctor_pending" 0x0004 0x0000000000000000000000000000000000000000000000000000000000000020 "nonEmptyString2"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec 5 // "__ctor_pending"
@@ -49,10 +49,6 @@ __postInit:
     bytec 5 // "__ctor_pending"
     intc_0 // 0
     app_global_put
-    bytec 8 // "uninitializedBytes"
-    pushint 2
-    box_create
-    pop
     bytec_1 // "emptyBytes"
     intc_0 // 0
     box_create
@@ -66,7 +62,7 @@ __postInit:
     bytec 4 // "nonEmptyString"
     pushbytes "This is a non empty string"
     app_global_put
-    bytec 9 // "nonEmptyString2"
+    bytec 8 // "nonEmptyString2"
     pushbytes "Another string"
     app_global_put
     intc_1 // 1
@@ -247,7 +243,7 @@ j:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.k[routing]() -> void:
 k:
-    bytec 9 // "nonEmptyString2"
+    bytec 8 // "nonEmptyString2"
     pushbytes ""
     app_global_put
     pushbytes 0x151f7c750000
@@ -393,7 +389,7 @@ o:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/empty_storage_string.sol.C.q[routing]() -> void:
 q:
-    bytec 8 // "uninitializedBytes"
+    pushbytes "uninitializedBytes"
     box_get
     pushbytes 0x
     cover 2

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/enum_explicit_overflow.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 8 32 0
+    intcblock 1 32 8 0
     bytecblock "choice" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x1c5791a6 0x63ed3fd2 0x19c32ccd // method "getChoiceExp(uint256)uint256", method "getChoiceFromSigned(uint512)uint256", method "getChoiceFromMax()uint256"
+    pushbytess 0x1c5791a6 0x08d88de6 0x19c32ccd // method "getChoiceExp(uint256)uint256", method "getChoiceFromSigned(uint256)uint256", method "getChoiceFromMax()uint256"
     txna ApplicationArgs 0
     match getChoiceExp getChoiceFromSigned getChoiceFromMax
     err
@@ -37,16 +37,16 @@ getChoiceExp:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    intc_1 // 8
+    intc_2 // 8
     bzero
     swap
     concat
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     -
     extract_uint64
     dup
@@ -57,7 +57,7 @@ getChoiceExp:
     dig 1
     app_global_put
     itob
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
@@ -73,16 +73,16 @@ getChoiceFromSigned:
     txna ApplicationArgs 1
     dup
     len
-    pushint 64
+    intc_1 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
-    intc_1 // 8
+    assert // invalid number of bytes for arc4.uint256
+    intc_2 // 8
     bzero
     swap
     concat
     dup
     len
-    intc_1 // 8
+    intc_2 // 8
     -
     extract_uint64
     dup
@@ -93,7 +93,7 @@ getChoiceFromSigned:
     dig 1
     app_global_put
     itob
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75

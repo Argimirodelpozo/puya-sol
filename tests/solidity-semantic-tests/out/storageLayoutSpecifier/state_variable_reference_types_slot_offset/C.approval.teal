@@ -4,10 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_reference_types_slot_offset.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 64
-    bytecblock "__ctor_pending" 0x 0x00
+    bytecblock 0x "__ctor_pending" "t2" "t1"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -21,6 +21,12 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
+    bytec_2 // "t2"
+    bytec_0 // 0x
+    app_global_put
+    bytec_3 // "t1"
+    bytec_0 // 0x
+    app_global_put
     txn OnCompletion
     !
     assert
@@ -34,10 +40,10 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_reference_types_slot_offset.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 0
     app_global_put
     pushbytes "dArray"
@@ -48,18 +54,14 @@ __postInit:
     intc_2 // 64
     box_create
     pop
-    pushbytes "bArray"
-    pushint 2
-    box_create
-    pop
-    pushbytes "t1"
-    bytec_1 // 0x
+    bytec_3 // "t1"
+    bytec_0 // 0x
     app_global_put
-    pushbytes "t2"
-    bytec_1 // 0x
+    bytec_2 // "t2"
+    bytec_0 // 0x
     app_global_put
     pushbytes "str"
-    bytec_1 // 0x
+    bytec_0 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -129,7 +131,7 @@ s1:
     uncover 2
     pushint 512
     getbit
-    bytec_2 // 0x00
+    pushbytes 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -141,7 +143,7 @@ s1:
     b|
     uncover 2
     concat
-    bytec_2 // 0x00
+    pushbytes 0x00
     intc_1 // 0
     uncover 3
     setbit

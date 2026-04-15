@@ -4,13 +4,13 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_transient_storage_access_inside_function.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 64
-    bytecblock "z" 0x151f7c75 "y"
+    bytecblock "z" "y" 0x151f7c75 "x"
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytes "x"
+    bytec_3 // "x"
     intc_0 // 0
     app_global_put
-    bytec_2 // "y"
+    bytec_1 // "y"
     intc_0 // 0
     app_global_put
     bytec_0 // "z"
@@ -27,6 +27,15 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
+    bytec_3 // "x"
+    intc_0 // 0
+    app_global_put
+    bytec_1 // "y"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "z"
+    pushbytes 0x
+    app_global_put
     txn OnCompletion
     !
     assert
@@ -54,7 +63,7 @@ f:
     intc_2 // 64
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -65,11 +74,11 @@ f:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/inline_assembly_transient_storage_access_inside_function.sol.C.y[routing]() -> void:
 y:
     intc_0 // 0
-    bytec_2 // "y"
+    bytec_1 // "y"
     app_global_get_ex
     assert // check y exists
     itob
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -91,7 +100,7 @@ z:
     intc_2 // 64
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log

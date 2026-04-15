@@ -1,9 +1,9 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.test.approval_program() -> uint64:
+// /tmp/multisource_01dppwg9/prbmath.sol.test.approval_program() -> uint64:
 main:
-    intcblock 64 1 0 1000000000000000000 500000000000000000
+    intcblock 32 1 0 1000000000000000000 500000000000000000
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x 0x0000000000000000000000000000000100000000000000000000000000000000 0x8000000000000000000000000000000000000000000000000000000000000000 0x01 0x0000000000000000000000000000000000000000000000000000000000000002 0x151f7c75 0x0de0b6b3a7640000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000002 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000 0xc097ce7bc90715b34b9f1000000000 0x0000000000000000000000000000000000000000000000000000000100000000 0x0000000000000000000000000000000000000000000000000000000000010000 0x10 0x0000000000000000000000000000000000000000000000000000000000000100 0x0000000000000000000000000000000000000000000000000000000000000010 0x02 0x80000000000000000000000000000000 0x0100000000000000000000000000000000 0x0000000000000000000000000000000000000000000000010000000000000000 0x0100000000 0x010000 0x0100 0x0000000000000000000000000000000000000000000000000000000000000004
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,13 +23,13 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x96ea5365 0x857cc5aa 0x62f8891d 0xc4959f01 0x2a7eb082 0x19cd0e7f 0x186b2067 0x6e4032d7 0x613f29c8 0xece72dcc // method "div(uint512,uint512)uint512", method "exp(uint512)uint512", method "exp2(uint512)uint512", method "gm(uint512,uint512)uint512", method "log10(uint512)uint512", method "log2(uint512)uint512", method "mul(uint512,uint512)uint512", method "pow(uint512,uint256)uint512", method "sqrt(uint512)uint512", method "benchmark(uint512)(uint512,uint512,uint512)"
+    pushbytess 0x06d93317 0x1c82b4fe 0x4b57d4d9 0x1bb06d86 0x23bcb8a0 0x3102179b 0x96028fa4 0xc6fa7dd3 0x2b4d0629 0xbf57843f // method "div(uint256,uint256)uint256", method "exp(uint256)uint256", method "exp2(uint256)uint256", method "gm(uint256,uint256)uint256", method "log10(uint256)uint256", method "log2(uint256)uint256", method "mul(uint256,uint256)uint256", method "pow(uint256,uint256)uint256", method "sqrt(uint256)uint256", method "benchmark(uint256)(uint512,uint512,uint512)"
     txna ApplicationArgs 0
     match div exp exp2 gm log10 log2 mul pow sqrt benchmark
     err
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.PRBMathCommon.exp2(x: bytes) -> bytes:
+// /tmp/multisource_01dppwg9/prbmath.sol.PRBMathCommon.exp2(x: bytes) -> bytes:
 PRBMathCommon.exp2:
     proto 1 1
     bytec 19 // 0x80000000000000000000000000000000
@@ -1056,7 +1056,7 @@ PRBMathCommon.exp2_after_if_else@128:
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    pushint 32
+    intc_0 // 32
     bzero
     pushint 8
     bzero
@@ -1084,7 +1084,7 @@ PRBMathCommon.exp2_after_if_else@128:
     retsub
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.PRBMathCommon.mostSignificantBit(x: bytes) -> bytes:
+// /tmp/multisource_01dppwg9/prbmath.sol.PRBMathCommon.mostSignificantBit(x: bytes) -> bytes:
 PRBMathCommon.mostSignificantBit:
     proto 1 1
     bytec_1 // 0x
@@ -1199,7 +1199,7 @@ PRBMathCommon.mostSignificantBit_after_if_else@16:
     retsub
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.PRBMathCommon.mulDiv(x: bytes, y: bytes, denominator: bytes) -> bytes:
+// /tmp/multisource_01dppwg9/prbmath.sol.PRBMathCommon.mulDiv(x: bytes, y: bytes, denominator: bytes) -> bytes:
 PRBMathCommon.mulDiv:
     proto 3 1
     intc_2 // 0
@@ -1466,7 +1466,7 @@ PRBMathCommon.mulDiv_ternary_false@7:
     b PRBMathCommon.mulDiv_ternary_merge@8
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.PRBMathCommon.mulDivFixedPoint(x: bytes, y: bytes) -> bytes:
+// /tmp/multisource_01dppwg9/prbmath.sol.PRBMathCommon.mulDivFixedPoint(x: bytes, y: bytes) -> bytes:
 PRBMathCommon.mulDivFixedPoint:
     proto 2 1
     load 0
@@ -1582,7 +1582,7 @@ PRBMathCommon.mulDivFixedPoint_after_if_else@2:
     retsub
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.PRBMathCommon.sqrt(x: bytes) -> bytes:
+// /tmp/multisource_01dppwg9/prbmath.sol.PRBMathCommon.sqrt(x: bytes) -> bytes:
 PRBMathCommon.sqrt:
     proto 1 1
     intc_2 // 0
@@ -1777,7 +1777,7 @@ PRBMathCommon.sqrt_if_body@3:
     b PRBMathCommon.sqrt_after_if_else@4
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.PRBMathSD59x18.abs(x: bytes) -> bytes:
+// /tmp/multisource_01dppwg9/prbmath.sol.PRBMathSD59x18.abs(x: bytes) -> bytes:
 PRBMathSD59x18.abs:
     proto 1 1
     frame_dig -1
@@ -1803,7 +1803,7 @@ PRBMathSD59x18.abs_ternary_false@2:
     retsub
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.PRBMathSD59x18.ceil(x: bytes) -> bytes:
+// /tmp/multisource_01dppwg9/prbmath.sol.PRBMathSD59x18.ceil(x: bytes) -> bytes:
 PRBMathSD59x18.ceil:
     proto 1 1
     intc_2 // 0
@@ -1904,7 +1904,7 @@ PRBMathSD59x18.ceil_ternary_false@3:
     b PRBMathSD59x18.ceil_ternary_merge@4
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.PRBMathSD59x18.div(x: bytes, y: bytes) -> bytes:
+// /tmp/multisource_01dppwg9/prbmath.sol.PRBMathSD59x18.div(x: bytes, y: bytes) -> bytes:
 PRBMathSD59x18.div:
     proto 2 1
     intc_2 // 0
@@ -2044,7 +2044,7 @@ PRBMathSD59x18.div_ternary_false@2:
     b PRBMathSD59x18.div_ternary_merge@3
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.PRBMathSD59x18.exp(x: bytes) -> bytes:
+// /tmp/multisource_01dppwg9/prbmath.sol.PRBMathSD59x18.exp(x: bytes) -> bytes:
 PRBMathSD59x18.exp:
     proto 1 1
     intc_2 // 0
@@ -2145,7 +2145,7 @@ PRBMathSD59x18.exp_ternary_false@5:
     b PRBMathSD59x18.exp_ternary_merge@6
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.PRBMathSD59x18.exp2(x: bytes) -> bytes:
+// /tmp/multisource_01dppwg9/prbmath.sol.PRBMathSD59x18.exp2(x: bytes) -> bytes:
 PRBMathSD59x18.exp2:
     proto 1 1
     intc_2 // 0
@@ -2274,7 +2274,7 @@ PRBMathSD59x18.exp2_else_body@26:
     b PRBMathSD59x18.exp2_after_if_else@27
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.PRBMathSD59x18.gm(x: bytes, y: bytes) -> bytes:
+// /tmp/multisource_01dppwg9/prbmath.sol.PRBMathSD59x18.gm(x: bytes, y: bytes) -> bytes:
 PRBMathSD59x18.gm:
     proto 2 1
     intc_2 // 0
@@ -2424,7 +2424,7 @@ PRBMathSD59x18.gm_ternary_false@5:
     b PRBMathSD59x18.gm_ternary_merge@6
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.PRBMathSD59x18.log10(x: bytes) -> bytes:
+// /tmp/multisource_01dppwg9/prbmath.sol.PRBMathSD59x18.log10(x: bytes) -> bytes:
 PRBMathSD59x18.log10:
     proto 1 1
     intc_2 // 0
@@ -2436,15 +2436,15 @@ PRBMathSD59x18.log10:
     b>
     assert
     load 0
-    pushint 32
+    intc_0 // 32
     bzero
     frame_dig -1
     b|
     dup
     len
-    pushint 32
+    intc_0 // 32
     -
-    pushint 32
+    intc_0 // 32
     extract3
     pushbytess 0x0000000000000000000000000000000000000000000000000000000000000001 0x000000000000000000000000000000000000000000000000000000000000000a 0x0000000000000000000000000000000000000000000000000000000000000064 0x00000000000000000000000000000000000000000000000000000000000003e8 0x0000000000000000000000000000000000000000000000000000000000002710 0x00000000000000000000000000000000000000000000000000000000000186a0 0x00000000000000000000000000000000000000000000000000000000000f4240 0x0000000000000000000000000000000000000000000000000000000000989680 0x0000000000000000000000000000000000000000000000000000000005f5e100 0x000000000000000000000000000000000000000000000000000000003b9aca00 0x00000000000000000000000000000000000000000000000000000002540be400 0x000000000000000000000000000000000000000000000000000000174876e800 0x000000000000000000000000000000000000000000000000000000e8d4a51000 0x000000000000000000000000000000000000000000000000000009184e72a000 0x00000000000000000000000000000000000000000000000000005af3107a4000 0x00000000000000000000000000000000000000000000000000038d7ea4c68000 0x000000000000000000000000000000000000000000000000002386f26fc10000 0x000000000000000000000000000000000000000000000000016345785d8a0000 0x0000000000000000000000000000000000000000000000000de0b6b3a7640000 0x0000000000000000000000000000000000000000000000008ac7230489e80000 0x0000000000000000000000000000000000000000000000056bc75e2d63100000 0x00000000000000000000000000000000000000000000003635c9adc5dea00000 0x00000000000000000000000000000000000000000000021e19e0c9bab2400000 0x00000000000000000000000000000000000000000000152d02c7e14af6800000 0x00000000000000000000000000000000000000000000d3c21bcecceda1000000 0x000000000000000000000000000000000000000000084595161401484a000000 0x00000000000000000000000000000000000000000052b7d2dcc80cd2e4000000 0x0000000000000000000000000000000000000000033b2e3c9fd0803ce8000000 0x0000000000000000000000000000000000000000204fce5e3e25026110000000 0x0000000000000000000000000000000000000001431e0fae6d7217caa0000000 0x000000000000000000000000000000000000000c9f2c9cd04674edea40000000 0x000000000000000000000000000000000000007e37be2022c0914b2680000000 0x00000000000000000000000000000000000004ee2d6d415b85acef8100000000 0x000000000000000000000000000000000000314dc6448d9338c15b0a00000000 0x000000000000000000000000000000000001ed09bead87c0378d8e6400000000 0x000000000000000000000000000000000013426172c74d822b878fe800000000 0x0000000000000000000000000000000000c097ce7bc90715b34b9f1000000000 0x000000000000000000000000000000000785ee10d5da46d900f436a000000000 0x000000000000000000000000000000004b3b4ca85a86c47a098a224000000000 0x00000000000000000000000000000002f050fe938943acc45f65568000000000 0x0000000000000000000000000000001d6329f1c35ca4bfabb9f5610000000000 0x00000000000000000000000000000125dfa371a19e6f7cb54395ca0000000000 0x00000000000000000000000000000b7abc627050305adf14a3d9e40000000000 0x000000000000000000000000000072cb5bd86321e38cb6ce6682e80000000000 0x00000000000000000000000000047bf19673df52e37f2410011d100000000000 0x000000000000000000000000002cd76fe086b93ce2f768a00b22a00000000000 0x00000000000000000000000001c06a5ec5433c60ddaa16406f5a400000000000 0x000000000000000000000000118427b3b4a05bc8a8a4de845986800000000000 0x000000000000000000000000af298d050e4395d69670b12b7f41000000000000 0x000000000000000000000006d79f82328ea3da61e066ebb2f88a000000000000 0x0000000000000000000000446c3b15f9926687d2c40534fdb564000000000000 0x0000000000000000000002ac3a4edbbfb8014e3ba83411e915e8000000000000 0x000000000000000000001aba4714957d300d0e549208b31adb10000000000000 0x000000000000000000010b46c6cdd6e3e0828f4db456ff0c8ea0000000000000 0x0000000000000000000a70c3c40a64e6c51999090b65f67d9240000000000000 0x0000000000000000006867a5a867f103b2fffa5a71fba0e7b680000000000000 0x000000000000000004140c78940f6a24fdffc78873d4490d2100000000000000 0x000000000000000028c87cb5c89a2571ebfdcb54864ada834a00000000000000 0x000000000000000197d4df19d605767337e9f14d3eec8920e400000000000000 0x000000000000000fee50b7025c36a0802f236d04753d5b48e800000000000000 0x000000000000009f4f2726179a224501d762422c946590d91000000000000000 0x000000000000063917877cec0556b21269d695bdcbf7a87aa000000000000000 0x0000000000003e3aeb4ae1383562f4b82261d969f7ac94ca4000000000000000 0x0000000000026e4d30eccc3215dd8f3157d27e23acbdcfe68000000000000000 0x0000000000184f03e93ff9f4daa797ed6e38ed64bf6a1f010000000000000000 0x0000000000f316271c7fc3908a8bef464e3945ef7a25360a0000000000000000 0x00000000097edd871cfda3a5697758bf0e3cbb5ac5741c640000000000000000 0x000000005ef4a74721e864761ea977768e5f518bb6891be80000000000000000 0x00000003b58e88c75313ec9d329eaaa18fb92f75215b17100000000000000000 0x00000025179157c93ec73e23fa32aa4f9d3bda934d8ee6a00000000000000000 0x00000172ebad6ddc73c86d67c5faa71c245689c1079502400000000000000000 0x00000e7d34c64a9c85d4460dbbca87196b61618a4bd216800000000000000000 0x000090e40fbeea1d3a4abc8955e946fe31cdcf66f634e1000000000000000000 0x0005a8e89d75252446eb5d5d5b1cc5edf20a1a059e10ca000000000000000000 0x003899162693736ac531a5a58f1fbb4b746504382ca7e4000000000000000000 0x0235fadd81c2822bb3f07877973d50f28bf22a31be8ee8000000000000000000 0x161bcca7119915b50764b4abe86529797775a5f1719510000000000000000000
     uncover 77
@@ -2972,7 +2972,7 @@ PRBMathSD59x18.log10_switch_case_0@1:
     b PRBMathSD59x18.log10_switch_case_next@79
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.PRBMathSD59x18.log2(x: bytes) -> bytes:
+// /tmp/multisource_01dppwg9/prbmath.sol.PRBMathSD59x18.log2(x: bytes) -> bytes:
 PRBMathSD59x18.log2:
     proto 1 1
     intc_2 // 0
@@ -3038,7 +3038,7 @@ PRBMathSD59x18.log2_ternary_merge@28:
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     frame_bury 3
-    pushint 32
+    intc_0 // 32
     bzero
     pushint 8
     bzero
@@ -3230,7 +3230,7 @@ PRBMathSD59x18.log2_ternary_false@4:
     b PRBMathSD59x18.log2_ternary_merge@5
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.PRBMathSD59x18.mul(x: bytes, y: bytes) -> bytes:
+// /tmp/multisource_01dppwg9/prbmath.sol.PRBMathSD59x18.mul(x: bytes, y: bytes) -> bytes:
 PRBMathSD59x18.mul:
     proto 2 1
     intc_2 // 0
@@ -3363,7 +3363,7 @@ PRBMathSD59x18.mul_ternary_false@2:
     b PRBMathSD59x18.mul_ternary_merge@3
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.PRBMathSD59x18.pow(x: bytes, y: bytes) -> bytes:
+// /tmp/multisource_01dppwg9/prbmath.sol.PRBMathSD59x18.pow(x: bytes, y: bytes) -> bytes:
 PRBMathSD59x18.pow:
     proto 2 1
     intc_2 // 0
@@ -3462,7 +3462,7 @@ PRBMathSD59x18.pow_ternary_false@2:
     b PRBMathSD59x18.pow_ternary_merge@3
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.PRBMathSD59x18.sqrt(x: bytes) -> bytes:
+// /tmp/multisource_01dppwg9/prbmath.sol.PRBMathSD59x18.sqrt(x: bytes) -> bytes:
 PRBMathSD59x18.sqrt:
     proto 1 1
     frame_dig -1
@@ -3485,27 +3485,27 @@ PRBMathSD59x18.sqrt:
     retsub
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.test.div[routing]() -> void:
+// /tmp/multisource_01dppwg9/prbmath.sol.test.div[routing]() -> void:
 div:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     callsub PRBMathSD59x18.div
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec 6 // 0x151f7c75
@@ -3516,21 +3516,21 @@ div:
     return
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.test.exp[routing]() -> void:
+// /tmp/multisource_01dppwg9/prbmath.sol.test.exp[routing]() -> void:
 exp:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     callsub PRBMathSD59x18.exp
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec 6 // 0x151f7c75
@@ -3541,21 +3541,21 @@ exp:
     return
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.test.exp2[routing]() -> void:
+// /tmp/multisource_01dppwg9/prbmath.sol.test.exp2[routing]() -> void:
 exp2:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     callsub PRBMathSD59x18.exp2
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec 6 // 0x151f7c75
@@ -3566,27 +3566,27 @@ exp2:
     return
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.test.gm[routing]() -> void:
+// /tmp/multisource_01dppwg9/prbmath.sol.test.gm[routing]() -> void:
 gm:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     callsub PRBMathSD59x18.gm
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec 6 // 0x151f7c75
@@ -3597,21 +3597,21 @@ gm:
     return
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.test.log10[routing]() -> void:
+// /tmp/multisource_01dppwg9/prbmath.sol.test.log10[routing]() -> void:
 log10:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     callsub PRBMathSD59x18.log10
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec 6 // 0x151f7c75
@@ -3622,21 +3622,21 @@ log10:
     return
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.test.log2[routing]() -> void:
+// /tmp/multisource_01dppwg9/prbmath.sol.test.log2[routing]() -> void:
 log2:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     callsub PRBMathSD59x18.log2
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec 6 // 0x151f7c75
@@ -3647,27 +3647,27 @@ log2:
     return
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.test.mul[routing]() -> void:
+// /tmp/multisource_01dppwg9/prbmath.sol.test.mul[routing]() -> void:
 mul:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     callsub PRBMathSD59x18.mul
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec 6 // 0x151f7c75
@@ -3678,27 +3678,27 @@ mul:
     return
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.test.pow[routing]() -> void:
+// /tmp/multisource_01dppwg9/prbmath.sol.test.pow[routing]() -> void:
 pow:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    pushint 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub PRBMathSD59x18.pow
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec 6 // 0x151f7c75
@@ -3709,21 +3709,21 @@ pow:
     return
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.test.sqrt[routing]() -> void:
+// /tmp/multisource_01dppwg9/prbmath.sol.test.sqrt[routing]() -> void:
 sqrt:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     callsub PRBMathSD59x18.sqrt
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec 6 // 0x151f7c75
@@ -3734,14 +3734,14 @@ sqrt:
     return
 
 
-// /tmp/multisource_wndhsqo_/prbmath.sol.test.benchmark[routing]() -> void:
+// /tmp/multisource_01dppwg9/prbmath.sol.test.benchmark[routing]() -> void:
 benchmark:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     pushint 3
     itob
     dig 1
@@ -3782,17 +3782,17 @@ benchmark_after_while@4:
     assert
     dig 2
     len
-    intc_0 // 64
+    pushint 64
     <=
     assert // overflow
-    intc_0 // 64
+    pushint 64
     bzero
     uncover 3
     dig 1
     b|
     dig 3
     len
-    intc_0 // 64
+    pushint 64
     <=
     assert // overflow
     uncover 3
@@ -3801,7 +3801,7 @@ benchmark_after_while@4:
     concat
     dig 2
     len
-    intc_0 // 64
+    pushint 64
     <=
     assert // overflow
     cover 2

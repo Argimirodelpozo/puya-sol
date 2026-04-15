@@ -3,14 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_with_zero_last_byte_of_inner_hash_comptime.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
-    bytecblock "__ctor_pending" 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
+    intcblock 32 1
+    bytecblock 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
-    intc_0 // 1
-    app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -21,15 +18,18 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
+    pushbytes 0x2eaab6fe // method "builtinMatchesSolidityImplementation()bool"
+    txna ApplicationArgs 0
+    match main_builtinMatchesSolidityImplementation_route@4
+    err
+
+main_builtinMatchesSolidityImplementation_route@4:
     txn OnCompletion
     !
-    assert
     txn ApplicationID
+    &&
     assert
-    pushbytess 0xbacc49e3 0x2eaab6fe // method "__postInit()void", method "builtinMatchesSolidityImplementation()bool"
-    txna ApplicationArgs 0
-    match __postInit builtinMatchesSolidityImplementation
-    err
+    b builtinMatchesSolidityImplementation
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_with_zero_last_byte_of_inner_hash_comptime.sol.erc7201Mock(id: bytes) -> bytes:
@@ -37,50 +37,30 @@ erc7201Mock:
     proto 1 1
     frame_dig -1
     keccak256
-    btoi
-    itob
     dup
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b>=
     assert // underflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     swap
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b-
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     concat
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    intc_0 // 32
     extract3
     keccak256
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b&
-    btoi
-    itob
     retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_with_zero_last_byte_of_inner_hash_comptime.sol.C.__postInit[routing]() -> void:
-__postInit:
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_0 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    pushbytes "array"
-    pushint 4294967295
-    box_create
-    pop
-    intc_0 // 1
-    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_with_zero_last_byte_of_inner_hash_comptime.sol.C.builtinMatchesSolidityImplementation[routing]() -> void:
@@ -90,12 +70,12 @@ builtinMatchesSolidityImplementation:
     pushbytes 0x06d0d983459328e82eacb1bf2d6fadfa38a6896e9d4cbfe0e1aa41c6281bab00
     b==
     pushbytes 0x00
-    intc_2 // 0
+    pushint 0
     uncover 2
     setbit
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return

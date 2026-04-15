@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 0
-    bytecblock "x" "y" 0x 0x151f7c75 "__ctor_pending" "abc" "1234567890123456789012345678901234567" "__dyn_storage"
+    bytecblock "x" 0x "y" 0x151f7c75 "__ctor_pending" "abc" "1234567890123456789012345678901234567" "__dyn_storage"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec 4 // "__ctor_pending"
@@ -47,10 +47,6 @@ __postInit:
     bytec_0 // "x"
     bytec 5 // "abc"
     box_put
-    bytec_1 // "y"
-    pushint 2
-    box_create
-    pop
     intc_0 // 1
     return
 
@@ -62,11 +58,11 @@ invalidateXShort:
     pushbytes 0x40
     callsub __storage_write
     store 0
-    bytec_1 // "y"
+    bytec_2 // "y"
     box_del
     pop
-    bytec_1 // "y"
-    bytec_2 // 0x
+    bytec_2 // "y"
+    bytec_1 // 0x
     box_put
     intc_0 // 1
     return
@@ -79,11 +75,11 @@ invalidateXLong:
     pushbytes 0x05
     callsub __storage_write
     store 0
-    bytec_1 // "y"
+    bytec_2 // "y"
     box_del
     pop
-    bytec_1 // "y"
-    bytec_2 // 0x
+    bytec_2 // "y"
+    bytec_1 // 0x
     box_put
     intc_0 // 1
     return
@@ -93,7 +89,7 @@ invalidateXLong:
 abiEncode:
     bytec_0 // "x"
     box_get
-    bytec_2 // 0x
+    bytec_1 // 0x
     cover 2
     select
     dup
@@ -114,7 +110,7 @@ abiEncode:
 abiEncodePacked:
     bytec_0 // "x"
     box_get
-    bytec_2 // 0x
+    bytec_1 // 0x
     cover 2
     select
     dup
@@ -135,7 +131,7 @@ abiEncodePacked:
 copyToMemory:
     bytec_0 // "x"
     box_get
-    bytec_2 // 0x
+    bytec_1 // 0x
     cover 2
     select
     dup
@@ -156,7 +152,7 @@ copyToMemory:
 indexAccess:
     bytec_0 // "x"
     box_get
-    bytec_2 // 0x
+    bytec_1 // 0x
     cover 2
     select
     extract 0 1
@@ -196,13 +192,13 @@ assignToLong:
 copyToStorage:
     bytec_0 // "x"
     box_get
-    bytec_2 // 0x
+    bytec_1 // 0x
     cover 2
     select
-    bytec_1 // "y"
+    bytec_2 // "y"
     box_del
     pop
-    bytec_1 // "y"
+    bytec_2 // "y"
     swap
     box_put
     intc_0 // 1
@@ -211,10 +207,10 @@ copyToStorage:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.copyFromStorageShort[routing]() -> void:
 copyFromStorageShort:
-    bytec_1 // "y"
+    bytec_2 // "y"
     box_del
     pop
-    bytec_1 // "y"
+    bytec_2 // "y"
     bytec 5 // "abc"
     box_put
     bytec_0 // "x"
@@ -229,10 +225,10 @@ copyFromStorageShort:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.copyFromStorageLong[routing]() -> void:
 copyFromStorageLong:
-    bytec_1 // "y"
+    bytec_2 // "y"
     box_del
     pop
-    bytec_1 // "y"
+    bytec_2 // "y"
     bytec 6 // "1234567890123456789012345678901234567"
     box_put
     bytec_0 // "x"
@@ -249,7 +245,7 @@ copyFromStorageLong:
 arrayPop:
     bytec_0 // "x"
     box_get
-    bytec_2 // 0x
+    bytec_1 // 0x
     cover 2
     select
     dup
@@ -273,7 +269,7 @@ arrayPop:
 arrayPush:
     bytec_0 // "x"
     box_get
-    bytec_2 // 0x
+    bytec_1 // 0x
     cover 2
     select
     pushbytes 0x74
@@ -292,7 +288,7 @@ arrayPush:
 arrayPushEmpty:
     bytec_0 // "x"
     box_get
-    bytec_2 // 0x
+    bytec_1 // 0x
     cover 2
     select
     pushbytes 0x00
@@ -313,7 +309,7 @@ del:
     box_del
     pop
     bytec_0 // "x"
-    bytec_2 // 0x
+    bytec_1 // 0x
     box_put
     intc_0 // 1
     return
@@ -323,7 +319,7 @@ del:
 x:
     bytec_0 // "x"
     box_get
-    bytec_2 // 0x
+    bytec_1 // 0x
     cover 2
     select
     dup
@@ -342,9 +338,9 @@ x:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/invalid_encoding_for_storage_byte_array.sol.C.y[routing]() -> void:
 y:
-    bytec_1 // "y"
+    bytec_2 // "y"
     box_get
-    bytec_2 // 0x
+    bytec_1 // 0x
     cover 2
     select
     dup
@@ -378,7 +374,7 @@ __storage_write:
     -
     intc_1 // 32
     extract3
-    bytec_1 // "y"
+    bytec_2 // "y"
     swap
     app_global_put
     retsub

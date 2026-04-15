@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 32
+    intcblock 1 2 0 32
     bytecblock "s" "__ctor_pending" 0x151f7c75400000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -50,10 +50,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_1 // 0
+    intc_2 // 0
     app_global_put
     bytec_0 // "s"
-    intc_2 // 2
+    intc_1 // 2
     box_create
     pop
 
@@ -61,17 +61,25 @@ __postInit_while_top@2:
     bytec_0 // "s"
     box_len
     pop
-    intc_2 // 2
+    intc_1 // 2
+    >=
+    bz __postInit_ternary_false@4
+    bytec_0 // "s"
+    box_len
+    pop
+
+__postInit_ternary_merge@5:
+    intc_1 // 2
     -
     intc_3 // 32
     /
     itob
     pushbytes 0x2a
     b<
-    bz __postInit_after_while@4
+    bz __postInit_after_while@7
     bytec_0 // "s"
-    intc_1 // 0
-    intc_2 // 2
+    intc_2 // 0
+    intc_1 // 2
     box_extract
     btoi
     bytec_0 // "s"
@@ -88,23 +96,27 @@ __postInit_while_top@2:
     itob
     extract 6 2
     bytec_0 // "s"
-    intc_1 // 0
+    intc_2 // 0
     uncover 2
     box_replace
     intc_3 // 32
     *
-    intc_2 // 2
+    intc_1 // 2
     +
     bytec_0 // "s"
     swap
-    intc_1 // 0
+    intc_2 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     box_splice
     b __postInit_while_top@2
 
-__postInit_after_while@4:
+__postInit_after_while@7:
     intc_0 // 1
     return
+
+__postInit_ternary_false@4:
+    intc_1 // 2
+    b __postInit_ternary_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_function_selectors.sol.C.g[routing]() -> void:

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_boundary_test.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 2 1
+    intcblock 32 2 0 1
     bytecblock "storageArray" "__ctor_pending" 0x068101
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,10 +38,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_1 // 0
+    intc_2 // 0
     app_global_put
     bytec_0 // "storageArray"
-    intc_2 // 2
+    intc_1 // 2
     box_create
     pop
     intc_3 // 1
@@ -63,7 +63,7 @@ test_boundary_check:
     ==
     assert // invalid number of bytes for arc4.uint256
 
-test_boundary_check_while_top@13:
+test_boundary_check_while_top@19:
     pushint 170010
     global OpcodeBudget
     >
@@ -77,26 +77,34 @@ test_boundary_check_while_top@13:
     itxn_field ApprovalProgram
     bytec_2 // 0x068101
     itxn_field ClearStateProgram
-    intc_1 // 0
+    intc_2 // 0
     itxn_field Fee
     itxn_submit
-    b test_boundary_check_while_top@13
+    b test_boundary_check_while_top@19
 
 test_boundary_check_while_top@2:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_2 // 2
+    intc_1 // 2
+    >=
+    bz test_boundary_check_ternary_false@4
+    bytec_0 // "storageArray"
+    box_len
+    pop
+
+test_boundary_check_ternary_merge@5:
+    intc_1 // 2
     -
     intc_0 // 32
     /
     itob
     dig 2
     b<
-    bz test_boundary_check_while_top@5
+    bz test_boundary_check_while_top@8
     bytec_0 // "storageArray"
-    intc_1 // 0
-    intc_2 // 2
+    intc_2 // 0
+    intc_1 // 2
     box_extract
     btoi
     bytec_0 // "storageArray"
@@ -113,35 +121,43 @@ test_boundary_check_while_top@2:
     itob
     extract 6 2
     bytec_0 // "storageArray"
-    intc_1 // 0
+    intc_2 // 0
     uncover 2
     box_replace
     intc_0 // 32
     *
-    intc_2 // 2
+    intc_1 // 2
     +
     bytec_0 // "storageArray"
     swap
-    intc_1 // 0
+    intc_2 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     box_splice
     b test_boundary_check_while_top@2
 
-test_boundary_check_while_top@5:
+test_boundary_check_while_top@8:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_2 // 2
+    intc_1 // 2
+    >=
+    bz test_boundary_check_ternary_false@10
+    bytec_0 // "storageArray"
+    box_len
+    pop
+
+test_boundary_check_ternary_merge@11:
+    intc_1 // 2
     -
     intc_0 // 32
     /
     itob
     dig 2
     b>
-    bz test_boundary_check_after_while@7
+    bz test_boundary_check_after_while@13
     bytec_0 // "storageArray"
-    intc_1 // 0
-    intc_2 // 2
+    intc_2 // 0
+    intc_1 // 2
     box_extract
     btoi
     intc_3 // 1
@@ -150,12 +166,12 @@ test_boundary_check_while_top@5:
     itob
     extract 6 2
     bytec_0 // "storageArray"
-    intc_1 // 0
+    intc_2 // 0
     uncover 2
     box_replace
     intc_0 // 32
     *
-    intc_2 // 2
+    intc_1 // 2
     +
     bytec_0 // "storageArray"
     swap
@@ -170,9 +186,9 @@ test_boundary_check_while_top@5:
     bytec_0 // "storageArray"
     swap
     box_resize
-    b test_boundary_check_while_top@5
+    b test_boundary_check_while_top@8
 
-test_boundary_check_after_while@7:
+test_boundary_check_after_while@13:
     bytec_0 // "storageArray"
     box_get
     pushbytes 0x0000
@@ -208,3 +224,11 @@ test_boundary_check_after_while@7:
     log
     intc_3 // 1
     return
+
+test_boundary_check_ternary_false@10:
+    intc_1 // 2
+    b test_boundary_check_ternary_merge@11
+
+test_boundary_check_ternary_false@4:
+    intc_1 // 2
+    b test_boundary_check_ternary_merge@5

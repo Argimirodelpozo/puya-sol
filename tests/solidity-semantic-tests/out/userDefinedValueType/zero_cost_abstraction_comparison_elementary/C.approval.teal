@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/zero_cost_abstraction_comparison_elementary.sol.C.approval_program() -> uint64:
 main:
-    intcblock 64 1 0
+    intcblock 32 1 0
     bytecblock "x" 0x8000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x221552b7 0xfdd59e04 0x1ff2e886 // method "setX(uint512)void", method "getX()uint512", method "add(uint512,uint512)uint512"
+    pushbytess 0x12178b95 0x43e6f972 0xac976e02 // method "setX(uint256)void", method "getX()uint256", method "add(uint256,uint256)uint256"
     txna ApplicationArgs 0
     match setX getX add
     err
@@ -37,9 +37,9 @@ setX:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     bytec_0 // "x"
     swap
     app_global_put
@@ -55,10 +55,10 @@ getX:
     assert // check x exists
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -74,17 +74,17 @@ add:
     txna ApplicationArgs 1
     dupn 2
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     cover 2
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     swap
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
@@ -120,10 +120,10 @@ add_bool_merge@5:
     b%
     dup
     len
-    intc_0 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 64
+    intc_0 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75

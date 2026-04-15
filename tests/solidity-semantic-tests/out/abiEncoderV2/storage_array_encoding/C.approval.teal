@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/storage_array_encoding.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 64
+    intcblock 32 1 2 0
     bytecblock "__ctor_pending" "tmp_h" "tmp_i" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
-    intc_0 // 1
+    intc_1 // 1
     app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -38,17 +38,17 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_1 // 0
+    intc_3 // 0
     app_global_put
     bytec_1 // "tmp_h"
     intc_2 // 2
     box_create
     pop
     bytec_2 // "tmp_i"
-    intc_3 // 64
+    pushint 64
     box_create
     pop
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
@@ -56,22 +56,42 @@ __postInit:
 h:
     txna ApplicationArgs 1
     dup
-    intc_1 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 64
+    pushint 64
     *
     intc_2 // 2
     +
     dig 1
     len
+    dup
+    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint256, 2>>
     bytec_1 // "tmp_h"
     box_del
     pop
     bytec_1 // "tmp_h"
-    dig 1
+    dig 2
     box_put
+    intc_0 // 32
+    bzero
+    swap
+    intc_2 // 2
+    -
+    intc_0 // 32
+    /
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    extract 2 0
+    concat
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000020
     swap
     concat
@@ -85,7 +105,7 @@ h:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
@@ -100,10 +120,30 @@ i:
     bytec_2 // "tmp_i"
     dig 1
     box_put
-    dup
+    intc_0 // 32
+    bzero
+    dig 1
     extract 0 64 // on error: index access is out of bounds
+    dig 1
     swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
     extract 64 64 // on error: index access is out of bounds
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     dup
     len
@@ -115,5 +155,5 @@ i:
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/empty_nonempty_empty.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 0 2
+    intcblock 1 0
     bytecblock "__ctor_pending" "x"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -40,10 +40,6 @@ __postInit:
     bytec_0 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    bytec_1 // "x"
-    intc_2 // 2
-    box_create
-    pop
     intc_0 // 1
     return
 
@@ -54,7 +50,7 @@ set:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_2 // 2
+    pushint 2
     +
     dig 1
     len

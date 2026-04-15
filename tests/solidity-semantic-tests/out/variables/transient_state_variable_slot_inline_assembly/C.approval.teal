@@ -3,19 +3,24 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_slot_inline_assembly.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1
+    intcblock 1 0
+    bytecblock 0x "x" "w" "a" 0x0000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytess "y" 0x
+    pushbytes "y"
+    bytec_0 // 0x
     app_global_put
-    pushbytess "x" 0x
+    bytec_1 // "x"
+    bytec_0 // 0x
     app_global_put
-    pushbytes "w"
-    pushint 0
+    bytec_2 // "w"
+    intc_1 // 0
     app_global_put
-    pushbytess "z" 0x
+    pushbytes "z"
+    bytec_0 // 0x
     app_global_put
-    pushbytess "a" base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // "a", addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec_3 // "a"
+    bytec 4 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     app_global_put
     intc_0 // 1
     return
@@ -28,6 +33,15 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
+    bytec_1 // "x"
+    bytec_0 // 0x
+    app_global_put
+    bytec_2 // "w"
+    intc_1 // 0
+    app_global_put
+    bytec_3 // "a"
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
     txn OnCompletion
     !
     assert

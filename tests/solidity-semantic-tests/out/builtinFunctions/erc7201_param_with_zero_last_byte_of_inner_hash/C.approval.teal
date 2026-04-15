@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_with_zero_last_byte_of_inner_hash.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 0
-    bytecblock 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 "85"
+    bytecblock 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 "85" 0x06d0d983459328e82eacb1bf2d6fadfa38a6896e9d4cbfe0e1aa41c6281bab00
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -37,8 +37,6 @@ erc7201Mock:
     proto 1 1
     frame_dig -1
     keccak256
-    btoi
-    itob
     dup
     bytec_0 // 0x01
     b>=
@@ -62,8 +60,6 @@ erc7201Mock:
     keccak256
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b&
-    btoi
-    itob
     retsub
 
 
@@ -71,12 +67,12 @@ erc7201Mock:
 builtinMatchesSolidityImplementation:
     bytec_2 // "85"
     callsub erc7201Mock
-    pushbytes 0x
+    bytec_3 // 0x06d0d983459328e82eacb1bf2d6fadfa38a6896e9d4cbfe0e1aa41c6281bab00
     b==
     bz builtinMatchesSolidityImplementation_bool_false@4
     bytec_2 // "85"
     callsub erc7201Mock
-    pushbytes 0x06d0d983459328e82eacb1bf2d6fadfa38a6896e9d4cbfe0e1aa41c6281bab00
+    bytec_3 // 0x06d0d983459328e82eacb1bf2d6fadfa38a6896e9d4cbfe0e1aa41c6281bab00
     b==
     bz builtinMatchesSolidityImplementation_bool_false@4
     intc_0 // 1

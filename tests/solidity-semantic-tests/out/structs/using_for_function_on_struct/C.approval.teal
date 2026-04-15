@@ -1,0 +1,109 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/using_for_function_on_struct.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1 64
+    bytecblock "x" 0x0000000000000000000000000000000000000000000000000000000000000003 0x151f7c75
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "x"
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x1928cd24 0x3f4abdfd // method "f(uint256)uint256", method "x()uint512"
+    txna ApplicationArgs 0
+    match f x
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/using_for_function_on_struct.sol.D.mul(self: bytes, x: bytes) -> bytes, bytes:
+D.mul:
+    proto 2 2
+    frame_dig -2
+    extract 0 32
+    frame_dig -1
+    b*
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    dup
+    frame_bury -2
+    extract 0 32
+    frame_dig -2
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/using_for_function_on_struct.sol.C.f[routing]() -> void:
+f:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    bytec_0 // "x"
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000003
+    app_global_put
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000003
+    uncover 2
+    callsub D.mul
+    bytec_0 // "x"
+    swap
+    app_global_put
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/using_for_function_on_struct.sol.C.x[routing]() -> void:
+x:
+    pushint 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    dup
+    len
+    intc_2 // 64
+    <=
+    assert // overflow
+    intc_2 // 64
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

@@ -228,32 +228,42 @@ addresses:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/calldata.sol.C.test_equality(_addresses: bytes) -> bytes:
 test_equality:
     proto 1 1
+    intc_0 // 0
     frame_dig -1
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     itob
-    dup
     bytec_0 // "addresses"
     box_len
     pop
+    intc_3 // 2
+    >=
+    bz test_equality_ternary_false@2
+    bytec_0 // "addresses"
+    box_len
+    pop
+
+test_equality_ternary_merge@3:
     intc_3 // 2
     -
     intc_1 // 32
     /
     itob
+    frame_dig 1
     b==
     assert
     intc_0 // 0
     itob
+    frame_bury 0
 
-test_equality_while_top@1:
-    frame_dig 1
+test_equality_while_top@4:
     frame_dig 0
+    frame_dig 1
     b<
-    bz test_equality_after_while@3
+    bz test_equality_after_while@6
     pushint 8
     bzero
-    frame_dig 1
+    frame_dig 0
     dup
     cover 2
     concat
@@ -284,10 +294,14 @@ test_equality_while_top@1:
     assert
     bytec_3 // 0x01
     b+
-    frame_bury 1
-    b test_equality_while_top@1
+    frame_bury 0
+    b test_equality_while_top@4
 
-test_equality_after_while@3:
+test_equality_after_while@6:
     frame_dig -1
     frame_bury 0
     retsub
+
+test_equality_ternary_false@2:
+    intc_3 // 2
+    b test_equality_ternary_merge@3

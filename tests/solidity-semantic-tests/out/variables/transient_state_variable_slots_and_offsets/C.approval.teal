@@ -4,20 +4,20 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_slots_and_offsets.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 16
-    bytecblock "x" "y" "w" 0x
+    bytecblock "x" 0x "y" "w" "z"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
-    bytec_3 // 0x
+    bytec_1 // 0x
     app_global_put
-    bytec_1 // "y"
+    bytec_2 // "y"
     intc_0 // 0
     app_global_put
-    bytec_2 // "w"
+    bytec_3 // "w"
     intc_0 // 0
     app_global_put
-    pushbytes "z"
-    bytec_3 // 0x
+    bytec 4 // "z"
+    bytec_1 // 0x
     app_global_put
     intc_1 // 1
     return
@@ -30,6 +30,18 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
+    bytec_0 // "x"
+    bytec_1 // 0x
+    app_global_put
+    bytec_2 // "y"
+    intc_0 // 0
+    app_global_put
+    bytec_3 // "w"
+    intc_0 // 0
+    app_global_put
+    bytec 4 // "z"
+    bytec_1 // 0x
+    app_global_put
     pushbytes 0x4a93bb88 // method "f()(uint128,uint64,uint64,uint256)"
     txna ApplicationArgs 0
     match main_f_route@4
@@ -51,15 +63,15 @@ f:
     bytec_0 // "x"
     swap
     app_global_put
-    bytec_1 // "y"
+    bytec_2 // "y"
     pushint 2
     app_global_put
-    bytec_2 // "w"
+    bytec_3 // "w"
     pushint 3
     app_global_put
     pushint 4
     itob
-    pushbytes "z"
+    bytec 4 // "z"
     swap
     app_global_put
     intc_0 // 0
@@ -75,11 +87,11 @@ f:
     bzero
     b|
     intc_0 // 0
-    bytec_1 // "y"
+    bytec_2 // "y"
     app_global_get_ex
     assert // check y exists
     intc_0 // 0
-    bytec_2 // "w"
+    bytec_3 // "w"
     app_global_get_ex
     assert // check w exists
     swap

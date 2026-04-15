@@ -47,7 +47,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xdcb5be9f 0xfc4332fb 0x8cf2b9d7 0xffd03f6e 0xb2f6721a 0x3c749367 0x8f029f8a 0x10a8ab7d 0x553aaaf5 0x9a3f9185 0x7a66f091 0x0b4bc485 0x5af2a918 0xcd328dae 0xd32a6c34 0xfdfaf579 0xf022214e 0xdad7beec 0x8a350bda 0xe492266c 0x44e23cd9 0xc6c11df2 0x60b24ec0 0xe5e8a40d 0x25becda0 0x909d0b57 // method "storage_a()(uint512,uint512)", method "storage_ra()(uint512,uint512)", method "storage_b()(uint512,uint512)", method "storage_rb()(uint512,uint512)", method "storage_c()(uint512,uint512)", method "storage_rc()(uint512,uint512)", method "storage_d()(uint512,uint512)", method "storage_rd()(uint512,uint512)", method "set_a(uint64,uint64)void", method "set_ra(uint64,uint64)void", method "set_b(uint64,uint64)void", method "set_rb(uint64,uint64)void", method "set_c(uint64,uint64)void", method "set_rc(uint64,uint64)void", method "set_d(uint512,address)void", method "set_rd(uint512,address)void", method "read_slot(uint512)uint512", method "read_contents_asm()(byte[32],byte[32],byte[32],byte[32])", method "a()(uint64,uint64)", method "ra()(uint64,uint64)", method "b()(uint64,uint64)", method "rb()(uint64,uint64)", method "c()(uint64,uint64)", method "rc()(uint64,uint64)", method "d()(uint512,address)", method "rd()(uint512,address)"
+    pushbytess 0xdcb5be9f 0xfc4332fb 0x8cf2b9d7 0xffd03f6e 0xb2f6721a 0x3c749367 0x8f029f8a 0x10a8ab7d 0x553aaaf5 0x9a3f9185 0x7a66f091 0x0b4bc485 0x5af2a918 0xcd328dae 0x873476e2 0x0604745c 0xf022214e 0xdad7beec 0x8a350bda 0xe492266c 0x44e23cd9 0xc6c11df2 0x60b24ec0 0xe5e8a40d 0x25becda0 0x909d0b57 // method "storage_a()(uint512,uint512)", method "storage_ra()(uint512,uint512)", method "storage_b()(uint512,uint512)", method "storage_rb()(uint512,uint512)", method "storage_c()(uint512,uint512)", method "storage_rc()(uint512,uint512)", method "storage_d()(uint512,uint512)", method "storage_rd()(uint512,uint512)", method "set_a(uint64,uint64)void", method "set_ra(uint64,uint64)void", method "set_b(uint64,uint64)void", method "set_rb(uint64,uint64)void", method "set_c(uint64,uint64)void", method "set_rc(uint64,uint64)void", method "set_d(uint96,address)void", method "set_rd(uint96,address)void", method "read_slot(uint512)uint512", method "read_contents_asm()(byte[32],byte[32],byte[32],byte[32])", method "a()(uint64,uint64)", method "ra()(uint64,uint64)", method "b()(uint64,uint64)", method "rb()(uint64,uint64)", method "c()(uint64,uint64)", method "rc()(uint64,uint64)", method "d()(uint512,address)", method "rd()(uint512,address)"
     txna ApplicationArgs 0
     match storage_a storage_ra storage_b storage_rb storage_c storage_rc storage_d storage_rd set_a set_ra set_b set_rb set_c set_rc set_d set_rd read_slot read_contents_asm a ra b rb c rc d rd
     err
@@ -331,9 +331,9 @@ set_d:
     dup
     len
     dup
-    pushint 64
+    pushint 12
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint96
     txna ApplicationArgs 2
     dup
     len
@@ -370,9 +370,9 @@ set_rd:
     dup
     len
     dup
-    pushint 64
+    pushint 12
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint96
     txna ApplicationArgs 2
     dup
     len

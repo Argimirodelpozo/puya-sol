@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_library_structs.sol.Test.approval_program() -> uint64:
 main:
     intcblock 32 0 1 610
-    bytecblock "__ctor_pending" 0x000000000000000000000000000000000000000000000000000000000000000000220000 0x068101 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    bytecblock "__ctor_pending" 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad 0x000000000000000000000000000000000000000000000000000000000000000000220000 0x068101
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
@@ -80,7 +80,7 @@ Lib.set_while_top@3:
     swap
     concat
     frame_bury -1
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000220000
+    bytec_2 // 0x000000000000000000000000000000000000000000000000000000000000000000220000
     frame_dig -1
     uncover 3
     uncover 3
@@ -116,9 +116,9 @@ f_while_top@2:
     itxn_field TypeEnum
     pushint 5 // DeleteApplication
     itxn_field OnCompletion
-    bytec_2 // 0x068101
+    bytec_3 // 0x068101
     itxn_field ApprovalProgram
-    bytec_2 // 0x068101
+    bytec_3 // 0x068101
     itxn_field ClearStateProgram
     intc_1 // 0
     itxn_field Fee
@@ -126,18 +126,19 @@ f_while_top@2:
     b f_while_top@2
 
 f_after_while@7:
-    bytec_3 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    bytec_1 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
     box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000220000
+    bytec_2 // 0x000000000000000000000000000000000000000000000000000000000000000000220000
     cover 2
     select
     callsub Lib.set
-    popn 2
-    bytec_3 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000220000
-    cover 2
-    select
+    pop
+    bytec_1 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    box_del
+    pop
+    bytec_1 // 0x64617461ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    dig 1
+    box_put
     dup
     extract 0 32
     dig 1

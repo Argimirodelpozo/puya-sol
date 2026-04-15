@@ -4,20 +4,20 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable_tuple_assignment.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32
-    bytecblock "y" "w" 0x "z" "x"
+    bytecblock "w" 0x "y" "x" "z"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 4 // "x"
-    bytec_2 // 0x
+    bytec_3 // "x"
+    bytec_1 // 0x
     app_global_put
-    bytec_0 // "y"
-    bytec_2 // 0x
+    bytec_2 // "y"
+    bytec_1 // 0x
     app_global_put
-    bytec_1 // "w"
-    bytec_2 // 0x
+    bytec_0 // "w"
+    bytec_1 // 0x
     app_global_put
-    bytec_3 // "z"
-    bytec_2 // 0x
+    bytec 4 // "z"
+    bytec_1 // 0x
     app_global_put
     intc_1 // 1
     return
@@ -30,6 +30,12 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
+    bytec_3 // "x"
+    bytec_1 // 0x
+    app_global_put
+    bytec_0 // "w"
+    bytec_1 // 0x
+    app_global_put
     pushbytes 0xb34b38c7 // method "f()(uint256,uint256,uint256)"
     txna ApplicationArgs 0
     match main_f_route@4
@@ -48,67 +54,67 @@ main_f_route@4:
 f:
     intc_1 // 1
     itob
-    bytec 4 // "x"
+    bytec_3 // "x"
     swap
     app_global_put
     pushint 2
     itob
-    bytec_0 // "y"
+    bytec_2 // "y"
     swap
     app_global_put
     pushint 3
     itob
-    bytec_1 // "w"
+    bytec_0 // "w"
     swap
     app_global_put
     pushint 4
     itob
-    bytec_3 // "z"
+    bytec 4 // "z"
     dig 1
     app_global_put
     intc_0 // 0
-    bytec_0 // "y"
+    bytec_2 // "y"
     app_global_get_ex
     bury 1
     assert // check y exists
     intc_0 // 0
-    bytec_1 // "w"
+    bytec_0 // "w"
     app_global_get_ex
     bury 1
     assert // check w exists
-    bytec_1 // "w"
+    bytec_0 // "w"
     dig 1
     app_global_put
     intc_0 // 0
-    bytec_0 // "y"
+    bytec_2 // "y"
     app_global_get_ex
     bury 1
     assert // check y exists
     intc_0 // 0
-    bytec_3 // "z"
+    bytec 4 // "z"
     app_global_get_ex
     bury 1
     assert // check z exists
-    bytec_0 // "y"
+    bytec_2 // "y"
     dig 1
     app_global_put
     intc_0 // 0
-    bytec_1 // "w"
+    bytec_0 // "w"
     app_global_get_ex
     bury 1
     assert // check w exists
     intc_0 // 0
-    bytec_3 // "z"
+    bytec 4 // "z"
     app_global_get_ex
     bury 1
     assert // check z exists
-    bytec 4 // "x"
+    bytec_3 // "x"
     swap
     app_global_put
     intc_2 // 32
     bzero
     intc_0 // 0
-    bytec_0 // "y"
+    bytec_2 // "y"
     app_global_get_ex
     assert // check y exists
     dup
@@ -119,7 +125,7 @@ f:
     dig 1
     b|
     intc_0 // 0
-    bytec_1 // "w"
+    bytec_0 // "w"
     app_global_get_ex
     assert // check w exists
     dup

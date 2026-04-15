@@ -1,0 +1,158 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 64 32 4
+    bytecblock 0x151f7c75 0x 0x0002
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x58a64301 0x595e23e2 // method "f()(uint512,bool[][2],(bool[])[2],uint512)", method "g()(uint256,uint256)"
+    txna ApplicationArgs 0
+    match f g
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol.C.f[routing]() -> void:
+f:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol.C.f
+    dig 3
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    intc_1 // 64
+    bzero
+    uncover 4
+    dig 1
+    b|
+    pushbytes 0x0084
+    concat
+    dig 4
+    len
+    pushint 132
+    +
+    itob
+    extract 6 2
+    concat
+    dig 2
+    len
+    intc_1 // 64
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol.C.g[routing]() -> void:
+g:
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol.C.f
+    popn 3
+    callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol.C.f
+    cover 4
+    popn 3
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    dig 2
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol.C.f() -> bytes, bytes, bytes, bytes:
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/skip_dynamic_types_for_static_arrays_with_dynamic_elements.sol.C.f:
+    pushint 5
+    itob
+    bytec_1 // 0x
+    pushint 0
+    getbit
+    bytec_1 // 0x
+    intc_0 // 1
+    dig 2
+    setbit
+    bytec_2 // 0x0002
+    dig 1
+    concat
+    pushint 6
+    itob
+    pushbytes 0x000400060001
+    dig 2
+    concat
+    bytec_2 // 0x0002
+    uncover 3
+    concat
+    uncover 3
+    pushint 2
+    dig 5
+    setbit
+    pushint 3
+    dig 5
+    setbit
+    intc_3 // 4
+    uncover 5
+    setbit
+    pushbytes 0x00020005
+    swap
+    concat
+    dig 1
+    len
+    intc_3 // 4
+    +
+    itob
+    extract 6 2
+    pushbytes 0x0004
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 3
+    cover 2
+    uncover 3
+    retsub

@@ -4,36 +4,36 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/member_accessors.sol.test.approval_program() -> uint64:
 main:
     intcblock 1 0 64
-    bytecblock 0x 0x151f7c75 "data" "name" "a_hash" "an_address" "super_secret_data"
+    bytecblock 0x151f7c75 "data" "name" "a_hash" "an_address" 0x0000000000000000000000000000000000000000000000000000000000000000 "super_secret_data"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "data"
-    bytec_0 // 0x
+    bytec_1 // "data"
+    pushbytes 0x
     app_global_put
-    bytec_3 // "name"
-    bytec_0 // 0x
+    bytec_2 // "name"
+    pushbytes 0x000000000000
     app_global_put
-    bytec 4 // "a_hash"
-    bytec_0 // 0x
+    bytec_3 // "a_hash"
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    bytec 5 // "an_address"
-    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec 4 // "an_address"
+    bytec 5 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     app_global_put
     bytec 6 // "super_secret_data"
-    bytec_0 // 0x
+    pushbytes 0x
     app_global_put
     pushint 8
     itob
-    bytec_2 // "data"
+    bytec_1 // "data"
     swap
     app_global_put
-    bytec_3 // "name"
+    bytec_2 // "name"
     pushbytes 0x43656c696e61
     app_global_put
-    bytec 4 // "a_hash"
+    bytec_3 // "a_hash"
     pushbytes 0xa91eddf639b0b768929589c1a9fd21dcb0107199bdd82e55c5348018a1572f52
     app_global_put
-    bytec 5 // "an_address"
+    bytec 4 // "an_address"
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000001337
     app_global_put
     pushint 42
@@ -66,7 +66,7 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/member_accessors.sol.test.data[routing]() -> void:
 data:
     intc_1 // 0
-    bytec_2 // "data"
+    bytec_1 // "data"
     app_global_get_ex
     assert // check data exists
     dup
@@ -77,7 +77,7 @@ data:
     intc_2 // 64
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -88,10 +88,10 @@ data:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/member_accessors.sol.test.name[routing]() -> void:
 name:
     intc_1 // 0
-    bytec_3 // "name"
+    bytec_2 // "name"
     app_global_get_ex
     assert // check name exists
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -102,10 +102,10 @@ name:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/member_accessors.sol.test.a_hash[routing]() -> void:
 a_hash:
     intc_1 // 0
-    bytec 4 // "a_hash"
+    bytec_3 // "a_hash"
     app_global_get_ex
     assert // check a_hash exists
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -116,10 +116,10 @@ a_hash:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/member_accessors.sol.test.an_address[routing]() -> void:
 an_address:
     intc_1 // 0
-    bytec 5 // "an_address"
+    bytec 4 // "an_address"
     app_global_get_ex
     assert // check an_address exists
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log

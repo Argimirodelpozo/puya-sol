@@ -46,10 +46,6 @@ __postInit:
     bytec_1 // "__ctor_pending"
     pushint 0
     app_global_put
-    bytec_0 // "testArray"
-    pushint 2
-    box_create
-    pop
     intc_0 // 1
     return
 
@@ -109,12 +105,13 @@ checkSlots:
     -
     extract_uint64
     callsub __storage_read
-    dig 3
+    cover 3
+    dig 2
     pushbytes 0x01
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    dig 2
+    dig 1
     swap
     concat
     dup
@@ -123,12 +120,13 @@ checkSlots:
     -
     extract_uint64
     callsub __storage_read
-    dig 4
+    cover 3
+    dig 2
     pushbytes 0x02
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    dig 3
+    dig 1
     swap
     concat
     dup
@@ -137,13 +135,12 @@ checkSlots:
     -
     extract_uint64
     callsub __storage_read
-    uncover 5
+    cover 3
+    uncover 2
     pushbytes 0x03
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    uncover 4
-    swap
     concat
     dup
     len
@@ -151,48 +148,57 @@ checkSlots:
     -
     extract_uint64
     callsub __storage_read
-    uncover 4
+    swap
     store 0
     bytec_0 // "testArray"
     box_len
     pop
     pushint 2
+    >=
+    bz checkSlots_ternary_false@3
+    bytec_0 // "testArray"
+    box_len
+    pop
+
+checkSlots_ternary_merge@4:
+    pushint 2
     -
     itob
     dig 4
+    dup
     len
     intc_1 // 64
     <=
     assert // overflow
     intc_1 // 64
     bzero
-    uncover 5
+    swap
     dig 1
     b|
     dig 5
+    dup
     len
     intc_1 // 64
     <=
     assert // overflow
-    uncover 5
     dig 2
     b|
     concat
     dig 4
+    dup
     len
     intc_1 // 64
     <=
     assert // overflow
-    uncover 4
     dig 2
     b|
     concat
     dig 3
+    dup
     len
     intc_1 // 64
     <=
     assert // overflow
-    uncover 3
     dig 2
     b|
     concat
@@ -205,6 +211,10 @@ checkSlots:
     log
     intc_0 // 1
     return
+
+checkSlots_ternary_false@3:
+    pushint 2
+    b checkSlots_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.fillArray[routing]() -> void:

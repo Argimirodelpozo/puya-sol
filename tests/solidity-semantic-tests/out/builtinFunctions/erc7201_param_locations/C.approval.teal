@@ -4,10 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_locations.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32 2
-    bytecblock 0x00 0x151f7c75 0x "example.contract" "example.main" 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x00 0x151f7c75 0x01 "example.contract" "example.main" "storageVarStr" 0x010000000000000000000000000000000000000000000000000000000000000000 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytes "storageVarStr"
+    bytec 5 // "storageVarStr"
     bytec_3 // "example.contract"
     app_global_put
     intc_1 // 1
@@ -37,20 +37,18 @@ erc7201Mock:
     proto 1 1
     frame_dig -1
     keccak256
-    btoi
-    itob
     dup
-    pushbytes 0x01
+    bytec_2 // 0x01
     b>=
     assert // underflow
     intc_2 // 32
     bzero
     swap
-    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    pushbytes 0x01
+    bytec_2 // 0x01
     b-
-    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     concat
     dup
@@ -62,16 +60,27 @@ erc7201Mock:
     keccak256
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b&
-    btoi
-    itob
     retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/erc7201_param_locations.sol.C.storageVar[routing]() -> void:
 storageVar:
+    intc_2 // 32
+    bzero
+    intc_0 // 0
+    bytec 5 // "storageVarStr"
+    app_global_get_ex
+    assert // check storageVarStr exists
+    keccak256
+    bytec_2 // 0x01
+    b-
+    b|
+    keccak256
+    extract 0 31
+    bytec_0 // 0x00
+    concat
     bytec_3 // "example.contract"
     callsub erc7201Mock
-    bytec_2 // 0x
     b==
     bytec_0 // 0x00
     intc_0 // 0
@@ -107,7 +116,7 @@ constStorageVar:
 memoryVar:
     bytec 4 // "example.main"
     callsub erc7201Mock
-    bytec_2 // 0x
+    bytec 7 // 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500
     b==
     bytec_0 // 0x00
     intc_0 // 0
@@ -129,13 +138,24 @@ calldataParam:
     extract_uint16 // on error: invalid array length header
     intc_3 // 2
     +
-    swap
+    dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    intc_2 // 32
+    bzero
+    swap
+    keccak256
+    bytec_2 // 0x01
+    b-
+    b|
+    keccak256
+    extract 0 31
+    bytec_0 // 0x00
+    concat
     bytec 4 // "example.main"
     callsub erc7201Mock
-    bytec_2 // 0x
     b==
     bytec_0 // 0x00
     intc_0 // 0
@@ -157,13 +177,25 @@ calldataSlice:
     extract_uint16 // on error: invalid array length header
     intc_3 // 2
     +
-    swap
+    dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    intc_2 // 32
+    bzero
+    swap
+    substring 2 5
+    keccak256
+    bytec_2 // 0x01
+    b-
+    b|
+    keccak256
+    extract 0 31
+    bytec_0 // 0x00
+    concat
     pushbytes "amp"
     callsub erc7201Mock
-    bytec_2 // 0x
     b==
     bytec_0 // 0x00
     intc_0 // 0
@@ -181,7 +213,7 @@ calldataSlice:
 literalParam:
     bytec 4 // "example.main"
     callsub erc7201Mock
-    pushbytes 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500
+    bytec 7 // 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500
     b==
     bytec_0 // 0x00
     intc_0 // 0

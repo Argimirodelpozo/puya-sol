@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_access.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 2 1
+    intcblock 32 2 0 1
     bytecblock "storageArray" "__ctor_pending" 0x068101 0x01
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,10 +38,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_1 // 0
+    intc_2 // 0
     app_global_put
     bytec_0 // "storageArray"
-    intc_2 // 2
+    intc_1 // 2
     box_create
     pop
     intc_3 // 1
@@ -50,7 +50,7 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_access.sol.C.test_indices[routing]() -> void:
 test_indices:
-    intc_1 // 0
+    intc_2 // 0
     dupn 2
     txna ApplicationArgs 1
     dup
@@ -59,7 +59,7 @@ test_indices:
     ==
     assert // invalid number of bytes for arc4.uint256
 
-test_indices_while_top@19:
+test_indices_while_top@25:
     pushint 170010
     global OpcodeBudget
     >
@@ -73,26 +73,34 @@ test_indices_while_top@19:
     itxn_field ApprovalProgram
     bytec_2 // 0x068101
     itxn_field ClearStateProgram
-    intc_1 // 0
+    intc_2 // 0
     itxn_field Fee
     itxn_submit
-    b test_indices_while_top@19
+    b test_indices_while_top@25
 
 test_indices_while_top@2:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_2 // 2
+    intc_1 // 2
+    >=
+    bz test_indices_ternary_false@4
+    bytec_0 // "storageArray"
+    box_len
+    pop
+
+test_indices_ternary_merge@5:
+    intc_1 // 2
     -
     intc_0 // 32
     /
     itob
     dig 1
     b<
-    bz test_indices_while_top@5
+    bz test_indices_while_top@8
     bytec_0 // "storageArray"
-    intc_1 // 0
-    intc_2 // 2
+    intc_2 // 0
+    intc_1 // 2
     box_extract
     btoi
     bytec_0 // "storageArray"
@@ -109,35 +117,43 @@ test_indices_while_top@2:
     itob
     extract 6 2
     bytec_0 // "storageArray"
-    intc_1 // 0
+    intc_2 // 0
     uncover 2
     box_replace
     intc_0 // 32
     *
-    intc_2 // 2
+    intc_1 // 2
     +
     bytec_0 // "storageArray"
     swap
-    intc_1 // 0
+    intc_2 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     box_splice
     b test_indices_while_top@2
 
-test_indices_while_top@5:
+test_indices_while_top@8:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_2 // 2
+    intc_1 // 2
+    >=
+    bz test_indices_ternary_false@10
+    bytec_0 // "storageArray"
+    box_len
+    pop
+
+test_indices_ternary_merge@11:
+    intc_1 // 2
     -
     intc_0 // 32
     /
     itob
     dig 1
     b>
-    bz test_indices_after_while@7
+    bz test_indices_after_while@13
     bytec_0 // "storageArray"
-    intc_1 // 0
-    intc_2 // 2
+    intc_2 // 0
+    intc_1 // 2
     box_extract
     btoi
     intc_3 // 1
@@ -146,12 +162,12 @@ test_indices_while_top@5:
     itob
     extract 6 2
     bytec_0 // "storageArray"
-    intc_1 // 0
+    intc_2 // 0
     uncover 2
     box_replace
     intc_0 // 32
     *
-    intc_2 // 2
+    intc_1 // 2
     +
     bytec_0 // "storageArray"
     swap
@@ -166,20 +182,20 @@ test_indices_while_top@5:
     bytec_0 // "storageArray"
     swap
     box_resize
-    b test_indices_while_top@5
+    b test_indices_while_top@8
 
-test_indices_after_while@7:
-    intc_1 // 0
+test_indices_after_while@13:
+    intc_2 // 0
     itob
     dup
     bury 5
     bury 3
 
-test_indices_while_top@8:
+test_indices_while_top@14:
     dig 2
     dig 1
     b<
-    bz test_indices_after_while@10
+    bz test_indices_after_while@16
     dig 2
     dup
     bytec_3 // 0x01
@@ -204,23 +220,23 @@ test_indices_while_top@8:
     extract_uint64
     intc_0 // 32
     *
-    intc_2 // 2
+    intc_1 // 2
     +
     bytec_0 // "storageArray"
     swap
     uncover 2
     box_replace // on error: index out of bounds
     bury 3
-    b test_indices_while_top@8
+    b test_indices_while_top@14
 
-test_indices_after_while@10:
+test_indices_after_while@16:
     dig 3
     bury 2
 
-test_indices_while_top@11:
+test_indices_while_top@17:
     dup2
     b<
-    bz test_indices_after_while@13
+    bz test_indices_after_while@19
     bytec_0 // "storageArray"
     box_get
     pushbytes 0x0000
@@ -251,8 +267,16 @@ test_indices_while_top@11:
     bury 4
     b==
     assert
-    b test_indices_while_top@11
+    b test_indices_while_top@17
 
-test_indices_after_while@13:
+test_indices_after_while@19:
     intc_3 // 1
     return
+
+test_indices_ternary_false@10:
+    intc_1 // 2
+    b test_indices_ternary_merge@11
+
+test_indices_ternary_false@4:
+    intc_1 // 2
+    b test_indices_ternary_merge@5

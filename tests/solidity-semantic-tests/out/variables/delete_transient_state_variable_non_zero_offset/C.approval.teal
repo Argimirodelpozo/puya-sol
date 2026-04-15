@@ -4,17 +4,17 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/delete_transient_state_variable_non_zero_offset.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 64
-    bytecblock "y" "x" "z" 0x 0xffffffffffffffffffffffffffff
+    bytecblock "y" "x" "z" 0x0000000000000000000000000000 0xffffffffffffffffffffffffffff
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "x"
-    bytec_3 // 0x
+    bytec_3 // 0x0000000000000000000000000000
     app_global_put
     bytec_0 // "y"
     intc_0 // 0
     app_global_put
     bytec_2 // "z"
-    bytec_3 // 0x
+    pushbytes 0x
     app_global_put
     intc_1 // 1
     return
@@ -27,6 +27,15 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
+    bytec_1 // "x"
+    bytec_3 // 0x0000000000000000000000000000
+    app_global_put
+    bytec_0 // "y"
+    intc_0 // 0
+    app_global_put
+    bytec_2 // "z"
+    pushbytes 0x
+    app_global_put
     pushbytes 0x444344db // method "f()(byte[14],uint64,uint512)"
     txna ApplicationArgs 0
     match main_f_route@4

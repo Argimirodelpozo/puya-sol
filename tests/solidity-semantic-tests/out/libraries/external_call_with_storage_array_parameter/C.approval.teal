@@ -1,0 +1,95 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/external_call_with_storage_array_parameter.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1
+    bytecblock "x"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "x"
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    pushbytes 0xc14ad39f // method "g(uint256)uint256"
+    txna ApplicationArgs 0
+    match main_g_route@4
+    err
+
+main_g_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    b g
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/external_call_with_storage_array_parameter.sol.L.f(_a: bytes) -> bytes, bytes, bytes:
+L.f:
+    proto 1 3
+    frame_dig -1
+    extract 0 32 // on error: index access is out of bounds
+    frame_dig -1
+    extract 32 32 // on error: index access is out of bounds
+    b*
+    frame_dig -1
+    dup
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/external_call_with_storage_array_parameter.sol.C.g[routing]() -> void:
+g:
+    txna ApplicationArgs 1
+    dup
+    len
+    dup
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    pushint 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
+    dig 1
+    replace2 32 // on error: index access is out of bounds
+    swap
+    replace2 0 // on error: index access is out of bounds
+    bytec_0 // "x"
+    dig 1
+    app_global_put
+    callsub L.f
+    pop
+    bytec_0 // "x"
+    swap
+    app_global_put
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_push_pop.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 2 0 1
+    intcblock 2 32 0 1
     bytecblock "storageArray" "__ctor_pending" 0x068101 0x
     txn ApplicationID
     bnz main_after_if_else@2
@@ -41,7 +41,7 @@ __postInit:
     intc_2 // 0
     app_global_put
     bytec_0 // "storageArray"
-    intc_1 // 2
+    intc_0 // 2
     box_create
     pop
     intc_3 // 1
@@ -53,11 +53,11 @@ set_get_length:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
 
-set_get_length_while_top@13:
+set_get_length_while_top@22:
     pushint 170010
     global OpcodeBudget
     >
@@ -74,29 +74,37 @@ set_get_length_while_top@13:
     intc_2 // 0
     itxn_field Fee
     itxn_submit
-    b set_get_length_while_top@13
+    b set_get_length_while_top@22
 
 set_get_length_while_top@2:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
+    >=
+    bz set_get_length_ternary_false@4
+    bytec_0 // "storageArray"
+    box_len
+    pop
+
+set_get_length_ternary_merge@5:
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
     dig 1
     b<
-    bz set_get_length_while_top@5
+    bz set_get_length_while_top@8
     bytec_0 // "storageArray"
     intc_2 // 0
-    intc_1 // 2
+    intc_0 // 2
     box_extract
     btoi
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_0 // 32
+    intc_1 // 32
     +
     bytec_0 // "storageArray"
     swap
@@ -110,9 +118,9 @@ set_get_length_while_top@2:
     intc_2 // 0
     uncover 2
     box_replace
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     bytec_0 // "storageArray"
     swap
@@ -121,21 +129,29 @@ set_get_length_while_top@2:
     box_splice
     b set_get_length_while_top@2
 
-set_get_length_while_top@5:
+set_get_length_while_top@8:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
+    >=
+    bz set_get_length_ternary_false@10
+    bytec_0 // "storageArray"
+    box_len
+    pop
+
+set_get_length_ternary_merge@11:
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
     bytec_3 // 0x
     b>
-    bz set_get_length_after_while@7
+    bz set_get_length_after_while@13
     bytec_0 // "storageArray"
     intc_2 // 0
-    intc_1 // 2
+    intc_0 // 2
     box_extract
     btoi
     intc_3 // 1
@@ -147,35 +163,43 @@ set_get_length_while_top@5:
     intc_2 // 0
     uncover 2
     box_replace
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     bytec_0 // "storageArray"
     swap
-    intc_0 // 32
+    intc_1 // 32
     bytec_3 // 0x
     box_splice
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_0 // 32
+    intc_1 // 32
     -
     bytec_0 // "storageArray"
     swap
     box_resize
-    b set_get_length_while_top@5
+    b set_get_length_while_top@8
 
-set_get_length_after_while@7:
+set_get_length_after_while@13:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
+    >=
+    bz set_get_length_ternary_false@15
+    bytec_0 // "storageArray"
+    box_len
+    pop
+
+set_get_length_ternary_merge@16:
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -184,3 +208,15 @@ set_get_length_after_while@7:
     log
     intc_3 // 1
     return
+
+set_get_length_ternary_false@15:
+    intc_0 // 2
+    b set_get_length_ternary_merge@16
+
+set_get_length_ternary_false@10:
+    intc_0 // 2
+    b set_get_length_ternary_merge@11
+
+set_get_length_ternary_false@4:
+    intc_0 // 2
+    b set_get_length_ternary_merge@5

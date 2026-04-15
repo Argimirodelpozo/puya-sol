@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/conversion_abicoderv1.sol.C.approval_program() -> uint64:
 main:
-    intcblock 8 1 255 64
+    intcblock 8 1 32 255
     bytecblock 0x151f7c75 0xff 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -23,7 +23,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xc38cc40c 0x874daf79 0xbd14655b 0x0e5a6e3c 0xa7348d1d 0x2aa15a5a 0x38b44a3e // method "f(uint256)uint64", method "g(uint256)uint512", method "h(uint64)uint512", method "i(uint64)uint64", method "j(uint64)uint256", method "k(uint64)uint64", method "m(uint64)uint64"
+    pushbytess 0xc38cc40c 0xc14ad39f 0x8ca5396c 0x0e5a6e3c 0xa7348d1d 0x2aa15a5a 0x38b44a3e // method "f(uint256)uint64", method "g(uint256)uint256", method "h(uint64)uint256", method "i(uint64)uint64", method "j(uint64)uint256", method "k(uint64)uint64", method "m(uint64)uint64"
     txna ApplicationArgs 0
     match f g h i j k m
     err
@@ -34,7 +34,7 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    pushint 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     intc_0 // 8
@@ -46,7 +46,7 @@ f:
     intc_0 // 8
     -
     extract_uint64
-    intc_2 // 255
+    intc_3 // 255
     &
     itob
     bytec_0 // 0x151f7c75
@@ -62,7 +62,7 @@ g:
     txna ApplicationArgs 1
     dup
     len
-    pushint 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     intc_0 // 8
@@ -89,10 +89,10 @@ g:
 g_ternary_merge@4:
     dup
     len
-    intc_3 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -115,7 +115,7 @@ h:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    intc_2 // 255
+    intc_3 // 255
     &
     itob
     bytec_1 // 0xff
@@ -132,10 +132,10 @@ h:
 h_ternary_merge@4:
     dup
     len
-    intc_3 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -158,7 +158,7 @@ i:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    intc_2 // 255
+    intc_3 // 255
     &
     itob
     bytec_0 // 0x151f7c75
@@ -178,10 +178,10 @@ j:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    intc_2 // 255
+    intc_3 // 255
     &
     itob
-    pushint 32
+    intc_2 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -201,7 +201,7 @@ k:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    intc_2 // 255
+    intc_3 // 255
     &
     itob
     bytec_0 // 0x151f7c75
@@ -221,7 +221,7 @@ m:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    intc_2 // 255
+    intc_3 // 255
     &
     itob
     bytec_0 // 0x151f7c75

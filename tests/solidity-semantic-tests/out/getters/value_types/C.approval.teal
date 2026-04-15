@@ -4,65 +4,65 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/value_types.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 64
-    bytecblock 0x151f7c75 0x "a" "b" "c" "d" "e" "f" "g" "h" "i"
+    bytecblock 0x151f7c75 "a" "b" "c" "d" "e" "f" "g" "h" "i" 0x0000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "a"
+    bytec_1 // "a"
     intc_0 // 0
     app_global_put
-    bytec_3 // "b"
+    bytec_2 // "b"
     intc_0 // 0
     app_global_put
-    bytec 4 // "c"
-    bytec_1 // 0x
+    bytec_3 // "c"
+    pushbytes 0x
     app_global_put
-    bytec 5 // "d"
-    bytec_1 // 0x
+    bytec 4 // "d"
+    pushbytes 0x
     app_global_put
-    bytec 6 // "e"
-    bytec_1 // 0x
+    bytec 5 // "e"
+    pushbytes 0x00
     app_global_put
-    bytec 7 // "f"
-    bytec_1 // 0x
+    bytec 6 // "f"
+    bytec 10 // 0x0000000000000000000000000000000000000000
     app_global_put
-    bytec 8 // "g"
-    bytec_1 // 0x
+    bytec 7 // "g"
+    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    bytec 9 // "h"
+    bytec 8 // "h"
     intc_0 // 0
     app_global_put
-    bytec 10 // "i"
-    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec 9 // "i"
+    bytec 11 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     app_global_put
-    bytec_2 // "a"
+    bytec_1 // "a"
     pushint 3
     app_global_put
-    bytec_3 // "b"
+    bytec_2 // "b"
     pushint 4
     app_global_put
     pushint 5
     itob
-    bytec 4 // "c"
+    bytec_3 // "c"
     swap
     app_global_put
     pushint 6
     itob
-    bytec 5 // "d"
+    bytec 4 // "d"
     swap
     app_global_put
-    bytec 6 // "e"
+    bytec 5 // "e"
     pushbytes 0x7f
     app_global_put
-    bytec 7 // "f"
-    pushbytes 0x0000000000000000000000000000000000000000
+    bytec 6 // "f"
+    bytec 10 // 0x0000000000000000000000000000000000000000
     app_global_put
-    bytec 8 // "g"
+    bytec 7 // "g"
     pushbytes 0x6465616462656566313564656164000000000000000000000000000000000010
     app_global_put
-    bytec 9 // "h"
+    bytec 8 // "h"
     intc_1 // 1
     app_global_put
-    bytec 10 // "i"
+    bytec 9 // "i"
     pushbytes 0x0000000000000000000000005555555555555555555555555555555555555555
     app_global_put
     intc_1 // 1
@@ -90,7 +90,7 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/value_types.sol.C.a[routing]() -> void:
 a:
     intc_0 // 0
-    bytec_2 // "a"
+    bytec_1 // "a"
     app_global_get_ex
     assert // check a exists
     itob
@@ -105,7 +105,7 @@ a:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/value_types.sol.C.b[routing]() -> void:
 b:
     intc_0 // 0
-    bytec_3 // "b"
+    bytec_2 // "b"
     app_global_get_ex
     assert // check b exists
     itob
@@ -120,7 +120,7 @@ b:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/value_types.sol.C.c[routing]() -> void:
 c:
     intc_0 // 0
-    bytec 4 // "c"
+    bytec_3 // "c"
     app_global_get_ex
     assert // check c exists
     dup
@@ -142,7 +142,7 @@ c:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/value_types.sol.C.d[routing]() -> void:
 d:
     intc_0 // 0
-    bytec 5 // "d"
+    bytec 4 // "d"
     app_global_get_ex
     assert // check d exists
     dup
@@ -164,7 +164,7 @@ d:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/value_types.sol.C.e[routing]() -> void:
 e:
     intc_0 // 0
-    bytec 6 // "e"
+    bytec 5 // "e"
     app_global_get_ex
     assert // check e exists
     bytec_0 // 0x151f7c75
@@ -178,7 +178,7 @@ e:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/value_types.sol.C.f[routing]() -> void:
 f:
     intc_0 // 0
-    bytec 7 // "f"
+    bytec 6 // "f"
     app_global_get_ex
     assert // check f exists
     bytec_0 // 0x151f7c75
@@ -192,7 +192,7 @@ f:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/value_types.sol.C.g[routing]() -> void:
 g:
     intc_0 // 0
-    bytec 8 // "g"
+    bytec 7 // "g"
     app_global_get_ex
     assert // check g exists
     bytec_0 // 0x151f7c75
@@ -206,7 +206,7 @@ g:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/value_types.sol.C.h[routing]() -> void:
 h:
     intc_0 // 0
-    bytec 9 // "h"
+    bytec 8 // "h"
     app_global_get_ex
     assert // check h exists
     pushbytes 0x00
@@ -224,7 +224,7 @@ h:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/value_types.sol.C.i[routing]() -> void:
 i:
     intc_0 // 0
-    bytec 10 // "i"
+    bytec 9 // "i"
     app_global_get_ex
     assert // check i exists
     bytec_0 // 0x151f7c75

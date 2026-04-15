@@ -4,11 +4,11 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.A.approval_program() -> uint64:
 main:
     intcblock 32 1 64
-    bytecblock "value"
+    bytecblock "value" 0x
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "value"
-    pushbytes 0x
+    bytec_1 // 0x
     app_global_put
     intc_1 // 1
     return
@@ -21,6 +21,9 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
+    bytec_0 // "value"
+    bytec_1 // 0x
+    app_global_put
     txn OnCompletion
     !
     assert

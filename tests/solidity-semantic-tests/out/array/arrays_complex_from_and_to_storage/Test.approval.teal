@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/arrays_complex_from_and_to_storage.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
+    intcblock 32 1 2 0
     bytecblock "data" "__ctor_pending" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,10 +38,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_2 // 0
+    intc_3 // 0
     app_global_put
     bytec_0 // "data"
-    intc_3 // 2
+    intc_2 // 2
     box_create
     pop
     intc_1 // 1
@@ -52,11 +52,11 @@ __postInit:
 set:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
     pushint 9
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     dig 1
     len
@@ -71,7 +71,15 @@ set:
     bytec_0 // "data"
     box_len
     pop
-    intc_3 // 2
+    intc_2 // 2
+    >=
+    bz set_ternary_false@3
+    bytec_0 // "data"
+    box_len
+    pop
+
+set_ternary_merge@4:
+    intc_2 // 2
     -
     pushint 9
     /
@@ -85,6 +93,10 @@ set:
     log
     intc_1 // 1
     return
+
+set_ternary_false@3:
+    intc_2 // 2
+    b set_ternary_merge@4
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/arrays_complex_from_and_to_storage.sol.Test.get[routing]() -> void:
@@ -144,7 +156,7 @@ data:
     box_get
     swap
     btoi
-    intc_2 // 0
+    intc_3 // 0
     swap
     uncover 2
     select

@@ -1,0 +1,246 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/negative_stack_height.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 2 16000 48000 32000
+    bytecblock 0x151f7c75 0x00 "__ctor_pending" "invoices"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xbc67fd12 0xe47e0ec8 0x644db31c 0xc5fdb625 // method "__postInit()void", method "nredit(uint256)(uint256[500],uint256[500],uint256[500],bool[500],uint256[500])", method "return500InvoicesByDates(uint256,uint256,uint256)(uint256[500],bool[500],uint256[500],uint8[32][3][500],uint8[32][3][500],uint8[32][2][500],uint256[500],bool[500],bool[500])", method "return500PaymentsByDates(uint256,uint256,uint256)(uint256[500],uint256[500],uint256[500],bool[500],uint8[32][3][500],uint8[32][2][500],uint256[500],bool[500])", method "invoices(uint256)(uint512,bool,bool,bool)"
+    txna ApplicationArgs 0
+    match __postInit nredit return500InvoicesByDates return500PaymentsByDates invoices
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/negative_stack_height.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_2 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_2 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_3 // "invoices"
+    intc_3 // 2
+    box_create
+    pop
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/negative_stack_height.sol.C.nredit[routing]() -> void:
+nredit:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc 4 // 16000
+    bzero
+    dup
+    dig 1
+    concat
+    dig 1
+    concat
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/negative_stack_height.sol.C.return500InvoicesByDates[routing]() -> void:
+return500InvoicesByDates:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc 4 // 16000
+    bzero
+    intc 5 // 48000
+    bzero
+    intc 6 // 32000
+    bzero
+    dig 2
+    dig 3
+    concat
+    dig 2
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/negative_stack_height.sol.C.return500PaymentsByDates[routing]() -> void:
+return500PaymentsByDates:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc 4 // 16000
+    bzero
+    intc 5 // 48000
+    bzero
+    intc 6 // 32000
+    bzero
+    dig 2
+    dig 3
+    concat
+    dig 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/negative_stack_height.sol.C.invoices[routing]() -> void:
+invoices:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    intc_0 // 32
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    sha256
+    bytec_3 // "invoices"
+    swap
+    concat
+    pushbytes 0x
+    intc_2 // 0
+    getbit
+    pushbytes 0x
+    intc_1 // 1
+    dig 2
+    setbit
+    intc_3 // 2
+    uncover 2
+    setbit
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    swap
+    concat
+    swap
+    box_get
+    select
+    dup
+    extract 0 32
+    dig 1
+    pushint 256
+    getbit
+    bytec_1 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    intc_2 // 0
+    getbit
+    dig 2
+    pushint 257
+    getbit
+    bytec_1 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    intc_2 // 0
+    getbit
+    uncover 3
+    pushint 258
+    getbit
+    bytec_1 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    intc_2 // 0
+    getbit
+    pushint 64
+    bzero
+    uncover 4
+    b|
+    bytec_1 // 0x00
+    intc_2 // 0
+    uncover 5
+    setbit
+    intc_1 // 1
+    uncover 4
+    setbit
+    intc_3 // 2
+    uncover 3
+    setbit
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_zeroed_test.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 2 0 1
+    intcblock 2 32 0 1
     bytecblock "storageArray" 0x 0x01 0x0000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x068101 "__dyn_storage"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -37,7 +37,7 @@ box_dynamic_array_pop_fixed_size:
     proto 3 0
     frame_dig -3
     frame_dig -2
-    intc_1 // 2
+    intc_0 // 2
     box_extract
     btoi
     intc_3 // 1
@@ -50,7 +50,7 @@ box_dynamic_array_pop_fixed_size:
     uncover 2
     box_replace
     frame_dig -2
-    intc_1 // 2
+    intc_0 // 2
     +
     swap
     frame_dig -1
@@ -77,7 +77,7 @@ box_dynamic_array_concat_fixed:
     proto 5 0
     frame_dig -5
     frame_dig -4
-    intc_1 // 2
+    intc_0 // 2
     box_extract
     btoi
     frame_dig -5
@@ -100,7 +100,7 @@ box_dynamic_array_concat_fixed:
     uncover 2
     box_replace
     frame_dig -4
-    intc_1 // 2
+    intc_0 // 2
     +
     swap
     frame_dig -1
@@ -123,7 +123,7 @@ __postInit:
     intc_2 // 0
     app_global_put
     bytec_0 // "storageArray"
-    intc_1 // 2
+    intc_0 // 2
     box_create
     pop
     intc_3 // 1
@@ -138,11 +138,11 @@ test_zeroed_indices:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
 
-test_zeroed_indices_while_top@36:
+test_zeroed_indices_while_top@54:
     pushint 170010
     global OpcodeBudget
     >
@@ -159,68 +159,84 @@ test_zeroed_indices_while_top@36:
     intc_2 // 0
     itxn_field Fee
     itxn_submit
-    b test_zeroed_indices_while_top@36
+    b test_zeroed_indices_while_top@54
 
 test_zeroed_indices_while_top@2:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
+    >=
+    bz test_zeroed_indices_ternary_false@4
+    bytec_0 // "storageArray"
+    box_len
+    pop
+
+test_zeroed_indices_ternary_merge@5:
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
     dig 1
     b<
-    bz test_zeroed_indices_while_top@5
+    bz test_zeroed_indices_while_top@8
     bytec_0 // "storageArray"
     intc_2 // 0
     bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
     intc_3 // 1
-    intc_0 // 32
+    intc_1 // 32
     callsub box_dynamic_array_concat_fixed
     b test_zeroed_indices_while_top@2
 
-test_zeroed_indices_while_top@5:
+test_zeroed_indices_while_top@8:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
+    >=
+    bz test_zeroed_indices_ternary_false@10
+    bytec_0 // "storageArray"
+    box_len
+    pop
+
+test_zeroed_indices_ternary_merge@11:
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
     dig 1
     b>
-    bz test_zeroed_indices_after_while@7
+    bz test_zeroed_indices_after_while@13
     bytec_0 // "storageArray"
     intc_2 // 0
-    intc_0 // 32
+    intc_1 // 32
     callsub box_dynamic_array_pop_fixed_size
-    b test_zeroed_indices_while_top@5
+    b test_zeroed_indices_while_top@8
 
-test_zeroed_indices_after_while@7:
+test_zeroed_indices_after_while@13:
     intc_2 // 0
     itob
     dup
     bury 7
     bury 5
 
-test_zeroed_indices_while_top@8:
+test_zeroed_indices_while_top@14:
     dig 4
     dig 1
     b<
-    bz test_zeroed_indices_after_while@10
+    bz test_zeroed_indices_after_while@16
     dig 4
     dup
     bytec_2 // 0x01
     b+
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     dig 1
     b|
@@ -233,71 +249,87 @@ test_zeroed_indices_while_top@8:
     pushint 8
     -
     extract_uint64
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     bytec_0 // "storageArray"
     swap
     uncover 2
     box_replace // on error: index out of bounds
     bury 5
-    b test_zeroed_indices_while_top@8
+    b test_zeroed_indices_while_top@14
 
-test_zeroed_indices_after_while@10:
+test_zeroed_indices_after_while@16:
     dup
     pushbytes 0x03
     b>
-    bz test_zeroed_indices_while_top@22
+    bz test_zeroed_indices_while_top@34
 
-test_zeroed_indices_while_top@12:
+test_zeroed_indices_while_top@18:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
+    >=
+    bz test_zeroed_indices_ternary_false@20
+    bytec_0 // "storageArray"
+    box_len
+    pop
+
+test_zeroed_indices_ternary_merge@21:
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
     bytec_1 // 0x
     b>
-    bz test_zeroed_indices_while_top@15
+    bz test_zeroed_indices_while_top@24
     bytec_0 // "storageArray"
     intc_2 // 0
-    intc_0 // 32
+    intc_1 // 32
     callsub box_dynamic_array_pop_fixed_size
-    b test_zeroed_indices_while_top@12
+    b test_zeroed_indices_while_top@18
 
-test_zeroed_indices_while_top@15:
+test_zeroed_indices_while_top@24:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
+    >=
+    bz test_zeroed_indices_ternary_false@26
+    bytec_0 // "storageArray"
+    box_len
+    pop
+
+test_zeroed_indices_ternary_merge@27:
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
     pushbytes 0x03
     b<
-    bz test_zeroed_indices_after_while@17
+    bz test_zeroed_indices_after_while@29
     bytec_0 // "storageArray"
     intc_2 // 0
     bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
     intc_3 // 1
-    intc_0 // 32
+    intc_1 // 32
     callsub box_dynamic_array_concat_fixed
-    b test_zeroed_indices_while_top@15
+    b test_zeroed_indices_while_top@24
 
-test_zeroed_indices_after_while@17:
+test_zeroed_indices_after_while@29:
     pushint 3
     itob
     bury 3
 
-test_zeroed_indices_while_top@18:
+test_zeroed_indices_while_top@30:
     dig 2
     dig 1
     b<
-    bz test_zeroed_indices_while_top@22
+    bz test_zeroed_indices_while_top@34
     load 0
     pushint 8
     bzero
@@ -320,20 +352,20 @@ test_zeroed_indices_while_top@18:
     extract_uint64
     dup
     bury 3
-    bnz test_zeroed_indices_else_body@33
-    intc_0 // 32
+    bnz test_zeroed_indices_else_body@51
+    intc_1 // 32
     bzero
     bytec_0 // "storageArray"
     app_global_get
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
 
-test_zeroed_indices_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_zeroed_test.sol.C.__storage_read@34:
+test_zeroed_indices_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_zeroed_test.sol.C.__storage_read@52:
     bytec_1 // 0x
     b==
     !
@@ -345,9 +377,9 @@ test_zeroed_indices_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puy
     bytec_2 // 0x01
     b+
     bury 3
-    b test_zeroed_indices_while_top@18
+    b test_zeroed_indices_while_top@30
 
-test_zeroed_indices_else_body@33:
+test_zeroed_indices_else_body@51:
     bytec 6 // "__dyn_storage"
     pushint 8192
     box_create
@@ -355,61 +387,77 @@ test_zeroed_indices_else_body@33:
     dig 1
     pushint 256
     %
-    intc_0 // 32
+    intc_1 // 32
     *
     bytec 6 // "__dyn_storage"
     swap
-    intc_0 // 32
+    intc_1 // 32
     box_extract
-    b test_zeroed_indices_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_zeroed_test.sol.C.__storage_read@34
+    b test_zeroed_indices_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/array_storage_index_zeroed_test.sol.C.__storage_read@52
 
-test_zeroed_indices_while_top@22:
+test_zeroed_indices_while_top@34:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
+    >=
+    bz test_zeroed_indices_ternary_false@36
+    bytec_0 // "storageArray"
+    box_len
+    pop
+
+test_zeroed_indices_ternary_merge@37:
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
     bytec_1 // 0x
     b>
-    bz test_zeroed_indices_while_top@25
+    bz test_zeroed_indices_while_top@40
     bytec_0 // "storageArray"
     intc_2 // 0
-    intc_0 // 32
+    intc_1 // 32
     callsub box_dynamic_array_pop_fixed_size
-    b test_zeroed_indices_while_top@22
+    b test_zeroed_indices_while_top@34
 
-test_zeroed_indices_while_top@25:
+test_zeroed_indices_while_top@40:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
+    >=
+    bz test_zeroed_indices_ternary_false@42
+    bytec_0 // "storageArray"
+    box_len
+    pop
+
+test_zeroed_indices_ternary_merge@43:
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
     dig 1
     b<
-    bz test_zeroed_indices_after_while@27
+    bz test_zeroed_indices_after_while@45
     bytec_0 // "storageArray"
     intc_2 // 0
     bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
     intc_3 // 1
-    intc_0 // 32
+    intc_1 // 32
     callsub box_dynamic_array_concat_fixed
-    b test_zeroed_indices_while_top@25
+    b test_zeroed_indices_while_top@40
 
-test_zeroed_indices_after_while@27:
+test_zeroed_indices_after_while@45:
     dig 5
     bury 4
 
-test_zeroed_indices_while_top@28:
+test_zeroed_indices_while_top@46:
     dig 3
     dig 1
     b<
-    bz test_zeroed_indices_after_while@30
+    bz test_zeroed_indices_after_while@48
     bytec_0 // "storageArray"
     box_get
     pushbytes 0x0000
@@ -429,9 +477,9 @@ test_zeroed_indices_while_top@28:
     swap
     extract 2 0
     swap
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_0 // 32
+    intc_1 // 32
     extract3 // on error: index access is out of bounds
     bytec_1 // 0x
     b==
@@ -450,8 +498,32 @@ test_zeroed_indices_while_top@28:
     bytec_2 // 0x01
     b+
     bury 4
-    b test_zeroed_indices_while_top@28
+    b test_zeroed_indices_while_top@46
 
-test_zeroed_indices_after_while@30:
+test_zeroed_indices_after_while@48:
     intc_3 // 1
     return
+
+test_zeroed_indices_ternary_false@42:
+    intc_0 // 2
+    b test_zeroed_indices_ternary_merge@43
+
+test_zeroed_indices_ternary_false@36:
+    intc_0 // 2
+    b test_zeroed_indices_ternary_merge@37
+
+test_zeroed_indices_ternary_false@26:
+    intc_0 // 2
+    b test_zeroed_indices_ternary_merge@27
+
+test_zeroed_indices_ternary_false@20:
+    intc_0 // 2
+    b test_zeroed_indices_ternary_merge@21
+
+test_zeroed_indices_ternary_false@10:
+    intc_0 // 2
+    b test_zeroed_indices_ternary_merge@11
+
+test_zeroed_indices_ternary_false@4:
+    intc_0 // 2
+    b test_zeroed_indices_ternary_merge@5

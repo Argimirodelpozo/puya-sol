@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/calldata_overlapped_dynamic_arrays.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
+    intcblock 32 1 2 0
     bytecblock 0x151f7c75 "__ctor_pending" "s" "n"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,10 +38,10 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_2 // 0
+    intc_3 // 0
     app_global_put
     bytec_2 // "s"
-    intc_3 // 2
+    intc_2 // 2
     box_create
     pop
     bytec_3 // "n"
@@ -55,11 +55,11 @@ __postInit:
 f_memory:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     dig 1
     len
@@ -88,14 +88,16 @@ f_memory:
 f_encode:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     dig 1
     len
+    dup
+    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
     txna ApplicationArgs 2
@@ -104,10 +106,29 @@ f_encode:
     pushint 64
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
+    intc_0 // 32
+    bzero
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000040
+    uncover 2
+    concat
+    uncover 2
+    intc_2 // 2
+    -
+    intc_0 // 32
+    /
+    itob
+    uncover 2
     swap
     concat
-    swap
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    extract 2 0
+    concat
     concat
     dup
     len
@@ -127,11 +148,11 @@ f_encode:
 f_which:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     dig 1
     len
@@ -206,14 +227,16 @@ f_which:
 f_storage:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     dig 1
     len
+    dup
+    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
     txna ApplicationArgs 2
@@ -226,11 +249,29 @@ f_storage:
     box_del
     pop
     bytec_2 // "s"
-    dig 2
+    dig 3
     box_put
     bytec_3 // "n"
     swap
     app_global_put
+    intc_0 // 32
+    bzero
+    swap
+    intc_2 // 2
+    -
+    intc_0 // 32
+    /
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    extract 2 0
+    concat
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000020
     swap
     concat

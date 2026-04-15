@@ -1,9 +1,9 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_xdnb4vne/main.sol.C.approval_program() -> uint64:
+// /tmp/multisource_dvc8qo75/main.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2
+    intcblock 1 2 0
     bytecblock "data" "__ctor_pending"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -32,24 +32,20 @@ main_after_if_else@2:
     err
 
 
-// /tmp/multisource_xdnb4vne/main.sol.longdata() -> bytes:
+// /tmp/multisource_dvc8qo75/main.sol.longdata() -> bytes:
 longdata:
     pushbytes "xasopca.pngaibngidak.jbtnudak.cAP.BRRSMCPJAGPD KIAJDOMHUKR,SCPIDxasopca.pngaibngidak.jbtnudak.cAP.BRRSMCPJAGPD KIAJDOMHUKR,SCPIDM,SEYBDXCNTKIMNJGO;DUIAQBQUEHAKMPGIDSAJCOUKANJBCUEBKNA.GIAKMV.TIAJMO<KXBANJCPGUD ABKCJIDHA NKIMAJU,EKAMHSO;PYCAKUM,L.UCA MR;KITAM,SEYBDXCNTKIMNJGO;DUIAQBQUEHAKMPGIDSAJCOUKANJBCUEBKNA.GIAKMV.TIAJMO<KXBANJCPGUD ABKCJIDHA NKIMAJU,EKAMHSO;PYCAKUM,L.UCA MR;KITA .RPOKIDAS,.CKUMT.,ORKAD ,NOKIDHA .CGKIAD OVHAMS CUAOGT DAKN OITxasopca.pngaibngidak.jbtnudak.cAP.BRRSMCPJAGPD KIAJDOMHUKR,SCPIDM,SEYBDXCNTKIMNJGO;DUIAQBQUEHAKMPGIDSAJCOUKANJBCUEBKNA.GIAKMV.TIAJMO<KXBANJCPGUD ABKCJIDHA NKIMAJU,EKAMHSO;PYCAKUM,L.UCA MR;KITAapibakrpidbacnidkacjadtnpdkylca.,jda,r.kuadc,jdlkjd',c'dj, ncg danosumantkudkc,djntudkantuadnc,ui,c.ud,.nujdncud,j.rsch'pkl.'pih"
     retsub
 
 
-// /tmp/multisource_xdnb4vne/main.sol.C.__postInit[routing]() -> void:
+// /tmp/multisource_dvc8qo75/main.sol.C.__postInit[routing]() -> void:
 __postInit:
     bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
-    intc_1 // 0
+    intc_2 // 0
     app_global_put
-    bytec_0 // "data"
-    intc_2 // 2
-    box_create
-    pop
     callsub longdata
     bytec_0 // "data"
     box_del
@@ -61,20 +57,28 @@ __postInit:
     return
 
 
-// /tmp/multisource_xdnb4vne/main.sol.C.test[routing]() -> void:
+// /tmp/multisource_dvc8qo75/main.sol.C.test[routing]() -> void:
 test:
     load 0
     store 0
     bytec_0 // "data"
     box_len
     pop
-    intc_2 // 2
+    intc_1 // 2
+    >=
+    bz test_ternary_false@3
+    bytec_0 // "data"
+    box_len
+    pop
+
+test_ternary_merge@4:
+    intc_1 // 2
     -
     itob
     pushbytes 0x32
     b>
     pushbytes 0x00
-    intc_1 // 0
+    intc_2 // 0
     uncover 2
     setbit
     pushbytes 0x151f7c75
@@ -83,3 +87,7 @@ test:
     log
     intc_0 // 1
     return
+
+test_ternary_false@3:
+    intc_1 // 2
+    b test_ternary_merge@4

@@ -3,12 +3,12 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/transient_state_variable_value_type.sol.C.approval_program() -> uint64:
 main:
-    intcblock 65535 0 1 10
+    intcblock 0 65535 1 10
     bytecblock "x"
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
-    intc_1 // 0
+    intc_0 // 0
     app_global_put
     intc_2 // 1
     return
@@ -21,6 +21,9 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
+    bytec_0 // "x"
+    intc_0 // 0
+    app_global_put
     pushbytes 0x6ca2f943 // method "f()uint64"
     txna ApplicationArgs 0
     match main_f_route@4
@@ -37,26 +40,26 @@ main_f_route@4:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/transient_state_variable_value_type.sol.C.f[routing]() -> void:
 f:
-    intc_1 // 0
+    intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     intc_3 // 10
     +
     dup
-    intc_0 // 65535
+    intc_1 // 65535
     <=
     assert // overflow
     intc_3 // 10
     *
     dup
-    intc_0 // 65535
+    intc_1 // 65535
     <=
     assert // overflow
     bytec_0 // "x"
     dig 1
     app_global_put
-    intc_0 // 65535
+    intc_1 // 65535
     &
     itob
     pushbytes 0x151f7c75
