@@ -110,6 +110,29 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 				elemSizeConst->wtype = awst::WType::uint64Type();
 				elemSizeConst->value = std::to_string(elemSize);
 
+				// Guard against box_len returning 0 (uninitialised box):
+				// `(0 - 2) / elemSize` underflows. Use `max(len, 2)` so the
+				// subtraction always stays non-negative, yielding 0 for
+				// empty boxes.
+				auto two = std::make_shared<awst::IntegerConstant>();
+				two->sourceLocation = m_loc;
+				two->wtype = awst::WType::uint64Type();
+				two->value = "2";
+
+				auto lenGe2 = std::make_shared<awst::NumericComparisonExpression>();
+				lenGe2->sourceLocation = m_loc;
+				lenGe2->wtype = awst::WType::boolType();
+				lenGe2->lhs = lenVal;
+				lenGe2->op = awst::NumericComparison::Gte;
+				lenGe2->rhs = two;
+
+				auto safeLen = std::make_shared<awst::ConditionalExpression>();
+				safeLen->sourceLocation = m_loc;
+				safeLen->wtype = awst::WType::uint64Type();
+				safeLen->condition = std::move(lenGe2);
+				safeLen->trueExpr = std::move(lenVal);
+				safeLen->falseExpr = std::move(two);
+
 				// Subtract 2-byte ARC4 length header before dividing
 				auto headerSize = std::make_shared<awst::IntegerConstant>();
 				headerSize->sourceLocation = m_loc;
@@ -118,7 +141,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 				auto dataLen = std::make_shared<awst::UInt64BinaryOperation>();
 				dataLen->sourceLocation = m_loc;
 				dataLen->wtype = awst::WType::uint64Type();
-				dataLen->left = std::move(lenVal);
+				dataLen->left = std::move(safeLen);
 				dataLen->op = awst::UInt64BinaryOperator::Sub;
 				dataLen->right = std::move(headerSize);
 
