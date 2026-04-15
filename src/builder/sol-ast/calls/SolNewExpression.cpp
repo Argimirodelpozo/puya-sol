@@ -184,6 +184,29 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 	if (resultType && resultType->kind() == awst::WTypeKind::Bytes)
 		return handleNewBytes();
 
+	// `new string(N)` allocates an N-byte string. Reuse the bytes handler
+	// (which emits `bzero(N)`) and reinterpret the result as string.
+	if (resultType == awst::WType::stringType())
+	{
+		auto sizeExpr = !m_call.arguments().empty()
+			? buildExpr(*m_call.arguments()[0])
+			: nullptr;
+		if (sizeExpr)
+			sizeExpr = builder::TypeCoercion::implicitNumericCast(
+				std::move(sizeExpr), awst::WType::uint64Type(), m_loc);
+		auto bzero = std::make_shared<awst::IntrinsicCall>();
+		bzero->sourceLocation = m_loc;
+		bzero->wtype = awst::WType::bytesType();
+		bzero->opCode = "bzero";
+		if (sizeExpr)
+			bzero->stackArgs.push_back(std::move(sizeExpr));
+		auto cast = std::make_shared<awst::ReinterpretCast>();
+		cast->sourceLocation = m_loc;
+		cast->wtype = resultType;
+		cast->expr = std::move(bzero);
+		return cast;
+	}
+
 	if (resultType && (resultType->kind() == awst::WTypeKind::ReferenceArray
 		|| resultType->kind() == awst::WTypeKind::ARC4StaticArray
 		|| resultType->kind() == awst::WTypeKind::ARC4DynamicArray))
