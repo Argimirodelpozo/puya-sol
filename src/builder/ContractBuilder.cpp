@@ -3371,11 +3371,13 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				// Walk the body and wrap biguint tuple elements in ARC4Encode.
 				// Handles direct tuple returns and conditional expressions whose
 				// branches are tuple literals.
+				static int retTmpCounter = 0;
 				std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> wrapTupleReturns;
 				wrapTupleReturns = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
 				{
-					for (auto& stmt : stmts)
+					for (size_t si = 0; si < stmts.size(); ++si)
 					{
+						auto& stmt = stmts[si];
 						if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
 						{
 							if (!ret->value) continue;
@@ -3387,6 +3389,58 @@ awst::ContractMethod ContractBuilder::buildFunction(
 								wrapTupleItems(dynamic_cast<awst::TupleExpression*>(cond->falseExpr.get()));
 								cond->wtype = new awst::WTuple(
 									std::vector<awst::WType const*>(arc4Types));
+							}
+							else if (ret->value->wtype
+								&& ret->value->wtype->kind() == awst::WTypeKind::WTuple)
+							{
+								// Non-literal tuple expression (e.g. `return fu()`):
+								// spill into a local, then build a TupleExpression of
+								// ARC4-encoded TupleItemExpressions so each biguint
+								// element is properly widened to its ARC4UIntN width.
+								auto const* subTupleType = static_cast<awst::WTuple const*>(ret->value->wtype);
+								bool needsWrap = false;
+								for (auto const* t : subTupleType->types())
+									if (t == awst::WType::biguintType()) { needsWrap = true; break; }
+								if (!needsWrap) continue;
+
+								std::string tmpName = "__ret_tmp_" + std::to_string(retTmpCounter++);
+								auto tmpVar = std::make_shared<awst::VarExpression>();
+								tmpVar->sourceLocation = ret->sourceLocation;
+								tmpVar->wtype = ret->value->wtype;
+								tmpVar->name = tmpName;
+
+								auto assign = std::make_shared<awst::AssignmentStatement>();
+								assign->sourceLocation = ret->sourceLocation;
+								assign->target = tmpVar;
+								assign->value = std::move(ret->value);
+
+								auto newTuple = std::make_shared<awst::TupleExpression>();
+								newTuple->sourceLocation = assign->sourceLocation;
+								for (size_t i = 0; i < arc4Types.size() && i < subTupleType->types().size(); ++i)
+								{
+									auto item = std::make_shared<awst::TupleItemExpression>();
+									item->sourceLocation = assign->sourceLocation;
+									item->base = tmpVar;
+									item->index = static_cast<int>(i);
+									item->wtype = subTupleType->types()[i];
+									if (subTupleType->types()[i] == awst::WType::biguintType()
+										&& arc4Types[i]->kind() == awst::WTypeKind::ARC4UIntN)
+									{
+										auto encode = std::make_shared<awst::ARC4Encode>();
+										encode->sourceLocation = assign->sourceLocation;
+										encode->wtype = arc4Types[i];
+										encode->value = std::move(item);
+										newTuple->items.push_back(std::move(encode));
+									}
+									else
+										newTuple->items.push_back(std::move(item));
+								}
+								newTuple->wtype = new awst::WTuple(
+									std::vector<awst::WType const*>(arc4Types));
+								ret->value = std::move(newTuple);
+
+								stmts.insert(stmts.begin() + si, std::move(assign));
+								++si; // skip the newly-inserted assign
 							}
 						}
 						else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get()))
