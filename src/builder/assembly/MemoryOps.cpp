@@ -352,6 +352,52 @@ void AssemblyBuilder::handleMstore(
 	assignMemoryVar(std::move(replace), _loc, _out);
 }
 
+void AssemblyBuilder::handleMstore8(
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	if (_args.size() != 2)
+	{
+		Logger::instance().error("mstore8 requires 2 arguments", _loc);
+		return;
+	}
+
+	// mstore8(ptr, value): write the low 8 bits of value as a single byte
+	// at memory[ptr]. Pad the value to 32 bytes and extract byte[31] (the
+	// low byte), then replace3 one byte at the target offset in the blob.
+	auto offsetU64 = offsetToUint64(_args[0], _loc);
+	auto padded = padTo32Bytes(ensureBiguint(_args[1], _loc), _loc);
+
+	auto start = std::make_shared<awst::IntegerConstant>();
+	start->sourceLocation = _loc;
+	start->wtype = awst::WType::uint64Type();
+	start->value = "31";
+	auto len = std::make_shared<awst::IntegerConstant>();
+	len->sourceLocation = _loc;
+	len->wtype = awst::WType::uint64Type();
+	len->value = "1";
+
+	auto lowByte = std::make_shared<awst::IntrinsicCall>();
+	lowByte->sourceLocation = _loc;
+	lowByte->wtype = awst::WType::bytesType();
+	lowByte->opCode = "extract3";
+	lowByte->stackArgs.push_back(std::move(padded));
+	lowByte->stackArgs.push_back(std::move(start));
+	lowByte->stackArgs.push_back(std::move(len));
+
+	auto replace = std::make_shared<awst::IntrinsicCall>();
+	replace->sourceLocation = _loc;
+	replace->wtype = awst::WType::bytesType();
+	replace->opCode = "replace3";
+	replace->stackArgs.push_back(memoryVar(_loc));
+	replace->stackArgs.push_back(std::move(offsetU64));
+	replace->stackArgs.push_back(std::move(lowByte));
+
+	assignMemoryVar(std::move(replace), _loc, _out);
+}
+
 void AssemblyBuilder::handleReturn(
 	std::vector<std::shared_ptr<awst::Expression>> const& _args,
 	awst::SourceLocation const& _loc,

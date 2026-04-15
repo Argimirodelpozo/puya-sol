@@ -152,6 +152,11 @@ private:
 		awst::SourceLocation const& _loc,
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
+	void handleMstore8(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
 	void handleReturn(
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
 		awst::SourceLocation const& _loc,

@@ -786,6 +786,11 @@ void AssemblyBuilder::buildExpressionStatement(
 			handleMstore(args, loc, _out);
 			return;
 		}
+		if (funcName == "mstore8")
+		{
+			handleMstore8(args, loc, _out);
+			return;
+		}
 		if (funcName == "return")
 		{
 			handleReturn(args, loc, _out);
