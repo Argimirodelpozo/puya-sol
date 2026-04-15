@@ -158,6 +158,80 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 		return cast;
 	}
 
+	if (member == "codehash")
+	{
+		// Solidity: address.codehash == keccak256 of the account's code,
+		// or bytes32(0) for EOAs / non-existent addresses.
+		//
+		// On AVM we can fetch the current app's approval program via
+		// `app_params_get AppApprovalProgram (global CurrentApplicationID)`
+		// and hash it with keccak256. For non-current addresses there is
+		// no cheap way to dereference the address → app id, so the fast
+		// path only handles `address(this).codehash`. Arbitrary addresses
+		// fall through to the generic stub (bytes32(0)).
+		auto addrExpr = buildExpr(baseExpression());
+		if (auto const* ic = dynamic_cast<awst::IntrinsicCall const*>(addrExpr.get()))
+		{
+			if (ic->opCode == "global"
+				&& !ic->immediates.empty()
+				&& std::holds_alternative<std::string>(ic->immediates[0])
+				&& std::get<std::string>(ic->immediates[0]) == "CurrentApplicationAddress")
+			{
+				auto appId = std::make_shared<awst::IntrinsicCall>();
+				appId->sourceLocation = m_loc;
+				appId->wtype = awst::WType::uint64Type();
+				appId->opCode = "global";
+				appId->immediates = {std::string("CurrentApplicationID")};
+				auto appIdCast = std::make_shared<awst::ReinterpretCast>();
+				appIdCast->sourceLocation = m_loc;
+				appIdCast->wtype = awst::WType::applicationType();
+				appIdCast->expr = std::move(appId);
+
+				auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
+					std::vector<awst::WType const*>{
+						awst::WType::bytesType(), awst::WType::boolType()});
+				auto appParamsGet = std::make_shared<awst::IntrinsicCall>();
+				appParamsGet->sourceLocation = m_loc;
+				appParamsGet->wtype = tupleType;
+				appParamsGet->opCode = "app_params_get";
+				appParamsGet->immediates = {std::string("AppApprovalProgram")};
+				appParamsGet->stackArgs.push_back(std::move(appIdCast));
+
+				auto bytesOut = std::make_shared<awst::TupleItemExpression>();
+				bytesOut->sourceLocation = m_loc;
+				bytesOut->wtype = awst::WType::bytesType();
+				bytesOut->base = std::move(appParamsGet);
+				bytesOut->index = 0;
+
+				auto hash = std::make_shared<awst::IntrinsicCall>();
+				hash->sourceLocation = m_loc;
+				hash->wtype = awst::WType::bytesType();
+				hash->opCode = "keccak256";
+				hash->stackArgs.push_back(std::move(bytesOut));
+
+				if (m_wtype && m_wtype != awst::WType::bytesType())
+				{
+					auto cast = std::make_shared<awst::ReinterpretCast>();
+					cast->sourceLocation = m_loc;
+					cast->wtype = m_wtype;
+					cast->expr = std::move(hash);
+					return cast;
+				}
+				return hash;
+			}
+		}
+		// Fallback: bytes32(0) for non-this addresses.
+		Logger::instance().warning(
+			"address(other).codehash returns bytes32(0) on AVM — no way to "
+			"dereference an arbitrary address to its application code.", m_loc);
+		auto zero = std::make_shared<awst::BytesConstant>();
+		zero->sourceLocation = m_loc;
+		zero->wtype = m_ctx.typeMapper.createType<awst::BytesWType>(32);
+		zero->encoding = awst::BytesEncoding::Base16;
+		zero->value = std::vector<uint8_t>(32, 0);
+		return zero;
+	}
+
 	Logger::instance().warning("address property '." + member + "' has no Algorand equivalent", m_loc);
 	auto e = std::make_shared<awst::BytesConstant>();
 	e->sourceLocation = m_loc;
