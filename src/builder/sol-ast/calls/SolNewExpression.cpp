@@ -247,6 +247,11 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			};
 			create->fields["TypeEnum"] = makeU64("6");
 			create->fields["Fee"] = makeU64("0");
+			// Extra program pages for large child contracts
+			create->fields["ExtraProgramPages"] = makeU64("3");
+			// Global/local state schema — generous defaults
+			create->fields["GlobalNumUint"] = makeU64("16");
+			create->fields["GlobalNumByteSlice"] = makeU64("16");
 
 			// ApprovalProgram = TemplateVar("TMPL_APPROVAL_ChildName")
 			auto approvalTmpl = std::make_shared<awst::TemplateVar>();
@@ -364,7 +369,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				auto fundAmount = std::make_shared<awst::IntegerConstant>();
 				fundAmount->sourceLocation = m_loc;
 				fundAmount->wtype = awst::WType::uint64Type();
-				fundAmount->value = "200000"; // min balance
+				fundAmount->value = "1000000"; // generous MBR for child + extra pages + state
 				fundCreate->fields["Amount"] = std::move(fundAmount);
 
 				static awst::WInnerTransaction s_fundTxnType(1);

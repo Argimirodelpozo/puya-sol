@@ -507,7 +507,7 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
 
         sp = algod.suggested_params()
         sp.flat_fee = True
-        sp.fee = max(sp.min_fee, 1000) * 4  # cover inner txns + box ops
+        sp.fee = max(sp.min_fee, 1000) * 8  # cover inner txns + box ops + child app creation
         txn = ApplicationCreateTxn(
             sender=account.address, sp=sp,
             on_complete=OnComplete.NoOpOC,
@@ -530,7 +530,7 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
         # Fund: min balance + box storage + constructor value
         # Box storage costs 2500 + 400*size per box
         box_cost = sum(2500 + 400 * 1024 for _ in box_refs)  # assume 1KB per box
-        min_balance = 100_000 + 28500 * 16 + 50000 * 16 + box_cost + 5_000_000  # extra for inner app creation (up to ~20 child apps)
+        min_balance = 100_000 + 28500 * 16 + 50000 * 16 + box_cost + 10_000_000  # extra for inner app creation + child funding
         total_fund = min_balance + fund_amount
         sp2 = algod.suggested_params()
         pay = PaymentTxn(account.address, sp2, app_addr, total_fund)
