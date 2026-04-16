@@ -445,6 +445,24 @@ def _load_arc56(arc56_path: Path) -> au.Arc56Contract:
     return au.Arc56Contract.from_json(arc56_path.read_text())
 
 
+def _substitute_template_vars(teal_source: str, tmpl_path) -> str:
+    """Replace TMPL_* placeholders in TEAL with actual bytecode from .tmpl file."""
+    import json as _json
+    from pathlib import Path as _P
+    tp = _P(tmpl_path)
+    if not tp.exists():
+        return teal_source
+    tmpl = _json.loads(tp.read_text())
+    for name, hex_val in tmpl.items():
+        # Convert hex to raw bytes, then to TEAL pushbytes format
+        raw = bytes.fromhex(hex_val)
+        # Replace the TMPL_ reference in the bytecblock or pushbytes line
+        # puya emits: bytecblock ... TMPL_APPROVAL_C ...
+        # We replace the token with 0x<hex>
+        teal_source = teal_source.replace(name, "0x" + hex_val)
+    return teal_source
+
+
 def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0) -> au.AppClient | None:
     """Deploy a compiled contract. Returns AppClient or None.
     ctor_args: list of raw string args from constructor() call, or None.
@@ -453,11 +471,18 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
         app_spec = _load_arc56(artifacts["arc56"])
         algod = localnet.client.algod
 
+        # Read TEAL and substitute template variables if .tmpl file exists
+        approval_teal = artifacts["approval_teal"].read_text()
+        clear_teal = artifacts["clear_teal"].read_text()
+        tmpl_path = artifacts["approval_teal"].parent / "deploy.tmpl.json"
+        approval_teal = _substitute_template_vars(approval_teal, tmpl_path)
+        clear_teal = _substitute_template_vars(clear_teal, tmpl_path)
+
         approval_bin = encoding.base64.b64decode(
-            algod.compile(artifacts["approval_teal"].read_text())["result"]
+            algod.compile(approval_teal)["result"]
         )
         clear_bin = encoding.base64.b64decode(
-            algod.compile(artifacts["clear_teal"].read_text())["result"]
+            algod.compile(clear_teal)["result"]
         )
 
         max_size = max(len(approval_bin), len(clear_bin))
