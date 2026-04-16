@@ -1,3 +1,4 @@
+#include "builder/sol-types/TypeCoercion.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "Logger.h"
 
@@ -774,7 +775,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::makeTwoPow256(
 	auto c = std::make_shared<awst::IntegerConstant>();
 	c->sourceLocation = _loc;
 	c->wtype = awst::WType::biguintType();
-	c->value = "115792089237316195423570985008687907853269984665640564039457584007913129639936";
+	c->value = kPow2_256;
 	return c;
 }
 

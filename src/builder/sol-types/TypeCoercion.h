@@ -16,6 +16,12 @@
 namespace puyasol::builder
 {
 
+/// 2^256 as a decimal string — used across the compiler for modular wrapping,
+/// sign extension, and overflow detection.  Centralised here to avoid 15+
+/// copies of the same 78-digit literal scattered through the codebase.
+inline constexpr char const* kPow2_256 =
+	"115792089237316195423570985008687907853269984665640564039457584007913129639936";
+
 class TypeCoercion
 {
 public:

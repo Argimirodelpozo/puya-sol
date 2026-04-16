@@ -554,7 +554,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			auto pow256 = std::make_shared<awst::IntegerConstant>();
 			pow256->sourceLocation = _loc;
 			pow256->wtype = awst::WType::biguintType();
-			pow256->value = "115792089237316195423570985008687907853269984665640564039457584007913129639936";
+			pow256->value = kPow2_256;
 
 			auto addPow = std::make_shared<awst::BigUIntBinaryOperation>();
 			addPow->sourceLocation = _loc;
@@ -573,7 +573,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			auto pow256b = std::make_shared<awst::IntegerConstant>();
 			pow256b->sourceLocation = _loc;
 			pow256b->wtype = awst::WType::biguintType();
-			pow256b->value = "115792089237316195423570985008687907853269984665640564039457584007913129639936";
+			pow256b->value = kPow2_256;
 
 			auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
 			mod->sourceLocation = _loc;
@@ -668,8 +668,6 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			// so that huge exponents (e.g. 2**1113) don't overflow biguint.
 			// Take each intermediate result mod 2^256 inside the loop.
 			bool const wrapMod = m_inUncheckedBlock;
-			static const std::string kPow256 =
-				"115792089237316195423570985008687907853269984665640564039457584007913129639936";
 			auto wrapMod256 = [&](std::shared_ptr<awst::Expression> v)
 				-> std::shared_ptr<awst::Expression>
 			{
@@ -679,7 +677,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 				mod->wtype = awst::WType::biguintType();
 				mod->left = std::move(v);
 				mod->op = awst::BigUIntBinaryOperator::Mod;
-				mod->right = makeConst(kPow256);
+				mod->right = makeConst(kPow2_256);
 				return mod;
 			};
 
@@ -753,7 +751,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			auto pow256 = std::make_shared<awst::IntegerConstant>();
 			pow256->sourceLocation = _loc;
 			pow256->wtype = awst::WType::biguintType();
-			pow256->value = "115792089237316195423570985008687907853269984665640564039457584007913129639936";
+			pow256->value = kPow2_256;
 
 			auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
 			mod->sourceLocation = _loc;

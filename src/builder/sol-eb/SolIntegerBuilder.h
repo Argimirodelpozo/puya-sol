@@ -105,9 +105,6 @@ private:
 		BuilderBinaryOp _op,
 		awst::SourceLocation const& _loc);
 
-	/// The 2^256 constant string.
-	static constexpr char const* POW_2_256 =
-		"115792089237316195423570985008687907853269984665640564039457584007913129639936";
 };
 
 } // namespace puyasol::builder::eb

@@ -173,9 +173,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint256(
 	// threshold = 2^(N-1)
 	solidity::u256 threshold = solidity::u256(1) << (_bits - 1);
 	// 2^256 as a string (u256 can't hold it, it overflows to 0)
-	static const std::string pow256Str = "115792089237316195423570985008687907853269984665640564039457584007913129639936";
 	// offset = 2^256 - 2^N: compute using 512-bit int to avoid overflow
-	boost::multiprecision::uint512_t pow256_wide(pow256Str);
+	boost::multiprecision::uint512_t pow256_wide(kPow2_256);
 	boost::multiprecision::uint512_t offset_wide = pow256_wide - (boost::multiprecision::uint512_t(1) << _bits);
 	std::string offsetStr = offset_wide.str();
 
@@ -207,7 +206,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint256(
 	auto pow256Const = std::make_shared<awst::IntegerConstant>();
 	pow256Const->sourceLocation = _loc;
 	pow256Const->wtype = awst::WType::biguintType();
-	pow256Const->value = pow256Str;
+	pow256Const->value = kPow2_256;
 
 	auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
 	mod->sourceLocation = _loc;

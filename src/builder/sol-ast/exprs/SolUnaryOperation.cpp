@@ -1,6 +1,7 @@
 /// @file SolUnaryOperation.cpp
 /// Migrated from UnaryOperationBuilder.cpp.
 
+#include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-ast/exprs/SolUnaryOperation.h"
 #include "builder/sol-eb/NodeBuilder.h"
 #include "builder/sol-eb/BuilderOps.h"
@@ -67,7 +68,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		std::string pow2NStr, halfNStr;
 		if (bits == 256)
 		{
-			pow2NStr = "115792089237316195423570985008687907853269984665640564039457584007913129639936";
+			pow2NStr = kPow2_256;
 			halfNStr = "57896044618658097711785492504343953926634992332820282019728792003956564819968";
 		}
 		else
@@ -281,7 +282,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			{
 				// 2^256 - val (two's complement negation)
 				static const std::string pow256Str =
-					"115792089237316195423570985008687907853269984665640564039457584007913129639936";
+					kPow2_256;
 				solidity::u256 pow256(pow256Str);
 				solidity::u256 negVal = pow256 - val;
 				std::ostringstream oss;
@@ -322,7 +323,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			if (val > 0)
 			{
 				static const std::string pow256Str =
-					"115792089237316195423570985008687907853269984665640564039457584007913129639936";
+					kPow2_256;
 				solidity::u256 pow256(pow256Str);
 				solidity::u256 negVal = pow256 - val;
 				std::ostringstream oss;
@@ -439,7 +440,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 	}
 
 	static const std::string pow256 =
-		"115792089237316195423570985008687907853269984665640564039457584007913129639936";
+		kPow2_256;
 	static const std::string pow256Minus1 =
 		"115792089237316195423570985008687907853269984665640564039457584007913129639935";
 

@@ -594,12 +594,10 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			addOne->right = std::move(one);
 
 			// Mod 2^256 to handle -0 overflow (2^256 wraps to 0)
-			static const std::string pow256 =
-				"115792089237316195423570985008687907853269984665640564039457584007913129639936";
 			auto modConst = std::make_shared<awst::IntegerConstant>();
 			modConst->sourceLocation = _loc;
 			modConst->wtype = awst::WType::biguintType();
-			modConst->value = pow256;
+			modConst->value = kPow2_256;
 
 			auto wrapped = std::make_shared<awst::BigUIntBinaryOperation>();
 			wrapped->sourceLocation = _loc;
@@ -945,13 +943,11 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildBigUIntExp(
 	// In unchecked mode, Solidity wraps intermediate products mod 2^256 so
 	// that huge exponents (e.g. 2**1113) don't blow past biguint capacity.
 	bool const wrapMod = m_ctx.inUncheckedBlock;
-	static const std::string kPow256 =
-		"115792089237316195423570985008687907853269984665640564039457584007913129639936";
-	auto wrapMod256 = [&](std::shared_ptr<awst::Expression> v)
+		auto wrapMod256 = [&](std::shared_ptr<awst::Expression> v)
 		-> std::shared_ptr<awst::Expression>
 	{
 		if (!wrapMod) return v;
-		return makeBinOp(std::move(v), awst::BigUIntBinaryOperator::Mod, makeConst(kPow256));
+		return makeBinOp(std::move(v), awst::BigUIntBinaryOperator::Mod, makeConst(kPow2_256));
 	};
 
 	// if exp & 1 != 0: result = (result * base) [mod 2^256 if unchecked]
@@ -1030,7 +1026,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildWrappingSubtract(
 	auto pow256 = std::make_shared<awst::IntegerConstant>();
 	pow256->sourceLocation = _loc;
 	pow256->wtype = awst::WType::biguintType();
-	pow256->value = POW_2_256;
+	pow256->value = kPow2_256;
 
 	auto addPow = std::make_shared<awst::BigUIntBinaryOperation>();
 	addPow->sourceLocation = _loc;
@@ -1060,7 +1056,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::wrapMod256(
 	auto pow256 = std::make_shared<awst::IntegerConstant>();
 	pow256->sourceLocation = _loc;
 	pow256->wtype = awst::WType::biguintType();
-	pow256->value = POW_2_256;
+	pow256->value = kPow2_256;
 
 	auto mod = std::make_shared<awst::BigUIntBinaryOperation>();
 	mod->sourceLocation = _loc;
@@ -1105,7 +1101,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildSignedModDiv(
 	auto negLeft = std::make_shared<awst::BigUIntBinaryOperation>();
 	negLeft->sourceLocation = _loc;
 	negLeft->wtype = awst::WType::biguintType();
-	negLeft->left = makeConst(POW_2_256);
+	negLeft->left = makeConst(kPow2_256);
 	negLeft->op = awst::BigUIntBinaryOperator::Sub;
 	negLeft->right = _left;
 
@@ -1128,7 +1124,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildSignedModDiv(
 	auto negRight = std::make_shared<awst::BigUIntBinaryOperation>();
 	negRight->sourceLocation = _loc;
 	negRight->wtype = awst::WType::biguintType();
-	negRight->left = makeConst(POW_2_256);
+	negRight->left = makeConst(kPow2_256);
 	negRight->op = awst::BigUIntBinaryOperator::Sub;
 	negRight->right = _right;
 
@@ -1158,7 +1154,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildSignedModDiv(
 	auto negResult = std::make_shared<awst::BigUIntBinaryOperation>();
 	negResult->sourceLocation = _loc;
 	negResult->wtype = awst::WType::biguintType();
-	negResult->left = makeConst(POW_2_256);
+	negResult->left = makeConst(kPow2_256);
 	negResult->op = awst::BigUIntBinaryOperator::Sub;
 	negResult->right = absResult;
 
