@@ -1337,13 +1337,69 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
             else:
                 args.append(a)
 
-        # Skip payable calls (non-bare). Bare payable calls are handled above
-        # with direct ATC grouping. Non-bare payable functions would need
-        # more plumbing to compare return values correctly.
-        if call.value_wei > 0:
-            return None, "payable skipped"
-
         method = resolve_method(app_spec, call.method_signature) if app_spec else call.method_signature
+
+        # Payable method calls: send a PaymentTxn to the app address first,
+        # then call the method. msg.value reads gtxns Amount from the
+        # preceding transaction in the group.
+        if call.value_wei > 0:
+            from algosdk.transaction import PaymentTxn as _PayPT
+            from algosdk.logic import get_application_address as _pay_app_addr
+
+            _algod = app.algorand.client.algod
+            _sender = app._default_sender
+
+            # Clamp wei to avoid overspending
+            _amt = call.value_wei
+            if _amt > 1000:
+                _amt = 1000
+
+            # Send payment first (separate txn — not grouped but
+            # increases the app balance for msg.value semantics)
+            _pay_sp = _algod.suggested_params()
+            pay_txn = _PayPT(
+                sender=_sender, sp=_pay_sp,
+                receiver=_pay_app_addr(app.app_id), amt=_amt,
+            )
+            _signer = app._default_signer or app.algorand.account.get_signer(_sender)
+            _algod.send_transaction(pay_txn.sign(_signer.private_key if hasattr(_signer, 'private_key') else app.algorand.account.get_account(_sender).private_key))
+
+            # Now call the method normally (POPULATE handles resource refs)
+            params = au.AppClientMethodCallParams(
+                method=method, args=args if args else None,
+                extra_fee=au.AlgoAmount(micro_algo=30000),
+            )
+            try:
+                result = app.send.call(params, send_params=POPULATE)
+            except Exception as ex1:
+                err_str = str(ex1)
+                if "cost budget" in err_str or "dynamic cost" in err_str or "simulate" in err_str.lower():
+                    try:
+                        result = _call_with_extra_budget(app, method, args, extra_calls=15)
+                    except Exception:
+                        raise ex1
+                else:
+                    raise
+
+            actual = result.abi_return
+            if len(call.expected) == 0 or (len(call.expected) == 1 and call.expected[0] == ""):
+                return True, "void ok"
+            if len(call.expected) == 1:
+                expected = parse_value(call.expected[0])
+                if _compare_values(actual, expected):
+                    return True, f"{actual}"
+                return False, f"expected {expected}, got {actual}"
+            if isinstance(actual, (list, tuple)):
+                actual_list = list(actual)
+            elif isinstance(actual, dict):
+                actual_list = list(actual.values())
+            else:
+                actual_list = [actual]
+            expected_list = [parse_value(e) for e in call.expected]
+            if len(actual_list) == len(expected_list) and all(
+                _compare_values(a, e) for a, e in zip(actual_list, expected_list)):
+                return True, f"{actual}"
+            return False, f"expected {expected_list}, got {actual_list}"
 
         # Regroup flat args for static/dynamic array parameters
         args = _regroup_args(args, call.method_signature)
