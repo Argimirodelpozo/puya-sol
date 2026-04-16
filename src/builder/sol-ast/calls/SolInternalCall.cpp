@@ -64,38 +64,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	FunctionDefinition const* _funcDef,
 	bool _isUsingForCall)
 {
-	// Function-type parameters: only internal function pointers passed as params
-	// are supported. External/other function-type params are skipped.
-	if (_funcDef)
-	{
-		bool hasFunctionParam = false;
-		bool allInternal = true;
-		for (auto const& p: _funcDef->parameters())
-		{
-			if (auto const* ft = dynamic_cast<FunctionType const*>(p->type()))
-			{
-				hasFunctionParam = true;
-				if (ft->kind() != FunctionType::Kind::Internal)
-					allInternal = false;
-			}
-		}
-		if (hasFunctionParam && !allInternal)
-		{
-			Logger::instance().warning(
-				"skipping call to '" + _funcDef->name()
-				+ "' (has non-internal function-type parameter)", m_loc);
-			auto noop = std::make_shared<awst::IntrinsicCall>();
-			noop->sourceLocation = m_loc;
-			noop->wtype = awst::WType::voidType();
-			noop->opCode = "log";
-			auto msg = std::make_shared<awst::BytesConstant>();
-			msg->sourceLocation = m_loc;
-			msg->wtype = awst::WType::bytesType();
-			msg->value = {};
-			noop->stackArgs.push_back(std::move(msg));
-			return noop;
-		}
-	}
+	// External function-type params are passed as bytes (12-byte packed
+	// appId + selector). No guard needed — the dispatch handles them.
 
 	auto call = std::make_shared<awst::SubroutineCallExpression>();
 	call->sourceLocation = m_loc;
@@ -420,24 +390,30 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 		}
 		else if (auto const* funcType = dynamic_cast<FunctionType const*>(varDecl->type()))
 		{
-			if (funcType->kind() == FunctionType::Kind::Internal)
-			{
-				std::shared_ptr<awst::Expression> ptrExpr;
+			bool isInternal = funcType->kind() == FunctionType::Kind::Internal;
+			bool isExternal = funcType->kind() == FunctionType::Kind::External
+				|| funcType->kind() == FunctionType::Kind::DelegateCall;
 
+			if (isInternal || isExternal)
+			{
+				auto* ptrWType = isInternal
+					? awst::WType::uint64Type()
+					: awst::WType::bytesType();
+
+				std::shared_ptr<awst::Expression> ptrExpr;
 				if (varDecl->isStateVariable())
 				{
-					// State variable: read function ID from global state
 					ptrExpr = m_ctx.storageMapper.createStateRead(
-						name, awst::WType::uint64Type(),
+						name, ptrWType,
 						awst::AppStorageKind::AppGlobal, m_loc);
 				}
 				else
 				{
-					// Local/param: use variable directly
-					ptrExpr = std::make_shared<awst::VarExpression>();
-					std::static_pointer_cast<awst::VarExpression>(ptrExpr)->sourceLocation = m_loc;
-					std::static_pointer_cast<awst::VarExpression>(ptrExpr)->wtype = awst::WType::uint64Type();
-					std::static_pointer_cast<awst::VarExpression>(ptrExpr)->name = name;
+					auto var = std::make_shared<awst::VarExpression>();
+					var->sourceLocation = m_loc;
+					var->wtype = ptrWType;
+					var->name = name;
+					ptrExpr = std::move(var);
 				}
 
 				std::vector<std::shared_ptr<awst::Expression>> args;
@@ -450,7 +426,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 					return result;
 			}
 
-			// Fallback for external / unsupported:
+			// Fallback for unsupported kinds:
 			// emit assert(false) to revert (matches EVM behavior for uninitialized pointers)
 			Logger::instance().warning(
 				"call to function pointer '" + name + "' (state var / unsupported), emitting assert(false)", m_loc);

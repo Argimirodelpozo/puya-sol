@@ -263,6 +263,22 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 					return std::make_unique<SolInternalCall>(m_ctx, _node);
 			}
 		}
+
+		// Case 3: function pointer variable call — `x(a)` where x is a local
+		// or param with external function type. Route to SolInternalCall which
+		// has the fn-ptr dispatch logic (inner app txn).
+		if (auto const* ident = dynamic_cast<
+				solidity::frontend::Identifier const*>(callExpr))
+		{
+			auto const* decl = ident->annotation().referencedDeclaration;
+			if (auto const* varDecl = dynamic_cast<
+					solidity::frontend::VariableDeclaration const*>(decl))
+			{
+				if (dynamic_cast<solidity::frontend::FunctionType const*>(varDecl->type()))
+					return std::make_unique<SolInternalCall>(m_ctx, _node);
+			}
+		}
+
 		return std::make_unique<SolExternalCall>(m_ctx, _node);
 	}
 

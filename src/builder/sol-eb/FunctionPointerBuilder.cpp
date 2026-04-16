@@ -253,92 +253,154 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		extractSel->stackArgs.push_back(std::move(eight2));
 		extractSel->stackArgs.push_back(std::move(four));
 
-		// Build inner app call: itxn_begin; ... itxn_submit
-		// For now, emit as a self-call via SubmitInnerTransaction
-		// with ApplicationArgs = [selector, arg1, arg2, ...]
-		auto innerCall = std::make_shared<awst::CreateInnerTransaction>();
-		innerCall->sourceLocation = _loc;
-		innerCall->wtype = awst::WType::voidType();
-		innerCall->fields["TypeEnum"] = std::make_shared<awst::IntegerConstant>();
-		static_cast<awst::IntegerConstant*>(innerCall->fields["TypeEnum"].get())->sourceLocation = _loc;
-		static_cast<awst::IntegerConstant*>(innerCall->fields["TypeEnum"].get())->wtype = awst::WType::uint64Type();
-		static_cast<awst::IntegerConstant*>(innerCall->fields["TypeEnum"].get())->value = "6"; // appl
-		innerCall->fields["ApplicationID"] = std::move(appId);
+		// Build ApplicationArgs tuple: [selector, arg1_32bytes, ...]
+		// Each arg is a separate tuple element (matching puya's inner txn layout).
+		auto argsTuple = std::make_shared<awst::TupleExpression>();
+		argsTuple->sourceLocation = _loc;
+		// wtype will be set after all items are added
+		argsTuple->items.push_back(std::move(extractSel));
 
-		// Build args: [selector, encoded_arg1, encoded_arg2, ...]
-		// For simplicity, each arg is ARC4-encoded as 32-byte uint256
-		std::vector<std::shared_ptr<awst::Expression>> appArgs;
-		appArgs.push_back(std::move(extractSel));
 		for (auto& arg : _args)
 		{
-			// Ensure biguint for ARC4 encoding
+			// Promote to biguint, reinterpret as bytes, pad to 32
 			auto coerced = builder::TypeCoercion::implicitNumericCast(
 				std::move(arg), awst::WType::biguintType(), _loc);
-			// Reinterpret as bytes
 			auto toBytes = std::make_shared<awst::ReinterpretCast>();
 			toBytes->sourceLocation = _loc;
 			toBytes->wtype = awst::WType::bytesType();
 			toBytes->expr = std::move(coerced);
-			// Pad to 32 bytes
-			auto padded = std::make_shared<awst::IntrinsicCall>();
-			padded->sourceLocation = _loc;
-			padded->wtype = awst::WType::bytesType();
-			padded->opCode = "concat";
+
+			// Left-pad to 32 bytes: concat(bzero(32), bytes) then last 32
 			auto pad = std::make_shared<awst::IntrinsicCall>();
 			pad->sourceLocation = _loc;
 			pad->wtype = awst::WType::bytesType();
 			pad->opCode = "bzero";
-			auto thirtyTwo = std::make_shared<awst::IntegerConstant>();
-			thirtyTwo->sourceLocation = _loc;
-			thirtyTwo->wtype = awst::WType::uint64Type();
-			thirtyTwo->value = "32";
-			pad->stackArgs.push_back(std::move(thirtyTwo));
+			auto n32 = std::make_shared<awst::IntegerConstant>();
+			n32->sourceLocation = _loc;
+			n32->wtype = awst::WType::uint64Type();
+			n32->value = "32";
+			pad->stackArgs.push_back(std::move(n32));
+			auto padded = std::make_shared<awst::IntrinsicCall>();
+			padded->sourceLocation = _loc;
+			padded->wtype = awst::WType::bytesType();
+			padded->opCode = "concat";
 			padded->stackArgs.push_back(std::move(pad));
 			padded->stackArgs.push_back(std::move(toBytes));
-			// Take last 32 bytes
+
 			auto lenExpr = std::make_shared<awst::IntrinsicCall>();
 			lenExpr->sourceLocation = _loc;
 			lenExpr->wtype = awst::WType::uint64Type();
 			lenExpr->opCode = "len";
 			lenExpr->stackArgs.push_back(padded);
-			auto thirty2b = std::make_shared<awst::IntegerConstant>();
-			thirty2b->sourceLocation = _loc;
-			thirty2b->wtype = awst::WType::uint64Type();
-			thirty2b->value = "32";
-			auto offset = std::make_shared<awst::UInt64BinaryOperation>();
-			offset->sourceLocation = _loc;
-			offset->wtype = awst::WType::uint64Type();
-			offset->left = std::move(lenExpr);
-			offset->op = awst::UInt64BinaryOperator::Sub;
-			offset->right = std::move(thirty2b);
-			auto thirty2c = std::make_shared<awst::IntegerConstant>();
-			thirty2c->sourceLocation = _loc;
-			thirty2c->wtype = awst::WType::uint64Type();
-			thirty2c->value = "32";
-			auto extract = std::make_shared<awst::IntrinsicCall>();
-			extract->sourceLocation = _loc;
-			extract->wtype = awst::WType::bytesType();
-			extract->opCode = "extract3";
-			extract->stackArgs.push_back(std::move(padded));
-			extract->stackArgs.push_back(std::move(offset));
-			extract->stackArgs.push_back(std::move(thirty2c));
-			appArgs.push_back(std::move(extract));
+			auto n32b = std::make_shared<awst::IntegerConstant>();
+			n32b->sourceLocation = _loc;
+			n32b->wtype = awst::WType::uint64Type();
+			n32b->value = "32";
+			auto off = std::make_shared<awst::UInt64BinaryOperation>();
+			off->sourceLocation = _loc;
+			off->wtype = awst::WType::uint64Type();
+			off->left = std::move(lenExpr);
+			off->op = awst::UInt64BinaryOperator::Sub;
+			off->right = std::move(n32b);
+			auto n32c = std::make_shared<awst::IntegerConstant>();
+			n32c->sourceLocation = _loc;
+			n32c->wtype = awst::WType::uint64Type();
+			n32c->value = "32";
+			auto last32 = std::make_shared<awst::IntrinsicCall>();
+			last32->sourceLocation = _loc;
+			last32->wtype = awst::WType::bytesType();
+			last32->opCode = "extract3";
+			last32->stackArgs.push_back(std::move(padded));
+			last32->stackArgs.push_back(std::move(off));
+			last32->stackArgs.push_back(std::move(n32c));
+
+			argsTuple->items.push_back(std::move(last32));
 		}
 
-		// TODO: Full inner txn emission requires CreateInnerTransaction +
-		// SubmitInnerTransaction AWST nodes, which we use elsewhere.
-		// For now, log a warning and return a stub. The full implementation
-		// needs integration with the inner call builder in InnerCallHandlers.
-		Logger::instance().warning(
-			"external function pointer call: inner txn dispatch not yet wired to AWST", _loc);
+		// Set WTuple type for the args tuple
+		{
+			std::vector<awst::WType const*> itemTypes;
+			for (auto const& item : argsTuple->items)
+				itemTypes.push_back(item->wtype ? item->wtype : awst::WType::bytesType());
+			argsTuple->wtype = new awst::WTuple(std::move(itemTypes));
+		}
 
-		// Return a default value for the expected return type
+		// CreateInnerTransaction
+		static awst::WInnerTransactionFields s_applFields(6);
+		auto create = std::make_shared<awst::CreateInnerTransaction>();
+		create->sourceLocation = _loc;
+		create->wtype = &s_applFields;
+		auto makeU64 = [&](std::string val) {
+			auto c = std::make_shared<awst::IntegerConstant>();
+			c->sourceLocation = _loc;
+			c->wtype = awst::WType::uint64Type();
+			c->value = std::move(val);
+			return c;
+		};
+		create->fields["TypeEnum"] = makeU64("6");
+		create->fields["Fee"] = makeU64("0");
+		create->fields["ApplicationID"] = std::move(appId);
+		create->fields["OnCompletion"] = makeU64("0");
+		create->fields["ApplicationArgs"] = std::move(argsTuple);
+
+		// SubmitInnerTransaction
+		static awst::WInnerTransaction s_applTxn(6);
+		auto submit = std::make_shared<awst::SubmitInnerTransaction>();
+		submit->sourceLocation = _loc;
+		submit->wtype = &s_applTxn;
+		submit->itxns.push_back(std::move(create));
+
+		auto submitStmt = std::make_shared<awst::ExpressionStatement>();
+		submitStmt->sourceLocation = _loc;
+		submitStmt->expr = std::move(submit);
+		_ctx.prePendingStatements.push_back(std::move(submitStmt));
+
+		// Read return value from itxn LastLog
 		awst::WType const* retType = awst::WType::voidType();
 		if (!_funcType->returnParameterTypes().empty())
-		{
 			retType = _ctx.typeMapper.map(_funcType->returnParameterTypes()[0]);
+
+		if (retType == awst::WType::voidType())
+		{
+			auto vc = std::make_shared<awst::VoidConstant>();
+			vc->sourceLocation = _loc;
+			vc->wtype = awst::WType::voidType();
+			return vc;
 		}
-		return builder::TypeCoercion::makeDefaultValue(retType, _loc);
+
+		// itxn LastLog → strip 4-byte ARC4 prefix → decode
+		auto readLog = std::make_shared<awst::IntrinsicCall>();
+		readLog->sourceLocation = _loc;
+		readLog->wtype = awst::WType::bytesType();
+		readLog->opCode = "itxn";
+		readLog->immediates = {std::string("LastLog")};
+
+		auto stripPrefix = std::make_shared<awst::IntrinsicCall>();
+		stripPrefix->sourceLocation = _loc;
+		stripPrefix->wtype = awst::WType::bytesType();
+		stripPrefix->opCode = "extract";
+		stripPrefix->immediates = {4, 0};
+		stripPrefix->stackArgs.push_back(std::move(readLog));
+
+		// Reinterpret as biguint for uint256 returns
+		if (retType == awst::WType::biguintType())
+		{
+			auto cast = std::make_shared<awst::ReinterpretCast>();
+			cast->sourceLocation = _loc;
+			cast->wtype = awst::WType::biguintType();
+			cast->expr = std::move(stripPrefix);
+			return cast;
+		}
+		if (retType == awst::WType::uint64Type())
+		{
+			auto btoi = std::make_shared<awst::IntrinsicCall>();
+			btoi->sourceLocation = _loc;
+			btoi->wtype = awst::WType::uint64Type();
+			btoi->opCode = "btoi";
+			btoi->stackArgs.push_back(std::move(stripPrefix));
+			return btoi;
+		}
+		return stripPrefix;
 	}
 
 	// Internal: call __funcptr_dispatch_<signature>(id, args...)
