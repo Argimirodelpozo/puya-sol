@@ -1377,8 +1377,15 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
             # For a 0-arg method, app_args = [selector, *extras]
             _app_args = [_selector] + _extra_app_args
 
+            # Include box references so the contract can access its boxes
+            _box_refs = None
+            if hasattr(app, '_box_refs') and app._box_refs:
+                from algosdk.transaction import BoxReference as _BR2
+                _box_refs = [_BR2(app_index=0, name=r[1]) for r in app._box_refs]
+
             _txn = _ACT2(sender=_sender, sp=_sp, index=app.app_id,
-                         on_complete=_OC2.NoOpOC, app_args=_app_args)
+                         on_complete=_OC2.NoOpOC, app_args=_app_args,
+                         boxes=_box_refs)
             _atc = _ATC2()
             _atc.add_transaction(_TWS2(_txn, _signer))
             try:

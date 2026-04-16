@@ -354,7 +354,11 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 						Logger::instance().debug("[STORAGE-AUG] " + qualifiedName
 							+ " param[" + std::to_string(pi) + "]=" + func->parameters()[pi]->name()
 							+ " refLoc=" + std::to_string(static_cast<int>(refLoc)));
-						if (refLoc == solidity::frontend::VariableDeclaration::Location::Storage)
+						// Skip mapping storage-ref params — they use shared box keys
+						// so no write-back is needed. Only struct-style storage refs
+						// need return augmentation.
+						if (refLoc == solidity::frontend::VariableDeclaration::Location::Storage
+							&& !mappingStorageParams.count(pi))
 							storageParamIndices.push_back(pi);
 					}
 				}
