@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 2 24
+    intcblock 0 2 1 24
     bytecblock "array" "externalCalled" "__ctor_pending" 0xfcc8e844
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_2 // "__ctor_pending"
-    intc_1 // 1
+    intc_2 // 1
     app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -38,10 +38,10 @@ dynamic_array_concat_dynamic_element:
     pushbytes ""
     dup
     frame_dig -2
-    intc_2 // 2
+    intc_1 // 2
     *
     frame_dig -4
-    intc_2 // 2
+    intc_1 // 2
     *
     intc_0 // 0
 
@@ -63,7 +63,7 @@ dynamic_array_concat_dynamic_element_for_header@1:
     swap
     concat
     frame_bury 1
-    intc_2 // 2
+    intc_1 // 2
     +
     frame_bury 4
     b dynamic_array_concat_dynamic_element_for_header@1
@@ -93,7 +93,7 @@ dynamic_array_concat_dynamic_element_for_header@5:
     swap
     concat
     frame_bury 1
-    intc_2 // 2
+    intc_1 // 2
     +
     frame_bury 4
     b dynamic_array_concat_dynamic_element_for_header@5
@@ -131,7 +131,7 @@ __postInit:
     intc_0 // 0
     app_global_put
     bytec_0 // "array"
-    intc_2 // 2
+    intc_1 // 2
     box_create
     pop
     intc_0 // 0
@@ -139,7 +139,7 @@ __postInit:
     bytec_1 // "externalCalled"
     swap
     app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
@@ -160,7 +160,7 @@ ext:
     bytec_1 // "externalCalled"
     swap
     app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
@@ -169,13 +169,33 @@ f:
     bytec_0 // "array"
     box_get
     assert // box exists
+    global CurrentApplicationID
+    itob
+    pushbytes 0xd316d3ee
+    concat
     dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x000100020002
+    swap
+    concat
+    dig 1
     intc_0 // 0
     extract_uint16
-    swap
+    uncover 2
     extract 2 0
-    intc_1 // 1
-    pushbytes 0x000200020000
+    dig 2
+    extract 2 0
+    uncover 3
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    uncover 3
+    uncover 3
+    uncover 2
+    uncover 3
     callsub dynamic_array_concat_dynamic_element
     bytec_0 // "array"
     box_del
@@ -192,12 +212,12 @@ f:
     intc_0 // 0
     extract_uint16
     dig 1
-    intc_1 // 1
+    intc_2 // 1
     - // on error: index access is out of bounds
     dig 3
     len
     dig 4
-    intc_2 // 2
+    intc_1 // 2
     extract_uint16
     uncover 2
     select
@@ -233,12 +253,12 @@ f:
     intc_0 // 0
     extract_uint16
     dig 1
-    intc_1 // 1
+    intc_2 // 1
     - // on error: index access is out of bounds
     dig 3
     len
     dig 4
-    intc_2 // 2
+    intc_1 // 2
     extract_uint16
     dup2
     uncover 4
@@ -261,7 +281,7 @@ f:
     itxn_submit
     itxn_begin
     uncover 2
-    intc_2 // 2
+    intc_1 // 2
     - // on error: index access is out of bounds
     dig 3
     pushint 4
@@ -290,5 +310,5 @@ f:
     pushbytes 0x02
     b==
     assert
-    intc_1 // 1
+    intc_2 // 1
     return

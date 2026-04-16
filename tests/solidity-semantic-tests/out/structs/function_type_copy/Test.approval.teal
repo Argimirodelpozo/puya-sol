@@ -4,8 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/function_type_copy.sol.Test.approval_program() -> uint64:
 main:
     intcblock 2 0 1 24
-    bytecblock 0x 0x0000 "c" 0x0a8101
-    bytec_0 // ""
+    bytecblock "c" 0x0a8101 0xddb66c36 0xbf55c8a8 0xf589218f
+    pushbytes ""
     txn ApplicationID
     bnz main_after_if_else@2
     intc_3 // 24
@@ -13,7 +13,7 @@ main:
     dig 1
     itob
     concat
-    bytec_2 // "c"
+    bytec_0 // "c"
     swap
     app_global_put
     intc_2 // 1
@@ -145,9 +145,9 @@ test:
     itxn_field TypeEnum
     intc_1 // 0
     itxn_field Fee
-    bytec_3 // 0x0a8101
+    bytec_1 // 0x0a8101
     itxn_field ClearStateProgram
-    bytec_3 // 0x0a8101
+    bytec_1 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -162,31 +162,59 @@ test:
     pushint 200000
     itxn_field Amount
     itxn_submit
+    global CurrentApplicationID
+    itob
+    bytec_2 // 0xddb66c36
+    concat
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
     pushbytes 0x000300060008000a000000000000
-    bytec_1 // 0x0000
+    swap
     intc_1 // 0
     callsub dynamic_array_replace_byte_length_head
+    global CurrentApplicationID
+    itob
+    bytec_3 // 0xbf55c8a8
+    concat
     dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    dig 1
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_2 // 1
     >
     assert // index access is out of bounds
-    bytec_1 // 0x0000
     intc_2 // 1
     callsub dynamic_array_replace_byte_length_head
+    global CurrentApplicationID
+    itob
+    bytec 4 // 0xf589218f
+    concat
     dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    dig 1
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 2
     >
     assert // index access is out of bounds
-    bytec_1 // 0x0000
     intc_0 // 2
     callsub dynamic_array_replace_byte_length_head
     itxn_begin
     intc_1 // 0
-    bytec_2 // "c"
+    bytec_0 // "c"
     app_global_get_ex
     assert // check c exists
     intc_3 // 24
@@ -233,7 +261,10 @@ test:
     cover 2
     extract3
     extract 2 0
-    bytec_0 // 0x
+    global CurrentApplicationID
+    itob
+    bytec_2 // 0xddb66c36
+    concat
     ==
     assert
     intc_2 // 1
@@ -251,7 +282,10 @@ test:
     cover 2
     extract3
     extract 2 0
-    bytec_0 // 0x
+    global CurrentApplicationID
+    itob
+    bytec_3 // 0xbf55c8a8
+    concat
     ==
     assert
     intc_0 // 2
@@ -267,7 +301,10 @@ test:
     +
     extract3
     extract 2 0
-    bytec_0 // 0x
+    global CurrentApplicationID
+    itob
+    bytec 4 // 0xf589218f
+    concat
     ==
     assert
     pushbytes 0x151f7c7580

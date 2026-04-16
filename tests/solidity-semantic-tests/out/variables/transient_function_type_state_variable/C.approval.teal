@@ -3,13 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_function_type_state_variable.sol.C.approval_program() -> uint64:
 main:
-    bytecblock "f" 0x
+    intcblock 1 0
+    bytecblock "f" 0x6dae091f 0x
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "f"
-    bytec_1 // 0x
+    bytec_2 // 0x
     app_global_put
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -21,7 +22,7 @@ main_after_if_else@2:
     replace2 64
     store 0
     bytec_0 // "f"
-    bytec_1 // 0x
+    bytec_2 // 0x
     app_global_put
     txn OnCompletion
     !
@@ -34,23 +35,41 @@ main_after_if_else@2:
     err
 
 main_g_route@5:
-    pushint 1
+    intc_0 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_function_type_state_variable.sol.C.test[routing]() -> void:
 test:
-    pushint 0
+    intc_1 // 0
     bytec_0 // "f"
     app_global_get_ex
     assert // check f exists
-    bytec_1 // 0x
+    global CurrentApplicationID
+    itob
+    bytec_1 // 0x6dae091f
+    concat
     !=
     assert
+    global CurrentApplicationID
+    itob
+    bytec_1 // 0x6dae091f
+    concat
     bytec_0 // "f"
-    bytec_1 // 0x
+    dig 1
     app_global_put
-    pushbytes 0x151f7c7580
+    global CurrentApplicationID
+    itob
+    bytec_1 // 0x6dae091f
+    concat
+    ==
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
-    pushint 1
+    intc_0 // 1
     return

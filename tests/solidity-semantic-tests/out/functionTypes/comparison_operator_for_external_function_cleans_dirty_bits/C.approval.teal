@@ -3,6 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/comparison_operator_for_external_function_cleans_dirty_bits.sol.C.approval_program() -> uint64:
 main:
+    bytecblock 0x6dae091f
     txn ApplicationID
     bnz main_after_if_else@2
     pushint 1
@@ -33,9 +34,24 @@ main_g_route@5:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/comparison_operator_for_external_function_cleans_dirty_bits.sol.C.comparison_operators_for_external_function_pointers_with_dirty_bits[routing]() -> void:
 comparison_operators_for_external_function_pointers_with_dirty_bits:
+    global CurrentApplicationID
+    itob
+    bytec_0 // 0x6dae091f
+    concat
     load 0
     store 0
-    pushbytes 0x151f7c7580
+    global CurrentApplicationID
+    itob
+    bytec_0 // 0x6dae091f
+    concat
+    ==
+    pushbytes 0x00
+    pushint 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
     pushint 1
     return

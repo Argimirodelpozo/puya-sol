@@ -3,9 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/external_function_pointer_selector_assignment.sol.C.approval_program() -> uint64:
 main:
+    intcblock 1 4294967295
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -27,7 +28,7 @@ main_after_if_else@2:
     err
 
 main_testFunction_route@5:
-    pushint 1
+    intc_0 // 1
     return
 
 
@@ -40,12 +41,23 @@ testYul:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    pushint 4294967295
+    intc_1 // 4294967295
     <=
     assert // ABI validation
+    global CurrentApplicationID
+    itob
+    pushbytes 0x0889c56e
+    concat
     load 0
     store 0
-    pushbytes 0x151f7c750000000000000000
+    pushint 20
+    extract_uint32
+    intc_1 // 4294967295
+    &
+    itob
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
-    pushint 1
+    intc_0 // 1
     return
