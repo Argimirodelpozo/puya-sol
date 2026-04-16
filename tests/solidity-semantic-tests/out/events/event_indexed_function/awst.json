@@ -501,7 +501,7 @@
                   "name": "void",
                   "immutable": true
                 },
-                "signature": "Test(byte[])",
+                "signature": "Test(byte[12])",
                 "value": {
                   "_type": "NewStruct",
                   "source_location": {
@@ -515,13 +515,21 @@
                   "wtype": {
                     "_type": "ARC4Struct",
                     "name": "Test",
-                    "immutable": true,
+                    "immutable": false,
                     "fields": {
                       "_0": {
-                        "_type": "ARC4UIntN",
-                        "name": "arc4.uint64",
-                        "immutable": true,
-                        "n": 64,
+                        "_type": "ARC4StaticArray",
+                        "name": "arc4.static_array<arc4.uint8, 12>",
+                        "immutable": false,
+                        "element_type": {
+                          "_type": "ARC4UIntN",
+                          "name": "arc4.uint8",
+                          "immutable": true,
+                          "n": 8,
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "array_size": 12,
                         "arc4_alias": null,
                         "source_location": null
                       }
@@ -543,15 +551,23 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "ARC4UIntN",
-                        "name": "arc4.uint64",
-                        "immutable": true,
-                        "n": 64,
+                        "_type": "ARC4StaticArray",
+                        "name": "arc4.static_array<arc4.uint8, 12>",
+                        "immutable": false,
+                        "element_type": {
+                          "_type": "ARC4UIntN",
+                          "name": "arc4.uint8",
+                          "immutable": true,
+                          "n": 8,
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "array_size": 12,
                         "arc4_alias": null,
                         "source_location": null
                       },
                       "value": {
-                        "_type": "IntegerConstant",
+                        "_type": "IntrinsicCall",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_indexed_function.sol",
                           "line": 102,
@@ -561,12 +577,117 @@
                           "end_column": null
                         },
                         "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
+                          "_type": "BytesWType",
+                          "name": "bytes[12]",
+                          "immutable": true,
+                          "length": 12
                         },
-                        "value": 1,
-                        "teal_alias": null
+                        "op_code": "concat",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_indexed_function.sol",
+                              "line": 102,
+                              "end_line": 122,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "itob",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_indexed_function.sol",
+                                  "line": 102,
+                                  "end_line": 122,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 0,
+                                "teal_alias": null
+                              }
+                            ]
+                          },
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_indexed_function.sol",
+                              "line": 102,
+                              "end_line": 122,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "extract",
+                            "immediates": [
+                              4,
+                              4
+                            ],
+                            "stack_args": [
+                              {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_indexed_function.sol",
+                                  "line": 102,
+                                  "end_line": 122,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "itob",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/event_indexed_function.sol",
+                                      "line": 102,
+                                      "end_line": 122,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 1,
+                                    "teal_alias": null
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
                       },
                       "error_message": null
                     }

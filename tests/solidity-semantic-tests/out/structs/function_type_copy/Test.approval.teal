@@ -3,12 +3,12 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/function_type_copy.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 2 0 1 24
-    bytecblock "c" 0x0a8101 0xddb66c36 0xbf55c8a8 0xf589218f
+    intcblock 0 1 24 6
+    bytecblock "c" 0x0a8101
     pushbytes ""
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_3 // 24
+    intc_2 // 24
     bzero
     dig 1
     itob
@@ -16,7 +16,7 @@ main:
     bytec_0 // "c"
     swap
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -38,112 +38,24 @@ main_after_if_else@2:
     err
 
 main_random3_route@8:
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_random2_route@7:
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_random1_route@6:
-    intc_2 // 1
+    intc_1 // 1
     return
-
-
-// _puya_lib.arc4.dynamic_array_replace_byte_length_head(array: bytes, new_item: bytes, index: uint64) -> bytes:
-dynamic_array_replace_byte_length_head:
-    proto 3 1
-    frame_dig -3
-    substring 0 2
-    dup
-    btoi
-    frame_dig -3
-    extract 2 0
-    frame_dig -1
-    dig 2
-    <
-    assert // Index out of bounds
-    frame_dig -1
-    intc_0 // 2
-    *
-    dup2
-    extract_uint16
-    dig 2
-    dig 1
-    extract_uint16
-    dig 1
-    +
-    intc_0 // 2
-    +
-    dig 3
-    intc_1 // 0
-    uncover 3
-    substring3
-    frame_dig -2
-    concat
-    dig 3
-    len
-    uncover 4
-    uncover 3
-    uncover 2
-    substring3
-    concat
-    dup
-    cover 3
-    uncover 2
-    intc_0 // 2
-    *
-    dup
-    cover 2
-    cover 3
-    dig 2
-    extract_uint16
-    frame_dig -1
-    select
-    swap
-
-dynamic_array_replace_byte_length_head_for_header@2:
-    frame_dig 4
-    frame_dig 2
-    <
-    bz dynamic_array_replace_byte_length_head_after_for@4
-    frame_dig 3
-    dup
-    itob
-    extract 6 2
-    frame_dig 1
-    frame_dig 4
-    dup
-    cover 4
-    uncover 2
-    replace3
-    dup
-    frame_bury 1
-    dig 1
-    extract_uint16
-    intc_0 // 2
-    +
-    +
-    frame_bury 3
-    intc_0 // 2
-    +
-    frame_bury 4
-    b dynamic_array_replace_byte_length_head_for_header@2
-
-dynamic_array_replace_byte_length_head_after_for@4:
-    frame_dig 0
-    frame_dig 1
-    concat
-    frame_bury 0
-    retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/function_type_copy.sol.Test.test[routing]() -> void:
 test:
     itxn_begin
-    pushint 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     bytec_1 // 0x0a8101
     itxn_field ClearStateProgram
@@ -154,160 +66,63 @@ test:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_2 // 1
+    intc_1 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     pushint 200000
     itxn_field Amount
     itxn_submit
-    global CurrentApplicationID
-    itob
-    bytec_2 // 0xddb66c36
-    concat
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    pushbytes 0x000300060008000a000000000000
-    swap
-    intc_1 // 0
-    callsub dynamic_array_replace_byte_length_head
-    global CurrentApplicationID
-    itob
-    bytec_3 // 0xbf55c8a8
-    concat
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    dig 1
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    intc_2 // 1
-    >
-    assert // index access is out of bounds
-    intc_2 // 1
-    callsub dynamic_array_replace_byte_length_head
-    global CurrentApplicationID
-    itob
-    bytec 4 // 0xf589218f
-    concat
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    dig 1
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    intc_0 // 2
-    >
-    assert // index access is out of bounds
-    intc_0 // 2
-    callsub dynamic_array_replace_byte_length_head
     itxn_begin
-    intc_1 // 0
+    intc_0 // 0
     bytec_0 // "c"
     app_global_get_ex
     assert // check c exists
-    intc_3 // 24
+    intc_2 // 24
     extract_uint64
-    pushint 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    pushbytes 0xb7c4ff64 // method "f(byte[][])(byte[][])"
+    pushbytes 0xccd88189 // method "f(uint8[12][])(uint8[12][])"
     itxn_field ApplicationArgs
+    pushbytes 0x0003000000000000000000000001000000000000000000000002000000000000000000000003
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     extract 4 0
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16
     dig 1
     len
     substring3
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    dup
     itob
     pushbytes 0x03
     b==
     assert
-    swap
-    extract 2 0
-    dig 1
-    assert // index access is out of bounds
     dup
-    intc_1 // 0
-    extract_uint16
-    dup2
-    extract_uint16
-    intc_0 // 2
-    +
-    dig 2
-    cover 2
-    extract3
-    extract 2 0
-    global CurrentApplicationID
-    itob
-    bytec_2 // 0xddb66c36
-    concat
+    extract 2 12
+    pushbytes 0x000000000000000000000001
     ==
     assert
-    intc_2 // 1
-    dig 2
-    <
-    assert // index access is out of bounds
     dup
-    intc_0 // 2
-    extract_uint16
-    dup2
-    extract_uint16
-    intc_0 // 2
-    +
-    dig 2
-    cover 2
-    extract3
-    extract 2 0
-    global CurrentApplicationID
-    itob
-    bytec_3 // 0xbf55c8a8
-    concat
+    extract 14 12
+    pushbytes 0x000000000000000000000002
     ==
     assert
-    intc_0 // 2
-    uncover 2
-    <
-    assert // index access is out of bounds
-    dup
-    pushint 4
-    extract_uint16
-    dup2
-    extract_uint16
-    intc_0 // 2
-    +
-    extract3
-    extract 2 0
-    global CurrentApplicationID
-    itob
-    bytec 4 // 0xf589218f
-    concat
+    extract 26 12
+    pushbytes 0x000000000000000000000003
     ==
     assert
     pushbytes 0x151f7c7580
     log
-    intc_2 // 1
+    intc_1 // 1
     return

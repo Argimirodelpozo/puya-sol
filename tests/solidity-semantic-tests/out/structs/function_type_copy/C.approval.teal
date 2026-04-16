@@ -3,10 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/function_type_copy.sol.C.approval_program() -> uint64:
 main:
-    intcblock 2 1 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    pushint 1
     return
 
 main_after_if_else@2:
@@ -17,7 +16,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0xb7c4ff64 // method "f(byte[][])(byte[][])"
+    pushbytes 0xccd88189 // method "f(uint8[12][])(uint8[12][])"
     txna ApplicationArgs 0
     match main_f_route@4
     err
@@ -34,62 +33,20 @@ main_f_route@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/function_type_copy.sol.C.f[routing]() -> void:
 f:
     txna ApplicationArgs 1
-    dupn 2
-    intc_2 // 0
+    dup
+    pushint 0
     extract_uint16 // on error: invalid array length header
-    dup
-    cover 2
-    intc_0 // 2
+    pushint 12
     *
-    swap
-    dup
-    len
-    swap
-    extract 2 0
-    intc_2 // 0
-
-f_for_header@1:
-    dup
-    dig 5
-    <
-    bz f_after_for@4
-    dupn 2
-    intc_0 // 2
-    *
-    dig 3
-    dup
-    uncover 2
-    extract_uint16 // on error: invalid array encoding
-    dup
-    dig 7
-    dup
-    cover 4
-    ==
-    assert // invalid tail pointer for (len+(len+uint8[])[])
+    pushint 2
+    +
     dig 1
     len
-    substring3
-    intc_2 // 0
-    extract_uint16 // on error: invalid array length header
-    intc_0 // 2
-    +
-    +
-    bury 5
-    intc_1 // 1
-    +
-    bury 1
-    b f_for_header@1
-
-f_after_for@4:
-    dig 3
-    intc_0 // 2
-    +
-    dig 3
     ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint8>>
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 12>>
     pushbytes 0x151f7c750002
-    dig 6
+    swap
     concat
     log
-    intc_1 // 1
+    pushint 1
     return

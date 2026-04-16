@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 2 1 24
-    bytecblock "array" "externalCalled" "__ctor_pending" 0xfcc8e844
+    intcblock 0 1 2 12
+    bytecblock "array" "externalCalled" "__ctor_pending" 0x0000 0x83cec4cd
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_2 // "__ctor_pending"
-    intc_2 // 1
+    intc_1 // 1
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -32,93 +32,45 @@ main_after_if_else@2:
     err
 
 
-// _puya_lib.arc4.dynamic_array_concat_dynamic_element(array_items_count: uint64, array_head_and_tail: bytes, new_items_count: uint64, new_head_and_tail: bytes) -> bytes:
-dynamic_array_concat_dynamic_element:
-    proto 4 1
-    pushbytes ""
-    dup
+// _puya_lib.box_arc4.box_dynamic_array_concat_fixed(box_key: bytes, array_offset: uint64, new_items_bytes: bytes, new_items_count: uint64, fixed_element_size: uint64) -> void:
+box_dynamic_array_concat_fixed:
+    proto 5 0
+    frame_dig -5
+    frame_dig -4
+    intc_2 // 2
+    box_extract
+    btoi
+    frame_dig -5
+    box_len
+    pop
     frame_dig -2
-    intc_1 // 2
-    *
-    frame_dig -4
-    intc_1 // 2
-    *
-    intc_0 // 0
-
-dynamic_array_concat_dynamic_element_for_header@1:
-    frame_dig 4
-    frame_dig 3
-    <
-    bz dynamic_array_concat_dynamic_element_after_for@4
-    frame_dig -3
-    frame_dig 4
-    dup
-    cover 2
-    extract_uint16
-    frame_dig 2
-    +
-    itob
-    extract 6 2
-    frame_dig 1
-    swap
-    concat
-    frame_bury 1
-    intc_1 // 2
-    +
-    frame_bury 4
-    b dynamic_array_concat_dynamic_element_for_header@1
-
-dynamic_array_concat_dynamic_element_after_for@4:
-    frame_dig -3
-    len
-    frame_bury 0
-    intc_0 // 0
-    frame_bury 4
-
-dynamic_array_concat_dynamic_element_for_header@5:
-    frame_dig 4
-    frame_dig 2
-    <
-    bz dynamic_array_concat_dynamic_element_after_for@8
     frame_dig -1
-    frame_dig 4
-    dup
-    cover 2
-    extract_uint16
-    frame_dig 0
+    *
     +
-    itob
-    extract 6 2
-    frame_dig 1
+    frame_dig -5
     swap
-    concat
-    frame_bury 1
-    intc_1 // 2
-    +
-    frame_bury 4
-    b dynamic_array_concat_dynamic_element_for_header@5
-
-dynamic_array_concat_dynamic_element_after_for@8:
-    frame_dig -4
+    box_resize
+    dup
     frame_dig -2
     +
     itob
     extract 6 2
-    frame_dig 1
-    concat
-    frame_dig -3
-    frame_dig 3
-    frame_dig 0
-    substring3
-    concat
-    frame_dig -1
-    len
-    frame_dig -1
-    frame_dig 2
+    frame_dig -5
+    frame_dig -4
     uncover 2
-    substring3
-    concat
-    frame_bury 0
+    box_replace
+    frame_dig -4
+    intc_2 // 2
+    +
+    swap
+    frame_dig -1
+    *
+    +
+    frame_dig -5
+    swap
+    intc_0 // 0
+    frame_dig -3
+    box_splice
     retsub
 
 
@@ -131,7 +83,7 @@ __postInit:
     intc_0 // 0
     app_global_put
     bytec_0 // "array"
-    intc_1 // 2
+    intc_2 // 2
     box_create
     pop
     intc_0 // 0
@@ -139,7 +91,7 @@ __postInit:
     bytec_1 // "externalCalled"
     swap
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -160,71 +112,25 @@ ext:
     bytec_1 // "externalCalled"
     swap
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/copy_struct_invalid_ir_bug.sol.C.f[routing]() -> void:
 f:
     bytec_0 // "array"
+    intc_0 // 0
+    pushbytes 0x000000000000000000000001
+    intc_1 // 1
+    intc_3 // 12
+    callsub box_dynamic_array_concat_fixed
+    bytec_0 // "array"
     box_get
-    assert // box exists
-    global CurrentApplicationID
-    itob
-    pushbytes 0xd316d3ee
-    concat
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    pushbytes 0x000100020002
-    swap
-    concat
-    dig 1
-    intc_0 // 0
-    extract_uint16
-    uncover 2
-    extract 2 0
-    dig 2
-    extract 2 0
-    uncover 3
-    intc_0 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 3
-    uncover 3
-    uncover 2
-    uncover 3
-    callsub dynamic_array_concat_dynamic_element
-    bytec_0 // "array"
-    box_del
-    pop
-    bytec_0 // "array"
-    dig 1
-    box_put
-    dup
-    extract 2 0
-    swap
-    intc_0 // 0
-    extract_uint16 // on error: invalid array length header
-    dig 1
-    intc_0 // 0
-    extract_uint16
-    dig 1
-    intc_2 // 1
-    - // on error: index access is out of bounds
-    dig 3
-    len
-    dig 4
-    intc_1 // 2
-    extract_uint16
-    uncover 2
-    select
-    dig 3
+    bytec_3 // 0x0000
     cover 2
-    substring3
-    pushbytes 0x00010002
+    select
+    extract 2 12
+    pushbytes 0x0001
     swap
     concat
     dup
@@ -232,42 +138,21 @@ f:
     swap
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    uncover 2
-    uncover 3
-    uncover 2
-    uncover 3
-    callsub dynamic_array_concat_dynamic_element
     bytec_0 // "array"
-    box_del
-    pop
-    bytec_0 // "array"
-    dig 1
-    box_put
+    intc_0 // 0
+    uncover 3
+    uncover 3
+    intc_3 // 12
+    callsub box_dynamic_array_concat_fixed
     itxn_begin
-    dup
-    extract 2 0
-    swap
-    intc_0 // 0
-    extract_uint16 // on error: invalid array length header
-    dig 1
-    intc_0 // 0
-    extract_uint16
-    dig 1
-    intc_2 // 1
-    - // on error: index access is out of bounds
-    dig 3
-    len
-    dig 4
-    intc_1 // 2
-    extract_uint16
-    dup2
-    uncover 4
+    bytec_0 // "array"
+    box_get
+    bytec_3 // 0x0000
+    cover 2
     select
-    dig 5
-    uncover 4
-    uncover 2
-    substring3
-    intc_3 // 24
+    dup
+    extract 2 12
+    pushint 24
     extract_uint64
     pushint 6
     itxn_field TypeEnum
@@ -276,22 +161,12 @@ f:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_3 // method "el()byte[]"
+    bytec 4 // method "el()uint8[12]"
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
-    uncover 2
-    intc_1 // 2
-    - // on error: index access is out of bounds
-    dig 3
-    pushint 4
-    extract_uint16
-    uncover 3
-    swap
-    uncover 2
-    select
-    substring3
-    intc_3 // 24
+    extract 14 12
+    pushint 24
     extract_uint64
     pushint 6
     itxn_field TypeEnum
@@ -300,7 +175,7 @@ f:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_3 // method "el()byte[]"
+    bytec 4 // method "el()uint8[12]"
     itxn_field ApplicationArgs
     itxn_submit
     intc_0 // 0
@@ -310,5 +185,5 @@ f:
     pushbytes 0x02
     b==
     assert
-    intc_2 // 1
+    intc_1 // 1
     return

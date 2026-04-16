@@ -774,7 +774,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "IntrinsicCall",
+                "_type": "ARC4Encode",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_external_function_type.sol",
                   "line": 438,
@@ -784,33 +784,56 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "WType",
-                  "name": "void",
-                  "immutable": true
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
                 },
-                "op_code": "log",
-                "immediates": [],
-                "stack_args": [
-                  {
-                    "_type": "BytesConstant",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_external_function_type.sol",
-                      "line": 438,
-                      "end_line": 465,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "BytesWType",
-                      "name": "bytes",
-                      "immutable": true,
-                      "length": null
-                    },
-                    "value": "",
-                    "encoding": "unknown"
-                  }
-                ]
+                "value": {
+                  "_type": "SubroutineCallExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_external_function_type.sol",
+                    "line": 438,
+                    "end_line": 465,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
+                  },
+                  "target": {
+                    "_type": "InstanceMethodTarget",
+                    "member_name": "double"
+                  },
+                  "args": [
+                    {
+                      "name": null,
+                      "value": {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_external_function_type.sol",
+                          "line": 459,
+                          "end_line": 464,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "name": "value"
+                      }
+                    }
+                  ]
+                },
+                "error_message": null
               }
             }
           ],

@@ -139,14 +139,14 @@
                     },
                     "wtype": {
                       "_type": "BytesWType",
-                      "name": "bytes",
+                      "name": "bytes[12]",
                       "immutable": true,
-                      "length": null
+                      "length": 12
                     },
                     "name": "g"
                   },
                   "value": {
-                    "_type": "IntrinsicCall",
+                    "_type": "ReinterpretCast",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_function_complex.sol",
                       "line": 1,
@@ -157,16 +157,33 @@
                     },
                     "wtype": {
                       "_type": "BytesWType",
-                      "name": "bytes",
+                      "name": "bytes[12]",
                       "immutable": true,
-                      "length": null
+                      "length": 12
                     },
-                    "op_code": "txna",
-                    "immediates": [
-                      "ApplicationArgs",
-                      0
-                    ],
-                    "stack_args": []
+                    "expr": {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_function_complex.sol",
+                        "line": 1,
+                        "end_line": 117,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "txna",
+                      "immediates": [
+                        "ApplicationArgs",
+                        0
+                      ],
+                      "stack_args": []
+                    }
                   }
                 },
                 {
@@ -298,7 +315,7 @@
                       "exists_assertion_message": "check x exists"
                     },
                     "value": {
-                      "_type": "VoidConstant",
+                      "_type": "SubroutineCallExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_function_complex.sol",
                         "line": 105,
@@ -309,9 +326,80 @@
                       },
                       "wtype": {
                         "_type": "WType",
-                        "name": "void",
+                        "name": "biguint",
                         "immutable": true
-                      }
+                      },
+                      "target": {
+                        "_type": "InstanceMethodTarget",
+                        "member_name": "__funcptr_dispatch_ret_u256"
+                      },
+                      "args": [
+                        {
+                          "name": "__funcptr_id",
+                          "value": {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_function_complex.sol",
+                              "line": 105,
+                              "end_line": 108,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "op_code": "btoi",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_function_complex.sol",
+                                  "line": 105,
+                                  "end_line": 108,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "extract",
+                                "immediates": [
+                                  8,
+                                  4
+                                ],
+                                "stack_args": [
+                                  {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_function_complex.sol",
+                                      "line": 105,
+                                      "end_line": 108,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes[12]",
+                                      "immutable": true,
+                                      "length": 12
+                                    },
+                                    "name": "g"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
                     }
                   }
                 },
@@ -2479,6 +2567,112 @@
         "pure": false,
         "cref": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_function_complex.sol.D",
         "member_name": "__storage_write",
+        "arc4_method_config": null
+      },
+      {
+        "_type": "ContractMethod",
+        "source_location": {
+          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_function_complex.sol",
+          "line": 1,
+          "end_line": 1,
+          "comment_lines": 0,
+          "column": null,
+          "end_column": null
+        },
+        "args": [
+          {
+            "_type": "SubroutineArgument",
+            "name": "__funcptr_id",
+            "source_location": {
+              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_function_complex.sol",
+              "line": 1,
+              "end_line": 1,
+              "comment_lines": 0,
+              "column": null,
+              "end_column": null
+            },
+            "wtype": {
+              "_type": "WType",
+              "name": "uint64",
+              "immutable": true
+            }
+          }
+        ],
+        "return_type": {
+          "_type": "WType",
+          "name": "biguint",
+          "immutable": true
+        },
+        "body": {
+          "_type": "Block",
+          "source_location": {
+            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_function_complex.sol",
+            "line": 1,
+            "end_line": 1,
+            "comment_lines": 0,
+            "column": null,
+            "end_column": null
+          },
+          "body": [
+            {
+              "_type": "ExpressionStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_function_complex.sol",
+                "line": 1,
+                "end_line": 1,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "expr": {
+                "_type": "AssertExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_function_complex.sol",
+                  "line": 1,
+                  "end_line": 1,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "void",
+                  "immutable": true
+                },
+                "condition": {
+                  "_type": "BoolConstant",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_function_complex.sol",
+                    "line": 1,
+                    "end_line": 1,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "bool",
+                    "immutable": true
+                  },
+                  "value": false
+                },
+                "error_message": "invalid function pointer",
+                "comment": "invalid function pointer"
+              }
+            }
+          ],
+          "label": null,
+          "comment": null
+        },
+        "documentation": {
+          "description": null,
+          "args": {},
+          "returns": null
+        },
+        "inline": null,
+        "pure": false,
+        "cref": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/constructor_function_complex.sol.D",
+        "member_name": "__funcptr_dispatch_ret_u256",
         "arc4_method_config": null
       }
     ],

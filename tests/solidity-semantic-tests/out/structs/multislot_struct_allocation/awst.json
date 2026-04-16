@@ -759,8 +759,8 @@
                           "source_location": null
                         },
                         "x": {
-                          "_type": "ARC4DynamicArray",
-                          "name": "byte[]",
+                          "_type": "ARC4StaticArray",
+                          "name": "arc4.static_array<arc4.uint8, 12>",
                           "immutable": false,
                           "element_type": {
                             "_type": "ARC4UIntN",
@@ -770,7 +770,8 @@
                             "arc4_alias": null,
                             "source_location": null
                           },
-                          "arc4_alias": "byte[]",
+                          "array_size": 12,
+                          "arc4_alias": null,
                           "source_location": null
                         }
                       },
@@ -824,8 +825,8 @@
                           "source_location": null
                         },
                         "x": {
-                          "_type": "ARC4DynamicArray",
-                          "name": "byte[]",
+                          "_type": "ARC4StaticArray",
+                          "name": "arc4.static_array<arc4.uint8, 12>",
                           "immutable": false,
                           "element_type": {
                             "_type": "ARC4UIntN",
@@ -835,7 +836,8 @@
                             "arc4_alias": null,
                             "source_location": null
                           },
-                          "arc4_alias": "byte[]",
+                          "array_size": 12,
+                          "arc4_alias": null,
                           "source_location": null
                         }
                       },
@@ -883,8 +885,8 @@
                           "source_location": null
                         },
                         "x": {
-                          "_type": "ARC4DynamicArray",
-                          "name": "byte[]",
+                          "_type": "ARC4StaticArray",
+                          "name": "arc4.static_array<arc4.uint8, 12>",
                           "immutable": false,
                           "element_type": {
                             "_type": "ARC4UIntN",
@@ -894,7 +896,8 @@
                             "arc4_alias": null,
                             "source_location": null
                           },
-                          "arc4_alias": "byte[]",
+                          "array_size": 12,
+                          "arc4_alias": null,
                           "source_location": null
                         }
                       },
@@ -991,8 +994,8 @@
                           "end_column": null
                         },
                         "wtype": {
-                          "_type": "ARC4DynamicArray",
-                          "name": "byte[]",
+                          "_type": "ARC4StaticArray",
+                          "name": "arc4.static_array<arc4.uint8, 12>",
                           "immutable": false,
                           "element_type": {
                             "_type": "ARC4UIntN",
@@ -1002,7 +1005,8 @@
                             "arc4_alias": null,
                             "source_location": null
                           },
-                          "arc4_alias": "byte[]",
+                          "array_size": 12,
+                          "arc4_alias": null,
                           "source_location": null
                         },
                         "value": {
@@ -1017,9 +1021,9 @@
                           },
                           "wtype": {
                             "_type": "BytesWType",
-                            "name": "bytes",
+                            "name": "bytes[12]",
                             "immutable": true,
-                            "length": null
+                            "length": 12
                           },
                           "op_code": "concat",
                           "immediates": [],
@@ -1044,7 +1048,7 @@
                               "immediates": [],
                               "stack_args": [
                                 {
-                                  "_type": "IntrinsicCall",
+                                  "_type": "IntegerConstant",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/multislot_struct_allocation.sol",
                                     "line": 255,
@@ -1058,11 +1062,8 @@
                                     "name": "uint64",
                                     "immutable": true
                                   },
-                                  "op_code": "global",
-                                  "immediates": [
-                                    "CurrentApplicationID"
-                                  ],
-                                  "stack_args": []
+                                  "value": 0,
+                                  "teal_alias": null
                                 }
                               ]
                             },
@@ -1082,8 +1083,11 @@
                                 "immutable": true,
                                 "length": null
                               },
-                              "op_code": "extract3",
-                              "immediates": [],
+                              "op_code": "extract",
+                              "immediates": [
+                                4,
+                                4
+                              ],
                               "stack_args": [
                                 {
                                   "_type": "IntrinsicCall",
@@ -1101,11 +1105,11 @@
                                     "immutable": true,
                                     "length": null
                                   },
-                                  "op_code": "sha512_256",
+                                  "op_code": "itob",
                                   "immediates": [],
                                   "stack_args": [
                                     {
-                                      "_type": "BytesConstant",
+                                      "_type": "IntegerConstant",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/multislot_struct_allocation.sol",
                                         "line": 255,
@@ -1115,51 +1119,14 @@
                                         "end_column": null
                                       },
                                       "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
                                       },
-                                      "value": "Zzy$XZges=HYo",
-                                      "encoding": "utf8"
+                                      "value": 1,
+                                      "teal_alias": null
                                     }
                                   ]
-                                },
-                                {
-                                  "_type": "IntegerConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/multislot_struct_allocation.sol",
-                                    "line": 255,
-                                    "end_line": 261,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "value": 0,
-                                  "teal_alias": null
-                                },
-                                {
-                                  "_type": "IntegerConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/multislot_struct_allocation.sol",
-                                    "line": 255,
-                                    "end_line": 261,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "value": 4,
-                                  "teal_alias": null
                                 }
                               ]
                             }
@@ -1274,7 +1241,7 @@
                                 "column": null,
                                 "end_column": null
                               },
-                              "value": "x()byte[]"
+                              "value": "x()uint8[12]"
                             }
                           },
                           {
@@ -1405,8 +1372,8 @@
                                         "source_location": null
                                       },
                                       "x": {
-                                        "_type": "ARC4DynamicArray",
-                                        "name": "byte[]",
+                                        "_type": "ARC4StaticArray",
+                                        "name": "arc4.static_array<arc4.uint8, 12>",
                                         "immutable": false,
                                         "element_type": {
                                           "_type": "ARC4UIntN",
@@ -1416,7 +1383,8 @@
                                           "arc4_alias": null,
                                           "source_location": null
                                         },
-                                        "arc4_alias": "byte[]",
+                                        "array_size": 12,
+                                        "arc4_alias": null,
                                         "source_location": null
                                       }
                                     },
@@ -1462,8 +1430,8 @@
                                               "source_location": null
                                             },
                                             "x": {
-                                              "_type": "ARC4DynamicArray",
-                                              "name": "byte[]",
+                                              "_type": "ARC4StaticArray",
+                                              "name": "arc4.static_array<arc4.uint8, 12>",
                                               "immutable": false,
                                               "element_type": {
                                                 "_type": "ARC4UIntN",
@@ -1473,7 +1441,8 @@
                                                 "arc4_alias": null,
                                                 "source_location": null
                                               },
-                                              "arc4_alias": "byte[]",
+                                              "array_size": 12,
+                                              "arc4_alias": null,
                                               "source_location": null
                                             }
                                           },

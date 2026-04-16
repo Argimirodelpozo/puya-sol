@@ -1,0 +1,48 @@
+#pragma version 10
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.approval_program() -> uint64:
+main:
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushint 4096
+    bzero
+    store 0
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x19eadd1c 0x55410b82 // method "g(string)bool", method "main()bool"
+    txna ApplicationArgs 0
+    match g main_main_route@6
+    err
+
+main_main_route@6:
+    err // invalid function pointer
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/external_functions_with_calldata_args_assigned_to_function_pointers_with_memory_type.sol.C.g[routing]() -> void:
+g:
+    txna ApplicationArgs 1
+    dup
+    pushint 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    pushbytes 0x151f7c7580
+    log
+    pushint 1
+    return

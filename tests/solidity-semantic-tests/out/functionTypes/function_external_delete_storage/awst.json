@@ -176,11 +176,11 @@
                         },
                         "wtype": {
                           "_type": "BytesWType",
-                          "name": "bytes",
+                          "name": "bytes[12]",
                           "immutable": true,
-                          "length": null
+                          "length": 12
                         },
-                        "value": "",
+                        "value": "000000000000000",
                         "encoding": "base16"
                       }
                     ]
@@ -627,9 +627,9 @@
                 },
                 "wtype": {
                   "_type": "BytesWType",
-                  "name": "bytes",
+                  "name": "bytes[12]",
                   "immutable": true,
-                  "length": null
+                  "length": 12
                 },
                 "target": {
                   "_type": "AppStateExpression",
@@ -643,9 +643,9 @@
                   },
                   "wtype": {
                     "_type": "BytesWType",
-                    "name": "bytes",
+                    "name": "bytes[12]",
                     "immutable": true,
-                    "length": null
+                    "length": 12
                   },
                   "key": {
                     "_type": "BytesConstant",
@@ -668,22 +668,144 @@
                   "exists_assertion_message": "check x exists"
                 },
                 "value": {
-                  "_type": "IntegerConstant",
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_external_delete_storage.sol",
-                    "line": 118,
+                    "line": 114,
                     "end_line": 124,
                     "comment_lines": 0,
                     "column": null,
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "uint64",
-                    "immutable": true
+                    "_type": "BytesWType",
+                    "name": "bytes[12]",
+                    "immutable": true,
+                    "length": 12
                   },
-                  "value": 1,
-                  "teal_alias": null
+                  "expr": {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_external_delete_storage.sol",
+                      "line": 118,
+                      "end_line": 124,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes[12]",
+                      "immutable": true,
+                      "length": 12
+                    },
+                    "op_code": "concat",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_external_delete_storage.sol",
+                          "line": 118,
+                          "end_line": 124,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "itob",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_external_delete_storage.sol",
+                              "line": 118,
+                              "end_line": 124,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 0,
+                            "teal_alias": null
+                          }
+                        ]
+                      },
+                      {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_external_delete_storage.sol",
+                          "line": 118,
+                          "end_line": 124,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "extract",
+                        "immediates": [
+                          4,
+                          4
+                        ],
+                        "stack_args": [
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_external_delete_storage.sol",
+                              "line": 118,
+                              "end_line": 124,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "itob",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_external_delete_storage.sol",
+                                  "line": 118,
+                                  "end_line": 124,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 1,
+                                "teal_alias": null
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
                 }
               }
             }
@@ -759,7 +881,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "NumericComparisonExpression",
+                "_type": "BytesComparisonExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_external_delete_storage.sol",
                   "line": 193,
@@ -784,9 +906,10 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
+                    "_type": "BytesWType",
+                    "name": "bytes",
+                    "immutable": true,
+                    "length": null
                   },
                   "expr": {
                     "_type": "AppStateExpression",
@@ -800,9 +923,9 @@
                     },
                     "wtype": {
                       "_type": "BytesWType",
-                      "name": "bytes",
+                      "name": "bytes[12]",
                       "immutable": true,
-                      "length": null
+                      "length": 12
                     },
                     "key": {
                       "_type": "BytesConstant",
@@ -827,7 +950,7 @@
                 },
                 "operator": "==",
                 "rhs": {
-                  "_type": "IntegerConstant",
+                  "_type": "ReinterpretCast",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_external_delete_storage.sol",
                     "line": 193,
@@ -837,12 +960,134 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
+                    "_type": "BytesWType",
+                    "name": "bytes",
+                    "immutable": true,
+                    "length": null
                   },
-                  "value": 1,
-                  "teal_alias": null
+                  "expr": {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_external_delete_storage.sol",
+                      "line": 198,
+                      "end_line": 204,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "BytesWType",
+                      "name": "bytes[12]",
+                      "immutable": true,
+                      "length": 12
+                    },
+                    "op_code": "concat",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_external_delete_storage.sol",
+                          "line": 198,
+                          "end_line": 204,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "itob",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_external_delete_storage.sol",
+                              "line": 198,
+                              "end_line": 204,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 0,
+                            "teal_alias": null
+                          }
+                        ]
+                      },
+                      {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_external_delete_storage.sol",
+                          "line": 198,
+                          "end_line": 204,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "extract",
+                        "immediates": [
+                          4,
+                          4
+                        ],
+                        "stack_args": [
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_external_delete_storage.sol",
+                              "line": 198,
+                              "end_line": 204,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "itob",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/function_external_delete_storage.sol",
+                                  "line": 198,
+                                  "end_line": 204,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 1,
+                                "teal_alias": null
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
                 }
               }
             }
@@ -929,9 +1174,9 @@
                 },
                 "wtype": {
                   "_type": "BytesWType",
-                  "name": "bytes",
+                  "name": "bytes[12]",
                   "immutable": true,
-                  "length": null
+                  "length": 12
                 },
                 "name": "zero"
               },
@@ -947,11 +1192,11 @@
                 },
                 "wtype": {
                   "_type": "BytesWType",
-                  "name": "bytes",
+                  "name": "bytes[12]",
                   "immutable": true,
-                  "length": null
+                  "length": 12
                 },
-                "value": "",
+                "value": "000000000000000",
                 "encoding": "base16"
               }
             },
@@ -992,9 +1237,9 @@
                   },
                   "wtype": {
                     "_type": "BytesWType",
-                    "name": "bytes",
+                    "name": "bytes[12]",
                     "immutable": true,
-                    "length": null
+                    "length": 12
                   },
                   "key": {
                     "_type": "BytesConstant",
@@ -1029,9 +1274,9 @@
                   },
                   "wtype": {
                     "_type": "BytesWType",
-                    "name": "bytes",
+                    "name": "bytes[12]",
                     "immutable": true,
-                    "length": null
+                    "length": 12
                   },
                   "name": "zero"
                 }
@@ -1120,9 +1365,9 @@
                 },
                 "wtype": {
                   "_type": "BytesWType",
-                  "name": "bytes",
+                  "name": "bytes[12]",
                   "immutable": true,
-                  "length": null
+                  "length": 12
                 },
                 "key": {
                   "_type": "BytesConstant",
@@ -1167,9 +1412,9 @@
                 },
                 "wtype": {
                   "_type": "BytesWType",
-                  "name": "bytes",
+                  "name": "bytes[12]",
                   "immutable": true,
-                  "length": null
+                  "length": 12
                 },
                 "key": {
                   "_type": "BytesConstant",
@@ -1203,11 +1448,11 @@
                 },
                 "wtype": {
                   "_type": "BytesWType",
-                  "name": "bytes",
+                  "name": "bytes[12]",
                   "immutable": true,
-                  "length": null
+                  "length": 12
                 },
-                "value": "",
+                "value": "000000000000000",
                 "encoding": "base16"
               }
             }
@@ -1258,9 +1503,9 @@
         "args": [],
         "return_type": {
           "_type": "BytesWType",
-          "name": "bytes",
+          "name": "bytes[12]",
           "immutable": true,
-          "length": null
+          "length": 12
         },
         "body": {
           "_type": "Block",
@@ -1295,9 +1540,9 @@
                 },
                 "wtype": {
                   "_type": "BytesWType",
-                  "name": "bytes",
+                  "name": "bytes[12]",
                   "immutable": true,
-                  "length": null
+                  "length": 12
                 },
                 "key": {
                   "_type": "BytesConstant",
@@ -3339,9 +3584,9 @@
         "member_name": "x",
         "storage_wtype": {
           "_type": "BytesWType",
-          "name": "bytes",
+          "name": "bytes[12]",
           "immutable": true,
-          "length": null
+          "length": 12
         },
         "key": {
           "_type": "BytesConstant",

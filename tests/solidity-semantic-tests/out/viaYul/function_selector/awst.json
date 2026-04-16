@@ -616,7 +616,7 @@
         "args": [
           {
             "_type": "SubroutineArgument",
-            "name": "a",
+            "name": "__arc4_a",
             "source_location": {
               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_selector.sol",
               "line": 111,
@@ -626,10 +626,20 @@
               "end_column": null
             },
             "wtype": {
-              "_type": "BytesWType",
-              "name": "bytes",
-              "immutable": true,
-              "length": null
+              "_type": "ARC4StaticArray",
+              "name": "arc4.static_array<arc4.uint8, 12>",
+              "immutable": false,
+              "element_type": {
+                "_type": "ARC4UIntN",
+                "name": "arc4.uint8",
+                "immutable": true,
+                "n": 8,
+                "arc4_alias": null,
+                "source_location": null
+              },
+              "array_size": 12,
+              "arc4_alias": null,
+              "source_location": null
             }
           }
         ],
@@ -651,6 +661,81 @@
           },
           "body": [
             {
+              "_type": "AssignmentStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_selector.sol",
+                "line": 111,
+                "end_line": 132,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "target": {
+                "_type": "VarExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_selector.sol",
+                  "line": 111,
+                  "end_line": 132,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "BytesWType",
+                  "name": "bytes[12]",
+                  "immutable": true,
+                  "length": 12
+                },
+                "name": "a"
+              },
+              "value": {
+                "_type": "ARC4Decode",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_selector.sol",
+                  "line": 111,
+                  "end_line": 132,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "BytesWType",
+                  "name": "bytes[12]",
+                  "immutable": true,
+                  "length": 12
+                },
+                "value": {
+                  "_type": "VarExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_selector.sol",
+                    "line": 111,
+                    "end_line": 132,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "ARC4StaticArray",
+                    "name": "arc4.static_array<arc4.uint8, 12>",
+                    "immutable": false,
+                    "element_type": {
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint8",
+                      "immutable": true,
+                      "n": 8,
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "array_size": 12,
+                    "arc4_alias": null,
+                    "source_location": null
+                  },
+                  "name": "__arc4_a"
+                },
+                "error_message": null
+              }
+            },
+            {
               "_type": "ReturnStatement",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_selector.sol",
@@ -661,10 +746,10 @@
                 "end_column": null
               },
               "value": {
-                "_type": "ReinterpretCast",
+                "_type": "BytesConstant",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_selector.sol",
-                  "line": 175,
+                  "line": 168,
                   "end_line": 185,
                   "comment_lines": 0,
                   "column": null,
@@ -676,48 +761,8 @@
                   "immutable": true,
                   "length": 4
                 },
-                "expr": {
-                  "_type": "IntrinsicCall",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_selector.sol",
-                    "line": 175,
-                    "end_line": 185,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
-                  },
-                  "op_code": "extract",
-                  "immediates": [
-                    20,
-                    4
-                  ],
-                  "stack_args": [
-                    {
-                      "_type": "VarExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/function_selector.sol",
-                        "line": 175,
-                        "end_line": 176,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
-                      },
-                      "name": "a"
-                    }
-                  ]
-                }
+                "value": "00000",
+                "encoding": "base16"
               }
             }
           ],
