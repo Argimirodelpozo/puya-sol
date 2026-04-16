@@ -2154,6 +2154,10 @@ def run_test(test: SemanticTest, localnet, account, verbose=False, _budget_retry
 
     if failed > 0:
         return "FAIL", f"{passed}p/{failed}f/{skipped}s" + "\n".join([""] + details)
+    # If every assertion was skipped and none passed, report as FAIL
+    # (not a false positive — the test wasn't actually verified)
+    if passed == 0 and skipped > 0:
+        return "FAIL", f"0p/0f/{skipped}s (all skipped)" + "\n".join([""] + details)
     return "PASS", f"{passed}p/{skipped}s"
 
 
