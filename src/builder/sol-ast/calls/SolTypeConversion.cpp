@@ -500,13 +500,19 @@ std::shared_ptr<awst::Expression> SolTypeConversion::applyNarrowingMask(
 
 	unsigned targetBits = targetIntType->numBits();
 
-	// uint64 narrowing
+	// uint64 narrowing — also triggered when casting signed→unsigned at the
+	// same width (e.g. int8→uint8): the uint64 representation of -2 is
+	// 2^64-2, which must be masked to 8 bits to produce 254.
 	if (_targetType == awst::WType::uint64Type() && _expr->wtype == awst::WType::uint64Type())
 	{
 		unsigned sourceBits = 64;
+		bool sourceIsSigned = false;
 		if (auto const* srcInt = dynamic_cast<solidity::frontend::IntegerType const*>(solSourceType))
+		{
 			sourceBits = srcInt->numBits();
-		if (targetBits < sourceBits && targetBits < 64)
+			sourceIsSigned = srcInt->isSigned();
+		}
+		if (targetBits < 64 && (targetBits < sourceBits || (sourceIsSigned && !targetIntType->isSigned())))
 		{
 			auto mask = std::make_shared<awst::IntegerConstant>();
 			mask->sourceLocation = m_loc;

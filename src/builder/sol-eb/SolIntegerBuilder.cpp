@@ -167,7 +167,31 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 	switch (_op)
 	{
 	case BuilderBinaryOp::Add: e->op = awst::UInt64BinaryOperator::Add; break;
-	case BuilderBinaryOp::Sub: e->op = awst::UInt64BinaryOperator::Sub; break;
+	case BuilderBinaryOp::Sub:
+	{
+		// Unchecked uint sub for narrow types: AVM `-` panics on underflow,
+		// so use (a + 2^N - b) % 2^N instead to wrap correctly.
+		if (m_ctx.inUncheckedBlock && !m_signed && m_bits < 64)
+		{
+			uint64_t pow2N = uint64_t(1) << m_bits;
+			auto powConst = std::make_shared<awst::IntegerConstant>();
+			powConst->sourceLocation = _loc;
+			powConst->wtype = awst::WType::uint64Type();
+			powConst->value = std::to_string(pow2N);
+
+			auto aPlusPow = std::make_shared<awst::UInt64BinaryOperation>();
+			aPlusPow->sourceLocation = _loc;
+			aPlusPow->wtype = awst::WType::uint64Type();
+			aPlusPow->left = std::move(e->left);
+			aPlusPow->op = awst::UInt64BinaryOperator::Add;
+			aPlusPow->right = std::move(powConst);
+
+			e->left = std::move(aPlusPow);
+			// e->right stays the same: (a + 2^N) - b
+		}
+		e->op = awst::UInt64BinaryOperator::Sub;
+		break;
+	}
 	case BuilderBinaryOp::Mult: e->op = awst::UInt64BinaryOperator::Mult; break;
 	case BuilderBinaryOp::Div:
 	case BuilderBinaryOp::FloorDiv: e->op = awst::UInt64BinaryOperator::FloorDiv; break;
