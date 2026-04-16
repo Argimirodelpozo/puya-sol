@@ -305,34 +305,6 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// Reserve scratch slots 0-4 for EVM memory simulation
 	contract->reservedScratchSpace = AssemblyBuilder::reservedScratchSlots();
 
-	// Approval and clear programs
-	m_postInitMethod.reset();
-	contract->approvalProgram = buildApprovalProgram(_contract, contractName);
-	contract->clearProgram = buildClearProgram(_contract, contractName);
-
-	// If constructor auto-split was triggered, add the __postInit method
-	// and the __ctor_pending state variable
-	if (m_postInitMethod)
-	{
-		// Add __ctor_pending global state variable
-		awst::AppStorageDefinition ctorPendingState;
-		ctorPendingState.memberName = "__ctor_pending";
-		ctorPendingState.sourceLocation = contract->approvalProgram.sourceLocation;
-		ctorPendingState.storageKind = awst::AppStorageKind::AppGlobal;
-		ctorPendingState.storageWType = awst::WType::uint64Type();
-		auto key = std::make_shared<awst::BytesConstant>();
-		key->sourceLocation = ctorPendingState.sourceLocation;
-		key->wtype = awst::WType::bytesType();
-		key->encoding = awst::BytesEncoding::Utf8;
-		std::string keyStr = "__ctor_pending";
-		key->value = std::vector<uint8_t>(keyStr.begin(), keyStr.end());
-		ctorPendingState.key = key;
-		contract->appState.push_back(std::move(ctorPendingState));
-
-		contract->methods.push_back(std::move(*m_postInitMethod));
-		m_postInitMethod.reset();
-	}
-
 	// Scan all functions (own + inherited) for super.method() calls.
 	// Collect AST IDs of base functions that need separate subroutines.
 	// MRO-aware super resolution: super.f() in contract X calls the NEXT
@@ -355,7 +327,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// For each function in the MRO chain, build (callerFuncId → superSubroutineName, targetFunc).
 	// This allows per-calling-context super resolution.
 	// Key: caller function AST ID → (super subroutine name, target FunctionDefinition)
-	std::unordered_map<int64_t, solidity::frontend::FunctionDefinition const*> superTargetFuncs;
+	m_superTargetFuncs.clear();
 	// Map: caller func AST ID → list of (superCallTargetId → superSubName) overrides
 	m_perFuncSuperOverrides.clear();
 
@@ -388,7 +360,41 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				m_perFuncSuperOverrides[callerId].push_back({superCallTargetId, superName});
 
 				// Record the target function for this super subroutine
-				superTargetFuncs[callerId] = mroTarget;
+				m_superTargetFuncs[callerId] = mroTarget;
+			}
+		}
+
+		// Constructor super.f(): the most-derived contract's constructor
+		// sits conceptually one position above chain[0] in the MRO. Its
+		// super target is whichever `f` appears first in the constructor
+		// body's super.f() reference. Emit a caller-keyed subroutine whose
+		// body is that target — the constructor call site will look up
+		// `f__super_<ctor.id>` via m_perFuncSuperOverrides.
+		if (auto const* ctor = _contract.constructor())
+		{
+			if (ctor->isImplemented())
+			{
+				SuperCallCollector ctorCollector;
+				ctor->body().accept(ctorCollector);
+				for (int64_t superCallTargetId: ctorCollector.superTargetIds)
+				{
+					// Find the target function in the MRO chain.
+					solidity::frontend::FunctionDefinition const* target = nullptr;
+					for (auto const& entry: chain)
+						if (entry.func->id() == superCallTargetId)
+						{ target = entry.func; break; }
+					if (!target)
+						continue;
+
+					int64_t callerId = ctor->id();
+					std::string name = fname;
+					if (m_overloadedNames.count(name))
+						name += "(" + std::to_string(target->parameters().size()) + ")";
+					std::string superName = name + "__super_" + std::to_string(callerId);
+					m_perFuncSuperOverrides[callerId].push_back({superCallTargetId, superName});
+					m_superTargetFuncs[callerId] = target;
+					m_exprBuilder->addSuperTarget(superCallTargetId, superName);
+				}
 			}
 		}
 	}
@@ -436,7 +442,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// Handle explicit base class calls (Base.f() — NOT super.f()).
 	// These always resolve to the specific base function, regardless of MRO.
 	// Collect from ALL functions in the hierarchy.
-	std::unordered_map<int64_t, solidity::frontend::FunctionDefinition const*> explicitBaseTargetFuncs;
+	m_explicitBaseTargetFuncs.clear();
 	{
 		SuperCallCollector globalCollector;
 		for (auto const* base: mro)
@@ -452,7 +458,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				{
 					if (func->id() == id && func->isImplemented())
 					{
-						explicitBaseTargetFuncs[id] = func;
+						m_explicitBaseTargetFuncs[id] = func;
 						std::string name = func->name();
 						if (m_overloadedNames.count(name))
 							name += "(" + std::to_string(func->parameters().size()) + ")";
@@ -482,7 +488,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 			m_exprBuilder->addSuperTarget(id, name + "__super_" + std::to_string(id));
 		}
 		// Re-register explicit base targets (they're fixed, not MRO-dependent)
-		for (auto const& [id, func]: explicitBaseTargetFuncs)
+		for (auto const& [id, func]: m_explicitBaseTargetFuncs)
 		{
 			std::string name = func->name();
 			if (m_overloadedNames.count(name))
@@ -496,10 +502,43 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		m_exprBuilder->clearSuperTargets();
 	};
 
-	// Snapshot all super target registrations for use by constructor body.
-	// The constructor is built in buildApprovalProgram() after clearSuperTargets()
-	// has been called for each function, so we save the full map here.
+	// Snapshot super target registrations so the constructor body —
+	// translated inside buildApprovalProgram below — can resolve `super.f()`
+	// to the eventually-emitted `f__super_N` subroutine instead of falling
+	// back to the current contract's own `f`.
 	m_allSuperTargetNames = m_exprBuilder->superTargetNames();
+
+	// Approval and clear programs
+	m_postInitMethod.reset();
+	contract->approvalProgram = buildApprovalProgram(_contract, contractName);
+	contract->clearProgram = buildClearProgram(_contract, contractName);
+
+	// If constructor auto-split was triggered, add the __postInit method
+	// and the __ctor_pending state variable
+	if (m_postInitMethod)
+	{
+		// Add __ctor_pending global state variable
+		awst::AppStorageDefinition ctorPendingState;
+		ctorPendingState.memberName = "__ctor_pending";
+		ctorPendingState.sourceLocation = contract->approvalProgram.sourceLocation;
+		ctorPendingState.storageKind = awst::AppStorageKind::AppGlobal;
+		ctorPendingState.storageWType = awst::WType::uint64Type();
+		auto key = std::make_shared<awst::BytesConstant>();
+		key->sourceLocation = ctorPendingState.sourceLocation;
+		key->wtype = awst::WType::bytesType();
+		key->encoding = awst::BytesEncoding::Utf8;
+		std::string keyStr = "__ctor_pending";
+		key->value = std::vector<uint8_t>(keyStr.begin(), keyStr.end());
+		ctorPendingState.key = key;
+		contract->appState.push_back(std::move(ctorPendingState));
+
+		contract->methods.push_back(std::move(*m_postInitMethod));
+		m_postInitMethod.reset();
+	}
+
+
+	// m_allSuperTargetNames was pre-populated before buildApprovalProgram
+	// so constructor bodies could resolve `super.f()`. Nothing to do here.
 
 	// Translate all defined functions in this contract
 	// Use "name(paramCount)" for overloaded functions to disambiguate
@@ -1182,7 +1221,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	clearSuperOverrides();
 
 	// Emit MRO-dependent super subroutines (keyed by caller func AST ID)
-	for (auto const& [callerFuncId, targetFunc]: superTargetFuncs)
+	for (auto const& [callerFuncId, targetFunc]: m_superTargetFuncs)
 	{
 		std::string name = targetFunc->name();
 		if (m_overloadedNames.count(name))
@@ -1210,7 +1249,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	}
 
 	// Emit explicit base class call subroutines (keyed by target func AST ID)
-	for (auto const& [targetId, func]: explicitBaseTargetFuncs)
+	for (auto const& [targetId, func]: m_explicitBaseTargetFuncs)
 	{
 		std::string name = func->name();
 		if (m_overloadedNames.count(name))

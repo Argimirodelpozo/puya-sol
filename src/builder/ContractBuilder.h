@@ -134,6 +134,10 @@ private:
 	std::unordered_map<int64_t, std::string> m_allSuperTargetNames;
 	/// Per-function MRO super overrides (caller func ID → list of (targetId, superName)).
 	std::map<int64_t, std::vector<std::pair<int64_t, std::string>>> m_perFuncSuperOverrides;
+	/// MRO super targets (caller func ID → target function whose body becomes the subroutine).
+	std::unordered_map<int64_t, solidity::frontend::FunctionDefinition const*> m_superTargetFuncs;
+	/// Explicit base class call targets (target func ID → target function).
+	std::unordered_map<int64_t, solidity::frontend::FunctionDefinition const*> m_explicitBaseTargetFuncs;
 
 	/// Generate __storage_read and __storage_write dispatch subroutines.
 	/// Uses StorageLayout to build a switch table mapping slot numbers
