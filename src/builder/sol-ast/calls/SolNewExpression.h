@@ -1,6 +1,8 @@
 #pragma once
 
 #include "builder/sol-ast/SolFunctionCall.h"
+#include <set>
+#include <string>
 
 namespace puyasol::builder::sol_ast
 {
@@ -13,11 +15,16 @@ public:
 	using SolFunctionCall::SolFunctionCall;
 	std::shared_ptr<awst::Expression> toAwst() override;
 
+	/// Child contract names referenced by `new C()`. Used to generate
+	/// the .tmpl file mapping template variable names to child bytecode.
+	static std::set<std::string> const& childContracts() { return s_childContracts; }
+	static void resetChildContracts() { s_childContracts.clear(); }
+
 private:
-	/// new bytes(N) → bzero(N)
 	std::shared_ptr<awst::Expression> handleNewBytes();
-	/// new T[](N) → NewArray with N default elements or runtime loop
 	std::shared_ptr<awst::Expression> handleNewArray();
+
+	static std::set<std::string> s_childContracts;
 };
 
 } // namespace puyasol::builder::sol_ast

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nlohmann/json.hpp>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -17,7 +18,8 @@ public:
 		std::string const& _contractName,
 		std::string const& _outputDir,
 		int _optimizationLevel = 1,
-		bool _outputIr = false
+		bool _outputIr = false,
+		std::set<std::string> const& _templateVarChildren = {}
 	);
 
 	/// Write options.json for multiple contracts (split contract mode).
@@ -26,7 +28,8 @@ public:
 		std::vector<std::string> const& _contractNames,
 		std::string const& _outputDir,
 		int _optimizationLevel = 1,
-		bool _outputIr = false
+		bool _outputIr = false,
+		std::set<std::string> const& _templateVarChildren = {}
 	);
 };
 

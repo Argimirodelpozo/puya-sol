@@ -405,6 +405,10 @@ njson AWSTSerializer::serializeExpression(awst::Expression const& _expr)
 	{
 		j["expr"] = serializeExpression(*e->expr);
 	}
+	else if (auto const* e = dynamic_cast<awst::TemplateVar const*>(&_expr))
+	{
+		j["name"] = e->name;
+	}
 	else if (auto const* e = dynamic_cast<awst::Copy const*>(&_expr))
 	{
 		j["value"] = serializeExpression(*e->value);

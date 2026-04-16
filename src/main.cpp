@@ -1,6 +1,7 @@
 #include "Logger.h"
 #include "builder/AWSTBuilder.h"
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/sol-ast/calls/SolNewExpression.h"
 #include "json/AWSTSerializer.h"
 #include "json/OptionsWriter.h"
 #include "runner/PuyaRunner.h"
@@ -13,6 +14,8 @@
 #include <boost/filesystem.hpp>
 
 #include <fstream>
+#include <nlohmann/json.hpp>
+using njson = nlohmann::ordered_json;
 #include <iostream>
 #include <regex>
 #include <set>
@@ -748,16 +751,17 @@ int main(int _argc, char* _argv[])
 			contractNames.push_back(contract->id);
 	}
 
-	// Write options.json
+	// Write options.json (with template var declarations for child contracts)
+	auto const& childContracts = puyasol::builder::sol_ast::SolNewExpression::childContracts();
 	std::string optionsPath = (fs::path(opts.outputDir) / "options.json").string();
 	if (contractNames.size() <= 1)
 	{
 		std::string contractName = contractNames.empty() ? "" : contractNames[0];
-		puyasol::json::OptionsWriter::write(optionsPath, contractName, opts.outputDir, opts.optimizationLevel, opts.outputIr);
+		puyasol::json::OptionsWriter::write(optionsPath, contractName, opts.outputDir, opts.optimizationLevel, opts.outputIr, childContracts);
 	}
 	else
 	{
-		puyasol::json::OptionsWriter::writeMultiple(optionsPath, contractNames, opts.outputDir, opts.optimizationLevel, opts.outputIr);
+		puyasol::json::OptionsWriter::writeMultiple(optionsPath, contractNames, opts.outputDir, opts.optimizationLevel, opts.outputIr, childContracts);
 	}
 	logger.info("Wrote: " + optionsPath);
 
@@ -777,6 +781,53 @@ int main(int _argc, char* _argv[])
 		puyasol::runner::PuyaRunner runner;
 		runner.setPuyaPath(opts.puyaPath);
 		int exitCode = runner.run(awstPath, optionsPath, opts.logLevel);
+
+		// Generate .tmpl file if any child contracts were referenced via new C()
+		auto const& children = puyasol::builder::sol_ast::SolNewExpression::childContracts();
+		if (!children.empty())
+		{
+			std::string tmplPath = (fs::path(opts.outputDir) / "deploy.tmpl.json").string();
+			njson tmpl = njson::object();
+			for (auto const& childName : children)
+			{
+				// Read the child's compiled binaries from the output dir
+				auto approvalBin = fs::path(opts.outputDir) / (childName + ".approval.bin");
+				auto clearBin = fs::path(opts.outputDir) / (childName + ".clear.bin");
+				if (fs::exists(approvalBin))
+				{
+					std::ifstream af(approvalBin, std::ios::binary);
+					std::vector<uint8_t> ab((std::istreambuf_iterator<char>(af)),
+						std::istreambuf_iterator<char>());
+					std::string hex;
+					for (auto b : ab)
+					{
+						char buf[3];
+						snprintf(buf, sizeof(buf), "%02x", b);
+						hex += buf;
+					}
+					tmpl["TMPL_APPROVAL_" + childName] = hex;
+				}
+				if (fs::exists(clearBin))
+				{
+					std::ifstream cf(clearBin, std::ios::binary);
+					std::vector<uint8_t> cb((std::istreambuf_iterator<char>(cf)),
+						std::istreambuf_iterator<char>());
+					std::string hex;
+					for (auto b : cb)
+					{
+						char buf[3];
+						snprintf(buf, sizeof(buf), "%02x", b);
+						hex += buf;
+					}
+					tmpl["TMPL_CLEAR_" + childName] = hex;
+				}
+			}
+			std::ofstream tf(tmplPath);
+			tf << tmpl.dump(2);
+			logger.info("Wrote: " + tmplPath);
+			puyasol::builder::sol_ast::SolNewExpression::resetChildContracts();
+		}
+
 		return exitCode;
 	}
 

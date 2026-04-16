@@ -375,6 +375,14 @@ struct ReinterpretCast: Expression
 	std::shared_ptr<Expression> expr;
 };
 
+/// A placeholder for a value not known at compile time — substituted
+/// before deployment. Compiles to `pushbytes TMPL_<name>` in TEAL.
+struct TemplateVar: Expression
+{
+	std::string nodeType() const override { return "TemplateVar"; }
+	std::string name;
+};
+
 struct Copy: Expression
 {
 	std::string nodeType() const override { return "Copy"; }

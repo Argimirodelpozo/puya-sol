@@ -13,6 +13,8 @@
 namespace puyasol::builder::sol_ast
 {
 
+std::set<std::string> SolNewExpression::s_childContracts;
+
 using namespace solidity::frontend;
 
 std::shared_ptr<awst::Expression> SolNewExpression::handleNewBytes()
@@ -222,47 +224,43 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			newExpr->typeName().annotation().type);
 		if (contractType)
 		{
-			Logger::instance().warning(
-				"'new " + contractType->contractDefinition().name() + "()' "
-				"deployed as stub inner app (no child bytecode embedding yet).", m_loc);
+			std::string childName = contractType->contractDefinition().name();
+			Logger::instance().info(
+				"'new " + childName + "()' — using template variables for "
+				"child bytecode (substitute before deployment).");
 
-			// Build inner appl create transaction
+			// Track this child contract for .tmpl file generation
+			s_childContracts.insert(childName);
+
+			// Build inner appl create transaction with TemplateVar programs
 			static awst::WInnerTransactionFields s_applFieldsType(6); // appl
 			auto create = std::make_shared<awst::CreateInnerTransaction>();
 			create->sourceLocation = m_loc;
 			create->wtype = &s_applFieldsType;
 
-			// TypeEnum = 6 (appl)
-			auto typeVal = std::make_shared<awst::IntegerConstant>();
-			typeVal->sourceLocation = m_loc;
-			typeVal->wtype = awst::WType::uint64Type();
-			typeVal->value = "6";
-			create->fields["TypeEnum"] = std::move(typeVal);
+			auto makeU64 = [&](std::string val) {
+				auto c = std::make_shared<awst::IntegerConstant>();
+				c->sourceLocation = m_loc;
+				c->wtype = awst::WType::uint64Type();
+				c->value = std::move(val);
+				return c;
+			};
+			create->fields["TypeEnum"] = makeU64("6");
+			create->fields["Fee"] = makeU64("0");
 
-			// Fee = 0 (pooled)
-			auto feeVal = std::make_shared<awst::IntegerConstant>();
-			feeVal->sourceLocation = m_loc;
-			feeVal->wtype = awst::WType::uint64Type();
-			feeVal->value = "0";
-			create->fields["Fee"] = std::move(feeVal);
+			// ApprovalProgram = TemplateVar("TMPL_APPROVAL_ChildName")
+			auto approvalTmpl = std::make_shared<awst::TemplateVar>();
+			approvalTmpl->sourceLocation = m_loc;
+			approvalTmpl->wtype = awst::WType::bytesType();
+			approvalTmpl->name = "TMPL_APPROVAL_" + childName;
+			create->fields["ApprovalProgram"] = std::move(approvalTmpl);
 
-			// OnCompletion = 0 (NoOp) — implicit for create
-
-			// Minimal approval program: #pragma version 10; int 1 (0x0a8101)
-			auto approvalProg = std::make_shared<awst::BytesConstant>();
-			approvalProg->sourceLocation = m_loc;
-			approvalProg->wtype = awst::WType::bytesType();
-			approvalProg->encoding = awst::BytesEncoding::Base16;
-			approvalProg->value = {0x0a, 0x81, 0x01};
-			create->fields["ApprovalProgram"] = std::move(approvalProg);
-
-			// Minimal clear program: same
-			auto clearProg = std::make_shared<awst::BytesConstant>();
-			clearProg->sourceLocation = m_loc;
-			clearProg->wtype = awst::WType::bytesType();
-			clearProg->encoding = awst::BytesEncoding::Base16;
-			clearProg->value = {0x0a, 0x81, 0x01};
-			create->fields["ClearStateProgram"] = std::move(clearProg);
+			// ClearStateProgram = TemplateVar("TMPL_CLEAR_ChildName")
+			auto clearTmpl = std::make_shared<awst::TemplateVar>();
+			clearTmpl->sourceLocation = m_loc;
+			clearTmpl->wtype = awst::WType::bytesType();
+			clearTmpl->name = "TMPL_CLEAR_" + childName;
+			create->fields["ClearStateProgram"] = std::move(clearTmpl);
 
 			// Submit the inner transaction
 			static awst::WInnerTransaction s_applTxnType(6);

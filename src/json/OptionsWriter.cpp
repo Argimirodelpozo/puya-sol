@@ -8,12 +8,28 @@ namespace puyasol::json
 
 using njson = nlohmann::json;
 
+static void addTemplateVarDefs(njson& opts, std::set<std::string> const& _children)
+{
+	if (_children.empty()) return;
+	auto& defs = opts["cli_template_definitions"];
+	for (auto const& child : _children)
+	{
+		// Declare each template var as bytes type with a stub default.
+		// The actual values are substituted at deployment time from
+		// the .tmpl file, but puya needs the declarations to compile.
+		// Keys WITHOUT the TMPL_ prefix — puya adds it from template_vars_prefix
+		defs["APPROVAL_" + child] = "0x068101"; // stub: #pragma version 6; int 1
+		defs["CLEAR_" + child] = "0x068101";
+	}
+}
+
 void OptionsWriter::write(
 	std::string const& _path,
 	std::string const& _contractName,
 	std::string const& _outputDir,
 	int _optimizationLevel,
-	bool _outputIr
+	bool _outputIr,
+	std::set<std::string> const& _templateVarChildren
 )
 {
 	njson opts;
@@ -29,6 +45,7 @@ void OptionsWriter::write(
 	opts["target_avm_version"] = 10;
 	opts["template_vars_prefix"] = "TMPL_";
 	opts["cli_template_definitions"] = njson::object();
+	addTemplateVarDefs(opts, _templateVarChildren);
 	if (_outputIr)
 	{
 		opts["output_ssa_ir"] = true;
@@ -51,7 +68,8 @@ void OptionsWriter::writeMultiple(
 	std::vector<std::string> const& _contractNames,
 	std::string const& _outputDir,
 	int _optimizationLevel,
-	bool _outputIr
+	bool _outputIr,
+	std::set<std::string> const& _templateVarChildren
 )
 {
 	njson opts;
@@ -68,6 +86,7 @@ void OptionsWriter::writeMultiple(
 	opts["target_avm_version"] = 10;
 	opts["template_vars_prefix"] = "TMPL_";
 	opts["cli_template_definitions"] = njson::object();
+	addTemplateVarDefs(opts, _templateVarChildren);
 	if (_outputIr)
 	{
 		opts["output_ssa_ir"] = true;
