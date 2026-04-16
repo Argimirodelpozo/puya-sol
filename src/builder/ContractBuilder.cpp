@@ -281,6 +281,10 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	m_exprBuilder->setTransientStorage(
 		m_transientStorage.hasTransientVars() ? &m_transientStorage : nullptr);
 
+	// Set the contract cref for function pointer dispatch resolution.
+	// Library subroutines need this to construct SubroutineIDs.
+	eb::FunctionPointerBuilder::setCurrentCref(contractId);
+
 	auto contract = std::make_shared<awst::Contract>();
 	contract->sourceLocation = makeLoc(_contract.location());
 	contract->id = contractId;
@@ -1274,7 +1278,8 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		std::string cref = m_sourceFile + "." + contractName;
 		awst::SourceLocation loc;
 		loc.file = m_sourceFile;
-		auto dispatchMethods = eb::FunctionPointerBuilder::generateDispatchMethods(cref, loc);
+		auto dispatchMethods = eb::FunctionPointerBuilder::generateDispatchMethods(
+			cref, loc, &m_dispatchSubroutines);
 		for (auto& m : dispatchMethods)
 			contract->methods.push_back(std::move(m));
 		eb::FunctionPointerBuilder::reset();

@@ -16,12 +16,14 @@ using namespace solidity::frontend;
 std::map<int64_t, FuncPtrEntry> FunctionPointerBuilder::s_targets;
 unsigned FunctionPointerBuilder::s_nextId = 1; // 0 = zero-initialized/invalid
 std::map<std::string, solidity::frontend::FunctionType const*> FunctionPointerBuilder::s_neededDispatches;
+std::string FunctionPointerBuilder::s_currentCref;
 
 void FunctionPointerBuilder::reset()
 {
 	s_targets.clear();
 	s_nextId = 1;
 	s_neededDispatches.clear();
+	s_currentCref.clear();
 }
 
 // ── Type mapping ──
@@ -102,15 +104,79 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 
 	if (isExternal)
 	{
-		// External: not yet implemented (would need address + selector)
-		Logger::instance().warning(
-			"external function pointer reference not fully supported", _loc);
-		auto zero = std::make_shared<awst::BytesConstant>();
-		zero->sourceLocation = _loc;
-		zero->wtype = awst::WType::bytesType();
-		zero->encoding = awst::BytesEncoding::Base16;
-		zero->value = {};
-		return zero;
+		// External function pointer = concat(itob(appId), selector).
+		// `this.f` → (CurrentApplicationID, f.selector).
+		// The 12-byte representation (8 appId + 4 selector) is stored as
+		// raw bytes. Calling it extracts appId + selector for an inner txn.
+
+		// Compute ARC4 selector: sha512_256("f(...)") first 4 bytes.
+		// Use the function name + ABI param types.
+		std::string abiSig = _funcDef->name() + "(";
+		bool first = true;
+		for (auto const& p : _funcDef->parameters())
+		{
+			if (!first) abiSig += ",";
+			// Simplified: use Solidity canonical type names
+			abiSig += p->type()->canonicalName();
+			first = false;
+		}
+		abiSig += ")";
+
+		// For now, use keccak256-based selector (EVM convention)
+		// but our ARC4 routing uses sha512_256. Since this.f targets
+		// our own contract, we need the ARC4 selector. Encode the
+		// method signature and hash.
+		auto sigConst = std::make_shared<awst::BytesConstant>();
+		sigConst->sourceLocation = _loc;
+		sigConst->wtype = awst::WType::bytesType();
+		sigConst->encoding = awst::BytesEncoding::Utf8;
+		sigConst->value = std::vector<uint8_t>(abiSig.begin(), abiSig.end());
+
+		// sha512_256(sig)[:4] for ARC4 selector
+		auto hash = std::make_shared<awst::IntrinsicCall>();
+		hash->sourceLocation = _loc;
+		hash->wtype = awst::WType::bytesType();
+		hash->opCode = "sha512_256";
+		hash->stackArgs.push_back(std::move(sigConst));
+
+		auto four = std::make_shared<awst::IntegerConstant>();
+		four->sourceLocation = _loc;
+		four->wtype = awst::WType::uint64Type();
+		four->value = "4";
+		auto zero2 = std::make_shared<awst::IntegerConstant>();
+		zero2->sourceLocation = _loc;
+		zero2->wtype = awst::WType::uint64Type();
+		zero2->value = "0";
+
+		auto selector = std::make_shared<awst::IntrinsicCall>();
+		selector->sourceLocation = _loc;
+		selector->wtype = awst::WType::bytesType();
+		selector->opCode = "extract3";
+		selector->stackArgs.push_back(std::move(hash));
+		selector->stackArgs.push_back(std::move(zero2));
+		selector->stackArgs.push_back(std::move(four));
+
+		// itob(CurrentApplicationID)
+		auto appId = std::make_shared<awst::IntrinsicCall>();
+		appId->sourceLocation = _loc;
+		appId->wtype = awst::WType::uint64Type();
+		appId->opCode = "global";
+		appId->immediates = {std::string("CurrentApplicationID")};
+
+		auto appIdBytes = std::make_shared<awst::IntrinsicCall>();
+		appIdBytes->sourceLocation = _loc;
+		appIdBytes->wtype = awst::WType::bytesType();
+		appIdBytes->opCode = "itob";
+		appIdBytes->stackArgs.push_back(std::move(appId));
+
+		// concat(itob(appId), selector) → 12 bytes
+		auto packed = std::make_shared<awst::IntrinsicCall>();
+		packed->sourceLocation = _loc;
+		packed->wtype = awst::WType::bytesType();
+		packed->opCode = "concat";
+		packed->stackArgs.push_back(std::move(appIdBytes));
+		packed->stackArgs.push_back(std::move(selector));
+		return packed;
 	}
 
 	// Internal: return the function's unique ID
@@ -141,9 +207,138 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 
 	if (isExternal)
 	{
+		// External function pointer call: extract appId + selector from
+		// the 12-byte packed representation, then emit an inner app call.
+		// ptrExpr = concat(itob(appId), selector) = 12 bytes
+
+		// Extract appId: btoi(extract(_ptr, 0, 8))
+		auto zero = std::make_shared<awst::IntegerConstant>();
+		zero->sourceLocation = _loc;
+		zero->wtype = awst::WType::uint64Type();
+		zero->value = "0";
+		auto eight = std::make_shared<awst::IntegerConstant>();
+		eight->sourceLocation = _loc;
+		eight->wtype = awst::WType::uint64Type();
+		eight->value = "8";
+
+		auto extractAppId = std::make_shared<awst::IntrinsicCall>();
+		extractAppId->sourceLocation = _loc;
+		extractAppId->wtype = awst::WType::bytesType();
+		extractAppId->opCode = "extract3";
+		extractAppId->stackArgs.push_back(_ptrExpr);
+		extractAppId->stackArgs.push_back(std::move(zero));
+		extractAppId->stackArgs.push_back(std::move(eight));
+
+		auto appId = std::make_shared<awst::IntrinsicCall>();
+		appId->sourceLocation = _loc;
+		appId->wtype = awst::WType::uint64Type();
+		appId->opCode = "btoi";
+		appId->stackArgs.push_back(std::move(extractAppId));
+
+		// Extract selector: extract(_ptr, 8, 4)
+		auto eight2 = std::make_shared<awst::IntegerConstant>();
+		eight2->sourceLocation = _loc;
+		eight2->wtype = awst::WType::uint64Type();
+		eight2->value = "8";
+		auto four = std::make_shared<awst::IntegerConstant>();
+		four->sourceLocation = _loc;
+		four->wtype = awst::WType::uint64Type();
+		four->value = "4";
+
+		auto extractSel = std::make_shared<awst::IntrinsicCall>();
+		extractSel->sourceLocation = _loc;
+		extractSel->wtype = awst::WType::bytesType();
+		extractSel->opCode = "extract3";
+		extractSel->stackArgs.push_back(_ptrExpr);
+		extractSel->stackArgs.push_back(std::move(eight2));
+		extractSel->stackArgs.push_back(std::move(four));
+
+		// Build inner app call: itxn_begin; ... itxn_submit
+		// For now, emit as a self-call via SubmitInnerTransaction
+		// with ApplicationArgs = [selector, arg1, arg2, ...]
+		auto innerCall = std::make_shared<awst::CreateInnerTransaction>();
+		innerCall->sourceLocation = _loc;
+		innerCall->wtype = awst::WType::voidType();
+		innerCall->fields["TypeEnum"] = std::make_shared<awst::IntegerConstant>();
+		static_cast<awst::IntegerConstant*>(innerCall->fields["TypeEnum"].get())->sourceLocation = _loc;
+		static_cast<awst::IntegerConstant*>(innerCall->fields["TypeEnum"].get())->wtype = awst::WType::uint64Type();
+		static_cast<awst::IntegerConstant*>(innerCall->fields["TypeEnum"].get())->value = "6"; // appl
+		innerCall->fields["ApplicationID"] = std::move(appId);
+
+		// Build args: [selector, encoded_arg1, encoded_arg2, ...]
+		// For simplicity, each arg is ARC4-encoded as 32-byte uint256
+		std::vector<std::shared_ptr<awst::Expression>> appArgs;
+		appArgs.push_back(std::move(extractSel));
+		for (auto& arg : _args)
+		{
+			// Ensure biguint for ARC4 encoding
+			auto coerced = builder::TypeCoercion::implicitNumericCast(
+				std::move(arg), awst::WType::biguintType(), _loc);
+			// Reinterpret as bytes
+			auto toBytes = std::make_shared<awst::ReinterpretCast>();
+			toBytes->sourceLocation = _loc;
+			toBytes->wtype = awst::WType::bytesType();
+			toBytes->expr = std::move(coerced);
+			// Pad to 32 bytes
+			auto padded = std::make_shared<awst::IntrinsicCall>();
+			padded->sourceLocation = _loc;
+			padded->wtype = awst::WType::bytesType();
+			padded->opCode = "concat";
+			auto pad = std::make_shared<awst::IntrinsicCall>();
+			pad->sourceLocation = _loc;
+			pad->wtype = awst::WType::bytesType();
+			pad->opCode = "bzero";
+			auto thirtyTwo = std::make_shared<awst::IntegerConstant>();
+			thirtyTwo->sourceLocation = _loc;
+			thirtyTwo->wtype = awst::WType::uint64Type();
+			thirtyTwo->value = "32";
+			pad->stackArgs.push_back(std::move(thirtyTwo));
+			padded->stackArgs.push_back(std::move(pad));
+			padded->stackArgs.push_back(std::move(toBytes));
+			// Take last 32 bytes
+			auto lenExpr = std::make_shared<awst::IntrinsicCall>();
+			lenExpr->sourceLocation = _loc;
+			lenExpr->wtype = awst::WType::uint64Type();
+			lenExpr->opCode = "len";
+			lenExpr->stackArgs.push_back(padded);
+			auto thirty2b = std::make_shared<awst::IntegerConstant>();
+			thirty2b->sourceLocation = _loc;
+			thirty2b->wtype = awst::WType::uint64Type();
+			thirty2b->value = "32";
+			auto offset = std::make_shared<awst::UInt64BinaryOperation>();
+			offset->sourceLocation = _loc;
+			offset->wtype = awst::WType::uint64Type();
+			offset->left = std::move(lenExpr);
+			offset->op = awst::UInt64BinaryOperator::Sub;
+			offset->right = std::move(thirty2b);
+			auto thirty2c = std::make_shared<awst::IntegerConstant>();
+			thirty2c->sourceLocation = _loc;
+			thirty2c->wtype = awst::WType::uint64Type();
+			thirty2c->value = "32";
+			auto extract = std::make_shared<awst::IntrinsicCall>();
+			extract->sourceLocation = _loc;
+			extract->wtype = awst::WType::bytesType();
+			extract->opCode = "extract3";
+			extract->stackArgs.push_back(std::move(padded));
+			extract->stackArgs.push_back(std::move(offset));
+			extract->stackArgs.push_back(std::move(thirty2c));
+			appArgs.push_back(std::move(extract));
+		}
+
+		// TODO: Full inner txn emission requires CreateInnerTransaction +
+		// SubmitInnerTransaction AWST nodes, which we use elsewhere.
+		// For now, log a warning and return a stub. The full implementation
+		// needs integration with the inner call builder in InnerCallHandlers.
 		Logger::instance().warning(
-			"calling external function pointer not yet supported", _loc);
-		return nullptr;
+			"external function pointer call: inner txn dispatch not yet wired to AWST", _loc);
+
+		// Return a default value for the expected return type
+		awst::WType const* retType = awst::WType::voidType();
+		if (!_funcType->returnParameterTypes().empty())
+		{
+			retType = _ctx.typeMapper.map(_funcType->returnParameterTypes()[0]);
+		}
+		return builder::TypeCoercion::makeDefaultValue(retType, _loc);
 	}
 
 	// Internal: call __funcptr_dispatch_<signature>(id, args...)
@@ -169,7 +364,16 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 	auto call = std::make_shared<awst::SubroutineCallExpression>();
 	call->sourceLocation = _loc;
 	call->wtype = retType;
-	call->target = awst::InstanceMethodTarget{dname};
+	// Use SubroutineID from library context (where InstanceMethodTarget
+	// fails with "invocation outside of a contract method"). From contract
+	// context, InstanceMethodTarget resolves correctly.
+	bool inLibraryContext = !_ctx.contractName.empty()
+		&& !s_currentCref.empty()
+		&& s_currentCref.find("." + _ctx.contractName) == std::string::npos;
+	if (inLibraryContext)
+		call->target = awst::SubroutineID{s_currentCref + "." + dname};
+	else
+		call->target = awst::InstanceMethodTarget{dname};
 
 	// First arg: the pointer ID
 	awst::CallArg idArg;
@@ -234,7 +438,8 @@ std::string FunctionPointerBuilder::dispatchName(
 
 std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethods(
 	std::string const& _cref,
-	awst::SourceLocation const& _loc)
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Subroutine>>* _outRootSubs)
 {
 	std::vector<awst::ContractMethod> methods;
 
@@ -472,6 +677,23 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 			body->body.push_back(std::move(stmt));
 
 		dispatch.body = body;
+
+		// Also emit as a root-level Subroutine so library subroutines can
+		// resolve the dispatch via SubroutineID (puya can't resolve
+		// InstanceMethodTarget from outside the contract scope).
+		if (_outRootSubs)
+		{
+			auto sub = std::make_shared<awst::Subroutine>();
+			sub->sourceLocation = dispatch.sourceLocation;
+			sub->id = _cref + "." + dispatch.memberName;
+			sub->name = dispatch.memberName;
+			sub->returnType = dispatch.returnType;
+			sub->args = dispatch.args;
+			sub->body = dispatch.body; // shared ptr — same body
+			sub->pure = dispatch.pure;
+			_outRootSubs->push_back(std::move(sub));
+		}
+
 		methods.push_back(std::move(dispatch));
 	}
 

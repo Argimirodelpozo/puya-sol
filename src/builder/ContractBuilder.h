@@ -44,7 +44,16 @@ public:
 		solidity::frontend::ContractDefinition const& _contract
 	);
 
+	/// Take any function-pointer dispatch subroutines generated during build().
+	/// These are root-level Subroutine nodes (not contract methods) so they're
+	/// callable from library functions via SubroutineID.
+	std::vector<std::shared_ptr<awst::Subroutine>> takeDispatchSubroutines()
+	{
+		return std::move(m_dispatchSubroutines);
+	}
+
 private:
+	std::vector<std::shared_ptr<awst::Subroutine>> m_dispatchSubroutines;
 	TypeMapper& m_typeMapper;
 	StorageMapper& m_storageMapper;
 	std::string m_sourceFile;

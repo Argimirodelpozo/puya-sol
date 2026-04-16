@@ -1,5 +1,6 @@
 #include "builder/AWSTBuilder.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
+#include "builder/sol-eb/FunctionPointerBuilder.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
@@ -147,18 +148,16 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					if (!func->isImplemented())
 						continue;
 
-					// Skip functions with function-type parameters (AVM can't support function pointers)
+					// Skip functions with non-internal function-type parameters
 					{
-						bool hasFunctionParam = false;
+						bool hasNonInternalFnParam = false;
 						for (auto const& p: func->parameters())
 						{
-							if (dynamic_cast<solidity::frontend::FunctionType const*>(p->type()))
-							{
-								hasFunctionParam = true;
-								break;
-							}
+							if (auto const* ft = dynamic_cast<solidity::frontend::FunctionType const*>(p->type()))
+								if (ft->kind() != solidity::frontend::FunctionType::Kind::Internal)
+								{ hasNonInternalFnParam = true; break; }
 						}
-						if (hasFunctionParam)
+						if (hasNonInternalFnParam)
 							continue;
 					}
 
@@ -218,6 +217,25 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 		}
 	}
 
+	// Pre-set the function pointer dispatch cref to the first deployable
+	// contract so that library subroutines can construct SubroutineIDs
+	// for dispatch calls. Library bodies are translated before contracts,
+	// but the dispatch subroutines live in the contract scope.
+	for (auto const& sourceName: _compiler.sourceNames())
+	{
+		auto const& su = _compiler.ast(sourceName);
+		for (auto const& node: su.nodes())
+		{
+			auto const* c = dynamic_cast<solidity::frontend::ContractDefinition const*>(node.get());
+			if (c && !c->isLibrary() && !c->abstract() && !c->isInterface())
+			{
+				eb::FunctionPointerBuilder::setCurrentCref(_sourceFile + "." + c->name());
+				goto crefSet;
+			}
+		}
+	}
+	crefSet:
+
 	// Second pass: translate library functions as Subroutine root nodes
 	for (auto const& sourceName: _compiler.sourceNames())
 	{
@@ -269,21 +287,26 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					}
 				}
 
-				// Skip library functions with function-type parameters (e.g., comparators)
-				// AVM does not support function pointers / first-class functions
+				// Skip library functions with non-internal function-type
+				// parameters (external/delegate call pointers can't be
+				// represented on AVM). Internal function pointers work via
+				// our dispatch table mechanism.
 				{
-					bool hasFunctionParam = false;
+					bool hasNonInternalFnParam = false;
 					for (auto const& p: func->parameters())
 					{
-						if (dynamic_cast<solidity::frontend::FunctionType const*>(p->type()))
+						if (auto const* ft = dynamic_cast<solidity::frontend::FunctionType const*>(p->type()))
 						{
-							hasFunctionParam = true;
-							break;
+							if (ft->kind() != solidity::frontend::FunctionType::Kind::Internal)
+							{
+								hasNonInternalFnParam = true;
+								break;
+							}
 						}
 					}
-					if (hasFunctionParam)
+					if (hasNonInternalFnParam)
 					{
-						Logger::instance().debug("Skipping library function with function-type param: " + qualifiedName);
+						Logger::instance().debug("Skipping library function with non-internal function-type param: " + qualifiedName);
 						continue;
 					}
 				}
@@ -940,6 +963,11 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				_opupBudget, m_freeFunctionById, _ensureBudget, _viaYulBehavior
 			);
 			auto awstContract = translator.build(*contract);
+
+			// Collect dispatch subroutines as root nodes so library
+			// subroutines can resolve them via SubroutineID.
+			for (auto& sub : translator.takeDispatchSubroutines())
+				roots.push_back(std::move(sub));
 
 			// Only emit deployable contracts (those with public/external methods
 			// or a constructor). Non-deployable contracts (e.g., ErrorReporter

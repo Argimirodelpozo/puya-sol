@@ -73,9 +73,12 @@ public:
 	/// Groups targets by signature (param types + return types) and generates
 	/// one dispatch subroutine per signature group.
 	/// Called from ContractBuilder after all methods are translated.
+	/// Also populates _outRootSubs with root-level Subroutine copies so that
+	/// library subroutines can resolve them via SubroutineID.
 	static std::vector<awst::ContractMethod> generateDispatchMethods(
 		std::string const& _cref,
-		awst::SourceLocation const& _loc);
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Subroutine>>* _outRootSubs = nullptr);
 
 	/// Get the dispatch subroutine name for a given function type signature.
 	static std::string dispatchName(
@@ -85,6 +88,11 @@ public:
 	/// Called after all library/free functions are registered.
 	static void setSubroutineIds(
 		std::unordered_map<int64_t, std::string> const& _idMap);
+
+	/// Set the current contract cref — must be called before translating
+	/// function bodies so that library subroutines can construct
+	/// SubroutineIDs for dispatch calls.
+	static void setCurrentCref(std::string _cref) { s_currentCref = std::move(_cref); }
 
 	/// Clear all registered targets (between contracts).
 	static void reset();
@@ -97,6 +105,9 @@ private:
 	/// Dispatch signatures needed (from buildFunctionPointerCall).
 	/// Maps dispatch name → FunctionType* for generating empty dispatchers.
 	static std::map<std::string, solidity::frontend::FunctionType const*> s_neededDispatches;
+	/// Current contract cref — set during contract build so that library
+	/// subroutines can construct SubroutineIDs for dispatch calls.
+	static std::string s_currentCref;
 };
 
 } // namespace puyasol::builder::eb
