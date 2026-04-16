@@ -1323,13 +1323,17 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
         # Regroup flat args for static/dynamic array parameters
         args = _regroup_args(args, call.method_signature)
 
-        # Trim excess args if method expects fewer (extra calldata in EVM tests)
+        # Handle excess args: EVM tests may append raw calldata after the
+        # expected ABI params.  Instead of trimming, send the extras as
+        # additional ApplicationArgs so msg.data sees them.
+        excess_calldata = []
         if app_spec:
             import re as _re2
             pm2 = _re2.match(r'\w+\(([^)]*)\)', method)
             if pm2:
                 n_expected = len([p for p in pm2.group(1).split(',') if p.strip()]) if pm2.group(1).strip() else 0
                 if len(args) > n_expected:
+                    excess_calldata = args[n_expected:]
                     args = args[:n_expected]
 
         # Convert bytes to str for string params (algokit expects str)
@@ -1342,6 +1346,82 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
                 for i2, pt2 in enumerate(rptypes):
                     if pt2.strip() == 'string' and i2 < len(args) and isinstance(args[i2], bytes):
                         args[i2] = args[i2].decode('utf-8', errors='replace')
+
+        # When excess calldata exists, use a raw ApplicationCallTxn so the
+        # extra bytes appear as additional ApplicationArgs (msg.data sees them).
+        if excess_calldata:
+            from algosdk.transaction import ApplicationCallTxn as _ACT2, OnComplete as _OC2
+            from algosdk.atomic_transaction_composer import (
+                AtomicTransactionComposer as _ATC2, TransactionWithSigner as _TWS2,
+            )
+            from algosdk.abi import Method as _AbiMethod2
+            _algod = app.algorand.client.algod
+            _sender = app._default_sender
+            _signer = app._default_signer or app.algorand.account.get_signer(_sender)
+            _sp = _algod.suggested_params()
+            _sp.flat_fee = True
+            _sp.fee = 5000
+
+            # Build ApplicationArgs: selector + ABI-encoded params + raw excess
+            _m = _AbiMethod2.from_signature(method)
+            _selector = _m.get_selector()
+            # Encode excess calldata as individual ApplicationArgs
+            _extra_app_args = []
+            for ev in excess_calldata:
+                if isinstance(ev, int):
+                    _extra_app_args.append((ev & ((1 << 256) - 1)).to_bytes(32, 'big'))
+                elif isinstance(ev, bytes):
+                    _extra_app_args.append(ev)
+                elif isinstance(ev, bool):
+                    _extra_app_args.append(b'\x01' if ev else b'\x00')
+            # For a 0-arg method, app_args = [selector, *extras]
+            _app_args = [_selector] + _extra_app_args
+
+            _txn = _ACT2(sender=_sender, sp=_sp, index=app.app_id,
+                         on_complete=_OC2.NoOpOC, app_args=_app_args)
+            _atc = _ATC2()
+            _atc.add_transaction(_TWS2(_txn, _signer))
+            try:
+                _result = _atc.execute(_algod, 5)
+                if call.expect_failure:
+                    return False, "expected FAILURE but succeeded"
+                # Parse return from logs (ARC4: last log starts with 0x151f7c75)
+                _logs = _result.abi_results[0].tx_info.get('logs', []) if _result.abi_results else []
+                if not _logs:
+                    _logs = _result.tx_ids  # fallback
+                raw_return = None
+                for _lg in reversed(_logs if isinstance(_logs, list) else []):
+                    import base64
+                    _lb = base64.b64decode(_lg) if isinstance(_lg, str) else _lg
+                    if _lb[:4] == b'\x15\x1f\x7c\x75':
+                        raw_return = _lb[4:]
+                        break
+                if raw_return is not None:
+                    # Decode as N × 32-byte values and feed into normal comparison
+                    n_vals = len(raw_return) // 32
+                    if n_vals == 1:
+                        actual_val = int.from_bytes(raw_return[:32], 'big')
+                    elif n_vals > 1:
+                        actual_val = [int.from_bytes(raw_return[i*32:(i+1)*32], 'big') for i in range(n_vals)]
+                    else:
+                        actual_val = raw_return
+                    # Compare with expected
+                    if len(call.expected) == 1:
+                        exp = parse_value(call.expected[0])
+                        if _compare_values(actual_val, exp):
+                            return True, f"{actual_val}"
+                        return False, f"expected {exp}, got {actual_val}"
+                    expected_list = [parse_value(e) for e in call.expected]
+                    actual_list = list(actual_val) if isinstance(actual_val, list) else [actual_val]
+                    if len(actual_list) == len(expected_list):
+                        if all(_compare_values(a, e) for a, e in zip(actual_list, expected_list)):
+                            return True, f"{actual_val}"
+                    return False, f"expected {expected_list}, got {actual_list}"
+                return True, "ok (no return data)"
+            except Exception as ex:
+                if call.expect_failure:
+                    return True, "correctly reverted"
+                return False, f"exception: {str(ex)[:200]}"
 
         params = au.AppClientMethodCallParams(
             method=method, args=args if args else None,
