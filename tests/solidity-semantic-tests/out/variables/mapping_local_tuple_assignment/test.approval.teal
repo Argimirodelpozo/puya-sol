@@ -3,14 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/mapping_local_tuple_assignment.sol.test.approval_program() -> uint64:
 main:
-    intcblock 0 1 255 2
-    bytecblock "__ctor_pending" "m1" "m2"
+    intcblock 1 0 255 2
+    bytecblock "__ctor_pending" "m1" "m2" 0x6d31cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
-    intc_1 // 1
+    intc_0 // 1
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -38,7 +38,7 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_0 // 0
+    intc_1 // 0
     app_global_put
     bytec_1 // "m1"
     intc_3 // 2
@@ -48,7 +48,7 @@ __postInit:
     intc_3 // 2
     box_create
     pop
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -56,7 +56,7 @@ __postInit:
 f:
     pushint 42
     itob
-    pushbytes 0x6dcd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
+    bytec_3 // 0x6d31cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
     swap
     box_put
     bytec_2 // "m2"
@@ -72,24 +72,14 @@ f:
     box_put
     pushint 21
     itob
-    pushbytes 0x6dcd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
-    swap
-    box_put
-    pushbytes 0x6d31cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
-    box_get
-    swap
-    btoi
-    intc_0 // 0
-    swap
-    uncover 2
-    select
-    intc_2 // 255
-    &
     pushbytes 0x6d31cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70
+    dig 1
+    box_put
+    bytec_3 // 0x6d31cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50
     box_get
     swap
     btoi
-    intc_0 // 0
+    intc_1 // 0
     swap
     uncover 2
     select
@@ -99,7 +89,7 @@ f:
     box_get
     swap
     btoi
-    intc_0 // 0
+    intc_1 // 0
     swap
     uncover 2
     select
@@ -109,16 +99,15 @@ f:
     box_get
     swap
     btoi
-    intc_0 // 0
+    intc_1 // 0
     swap
     uncover 2
     select
     intc_2 // 255
     &
-    uncover 3
+    uncover 2
     itob
     uncover 3
-    itob
     concat
     uncover 2
     itob
@@ -130,5 +119,5 @@ f:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
