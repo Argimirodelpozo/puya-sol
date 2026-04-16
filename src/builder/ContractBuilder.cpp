@@ -15,37 +15,6 @@
 namespace puyasol::builder
 {
 
-/// Recursively checks if a statement list always terminates (return or revert).
-static bool blockAlwaysReturns(std::vector<std::shared_ptr<awst::Statement>> const& _stmts)
-{
-	if (_stmts.empty())
-		return false;
-	auto const& last = _stmts.back();
-	auto type = last->nodeType();
-	if (type == "ReturnStatement")
-		return true;
-	if (type == "IfElse")
-	{
-		auto const& ifElse = static_cast<awst::IfElse const&>(*last);
-		bool ifReturns = blockAlwaysReturns(ifElse.ifBranch->body);
-		bool elseReturns = ifElse.elseBranch && blockAlwaysReturns(ifElse.elseBranch->body);
-		return ifReturns && elseReturns;
-	}
-	// ExpressionStatement containing assert(false) is a guaranteed revert
-	if (type == "ExpressionStatement")
-	{
-		auto const& exprStmt = static_cast<awst::ExpressionStatement const&>(*last);
-		if (auto const* assertExpr = dynamic_cast<awst::AssertExpression const*>(exprStmt.expr.get()))
-		{
-			// Only assert(false) is guaranteed to terminate — assert(variable) may pass
-			if (auto const* boolConst = dynamic_cast<awst::BoolConstant const*>(assertExpr->condition.get()))
-				if (!boolConst->value)
-					return true;
-		}
-	}
-	return false;
-}
-
 /// Checks if a Solidity AST subtree references any state variable whose AST ID
 /// is in the given set (i.e. box-stored state variables).
 class BoxVarRefChecker: public solidity::frontend::ASTConstVisitor
@@ -3130,7 +3099,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// For named return parameters, synthesize a return referencing the variables.
 		// Otherwise append a default zero-value return.
 		if (method.returnType != awst::WType::voidType()
-			&& !blockAlwaysReturns(method.body->body))
+			&& !blockAlwaysTerminates(*method.body))
 		{
 			auto const& retParams = _func.returnParameters();
 			bool hasNamedReturns = false;
