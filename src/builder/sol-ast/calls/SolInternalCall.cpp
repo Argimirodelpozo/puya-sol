@@ -102,13 +102,45 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	call->wtype = _returnType;
 	call->target = std::move(_target);
 
-	// Collect parameter types for coercion
+	// Collect parameter types for coercion + detect mapping storage-ref params
 	std::vector<awst::WType const*> paramTypes;
+	std::set<size_t> mappingStorageParamIndices;
 	if (_funcDef)
 	{
-		for (auto const& param: _funcDef->parameters())
-			paramTypes.push_back(m_ctx.typeMapper.map(param->type()));
+		for (size_t pi = 0; pi < _funcDef->parameters().size(); ++pi)
+		{
+			auto const& param = _funcDef->parameters()[pi];
+			if (param->referenceLocation() == VariableDeclaration::Location::Storage
+				&& dynamic_cast<MappingType const*>(param->type()))
+			{
+				paramTypes.push_back(awst::WType::bytesType());
+				mappingStorageParamIndices.insert(pi);
+			}
+			else
+				paramTypes.push_back(m_ctx.typeMapper.map(param->type()));
+		}
 	}
+
+	// Helper: for a mapping storage-ref param, extract the state variable
+	// name from the argument expression and return it as a BytesConstant
+	// key prefix. The callee uses this prefix for box key derivation.
+	auto extractMappingKeyPrefix = [&](Expression const& argExpr)
+		-> std::shared_ptr<awst::Expression>
+	{
+		std::string name;
+		if (auto const* ident = dynamic_cast<Identifier const*>(&argExpr))
+			name = ident->name();
+		else if (auto const* ma = dynamic_cast<MemberAccess const*>(&argExpr))
+			name = ma->memberName();
+		if (name.empty())
+			name = "map"; // fallback
+		auto bc = std::make_shared<awst::BytesConstant>();
+		bc->sourceLocation = m_loc;
+		bc->wtype = awst::WType::bytesType();
+		bc->encoding = awst::BytesEncoding::Utf8;
+		bc->value = std::vector<uint8_t>(name.begin(), name.end());
+		return bc;
+	};
 
 	// For using-for calls, prepend receiver as first arg
 	if (_isUsingForCall)
@@ -117,10 +149,15 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(&funcExpr))
 		{
 			awst::CallArg ca;
-			ca.value = buildExpr(memberAccess->expression());
-			if (!paramTypes.empty())
-				ca.value = builder::TypeCoercion::implicitNumericCast(
-					std::move(ca.value), paramTypes[0], m_loc);
+			if (mappingStorageParamIndices.count(0))
+				ca.value = extractMappingKeyPrefix(memberAccess->expression());
+			else
+			{
+				ca.value = buildExpr(memberAccess->expression());
+				if (!paramTypes.empty())
+					ca.value = builder::TypeCoercion::implicitNumericCast(
+						std::move(ca.value), paramTypes[0], m_loc);
+			}
 			call->args.push_back(std::move(ca));
 		}
 	}
@@ -130,12 +167,15 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	for (size_t i = 0; i < sortedArgs.size(); ++i)
 	{
 		awst::CallArg ca;
-		ca.value = buildExpr(*sortedArgs[i]);
 		size_t paramIdx = _isUsingForCall ? (i + 1) : i;
-		if (paramIdx < paramTypes.size())
+		if (mappingStorageParamIndices.count(paramIdx))
+			ca.value = extractMappingKeyPrefix(*sortedArgs[i]);
+		else
 		{
-			ca.value = builder::TypeCoercion::implicitNumericCast(
-				std::move(ca.value), paramTypes[paramIdx], m_loc);
+			ca.value = buildExpr(*sortedArgs[i]);
+			if (paramIdx < paramTypes.size())
+				ca.value = builder::TypeCoercion::implicitNumericCast(
+					std::move(ca.value), paramTypes[paramIdx], m_loc);
 		}
 		call->args.push_back(std::move(ca));
 	}

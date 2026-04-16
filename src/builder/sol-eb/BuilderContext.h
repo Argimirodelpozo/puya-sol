@@ -80,6 +80,7 @@ struct BuilderContext
 	std::map<int64_t, solidity::frontend::FunctionDefinition const*>& funcPtrTargets;
 	std::unordered_map<int64_t, unsigned long long>& constantLocals;
 	std::map<std::string, int64_t>& varNameToId;
+	std::map<int64_t, std::string> const& mappingKeyParams;
 	bool inConstructor;
 	bool inUncheckedBlock;
 

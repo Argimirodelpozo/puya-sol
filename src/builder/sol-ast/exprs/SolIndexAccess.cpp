@@ -198,11 +198,33 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 	e->sourceLocation = m_loc;
 	e->wtype = valueWType;
 
-	auto prefix = std::make_shared<awst::BytesConstant>();
-	prefix->sourceLocation = m_loc;
-	prefix->wtype = awst::WType::boxKeyType();
-	prefix->encoding = awst::BytesEncoding::Utf8;
-	prefix->value = std::vector<uint8_t>(varName.begin(), varName.end());
+	// Build the box key prefix. For mapping-storage-ref parameters, the
+	// prefix is a runtime bytes value (the caller passes the state variable
+	// name). For regular state variables, it's a compile-time constant.
+	std::shared_ptr<awst::Expression> prefix;
+	std::string mappingKeyParam;
+	if (auto const* ident = dynamic_cast<Identifier const*>(cursor))
+		if (auto const* decl = ident->annotation().referencedDeclaration)
+			mappingKeyParam = m_ctx.mappingKeyParams.count(decl->id())
+				? m_ctx.mappingKeyParams.at(decl->id()) : "";
+	if (!mappingKeyParam.empty())
+	{
+		// Dynamic prefix from function parameter (bytes value at runtime)
+		auto var = std::make_shared<awst::VarExpression>();
+		var->sourceLocation = m_loc;
+		var->wtype = awst::WType::bytesType();
+		var->name = mappingKeyParam;
+		prefix = std::move(var);
+	}
+	else
+	{
+		auto bc = std::make_shared<awst::BytesConstant>();
+		bc->sourceLocation = m_loc;
+		bc->wtype = awst::WType::boxKeyType();
+		bc->encoding = awst::BytesEncoding::Utf8;
+		bc->value = std::vector<uint8_t>(varName.begin(), varName.end());
+		prefix = std::move(bc);
+	}
 
 	if (!indexExprs.empty())
 	{

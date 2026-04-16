@@ -155,6 +155,17 @@ void ExpressionBuilder::removeStorageAlias(int64_t _declId)
 	m_storageAliases.erase(_declId);
 }
 
+void ExpressionBuilder::addMappingKeyParam(int64_t _declId, std::string const& _paramName)
+{
+	m_mappingKeyParams[_declId] = _paramName;
+}
+
+std::string ExpressionBuilder::getMappingKeyParam(int64_t _declId) const
+{
+	auto it = m_mappingKeyParams.find(_declId);
+	return it != m_mappingKeyParams.end() ? it->second : std::string{};
+}
+
 awst::SourceLocation ExpressionBuilder::makeLoc(
 	solidity::langutil::SourceLocation const& _solLoc
 )
@@ -193,6 +204,7 @@ eb::BuilderContext ExpressionBuilder::makeBuilderContext()
 		/*.funcPtrTargets =*/ m_funcPtrTargets,
 		/*.constantLocals =*/ m_constantLocals,
 		/*.varNameToId =*/ m_varNameToId,
+		/*.mappingKeyParams =*/ m_mappingKeyParams,
 		/*.inConstructor =*/ m_inConstructor,
 		/*.inUncheckedBlock =*/ m_inUncheckedBlock,
 		/*.pendingArrayPushValue =*/ m_pendingArrayPushValue,

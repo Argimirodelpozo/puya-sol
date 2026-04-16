@@ -306,7 +306,8 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				if (func->documentation())
 					sub->documentation.description = *func->documentation()->text();
 
-				// Parameters
+				// Parameters — mapping storage refs become bytes (runtime key prefix)
+				std::set<size_t> mappingStorageParams;
 				for (size_t pi = 0; pi < func->parameters().size(); ++pi)
 				{
 					auto const& param = func->parameters()[pi];
@@ -318,7 +319,18 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					arg.sourceLocation.file = _sourceFile;
 					arg.sourceLocation.line = param->location().start >= 0 ? param->location().start : 0;
 					arg.sourceLocation.endLine = param->location().end >= 0 ? param->location().end : 0;
-					arg.wtype = m_typeMapper.map(param->type());
+
+					// Mapping storage refs: the callee receives the box key
+					// PREFIX as bytes so that m[k] → box_get(prefix+sha256(k))
+					// uses the caller's storage variable name, not the param name.
+					if (param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
+						&& dynamic_cast<solidity::frontend::MappingType const*>(param->type()))
+					{
+						arg.wtype = awst::WType::bytesType();
+						mappingStorageParams.insert(pi);
+					}
+					else
+						arg.wtype = m_typeMapper.map(param->type());
 					sub->args.push_back(std::move(arg));
 				}
 
@@ -374,6 +386,15 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					m_typeMapper, *m_storageMapper, _sourceFile, libraryName, m_libraryFunctionIds,
 					{}, m_freeFunctionById
 				);
+
+				// Register mapping-storage-ref params so SolIndexAccess can
+				// use them as dynamic box key prefixes at runtime.
+				for (size_t idx: mappingStorageParams)
+				{
+					auto const& param = func->parameters()[idx];
+					exprBuilder.addMappingKeyParam(param->id(), param->name());
+				}
+
 				sol_ast::StatementContext stmtCtx{
 					&exprBuilder, &m_typeMapper, _sourceFile,
 					[&](solidity::frontend::Expression const& e) { return exprBuilder.build(e); },
@@ -393,7 +414,8 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					std::string pname = param->name();
 					if (pname.empty())
 						pname = "_param" + std::to_string(pi);
-					paramContext.emplace_back(pname, m_typeMapper.map(param->type()));
+					auto* ptype = mappingStorageParams.count(pi) ? awst::WType::bytesType() : m_typeMapper.map(param->type());
+					paramContext.emplace_back(pname, ptype);
 					if (auto const* solType = param->annotation().type)
 					{
 						auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(solType);

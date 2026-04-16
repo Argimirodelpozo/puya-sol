@@ -144,6 +144,13 @@ public:
 	/// Remove a previously registered storage pointer alias.
 	void removeStorageAlias(int64_t _declId);
 
+	/// Mark a declaration as a mapping-storage-ref parameter whose runtime
+	/// value is the box key prefix (bytes). SolIndexAccess uses this to
+	/// build dynamic BoxPrefixedKeyExpression instead of a static name.
+	void addMappingKeyParam(int64_t _declId, std::string const& _paramName);
+	/// Look up a mapping-key param by decl ID. Returns the param name or empty.
+	std::string getMappingKeyParam(int64_t _declId) const;
+
 	/// Set constructor context: immutable variables are writable during construction.
 	void setTransientStorage(TransientStorage* _ts) { m_transientStorage = _ts; }
 	void setInConstructor(bool _inConstructor) { m_inConstructor = _inConstructor; }
@@ -173,6 +180,11 @@ private:
 	/// For `Type storage p = _mapping[key]`, stores the StateGet(BoxValueExpression)
 	/// so that later references to `p` resolve to the box, not a local variable.
 	std::map<int64_t, std::shared_ptr<awst::Expression>> m_storageAliases;
+
+	/// Mapping-storage-ref params: decl ID → param name. The param holds the
+	/// box key prefix as bytes at runtime. SolIndexAccess uses this to build
+	/// dynamic box key expressions instead of static BytesConstant prefixes.
+	std::map<int64_t, std::string> m_mappingKeyParams;
 
 	/// Slot-based storage references: maps AST declaration ID to the slot expression.
 	/// For `Type storage _x = getArray()` where getArray() sets .slot in assembly,
