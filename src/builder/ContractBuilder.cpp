@@ -3044,13 +3044,21 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				continue;
 			}
 
-			// Remap aggregate types (arrays, tuples, fixed bytes) to ARC4 encoding
+			// Remap aggregate types (arrays, tuples) and external fn-ptr
+			// bytes[12] to ARC4 encoding. General bytes/bytes[N] params
+			// are NOT remapped — only fn-ptr-specific bytes[12].
 			bool isAggregate = arg.wtype
 				&& (arg.wtype->kind() == awst::WTypeKind::ReferenceArray
 					|| arg.wtype->kind() == awst::WTypeKind::ARC4StaticArray
 					|| arg.wtype->kind() == awst::WTypeKind::ARC4DynamicArray
-					|| arg.wtype->kind() == awst::WTypeKind::WTuple
-					|| arg.wtype->kind() == awst::WTypeKind::Bytes);
+					|| arg.wtype->kind() == awst::WTypeKind::WTuple);
+			// External fn-ptr: bytes[12] needs ARC4 remapping to byte[12]
+			if (!isAggregate && pi < solParams.size())
+			{
+				if (dynamic_cast<solidity::frontend::FunctionType const*>(solParams[pi]->type())
+					&& arg.wtype && arg.wtype->kind() == awst::WTypeKind::Bytes)
+					isAggregate = true;
+			}
 			if (!isAggregate)
 				continue;
 
