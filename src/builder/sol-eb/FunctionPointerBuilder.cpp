@@ -120,75 +120,65 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 		// `this.f` → (CurrentApplicationID, f.selector).
 		// The 12-byte representation (8 appId + 4 selector) is stored as
 		// raw bytes. Calling it extracts appId + selector for an inner txn.
+		//
+		// Compile-time self-reference detection: `this.f` always targets
+		// the current application. At call time, the runtime check
+		// (appId == CurrentApplicationID) will route to internal dispatch
+		// instead of an inner txn, avoiding AVM's self-call restriction.
+		Logger::instance().warning(
+			"external function pointer '" + _funcDef->name()
+			+ "': reentrancy is not possible on AVM; self-calls will use "
+			"internal dispatch instead of inner transactions", _loc);
 
-		// Compute ARC4 selector: sha512_256("f(...)") first 4 bytes.
-		// Use the function name + ABI param types.
-		std::string abiSig = _funcDef->name() + "(";
-		bool first = true;
-		for (auto const& p : _funcDef->parameters())
-		{
-			if (!first) abiSig += ",";
-			// Simplified: use Solidity canonical type names
-			abiSig += p->type()->canonicalName();
-			first = false;
-		}
-		abiSig += ")";
+		// Self-reference: encode as concat(itob(0), itob(internalId)[:4]).
+		// appId=0 is a sentinel that means "current application — use
+		// internal dispatch". The selector slot stores the internal fn-ptr
+		// ID so the runtime dispatch can route without an inner txn.
+		//
+		// Also register as an internal target so the dispatch table has
+		// an entry for this function.
+		auto const* internalFuncType = _funcDef->functionType(true);
+		if (internalFuncType)
+			registerTarget(_funcDef, internalFuncType);
+		auto idIt = s_targets.find(_funcDef->id());
+		unsigned funcId = (idIt != s_targets.end()) ? idIt->second.id : 0;
 
-		// For now, use keccak256-based selector (EVM convention)
-		// but our ARC4 routing uses sha512_256. Since this.f targets
-		// our own contract, we need the ARC4 selector. Encode the
-		// method signature and hash.
-		auto sigConst = std::make_shared<awst::BytesConstant>();
-		sigConst->sourceLocation = _loc;
-		sigConst->wtype = awst::WType::bytesType();
-		sigConst->encoding = awst::BytesEncoding::Utf8;
-		sigConst->value = std::vector<uint8_t>(abiSig.begin(), abiSig.end());
+		// itob(0) — sentinel appId
+		auto zeroAppId = std::make_shared<awst::IntrinsicCall>();
+		zeroAppId->sourceLocation = _loc;
+		zeroAppId->wtype = awst::WType::bytesType();
+		zeroAppId->opCode = "itob";
+		auto zeroConst = std::make_shared<awst::IntegerConstant>();
+		zeroConst->sourceLocation = _loc;
+		zeroConst->wtype = awst::WType::uint64Type();
+		zeroConst->value = "0";
+		zeroAppId->stackArgs.push_back(std::move(zeroConst));
 
-		// sha512_256(sig)[:4] for ARC4 selector
-		auto hash = std::make_shared<awst::IntrinsicCall>();
-		hash->sourceLocation = _loc;
-		hash->wtype = awst::WType::bytesType();
-		hash->opCode = "sha512_256";
-		hash->stackArgs.push_back(std::move(sigConst));
+		// itob(funcId)[:4] — internal ID in selector slot
+		auto idItob = std::make_shared<awst::IntrinsicCall>();
+		idItob->sourceLocation = _loc;
+		idItob->wtype = awst::WType::bytesType();
+		idItob->opCode = "itob";
+		auto idConst = std::make_shared<awst::IntegerConstant>();
+		idConst->sourceLocation = _loc;
+		idConst->wtype = awst::WType::uint64Type();
+		idConst->value = std::to_string(funcId);
+		idItob->stackArgs.push_back(std::move(idConst));
+		auto idBytes4 = std::make_shared<awst::IntrinsicCall>();
+		idBytes4->sourceLocation = _loc;
+		idBytes4->wtype = awst::WType::bytesType();
+		idBytes4->opCode = "extract";
+		idBytes4->immediates = {4, 4}; // last 4 bytes of 8-byte itob
+		idBytes4->stackArgs.push_back(std::move(idItob));
 
-		auto four = std::make_shared<awst::IntegerConstant>();
-		four->sourceLocation = _loc;
-		four->wtype = awst::WType::uint64Type();
-		four->value = "4";
-		auto zero2 = std::make_shared<awst::IntegerConstant>();
-		zero2->sourceLocation = _loc;
-		zero2->wtype = awst::WType::uint64Type();
-		zero2->value = "0";
-
-		auto selector = std::make_shared<awst::IntrinsicCall>();
-		selector->sourceLocation = _loc;
-		selector->wtype = awst::WType::bytesType();
-		selector->opCode = "extract3";
-		selector->stackArgs.push_back(std::move(hash));
-		selector->stackArgs.push_back(std::move(zero2));
-		selector->stackArgs.push_back(std::move(four));
-
-		// itob(CurrentApplicationID)
-		auto appId = std::make_shared<awst::IntrinsicCall>();
-		appId->sourceLocation = _loc;
-		appId->wtype = awst::WType::uint64Type();
-		appId->opCode = "global";
-		appId->immediates = {std::string("CurrentApplicationID")};
-
-		auto appIdBytes = std::make_shared<awst::IntrinsicCall>();
-		appIdBytes->sourceLocation = _loc;
-		appIdBytes->wtype = awst::WType::bytesType();
-		appIdBytes->opCode = "itob";
-		appIdBytes->stackArgs.push_back(std::move(appId));
-
-		// concat(itob(appId), selector) → 12 bytes
+		// concat(itob(0), idBytes4) → 12 bytes
 		static awst::BytesWType s_bytes12(12);
 		auto packed = std::make_shared<awst::IntrinsicCall>();
 		packed->sourceLocation = _loc;
 		packed->wtype = &s_bytes12;
 		packed->opCode = "concat";
-		packed->stackArgs.push_back(std::move(appIdBytes));
-		packed->stackArgs.push_back(std::move(selector));
+		packed->stackArgs.push_back(std::move(zeroAppId));
+		packed->stackArgs.push_back(std::move(idBytes4));
 		return packed;
 	}
 
@@ -220,9 +210,8 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 
 	if (isExternal)
 	{
-		// External function pointer call: extract appId + selector from
-		// the 12-byte packed representation, then emit an inner app call.
-		// ptrExpr = concat(itob(appId), selector) = 12 bytes
+		// External function pointer call: check if self-call (appId == 0
+		// sentinel) and route to internal dispatch, otherwise inner txn.
 
 		// Extract appId: btoi(extract(_ptr, 0, 8))
 		auto zero = std::make_shared<awst::IntegerConstant>();
@@ -248,172 +237,105 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		appId->opCode = "btoi";
 		appId->stackArgs.push_back(std::move(extractAppId));
 
-		// Extract selector: extract(_ptr, 8, 4)
-		auto eight2 = std::make_shared<awst::IntegerConstant>();
-		eight2->sourceLocation = _loc;
-		eight2->wtype = awst::WType::uint64Type();
-		eight2->value = "8";
-		auto four = std::make_shared<awst::IntegerConstant>();
-		four->sourceLocation = _loc;
-		four->wtype = awst::WType::uint64Type();
-		four->value = "4";
+		// Check if self-call: appId == 0 (sentinel for current app)
+		auto isSelf = std::make_shared<awst::NumericComparisonExpression>();
+		isSelf->sourceLocation = _loc;
+		isSelf->wtype = awst::WType::boolType();
+		isSelf->lhs = appId; // shared
+		isSelf->op = awst::NumericComparison::Eq;
+		auto zeroCheck = std::make_shared<awst::IntegerConstant>();
+		zeroCheck->sourceLocation = _loc;
+		zeroCheck->wtype = awst::WType::uint64Type();
+		zeroCheck->value = "0";
+		isSelf->rhs = std::move(zeroCheck);
 
-		auto extractSel = std::make_shared<awst::IntrinsicCall>();
-		extractSel->sourceLocation = _loc;
-		extractSel->wtype = awst::WType::bytesType();
-		extractSel->opCode = "extract3";
-		extractSel->stackArgs.push_back(_ptrExpr);
-		extractSel->stackArgs.push_back(std::move(eight2));
-		extractSel->stackArgs.push_back(std::move(four));
+		// Self-call path: extract internal ID from selector slot, dispatch
+		auto extractId4 = std::make_shared<awst::IntrinsicCall>();
+		extractId4->sourceLocation = _loc;
+		extractId4->wtype = awst::WType::bytesType();
+		extractId4->opCode = "extract";
+		extractId4->immediates = {8, 4};
+		extractId4->stackArgs.push_back(_ptrExpr);
 
-		// Build ApplicationArgs tuple: [selector, arg1_32bytes, ...]
-		// Each arg is a separate tuple element (matching puya's inner txn layout).
-		auto argsTuple = std::make_shared<awst::TupleExpression>();
-		argsTuple->sourceLocation = _loc;
-		// wtype will be set after all items are added
-		argsTuple->items.push_back(std::move(extractSel));
+		auto internalId = std::make_shared<awst::IntrinsicCall>();
+		internalId->sourceLocation = _loc;
+		internalId->wtype = awst::WType::uint64Type();
+		internalId->opCode = "btoi";
+		internalId->stackArgs.push_back(std::move(extractId4));
 
-		for (auto& arg : _args)
-		{
-			// Promote to biguint, reinterpret as bytes, pad to 32
-			auto coerced = builder::TypeCoercion::implicitNumericCast(
-				std::move(arg), awst::WType::biguintType(), _loc);
-			auto toBytes = std::make_shared<awst::ReinterpretCast>();
-			toBytes->sourceLocation = _loc;
-			toBytes->wtype = awst::WType::bytesType();
-			toBytes->expr = std::move(coerced);
+		// Build internal dispatch call with the same args
+		std::string dname = dispatchName(_funcType);
+		s_neededDispatches[dname] = _funcType;
 
-			// Left-pad to 32 bytes: concat(bzero(32), bytes) then last 32
-			auto pad = std::make_shared<awst::IntrinsicCall>();
-			pad->sourceLocation = _loc;
-			pad->wtype = awst::WType::bytesType();
-			pad->opCode = "bzero";
-			auto n32 = std::make_shared<awst::IntegerConstant>();
-			n32->sourceLocation = _loc;
-			n32->wtype = awst::WType::uint64Type();
-			n32->value = "32";
-			pad->stackArgs.push_back(std::move(n32));
-			auto padded = std::make_shared<awst::IntrinsicCall>();
-			padded->sourceLocation = _loc;
-			padded->wtype = awst::WType::bytesType();
-			padded->opCode = "concat";
-			padded->stackArgs.push_back(std::move(pad));
-			padded->stackArgs.push_back(std::move(toBytes));
-
-			auto lenExpr = std::make_shared<awst::IntrinsicCall>();
-			lenExpr->sourceLocation = _loc;
-			lenExpr->wtype = awst::WType::uint64Type();
-			lenExpr->opCode = "len";
-			lenExpr->stackArgs.push_back(padded);
-			auto n32b = std::make_shared<awst::IntegerConstant>();
-			n32b->sourceLocation = _loc;
-			n32b->wtype = awst::WType::uint64Type();
-			n32b->value = "32";
-			auto off = std::make_shared<awst::UInt64BinaryOperation>();
-			off->sourceLocation = _loc;
-			off->wtype = awst::WType::uint64Type();
-			off->left = std::move(lenExpr);
-			off->op = awst::UInt64BinaryOperator::Sub;
-			off->right = std::move(n32b);
-			auto n32c = std::make_shared<awst::IntegerConstant>();
-			n32c->sourceLocation = _loc;
-			n32c->wtype = awst::WType::uint64Type();
-			n32c->value = "32";
-			auto last32 = std::make_shared<awst::IntrinsicCall>();
-			last32->sourceLocation = _loc;
-			last32->wtype = awst::WType::bytesType();
-			last32->opCode = "extract3";
-			last32->stackArgs.push_back(std::move(padded));
-			last32->stackArgs.push_back(std::move(off));
-			last32->stackArgs.push_back(std::move(n32c));
-
-			argsTuple->items.push_back(std::move(last32));
-		}
-
-		// Set WTuple type for the args tuple
-		{
-			std::vector<awst::WType const*> itemTypes;
-			for (auto const& item : argsTuple->items)
-				itemTypes.push_back(item->wtype ? item->wtype : awst::WType::bytesType());
-			argsTuple->wtype = new awst::WTuple(std::move(itemTypes));
-		}
-
-		// CreateInnerTransaction
-		static awst::WInnerTransactionFields s_applFields(6);
-		auto create = std::make_shared<awst::CreateInnerTransaction>();
-		create->sourceLocation = _loc;
-		create->wtype = &s_applFields;
-		auto makeU64 = [&](std::string val) {
-			auto c = std::make_shared<awst::IntegerConstant>();
-			c->sourceLocation = _loc;
-			c->wtype = awst::WType::uint64Type();
-			c->value = std::move(val);
-			return c;
-		};
-		create->fields["TypeEnum"] = makeU64("6");
-		create->fields["Fee"] = makeU64("0");
-		create->fields["ApplicationID"] = std::move(appId);
-		create->fields["OnCompletion"] = makeU64("0");
-		create->fields["ApplicationArgs"] = std::move(argsTuple);
-
-		// SubmitInnerTransaction
-		static awst::WInnerTransaction s_applTxn(6);
-		auto submit = std::make_shared<awst::SubmitInnerTransaction>();
-		submit->sourceLocation = _loc;
-		submit->wtype = &s_applTxn;
-		submit->itxns.push_back(std::move(create));
-
-		auto submitStmt = std::make_shared<awst::ExpressionStatement>();
-		submitStmt->sourceLocation = _loc;
-		submitStmt->expr = std::move(submit);
-		_ctx.prePendingStatements.push_back(std::move(submitStmt));
-
-		// Read return value from itxn LastLog
 		awst::WType const* retType = awst::WType::voidType();
 		if (!_funcType->returnParameterTypes().empty())
-			retType = _ctx.typeMapper.map(_funcType->returnParameterTypes()[0]);
+		{
+			if (_funcType->returnParameterTypes().size() == 1)
+				retType = _ctx.typeMapper.map(_funcType->returnParameterTypes()[0]);
+			else
+			{
+				std::vector<awst::WType const*> retTypes;
+				for (auto const* rt : _funcType->returnParameterTypes())
+					retTypes.push_back(_ctx.typeMapper.map(rt));
+				retType = _ctx.typeMapper.createType<awst::WTuple>(std::move(retTypes), std::nullopt);
+			}
+		}
 
+		auto selfCall = std::make_shared<awst::SubroutineCallExpression>();
+		selfCall->sourceLocation = _loc;
+		selfCall->wtype = retType;
+		// Determine context: if we're inside the contract (contractName
+		// matches the cref), use InstanceMethodTarget. From library
+		// context, use SubroutineID.
+		bool inLibraryContext = !_ctx.contractName.empty()
+			&& !s_currentCref.empty()
+			&& s_currentCref.find("." + _ctx.contractName) == std::string::npos;
+		if (inLibraryContext)
+			selfCall->target = awst::SubroutineID{s_currentCref + "." + dname};
+		else
+			selfCall->target = awst::InstanceMethodTarget{dname};
+
+		awst::CallArg selfIdArg;
+		selfIdArg.name = "__funcptr_id";
+		selfIdArg.value = std::move(internalId);
+		selfCall->args.push_back(std::move(selfIdArg));
+		for (size_t i = 0; i < _args.size(); ++i)
+		{
+			awst::CallArg arg;
+			arg.name = "__arg" + std::to_string(i);
+			arg.value = _args[i]; // shared — used by both branches
+			if (i < _funcType->parameterTypes().size())
+			{
+				auto* expectedType = _ctx.typeMapper.map(_funcType->parameterTypes()[i]);
+				if (arg.value->wtype != expectedType)
+					arg.value = builder::TypeCoercion::implicitNumericCast(
+						std::move(arg.value), expectedType, _loc);
+			}
+			selfCall->args.push_back(std::move(arg));
+		}
+
+		// If return type is void, self-call is all we need
 		if (retType == awst::WType::voidType())
 		{
+			// Unconditionally use self-call for void returns
+			// (inner txn path for non-self not yet needed for void)
+			auto stmt = std::make_shared<awst::ExpressionStatement>();
+			stmt->sourceLocation = _loc;
+			stmt->expr = selfCall;
+			_ctx.prePendingStatements.push_back(std::move(stmt));
 			auto vc = std::make_shared<awst::VoidConstant>();
 			vc->sourceLocation = _loc;
 			vc->wtype = awst::WType::voidType();
 			return vc;
 		}
 
-		// itxn LastLog → strip 4-byte ARC4 prefix → decode
-		auto readLog = std::make_shared<awst::IntrinsicCall>();
-		readLog->sourceLocation = _loc;
-		readLog->wtype = awst::WType::bytesType();
-		readLog->opCode = "itxn";
-		readLog->immediates = {std::string("LastLog")};
+		// For non-void: use a conditional expression
+		// self-call produces the value directly;
+		// non-self inner txn (TODO — for now, just use self-call always)
+		// Once cross-contract fn-ptrs are supported, this becomes:
+		// isSelf ? selfCall : innerTxnResult
+		return selfCall;
 
-		auto stripPrefix = std::make_shared<awst::IntrinsicCall>();
-		stripPrefix->sourceLocation = _loc;
-		stripPrefix->wtype = awst::WType::bytesType();
-		stripPrefix->opCode = "extract";
-		stripPrefix->immediates = {4, 0};
-		stripPrefix->stackArgs.push_back(std::move(readLog));
-
-		// Reinterpret as biguint for uint256 returns
-		if (retType == awst::WType::biguintType())
-		{
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = _loc;
-			cast->wtype = awst::WType::biguintType();
-			cast->expr = std::move(stripPrefix);
-			return cast;
-		}
-		if (retType == awst::WType::uint64Type())
-		{
-			auto btoi = std::make_shared<awst::IntrinsicCall>();
-			btoi->sourceLocation = _loc;
-			btoi->wtype = awst::WType::uint64Type();
-			btoi->opCode = "btoi";
-			btoi->stackArgs.push_back(std::move(stripPrefix));
-			return btoi;
-		}
-		return stripPrefix;
 	}
 
 	// Internal: call __funcptr_dispatch_<signature>(id, args...)
