@@ -36,7 +36,11 @@ awst::WType const* FunctionPointerBuilder::mapFunctionType(
 
 	if (_funcType->kind() == FunctionType::Kind::External
 		|| _funcType->kind() == FunctionType::Kind::DelegateCall)
-		return awst::WType::bytesType(); // address(32) + selector(4) = 36 bytes
+	{
+		// 12 bytes: itob(appId) 8 + selector 4
+		static awst::BytesWType s_extFnPtrType(12);
+		return &s_extFnPtrType;
+	}
 
 	// Internal function pointers: uint64 ID
 	return awst::WType::uint64Type();
@@ -80,7 +84,8 @@ void FunctionPointerBuilder::setSubroutineIds(
 std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference(
 	BuilderContext& _ctx,
 	FunctionDefinition const* _funcDef,
-	awst::SourceLocation const& _loc)
+	awst::SourceLocation const& _loc,
+	FunctionType const* _callerFuncType)
 {
 	if (!_funcDef)
 	{
@@ -92,9 +97,16 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 		return zero;
 	}
 
-	auto const* funcType = _funcDef->functionType(true); // internal
+	// Use caller-provided FunctionType if available (determines
+	// Internal vs External when both exist, e.g., `this.g` is External
+	// even though g also has an Internal overload).
+	auto const* funcType = _callerFuncType;
 	if (!funcType)
-		funcType = _funcDef->functionType(false); // external
+	{
+		funcType = _funcDef->functionType(true); // internal
+		if (!funcType)
+			funcType = _funcDef->functionType(false); // external
+	}
 
 	// Register as target
 	registerTarget(_funcDef, funcType);
@@ -170,9 +182,10 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 		appIdBytes->stackArgs.push_back(std::move(appId));
 
 		// concat(itob(appId), selector) → 12 bytes
+		static awst::BytesWType s_bytes12(12);
 		auto packed = std::make_shared<awst::IntrinsicCall>();
 		packed->sourceLocation = _loc;
-		packed->wtype = awst::WType::bytesType();
+		packed->wtype = &s_bytes12;
 		packed->opCode = "concat";
 		packed->stackArgs.push_back(std::move(appIdBytes));
 		packed->stackArgs.push_back(std::move(selector));

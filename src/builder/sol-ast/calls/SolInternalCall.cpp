@@ -396,9 +396,11 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 
 			if (isInternal || isExternal)
 			{
-				auto* ptrWType = isInternal
+				// External fn-ptrs: bytes[12] (appId 8 + selector 4)
+				static awst::BytesWType s_extFnPtrType(12);
+				awst::WType const* ptrWType = isInternal
 					? awst::WType::uint64Type()
-					: awst::WType::bytesType();
+					: &s_extFnPtrType;
 
 				std::shared_ptr<awst::Expression> ptrExpr;
 				if (varDecl->isStateVariable())

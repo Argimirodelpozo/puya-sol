@@ -2875,14 +2875,14 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			arg.name = param->name();
 		arg.sourceLocation = makeLoc(param->location());
 		arg.wtype = m_typeMapper.map(param->type());
-		// Function pointer parameters: override type to uint64 (internal) or bytes (external)
+		// Function pointer parameters: override type to uint64 (internal) or bytes[12] (external)
 		if (auto const* funcType = dynamic_cast<solidity::frontend::FunctionType const*>(param->type()))
 		{
 			if (funcType->kind() == solidity::frontend::FunctionType::Kind::Internal)
 				arg.wtype = awst::WType::uint64Type();
 			else if (funcType->kind() == solidity::frontend::FunctionType::Kind::External
 				|| funcType->kind() == solidity::frontend::FunctionType::Kind::DelegateCall)
-				arg.wtype = awst::WType::bytesType();
+				arg.wtype = m_typeMapper.createType<awst::BytesWType>(12);
 		}
 		method.args.push_back(std::move(arg));
 		paramIndex++;
@@ -3044,12 +3044,13 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				continue;
 			}
 
-			// Remap aggregate types (arrays, tuples) to ARC4 encoding
+			// Remap aggregate types (arrays, tuples, fixed bytes) to ARC4 encoding
 			bool isAggregate = arg.wtype
 				&& (arg.wtype->kind() == awst::WTypeKind::ReferenceArray
 					|| arg.wtype->kind() == awst::WTypeKind::ARC4StaticArray
 					|| arg.wtype->kind() == awst::WTypeKind::ARC4DynamicArray
-					|| arg.wtype->kind() == awst::WTypeKind::WTuple);
+					|| arg.wtype->kind() == awst::WTypeKind::WTuple
+					|| arg.wtype->kind() == awst::WTypeKind::Bytes);
 			if (!isAggregate)
 				continue;
 

@@ -44,10 +44,15 @@ public:
 	/// Build an expression that represents taking the address of a function.
 	/// For internal: returns IntegerConstant with the function's ID.
 	/// For external: returns bytes (address + selector).
+	/// Build an expression representing a function reference (pointer).
+	/// @param _callerFuncType  Optional: the FunctionType from the calling
+	///                         context, which determines Internal vs External.
+	///                         When null, derived from _funcDef.
 	static std::shared_ptr<awst::Expression> buildFunctionReference(
 		BuilderContext& _ctx,
 		solidity::frontend::FunctionDefinition const* _funcDef,
-		awst::SourceLocation const& _loc);
+		awst::SourceLocation const& _loc,
+		solidity::frontend::FunctionType const* _callerFuncType = nullptr);
 
 	/// Build a call through a function pointer.
 	/// For internal: calls __funcptr_dispatch(id, args...).

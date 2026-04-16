@@ -163,10 +163,11 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 			|| funcType->kind() == FunctionType::Kind::DelegateCall))
 		{
 			// Internal function pointers: uint64 (dispatch ID)
-			// External function pointers: bytes (address + selector)
-			result = (funcType->kind() == FunctionType::Kind::Internal)
-				? awst::WType::uint64Type()
-				: awst::WType::bytesType();
+			// External function pointers: bytes[12] (appId 8 + selector 4)
+			if (funcType->kind() == FunctionType::Kind::Internal)
+				result = awst::WType::uint64Type();
+			else
+				result = createType<awst::BytesWType>(12);
 		}
 		else
 			result = awst::WType::uint64Type(); // default for other function kinds

@@ -166,7 +166,7 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 		{
 			if (ft->kind() == solidity::frontend::FunctionType::Kind::Internal
 				|| ft->kind() == solidity::frontend::FunctionType::Kind::External)
-				return eb::FunctionPointerBuilder::buildFunctionReference(m_ctx, funcDef, m_loc);
+				return eb::FunctionPointerBuilder::buildFunctionReference(m_ctx, funcDef, m_loc, ft);
 		}
 		// Otherwise fall through — function used as call target, not a pointer value
 	}

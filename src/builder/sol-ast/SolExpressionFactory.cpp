@@ -42,13 +42,12 @@ class SolFunctionPointerAccess : public SolMemberAccess
 public:
 	SolFunctionPointerAccess(eb::BuilderContext& _ctx,
 		solidity::frontend::MemberAccess const& _node,
-		solidity::frontend::FunctionDefinition const* _funcDef)
-		: SolMemberAccess(_ctx, _node), m_funcDef(_funcDef) {}
+		solidity::frontend::FunctionDefinition const* _funcDef,
+		solidity::frontend::FunctionType const* _callerFuncType = nullptr)
+		: SolMemberAccess(_ctx, _node), m_funcDef(_funcDef), m_callerFuncType(_callerFuncType) {}
 
 	std::shared_ptr<awst::Expression> toAwst() override
 	{
-		// Check if this function has a super version name (base class function
-		// that's overridden in the current contract)
 		std::string awstName;
 		auto it = m_ctx.superTargetNames.find(m_funcDef->id());
 		if (it != m_ctx.superTargetNames.end())
@@ -59,10 +58,12 @@ public:
 			m_funcDef->functionType(true),
 			awstName);
 
-		return eb::FunctionPointerBuilder::buildFunctionReference(m_ctx, m_funcDef, m_loc);
+		return eb::FunctionPointerBuilder::buildFunctionReference(
+			m_ctx, m_funcDef, m_loc, m_callerFuncType);
 	}
 private:
 	solidity::frontend::FunctionDefinition const* m_funcDef;
+	solidity::frontend::FunctionType const* m_callerFuncType;
 };
 
 SolExpressionFactory::SolExpressionFactory(eb::BuilderContext& _ctx)
@@ -382,7 +383,7 @@ std::unique_ptr<SolMemberAccess> SolExpressionFactory::createMemberAccess(
 			{
 				if (ft->kind() == FunctionType::Kind::Internal
 					|| ft->kind() == FunctionType::Kind::External)
-					return std::make_unique<SolFunctionPointerAccess>(m_ctx, _node, funcDef);
+					return std::make_unique<SolFunctionPointerAccess>(m_ctx, _node, funcDef, ft);
 			}
 		}
 	}
