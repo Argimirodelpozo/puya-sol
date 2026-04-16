@@ -1339,67 +1339,89 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
 
         method = resolve_method(app_spec, call.method_signature) if app_spec else call.method_signature
 
-        # Payable method calls: send a PaymentTxn to the app address first,
-        # then call the method. msg.value reads gtxns Amount from the
-        # preceding transaction in the group.
+        # Payable method calls: group a PaymentTxn before the AppCallTxn
+        # in an atomic group so msg.value (gtxns Amount of preceding txn)
+        # reads the correct amount.
         if call.value_wei > 0:
             from algosdk.transaction import PaymentTxn as _PayPT
+            from algosdk.atomic_transaction_composer import (
+                AtomicTransactionComposer as _PayATC, TransactionWithSigner as _PayTWS,
+            )
+            from algosdk.abi import Method as _PayMethod
             from algosdk.logic import get_application_address as _pay_app_addr
 
             _algod = app.algorand.client.algod
             _sender = app._default_sender
+            _signer = app._default_signer or app.algorand.account.get_signer(_sender)
 
             # Clamp wei to avoid overspending
             _amt = call.value_wei
-            if _amt > 1000:
-                _amt = 1000
+            if _amt > 1_000_000:
+                _amt = 1_000_000
 
-            # Send payment first (separate txn — not grouped but
-            # increases the app balance for msg.value semantics)
+            _sp = _algod.suggested_params()
+            _sp.flat_fee = True
+            _sp.fee = 5000
+
+            # Group: payment + method call
+            atc = _PayATC()
+
+            # 1. Payment to app address
             _pay_sp = _algod.suggested_params()
+            _pay_sp.flat_fee = True
+            _pay_sp.fee = 1000
             pay_txn = _PayPT(
                 sender=_sender, sp=_pay_sp,
                 receiver=_pay_app_addr(app.app_id), amt=_amt,
             )
-            _signer = app._default_signer or app.algorand.account.get_signer(_sender)
-            _algod.send_transaction(pay_txn.sign(_signer.private_key if hasattr(_signer, 'private_key') else app.algorand.account.get_account(_sender).private_key))
+            atc.add_transaction(_PayTWS(pay_txn, _signer))
 
-            # Now call the method normally (POPULATE handles resource refs)
-            params = au.AppClientMethodCallParams(
-                method=method, args=args if args else None,
-                extra_fee=au.AlgoAmount(micro_algo=30000),
+            # 2. ABI method call
+            _m = _PayMethod.from_signature(method)
+            box_refs = None
+            if hasattr(app, '_box_refs') and app._box_refs:
+                from algosdk.transaction import BoxReference as _PayBR
+                box_refs = [_PayBR(app_index=0, name=r[1]) for r in app._box_refs]
+            atc.add_method_call(
+                app_id=app.app_id, method=_m,
+                sender=_sender, sp=_sp, signer=_signer,
+                method_args=args if args else [],
+                boxes=box_refs,
             )
-            try:
-                result = app.send.call(params, send_params=POPULATE)
-            except Exception as ex1:
-                err_str = str(ex1)
-                if "cost budget" in err_str or "dynamic cost" in err_str or "simulate" in err_str.lower():
-                    try:
-                        result = _call_with_extra_budget(app, method, args, extra_calls=15)
-                    except Exception:
-                        raise ex1
-                else:
-                    raise
 
-            actual = result.abi_return
-            if len(call.expected) == 0 or (len(call.expected) == 1 and call.expected[0] == ""):
-                return True, "void ok"
-            if len(call.expected) == 1:
-                expected = parse_value(call.expected[0])
-                if _compare_values(actual, expected):
-                    return True, f"{actual}"
-                return False, f"expected {expected}, got {actual}"
-            if isinstance(actual, (list, tuple)):
-                actual_list = list(actual)
-            elif isinstance(actual, dict):
-                actual_list = list(actual.values())
-            else:
-                actual_list = [actual]
-            expected_list = [parse_value(e) for e in call.expected]
-            if len(actual_list) == len(expected_list) and all(
-                _compare_values(a, e) for a, e in zip(actual_list, expected_list)):
-                return True, f"{actual}"
-            return False, f"expected {expected_list}, got {actual_list}"
+            try:
+                # Populate resources (child apps, boxes, etc.)
+                try:
+                    atc = au.populate_app_call_resources(atc, _algod)
+                except Exception:
+                    pass
+                result = atc.execute(_algod, 5)
+                if call.expect_failure:
+                    return False, "expected FAILURE but succeeded"
+                # ABI return from the method call (index 0 in abi_results)
+                abi_return = result.abi_results[0].return_value if result.abi_results else None
+                if len(call.expected) == 0 or (len(call.expected) == 1 and call.expected[0] == ""):
+                    return True, "void ok"
+                if len(call.expected) == 1:
+                    expected = parse_value(call.expected[0])
+                    if _compare_values(abi_return, expected):
+                        return True, f"{abi_return}"
+                    return False, f"expected {expected}, got {abi_return}"
+                if isinstance(abi_return, (list, tuple)):
+                    actual_list = list(abi_return)
+                elif isinstance(abi_return, dict):
+                    actual_list = list(abi_return.values())
+                else:
+                    actual_list = [abi_return]
+                expected_list = [parse_value(e) for e in call.expected]
+                if len(actual_list) == len(expected_list) and all(
+                    _compare_values(a, e) for a, e in zip(actual_list, expected_list)):
+                    return True, f"{abi_return}"
+                return False, f"expected {expected_list}, got {actual_list}"
+            except Exception as ex:
+                if call.expect_failure:
+                    return True, "correctly reverted"
+                return False, f"exception: {str(ex)[:200]}"
 
         # Regroup flat args for static/dynamic array parameters
         args = _regroup_args(args, call.method_signature)
