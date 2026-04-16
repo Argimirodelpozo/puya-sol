@@ -1,5 +1,6 @@
 #include "builder/ContractBuilder.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
+#include "builder/sol-ast/calls/SolNewExpression.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-eb/FunctionPointerBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -1418,6 +1419,34 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			{
 				needsPostInit = checker.found();
 			}
+		}
+	}
+
+	// Force __postInit if the constructor (or state var initializers)
+	// contains `new C()` — the inner create/fund txns need the parent
+	// to already have balance, which only happens after deployment.
+	if (!needsPostInit)
+	{
+		struct NewExprChecker: public solidity::frontend::ASTConstVisitor
+		{
+			bool found = false;
+			bool visit(solidity::frontend::NewExpression const&) override
+			{ found = true; return false; }
+		};
+		NewExprChecker newChecker;
+		// Check state variable initializers
+		for (auto const* base: _contract.annotation().linearizedBaseContracts)
+			for (auto const* var: base->stateVariables())
+				if (var->value())
+					var->value()->accept(newChecker);
+		// Check constructor body
+		if (auto const* ctor = _contract.constructor())
+			if (ctor->isImplemented())
+				ctor->body().accept(newChecker);
+		if (newChecker.found)
+		{
+			needsPostInit = true;
+			Logger::instance().debug("Forcing __postInit: constructor/state-init deploys child contracts via new C()");
 		}
 	}
 
