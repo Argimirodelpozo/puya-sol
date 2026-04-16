@@ -645,11 +645,11 @@
                 "name": "x"
               },
               "value": {
-                "_type": "ARC4Decode",
+                "_type": "UInt64BinaryOperation",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/dirty_calldata_dynamic_array.sol",
-                  "line": 115,
-                  "end_line": 119,
+                  "line": 108,
+                  "end_line": 120,
                   "comment_lines": 0,
                   "column": null,
                   "end_column": null
@@ -659,8 +659,8 @@
                   "name": "uint64",
                   "immutable": true
                 },
-                "value": {
-                  "_type": "IndexExpression",
+                "left": {
+                  "_type": "ARC4Decode",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/dirty_calldata_dynamic_array.sol",
                     "line": 115,
@@ -670,60 +670,95 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "ARC4UIntN",
-                    "name": "arc4.int16",
-                    "immutable": true,
-                    "n": 16,
-                    "arc4_alias": "int16",
-                    "source_location": null
+                    "_type": "WType",
+                    "name": "uint64",
+                    "immutable": true
                   },
-                  "base": {
-                    "_type": "VarExpression",
+                  "value": {
+                    "_type": "IndexExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/dirty_calldata_dynamic_array.sol",
                       "line": 115,
-                      "end_line": 116,
+                      "end_line": 119,
                       "comment_lines": 0,
                       "column": null,
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "ARC4DynamicArray",
-                      "name": "arc4.dynamic_array<arc4.int16>",
-                      "immutable": false,
-                      "element_type": {
-                        "_type": "ARC4UIntN",
-                        "name": "arc4.int16",
-                        "immutable": true,
-                        "n": 16,
-                        "arc4_alias": "int16",
-                        "source_location": null
-                      },
-                      "arc4_alias": null,
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.int16",
+                      "immutable": true,
+                      "n": 16,
+                      "arc4_alias": "int16",
                       "source_location": null
                     },
-                    "name": "a"
+                    "base": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/dirty_calldata_dynamic_array.sol",
+                        "line": 115,
+                        "end_line": 116,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "ARC4DynamicArray",
+                        "name": "arc4.dynamic_array<arc4.int16>",
+                        "immutable": false,
+                        "element_type": {
+                          "_type": "ARC4UIntN",
+                          "name": "arc4.int16",
+                          "immutable": true,
+                          "n": 16,
+                          "arc4_alias": "int16",
+                          "source_location": null
+                        },
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "name": "a"
+                    },
+                    "index": {
+                      "_type": "IntegerConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/dirty_calldata_dynamic_array.sol",
+                        "line": 117,
+                        "end_line": 118,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "uint64",
+                        "immutable": true
+                      },
+                      "value": 1,
+                      "teal_alias": null
+                    }
                   },
-                  "index": {
-                    "_type": "IntegerConstant",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/dirty_calldata_dynamic_array.sol",
-                      "line": 117,
-                      "end_line": 118,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "uint64",
-                      "immutable": true
-                    },
-                    "value": 1,
-                    "teal_alias": null
-                  }
+                  "error_message": null
                 },
-                "error_message": null
+                "op": "&",
+                "right": {
+                  "_type": "IntegerConstant",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/dirty_calldata_dynamic_array.sol",
+                    "line": 108,
+                    "end_line": 120,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "uint64",
+                    "immutable": true
+                  },
+                  "value": 65535,
+                  "teal_alias": null
+                }
               }
             },
             {

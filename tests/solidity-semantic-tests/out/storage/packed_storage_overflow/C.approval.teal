@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/packed_storage_overflow.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1
+    intcblock 0 1 65536
     bytecblock "a" "b" "x"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -64,9 +64,11 @@ f:
     bytec_0 // "a"
     app_global_get_ex
     assert // check a exists
+    intc_2 // 65536
+    +
     pushint 2
     -
-    pushint 65536
+    intc_2 // 65536
     %
     bytec_0 // "a"
     dig 1
