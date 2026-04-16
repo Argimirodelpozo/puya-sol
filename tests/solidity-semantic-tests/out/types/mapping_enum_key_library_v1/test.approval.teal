@@ -4,10 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v1.sol.test.approval_program() -> uint64:
 main:
     intcblock 1 255 8 0
-    bytecblock "table" "__ctor_pending" 0x
+    bytecblock "__ctor_pending" "table"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -32,13 +32,13 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v1.sol.L.get(table: bytes, k: uint64) -> uint64, bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v1.sol.L.get(table: bytes, k: uint64) -> uint64:
 L.get:
-    proto 2 2
+    proto 2 1
     frame_dig -1
     itob
     sha256
-    bytec_0 // "table"
+    frame_dig -2
     swap
     concat
     box_get
@@ -48,35 +48,33 @@ L.get:
     swap
     uncover 2
     select
-    frame_dig -2
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v1.sol.L.set(table: bytes, k: uint64, v: uint64) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v1.sol.L.set(table: bytes, k: uint64, v: uint64) -> void:
 L.set:
-    proto 3 1
+    proto 3 0
     frame_dig -2
     itob
     sha256
-    bytec_0 // "table"
+    frame_dig -3
     swap
     concat
     frame_dig -1
     itob
     box_put
-    bytec_2 // 0x
     retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v1.sol.test.__postInit[routing]() -> void:
 __postInit:
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     intc_3 // 0
     app_global_put
-    bytec_0 // "table"
+    bytec_1 // "table"
     pushint 2
     box_create
     pop
@@ -95,19 +93,9 @@ get:
     btoi
     intc_1 // 255
     &
-    bytec_0 // "table"
-    box_get
-    bytec_2 // 0x
-    cover 2
-    select
+    bytec_1 // "table"
     swap
     callsub L.get
-    bytec_0 // "table"
-    box_del
-    pop
-    bytec_0 // "table"
-    swap
-    box_put
     intc_1 // 255
     &
     itob
@@ -141,18 +129,8 @@ set:
     swap
     intc_1 // 255
     &
-    bytec_0 // "table"
-    box_get
-    bytec_2 // 0x
-    cover 2
-    select
+    bytec_1 // "table"
     cover 2
     callsub L.set
-    bytec_0 // "table"
-    box_del
-    pop
-    bytec_0 // "table"
-    swap
-    box_put
     intc_0 // 1
     return

@@ -4,10 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_library_mappings_public.sol.Test.approval_program() -> uint64:
 main:
     intcblock 32 1 2 0
-    bytecblock 0x "m1" "m2" "__ctor_pending"
+    bytecblock 0x "__ctor_pending" "m1" "m2"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_3 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -32,9 +32,9 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_library_mappings_public.sol.Lib.set(m: bytes, key: bytes, value: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_library_mappings_public.sol.Lib.set(m: bytes, key: bytes, value: bytes) -> void:
 Lib.set:
-    proto 3 1
+    proto 3 0
     intc_0 // 32
     bzero
     frame_dig -2
@@ -46,7 +46,7 @@ Lib.set:
     intc_0 // 32
     extract3
     sha256
-    pushbytes "m"
+    frame_dig -3
     swap
     concat
     dup
@@ -54,23 +54,22 @@ Lib.set:
     pop
     frame_dig -1
     box_put
-    bytec_0 // 0x
     retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_library_mappings_public.sol.Test.__postInit[routing]() -> void:
 __postInit:
-    bytec_3 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_3 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_3 // 0
     app_global_put
-    bytec_1 // "m1"
+    bytec_2 // "m1"
     intc_2 // 2
     box_create
     pop
-    bytec_2 // "m2"
+    bytec_3 // "m2"
     intc_2 // 2
     box_create
     pop
@@ -80,67 +79,33 @@ __postInit:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/using_library_mappings_public.sol.Test.f[routing]() -> void:
 f:
-    bytec_1 // "m1"
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
     intc_3 // 0
     itob
     intc_1 // 1
     itob
-    uncover 2
+    bytec_2 // "m1"
     dig 2
     uncover 2
     callsub Lib.set
-    bytec_1 // "m1"
-    box_del
-    pop
-    bytec_1 // "m1"
-    dig 1
-    box_put
     intc_2 // 2
     itob
     pushint 42
     itob
-    uncover 2
+    bytec_2 // "m1"
     dig 2
     uncover 2
     callsub Lib.set
-    bytec_1 // "m1"
-    box_del
-    pop
-    bytec_1 // "m1"
-    swap
-    box_put
-    bytec_2 // "m2"
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
     pushint 23
     itob
-    swap
+    bytec_3 // "m2"
     uncover 3
     uncover 2
     callsub Lib.set
-    bytec_2 // "m2"
-    box_del
-    pop
-    bytec_2 // "m2"
-    dig 1
-    box_put
     pushint 99
     itob
-    swap
+    bytec_3 // "m2"
     cover 2
     callsub Lib.set
-    bytec_2 // "m2"
-    box_del
-    pop
-    bytec_2 // "m2"
-    swap
-    box_put
     pushbytes 0x6d3166687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
     box_get
     bytec_0 // 0x

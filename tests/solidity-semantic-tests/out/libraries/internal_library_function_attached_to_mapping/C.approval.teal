@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/internal_library_function_attached_to_mapping.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1
-    bytecblock "__ctor_pending" 0x "map" 0x6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf 0x6d6170aa796dee6b6abca795103a49a9715b499482dcf870f9237b2a7b03a3c93fd310
+    bytecblock "__ctor_pending" "map" 0x6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf 0x6d6170aa796dee6b6abca795103a49a9715b499482dcf870f9237b2a7b03a3c93fd310
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
@@ -46,11 +46,11 @@ L.at:
     intc_0 // 32
     extract3
     sha256
-    pushbytes "a"
+    frame_dig -2
     swap
     concat
     box_get
-    bytec_1 // 0x
+    pushbytes 0x
     cover 2
     select
     retsub
@@ -64,7 +64,7 @@ __postInit:
     bytec_0 // "__ctor_pending"
     pushint 0
     app_global_put
-    bytec_2 // "map"
+    bytec_1 // "map"
     pushint 2
     box_create
     pop
@@ -82,25 +82,21 @@ mapValue:
     assert // invalid number of bytes for arc4.uint256
     pushint 36
     itob
-    bytec_3 // 0x6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
+    bytec_2 // 0x6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
     box_del
     pop
-    bytec_3 // 0x6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
+    bytec_2 // 0x6d61700a28e9ffef0073f9a6a674cf57ee77307f38f0f1bebb087888d9011ed0eeefdf
     swap
     box_put
     pushint 102
     itob
-    bytec 4 // 0x6d6170aa796dee6b6abca795103a49a9715b499482dcf870f9237b2a7b03a3c93fd310
+    bytec_3 // 0x6d6170aa796dee6b6abca795103a49a9715b499482dcf870f9237b2a7b03a3c93fd310
     box_del
     pop
-    bytec 4 // 0x6d6170aa796dee6b6abca795103a49a9715b499482dcf870f9237b2a7b03a3c93fd310
+    bytec_3 // 0x6d6170aa796dee6b6abca795103a49a9715b499482dcf870f9237b2a7b03a3c93fd310
     swap
     box_put
-    bytec_2 // "map"
-    box_get
-    bytec_1 // 0x
-    cover 2
-    select
+    bytec_1 // "map"
     swap
     callsub L.at
     dup

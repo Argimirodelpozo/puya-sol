@@ -49,24 +49,9 @@
       }
     ],
     "return_type": {
-      "_type": "WTuple",
-      "name": "tuple",
-      "immutable": true,
-      "types": [
-        {
-          "_type": "WType",
-          "name": "uint64",
-          "immutable": true
-        },
-        {
-          "_type": "BytesWType",
-          "name": "bytes",
-          "immutable": true,
-          "length": null
-        }
-      ],
-      "names": null,
-      "source_location": null
+      "_type": "WType",
+      "name": "uint64",
+      "immutable": true
     },
     "body": {
       "_type": "Block",
@@ -90,38 +75,32 @@
             "end_column": null
           },
           "value": {
-            "_type": "TupleExpression",
+            "_type": "StateGet",
             "source_location": {
               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-              "line": 144,
+              "line": 151,
               "end_line": 159,
               "comment_lines": 0,
               "column": null,
               "end_column": null
             },
-            "wtype": {
-              "_type": "WTuple",
-              "name": "tuple",
-              "immutable": true,
-              "types": [
-                {
-                  "_type": "WType",
-                  "name": "uint64",
-                  "immutable": true
-                },
-                {
-                  "_type": "BytesWType",
-                  "name": "bytes",
-                  "immutable": true,
-                  "length": null
-                }
-              ],
-              "names": null,
-              "source_location": null
-            },
-            "items": [
-              {
-                "_type": "StateGet",
+            "field": {
+              "_type": "BoxValueExpression",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
+                "line": 151,
+                "end_line": 159,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "wtype": {
+                "_type": "WType",
+                "name": "uint64",
+                "immutable": true
+              },
+              "key": {
+                "_type": "BoxPrefixedKeyExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
                   "line": 151,
@@ -130,8 +109,13 @@
                   "column": null,
                   "end_column": null
                 },
-                "field": {
-                  "_type": "BoxValueExpression",
+                "wtype": {
+                  "_type": "WType",
+                  "name": "box_key",
+                  "immutable": true
+                },
+                "prefix": {
+                  "_type": "VarExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
                     "line": 151,
@@ -141,44 +125,33 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "uint64",
-                    "immutable": true
+                    "_type": "BytesWType",
+                    "name": "bytes",
+                    "immutable": true,
+                    "length": null
                   },
-                  "key": {
-                    "_type": "BoxPrefixedKeyExpression",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                      "line": 151,
-                      "end_line": 159,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "box_key",
-                      "immutable": true
-                    },
-                    "prefix": {
-                      "_type": "BytesConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                        "line": 151,
-                        "end_line": 159,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "box_key",
-                        "immutable": true
-                      },
-                      "value": "bYWs_Wd",
-                      "encoding": "utf8"
-                    },
-                    "key": {
+                  "name": "table"
+                },
+                "key": {
+                  "_type": "IntrinsicCall",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
+                    "line": 151,
+                    "end_line": 159,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "BytesWType",
+                    "name": "bytes",
+                    "immutable": true,
+                    "length": null
+                  },
+                  "op_code": "sha256",
+                  "immediates": [],
+                  "stack_args": [
+                    {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
@@ -194,90 +167,51 @@
                         "immutable": true,
                         "length": null
                       },
-                      "op_code": "sha256",
+                      "op_code": "itob",
                       "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "IntrinsicCall",
+                          "_type": "VarExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                            "line": 151,
-                            "end_line": 159,
+                            "line": 157,
+                            "end_line": 158,
                             "comment_lines": 0,
                             "column": null,
                             "end_column": null
                           },
                           "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
                           },
-                          "op_code": "itob",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "VarExpression",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                                "line": 157,
-                                "end_line": 158,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "uint64",
-                                "immutable": true
-                              },
-                              "name": "k"
-                            }
-                          ]
+                          "name": "k"
                         }
                       ]
                     }
-                  },
-                  "exists_assertion_message": null
-                },
-                "default": {
-                  "_type": "IntegerConstant",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                    "line": 151,
-                    "end_line": 159,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "WType",
-                    "name": "uint64",
-                    "immutable": true
-                  },
-                  "value": 0,
-                  "teal_alias": null
+                  ]
                 }
               },
-              {
-                "_type": "VarExpression",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                  "line": 144,
-                  "end_line": 159,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "BytesWType",
-                  "name": "bytes",
-                  "immutable": true,
-                  "length": null
-                },
-                "name": "table"
-              }
-            ]
+              "exists_assertion_message": null
+            },
+            "default": {
+              "_type": "IntegerConstant",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
+                "line": 151,
+                "end_line": 159,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "wtype": {
+                "_type": "WType",
+                "name": "uint64",
+                "immutable": true
+              },
+              "value": 0,
+              "teal_alias": null
+            }
           }
         }
       ],
@@ -359,10 +293,9 @@
       }
     ],
     "return_type": {
-      "_type": "BytesWType",
-      "name": "bytes",
-      "immutable": true,
-      "length": null
+      "_type": "WType",
+      "name": "void",
+      "immutable": true
     },
     "body": {
       "_type": "Block",
@@ -431,7 +364,7 @@
                   "immutable": true
                 },
                 "prefix": {
-                  "_type": "BytesConstant",
+                  "_type": "VarExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
                     "line": 252,
@@ -441,12 +374,12 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "box_key",
-                    "immutable": true
+                    "_type": "BytesWType",
+                    "name": "bytes",
+                    "immutable": true,
+                    "length": null
                   },
-                  "value": "bYWs_Wd",
-                  "encoding": "utf8"
+                  "name": "table"
                 },
                 "key": {
                   "_type": "IntrinsicCall",
@@ -527,36 +460,6 @@
               },
               "name": "v"
             }
-          }
-        },
-        {
-          "_type": "ReturnStatement",
-          "source_location": {
-            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-            "line": 171,
-            "end_line": 271,
-            "comment_lines": 0,
-            "column": null,
-            "end_column": null
-          },
-          "value": {
-            "_type": "BytesConstant",
-            "source_location": {
-              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-              "line": 171,
-              "end_line": 271,
-              "comment_lines": 0,
-              "column": null,
-              "end_column": null
-            },
-            "wtype": {
-              "_type": "BytesWType",
-              "name": "bytes",
-              "immutable": true,
-              "length": null
-            },
-            "value": "",
-            "encoding": "base16"
           }
         }
       ],
@@ -1688,289 +1591,6 @@
               }
             },
             {
-              "_type": "AssignmentStatement",
-              "source_location": {
-                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                "line": 385,
-                "end_line": 400,
-                "comment_lines": 0,
-                "column": null,
-                "end_column": null
-              },
-              "target": {
-                "_type": "VarExpression",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                  "line": 385,
-                  "end_line": 400,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "WTuple",
-                  "name": "tuple",
-                  "immutable": true,
-                  "types": [
-                    {
-                      "_type": "WType",
-                      "name": "uint64",
-                      "immutable": true
-                    },
-                    {
-                      "_type": "BytesWType",
-                      "name": "bytes",
-                      "immutable": true,
-                      "length": null
-                    }
-                  ],
-                  "names": null,
-                  "source_location": null
-                },
-                "name": "__storage_wb_0"
-              },
-              "value": {
-                "_type": "SubroutineCallExpression",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                  "line": 385,
-                  "end_line": 400,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "WTuple",
-                  "name": "tuple",
-                  "immutable": true,
-                  "types": [
-                    {
-                      "_type": "WType",
-                      "name": "uint64",
-                      "immutable": true
-                    },
-                    {
-                      "_type": "BytesWType",
-                      "name": "bytes",
-                      "immutable": true,
-                      "length": null
-                    }
-                  ],
-                  "names": null,
-                  "source_location": null
-                },
-                "target": {
-                  "_type": "SubroutineID",
-                  "target": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol.L.get"
-                },
-                "args": [
-                  {
-                    "name": null,
-                    "value": {
-                      "_type": "StateGet",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                        "line": 391,
-                        "end_line": 396,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "field": {
-                        "_type": "BoxValueExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                          "line": 391,
-                          "end_line": 396,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        "key": {
-                          "_type": "BytesConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                            "line": 391,
-                            "end_line": 396,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "box_key",
-                            "immutable": true
-                          },
-                          "value": "bYWs_Wd",
-                          "encoding": "utf8"
-                        },
-                        "exists_assertion_message": null
-                      },
-                      "default": {
-                        "_type": "BytesConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                          "line": 391,
-                          "end_line": 396,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        "value": "",
-                        "encoding": "base16"
-                      }
-                    }
-                  },
-                  {
-                    "name": null,
-                    "value": {
-                      "_type": "VarExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                        "line": 398,
-                        "end_line": 399,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "name": "k"
-                    }
-                  }
-                ]
-              }
-            },
-            {
-              "_type": "ExpressionStatement",
-              "source_location": {
-                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                "line": 385,
-                "end_line": 400,
-                "comment_lines": 0,
-                "column": null,
-                "end_column": null
-              },
-              "expr": {
-                "_type": "AssignmentExpression",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                  "line": 385,
-                  "end_line": 400,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "BytesWType",
-                  "name": "bytes",
-                  "immutable": true,
-                  "length": null
-                },
-                "target": {
-                  "_type": "BoxValueExpression",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                    "line": 391,
-                    "end_line": 396,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
-                  },
-                  "key": {
-                    "_type": "BytesConstant",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                      "line": 391,
-                      "end_line": 396,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "box_key",
-                      "immutable": true
-                    },
-                    "value": "bYWs_Wd",
-                    "encoding": "utf8"
-                  },
-                  "exists_assertion_message": null
-                },
-                "value": {
-                  "_type": "TupleItemExpression",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                    "line": 385,
-                    "end_line": 400,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
-                  },
-                  "base": {
-                    "_type": "VarExpression",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                      "line": 385,
-                      "end_line": 400,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WTuple",
-                      "name": "tuple",
-                      "immutable": true,
-                      "types": [
-                        {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        }
-                      ],
-                      "names": null,
-                      "source_location": null
-                    },
-                    "name": "__storage_wb_0"
-                  },
-                  "index": 1
-                }
-              }
-            },
-            {
               "_type": "ReturnStatement",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
@@ -1996,7 +1616,7 @@
                   "immutable": true
                 },
                 "left": {
-                  "_type": "TupleItemExpression",
+                  "_type": "SubroutineCallExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
                     "line": 385,
@@ -2010,39 +1630,54 @@
                     "name": "uint64",
                     "immutable": true
                   },
-                  "base": {
-                    "_type": "VarExpression",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                      "line": 385,
-                      "end_line": 400,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WTuple",
-                      "name": "tuple",
-                      "immutable": true,
-                      "types": [
-                        {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
+                  "target": {
+                    "_type": "SubroutineID",
+                    "target": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol.L.get"
+                  },
+                  "args": [
+                    {
+                      "name": null,
+                      "value": {
+                        "_type": "BytesConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
+                          "line": 385,
+                          "end_line": 400,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
                         },
-                        {
+                        "wtype": {
                           "_type": "BytesWType",
                           "name": "bytes",
                           "immutable": true,
                           "length": null
-                        }
-                      ],
-                      "names": null,
-                      "source_location": null
+                        },
+                        "value": "bYWs_Wd",
+                        "encoding": "utf8"
+                      }
                     },
-                    "name": "__storage_wb_0"
-                  },
-                  "index": 0
+                    {
+                      "name": null,
+                      "value": {
+                        "_type": "VarExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
+                          "line": 398,
+                          "end_line": 399,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "name": "k"
+                      }
+                    }
+                  ]
                 },
                 "op": "&",
                 "right": {
@@ -2565,7 +2200,7 @@
               }
             },
             {
-              "_type": "AssignmentStatement",
+              "_type": "ExpressionStatement",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
                 "line": 456,
@@ -2574,25 +2209,7 @@
                 "column": null,
                 "end_column": null
               },
-              "target": {
-                "_type": "VarExpression",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                  "line": 456,
-                  "end_line": 474,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "BytesWType",
-                  "name": "bytes",
-                  "immutable": true,
-                  "length": null
-                },
-                "name": "__storage_wb_1"
-              },
-              "value": {
+              "expr": {
                 "_type": "SubroutineCallExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
@@ -2603,10 +2220,9 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "BytesWType",
-                  "name": "bytes",
-                  "immutable": true,
-                  "length": null
+                  "_type": "WType",
+                  "name": "void",
+                  "immutable": true
                 },
                 "target": {
                   "_type": "SubroutineID",
@@ -2616,70 +2232,23 @@
                   {
                     "name": null,
                     "value": {
-                      "_type": "StateGet",
+                      "_type": "BytesConstant",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                        "line": 462,
-                        "end_line": 467,
+                        "line": 456,
+                        "end_line": 474,
                         "comment_lines": 0,
                         "column": null,
                         "end_column": null
                       },
-                      "field": {
-                        "_type": "BoxValueExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                          "line": 462,
-                          "end_line": 467,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        "key": {
-                          "_type": "BytesConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                            "line": 462,
-                            "end_line": 467,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "box_key",
-                            "immutable": true
-                          },
-                          "value": "bYWs_Wd",
-                          "encoding": "utf8"
-                        },
-                        "exists_assertion_message": null
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
                       },
-                      "default": {
-                        "_type": "BytesConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                          "line": 462,
-                          "end_line": 467,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        "value": "",
-                        "encoding": "base16"
-                      }
+                      "value": "bYWs_Wd",
+                      "encoding": "utf8"
                     }
                   },
                   {
@@ -2723,115 +2292,6 @@
                     }
                   }
                 ]
-              }
-            },
-            {
-              "_type": "ExpressionStatement",
-              "source_location": {
-                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                "line": 456,
-                "end_line": 474,
-                "comment_lines": 0,
-                "column": null,
-                "end_column": null
-              },
-              "expr": {
-                "_type": "VoidConstant",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                  "line": 456,
-                  "end_line": 474,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "WType",
-                  "name": "void",
-                  "immutable": true
-                }
-              }
-            },
-            {
-              "_type": "ExpressionStatement",
-              "source_location": {
-                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                "line": 456,
-                "end_line": 474,
-                "comment_lines": 0,
-                "column": null,
-                "end_column": null
-              },
-              "expr": {
-                "_type": "AssignmentExpression",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                  "line": 456,
-                  "end_line": 474,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "BytesWType",
-                  "name": "bytes",
-                  "immutable": true,
-                  "length": null
-                },
-                "target": {
-                  "_type": "BoxValueExpression",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                    "line": 462,
-                    "end_line": 467,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
-                  },
-                  "key": {
-                    "_type": "BytesConstant",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                      "line": 462,
-                      "end_line": 467,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "box_key",
-                      "immutable": true
-                    },
-                    "value": "bYWs_Wd",
-                    "encoding": "utf8"
-                  },
-                  "exists_assertion_message": null
-                },
-                "value": {
-                  "_type": "VarExpression",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/mapping_enum_key_library_v2.sol",
-                    "line": 456,
-                    "end_line": 474,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "wtype": {
-                    "_type": "BytesWType",
-                    "name": "bytes",
-                    "immutable": true,
-                    "length": null
-                  },
-                  "name": "__storage_wb_1"
-                }
               }
             }
           ],

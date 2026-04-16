@@ -4,10 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_arguments_in_library.sol.Test.approval_program() -> uint64:
 main:
     intcblock 32 1
-    bytecblock "m" 0x "__ctor_pending" 0x151f7c75
+    bytecblock "m" "__ctor_pending" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -32,9 +32,9 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_arguments_in_library.sol.Lib.set(m: bytes, key: bytes, value: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_arguments_in_library.sol.Lib.set(m: bytes, key: bytes, value: bytes) -> void:
 Lib.set:
-    proto 3 1
+    proto 3 0
     intc_0 // 32
     bzero
     frame_dig -2
@@ -46,7 +46,7 @@ Lib.set:
     intc_0 // 32
     extract3
     sha256
-    bytec_0 // "m"
+    frame_dig -3
     swap
     concat
     dup
@@ -54,7 +54,6 @@ Lib.set:
     pop
     frame_dig -1
     box_put
-    bytec_1 // 0x
     retsub
 
 
@@ -72,11 +71,11 @@ Lib.get:
     intc_0 // 32
     extract3
     sha256
-    bytec_0 // "m"
+    frame_dig -2
     swap
     concat
     box_get
-    bytec_1 // 0x
+    pushbytes 0x
     cover 2
     select
     retsub
@@ -84,10 +83,10 @@ Lib.get:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/mapping_arguments_in_library.sol.Test.__postInit[routing]() -> void:
 __postInit:
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     pushint 0
     app_global_put
     bytec_0 // "m"
@@ -113,26 +112,12 @@ set:
     ==
     assert // invalid number of bytes for arc4.uint256
     bytec_0 // "m"
-    box_get
-    bytec_1 // 0x
-    cover 2
-    select
     dig 2
     callsub Lib.get
     bytec_0 // "m"
-    box_get
-    bytec_1 // 0x
-    cover 2
-    select
     uncover 3
     uncover 3
     callsub Lib.set
-    bytec_0 // "m"
-    box_del
-    pop
-    bytec_0 // "m"
-    swap
-    box_put
     dup
     len
     intc_0 // 32
@@ -141,7 +126,7 @@ set:
     intc_0 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -158,10 +143,6 @@ get:
     ==
     assert // invalid number of bytes for arc4.uint256
     bytec_0 // "m"
-    box_get
-    bytec_1 // 0x
-    cover 2
-    select
     swap
     callsub Lib.get
     dup
@@ -172,7 +153,7 @@ get:
     intc_0 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log

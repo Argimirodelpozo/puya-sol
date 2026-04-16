@@ -4,10 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/external_call_with_storage_mapping_parameter.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32
-    bytecblock "x" "__ctor_pending" 0x 0x78ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5 0x7866687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    bytecblock "__ctor_pending" 0x "x" 0x78ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5 0x7866687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -32,33 +32,36 @@ main_after_if_else@2:
     err
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/external_call_with_storage_mapping_parameter.sol.L.f(_a: bytes) -> bytes, bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/external_call_with_storage_mapping_parameter.sol.L.f(_a: bytes) -> bytes:
 L.f:
-    proto 1 2
-    pushbytes 0x5f6166687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    proto 1 1
+    frame_dig -1
+    pushbytes 0x66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
+    concat
     box_get
-    bytec_2 // 0x
+    bytec_1 // 0x
     cover 2
     select
-    pushbytes 0x5f61ec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
+    frame_dig -1
+    pushbytes 0xec4916dd28fc4c10d78e287ca5d9cc51ee1ae73cbfde08c6b37324cbfaac8bc5
+    concat
     box_get
-    bytec_2 // 0x
+    bytec_1 // 0x
     cover 2
     select
     b*
-    frame_dig -1
     retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/external_call_with_storage_mapping_parameter.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     pushint 0
     app_global_put
-    bytec_0 // "x"
+    bytec_2 // "x"
     pushint 2
     box_create
     pop
@@ -86,18 +89,8 @@ g:
     bytec 4 // 0x7866687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925
     swap
     box_put
-    bytec_0 // "x"
-    box_get
-    bytec_2 // 0x
-    cover 2
-    select
+    bytec_2 // "x"
     callsub L.f
-    bytec_0 // "x"
-    box_del
-    pop
-    bytec_0 // "x"
-    swap
-    box_put
     dup
     len
     intc_1 // 32
