@@ -228,7 +228,12 @@ def compile_test(sol_path: Path, out_dir: Path, ensure_budget: dict = None, via_
 
 
 def _extract_box_refs(teal_path):
-    """Extract box references from TEAL — find strings used with box_* ops."""
+    """Extract box references from TEAL by finding the string constant that
+    immediately precedes each box_* opcode. Anything simulate can already
+    discover (via populate_app_call_resources) is left to runtime — in
+    particular we do NOT scan the whole bytecblock for quoted strings,
+    since that also picks up app_global_put keys (e.g. "__ctor_pending",
+    "a") which are not boxes and only inflate funding + baselining."""
     teal = teal_path.read_text()
     refs = []
     seen = set()
@@ -253,16 +258,6 @@ def _extract_box_refs(teal_path):
                         seen.add(key)
                         refs.append((0, key.encode()))
                     break
-    # Also grab from bytecblock — but only short names that look like
-    # state variable names, not computed hashes or global state keys.
-    bytecblock_match = re.search(r'bytecblock\s+(.*)', teal)
-    if bytecblock_match:
-        for token in bytecblock_match.group(1).split():
-            if token.startswith('"') and token.endswith('"'):
-                key = token[1:-1]
-                if key not in seen and len(key) <= 64:
-                    seen.add(key)
-                    refs.append((0, key.encode()))
     return refs
 
 
