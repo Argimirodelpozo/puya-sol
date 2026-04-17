@@ -128,15 +128,9 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleEnumConversion()
 	cmp->op = awst::NumericComparison::Lt;
 	cmp->rhs = std::move(maxVal);
 
-	auto assertExpr = std::make_shared<awst::AssertExpression>();
-	assertExpr->sourceLocation = m_loc;
-	assertExpr->wtype = awst::WType::voidType();
-	assertExpr->condition = std::move(cmp);
-	assertExpr->errorMessage = "enum out of range";
-
 	auto stmt = std::make_shared<awst::ExpressionStatement>();
 	stmt->sourceLocation = m_loc;
-	stmt->expr = std::move(assertExpr);
+	stmt->expr = awst::makeAssert(std::move(cmp), m_loc, "enum out of range");
 	m_ctx.prePendingStatements.push_back(std::move(stmt));
 
 	return result;

@@ -126,15 +126,9 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			cmp->op = awst::NumericComparison::Ne;
 			cmp->rhs = makeBiguintConst(halfNStr);
 
-			auto assertExpr = std::make_shared<awst::AssertExpression>();
-			assertExpr->sourceLocation = m_loc;
-			assertExpr->wtype = awst::WType::voidType();
-			assertExpr->condition = std::move(cmp);
-			assertExpr->errorMessage = "signed negation overflow";
-
 			auto assertStmt = std::make_shared<awst::ExpressionStatement>();
 			assertStmt->sourceLocation = m_loc;
-			assertStmt->expr = std::move(assertExpr);
+			assertStmt->expr = awst::makeAssert(std::move(cmp), m_loc, "signed negation overflow");
 			m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 		}
 
@@ -530,15 +524,9 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 				cmp->op = awst::NumericComparison::Ne;
 				cmp->rhs = makeBConst(limitStr);
 
-				auto assertExpr = std::make_shared<awst::AssertExpression>();
-				assertExpr->sourceLocation = m_loc;
-				assertExpr->wtype = awst::WType::voidType();
-				assertExpr->condition = std::move(cmp);
-				assertExpr->errorMessage = "signed inc/dec overflow";
-
 				auto assertStmt = std::make_shared<awst::ExpressionStatement>();
 				assertStmt->sourceLocation = m_loc;
-				assertStmt->expr = std::move(assertExpr);
+				assertStmt->expr = awst::makeAssert(std::move(cmp), m_loc, "signed inc/dec overflow");
 				m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 			}
 

@@ -1113,15 +1113,9 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 						cmp->op = awst::NumericComparison::Lte;
 						cmp->rhs = std::move(mv);
 
-						auto ae = std::make_shared<awst::AssertExpression>();
-						ae->sourceLocation = loc;
-						ae->wtype = awst::WType::voidType();
-						ae->condition = std::move(cmp);
-						ae->errorMessage = "enum validation";
-
 						auto as = std::make_shared<awst::ExpressionStatement>();
 						as->sourceLocation = loc;
-						as->expr = std::move(ae);
+						as->expr = awst::makeAssert(std::move(cmp), loc, "enum validation");
 						body->body.push_back(std::move(as));
 					}
 				}
@@ -1516,6 +1510,14 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					if (defaultVal)
 						defaultVal = TypeCoercion::coerceForAssignment(
 							std::move(defaultVal), wtype, method.sourceLocation);
+					// Flush any prePending statements (e.g. `new C()` emits an
+					// inner-txn create + fund before referencing __new_app_id_N)
+					// into the target body so the referenced vars are bound
+					// before the state-var assignment.
+					for (auto& preStmt: m_exprBuilder->takePrePendingStatements())
+						targetBody.push_back(std::move(preStmt));
+					for (auto& postStmt: m_exprBuilder->takePendingStatements())
+						targetBody.push_back(std::move(postStmt));
 				}
 				if (!defaultVal)
 				{
@@ -2013,14 +2015,10 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			readKey->value = std::vector<uint8_t>(pendingKeyStr.begin(), pendingKeyStr.end());
 			readPending->stackArgs.push_back(readKey);
 
-			auto assertPending = std::make_shared<awst::AssertExpression>();
-			assertPending->sourceLocation = method.sourceLocation;
-			assertPending->wtype = awst::WType::voidType();
-			assertPending->condition = readPending;
-			assertPending->errorMessage = "__postInit already called";
 			auto assertStmt = std::make_shared<awst::ExpressionStatement>();
 			assertStmt->sourceLocation = method.sourceLocation;
-			assertStmt->expr = assertPending;
+			assertStmt->expr = awst::makeAssert(
+				readPending, method.sourceLocation, "__postInit already called");
 			postInitBody->body.push_back(std::move(assertStmt));
 
 			// Clear flag: __ctor_pending = 0
@@ -3232,15 +3230,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					cmp->op = awst::NumericComparison::Lt;
 					cmp->rhs = std::move(maxVal);
 
-					auto assertExpr = std::make_shared<awst::AssertExpression>();
-					assertExpr->sourceLocation = method.sourceLocation;
-					assertExpr->wtype = awst::WType::voidType();
-					assertExpr->condition = std::move(cmp);
-					assertExpr->errorMessage = "enum out of range";
-
 					auto assertStmt = std::make_shared<awst::ExpressionStatement>();
 					assertStmt->sourceLocation = method.sourceLocation;
-					assertStmt->expr = std::move(assertExpr);
+					assertStmt->expr = awst::makeAssert(std::move(cmp), method.sourceLocation, "enum out of range");
 					method.body->body.push_back(std::move(assertStmt));
 				}
 			}
@@ -3799,15 +3791,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						orExpr->right = std::move(cmpNeg);
 						orExpr->op = awst::BinaryBooleanOperator::Or;
 
-						auto assertExpr = std::make_shared<awst::AssertExpression>();
-						assertExpr->sourceLocation = loc;
-						assertExpr->wtype = awst::WType::voidType();
-						assertExpr->condition = std::move(orExpr);
-						assertExpr->errorMessage = "ABI validation";
-
 						auto assertStmt = std::make_shared<awst::ExpressionStatement>();
 						assertStmt->sourceLocation = loc;
-						assertStmt->expr = std::move(assertExpr);
+						assertStmt->expr = awst::makeAssert(std::move(orExpr), loc, "ABI validation");
 						maskStmts.push_back(std::move(assertStmt));
 					}
 					// No masking for signed types
@@ -3835,15 +3821,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					cmp->op = awst::NumericComparison::Lte;
 					cmp->rhs = std::move(maxVal);
 
-					auto assertExpr = std::make_shared<awst::AssertExpression>();
-					assertExpr->sourceLocation = loc;
-					assertExpr->wtype = awst::WType::voidType();
-					assertExpr->condition = std::move(cmp);
-					assertExpr->errorMessage = "ABI validation";
-
 					auto assertStmt = std::make_shared<awst::ExpressionStatement>();
 					assertStmt->sourceLocation = loc;
-					assertStmt->expr = std::move(assertExpr);
+					assertStmt->expr = awst::makeAssert(std::move(cmp), loc, "ABI validation");
 					maskStmts.push_back(std::move(assertStmt));
 				}
 
@@ -3914,15 +3894,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					cmp->op = awst::NumericComparison::Lte;
 					cmp->rhs = std::move(one);
 
-					auto assertExpr = std::make_shared<awst::AssertExpression>();
-					assertExpr->sourceLocation = loc;
-					assertExpr->wtype = awst::WType::voidType();
-					assertExpr->condition = std::move(cmp);
-					assertExpr->errorMessage = "ABI bool validation";
-
 					auto assertStmt = std::make_shared<awst::ExpressionStatement>();
 					assertStmt->sourceLocation = loc;
-					assertStmt->expr = std::move(assertExpr);
+					assertStmt->expr = awst::makeAssert(std::move(cmp), loc, "ABI bool validation");
 					maskStmts.push_back(std::move(assertStmt));
 				}
 
@@ -3956,15 +3930,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					cmp->op = awst::NumericComparison::Lte;
 					cmp->rhs = std::move(maxVal);
 
-					auto assertExpr = std::make_shared<awst::AssertExpression>();
-					assertExpr->sourceLocation = loc;
-					assertExpr->wtype = awst::WType::voidType();
-					assertExpr->condition = std::move(cmp);
-					assertExpr->errorMessage = "ABI enum validation";
-
 					auto assertStmt = std::make_shared<awst::ExpressionStatement>();
 					assertStmt->sourceLocation = loc;
-					assertStmt->expr = std::move(assertExpr);
+					assertStmt->expr = awst::makeAssert(std::move(cmp), loc, "ABI enum validation");
 					maskStmts.push_back(std::move(assertStmt));
 				}
 			}

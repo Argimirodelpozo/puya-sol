@@ -573,15 +573,9 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 
 		if (overflowCond)
 		{
-			auto assertExpr = std::make_shared<awst::AssertExpression>();
-			assertExpr->sourceLocation = m_loc;
-			assertExpr->wtype = awst::WType::voidType();
-			assertExpr->condition = std::move(overflowCond);
-			assertExpr->errorMessage = "signed arithmetic overflow";
-
 			auto assertStmt = std::make_shared<awst::ExpressionStatement>();
 			assertStmt->sourceLocation = m_loc;
-			assertStmt->expr = std::move(assertExpr);
+			assertStmt->expr = awst::makeAssert(std::move(overflowCond), m_loc, "signed arithmetic overflow");
 			m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 		}
 	}
@@ -801,15 +795,9 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 		rangeOk->trueExpr = std::move(leHalf);
 		rangeOk->falseExpr = std::move(ltHalf);
 
-		auto assertExpr = std::make_shared<awst::AssertExpression>();
-		assertExpr->sourceLocation = m_loc;
-		assertExpr->wtype = awst::WType::voidType();
-		assertExpr->condition = std::move(rangeOk);
-		assertExpr->errorMessage = "signed exp overflow";
-
 		auto assertStmt = std::make_shared<awst::ExpressionStatement>();
 		assertStmt->sourceLocation = m_loc;
-		assertStmt->expr = std::move(assertExpr);
+		assertStmt->expr = awst::makeAssert(std::move(rangeOk), m_loc, "signed exp overflow");
 		m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 	}
 
@@ -985,15 +973,9 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 		bZero->op = awst::NumericComparison::Ne;
 		bZero->rhs = makeBiguintConst("0");
 
-		auto assertExpr = std::make_shared<awst::AssertExpression>();
-		assertExpr->sourceLocation = m_loc;
-		assertExpr->wtype = awst::WType::voidType();
-		assertExpr->condition = std::move(bZero);
-		assertExpr->errorMessage = "division by zero";
-
 		auto assertStmt = std::make_shared<awst::ExpressionStatement>();
 		assertStmt->sourceLocation = m_loc;
-		assertStmt->expr = std::move(assertExpr);
+		assertStmt->expr = awst::makeAssert(std::move(bZero), m_loc, "division by zero");
 		m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 	}
 
@@ -1036,15 +1018,9 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 		notBoth->wtype = awst::WType::boolType();
 		notBoth->expr = std::move(bothTrue);
 
-		auto assertExpr = std::make_shared<awst::AssertExpression>();
-		assertExpr->sourceLocation = m_loc;
-		assertExpr->wtype = awst::WType::voidType();
-		assertExpr->condition = std::move(notBoth);
-		assertExpr->errorMessage = "signed division overflow";
-
 		auto assertStmt = std::make_shared<awst::ExpressionStatement>();
 		assertStmt->sourceLocation = m_loc;
-		assertStmt->expr = std::move(assertExpr);
+		assertStmt->expr = awst::makeAssert(std::move(notBoth), m_loc, "signed division overflow");
 		m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 	}
 

@@ -14,29 +14,23 @@ SolRevert::SolRevert(
 
 std::shared_ptr<awst::Expression> SolRevert::toAwst()
 {
-	auto assertExpr = std::make_shared<awst::AssertExpression>();
-	assertExpr->sourceLocation = m_loc;
-	assertExpr->wtype = awst::WType::voidType();
-
-	assertExpr->condition = awst::makeBoolConstant(false, m_loc);
-
 	// Determine error message. For `revert Error(args)`, the callee
 	// identifies the error name. For `revert("msg")`, Solidity treats
 	// this as a FunctionCall whose callee is the identifier `revert`,
 	// and the first argument is the message literal.
-	assertExpr->errorMessage = "revert";
+	std::string errorMessage = "revert";
 	auto const& callee = m_call.expression();
 	if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(&callee))
 	{
 		if (id->name() != "revert")
-			assertExpr->errorMessage = id->name();
+			errorMessage = id->name();
 	}
 	else if (auto const* ma = dynamic_cast<solidity::frontend::MemberAccess const*>(&callee))
 	{
-		assertExpr->errorMessage = ma->memberName();
+		errorMessage = ma->memberName();
 	}
 
-	return assertExpr;
+	return awst::makeAssert(awst::makeBoolConstant(false, m_loc), m_loc, std::move(errorMessage));
 }
 
 } // namespace puyasol::builder::sol_ast

@@ -75,15 +75,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolRevertStatement::toAwst()
 	else if (auto const* ma = dynamic_cast<MemberAccess const*>(&errorCall.expression()))
 		errorName = ma->memberName();
 
-	auto assertExpr = std::make_shared<awst::AssertExpression>();
-	assertExpr->sourceLocation = m_loc;
-	assertExpr->wtype = awst::WType::voidType();
-	assertExpr->condition = awst::makeBoolConstant(false, m_loc);
-	assertExpr->errorMessage = errorName;
-
 	auto stmt = std::make_shared<awst::ExpressionStatement>();
 	stmt->sourceLocation = m_loc;
-	stmt->expr = assertExpr;
+	stmt->expr = awst::makeAssert(awst::makeBoolConstant(false, m_loc), m_loc, errorName);
 	return {stmt};
 }
 
@@ -409,15 +403,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 					cmp->op = awst::NumericComparison::Lt;
 					cmp->rhs = std::move(maxVal);
 
-					auto assertExpr = std::make_shared<awst::AssertExpression>();
-					assertExpr->sourceLocation = m_loc;
-					assertExpr->wtype = awst::WType::voidType();
-					assertExpr->condition = std::move(cmp);
-					assertExpr->errorMessage = "enum out of range";
-
 					auto assertStmt = std::make_shared<awst::ExpressionStatement>();
 					assertStmt->sourceLocation = m_loc;
-					assertStmt->expr = std::move(assertExpr);
+					assertStmt->expr = awst::makeAssert(std::move(cmp), m_loc, "enum out of range");
 					result.push_back(std::move(assertStmt));
 				}
 			}

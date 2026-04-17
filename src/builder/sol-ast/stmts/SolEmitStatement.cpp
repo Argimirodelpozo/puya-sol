@@ -99,15 +99,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 				cmp->op = awst::NumericComparison::Lt;
 				cmp->rhs = std::move(maxVal);
 
-				auto assertExpr = std::make_shared<awst::AssertExpression>();
-				assertExpr->sourceLocation = m_loc;
-				assertExpr->wtype = awst::WType::voidType();
-				assertExpr->condition = std::move(cmp);
-				assertExpr->errorMessage = "enum out of range";
-
 				auto assertStmt = std::make_shared<awst::ExpressionStatement>();
 				assertStmt->sourceLocation = m_loc;
-				assertStmt->expr = std::move(assertExpr);
+				assertStmt->expr = awst::makeAssert(std::move(cmp), m_loc, "enum out of range");
 				preStatements.push_back(std::move(assertStmt));
 
 				translated = std::move(val);

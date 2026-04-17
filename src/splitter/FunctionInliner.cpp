@@ -1227,12 +1227,8 @@ std::shared_ptr<awst::Expression> FunctionInliner::deepCopyExpr(
 	if (type == "AssertExpression")
 	{
 		auto& src = static_cast<awst::AssertExpression const&>(*_expr);
-		auto n = std::make_shared<awst::AssertExpression>();
-		n->sourceLocation = src.sourceLocation;
-		n->wtype = src.wtype;
-		n->condition = deepCopyExpr(src.condition);
-		n->errorMessage = src.errorMessage;
-		return n;
+		return awst::makeAssert(
+			deepCopyExpr(src.condition), src.sourceLocation, src.errorMessage, src.wtype);
 	}
 	if (type == "ARC4Encode")
 	{

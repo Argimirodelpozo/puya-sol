@@ -1319,14 +1319,10 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 			cmp->lhs = currentO;
 			cmp->op = awst::NumericComparison::Eq;
 			cmp->rhs = zero;
-			auto ae = std::make_shared<awst::AssertExpression>();
-			ae->sourceLocation = loc;
-			ae->wtype = awst::WType::boolType();
-			ae->condition = cmp;
-			ae->errorMessage = "helper: already initialized";
 			auto es = std::make_shared<awst::ExpressionStatement>();
 			es->sourceLocation = loc;
-			es->expr = ae;
+			es->expr = awst::makeAssert(cmp, loc, "helper: already initialized",
+				awst::WType::boolType());
 			body->body.push_back(es);
 		}
 
@@ -1472,12 +1468,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 		return val;
 	};
 	auto makeAssertExpr = [&](std::shared_ptr<awst::Expression> cond, std::string msg) {
-		auto ae = std::make_shared<awst::AssertExpression>();
-		ae->sourceLocation = loc;
-		ae->wtype = awst::WType::boolType();
-		ae->condition = std::move(cond);
-		ae->errorMessage = std::move(msg);
-		return ae;
+		return awst::makeAssert(std::move(cond), loc, std::move(msg), awst::WType::boolType());
 	};
 	auto makeAssertStmt = [&](std::shared_ptr<awst::Expression> cond, std::string msg) {
 		auto es = std::make_shared<awst::ExpressionStatement>();
@@ -1882,12 +1873,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 		return val;
 	};
 	auto makeAssertExpr = [&](std::shared_ptr<awst::Expression> cond, std::string msg) {
-		auto ae = std::make_shared<awst::AssertExpression>();
-		ae->sourceLocation = loc;
-		ae->wtype = awst::WType::boolType();
-		ae->condition = std::move(cond);
-		ae->errorMessage = std::move(msg);
-		return ae;
+		return awst::makeAssert(std::move(cond), loc, std::move(msg), awst::WType::boolType());
 	};
 	auto makeAssertStmt = [&](std::shared_ptr<awst::Expression> cond, std::string msg) {
 		auto es = std::make_shared<awst::ExpressionStatement>();
@@ -2404,14 +2390,9 @@ std::vector<std::shared_ptr<awst::Statement>> ContractSplitter::buildValidationB
 		return val;
 	};
 	auto makeAssert = [&](std::shared_ptr<awst::Expression> cond, std::string msg) {
-		auto ae = std::make_shared<awst::AssertExpression>();
-		ae->sourceLocation = _loc;
-		ae->wtype = awst::WType::boolType();
-		ae->condition = std::move(cond);
-		ae->errorMessage = std::move(msg);
 		auto es = std::make_shared<awst::ExpressionStatement>();
 		es->sourceLocation = _loc;
-		es->expr = ae;
+		es->expr = awst::makeAssert(std::move(cond), _loc, std::move(msg), awst::WType::boolType());
 		return es;
 	};
 	auto makeNumericCmp = [&](

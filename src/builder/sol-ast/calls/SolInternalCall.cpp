@@ -432,14 +432,10 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 			// emit assert(false) to revert (matches EVM behavior for uninitialized pointers)
 			Logger::instance().warning(
 				"call to function pointer '" + name + "' (state var / unsupported), emitting assert(false)", m_loc);
-			auto assertExpr = std::make_shared<awst::AssertExpression>();
-			assertExpr->sourceLocation = m_loc;
-			assertExpr->wtype = awst::WType::voidType();
-			assertExpr->condition = awst::makeBoolConstant(false, m_loc);
-			assertExpr->errorMessage = "uninitialized function pointer";
 			auto stmt = std::make_shared<awst::ExpressionStatement>();
 			stmt->sourceLocation = m_loc;
-			stmt->expr = std::move(assertExpr);
+			stmt->expr = awst::makeAssert(
+				awst::makeBoolConstant(false, m_loc), m_loc, "uninitialized function pointer");
 			m_ctx.pendingStatements.push_back(std::move(stmt));
 
 			auto vc = std::make_shared<awst::VoidConstant>();
