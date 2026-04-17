@@ -867,10 +867,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 									std::shared_ptr<awst::Expression> storeVal = rs.value;
 									if (method.returnType == awst::WType::biguintType())
 									{
-										auto cast = std::make_shared<awst::ReinterpretCast>();
-										cast->sourceLocation = sloc;
-										cast->expr = storeVal;
-										cast->wtype = awst::WType::bytesType();
+										auto cast = awst::makeReinterpretCast(storeVal, awst::WType::bytesType(), sloc);
 										storeVal = cast;
 									}
 									else if (method.returnType == awst::WType::uint64Type())
@@ -1060,10 +1057,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 				// The gload bytes are raw ARC4-encoded data — same format
 				// as ApplicationArgs — so reinterpreting as the target type
 				// is correct (ARC4Struct/ReferenceArray are bytes at runtime).
-				auto cast = std::make_shared<awst::ReinterpretCast>();
-				cast->sourceLocation = sub->sourceLocation;
-				cast->expr = concatenated;
-				cast->wtype = sa.wtype;
+				auto cast = awst::makeReinterpretCast(concatenated, sa.wtype, sub->sourceLocation);
 
 				// Assign to local variable with the original arg name
 				auto assign = std::make_shared<awst::AssignmentStatement>();
@@ -1099,10 +1093,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 				// Convert to bytes if not already
 				if (sub->returnType == awst::WType::biguintType())
 				{
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = sub->sourceLocation;
-					cast->expr = storeVal;
-					cast->wtype = awst::WType::bytesType();
+					auto cast = awst::makeReinterpretCast(storeVal, awst::WType::bytesType(), sub->sourceLocation);
 					storeVal = cast;
 				}
 				else if (sub->returnType == awst::WType::uint64Type())
@@ -1117,10 +1108,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 				else if (sub->returnType == awst::WType::boolType())
 				{
 					// bool → itob(btoi equivalent)
-					auto boolToInt = std::make_shared<awst::ReinterpretCast>();
-					boolToInt->sourceLocation = sub->sourceLocation;
-					boolToInt->expr = storeVal;
-					boolToInt->wtype = awst::WType::uint64Type();
+					auto boolToInt = awst::makeReinterpretCast(storeVal, awst::WType::uint64Type(), sub->sourceLocation);
 					auto itob = std::make_shared<awst::IntrinsicCall>();
 					itob->sourceLocation = sub->sourceLocation;
 					itob->opCode = "itob";
@@ -1526,10 +1514,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 					else if (method.args[i].wtype == awst::WType::biguintType())
 					{
 						// biguint is already bytes at runtime, just reinterpret
-						auto cast = std::make_shared<awst::ReinterpretCast>();
-						cast->sourceLocation = loc;
-						cast->expr = argVar;
-						cast->wtype = awst::WType::bytesType();
+						auto cast = awst::makeReinterpretCast(argVar, awst::WType::bytesType(), loc);
 						storeValue = cast;
 					}
 				}
@@ -1612,19 +1597,13 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 				}
 				else if (method.returnType == awst::WType::biguintType())
 				{
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = loc;
-					cast->expr = gloadResult;
-					cast->wtype = awst::WType::biguintType();
+					auto cast = awst::makeReinterpretCast(gloadResult, awst::WType::biguintType(), loc);
 					resultExpr = cast;
 				}
 				else
 				{
 					// For bytes, structs, arrays: just use the raw bytes
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = loc;
-					cast->expr = gloadResult;
-					cast->wtype = method.returnType;
+					auto cast = awst::makeReinterpretCast(gloadResult, method.returnType, loc);
 					resultExpr = cast;
 				}
 			}
@@ -1902,10 +1881,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 							storeValue = makeIntrinsic("itob", {}, {argVar}, awst::WType::bytesType());
 						else if (method.args[i].wtype == awst::WType::biguintType())
 						{
-							auto cast = std::make_shared<awst::ReinterpretCast>();
-							cast->sourceLocation = loc;
-							cast->expr = argVar;
-							cast->wtype = awst::WType::bytesType();
+							auto cast = awst::makeReinterpretCast(argVar, awst::WType::bytesType(), loc);
 							storeValue = cast;
 						}
 					}
@@ -1976,18 +1952,12 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 						resultExpr = makeIntrinsic("btoi", {}, {gloadResult}, awst::WType::uint64Type());
 					else if (method.returnType == awst::WType::biguintType())
 					{
-						auto cast = std::make_shared<awst::ReinterpretCast>();
-						cast->sourceLocation = loc;
-						cast->expr = gloadResult;
-						cast->wtype = awst::WType::biguintType();
+						auto cast = awst::makeReinterpretCast(gloadResult, awst::WType::biguintType(), loc);
 						resultExpr = cast;
 					}
 					else
 					{
-						auto cast = std::make_shared<awst::ReinterpretCast>();
-						cast->sourceLocation = loc;
-						cast->expr = gloadResult;
-						cast->wtype = method.returnType;
+						auto cast = awst::makeReinterpretCast(gloadResult, method.returnType, loc);
 						resultExpr = cast;
 					}
 				}

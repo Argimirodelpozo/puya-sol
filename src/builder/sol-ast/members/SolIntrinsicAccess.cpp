@@ -90,10 +90,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		blockSeed->immediates = {std::string("BlkSeed")};
 		blockSeed->stackArgs.push_back(std::move(prevRound));
 
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = m_loc;
-		cast->wtype = awst::WType::biguintType();
-		cast->expr = std::move(blockSeed);
+		auto cast = awst::makeReinterpretCast(std::move(blockSeed), awst::WType::biguintType(), m_loc);
 		return cast;
 	}
 
@@ -150,10 +147,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		itob->wtype = awst::WType::bytesType();
 		itob->opCode = "itob";
 		itob->stackArgs.push_back(std::move(cond));
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = m_loc;
-		cast->wtype = awst::WType::biguintType();
-		cast->expr = std::move(itob);
+		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 		return cast;
 	}
 
@@ -276,10 +270,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		if (intrinsic->wtype == awst::WType::bytesType()
 			&& solType == awst::WType::biguintType())
 		{
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = m_loc;
-			cast->wtype = awst::WType::biguintType();
-			cast->expr = std::move(intrinsic);
+			auto cast = awst::makeReinterpretCast(std::move(intrinsic), awst::WType::biguintType(), m_loc);
 			return cast;
 		}
 		return intrinsic;

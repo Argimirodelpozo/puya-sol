@@ -704,10 +704,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 							|| (readExpr->wtype && readExpr->wtype->kind() == awst::WTypeKind::Bytes);
 						if (compat)
 						{
-							auto cast = std::make_shared<awst::ReinterpretCast>();
-							cast->sourceLocation = loc;
-							cast->wtype = getter.returnType;
-							cast->expr = std::move(readExpr);
+							auto cast = awst::makeReinterpretCast(std::move(readExpr), getter.returnType, loc);
 							readExpr = std::move(cast);
 						}
 					}
@@ -878,10 +875,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 					else if (argRef->wtype == awst::WType::biguintType())
 					{
 						// Normalize biguint to exactly 32 bytes before hashing.
-						auto reinterpret = std::make_shared<awst::ReinterpretCast>();
-						reinterpret->sourceLocation = loc;
-						reinterpret->wtype = awst::WType::bytesType();
-						reinterpret->expr = std::move(argRef);
+						auto reinterpret = awst::makeReinterpretCast(std::move(argRef), awst::WType::bytesType(), loc);
 
 						auto padWidth = awst::makeIntegerConstant("32", loc);
 
@@ -928,10 +922,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 					else
 					{
 						// string / bytes / address → ReinterpretCast to bytes
-						auto reinterpret = std::make_shared<awst::ReinterpretCast>();
-						reinterpret->sourceLocation = loc;
-						reinterpret->wtype = awst::WType::bytesType();
-						reinterpret->expr = std::move(argRef);
+						auto reinterpret = awst::makeReinterpretCast(std::move(argRef), awst::WType::bytesType(), loc);
 						keyBytes = std::move(reinterpret);
 					}
 					keyParts.push_back(std::move(keyBytes));
@@ -1655,19 +1646,13 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				if (paramType == awst::WType::accountType())
 				{
 					// bytes → account via ReinterpretCast
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = method.sourceLocation;
-					cast->wtype = awst::WType::accountType();
-					cast->expr = std::move(readArg);
+					auto cast = awst::makeReinterpretCast(std::move(readArg), awst::WType::accountType(), method.sourceLocation);
 					paramVal = std::move(cast);
 				}
 				else if (paramType == awst::WType::biguintType())
 				{
 					// bytes → biguint via ReinterpretCast (big-endian, no-op on AVM)
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = method.sourceLocation;
-					cast->wtype = awst::WType::biguintType();
-					cast->expr = std::move(readArg);
+					auto cast = awst::makeReinterpretCast(std::move(readArg), awst::WType::biguintType(), method.sourceLocation);
 					paramVal = std::move(cast);
 				}
 				else if (paramType == awst::WType::uint64Type()
@@ -1709,20 +1694,14 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				else if (paramType == awst::WType::stringType())
 				{
 					// bytes → string via ReinterpretCast
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = method.sourceLocation;
-					cast->wtype = awst::WType::stringType();
-					cast->expr = std::move(readArg);
+					auto cast = awst::makeReinterpretCast(std::move(readArg), awst::WType::stringType(), method.sourceLocation);
 					paramVal = std::move(cast);
 				}
 				else if (paramType->kind() == awst::WTypeKind::ReferenceArray)
 				{
 					// Array params: ReinterpretCast to ARC4 type, then ARC4Decode
 					auto const* arc4Type = m_typeMapper.mapToARC4Type(paramType);
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = method.sourceLocation;
-					cast->wtype = arc4Type;
-					cast->expr = std::move(readArg);
+					auto cast = awst::makeReinterpretCast(std::move(readArg), arc4Type, method.sourceLocation);
 
 					auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(paramType);
 					if (refArr && !refArr->arraySize().has_value())
@@ -1746,10 +1725,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					|| paramType->kind() == awst::WTypeKind::ARC4DynamicArray)
 				{
 					// ARC4 array params: just ReinterpretCast raw bytes to ARC4 type
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = method.sourceLocation;
-					cast->wtype = paramType;
-					cast->expr = std::move(readArg);
+					auto cast = awst::makeReinterpretCast(std::move(readArg), paramType, method.sourceLocation);
 					paramVal = std::move(cast);
 				}
 				else if (paramType->kind() == awst::WTypeKind::Bytes
@@ -1757,19 +1733,13 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					&& dynamic_cast<awst::BytesWType const*>(paramType)->length().has_value())
 				{
 					// bytes[N] params: ReinterpretCast from raw bytes
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = method.sourceLocation;
-					cast->wtype = paramType;
-					cast->expr = std::move(readArg);
+					auto cast = awst::makeReinterpretCast(std::move(readArg), paramType, method.sourceLocation);
 					paramVal = std::move(cast);
 				}
 				else if (dynamic_cast<awst::ARC4Struct const*>(paramType))
 				{
 					// Struct params: ReinterpretCast raw bytes to ARC4 struct type
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = method.sourceLocation;
-					cast->wtype = paramType;
-					cast->expr = std::move(readArg);
+					auto cast = awst::makeReinterpretCast(std::move(readArg), paramType, method.sourceLocation);
 					paramVal = std::move(cast);
 				}
 				else
@@ -2055,10 +2025,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 									boxInitVal = m_exprBuilder->build(*var->value());
 									if (boxInitVal && boxInitVal->wtype == awst::WType::stringType())
 									{
-										auto cast = std::make_shared<awst::ReinterpretCast>();
-										cast->sourceLocation = method.sourceLocation;
-										cast->wtype = awst::WType::bytesType();
-										cast->expr = std::move(boxInitVal);
+										auto cast = awst::makeReinterpretCast(std::move(boxInitVal), awst::WType::bytesType(), method.sourceLocation);
 										boxInitVal = std::move(cast);
 									}
 								}
@@ -4690,10 +4657,7 @@ void ContractBuilder::buildStorageDispatch(
 			boxExtract->stackArgs.push_back(std::move(offset));
 			boxExtract->stackArgs.push_back(makeUint64("32"));
 
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = loc;
-			cast->wtype = awst::WType::biguintType();
-			cast->expr = std::move(boxExtract);
+			auto cast = awst::makeReinterpretCast(std::move(boxExtract), awst::WType::biguintType(), loc);
 
 			auto ret = std::make_shared<awst::ReturnStatement>();
 			ret->sourceLocation = loc;
@@ -4771,10 +4735,7 @@ void ContractBuilder::buildStorageDispatch(
 				extract->stackArgs.push_back(std::move(sub));
 				extract->stackArgs.push_back(makeUint64("32"));
 
-				auto cast = std::make_shared<awst::ReinterpretCast>();
-				cast->sourceLocation = loc;
-				cast->wtype = awst::WType::biguintType();
-				cast->expr = std::move(extract);
+				auto cast = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), loc);
 
 				auto ret = std::make_shared<awst::ReturnStatement>();
 				ret->sourceLocation = loc;
@@ -4871,10 +4832,7 @@ void ContractBuilder::buildStorageDispatch(
 			// value as bytes (pad to 32)
 			auto valueVar = awst::makeVarExpression("__value", awst::WType::biguintType(), loc);
 
-			auto valBytes = std::make_shared<awst::ReinterpretCast>();
-			valBytes->sourceLocation = loc;
-			valBytes->wtype = awst::WType::bytesType();
-			valBytes->expr = std::move(valueVar);
+			auto valBytes = awst::makeReinterpretCast(std::move(valueVar), awst::WType::bytesType(), loc);
 
 			// Pad to 32 bytes
 			auto bz = std::make_shared<awst::IntrinsicCall>();
@@ -4965,10 +4923,7 @@ void ContractBuilder::buildStorageDispatch(
 				// Pad to 32 bytes to match EVM slot semantics
 				auto valueVar = awst::makeVarExpression("__value", awst::WType::biguintType(), loc);
 
-				auto cast = std::make_shared<awst::ReinterpretCast>();
-				cast->sourceLocation = loc;
-				cast->wtype = awst::WType::bytesType();
-				cast->expr = std::move(valueVar);
+				auto cast = awst::makeReinterpretCast(std::move(valueVar), awst::WType::bytesType(), loc);
 
 				// concat(bzero(32), bytes) → take last 32 bytes
 				auto bz = std::make_shared<awst::IntrinsicCall>();

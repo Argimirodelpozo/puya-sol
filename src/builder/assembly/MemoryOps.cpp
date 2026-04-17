@@ -52,10 +52,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleMload(
 	extract->stackArgs.push_back(std::move(len32));
 
 	// Cast bytes → biguint (mload returns uint256)
-	auto result = std::make_shared<awst::ReinterpretCast>();
-	result->sourceLocation = _loc;
-	result->wtype = awst::WType::biguintType();
-	result->expr = std::move(extract);
+	auto result = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
 	return result;
 }
 
@@ -142,10 +139,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleBytesMemoryRead(
 	// Translate the dynamic offset and convert biguint → uint64
 	auto offsetExpr = buildExpression(*offsetExprYul);
 
-	auto offsetBytes = std::make_shared<awst::ReinterpretCast>();
-	offsetBytes->sourceLocation = _loc;
-	offsetBytes->wtype = awst::WType::bytesType();
-	offsetBytes->expr = offsetExpr;
+	auto offsetBytes = awst::makeReinterpretCast(offsetExpr, awst::WType::bytesType(), _loc);
 
 	auto offsetU64 = std::make_shared<awst::IntrinsicCall>();
 	offsetU64->sourceLocation = _loc;
@@ -166,10 +160,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleBytesMemoryRead(
 	extract->stackArgs.push_back(std::move(lenArg));
 
 	// Cast bytes → biguint (mload returns uint256)
-	auto result = std::make_shared<awst::ReinterpretCast>();
-	result->sourceLocation = _loc;
-	result->wtype = awst::WType::biguintType();
-	result->expr = std::move(extract);
+	auto result = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
 
 	return result;
 }
@@ -264,10 +255,7 @@ bool AssemblyBuilder::tryHandleBytesMemoryWrite(
 	std::shared_ptr<awst::Expression> newValue = std::move(extract);
 	if (varType == awst::WType::stringType())
 	{
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = awst::WType::stringType();
-		cast->expr = std::move(newValue);
+		auto cast = awst::makeReinterpretCast(std::move(newValue), awst::WType::stringType(), _loc);
 		newValue = std::move(cast);
 	}
 

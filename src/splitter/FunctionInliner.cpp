@@ -1231,10 +1231,7 @@ std::shared_ptr<awst::Expression> FunctionInliner::deepCopyExpr(
 	if (type == "ReinterpretCast")
 	{
 		auto& src = static_cast<awst::ReinterpretCast const&>(*_expr);
-		auto n = std::make_shared<awst::ReinterpretCast>();
-		n->sourceLocation = src.sourceLocation;
-		n->wtype = src.wtype;
-		n->expr = deepCopyExpr(src.expr);
+		auto n = awst::makeReinterpretCast(deepCopyExpr(src.expr), src.wtype, src.sourceLocation);
 		return n;
 	}
 	if (type == "Copy")

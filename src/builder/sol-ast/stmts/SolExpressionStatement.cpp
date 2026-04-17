@@ -221,10 +221,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 						if (srcLen > 0 && dstLen > 0 && srcLen != dstLen)
 						{
 							auto expr = std::move(stmt->value);
-							auto toBytes = std::make_shared<awst::ReinterpretCast>();
-							toBytes->sourceLocation = m_loc;
-							toBytes->wtype = awst::WType::bytesType();
-							toBytes->expr = std::move(expr);
+							auto toBytes = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), m_loc);
 							std::shared_ptr<awst::Expression> result;
 							if (dstLen > srcLen)
 							{
@@ -255,18 +252,12 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 								extract->stackArgs.push_back(std::move(width));
 								result = std::move(extract);
 							}
-							auto finalCast = std::make_shared<awst::ReinterpretCast>();
-							finalCast->sourceLocation = m_loc;
-							finalCast->wtype = expectedType;
-							finalCast->expr = std::move(result);
+							auto finalCast = awst::makeReinterpretCast(std::move(result), expectedType, m_loc);
 							stmt->value = std::move(finalCast);
 						}
 						else
 						{
-							auto cast = std::make_shared<awst::ReinterpretCast>();
-							cast->sourceLocation = m_loc;
-							cast->wtype = expectedType;
-							cast->expr = std::move(stmt->value);
+							auto cast = awst::makeReinterpretCast(std::move(stmt->value), expectedType, m_loc);
 							stmt->value = std::move(cast);
 						}
 					}
@@ -301,10 +292,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 							&& tupleExpr->items[i]->wtype->kind() == awst::WTypeKind::Bytes
 							&& expectedElemType->kind() == awst::WTypeKind::Bytes)
 						{
-							auto cast = std::make_shared<awst::ReinterpretCast>();
-							cast->sourceLocation = m_loc;
-							cast->wtype = expectedElemType;
-							cast->expr = std::move(tupleExpr->items[i]);
+							auto cast = awst::makeReinterpretCast(std::move(tupleExpr->items[i]), expectedElemType, m_loc);
 							tupleExpr->items[i] = std::move(cast);
 						}
 						expectedTypes.push_back(tupleExpr->items[i]->wtype);

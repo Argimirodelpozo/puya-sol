@@ -275,10 +275,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 		itob->wtype = awst::WType::bytesType();
 		itob->opCode = "itob";
 		itob->stackArgs.push_back(std::move(expr));
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = m_loc;
-		cast->wtype = awst::WType::biguintType();
-		cast->expr = std::move(itob);
+		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 		return cast;
 	};
 
@@ -376,10 +373,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 			itob->wtype = awst::WType::bytesType();
 			itob->opCode = "itob";
 			itob->stackArgs.push_back(val);
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = m_loc;
-			cast->wtype = awst::WType::biguintType();
-			cast->expr = std::move(itob);
+			auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 			return cast;
 		};
 
@@ -575,10 +569,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 	if (!isBiguint)
 	{
 		// rawResult is biguint from the mod — convert back to uint64
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = m_loc;
-		cast->wtype = awst::WType::bytesType();
-		cast->expr = std::move(rawResult);
+		auto cast = awst::makeReinterpretCast(std::move(rawResult), awst::WType::bytesType(), m_loc);
 
 		// concat(bzero(8), bytes) then extract last 8 bytes → btoi
 		auto eight = awst::makeIntegerConstant("8", m_loc);
@@ -659,10 +650,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 		itob->wtype = awst::WType::bytesType();
 		itob->opCode = "itob";
 		itob->stackArgs.push_back(std::move(_base));
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = m_loc;
-		cast->wtype = awst::WType::biguintType();
-		cast->expr = std::move(itob);
+		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 		_base = std::move(cast);
 	}
 
@@ -712,10 +700,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 		itob->wtype = awst::WType::bytesType();
 		itob->opCode = "itob";
 		itob->stackArgs.push_back(std::move(_exp));
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = m_loc;
-		cast->wtype = awst::WType::biguintType();
-		cast->expr = std::move(itob);
+		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 		_exp = std::move(cast);
 	}
 
@@ -883,10 +868,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 		itob->wtype = awst::WType::bytesType();
 		itob->opCode = "itob";
 		itob->stackArgs.push_back(std::move(expr));
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = m_loc;
-		cast->wtype = awst::WType::biguintType();
-		cast->expr = std::move(itob);
+		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 		return cast;
 	};
 
@@ -1082,10 +1064,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 	// Convert back to uint64 for ≤64-bit types
 	if (bits <= 64)
 	{
-		auto castBytes = std::make_shared<awst::ReinterpretCast>();
-		castBytes->sourceLocation = m_loc;
-		castBytes->wtype = awst::WType::bytesType();
-		castBytes->expr = std::move(finalResult);
+		auto castBytes = awst::makeReinterpretCast(std::move(finalResult), awst::WType::bytesType(), m_loc);
 
 		auto eight = awst::makeIntegerConstant("8", m_loc);
 		auto bz = std::make_shared<awst::IntrinsicCall>();

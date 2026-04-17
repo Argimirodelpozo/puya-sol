@@ -58,10 +58,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 			extractCall->stackArgs.push_back(std::move(offArg));
 			extractCall->stackArgs.push_back(std::move(lenArg));
 
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = _loc;
-			cast->wtype = awst::WType::biguintType();
-			cast->expr = std::move(extractCall);
+			auto cast = awst::makeReinterpretCast(std::move(extractCall), awst::WType::biguintType(), _loc);
 			return cast;
 		}
 
@@ -242,10 +239,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 					keccak->opCode = "keccak256";
 					keccak->stackArgs.push_back(std::move(data));
 
-					auto castResult = std::make_shared<awst::ReinterpretCast>();
-					castResult->sourceLocation = _loc;
-					castResult->wtype = awst::WType::biguintType();
-					castResult->expr = std::move(keccak);
+					auto castResult = awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
 					return castResult;
 				}
 			}
@@ -304,10 +298,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 						keccak->opCode = "keccak256";
 						keccak->stackArgs.push_back(std::move(data));
 
-						auto castResult = std::make_shared<awst::ReinterpretCast>();
-						castResult->sourceLocation = _loc;
-						castResult->wtype = awst::WType::biguintType();
-						castResult->expr = std::move(keccak);
+						auto castResult = awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
 						return castResult;
 					}
 				}
@@ -336,10 +327,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 			keccak->opCode = "keccak256";
 			keccak->stackArgs.push_back(std::move(data));
 
-			auto castResult = std::make_shared<awst::ReinterpretCast>();
-			castResult->sourceLocation = _loc;
-			castResult->wtype = awst::WType::biguintType();
-			castResult->expr = std::move(keccak);
+			auto castResult = awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
 			return castResult;
 		}
 
@@ -370,10 +358,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 				std::shared_ptr<awst::Expression> paramBytes;
 				if (paramVar->wtype != awst::WType::bytesType())
 				{
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = _loc;
-					cast->wtype = awst::WType::bytesType();
-					cast->expr = std::move(paramVar);
+					auto cast = awst::makeReinterpretCast(std::move(paramVar), awst::WType::bytesType(), _loc);
 					paramBytes = std::move(cast);
 				}
 				else
@@ -394,10 +379,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 				keccak->opCode = "keccak256";
 				keccak->stackArgs.push_back(std::move(concat));
 
-				auto castResult = std::make_shared<awst::ReinterpretCast>();
-				castResult->sourceLocation = _loc;
-				castResult->wtype = awst::WType::biguintType();
-				castResult->expr = std::move(keccak);
+				auto castResult = awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
 				return castResult;
 			}
 		}
@@ -422,10 +404,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 		keccak->opCode = "keccak256";
 		keccak->stackArgs.push_back(std::move(emptyBytes));
 
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = awst::WType::biguintType();
-		cast->expr = std::move(keccak);
+		auto cast = awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
 		return cast;
 	}
 	if (numSlots <= 0)
@@ -452,10 +431,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 			keccak->opCode = "keccak256";
 			keccak->stackArgs.push_back(std::move(data));
 
-			auto castResult = std::make_shared<awst::ReinterpretCast>();
-			castResult->sourceLocation = _loc;
-			castResult->wtype = awst::WType::biguintType();
-			castResult->expr = std::move(keccak);
+			auto castResult = awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
 			return castResult;
 		}
 		// Check if offset = calldataParam + 0x20 (string/bytes data region)
@@ -479,10 +455,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 				std::shared_ptr<awst::Expression> hashInput;
 				if (paramVar->wtype != awst::WType::bytesType())
 				{
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = _loc;
-					cast->wtype = awst::WType::bytesType();
-					cast->expr = std::move(paramVar);
+					auto cast = awst::makeReinterpretCast(std::move(paramVar), awst::WType::bytesType(), _loc);
 					hashInput = std::move(cast);
 				}
 				else
@@ -494,10 +467,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 				keccak->opCode = "keccak256";
 				keccak->stackArgs.push_back(std::move(hashInput));
 
-				auto castResult = std::make_shared<awst::ReinterpretCast>();
-				castResult->sourceLocation = _loc;
-				castResult->wtype = awst::WType::biguintType();
-				castResult->expr = std::move(keccak);
+				auto castResult = awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
 				return castResult;
 			}
 		}
@@ -516,10 +486,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 		keccak->opCode = "keccak256";
 		keccak->stackArgs.push_back(std::move(zeroBytes));
 
-		auto castResult = std::make_shared<awst::ReinterpretCast>();
-		castResult->sourceLocation = _loc;
-		castResult->wtype = awst::WType::biguintType();
-		castResult->expr = std::move(keccak);
+		auto castResult = awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
 		return castResult;
 	}
 
@@ -541,10 +508,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 				: elem.paramType, _loc);
 
 			// Cast struct to raw bytes for field extraction
-			auto structBytes = std::make_shared<awst::ReinterpretCast>();
-			structBytes->sourceLocation = _loc;
-			structBytes->wtype = awst::WType::bytesType();
-			structBytes->expr = base;
+			auto structBytes = awst::makeReinterpretCast(base, awst::WType::bytesType(), _loc);
 
 			std::shared_ptr<awst::Expression> data;
 			int fieldByteOffset = 0;
@@ -566,10 +530,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 				extract->stackArgs.push_back(std::move(lenExpr));
 
 				// Cast to biguint, then pad to 32 bytes
-				auto asBiguint = std::make_shared<awst::ReinterpretCast>();
-				asBiguint->sourceLocation = _loc;
-				asBiguint->wtype = awst::WType::biguintType();
-				asBiguint->expr = std::move(extract);
+				auto asBiguint = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
 
 				auto padded = padTo32Bytes(std::move(asBiguint), _loc);
 
@@ -594,10 +555,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 			keccak->opCode = "keccak256";
 			keccak->stackArgs.push_back(std::move(data));
 
-			auto castResult = std::make_shared<awst::ReinterpretCast>();
-			castResult->sourceLocation = _loc;
-			castResult->wtype = awst::WType::biguintType();
-			castResult->expr = std::move(keccak);
+			auto castResult = awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
 			return castResult;
 		}
 	}
@@ -613,10 +571,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 	keccak->stackArgs.push_back(std::move(data));
 
 	// Convert bytes result to biguint (for Yul's uint256 type)
-	auto castResult = std::make_shared<awst::ReinterpretCast>();
-	castResult->sourceLocation = _loc;
-	castResult->wtype = awst::WType::biguintType();
-	castResult->expr = std::move(keccak);
+	auto castResult = awst::makeReinterpretCast(std::move(keccak), awst::WType::biguintType(), _loc);
 
 	return castResult;
 }

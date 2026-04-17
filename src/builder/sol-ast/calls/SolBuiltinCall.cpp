@@ -83,10 +83,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		cond->trueExpr = std::move(seed);
 		cond->falseExpr = std::move(zeros);
 
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = m_loc;
-		cast->wtype = m_ctx.typeMapper.createType<awst::BytesWType>(32);
-		cast->expr = std::move(cond);
+		auto cast = awst::makeReinterpretCast(std::move(cond), m_ctx.typeMapper.createType<awst::BytesWType>(32), m_loc);
 		return cast;
 	}
 
@@ -128,10 +125,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		// Cast string → bytes if needed (same underlying storage).
 		if (idExpr && idExpr->wtype != awst::WType::bytesType())
 		{
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = m_loc;
-			cast->wtype = awst::WType::bytesType();
-			cast->expr = std::move(idExpr);
+			auto cast = awst::makeReinterpretCast(std::move(idExpr), awst::WType::bytesType(), m_loc);
 			idExpr = std::move(cast);
 		}
 
@@ -143,10 +137,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		h1->stackArgs.push_back(idExpr);
 
 		// h1_int = biguint(h1)
-		auto h1Int = std::make_shared<awst::ReinterpretCast>();
-		h1Int->sourceLocation = m_loc;
-		h1Int->wtype = awst::WType::biguintType();
-		h1Int->expr = std::move(h1);
+		auto h1Int = awst::makeReinterpretCast(std::move(h1), awst::WType::biguintType(), m_loc);
 
 		// minus1 = h1_int - 1
 		auto one = awst::makeIntegerConstant("1", m_loc, awst::WType::biguintType());
@@ -159,10 +150,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		sub->right = std::move(one);
 
 		// minus1_bytes = 32-byte big-endian via b|(sub, bzero(32))
-		auto minusBytesCast = std::make_shared<awst::ReinterpretCast>();
-		minusBytesCast->sourceLocation = m_loc;
-		minusBytesCast->wtype = awst::WType::bytesType();
-		minusBytesCast->expr = std::move(sub);
+		auto minusBytesCast = awst::makeReinterpretCast(std::move(sub), awst::WType::bytesType(), m_loc);
 
 		auto padLen = awst::makeIntegerConstant("32", m_loc);
 
@@ -210,10 +198,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		masked->stackArgs.push_back(std::move(zeroByte));
 
 		// Cast to biguint
-		auto result = std::make_shared<awst::ReinterpretCast>();
-		result->sourceLocation = m_loc;
-		result->wtype = awst::WType::biguintType();
-		result->expr = std::move(masked);
+		auto result = awst::makeReinterpretCast(std::move(masked), awst::WType::biguintType(), m_loc);
 		return result;
 	}
 
@@ -277,10 +262,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::handleBlockhash()
 	// Cast to the target type (bytes32 or biguint)
 	if (m_wtype && m_wtype != awst::WType::bytesType())
 	{
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = m_loc;
-		cast->wtype = m_wtype;
-		cast->expr = std::move(e);
+		auto cast = awst::makeReinterpretCast(std::move(e), m_wtype, m_loc);
 		return cast;
 	}
 	return e;

@@ -164,10 +164,7 @@ void AssemblyBuilder::buildStatement(
 
 				if (useBytesMatch)
 				{
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = loc;
-					cast->wtype = awst::WType::bytesType();
-					cast->expr = switchExpr;
+					auto cast = awst::makeReinterpretCast(switchExpr, awst::WType::bytesType(), loc);
 
 					// Normalise to a fixed 32-byte big-endian encoding —
 					// biguint ABI decoding may produce 64-byte values (our
@@ -468,19 +465,13 @@ void AssemblyBuilder::buildAssignment(
 					itob->wtype = awst::WType::bytesType();
 					itob->opCode = "itob";
 					itob->stackArgs.push_back(std::move(slotExpr));
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = loc;
-					cast->wtype = awst::WType::biguintType();
-					cast->expr = std::move(itob);
+					auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), loc);
 					slotExpr = std::move(cast);
 				}
 				else if (slotExpr->wtype != awst::WType::biguintType())
 				{
 					// bytes[N] or other non-biguint → reinterpret as biguint
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = loc;
-					cast->wtype = awst::WType::biguintType();
-					cast->expr = std::move(slotExpr);
+					auto cast = awst::makeReinterpretCast(std::move(slotExpr), awst::WType::biguintType(), loc);
 					slotExpr = std::move(cast);
 				}
 
@@ -564,20 +555,14 @@ void AssemblyBuilder::buildAssignment(
 				extract->stackArgs.push_back(std::move(padded));
 				extract->stackArgs.push_back(std::move(zero));
 				extract->stackArgs.push_back(std::move(lenConst));
-				auto cast = std::make_shared<awst::ReinterpretCast>();
-				cast->sourceLocation = loc;
-				cast->wtype = target->wtype;
-				cast->expr = std::move(extract);
+				auto cast = awst::makeReinterpretCast(std::move(extract), target->wtype, loc);
 				value = std::move(cast);
 			}
 			else
 			{
 				// Untyped bytes — coerce biguint to bytes via ReinterpretCast
 				auto biguintVal = ensureBiguint(std::move(value), loc);
-				auto cast = std::make_shared<awst::ReinterpretCast>();
-				cast->sourceLocation = loc;
-				cast->wtype = target->wtype;
-				cast->expr = std::move(biguintVal);
+				auto cast = awst::makeReinterpretCast(std::move(biguintVal), target->wtype, loc);
 				value = std::move(cast);
 			}
 		}
@@ -586,10 +571,7 @@ void AssemblyBuilder::buildAssignment(
 			// Account (address) — pad biguint to 32 bytes for AVM address
 			auto biguintVal = ensureBiguint(std::move(value), loc);
 			auto padded = padTo32Bytes(std::move(biguintVal), loc);
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = loc;
-			cast->wtype = awst::WType::accountType();
-			cast->expr = std::move(padded);
+			auto cast = awst::makeReinterpretCast(std::move(padded), awst::WType::accountType(), loc);
 			value = std::move(cast);
 		}
 		else if (target->wtype == awst::WType::uint64Type())
@@ -626,23 +608,14 @@ void AssemblyBuilder::buildAssignment(
 			if (value->wtype == awst::WType::biguintType())
 			{
 				// biguint → bytes → account
-				auto toBytes = std::make_shared<awst::ReinterpretCast>();
-				toBytes->sourceLocation = loc;
-				toBytes->wtype = awst::WType::bytesType();
-				toBytes->expr = std::move(value);
+				auto toBytes = awst::makeReinterpretCast(std::move(value), awst::WType::bytesType(), loc);
 
-				auto toAccount = std::make_shared<awst::ReinterpretCast>();
-				toAccount->sourceLocation = loc;
-				toAccount->wtype = awst::WType::accountType();
-				toAccount->expr = std::move(toBytes);
+				auto toAccount = awst::makeReinterpretCast(std::move(toBytes), awst::WType::accountType(), loc);
 				value = std::move(toAccount);
 			}
 			else if (value->wtype != awst::WType::accountType())
 			{
-				auto cast = std::make_shared<awst::ReinterpretCast>();
-				cast->sourceLocation = loc;
-				cast->wtype = awst::WType::accountType();
-				cast->expr = std::move(value);
+				auto cast = awst::makeReinterpretCast(std::move(value), awst::WType::accountType(), loc);
 				value = std::move(cast);
 			}
 		}
@@ -674,10 +647,7 @@ void AssemblyBuilder::buildAssignment(
 				// compiles and downstream tests can run.
 				if (dynamic_cast<awst::IntegerConstant const*>(value.get()))
 				{
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = loc;
-					cast->wtype = target->wtype;
-					cast->expr = std::move(value);
+					auto cast = awst::makeReinterpretCast(std::move(value), target->wtype, loc);
 					value = std::move(cast);
 				}
 				else

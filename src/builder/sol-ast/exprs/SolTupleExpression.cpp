@@ -76,18 +76,12 @@ std::shared_ptr<awst::Expression> SolTupleExpression::toAwst()
 							extract->sourceLocation = m_loc;
 							extract->wtype = awst::WType::bytesType();
 							extract->opCode = "extract3";
-							auto castBytes = std::make_shared<awst::ReinterpretCast>();
-							castBytes->sourceLocation = m_loc;
-							castBytes->wtype = awst::WType::bytesType();
-							castBytes->expr = std::move(fullEncode);
+							auto castBytes = awst::makeReinterpretCast(std::move(fullEncode), awst::WType::bytesType(), m_loc);
 							extract->stackArgs.push_back(std::move(castBytes));
 							extract->stackArgs.push_back(std::move(startConst));
 							extract->stackArgs.push_back(std::move(lenConst));
 
-							auto cast = std::make_shared<awst::ReinterpretCast>();
-							cast->sourceLocation = m_loc;
-							cast->wtype = elementType;
-							cast->expr = std::move(extract);
+							auto cast = awst::makeReinterpretCast(std::move(extract), elementType, m_loc);
 							val = std::move(cast);
 						}
 						else

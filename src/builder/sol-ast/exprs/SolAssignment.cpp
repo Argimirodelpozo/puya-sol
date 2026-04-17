@@ -156,10 +156,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 				|| (assignTarget->wtype && assignTarget->wtype->kind() == awst::WTypeKind::Bytes);
 			if (srcIsStringOrBytes && tgtIsStringOrBytes)
 			{
-				auto cast = std::make_shared<awst::ReinterpretCast>();
-				cast->sourceLocation = m_loc;
-				cast->wtype = assignTarget->wtype;
-				cast->expr = std::move(assignValue);
+				auto cast = awst::makeReinterpretCast(std::move(assignValue), assignTarget->wtype, m_loc);
 				assignValue = std::move(cast);
 			}
 			else
@@ -291,10 +288,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleBytesElementAssignment(
 	else if (_value->wtype && _value->wtype->kind() == awst::WTypeKind::Bytes
 		&& _value->wtype != awst::WType::bytesType())
 	{
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = m_loc;
-		cast->wtype = awst::WType::bytesType();
-		cast->expr = std::move(_value);
+		auto cast = awst::makeReinterpretCast(std::move(_value), awst::WType::bytesType(), m_loc);
 		_value = std::move(cast);
 	}
 	_value = builder::TypeCoercion::stringToBytes(std::move(_value), m_loc);
@@ -319,10 +313,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleBytesElementAssignment(
 		target = cast->expr;
 	if (target->wtype != replaceValue->wtype)
 	{
-		auto adaptCast = std::make_shared<awst::ReinterpretCast>();
-		adaptCast->sourceLocation = m_loc;
-		adaptCast->wtype = target->wtype;
-		adaptCast->expr = std::move(replaceValue);
+		auto adaptCast = awst::makeReinterpretCast(std::move(replaceValue), target->wtype, m_loc);
 		replaceValue = std::move(adaptCast);
 	}
 
@@ -644,10 +635,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 				slotJ->right = std::move(jConst);
 
 				// btoi(slot + j) for __storage_write
-				auto castBytes = std::make_shared<awst::ReinterpretCast>();
-				castBytes->sourceLocation = m_loc;
-				castBytes->wtype = awst::WType::bytesType();
-				castBytes->expr = std::move(slotJ);
+				auto castBytes = awst::makeReinterpretCast(std::move(slotJ), awst::WType::bytesType(), m_loc);
 
 				// Safe truncate biguint slot to uint64: extract last 8 bytes then btoi
 				auto lenOp = std::make_shared<awst::IntrinsicCall>();
@@ -709,10 +697,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 					itob->wtype = awst::WType::bytesType();
 					itob->opCode = "itob";
 					itob->stackArgs.push_back(std::move(elemVal));
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = m_loc;
-					cast->wtype = awst::WType::biguintType();
-					cast->expr = std::move(itob);
+					auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 					elemVal = std::move(cast);
 				}
 
@@ -917,10 +902,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 				|| (value->wtype && value->wtype->kind() == awst::WTypeKind::Bytes);
 			if (valueIsCompatible)
 			{
-				auto cast = std::make_shared<awst::ReinterpretCast>();
-				cast->sourceLocation = m_loc;
-				cast->wtype = target->wtype;
-				cast->expr = std::move(value);
+				auto cast = awst::makeReinterpretCast(std::move(value), target->wtype, m_loc);
 				value = std::move(cast);
 			}
 		}
@@ -929,10 +911,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 		&& value->wtype && (value->wtype->kind() == awst::WTypeKind::Bytes
 			|| value->wtype == awst::WType::bytesType()))
 	{
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = m_loc;
-		cast->wtype = target->wtype;
-		cast->expr = std::move(value);
+		auto cast = awst::makeReinterpretCast(std::move(value), target->wtype, m_loc);
 		value = std::move(cast);
 	}
 

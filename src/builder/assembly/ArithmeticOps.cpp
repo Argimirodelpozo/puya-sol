@@ -225,21 +225,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleAnd(
 	call->wtype = awst::WType::bytesType();
 	call->opCode = "b&";
 	// Convert both operands to biguint first, then to bytes
-	auto lhsCast = std::make_shared<awst::ReinterpretCast>();
-	lhsCast->sourceLocation = _loc;
-	lhsCast->wtype = awst::WType::bytesType();
-	lhsCast->expr = ensureBiguint(_args[0], _loc);
-	auto rhsCast = std::make_shared<awst::ReinterpretCast>();
-	rhsCast->sourceLocation = _loc;
-	rhsCast->wtype = awst::WType::bytesType();
-	rhsCast->expr = ensureBiguint(_args[1], _loc);
+	auto lhsCast = awst::makeReinterpretCast(ensureBiguint(_args[0], _loc), awst::WType::bytesType(), _loc);
+	auto rhsCast = awst::makeReinterpretCast(ensureBiguint(_args[1], _loc), awst::WType::bytesType(), _loc);
 	call->stackArgs.push_back(std::move(lhsCast));
 	call->stackArgs.push_back(std::move(rhsCast));
 	// Reinterpret result back to biguint
-	auto result = std::make_shared<awst::ReinterpretCast>();
-	result->sourceLocation = _loc;
-	result->wtype = awst::WType::biguintType();
-	result->expr = std::move(call);
+	auto result = awst::makeReinterpretCast(std::move(call), awst::WType::biguintType(), _loc);
 	return result;
 }
 
@@ -257,20 +248,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleOr(
 	call->sourceLocation = _loc;
 	call->wtype = awst::WType::bytesType();
 	call->opCode = "b|";
-	auto lhsCast = std::make_shared<awst::ReinterpretCast>();
-	lhsCast->sourceLocation = _loc;
-	lhsCast->wtype = awst::WType::bytesType();
-	lhsCast->expr = ensureBiguint(_args[0], _loc);
-	auto rhsCast = std::make_shared<awst::ReinterpretCast>();
-	rhsCast->sourceLocation = _loc;
-	rhsCast->wtype = awst::WType::bytesType();
-	rhsCast->expr = ensureBiguint(_args[1], _loc);
+	auto lhsCast = awst::makeReinterpretCast(ensureBiguint(_args[0], _loc), awst::WType::bytesType(), _loc);
+	auto rhsCast = awst::makeReinterpretCast(ensureBiguint(_args[1], _loc), awst::WType::bytesType(), _loc);
 	call->stackArgs.push_back(std::move(lhsCast));
 	call->stackArgs.push_back(std::move(rhsCast));
-	auto result = std::make_shared<awst::ReinterpretCast>();
-	result->sourceLocation = _loc;
-	result->wtype = awst::WType::biguintType();
-	result->expr = std::move(call);
+	auto result = awst::makeReinterpretCast(std::move(call), awst::WType::biguintType(), _loc);
 	return result;
 }
 
@@ -292,10 +274,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleNot(
 	call->wtype = awst::WType::bytesType();
 	call->opCode = "b~";
 	call->stackArgs.push_back(std::move(padded));
-	auto result = std::make_shared<awst::ReinterpretCast>();
-	result->sourceLocation = _loc;
-	result->wtype = awst::WType::biguintType();
-	result->expr = std::move(call);
+	auto result = awst::makeReinterpretCast(std::move(call), awst::WType::biguintType(), _loc);
 	return result;
 }
 
@@ -319,21 +298,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleXor(
 	call->wtype = awst::WType::bytesType();
 	call->opCode = "b^";
 	// Convert both operands to bytes first
-	auto lhsCast = std::make_shared<awst::ReinterpretCast>();
-	lhsCast->sourceLocation = _loc;
-	lhsCast->wtype = awst::WType::bytesType();
-	lhsCast->expr = std::move(lhs);
-	auto rhsCast = std::make_shared<awst::ReinterpretCast>();
-	rhsCast->sourceLocation = _loc;
-	rhsCast->wtype = awst::WType::bytesType();
-	rhsCast->expr = std::move(rhs);
+	auto lhsCast = awst::makeReinterpretCast(std::move(lhs), awst::WType::bytesType(), _loc);
+	auto rhsCast = awst::makeReinterpretCast(std::move(rhs), awst::WType::bytesType(), _loc);
 	call->stackArgs.push_back(std::move(lhsCast));
 	call->stackArgs.push_back(std::move(rhsCast));
 	// Reinterpret result back to biguint
-	auto result = std::make_shared<awst::ReinterpretCast>();
-	result->sourceLocation = _loc;
-	result->wtype = awst::WType::biguintType();
-	result->expr = std::move(call);
+	auto result = awst::makeReinterpretCast(std::move(call), awst::WType::biguintType(), _loc);
 	return result;
 }
 

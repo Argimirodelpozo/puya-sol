@@ -236,10 +236,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 			}
 			else if (keyWType == awst::WType::biguintType())
 			{
-				auto reinterpret = std::make_shared<awst::ReinterpretCast>();
-				reinterpret->sourceLocation = m_loc;
-				reinterpret->wtype = awst::WType::bytesType();
-				reinterpret->expr = std::move(translated);
+				auto reinterpret = awst::makeReinterpretCast(std::move(translated), awst::WType::bytesType(), m_loc);
 
 				auto padWidth = awst::makeIntegerConstant("32", m_loc);
 
@@ -284,10 +281,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 			}
 			else
 			{
-				auto reinterpret = std::make_shared<awst::ReinterpretCast>();
-				reinterpret->sourceLocation = m_loc;
-				reinterpret->wtype = awst::WType::bytesType();
-				reinterpret->expr = std::move(translated);
+				auto reinterpret = awst::makeReinterpretCast(std::move(translated), awst::WType::bytesType(), m_loc);
 				keyBytes = std::move(reinterpret);
 			}
 			keyParts.push_back(std::move(keyBytes));
@@ -490,10 +484,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 					itob->wtype = awst::WType::bytesType();
 					itob->opCode = "itob";
 					itob->stackArgs.push_back(std::move(indexExpr));
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = m_loc;
-					cast->wtype = awst::WType::biguintType();
-					cast->expr = std::move(itob);
+					auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 					indexExpr = std::move(cast);
 				}
 
@@ -560,10 +551,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 
 					// __storage_read expects uint64 slot, but we have biguint.
 					// Truncate: btoi(add)
-					auto castToBytes = std::make_shared<awst::ReinterpretCast>();
-					castToBytes->sourceLocation = m_loc;
-					castToBytes->wtype = awst::WType::bytesType();
-					castToBytes->expr = std::move(add);
+					auto castToBytes = awst::makeReinterpretCast(std::move(add), awst::WType::bytesType(), m_loc);
 
 					// Safe truncate biguint to uint64: extract last 8 bytes then btoi
 					auto lenOp = std::make_shared<awst::IntrinsicCall>();
@@ -629,10 +617,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 						itob->wtype = awst::WType::bytesType();
 						itob->opCode = "itob";
 						itob->stackArgs.push_back(std::move(indexExpr));
-						auto cast = std::make_shared<awst::ReinterpretCast>();
-						cast->sourceLocation = m_loc;
-						cast->wtype = awst::WType::biguintType();
-						cast->expr = std::move(itob);
+						auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 						indexExpr = std::move(cast);
 					}
 
@@ -646,10 +631,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 					// Read: __storage_read(truncated_slot)
 					if (!m_indexAccess.annotation().willBeWrittenTo)
 					{
-						auto castToBytes = std::make_shared<awst::ReinterpretCast>();
-						castToBytes->sourceLocation = m_loc;
-						castToBytes->wtype = awst::WType::bytesType();
-						castToBytes->expr = std::move(add);
+						auto castToBytes = awst::makeReinterpretCast(std::move(add), awst::WType::bytesType(), m_loc);
 
 						// Safe truncate biguint to uint64
 						auto last8 = std::make_shared<awst::IntrinsicCall>();

@@ -470,6 +470,19 @@ struct ReinterpretCast: Expression
 	std::shared_ptr<Expression> expr;
 };
 
+// Construct a ReinterpretCast that bit-reinterprets `expr` as `targetType`.
+inline std::shared_ptr<ReinterpretCast> makeReinterpretCast(
+	std::shared_ptr<Expression> expr,
+	WType const* targetType,
+	SourceLocation loc)
+{
+	auto node = std::make_shared<ReinterpretCast>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = targetType;
+	node->expr = std::move(expr);
+	return node;
+}
+
 /// A placeholder for a value not known at compile time — substituted
 /// before deployment. Compiles to `pushbytes TMPL_<name>` in TEAL.
 struct TemplateVar: Expression

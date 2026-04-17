@@ -94,10 +94,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			itob->wtype = awst::WType::bytesType();
 			itob->opCode = "itob";
 			itob->stackArgs.push_back(std::move(operand));
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = m_loc;
-			cast->wtype = awst::WType::biguintType();
-			cast->expr = std::move(itob);
+			auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 			operand = std::move(cast);
 		}
 
@@ -208,10 +205,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		// Convert back to uint64 for ≤64-bit types
 		if (bits <= 64)
 		{
-			auto castBytes = std::make_shared<awst::ReinterpretCast>();
-			castBytes->sourceLocation = m_loc;
-			castBytes->wtype = awst::WType::bytesType();
-			castBytes->expr = std::move(negated);
+			auto castBytes = awst::makeReinterpretCast(std::move(negated), awst::WType::bytesType(), m_loc);
 
 			auto eight = awst::makeIntegerConstant("8", m_loc);
 			auto bz = std::make_shared<awst::IntrinsicCall>();
@@ -361,10 +355,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleBitNot(
 	auto expr = std::move(_operand);
 	if (expr->wtype == awst::WType::biguintType())
 	{
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = m_loc;
-		cast->wtype = awst::WType::bytesType();
-		cast->expr = std::move(expr);
+		auto cast = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), m_loc);
 		expr = std::move(cast);
 	}
 	auto e = std::make_shared<awst::BytesUnaryOperation>();
@@ -374,10 +365,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleBitNot(
 	e->expr = std::move(expr);
 	if (resultType == awst::WType::biguintType())
 	{
-		auto castBack = std::make_shared<awst::ReinterpretCast>();
-		castBack->sourceLocation = m_loc;
-		castBack->wtype = resultType;
-		castBack->expr = std::move(e);
+		auto castBack = awst::makeReinterpretCast(std::move(e), resultType, m_loc);
 		return castBack;
 	}
 	return e;
@@ -455,10 +443,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 				itob->wtype = awst::WType::bytesType();
 				itob->opCode = "itob";
 				itob->stackArgs.push_back(std::move(val));
-				auto cast = std::make_shared<awst::ReinterpretCast>();
-				cast->sourceLocation = m_loc;
-				cast->wtype = awst::WType::biguintType();
-				cast->expr = std::move(itob);
+				auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 				val = std::move(cast);
 			}
 
@@ -544,10 +529,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 			// Convert back to uint64 for ≤64-bit types
 			if (signedBits <= 64)
 			{
-				auto castBytes = std::make_shared<awst::ReinterpretCast>();
-				castBytes->sourceLocation = m_loc;
-				castBytes->wtype = awst::WType::bytesType();
-				castBytes->expr = std::move(mod);
+				auto castBytes = awst::makeReinterpretCast(std::move(mod), awst::WType::bytesType(), m_loc);
 				auto eight = awst::makeIntegerConstant("8", m_loc);
 				auto bz = std::make_shared<awst::IntrinsicCall>();
 				bz->sourceLocation = m_loc;

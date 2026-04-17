@@ -558,10 +558,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMemoryArray(
 				byteVal = builder::TypeCoercion::stringToBytes(std::move(byteVal), m_loc);
 				if (byteVal->wtype != awst::WType::bytesType())
 				{
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = m_loc;
-					cast->wtype = awst::WType::bytesType();
-					cast->expr = std::move(byteVal);
+					auto cast = awst::makeReinterpretCast(std::move(byteVal), awst::WType::bytesType(), m_loc);
 					byteVal = std::move(cast);
 				}
 			}

@@ -113,10 +113,7 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 			if (targetType == awst::WType::bytesType()
 				&& val->wtype == awst::WType::stringType())
 			{
-				auto cast = std::make_shared<awst::ReinterpretCast>();
-				cast->sourceLocation = val->sourceLocation;
-				cast->wtype = awst::WType::bytesType();
-				cast->expr = std::move(val);
+				auto cast = awst::makeReinterpretCast(std::move(val), awst::WType::bytesType(), val->sourceLocation);
 				return cast;
 			}
 			return val;

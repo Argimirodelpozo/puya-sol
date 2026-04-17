@@ -59,10 +59,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleGas(
 	itobCall->opCode = "itob";
 	itobCall->stackArgs.push_back(std::move(gasCall));
 
-	auto biguintCast = std::make_shared<awst::ReinterpretCast>();
-	biguintCast->sourceLocation = _loc;
-	biguintCast->wtype = awst::WType::biguintType();
-	biguintCast->expr = std::move(itobCall);
+	auto biguintCast = awst::makeReinterpretCast(std::move(itobCall), awst::WType::biguintType(), _loc);
 	return biguintCast;
 }
 
@@ -83,10 +80,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTimestamp(
 	itobCall->opCode = "itob";
 	itobCall->stackArgs.push_back(std::move(tsCall));
 
-	auto biguintCast = std::make_shared<awst::ReinterpretCast>();
-	biguintCast->sourceLocation = _loc;
-	biguintCast->wtype = awst::WType::biguintType();
-	biguintCast->expr = std::move(itobCall);
+	auto biguintCast = awst::makeReinterpretCast(std::move(itobCall), awst::WType::biguintType(), _loc);
 	return biguintCast;
 }
 
@@ -105,10 +99,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildPowerOf2(
 	if (shiftAmt->wtype != awst::WType::uint64Type())
 	{
 		// Cast biguint → bytes first
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = awst::WType::bytesType();
-		cast->expr = std::move(shiftAmt);
+		auto cast = awst::makeReinterpretCast(std::move(shiftAmt), awst::WType::bytesType(), _loc);
 
 		// Safe btoi: extract last 8 bytes to avoid btoi overflow (> 8 bytes fails)
 		// Pattern: concat(bzero(8), bytes) → extract3(result, len-8, 8) → btoi
@@ -202,10 +193,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildPowerOf2(
 	setbit->stackArgs.push_back(std::move(one));
 
 	// Cast bytes → biguint
-	auto castToBigUInt = std::make_shared<awst::ReinterpretCast>();
-	castToBigUInt->sourceLocation = _loc;
-	castToBigUInt->wtype = awst::WType::biguintType();
-	castToBigUInt->expr = std::move(setbit);
+	auto castToBigUInt = awst::makeReinterpretCast(std::move(setbit), awst::WType::biguintType(), _loc);
 
 	return castToBigUInt;
 }
@@ -299,10 +287,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleByte(
 	extract->stackArgs.push_back(std::move(one));
 
 	// Cast bytes → biguint for Yul semantics (all values are uint256)
-	auto castResult = std::make_shared<awst::ReinterpretCast>();
-	castResult->sourceLocation = _loc;
-	castResult->wtype = awst::WType::biguintType();
-	castResult->expr = std::move(extract);
+	auto castResult = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
 	return castResult;
 }
 
@@ -394,15 +379,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 	auto highMask = makeBigUIntBinOp(maxU256, awst::BigUIntBinaryOperator::Sub, lowMask, _loc);
 
 	// Negative case: x | highMask (set all bits above bitPos)
-	auto xCastNeg = std::make_shared<awst::ReinterpretCast>();
-	xCastNeg->sourceLocation = _loc;
-	xCastNeg->wtype = awst::WType::bytesType();
-	xCastNeg->expr = x;
+	auto xCastNeg = awst::makeReinterpretCast(x, awst::WType::bytesType(), _loc);
 
-	auto highMaskBytes = std::make_shared<awst::ReinterpretCast>();
-	highMaskBytes->sourceLocation = _loc;
-	highMaskBytes->wtype = awst::WType::bytesType();
-	highMaskBytes->expr = highMask;
+	auto highMaskBytes = awst::makeReinterpretCast(highMask, awst::WType::bytesType(), _loc);
 
 	auto orCall = std::make_shared<awst::IntrinsicCall>();
 	orCall->sourceLocation = _loc;
@@ -411,10 +390,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 	orCall->stackArgs.push_back(std::move(xCastNeg));
 	orCall->stackArgs.push_back(std::move(highMaskBytes));
 
-	auto negResult = std::make_shared<awst::ReinterpretCast>();
-	negResult->sourceLocation = _loc;
-	negResult->wtype = awst::WType::biguintType();
-	negResult->expr = std::move(orCall);
+	auto negResult = awst::makeReinterpretCast(std::move(orCall), awst::WType::biguintType(), _loc);
 
 	// Positive case: x & lowMask (clear all bits above bitPos)
 	// Re-create lowMask (can't reuse shared_ptr after move)
@@ -426,15 +402,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 
 	auto lowMask2 = makeBigUIntBinOp(pow2BitPos2, awst::BigUIntBinaryOperator::Sub, oneBI2, _loc);
 
-	auto xCastPos = std::make_shared<awst::ReinterpretCast>();
-	xCastPos->sourceLocation = _loc;
-	xCastPos->wtype = awst::WType::bytesType();
-	xCastPos->expr = x;
+	auto xCastPos = awst::makeReinterpretCast(x, awst::WType::bytesType(), _loc);
 
-	auto lowMask2Bytes = std::make_shared<awst::ReinterpretCast>();
-	lowMask2Bytes->sourceLocation = _loc;
-	lowMask2Bytes->wtype = awst::WType::bytesType();
-	lowMask2Bytes->expr = lowMask2;
+	auto lowMask2Bytes = awst::makeReinterpretCast(lowMask2, awst::WType::bytesType(), _loc);
 
 	auto andCall = std::make_shared<awst::IntrinsicCall>();
 	andCall->sourceLocation = _loc;
@@ -443,10 +413,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 	andCall->stackArgs.push_back(std::move(xCastPos));
 	andCall->stackArgs.push_back(std::move(lowMask2Bytes));
 
-	auto posResult = std::make_shared<awst::ReinterpretCast>();
-	posResult->sourceLocation = _loc;
-	posResult->wtype = awst::WType::biguintType();
-	posResult->expr = std::move(andCall);
+	auto posResult = awst::makeReinterpretCast(std::move(andCall), awst::WType::biguintType(), _loc);
 
 	// Conditional: isNeg ? negResult : posResult
 	auto cond = std::make_shared<awst::ConditionalExpression>();

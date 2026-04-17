@@ -91,10 +91,7 @@ std::shared_ptr<awst::Expression> BuiltinCallableRegistry::promoteToBigUInt(
 	itob->opCode = "itob";
 	itob->stackArgs.push_back(std::move(_expr));
 
-	auto cast = std::make_shared<awst::ReinterpretCast>();
-	cast->sourceLocation = _loc;
-	cast->wtype = awst::WType::biguintType();
-	cast->expr = std::move(itob);
+	auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
 	return cast;
 }
 
@@ -281,10 +278,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	auto toBytes = [&](std::shared_ptr<awst::Expression> expr) -> std::shared_ptr<awst::Expression> {
 		if (expr->wtype != awst::WType::bytesType())
 		{
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = _loc;
-			cast->wtype = awst::WType::bytesType();
-			cast->expr = std::move(expr);
+			auto cast = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), _loc);
 			return cast;
 		}
 		return expr;
@@ -305,10 +299,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	else
 	{
 		// biguint v → bytes → btoi
-		auto vBytes = std::make_shared<awst::ReinterpretCast>();
-		vBytes->sourceLocation = _loc;
-		vBytes->wtype = awst::WType::bytesType();
-		vBytes->expr = std::move(v);
+		auto vBytes = awst::makeReinterpretCast(std::move(v), awst::WType::bytesType(), _loc);
 		auto btoi = std::make_shared<awst::IntrinsicCall>();
 		btoi->sourceLocation = _loc;
 		btoi->wtype = awst::WType::uint64Type();
@@ -493,10 +484,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	maskedAddr->falseExpr = std::move(zero32);
 
 	// Cast to account type (address return type)
-	auto addrCast = std::make_shared<awst::ReinterpretCast>();
-	addrCast->sourceLocation = _loc;
-	addrCast->wtype = awst::WType::accountType();
-	addrCast->expr = std::move(maskedAddr);
+	auto addrCast = awst::makeReinterpretCast(std::move(maskedAddr), awst::WType::accountType(), _loc);
 
 	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(addrCast));
 }

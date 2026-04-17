@@ -119,10 +119,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
 	else if (_expr->wtype == awst::WType::stringType()
 		|| (_expr->wtype && _expr->wtype->kind() == awst::WTypeKind::Bytes))
 	{
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = awst::WType::bytesType();
-		cast->expr = std::move(_expr);
+		auto cast = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
 		bytesExpr = std::move(cast);
 	}
 	else if (_expr->wtype == awst::WType::uint64Type())
@@ -137,19 +134,13 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
 	}
 	else if (_expr->wtype == awst::WType::biguintType())
 	{
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = awst::WType::bytesType();
-		cast->expr = std::move(_expr);
+		auto cast = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
 		// For non-packed, ensure 32-byte padding
 		bytesExpr = _isPacked ? std::move(cast) : leftPadBytes(std::move(cast), 32, _loc);
 	}
 	else if (_expr->wtype == awst::WType::accountType())
 	{
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = awst::WType::bytesType();
-		cast->expr = std::move(_expr);
+		auto cast = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
 		bytesExpr = std::move(cast);
 	}
 	else if (_expr->wtype == awst::WType::boolType())
@@ -171,10 +162,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::toPackedBytes(
 	}
 	else
 	{
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = awst::WType::bytesType();
-		cast->expr = std::move(_expr);
+		auto cast = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
 		bytesExpr = std::move(cast);
 	}
 
@@ -222,10 +210,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgAsARC4Bytes(
 	}
 	if (wtype == awst::WType::biguintType())
 	{
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = awst::WType::bytesType();
-		cast->expr = std::move(_argExpr);
+		auto cast = awst::makeReinterpretCast(std::move(_argExpr), awst::WType::bytesType(), _loc);
 		return leftPadBytes(std::move(cast), 32, _loc);
 	}
 	if (wtype == awst::WType::boolType())
@@ -242,10 +227,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgAsARC4Bytes(
 	}
 	if (wtype == awst::WType::accountType())
 	{
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = awst::WType::bytesType();
-		cast->expr = std::move(_argExpr);
+		auto cast = awst::makeReinterpretCast(std::move(_argExpr), awst::WType::bytesType(), _loc);
 		return cast;
 	}
 	if (wtype && wtype->kind() == awst::WTypeKind::ReferenceArray)
@@ -268,10 +250,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgAsARC4Bytes(
 			encode->wtype = arc4ArrayType;
 			encode->value = std::move(_argExpr);
 
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = _loc;
-			cast->wtype = awst::WType::bytesType();
-			cast->expr = std::move(encode);
+			auto cast = awst::makeReinterpretCast(std::move(encode), awst::WType::bytesType(), _loc);
 			return cast;
 		}
 	}
@@ -279,17 +258,11 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgAsARC4Bytes(
 	if (wtype && (wtype->kind() == awst::WTypeKind::ARC4StaticArray
 		|| wtype->kind() == awst::WTypeKind::ARC4DynamicArray))
 	{
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = awst::WType::bytesType();
-		cast->expr = std::move(_argExpr);
+		auto cast = awst::makeReinterpretCast(std::move(_argExpr), awst::WType::bytesType(), _loc);
 		return cast;
 	}
 
-	auto cast = std::make_shared<awst::ReinterpretCast>();
-	cast->sourceLocation = _loc;
-	cast->wtype = awst::WType::bytesType();
-	cast->expr = std::move(_argExpr);
+	auto cast = awst::makeReinterpretCast(std::move(_argExpr), awst::WType::bytesType(), _loc);
 	return cast;
 }
 
@@ -539,10 +512,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodeWithSelector(
 		}
 		else if (selector->wtype == awst::WType::biguintType())
 		{
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = _loc;
-			cast->wtype = awst::WType::bytesType();
-			cast->expr = std::move(selector);
+			auto cast = awst::makeReinterpretCast(std::move(selector), awst::WType::bytesType(), _loc);
 			asBytes = std::move(cast);
 		}
 
@@ -820,10 +790,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 		auto bytesExpr = std::move(decoded);
 		if (bytesExpr->wtype != awst::WType::bytesType())
 		{
-			auto toBytes = std::make_shared<awst::ReinterpretCast>();
-			toBytes->sourceLocation = _loc;
-			toBytes->wtype = awst::WType::bytesType();
-			toBytes->expr = std::move(bytesExpr);
+			auto toBytes = awst::makeReinterpretCast(std::move(bytesExpr), awst::WType::bytesType(), _loc);
 			bytesExpr = std::move(toBytes);
 		}
 		auto btoi = std::make_shared<awst::IntrinsicCall>();
@@ -850,10 +817,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 		auto bytesExpr = std::move(decoded);
 		if (bytesExpr->wtype != awst::WType::bytesType())
 		{
-			auto toBytes = std::make_shared<awst::ReinterpretCast>();
-			toBytes->sourceLocation = _loc;
-			toBytes->wtype = awst::WType::bytesType();
-			toBytes->expr = std::move(bytesExpr);
+			auto toBytes = awst::makeReinterpretCast(std::move(bytesExpr), awst::WType::bytesType(), _loc);
 			bytesExpr = std::move(toBytes);
 		}
 		// Pull out the first 32 bytes (the head word) — handles ABIv2
@@ -879,10 +843,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 	auto dataExpr = std::move(decoded);
 	if (dataExpr->wtype != awst::WType::bytesType())
 	{
-		auto toBytes = std::make_shared<awst::ReinterpretCast>();
-		toBytes->sourceLocation = _loc;
-		toBytes->wtype = awst::WType::bytesType();
-		toBytes->expr = std::move(dataExpr);
+		auto toBytes = awst::makeReinterpretCast(std::move(dataExpr), awst::WType::bytesType(), _loc);
 		dataExpr = std::move(toBytes);
 	}
 
@@ -958,10 +919,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 	// Integer > 64 bits → biguint (ReinterpretCast)
 	if (wtype == awst::WType::biguintType())
 	{
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = awst::WType::biguintType();
-		cast->expr = std::move(headWord);
+		auto cast = awst::makeReinterpretCast(std::move(headWord), awst::WType::biguintType(), _loc);
 		return cast;
 	}
 
@@ -986,10 +944,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 	// Address → 32 bytes, take last 32 (it's the full word)
 	if (wtype == awst::WType::accountType())
 	{
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = awst::WType::accountType();
-		cast->expr = std::move(headWord);
+		auto cast = awst::makeReinterpretCast(std::move(headWord), awst::WType::accountType(), _loc);
 		return cast;
 	}
 
@@ -1045,20 +1000,14 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 		// Cast to target type (string, bytes, etc.)
 		if (wtype == awst::WType::stringType())
 		{
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = _loc;
-			cast->wtype = awst::WType::stringType();
-			cast->expr = std::move(dataBytes);
+			auto cast = awst::makeReinterpretCast(std::move(dataBytes), awst::WType::stringType(), _loc);
 			return cast;
 		}
 		return dataBytes;
 	}
 
 	// Fallback: ReinterpretCast the 32-byte word
-	auto cast = std::make_shared<awst::ReinterpretCast>();
-	cast->sourceLocation = _loc;
-	cast->wtype = wtype;
-	cast->expr = std::move(headWord);
+	auto cast = awst::makeReinterpretCast(std::move(headWord), wtype, _loc);
 	return cast;
 }
 
@@ -1151,10 +1100,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 			auto bytesExpr = std::move(_expr);
 			if (bytesExpr->wtype != awst::WType::bytesType())
 			{
-				auto cast = std::make_shared<awst::ReinterpretCast>();
-				cast->sourceLocation = _loc;
-				cast->wtype = awst::WType::bytesType();
-				cast->expr = std::move(bytesExpr);
+				auto cast = awst::makeReinterpretCast(std::move(bytesExpr), awst::WType::bytesType(), _loc);
 				bytesExpr = std::move(cast);
 			}
 
@@ -1216,10 +1162,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 			if (elemByteSize == 32)
 			{
 				auto arrayExpr = _expr;
-				auto asBytes = std::make_shared<awst::ReinterpretCast>();
-				asBytes->sourceLocation = _loc;
-				asBytes->wtype = awst::WType::bytesType();
-				asBytes->expr = arrayExpr;
+				auto asBytes = awst::makeReinterpretCast(arrayExpr, awst::WType::bytesType(), _loc);
 
 				auto rawLen = std::make_shared<awst::IntrinsicCall>();
 				rawLen->sourceLocation = _loc;
@@ -1258,10 +1201,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeDynamicTail(
 				stripHeader->opCode = "extract";
 				stripHeader->immediates = {2, 0};
 				{
-					auto bytesCast = std::make_shared<awst::ReinterpretCast>();
-					bytesCast->sourceLocation = _loc;
-					bytesCast->wtype = awst::WType::bytesType();
-					bytesCast->expr = arrayExpr;
+					auto bytesCast = awst::makeReinterpretCast(arrayExpr, awst::WType::bytesType(), _loc);
 					stripHeader->stackArgs.push_back(std::move(bytesCast));
 				}
 

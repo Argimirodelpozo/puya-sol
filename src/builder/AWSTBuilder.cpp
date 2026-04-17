@@ -589,10 +589,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					hash->stackArgs.push_back(std::move(concat));
 
 					// Cast bytes → bytes[32] to match return type
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = loc;
-					cast->wtype = sub->returnType;
-					cast->expr = std::move(hash);
+					auto cast = awst::makeReinterpretCast(std::move(hash), sub->returnType, loc);
 
 					auto ret = std::make_shared<awst::ReturnStatement>();
 					ret->sourceLocation = loc;

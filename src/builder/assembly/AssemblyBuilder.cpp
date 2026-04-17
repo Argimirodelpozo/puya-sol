@@ -636,20 +636,14 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBiguint(
 		itob->opCode = "itob";
 		itob->stackArgs.push_back(std::move(_expr));
 
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = awst::WType::biguintType();
-		cast->expr = std::move(itob);
+		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
 		return cast;
 	}
 
 	if (_expr->wtype->kind() == awst::WTypeKind::Bytes)
 	{
 		// bytes → biguint: ReinterpretCast
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = awst::WType::biguintType();
-		cast->expr = std::move(_expr);
+		auto cast = awst::makeReinterpretCast(std::move(_expr), awst::WType::biguintType(), _loc);
 		return cast;
 	}
 
@@ -777,10 +771,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::safeBtoi(
 {
 	// Safe btoi pattern: concat(bzero(8), bytes(expr)) → extract last 8 bytes → btoi
 	// This handles biguint values > 8 bytes from b&/b|/b^ padding.
-	auto cast = std::make_shared<awst::ReinterpretCast>();
-	cast->sourceLocation = _loc;
-	cast->wtype = awst::WType::bytesType();
-	cast->expr = std::move(_biguintExpr);
+	auto cast = awst::makeReinterpretCast(std::move(_biguintExpr), awst::WType::bytesType(), _loc);
 
 	auto eight = awst::makeIntegerConstant("8", _loc);
 

@@ -29,10 +29,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 		itob->opCode = "itob";
 		itob->stackArgs.push_back(std::move(_expr));
 
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = awst::WType::biguintType();
-		cast->expr = std::move(itob);
+		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
 		return cast;
 	}
 
@@ -42,10 +39,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 	if (_expr->wtype == awst::WType::biguintType() && _targetType == awst::WType::uint64Type())
 	{
 		// reinterpret biguint → bytes
-		auto toBytes = std::make_shared<awst::ReinterpretCast>();
-		toBytes->sourceLocation = _loc;
-		toBytes->wtype = awst::WType::bytesType();
-		toBytes->expr = std::move(_expr);
+		auto toBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
 
 		// bzero(8) — 8 zero bytes padding
 		auto eight = awst::makeIntegerConstant("8", _loc);
@@ -226,10 +220,7 @@ std::shared_ptr<awst::ReinterpretCast> TypeCoercion::reinterpretCast(
 	awst::SourceLocation const& _loc
 )
 {
-	auto cast = std::make_shared<awst::ReinterpretCast>();
-	cast->sourceLocation = _loc;
-	cast->wtype = _targetType;
-	cast->expr = std::move(_expr);
+	auto cast = awst::makeReinterpretCast(std::move(_expr), _targetType, _loc);
 	return cast;
 }
 
@@ -435,10 +426,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeZeroBytesRuntime(
 	if (_targetType == awst::WType::bytesType())
 		return bzero;
 
-	auto cast = std::make_shared<awst::ReinterpretCast>();
-	cast->sourceLocation = _loc;
-	cast->wtype = _targetType;
-	cast->expr = std::move(bzero);
+	auto cast = awst::makeReinterpretCast(std::move(bzero), _targetType, _loc);
 	return cast;
 }
 
@@ -587,10 +575,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 					encode->wtype = dynArr->elementType();
 					encode->value = std::move(nativeVal);
 
-					auto encBytes = std::make_shared<awst::ReinterpretCast>();
-					encBytes->sourceLocation = _loc;
-					encBytes->wtype = awst::WType::bytesType();
-					encBytes->expr = std::move(encode);
+					auto encBytes = awst::makeReinterpretCast(std::move(encode), awst::WType::bytesType(), _loc);
 
 					if (!bodyBytes)
 						bodyBytes = std::move(encBytes);
@@ -619,10 +604,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 				withHeader->stackArgs.push_back(std::move(header));
 				withHeader->stackArgs.push_back(std::move(bodyBytes));
 
-				auto cast = std::make_shared<awst::ReinterpretCast>();
-				cast->sourceLocation = _loc;
-				cast->wtype = _targetType;
-				cast->expr = std::move(withHeader);
+				auto cast = awst::makeReinterpretCast(std::move(withHeader), _targetType, _loc);
 				return cast;
 			}
 		}
@@ -648,10 +630,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 					int64_t diffElems = targetStat->arraySize() - srcStat->arraySize();
 					int64_t diffBytes = diffElems * elemSize;
 
-					auto srcBytes = std::make_shared<awst::ReinterpretCast>();
-					srcBytes->sourceLocation = _loc;
-					srcBytes->wtype = awst::WType::bytesType();
-					srcBytes->expr = std::move(_expr);
+					auto srcBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
 
 					auto padSize = awst::makeIntegerConstant(std::to_string(diffBytes), _loc);
 					auto pad = std::make_shared<awst::IntrinsicCall>();
@@ -667,10 +646,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 					cat->stackArgs.push_back(std::move(srcBytes));
 					cat->stackArgs.push_back(std::move(pad));
 
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = _loc;
-					cast->wtype = _targetType;
-					cast->expr = std::move(cat);
+					auto cast = awst::makeReinterpretCast(std::move(cat), _targetType, _loc);
 					return cast;
 				}
 			}
@@ -783,10 +759,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 							sourceWidth = static_cast<int>(*sw->length());
 					if (sourceWidth > 0 && sourceWidth < targetWidth)
 					{
-						auto srcBytes = std::make_shared<awst::ReinterpretCast>();
-						srcBytes->sourceLocation = _loc;
-						srcBytes->wtype = awst::WType::bytesType();
-						srcBytes->expr = std::move(_expr);
+						auto srcBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
 
 						int padBytes = targetWidth - sourceWidth;
 						auto padSize = awst::makeIntegerConstant(std::to_string(padBytes), _loc);
@@ -803,19 +776,13 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 						cat->stackArgs.push_back(std::move(srcBytes));
 						cat->stackArgs.push_back(std::move(pad));
 
-						auto cast = std::make_shared<awst::ReinterpretCast>();
-						cast->sourceLocation = _loc;
-						cast->wtype = _targetType;
-						cast->expr = std::move(cat);
+						auto cast = awst::makeReinterpretCast(std::move(cat), _targetType, _loc);
 						return cast;
 					}
 				}
 			}
 
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = _loc;
-			cast->wtype = _targetType;
-			cast->expr = std::move(_expr);
+			auto cast = awst::makeReinterpretCast(std::move(_expr), _targetType, _loc);
 			return cast;
 		}
 	}
@@ -825,19 +792,13 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 		&& (_expr->wtype->kind() == awst::WTypeKind::Bytes
 			|| _expr->wtype == awst::WType::bytesType()))
 	{
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = _targetType;
-		cast->expr = std::move(_expr);
+		auto cast = awst::makeReinterpretCast(std::move(_expr), _targetType, _loc);
 		return cast;
 	}
 	if (_expr->wtype == awst::WType::accountType()
 		&& _targetType->kind() == awst::WTypeKind::Bytes)
 	{
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = _targetType;
-		cast->expr = std::move(_expr);
+		auto cast = awst::makeReinterpretCast(std::move(_expr), _targetType, _loc);
 		return cast;
 	}
 
@@ -850,10 +811,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 	if (_targetType == awst::WType::accountType()
 		&& _expr->wtype == awst::WType::applicationType())
 	{
-		auto idBytes = std::make_shared<awst::ReinterpretCast>();
-		idBytes->sourceLocation = _loc;
-		idBytes->wtype = awst::WType::uint64Type();
-		idBytes->expr = std::move(_expr);
+		auto idBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::uint64Type(), _loc);
 
 		auto itob = std::make_shared<awst::IntrinsicCall>();
 		itob->sourceLocation = _loc;
@@ -875,10 +833,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 		cat->stackArgs.push_back(std::move(pad));
 		cat->stackArgs.push_back(std::move(itob));
 
-		auto accountCast = std::make_shared<awst::ReinterpretCast>();
-		accountCast->sourceLocation = _loc;
-		accountCast->wtype = _targetType;
-		accountCast->expr = std::move(cat);
+		auto accountCast = awst::makeReinterpretCast(std::move(cat), _targetType, _loc);
 		return accountCast;
 	}
 
@@ -887,10 +842,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 	if (_targetType == awst::WType::applicationType()
 		&& _expr->wtype == awst::WType::accountType())
 	{
-		auto toBytes = std::make_shared<awst::ReinterpretCast>();
-		toBytes->sourceLocation = _loc;
-		toBytes->wtype = awst::WType::bytesType();
-		toBytes->expr = std::move(_expr);
+		auto toBytes = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
 
 		auto extract = std::make_shared<awst::IntrinsicCall>();
 		extract->sourceLocation = _loc;
@@ -905,10 +857,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 		btoi->opCode = "btoi";
 		btoi->stackArgs.push_back(std::move(extract));
 
-		auto appIdCast = std::make_shared<awst::ReinterpretCast>();
-		appIdCast->sourceLocation = _loc;
-		appIdCast->wtype = _targetType;
-		appIdCast->expr = std::move(btoi);
+		auto appIdCast = awst::makeReinterpretCast(std::move(btoi), _targetType, _loc);
 		return appIdCast;
 	}
 

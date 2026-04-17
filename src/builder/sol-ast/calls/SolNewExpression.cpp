@@ -190,10 +190,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 		bzero->opCode = "bzero";
 		if (sizeExpr)
 			bzero->stackArgs.push_back(std::move(sizeExpr));
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = m_loc;
-		cast->wtype = resultType;
-		cast->expr = std::move(bzero);
+		auto cast = awst::makeReinterpretCast(std::move(bzero), resultType, m_loc);
 		return cast;
 	}
 
@@ -312,10 +309,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				fundAddrBytes->wtype = awst::WType::bytesType();
 				fundAddrBytes->base = std::move(fundTupleRead);
 				fundAddrBytes->index = 0;
-				auto fundAddr = std::make_shared<awst::ReinterpretCast>();
-				fundAddr->sourceLocation = m_loc;
-				fundAddr->wtype = awst::WType::accountType();
-				fundAddr->expr = std::move(fundAddrBytes);
+				auto fundAddr = awst::makeReinterpretCast(std::move(fundAddrBytes), awst::WType::accountType(), m_loc);
 
 				static awst::WInnerTransactionFields s_fundFieldsType(1);
 				auto fundCreate = std::make_shared<awst::CreateInnerTransaction>();
@@ -354,10 +348,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			// Return CreatedApplicationID as applicationType directly.
 			// This allows subsequent method calls to use the app ID
 			// instead of converting through the hashed address.
-			auto appIdCast = std::make_shared<awst::ReinterpretCast>();
-			appIdCast->sourceLocation = m_loc;
-			appIdCast->wtype = awst::WType::applicationType();
-			appIdCast->expr = std::move(createdAppId);
+			auto appIdCast = awst::makeReinterpretCast(std::move(createdAppId), awst::WType::applicationType(), m_loc);
 
 			return appIdCast;
 		}

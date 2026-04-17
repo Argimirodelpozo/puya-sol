@@ -67,10 +67,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildLiteral(
 					std::move(padded), loc, awst::BytesEncoding::Unknown);
 
 				// Cast to biguint for use in assembly context
-				auto cast = std::make_shared<awst::ReinterpretCast>();
-				cast->sourceLocation = loc;
-				cast->wtype = awst::WType::biguintType();
-				cast->expr = std::move(node);
+				auto cast = awst::makeReinterpretCast(std::move(node), awst::WType::biguintType(), loc);
 				return cast;
 			}
 			else
@@ -90,10 +87,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildLiteral(
 				std::vector<uint8_t>(strVal.begin(), strVal.end()),
 				loc, awst::BytesEncoding::Unknown);
 
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = loc;
-			cast->wtype = awst::WType::biguintType();
-			cast->expr = std::move(node);
+			auto cast = awst::makeReinterpretCast(std::move(node), awst::WType::biguintType(), loc);
 			return cast;
 		}
 	}
@@ -211,10 +205,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 			cat->stackArgs.push_back(std::move(node));
 			cat->stackArgs.push_back(std::move(pad));
 
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = loc;
-			cast->wtype = awst::WType::biguintType();
-			cast->expr = std::move(cat);
+			auto cast = awst::makeReinterpretCast(std::move(cat), awst::WType::biguintType(), loc);
 			return cast;
 		}
 	}
@@ -352,10 +343,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		appId->wtype = awst::WType::uint64Type();
 		appId->opCode = "global";
 		appId->immediates = {std::string("CurrentApplicationID")};
-		auto appIdCast = std::make_shared<awst::ReinterpretCast>();
-		appIdCast->sourceLocation = loc;
-		appIdCast->wtype = awst::WType::applicationType();
-		appIdCast->expr = std::move(appId);
+		auto appIdCast = awst::makeReinterpretCast(std::move(appId), awst::WType::applicationType(), loc);
 
 		auto* tupleType = m_typeMapper.createType<awst::WTuple>(
 			std::vector<awst::WType const*>{
@@ -379,10 +367,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		hash->opCode = "keccak256";
 		hash->stackArgs.push_back(std::move(bytesOut));
 
-		auto hashBigUint = std::make_shared<awst::ReinterpretCast>();
-		hashBigUint->sourceLocation = loc;
-		hashBigUint->wtype = awst::WType::biguintType();
-		hashBigUint->expr = std::move(hash);
+		auto hashBigUint = awst::makeReinterpretCast(std::move(hash), awst::WType::biguintType(), loc);
 
 		// arg > 2 → return hash, else 0. Empty/small addresses (0, 1,
 		// 2) match the "no code" EVM semantics; real contract addresses
@@ -395,10 +380,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		// accepts uint64/biguint/bool/asset/application.
 		if (addrExpr->wtype == awst::WType::accountType())
 		{
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = loc;
-			cast->wtype = awst::WType::biguintType();
-			cast->expr = std::move(addrExpr);
+			auto cast = awst::makeReinterpretCast(std::move(addrExpr), awst::WType::biguintType(), loc);
 			addrExpr = std::move(cast);
 		}
 		else if (addrExpr->wtype == awst::WType::uint64Type())
@@ -408,10 +390,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 			itob->wtype = awst::WType::bytesType();
 			itob->opCode = "itob";
 			itob->stackArgs.push_back(std::move(addrExpr));
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = loc;
-			cast->wtype = awst::WType::biguintType();
-			cast->expr = std::move(itob);
+			auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), loc);
 			addrExpr = std::move(cast);
 		}
 		// Compute three-way: addr == 0 → 0, 0 < addr ≤ 100 → keccak256(""),
@@ -430,10 +409,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 				0xe5, 0x00, 0xb6, 0x53, 0xca, 0x82, 0x27, 0x3b,
 				0x7b, 0xfa, 0xd8, 0x04, 0x5d, 0x85, 0xa4, 0x70},
 			loc);
-		auto emptyHashBigUint = std::make_shared<awst::ReinterpretCast>();
-		emptyHashBigUint->sourceLocation = loc;
-		emptyHashBigUint->wtype = awst::WType::biguintType();
-		emptyHashBigUint->expr = std::move(emptyHash);
+		auto emptyHashBigUint = awst::makeReinterpretCast(std::move(emptyHash), awst::WType::biguintType(), loc);
 
 		auto isLarge = std::make_shared<awst::NumericComparisonExpression>();
 		isLarge->sourceLocation = loc;
@@ -475,10 +451,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		addr->opCode = "global";
 		addr->immediates.push_back("CurrentApplicationAddress");
 
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = loc;
-		cast->wtype = awst::WType::biguintType();
-		cast->expr = std::move(addr);
+		auto cast = awst::makeReinterpretCast(std::move(addr), awst::WType::biguintType(), loc);
 		return cast;
 	}
 	if (funcName == "caller" || funcName == "origin")
@@ -490,10 +463,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		sender->opCode = "txn";
 		sender->immediates.push_back("Sender");
 
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = loc;
-		cast->wtype = awst::WType::biguintType();
-		cast->expr = std::move(sender);
+		auto cast = awst::makeReinterpretCast(std::move(sender), awst::WType::biguintType(), loc);
 		return cast;
 	}
 	if (funcName == "timestamp")
@@ -532,10 +502,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		seed->immediates = {std::string("BlkSeed")};
 		seed->stackArgs.push_back(std::move(prevRound));
 
-		auto seedBigUint = std::make_shared<awst::ReinterpretCast>();
-		seedBigUint->sourceLocation = loc;
-		seedBigUint->wtype = awst::WType::biguintType();
-		seedBigUint->expr = std::move(seed);
+		auto seedBigUint = awst::makeReinterpretCast(std::move(seed), awst::WType::biguintType(), loc);
 
 		if (funcName == "blobhash" && !args.empty())
 		{
@@ -574,10 +541,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		hash->wtype = awst::WType::bytesType();
 		hash->opCode = "sha256";
 		hash->stackArgs.push_back(std::move(hashInput));
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = loc;
-		cast->wtype = awst::WType::biguintType();
-		cast->expr = std::move(hash);
+		auto cast = awst::makeReinterpretCast(std::move(hash), awst::WType::biguintType(), loc);
 		return cast;
 	}
 	if (funcName == "number")
@@ -594,10 +558,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		itob->wtype = awst::WType::bytesType();
 		itob->opCode = "itob";
 		itob->stackArgs.push_back(std::move(round));
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = loc;
-		cast->wtype = awst::WType::biguintType();
-		cast->expr = std::move(itob);
+		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), loc);
 		return cast;
 	}
 	if (funcName == "coinbase" || funcName == "gasprice" || funcName == "basefee"
@@ -664,10 +625,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		}
 		else if (x->wtype == awst::WType::biguintType())
 		{
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = loc;
-			cast->wtype = awst::WType::bytesType();
-			cast->expr = std::move(x);
+			auto cast = awst::makeReinterpretCast(std::move(x), awst::WType::bytesType(), loc);
 			x = std::move(cast);
 		}
 
@@ -693,10 +651,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		itob2->opCode = "itob";
 		itob2->stackArgs.push_back(std::move(sub));
 
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = loc;
-		cast->wtype = awst::WType::biguintType();
-		cast->expr = std::move(itob2);
+		auto cast = awst::makeReinterpretCast(std::move(itob2), awst::WType::biguintType(), loc);
 		return cast;
 	}
 	if (funcName == "calldataload")

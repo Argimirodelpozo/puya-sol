@@ -157,10 +157,7 @@ void AssemblyBuilder::handleEcRecover(
 	);
 
 	// Cast biguint → bytes → btoi → uint64
-	auto vBytes = std::make_shared<awst::ReinterpretCast>();
-	vBytes->sourceLocation = _loc;
-	vBytes->wtype = awst::WType::bytesType();
-	vBytes->expr = std::move(vMinus27);
+	auto vBytes = awst::makeReinterpretCast(std::move(vMinus27), awst::WType::bytesType(), _loc);
 
 	auto recoveryId = std::make_shared<awst::IntrinsicCall>();
 	recoveryId->sourceLocation = _loc;
@@ -256,10 +253,7 @@ void AssemblyBuilder::handleEcRecover(
 	paddedAddr->stackArgs.push_back(std::move(addr));
 
 	// 9. Cast to biguint and store
-	auto addrBiguint = std::make_shared<awst::ReinterpretCast>();
-	addrBiguint->sourceLocation = _loc;
-	addrBiguint->wtype = awst::WType::biguintType();
-	addrBiguint->expr = std::move(paddedAddr);
+	auto addrBiguint = awst::makeReinterpretCast(std::move(paddedAddr), awst::WType::biguintType(), _loc);
 
 	storeResultToMemory(std::move(addrBiguint), _outputOffset, 1, _loc, _out);
 }
@@ -332,10 +326,7 @@ void AssemblyBuilder::handleSha256Precompile(
 	sha256Call->stackArgs.push_back(std::move(inputData));
 
 	// Convert to biguint and store at output
-	auto castResult = std::make_shared<awst::ReinterpretCast>();
-	castResult->sourceLocation = _loc;
-	castResult->wtype = awst::WType::biguintType();
-	castResult->expr = std::move(sha256Call);
+	auto castResult = awst::makeReinterpretCast(std::move(sha256Call), awst::WType::biguintType(), _loc);
 
 	storeResultToMemory(std::move(castResult), _outputOffset, 1, _loc, _out);
 }

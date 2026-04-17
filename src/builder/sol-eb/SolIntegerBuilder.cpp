@@ -56,10 +56,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::promoteToBigUInt(
 	itob->opCode = "itob";
 	itob->stackArgs.push_back(std::move(_expr));
 
-	auto cast = std::make_shared<awst::ReinterpretCast>();
-	cast->sourceLocation = _loc;
-	cast->wtype = awst::WType::biguintType();
-	cast->expr = std::move(itob);
+	auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
 	return cast;
 }
 
@@ -490,10 +487,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 				itob->opCode = "itob";
 				itob->stackArgs.push_back(std::move(masked));
 
-				auto cast = std::make_shared<awst::ReinterpretCast>();
-				cast->sourceLocation = _loc;
-				cast->wtype = awst::WType::biguintType();
-				cast->expr = std::move(itob);
+				auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
 				cmpOperand = std::move(cast);
 			}
 
@@ -517,10 +511,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 		{
 			// Two's complement: -x = ~x + 1
 			// Guard: ~0 + 1 = 2^256 overflows 256-bit biguint, so mask with % 2^256
-			auto castToBytes = std::make_shared<awst::ReinterpretCast>();
-			castToBytes->sourceLocation = _loc;
-			castToBytes->wtype = awst::WType::bytesType();
-			castToBytes->expr = std::move(operand);
+			auto castToBytes = awst::makeReinterpretCast(std::move(operand), awst::WType::bytesType(), _loc);
 
 			auto bitInvert = std::make_shared<awst::BytesUnaryOperation>();
 			bitInvert->sourceLocation = _loc;
@@ -528,10 +519,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			bitInvert->op = awst::BytesUnaryOperator::BitInvert;
 			bitInvert->expr = std::move(castToBytes);
 
-			auto castBack = std::make_shared<awst::ReinterpretCast>();
-			castBack->sourceLocation = _loc;
-			castBack->wtype = awst::WType::biguintType();
-			castBack->expr = std::move(bitInvert);
+			auto castBack = awst::makeReinterpretCast(std::move(bitInvert), awst::WType::biguintType(), _loc);
 
 			auto one = awst::makeIntegerConstant("1", _loc, awst::WType::biguintType());
 
@@ -564,10 +552,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			itob->opCode = "itob";
 			itob->stackArgs.push_back(std::move(operand));
 
-			auto castBiguint = std::make_shared<awst::ReinterpretCast>();
-			castBiguint->sourceLocation = _loc;
-			castBiguint->wtype = awst::WType::biguintType();
-			castBiguint->expr = std::move(itob);
+			auto castBiguint = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
 
 			// 2^64 - x
 			auto pow2_64 = std::make_shared<awst::IntegerConstant>();
@@ -603,10 +588,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 		if (m_isBigUInt)
 		{
 			// ~x for biguint: use BytesUnaryOperation via ReinterpretCast
-			auto toBytes = std::make_shared<awst::ReinterpretCast>();
-			toBytes->sourceLocation = _loc;
-			toBytes->wtype = awst::WType::bytesType();
-			toBytes->expr = resolve();
+			auto toBytes = awst::makeReinterpretCast(resolve(), awst::WType::bytesType(), _loc);
 
 			auto invert = std::make_shared<awst::BytesUnaryOperation>();
 			invert->sourceLocation = _loc;
@@ -614,10 +596,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			invert->op = awst::BytesUnaryOperator::BitInvert;
 			invert->expr = std::move(toBytes);
 
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = _loc;
-			cast->wtype = awst::WType::biguintType();
-			cast->expr = std::move(invert);
+			auto cast = awst::makeReinterpretCast(std::move(invert), awst::WType::biguintType(), _loc);
 			return wrap(std::move(cast));
 		}
 		// ~x for uint64: XOR with bit-width mask (not always 2^64-1)
@@ -768,10 +747,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildBigUIntShift(
 	setbit->stackArgs.push_back(std::move(bitIdx));
 	setbit->stackArgs.push_back(std::move(one));
 
-	auto castPow = std::make_shared<awst::ReinterpretCast>();
-	castPow->sourceLocation = _loc;
-	castPow->wtype = awst::WType::biguintType();
-	castPow->expr = std::move(setbit);
+	auto castPow = awst::makeReinterpretCast(std::move(setbit), awst::WType::biguintType(), _loc);
 
 	auto e = std::make_shared<awst::BigUIntBinaryOperation>();
 	e->sourceLocation = _loc;

@@ -97,10 +97,7 @@ std::shared_ptr<awst::Expression> TransientStorage::buildRead(
 	// Reinterpret bytes as the target type
 	if (_type == awst::WType::biguintType())
 	{
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = awst::WType::biguintType();
-		cast->expr = std::move(extract);
+		auto cast = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
 		return cast;
 	}
 	else if (_type == awst::WType::uint64Type() || _type == awst::WType::boolType())
@@ -141,10 +138,7 @@ std::shared_ptr<awst::Statement> TransientStorage::buildWrite(
 	{
 		// biguint → bytes, then b| with bzero(32) to pad to ≥32 bytes,
 		// then extract last 32
-		auto toBytes = std::make_shared<awst::ReinterpretCast>();
-		toBytes->sourceLocation = _loc;
-		toBytes->wtype = awst::WType::bytesType();
-		toBytes->expr = std::move(_value);
+		auto toBytes = awst::makeReinterpretCast(std::move(_value), awst::WType::bytesType(), _loc);
 
 		// bzero(32)
 		auto zeros = std::make_shared<awst::IntrinsicCall>();

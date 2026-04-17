@@ -56,10 +56,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 				idCall->wtype = awst::WType::uint64Type();
 				idCall->opCode = "global";
 				idCall->immediates = {std::string("CurrentApplicationID")};
-				auto cast = std::make_shared<awst::ReinterpretCast>();
-				cast->sourceLocation = m_loc;
-				cast->wtype = awst::WType::applicationType();
-				cast->expr = std::move(idCall);
+				auto cast = awst::makeReinterpretCast(std::move(idCall), awst::WType::applicationType(), m_loc);
 				appId = std::move(cast);
 			}
 		}
@@ -69,10 +66,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 			std::shared_ptr<awst::Expression> bytesExpr = std::move(addrExpr);
 			if (bytesExpr->wtype == awst::WType::accountType())
 			{
-				auto toBytes = std::make_shared<awst::ReinterpretCast>();
-				toBytes->sourceLocation = m_loc;
-				toBytes->wtype = awst::WType::bytesType();
-				toBytes->expr = std::move(bytesExpr);
+				auto toBytes = awst::makeReinterpretCast(std::move(bytesExpr), awst::WType::bytesType(), m_loc);
 				bytesExpr = std::move(toBytes);
 			}
 
@@ -89,10 +83,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 			btoi->opCode = "btoi";
 			btoi->stackArgs.push_back(std::move(extract));
 
-			auto castId = std::make_shared<awst::ReinterpretCast>();
-			castId->sourceLocation = m_loc;
-			castId->wtype = awst::WType::applicationType();
-			castId->expr = std::move(btoi);
+			auto castId = awst::makeReinterpretCast(std::move(btoi), awst::WType::applicationType(), m_loc);
 			appId = std::move(castId);
 		}
 
@@ -163,10 +154,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 		itob->opCode = "itob";
 		itob->stackArgs.push_back(std::move(balanceVal));
 
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = m_loc;
-		cast->wtype = awst::WType::biguintType();
-		cast->expr = std::move(itob);
+		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 		return cast;
 	}
 
@@ -221,10 +209,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 				appId->wtype = awst::WType::uint64Type();
 				appId->opCode = "global";
 				appId->immediates = {std::string("CurrentApplicationID")};
-				auto appIdCast = std::make_shared<awst::ReinterpretCast>();
-				appIdCast->sourceLocation = m_loc;
-				appIdCast->wtype = awst::WType::applicationType();
-				appIdCast->expr = std::move(appId);
+				auto appIdCast = awst::makeReinterpretCast(std::move(appId), awst::WType::applicationType(), m_loc);
 
 				auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
 					std::vector<awst::WType const*>{
@@ -250,10 +235,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 
 				if (m_wtype && m_wtype != awst::WType::bytesType())
 				{
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = m_loc;
-					cast->wtype = m_wtype;
-					cast->expr = std::move(hash);
+					auto cast = awst::makeReinterpretCast(std::move(hash), m_wtype, m_loc);
 					return cast;
 				}
 				return hash;

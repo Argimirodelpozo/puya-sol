@@ -261,10 +261,7 @@ std::shared_ptr<awst::Expression> StorageMapper::biguintSlotToBtoi(
 )
 {
 	// reinterpret_cast<bytes>(slotExpr)
-	auto castToBytes = std::make_shared<awst::ReinterpretCast>();
-	castToBytes->sourceLocation = _loc;
-	castToBytes->wtype = awst::WType::bytesType();
-	castToBytes->expr = _slotExpr;
+	auto castToBytes = awst::makeReinterpretCast(_slotExpr, awst::WType::bytesType(), _loc);
 
 	// len(castToBytes)
 	auto lenOp = std::make_shared<awst::IntrinsicCall>();

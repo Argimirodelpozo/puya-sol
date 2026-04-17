@@ -253,20 +253,14 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 				bytesWType && bytesWType->length().has_value() && *bytesWType->length() <= 8;
 			if (!knownSmall)
 			{
-				auto cast = std::make_shared<awst::ReinterpretCast>();
-				cast->sourceLocation = _loc;
-				cast->wtype = awst::WType::biguintType();
-				cast->expr = std::move(operand);
+				auto cast = awst::makeReinterpretCast(std::move(operand), awst::WType::biguintType(), _loc);
 				operand = std::move(cast);
 				return;
 			}
 			auto expr = std::move(operand);
 			if (expr->wtype != awst::WType::bytesType())
 			{
-				auto toBytes = std::make_shared<awst::ReinterpretCast>();
-				toBytes->sourceLocation = _loc;
-				toBytes->wtype = awst::WType::bytesType();
-				toBytes->expr = std::move(expr);
+				auto toBytes = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), _loc);
 				expr = std::move(toBytes);
 			}
 			auto btoi = std::make_shared<awst::IntrinsicCall>();
@@ -309,10 +303,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			itob->opCode = "itob";
 			itob->stackArgs.push_back(std::move(operand));
 
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = _loc;
-			cast->wtype = awst::WType::biguintType();
-			cast->expr = std::move(itob);
+			auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
 			operand = std::move(cast);
 		}
 	};
@@ -340,10 +331,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 				auto castToBytes = [&](std::shared_ptr<awst::Expression>& expr) {
 					if (expr->wtype != awst::WType::bytesType())
 					{
-						auto cast = std::make_shared<awst::ReinterpretCast>();
-						cast->sourceLocation = _loc;
-						cast->wtype = awst::WType::bytesType();
-						cast->expr = std::move(expr);
+						auto cast = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), _loc);
 						expr = std::move(cast);
 					}
 				};
@@ -510,10 +498,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			setbit->stackArgs.push_back(std::move(one));
 
 			// Cast bytes → biguint
-			auto castToBigUInt = std::make_shared<awst::ReinterpretCast>();
-			castToBigUInt->sourceLocation = _loc;
-			castToBigUInt->wtype = awst::WType::biguintType();
-			castToBigUInt->expr = std::move(setbit);
+			auto castToBigUInt = awst::makeReinterpretCast(std::move(setbit), awst::WType::biguintType(), _loc);
 
 			e->left = std::move(_left);
 			e->right = std::move(castToBigUInt);
@@ -931,10 +916,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildSubmitAndReturn(
 		// Convert raw ABI bytes to the target Solidity type
 		if (_solidityReturnType == awst::WType::biguintType())
 		{
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = _loc;
-			cast->wtype = awst::WType::biguintType();
-			cast->expr = std::move(stripPrefix);
+			auto cast = awst::makeReinterpretCast(std::move(stripPrefix), awst::WType::biguintType(), _loc);
 			return cast;
 		}
 		else if (_solidityReturnType == awst::WType::uint64Type())
@@ -967,10 +949,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildSubmitAndReturn(
 		}
 		else if (_solidityReturnType == awst::WType::accountType())
 		{
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = _loc;
-			cast->wtype = awst::WType::accountType();
-			cast->expr = std::move(stripPrefix);
+			auto cast = awst::makeReinterpretCast(std::move(stripPrefix), awst::WType::accountType(), _loc);
 			return cast;
 		}
 		// For tuple/struct returns: decode each field from ARC4-encoded bytes
@@ -1029,10 +1008,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildSubmitAndReturn(
 				std::shared_ptr<awst::Expression> fieldExpr;
 				if (fieldType == awst::WType::biguintType())
 				{
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = _loc;
-					cast->wtype = awst::WType::biguintType();
-					cast->expr = std::move(extract);
+					auto cast = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
 					fieldExpr = std::move(cast);
 				}
 				else if (fieldType == awst::WType::uint64Type())
@@ -1063,19 +1039,13 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildSubmitAndReturn(
 				}
 				else if (fieldType == awst::WType::accountType())
 				{
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = _loc;
-					cast->wtype = awst::WType::accountType();
-					cast->expr = std::move(extract);
+					auto cast = awst::makeReinterpretCast(std::move(extract), awst::WType::accountType(), _loc);
 					fieldExpr = std::move(cast);
 				}
 				else
 				{
 					// bytes or fixed bytes — cast to target type
-					auto cast = std::make_shared<awst::ReinterpretCast>();
-					cast->sourceLocation = _loc;
-					cast->wtype = fieldType;
-					cast->expr = std::move(extract);
+					auto cast = awst::makeReinterpretCast(std::move(extract), fieldType, _loc);
 					fieldExpr = std::move(cast);
 				}
 
@@ -1089,10 +1059,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildSubmitAndReturn(
 		// For ARC4Struct returns: wrap bytes in ReinterpretCast to struct type
 		if (dynamic_cast<awst::ARC4Struct const*>(_solidityReturnType))
 		{
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = _loc;
-			cast->wtype = _solidityReturnType;
-			cast->expr = std::move(stripPrefix);
+			auto cast = awst::makeReinterpretCast(std::move(stripPrefix), _solidityReturnType, _loc);
 			return cast;
 		}
 

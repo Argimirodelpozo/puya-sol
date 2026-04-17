@@ -29,10 +29,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemSlot(
 	extract->stackArgs.push_back(std::move(offsetConst));
 	extract->stackArgs.push_back(std::move(len32));
 
-	auto cast = std::make_shared<awst::ReinterpretCast>();
-	cast->sourceLocation = _loc;
-	cast->wtype = awst::WType::biguintType();
-	cast->expr = std::move(extract);
+	auto cast = awst::makeReinterpretCast(std::move(extract), awst::WType::biguintType(), _loc);
 	return cast;
 }
 
@@ -41,10 +38,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::padTo32Bytes(
 	awst::SourceLocation const& _loc
 )
 {
-	auto cast = std::make_shared<awst::ReinterpretCast>();
-	cast->sourceLocation = _loc;
-	cast->wtype = awst::WType::bytesType();
-	cast->expr = std::move(_expr);
+	auto cast = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
 
 	auto zeroBytes = std::make_shared<awst::IntrinsicCall>();
 	zeroBytes->sourceLocation = _loc;
@@ -155,10 +149,7 @@ void AssemblyBuilder::storeResultToMemory(
 		std::shared_ptr<awst::Expression> storeVal = std::move(_result);
 		if (storeVal->wtype == awst::WType::bytesType())
 		{
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = _loc;
-			cast->wtype = awst::WType::biguintType();
-			cast->expr = std::move(storeVal);
+			auto cast = awst::makeReinterpretCast(std::move(storeVal), awst::WType::biguintType(), _loc);
 			storeVal = std::move(cast);
 		}
 

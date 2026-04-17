@@ -177,10 +177,7 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 						ternary->trueExpr = makeSelectorExpr(trueSig);
 						ternary->falseExpr = makeSelectorExpr(falseSig);
 
-						auto cast = std::make_shared<awst::ReinterpretCast>();
-						cast->sourceLocation = m_loc;
-						cast->wtype = awst::WType::biguintType();
-						cast->expr = std::move(ternary);
+						auto cast = awst::makeReinterpretCast(std::move(ternary), awst::WType::biguintType(), m_loc);
 						return cast;
 					}
 				}
@@ -224,12 +221,11 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 				extract->immediates = {20, 4};
 				extract->stackArgs.push_back(std::move(base));
 
-				auto cast = std::make_shared<awst::ReinterpretCast>();
-				cast->sourceLocation = m_loc;
 				auto* targetType = m_ctx.typeMapper.map(m_memberAccess.annotation().type);
-				cast->wtype = targetType ? targetType : awst::WType::bytesType();
-				cast->expr = std::move(extract);
-				return cast;
+				return awst::makeReinterpretCast(
+					std::move(extract),
+					targetType ? targetType : awst::WType::bytesType(),
+					m_loc);
 			}
 		}
 		return nullptr;
@@ -254,18 +250,12 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 		extract->immediates = {0, 4};
 		extract->stackArgs.push_back(std::move(keccak));
 
-		auto padded = std::make_shared<awst::ReinterpretCast>();
-		padded->sourceLocation = m_loc;
-		padded->wtype = targetType;
-		padded->expr = std::move(extract);
+		auto padded = awst::makeReinterpretCast(std::move(extract), targetType, m_loc);
 		return padded;
 	}
 	else if (targetType != awst::WType::bytesType())
 	{
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = m_loc;
-		cast->wtype = targetType;
-		cast->expr = std::move(keccak);
+		auto cast = awst::makeReinterpretCast(std::move(keccak), targetType, m_loc);
 		return cast;
 	}
 	return keccak;

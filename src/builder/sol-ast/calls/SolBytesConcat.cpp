@@ -18,10 +18,7 @@ std::shared_ptr<awst::Expression> SolBytesConcat::toAwst()
 		if (expr->wtype == awst::WType::bytesType()
 			|| (expr->wtype && expr->wtype->kind() == awst::WTypeKind::Bytes))
 			return expr;
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = m_loc;
-		cast->wtype = awst::WType::bytesType();
-		cast->expr = std::move(expr);
+		auto cast = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), m_loc);
 		return cast;
 	};
 

@@ -130,10 +130,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::addressToAppId(
 				appId->opCode = "global";
 				appId->immediates = {std::string("CurrentApplicationID")};
 
-				auto cast = std::make_shared<awst::ReinterpretCast>();
-				cast->sourceLocation = _loc;
-				cast->wtype = awst::WType::applicationType();
-				cast->expr = std::move(appId);
+				auto cast = awst::makeReinterpretCast(std::move(appId), awst::WType::applicationType(), _loc);
 				return cast;
 			}
 		}
@@ -142,10 +139,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::addressToAppId(
 	std::shared_ptr<awst::Expression> bytesExpr = std::move(_receiver);
 	if (bytesExpr->wtype == awst::WType::accountType())
 	{
-		auto toBytes = std::make_shared<awst::ReinterpretCast>();
-		toBytes->sourceLocation = _loc;
-		toBytes->wtype = awst::WType::bytesType();
-		toBytes->expr = std::move(bytesExpr);
+		auto toBytes = awst::makeReinterpretCast(std::move(bytesExpr), awst::WType::bytesType(), _loc);
 		bytesExpr = std::move(toBytes);
 	}
 
@@ -162,10 +156,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::addressToAppId(
 	btoi->opCode = "btoi";
 	btoi->stackArgs.push_back(std::move(extract));
 
-	auto cast = std::make_shared<awst::ReinterpretCast>();
-	cast->sourceLocation = _loc;
-	cast->wtype = awst::WType::applicationType();
-	cast->expr = std::move(btoi);
+	auto cast = awst::makeReinterpretCast(std::move(btoi), awst::WType::applicationType(), _loc);
 	return cast;
 }
 
@@ -188,10 +179,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 
 	if (wtype == awst::WType::biguintType())
 	{
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = awst::WType::bytesType();
-		cast->expr = std::move(_arg);
+		auto cast = awst::makeReinterpretCast(std::move(_arg), awst::WType::bytesType(), _loc);
 
 		auto zeros = std::make_shared<awst::IntrinsicCall>();
 		zeros->sourceLocation = _loc;
@@ -233,18 +221,12 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 
 	if (wtype == awst::WType::accountType())
 	{
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = awst::WType::bytesType();
-		cast->expr = std::move(_arg);
+		auto cast = awst::makeReinterpretCast(std::move(_arg), awst::WType::bytesType(), _loc);
 		return cast;
 	}
 
 	// Fallback: reinterpret as bytes
-	auto cast = std::make_shared<awst::ReinterpretCast>();
-	cast->sourceLocation = _loc;
-	cast->wtype = awst::WType::bytesType();
-	cast->expr = std::move(_arg);
+	auto cast = awst::makeReinterpretCast(std::move(_arg), awst::WType::bytesType(), _loc);
 	return cast;
 }
 
@@ -484,10 +466,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 			// post-call if needed. For now, encode simple scalars.
 			if (retType == awst::WType::biguintType())
 			{
-				auto cast = std::make_shared<awst::ReinterpretCast>();
-				cast->sourceLocation = _loc;
-				cast->wtype = awst::WType::bytesType();
-				cast->expr = std::move(call);
+				auto cast = awst::makeReinterpretCast(std::move(call), awst::WType::bytesType(), _loc);
 				dataBytes = std::move(cast);
 			}
 			else if (retType == awst::WType::uint64Type())
@@ -502,10 +481,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 			else if (retType == awst::WType::bytesType()
 				|| (retType && retType->kind() == awst::WTypeKind::Bytes))
 			{
-				auto cast = std::make_shared<awst::ReinterpretCast>();
-				cast->sourceLocation = _loc;
-				cast->wtype = awst::WType::bytesType();
-				cast->expr = std::move(call);
+				auto cast = awst::makeReinterpretCast(std::move(call), awst::WType::bytesType(), _loc);
 				dataBytes = std::move(cast);
 			}
 			else
@@ -614,10 +590,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	// Coerce string-typed data → bytes for ApplicationArgs encoding.
 	if (_dataBytes->wtype == awst::WType::stringType())
 	{
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = awst::WType::bytesType();
-		cast->expr = std::move(_dataBytes);
+		auto cast = awst::makeReinterpretCast(std::move(_dataBytes), awst::WType::bytesType(), _loc);
 		_dataBytes = std::move(cast);
 	}
 
@@ -851,10 +824,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 			auto dataExpr = _ctx.buildExpr(dataArg);
 			if (dataExpr->wtype == awst::WType::stringType())
 			{
-				auto cast = std::make_shared<awst::ReinterpretCast>();
-				cast->sourceLocation = _loc;
-				cast->wtype = awst::WType::bytesType();
-				cast->expr = std::move(dataExpr);
+				auto cast = awst::makeReinterpretCast(std::move(dataExpr), awst::WType::bytesType(), _loc);
 				dataExpr = std::move(cast);
 			}
 
@@ -985,10 +955,7 @@ void InnerCallHandlers::fundCreatedApp(
 	addrBytes->base = std::move(appParams);
 	addrBytes->index = 0;
 
-	auto receiver = std::make_shared<awst::ReinterpretCast>();
-	receiver->sourceLocation = _loc;
-	receiver->wtype = awst::WType::accountType();
-	receiver->expr = std::move(addrBytes);
+	auto receiver = awst::makeReinterpretCast(std::move(addrBytes), awst::WType::accountType(), _loc);
 
 	// Build and submit inner payment
 	auto create = buildPaymentTransaction(_ctx, std::move(receiver), std::move(_amount), _loc);

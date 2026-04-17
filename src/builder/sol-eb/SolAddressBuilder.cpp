@@ -29,10 +29,7 @@ std::unique_ptr<InstanceBuilder> SolAddressBuilder::compare(
 		if (expr->wtype != awst::WType::bytesType()
 			&& expr->wtype != awst::WType::accountType())
 		{
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = _loc;
-			cast->wtype = awst::WType::bytesType();
-			cast->expr = std::move(expr);
+			auto cast = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), _loc);
 			expr = std::move(cast);
 		}
 	};

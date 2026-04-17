@@ -131,18 +131,12 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToInteger(
 			bytesWType && bytesWType->length().has_value() && *bytesWType->length() <= 8;
 		if (!knownSmall)
 		{
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = _loc;
-			cast->wtype = awst::WType::biguintType();
-			cast->expr = std::move(_arg);
+			auto cast = awst::makeReinterpretCast(std::move(_arg), awst::WType::biguintType(), _loc);
 			auto result = TypeCoercion::implicitNumericCast(std::move(cast), _targetWType, _loc);
 			return std::make_unique<SolIntegerBuilder>(_ctx, targetInt, std::move(result));
 		}
 		// bytes[N≤8] → btoi → uint64/biguint
-		auto toBytes = std::make_shared<awst::ReinterpretCast>();
-		toBytes->sourceLocation = _loc;
-		toBytes->wtype = awst::WType::bytesType();
-		toBytes->expr = std::move(_arg);
+		auto toBytes = awst::makeReinterpretCast(std::move(_arg), awst::WType::bytesType(), _loc);
 
 		auto btoi = std::make_shared<awst::IntrinsicCall>();
 		btoi->sourceLocation = _loc;
@@ -261,17 +255,11 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToAddress(
 	{
 		auto promoted = TypeCoercion::implicitNumericCast(
 			std::move(_arg), awst::WType::biguintType(), _loc);
-		auto toBytes = std::make_shared<awst::ReinterpretCast>();
-		toBytes->sourceLocation = _loc;
-		toBytes->wtype = awst::WType::bytesType();
-		toBytes->expr = std::move(promoted);
+		auto toBytes = awst::makeReinterpretCast(std::move(promoted), awst::WType::bytesType(), _loc);
 
 		auto padded = leftPadToN(std::move(toBytes), 32, _loc);
 
-		auto result = std::make_shared<awst::ReinterpretCast>();
-		result->sourceLocation = _loc;
-		result->wtype = awst::WType::accountType();
-		result->expr = std::move(padded);
+		auto result = awst::makeReinterpretCast(std::move(padded), awst::WType::accountType(), _loc);
 		return std::make_unique<SolAddressBuilder>(_ctx, _targetSolType, std::move(result));
 	}
 
@@ -279,10 +267,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToAddress(
 	if (srcWType == awst::WType::bytesType()
 		|| (srcWType && srcWType->kind() == awst::WTypeKind::Bytes))
 	{
-		auto result = std::make_shared<awst::ReinterpretCast>();
-		result->sourceLocation = _loc;
-		result->wtype = awst::WType::accountType();
-		result->expr = std::move(_arg);
+		auto result = awst::makeReinterpretCast(std::move(_arg), awst::WType::accountType(), _loc);
 		return std::make_unique<SolAddressBuilder>(_ctx, _targetSolType, std::move(result));
 	}
 
@@ -343,10 +328,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 		else
 			result = std::move(itob);
 
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = _targetWType;
-		cast->expr = std::move(result);
+		auto cast = awst::makeReinterpretCast(std::move(result), _targetWType, _loc);
 		return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType, std::move(cast));
 	}
 
@@ -354,17 +336,11 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 	if (srcWType == awst::WType::biguintType())
 	{
 		unsigned byteWidth = fbType->numBytes();
-		auto toBytes = std::make_shared<awst::ReinterpretCast>();
-		toBytes->sourceLocation = _loc;
-		toBytes->wtype = awst::WType::bytesType();
-		toBytes->expr = std::move(_arg);
+		auto toBytes = awst::makeReinterpretCast(std::move(_arg), awst::WType::bytesType(), _loc);
 
 		auto padded = leftPadToN(std::move(toBytes), byteWidth, _loc);
 
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = _targetWType;
-		cast->expr = std::move(padded);
+		auto cast = awst::makeReinterpretCast(std::move(padded), _targetWType, _loc);
 		return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType, std::move(cast));
 	}
 
@@ -378,10 +354,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 		if (srcLen > 0 && tgtLen > 0 && srcLen != tgtLen)
 		{
 			// Convert to raw bytes first
-			auto toBytes = std::make_shared<awst::ReinterpretCast>();
-			toBytes->sourceLocation = _loc;
-			toBytes->wtype = awst::WType::bytesType();
-			toBytes->expr = std::move(_arg);
+			auto toBytes = awst::makeReinterpretCast(std::move(_arg), awst::WType::bytesType(), _loc);
 
 			std::shared_ptr<awst::Expression> result;
 			if (tgtLen > srcLen)
@@ -415,18 +388,12 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 				extract->stackArgs.push_back(std::move(len));
 				result = std::move(extract);
 			}
-			auto cast = std::make_shared<awst::ReinterpretCast>();
-			cast->sourceLocation = _loc;
-			cast->wtype = _targetWType;
-			cast->expr = std::move(result);
+			auto cast = awst::makeReinterpretCast(std::move(result), _targetWType, _loc);
 			return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType, std::move(cast));
 		}
 
 		// Same size or unsized → reinterpret
-		auto cast = std::make_shared<awst::ReinterpretCast>();
-		cast->sourceLocation = _loc;
-		cast->wtype = _targetWType;
-		cast->expr = std::move(_arg);
+		auto cast = awst::makeReinterpretCast(std::move(_arg), _targetWType, _loc);
 		return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType, std::move(cast));
 	}
 
