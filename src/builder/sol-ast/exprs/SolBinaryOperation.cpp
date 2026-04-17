@@ -558,9 +558,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedArithmetic(
 
 		if (overflowCond)
 		{
-			auto assertStmt = std::make_shared<awst::ExpressionStatement>();
-			assertStmt->sourceLocation = m_loc;
-			assertStmt->expr = awst::makeAssert(std::move(overflowCond), m_loc, "signed arithmetic overflow");
+			auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(overflowCond), m_loc, "signed arithmetic overflow"), m_loc);
 			m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 		}
 	}
@@ -762,9 +760,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 		rangeOk->trueExpr = std::move(leHalf);
 		rangeOk->falseExpr = std::move(ltHalf);
 
-		auto assertStmt = std::make_shared<awst::ExpressionStatement>();
-		assertStmt->sourceLocation = m_loc;
-		assertStmt->expr = awst::makeAssert(std::move(rangeOk), m_loc, "signed exp overflow");
+		auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(rangeOk), m_loc, "signed exp overflow"), m_loc);
 		m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 	}
 
@@ -934,9 +930,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 		bZero->op = awst::NumericComparison::Ne;
 		bZero->rhs = makeBiguintConst("0");
 
-		auto assertStmt = std::make_shared<awst::ExpressionStatement>();
-		assertStmt->sourceLocation = m_loc;
-		assertStmt->expr = awst::makeAssert(std::move(bZero), m_loc, "division by zero");
+		auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(bZero), m_loc, "division by zero"), m_loc);
 		m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 	}
 
@@ -979,9 +973,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedDivMod(
 		notBoth->wtype = awst::WType::boolType();
 		notBoth->expr = std::move(bothTrue);
 
-		auto assertStmt = std::make_shared<awst::ExpressionStatement>();
-		assertStmt->sourceLocation = m_loc;
-		assertStmt->expr = awst::makeAssert(std::move(notBoth), m_loc, "signed division overflow");
+		auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(notBoth), m_loc, "signed division overflow"), m_loc);
 		m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 	}
 

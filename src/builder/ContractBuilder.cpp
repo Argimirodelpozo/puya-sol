@@ -1074,9 +1074,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 						cmp->op = awst::NumericComparison::Lte;
 						cmp->rhs = std::move(mv);
 
-						auto as = std::make_shared<awst::ExpressionStatement>();
-						as->sourceLocation = loc;
-						as->expr = awst::makeAssert(std::move(cmp), loc, "enum validation");
+						auto as = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), loc, "enum validation"), loc);
 						body->body.push_back(std::move(as));
 					}
 				}
@@ -1525,9 +1523,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				put->stackArgs.push_back(key);
 				put->stackArgs.push_back(defaultVal);
 
-				auto stmt = std::make_shared<awst::ExpressionStatement>();
-				stmt->sourceLocation = method.sourceLocation;
-				stmt->expr = put;
+				auto stmt = awst::makeExpressionStatement(put, method.sourceLocation);
 				targetBody.push_back(stmt);
 			}
 		};
@@ -1839,9 +1835,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			setPending->stackArgs.push_back(pendingKey);
 			setPending->stackArgs.push_back(one);
 
-			auto setPendingStmt = std::make_shared<awst::ExpressionStatement>();
-			setPendingStmt->sourceLocation = method.sourceLocation;
-			setPendingStmt->expr = setPending;
+			auto setPendingStmt = awst::makeExpressionStatement(setPending, method.sourceLocation);
 			createBlock->body.push_back(std::move(setPendingStmt));
 
 			// Build __postInit method with deferred constructor body
@@ -1913,10 +1907,8 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			readPending->stackArgs.push_back(
 				awst::makeUtf8BytesConstant("__ctor_pending", method.sourceLocation));
 
-			auto assertStmt = std::make_shared<awst::ExpressionStatement>();
-			assertStmt->sourceLocation = method.sourceLocation;
-			assertStmt->expr = awst::makeAssert(
-				readPending, method.sourceLocation, "__postInit already called");
+			auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(
+				readPending, method.sourceLocation, "__postInit already called"), method.sourceLocation);
 			postInitBody->body.push_back(std::move(assertStmt));
 
 			// Clear flag: __ctor_pending = 0
@@ -1931,9 +1923,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			clearPending->stackArgs.push_back(clearKey);
 			clearPending->stackArgs.push_back(zeroVal);
 
-			auto clearStmt = std::make_shared<awst::ExpressionStatement>();
-			clearStmt->sourceLocation = method.sourceLocation;
-			clearStmt->expr = clearPending;
+			auto clearStmt = awst::makeExpressionStatement(clearPending, method.sourceLocation);
 			postInitBody->body.push_back(std::move(clearStmt));
 
 			// Create boxes for dynamic array state variables
@@ -2041,9 +2031,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				boxCreate->stackArgs.push_back(std::move(boxKey));
 				boxCreate->stackArgs.push_back(std::move(boxSize));
 
-				auto boxStmt = std::make_shared<awst::ExpressionStatement>();
-				boxStmt->sourceLocation = method.sourceLocation;
-				boxStmt->expr = std::move(boxCreate);
+				auto boxStmt = awst::makeExpressionStatement(std::move(boxCreate), method.sourceLocation);
 				postInitBody->body.push_back(std::move(boxStmt));
 
 				// Write initial value for bytes vars with initializers
@@ -2056,9 +2044,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					put->wtype = awst::WType::voidType();
 					put->stackArgs.push_back(std::move(putKey));
 					put->stackArgs.push_back(std::move(boxInitVal));
-					auto putStmt = std::make_shared<awst::ExpressionStatement>();
-					putStmt->sourceLocation = method.sourceLocation;
-					putStmt->expr = std::move(put);
+					auto putStmt = awst::makeExpressionStatement(std::move(put), method.sourceLocation);
 					postInitBody->body.push_back(std::move(putStmt));
 				}
 			}
@@ -2352,9 +2338,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		storeOp->immediates = {AssemblyBuilder::MEMORY_SLOT_FIRST};
 		storeOp->stackArgs.push_back(std::move(bzeroCall));
 
-		auto exprStmt = std::make_shared<awst::ExpressionStatement>();
-		exprStmt->sourceLocation = method.sourceLocation;
-		exprStmt->expr = std::move(storeOp);
+		auto exprStmt = awst::makeExpressionStatement(std::move(storeOp), method.sourceLocation);
 		body->body.push_back(std::move(exprStmt));
 
 		// Write the free memory pointer (FMP) at offset 0x40 = 0x80.
@@ -2393,9 +2377,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		storeFmpOp->immediates = {AssemblyBuilder::MEMORY_SLOT_FIRST};
 		storeFmpOp->stackArgs.push_back(std::move(replaceOp));
 
-		auto fmpStmt = std::make_shared<awst::ExpressionStatement>();
-		fmpStmt->sourceLocation = method.sourceLocation;
-		fmpStmt->expr = std::move(storeFmpOp);
+		auto fmpStmt = awst::makeExpressionStatement(std::move(storeFmpOp), method.sourceLocation);
 		body->body.push_back(std::move(fmpStmt));
 	}
 
@@ -2435,9 +2417,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					method.sourceLocation);
 				if (!write)
 					continue;
-				auto stmt = std::make_shared<awst::ExpressionStatement>();
-				stmt->sourceLocation = method.sourceLocation;
-				stmt->expr = std::move(write);
+				auto stmt = awst::makeExpressionStatement(std::move(write), method.sourceLocation);
 				body->body.push_back(std::move(stmt));
 			}
 		}
@@ -2531,9 +2511,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				call->args.push_back(std::move(ca));
 			}
 
-			auto stmt = std::make_shared<awst::ExpressionStatement>();
-			stmt->sourceLocation = method.sourceLocation;
-			stmt->expr = call;
+			auto stmt = awst::makeExpressionStatement(call, method.sourceLocation);
 			return stmt;
 		};
 
@@ -3056,9 +3034,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					cmp->op = awst::NumericComparison::Lt;
 					cmp->rhs = std::move(maxVal);
 
-					auto assertStmt = std::make_shared<awst::ExpressionStatement>();
-					assertStmt->sourceLocation = method.sourceLocation;
-					assertStmt->expr = awst::makeAssert(std::move(cmp), method.sourceLocation, "enum out of range");
+					auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), method.sourceLocation, "enum out of range"), method.sourceLocation);
 					method.body->body.push_back(std::move(assertStmt));
 				}
 			}
@@ -3593,9 +3569,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						orExpr->right = std::move(cmpNeg);
 						orExpr->op = awst::BinaryBooleanOperator::Or;
 
-						auto assertStmt = std::make_shared<awst::ExpressionStatement>();
-						assertStmt->sourceLocation = loc;
-						assertStmt->expr = awst::makeAssert(std::move(orExpr), loc, "ABI validation");
+						auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(orExpr), loc, "ABI validation"), loc);
 						maskStmts.push_back(std::move(assertStmt));
 					}
 					// No masking for signed types
@@ -3617,9 +3591,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					cmp->op = awst::NumericComparison::Lte;
 					cmp->rhs = std::move(maxVal);
 
-					auto assertStmt = std::make_shared<awst::ExpressionStatement>();
-					assertStmt->sourceLocation = loc;
-					assertStmt->expr = awst::makeAssert(std::move(cmp), loc, "ABI validation");
+					auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), loc, "ABI validation"), loc);
 					maskStmts.push_back(std::move(assertStmt));
 				}
 
@@ -3675,9 +3647,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					cmp->op = awst::NumericComparison::Lte;
 					cmp->rhs = std::move(one);
 
-					auto assertStmt = std::make_shared<awst::ExpressionStatement>();
-					assertStmt->sourceLocation = loc;
-					assertStmt->expr = awst::makeAssert(std::move(cmp), loc, "ABI bool validation");
+					auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), loc, "ABI bool validation"), loc);
 					maskStmts.push_back(std::move(assertStmt));
 				}
 
@@ -3705,9 +3675,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					cmp->op = awst::NumericComparison::Lte;
 					cmp->rhs = std::move(maxVal);
 
-					auto assertStmt = std::make_shared<awst::ExpressionStatement>();
-					assertStmt->sourceLocation = loc;
-					assertStmt->expr = awst::makeAssert(std::move(cmp), loc, "ABI enum validation");
+					auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), loc, "ABI enum validation"), loc);
 					maskStmts.push_back(std::move(assertStmt));
 				}
 			}
@@ -3792,9 +3760,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				awst::CallArg{std::string("fee_source"), feeSource}
 			};
 
-			auto stmt = std::make_shared<awst::ExpressionStatement>();
-			stmt->sourceLocation = method.sourceLocation;
-			stmt->expr = std::move(call);
+			auto stmt = awst::makeExpressionStatement(std::move(call), method.sourceLocation);
 
 			method.body->body.insert(method.body->body.begin(), std::move(stmt));
 		}
@@ -4419,9 +4385,7 @@ void ContractBuilder::buildModifierChain(
 			}
 			else
 			{
-				auto stmt = std::make_shared<awst::ExpressionStatement>();
-				stmt->sourceLocation = modSub.sourceLocation;
-				stmt->expr = std::move(call);
+				auto stmt = awst::makeExpressionStatement(std::move(call), modSub.sourceLocation);
 				placeholderBlock->body.push_back(std::move(stmt));
 			}
 		}
@@ -4543,9 +4507,7 @@ void ContractBuilder::buildModifierChain(
 	}
 	else
 	{
-		auto stmt = std::make_shared<awst::ExpressionStatement>();
-		stmt->sourceLocation = _method.sourceLocation;
-		stmt->expr = std::move(call);
+		auto stmt = awst::makeExpressionStatement(std::move(call), _method.sourceLocation);
 		entryBody->body.push_back(std::move(stmt));
 	}
 
@@ -4643,9 +4605,7 @@ void ContractBuilder::buildStorageDispatch(
 			boxCreate->stackArgs.push_back(boxKey);
 			boxCreate->stackArgs.push_back(makeUint64("8192"));
 
-			auto popStmt = std::make_shared<awst::ExpressionStatement>();
-			popStmt->sourceLocation = loc;
-			popStmt->expr = std::move(boxCreate);
+			auto popStmt = awst::makeExpressionStatement(std::move(boxCreate), loc);
 			defaultBlock->body.push_back(std::move(popStmt));
 
 			// box_extract("__dyn_storage", offset, 32)
@@ -4666,12 +4626,6 @@ void ContractBuilder::buildStorageDispatch(
 		}
 
 		std::shared_ptr<awst::Statement> current;
-		// Wrap default in a ReturnStatement block
-		{
-			auto exprStmt = std::make_shared<awst::ExpressionStatement>();
-			exprStmt->sourceLocation = loc;
-			// Just use the default block directly
-		}
 		// Build the chain bottom-up
 		std::shared_ptr<awst::Block> elseBlock = defaultBlock;
 
@@ -4877,9 +4831,7 @@ void ContractBuilder::buildStorageDispatch(
 			boxCreate->stackArgs.push_back(boxKey);
 			boxCreate->stackArgs.push_back(makeUint64("8192"));
 
-			auto createStmt = std::make_shared<awst::ExpressionStatement>();
-			createStmt->sourceLocation = loc;
-			createStmt->expr = std::move(boxCreate);
+			auto createStmt = awst::makeExpressionStatement(std::move(boxCreate), loc);
 			defaultBlock->body.push_back(std::move(createStmt));
 
 			// box_replace("__dyn_storage", offset, padded_value)
@@ -4891,9 +4843,7 @@ void ContractBuilder::buildStorageDispatch(
 			boxReplace->stackArgs.push_back(std::move(offset));
 			boxReplace->stackArgs.push_back(std::move(paddedVal));
 
-			auto replaceStmt = std::make_shared<awst::ExpressionStatement>();
-			replaceStmt->sourceLocation = loc;
-			replaceStmt->expr = std::move(boxReplace);
+			auto replaceStmt = awst::makeExpressionStatement(std::move(boxReplace), loc);
 			defaultBlock->body.push_back(std::move(replaceStmt));
 
 			auto ret = std::make_shared<awst::ReturnStatement>();
@@ -4967,9 +4917,7 @@ void ContractBuilder::buildStorageDispatch(
 				put->stackArgs.push_back(makeBytes(sv.name));
 				put->stackArgs.push_back(std::move(extract));
 
-				auto stmt = std::make_shared<awst::ExpressionStatement>();
-				stmt->sourceLocation = loc;
-				stmt->expr = std::move(put);
+				auto stmt = awst::makeExpressionStatement(std::move(put), loc);
 				ifBlock->body.push_back(std::move(stmt));
 
 				auto ret = std::make_shared<awst::ReturnStatement>();

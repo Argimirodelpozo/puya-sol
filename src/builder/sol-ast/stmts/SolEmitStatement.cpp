@@ -96,9 +96,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 				cmp->op = awst::NumericComparison::Lt;
 				cmp->rhs = std::move(maxVal);
 
-				auto assertStmt = std::make_shared<awst::ExpressionStatement>();
-				assertStmt->sourceLocation = m_loc;
-				assertStmt->expr = awst::makeAssert(std::move(cmp), m_loc, "enum out of range");
+				auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), m_loc, "enum out of range"), m_loc);
 				preStatements.push_back(std::move(assertStmt));
 
 				translated = std::move(val);
@@ -153,9 +151,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 		logCall->opCode = "log";
 		logCall->stackArgs.push_back(std::move(selector));
 
-		auto stmt = std::make_shared<awst::ExpressionStatement>();
-		stmt->sourceLocation = m_loc;
-		stmt->expr = logCall;
+		auto stmt = awst::makeExpressionStatement(logCall, m_loc);
 		return {stmt};
 	}
 
@@ -177,9 +173,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 	emit->signature = eventSignature;
 	emit->value = std::move(newStruct);
 
-	auto stmt = std::make_shared<awst::ExpressionStatement>();
-	stmt->sourceLocation = m_loc;
-	stmt->expr = emit;
+	auto stmt = awst::makeExpressionStatement(emit, m_loc);
 
 	std::vector<std::shared_ptr<awst::Statement>> result;
 	for (auto& s: preStatements)

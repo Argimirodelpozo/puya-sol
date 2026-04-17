@@ -523,9 +523,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 				cmp->op = awst::NumericComparison::Gte;
 				cmp->rhs = _right;  // shared ref
 
-				auto assertStmt = std::make_shared<awst::ExpressionStatement>();
-				assertStmt->sourceLocation = _loc;
-				assertStmt->expr = awst::makeAssert(std::move(cmp), _loc, "underflow");
+				auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "underflow"), _loc);
 				m_prePendingStatements.push_back(std::move(assertStmt));
 			}
 
@@ -881,9 +879,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildSubmitAndReturn(
 	if (_solidityReturnType == awst::WType::boolType()
 		&& (!txnType.has_value() || txnType.value() != 6))
 	{
-		auto stmt = std::make_shared<awst::ExpressionStatement>();
-		stmt->sourceLocation = _loc;
-		stmt->expr = std::move(submit);
+		auto stmt = awst::makeExpressionStatement(std::move(submit), _loc);
 		m_prePendingStatements.push_back(std::move(stmt));
 
 		return awst::makeBoolConstant(true, _loc);
@@ -893,9 +889,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildSubmitAndReturn(
 	if (txnType.has_value() && txnType.value() == 6) // Application call
 	{
 		// Submit as a pre-pending statement so it executes BEFORE reading the result
-		auto submitStmt = std::make_shared<awst::ExpressionStatement>();
-		submitStmt->sourceLocation = _loc;
-		submitStmt->expr = std::move(submit);
+		auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
 		m_prePendingStatements.push_back(std::move(submitStmt));
 
 		// Read LastLog from most recently submitted inner txn using itxn intrinsic
@@ -1068,9 +1062,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildSubmitAndReturn(
 	}
 
 	// For non-appl returns: emit submit as pending, return type-appropriate default
-	auto stmt = std::make_shared<awst::ExpressionStatement>();
-	stmt->sourceLocation = _loc;
-	stmt->expr = std::move(submit);
+	auto stmt = awst::makeExpressionStatement(std::move(submit), _loc);
 	m_pendingStatements.push_back(std::move(stmt));
 
 	return StorageMapper::makeDefaultValue(_solidityReturnType, _loc);

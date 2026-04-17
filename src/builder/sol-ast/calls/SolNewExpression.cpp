@@ -138,9 +138,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 			extend->wtype = awst::WType::voidType();
 			extend->base = arrVar;
 			extend->other = std::move(singleArr);
-			auto extendStmt = std::make_shared<awst::ExpressionStatement>();
-			extendStmt->sourceLocation = m_loc;
-			extendStmt->expr = extend;
+			auto extendStmt = awst::makeExpressionStatement(extend, m_loc);
 			loopBody->body.push_back(std::move(extendStmt));
 
 			// __i++
@@ -256,9 +254,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			submit->wtype = &s_applTxnType;
 			submit->itxns.push_back(std::move(create));
 
-			auto submitStmt = std::make_shared<awst::ExpressionStatement>();
-			submitStmt->sourceLocation = m_loc;
-			submitStmt->expr = std::move(submit);
+			auto submitStmt = awst::makeExpressionStatement(std::move(submit), m_loc);
 			m_ctx.prePendingStatements.push_back(std::move(submitStmt));
 
 			// Read CreatedApplicationID via itxn intrinsic and save to temp var
@@ -339,9 +335,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				fundSubmit->wtype = &s_fundTxnType;
 				fundSubmit->itxns.push_back(std::move(fundCreate));
 
-				auto fundStmt = std::make_shared<awst::ExpressionStatement>();
-				fundStmt->sourceLocation = m_loc;
-				fundStmt->expr = std::move(fundSubmit);
+				auto fundStmt = awst::makeExpressionStatement(std::move(fundSubmit), m_loc);
 				m_ctx.prePendingStatements.push_back(std::move(fundStmt));
 			}
 

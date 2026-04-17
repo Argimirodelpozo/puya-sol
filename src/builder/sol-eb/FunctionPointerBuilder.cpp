@@ -298,9 +298,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		{
 			// Unconditionally use self-call for void returns
 			// (inner txn path for non-self not yet needed for void)
-			auto stmt = std::make_shared<awst::ExpressionStatement>();
-			stmt->sourceLocation = _loc;
-			stmt->expr = selfCall;
+			auto stmt = awst::makeExpressionStatement(selfCall, _loc);
 			_ctx.prePendingStatements.push_back(std::move(stmt));
 			auto vc = std::make_shared<awst::VoidConstant>();
 			vc->sourceLocation = _loc;
@@ -510,10 +508,8 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		defaultBlock->sourceLocation = _loc;
 		{
 			// assert(false) — invalid function pointer ID
-			auto stmt = std::make_shared<awst::ExpressionStatement>();
-			stmt->sourceLocation = _loc;
-			stmt->expr = awst::makeAssert(
-				awst::makeBoolConstant(false, _loc), _loc, "invalid function pointer");
+			auto stmt = awst::makeExpressionStatement(awst::makeAssert(
+				awst::makeBoolConstant(false, _loc), _loc, "invalid function pointer"), _loc);
 			defaultBlock->body.push_back(std::move(stmt));
 		}
 
@@ -610,9 +606,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 				}
 				else
 				{
-					auto stmt = std::make_shared<awst::ExpressionStatement>();
-					stmt->sourceLocation = _loc;
-					stmt->expr = std::move(call);
+					auto stmt = awst::makeExpressionStatement(std::move(call), _loc);
 					ifBlock->body.push_back(std::move(stmt));
 					auto ret = std::make_shared<awst::ReturnStatement>();
 					ret->sourceLocation = _loc;

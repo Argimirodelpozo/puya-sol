@@ -327,9 +327,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleTransfer(
 	submit->wtype = &s_payTxnType;
 	submit->itxns.push_back(std::move(create));
 
-	auto stmt = std::make_shared<awst::ExpressionStatement>();
-	stmt->sourceLocation = _loc;
-	stmt->expr = submit;
+	auto stmt = awst::makeExpressionStatement(submit, _loc);
 	_ctx.pendingStatements.push_back(std::move(stmt));
 
 	auto vc = std::make_shared<awst::VoidConstant>();
@@ -349,9 +347,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleSend(
 	submit->wtype = &s_payTxnType;
 	submit->itxns.push_back(std::move(create));
 
-	auto stmt = std::make_shared<awst::ExpressionStatement>();
-	stmt->sourceLocation = _loc;
-	stmt->expr = submit;
+	auto stmt = awst::makeExpressionStatement(submit, _loc);
 	_ctx.pendingStatements.push_back(std::move(stmt));
 
 	return std::make_unique<SolBoolBuilder>(_ctx, awst::makeBoolConstant(true, _loc));
@@ -368,9 +364,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithValue(
 	submit->wtype = &s_payTxnType;
 	submit->itxns.push_back(std::move(create));
 
-	auto stmt = std::make_shared<awst::ExpressionStatement>();
-	stmt->sourceLocation = _loc;
-	stmt->expr = submit;
+	auto stmt = awst::makeExpressionStatement(submit, _loc);
 	_ctx.pendingStatements.push_back(std::move(stmt));
 
 	return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTupleEmpty(_loc));
@@ -454,9 +448,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 		if (retType == awst::WType::voidType())
 		{
 			// Still need to emit the call as a statement for its side effects
-			auto stmt = std::make_shared<awst::ExpressionStatement>();
-			stmt->sourceLocation = _loc;
-			stmt->expr = call;
+			auto stmt = awst::makeExpressionStatement(call, _loc);
 			_ctx.prePendingStatements.push_back(std::move(stmt));
 			dataBytes = awst::makeBytesConstant({}, _loc);
 		}
@@ -487,9 +479,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 			else
 			{
 				// Unknown return type — emit as statement, return empty
-				auto stmt = std::make_shared<awst::ExpressionStatement>();
-				stmt->sourceLocation = _loc;
-				stmt->expr = call;
+				auto stmt = awst::makeExpressionStatement(call, _loc);
 				_ctx.prePendingStatements.push_back(std::move(stmt));
 				dataBytes = awst::makeBytesConstant({}, _loc);
 			}
@@ -556,9 +546,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 	submit->wtype = &s_applTxnType;
 	submit->itxns.push_back(std::move(create));
 
-	auto submitStmt = std::make_shared<awst::ExpressionStatement>();
-	submitStmt->sourceLocation = _loc;
-	submitStmt->expr = std::move(submit);
+	auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
 	_ctx.prePendingStatements.push_back(std::move(submitStmt));
 
 	// Read LastLog and strip ARC4 prefix
@@ -621,9 +609,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	submit->wtype = &s_applTxnType;
 	submit->itxns.push_back(std::move(create));
 
-	auto submitStmt = std::make_shared<awst::ExpressionStatement>();
-	submitStmt->sourceLocation = _loc;
-	submitStmt->expr = std::move(submit);
+	auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
 	_ctx.prePendingStatements.push_back(std::move(submitStmt));
 
 	// Read itxn LastLog as return data. Raw calls don't strip any prefix.
@@ -869,9 +855,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 				call->args.push_back(std::move(ca));
 			}
 
-			auto stmt = std::make_shared<awst::ExpressionStatement>();
-			stmt->sourceLocation = _loc;
-			stmt->expr = call;
+			auto stmt = awst::makeExpressionStatement(call, _loc);
 			_ctx.prePendingStatements.push_back(std::move(stmt));
 
 			return std::make_unique<GenericResultBuilder>(_ctx,
@@ -965,9 +949,7 @@ void InnerCallHandlers::fundCreatedApp(
 	submit->wtype = &s_payTxnType;
 	submit->itxns.push_back(std::move(create));
 
-	auto stmt = std::make_shared<awst::ExpressionStatement>();
-	stmt->sourceLocation = _loc;
-	stmt->expr = std::move(submit);
+	auto stmt = awst::makeExpressionStatement(std::move(submit), _loc);
 	_ctx.prePendingStatements.push_back(std::move(stmt));
 }
 

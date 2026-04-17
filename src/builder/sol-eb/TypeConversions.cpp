@@ -429,9 +429,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToEnum(
 	cmp->op = awst::NumericComparison::Lt;
 	cmp->rhs = std::move(maxVal);
 
-	auto stmt = std::make_shared<awst::ExpressionStatement>();
-	stmt->sourceLocation = _loc;
-	stmt->expr = awst::makeAssert(std::move(cmp), _loc, "enum out of range");
+	auto stmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "enum out of range"), _loc);
 	_ctx.prePendingStatements.push_back(std::move(stmt));
 
 	return std::make_unique<SolEnumBuilder>(_ctx, enumType, std::move(result));

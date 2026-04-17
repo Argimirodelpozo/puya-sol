@@ -535,9 +535,7 @@ void AssemblyBuilder::handleSstore(
 	valCA.value = std::move(valueArg);
 	call->args.push_back(std::move(valCA));
 
-	auto stmt = std::make_shared<awst::ExpressionStatement>();
-	stmt->sourceLocation = _loc;
-	stmt->expr = std::move(call);
+	auto stmt = awst::makeExpressionStatement(std::move(call), _loc);
 	_out.push_back(std::move(stmt));
 }
 

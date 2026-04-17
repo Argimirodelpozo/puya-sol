@@ -179,9 +179,7 @@ static std::vector<std::shared_ptr<awst::Statement>> dispatchStatementImpl(
 			else if (callExpr)
 			{
 				// No return params: call as an expression statement for side effects.
-				auto exprStmt = std::make_shared<awst::ExpressionStatement>();
-				exprStmt->sourceLocation = loc;
-				exprStmt->expr = std::move(callExpr);
+				auto exprStmt = awst::makeExpressionStatement(std::move(callExpr), loc);
 				result.push_back(std::move(exprStmt));
 			}
 
@@ -196,9 +194,7 @@ static std::vector<std::shared_ptr<awst::Statement>> dispatchStatementImpl(
 		else if (callExpr)
 		{
 			// No success clause (unusual) — just execute the call for its side effects.
-			auto exprStmt = std::make_shared<awst::ExpressionStatement>();
-			exprStmt->sourceLocation = loc;
-			exprStmt->expr = std::move(callExpr);
+			auto exprStmt = awst::makeExpressionStatement(std::move(callExpr), loc);
 			result.push_back(std::move(exprStmt));
 		}
 

@@ -96,9 +96,7 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 			if (!trueSig.empty())
 			{
 				auto condition = buildExpr(cond->condition());
-				auto condStmt = std::make_shared<awst::ExpressionStatement>();
-				condStmt->sourceLocation = m_loc;
-				condStmt->expr = condition;
+				auto condStmt = awst::makeExpressionStatement(condition, m_loc);
 				m_ctx.prePendingStatements.push_back(std::move(condStmt));
 
 				if (trueSig == falseSig)
@@ -120,9 +118,7 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 			auto innerVal = buildExpr(*inner);
 			if (innerVal && innerVal->wtype != awst::WType::voidType())
 			{
-				auto stmt = std::make_shared<awst::ExpressionStatement>();
-				stmt->sourceLocation = m_loc;
-				stmt->expr = std::move(innerVal);
+				auto stmt = awst::makeExpressionStatement(std::move(innerVal), m_loc);
 				m_ctx.prePendingStatements.push_back(std::move(stmt));
 			}
 		}

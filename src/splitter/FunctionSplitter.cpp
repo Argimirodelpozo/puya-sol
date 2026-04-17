@@ -500,9 +500,7 @@ std::vector<std::shared_ptr<awst::Subroutine>> FunctionSplitter::splitFunction(
 			}
 			else
 			{
-				auto stmt = std::make_shared<awst::ExpressionStatement>();
-				stmt->sourceLocation = _func->sourceLocation;
-				stmt->expr = call;
+				auto stmt = awst::makeExpressionStatement(call, _func->sourceLocation);
 				newBody->body.push_back(stmt);
 			}
 		}
@@ -513,9 +511,7 @@ std::vector<std::shared_ptr<awst::Subroutine>> FunctionSplitter::splitFunction(
 			if (liveOut.empty())
 			{
 				// No live vars to unpack, just call it
-				auto stmt = std::make_shared<awst::ExpressionStatement>();
-				stmt->sourceLocation = _func->sourceLocation;
-				stmt->expr = call;
+				auto stmt = awst::makeExpressionStatement(call, _func->sourceLocation);
 				newBody->body.push_back(stmt);
 			}
 			else if (liveOut.size() == 1)
@@ -1614,9 +1610,7 @@ void FunctionSplitter::convertToValueBasedIO(
 		if (writes.empty() && origReturnCount == 0)
 		{
 			// Void call, no writes — just call as expression statement
-			auto exprStmt = std::make_shared<awst::ExpressionStatement>();
-			exprStmt->sourceLocation = _parent->sourceLocation;
-			exprStmt->expr = newCall;
+			auto exprStmt = awst::makeExpressionStatement(newCall, _parent->sourceLocation);
 			newBody->body.push_back(exprStmt);
 		}
 		else if (isLastChunk && _parent->returnType != awst::WType::voidType() && writes.empty())
@@ -1893,9 +1887,7 @@ bool FunctionSplitter::expandRewrittenCallees(
 					}
 					else
 					{
-						auto exprStmt = std::make_shared<awst::ExpressionStatement>();
-						exprStmt->sourceLocation = rs.sourceLocation;
-						exprStmt->expr = rs.value;
+						auto exprStmt = awst::makeExpressionStatement(rs.value, rs.sourceLocation);
 						newBody.push_back(exprStmt);
 					}
 				}

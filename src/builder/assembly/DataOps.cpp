@@ -592,9 +592,7 @@ void AssemblyBuilder::handleRevert(
 )
 {
 	// revert(offset, length) — on AVM, assert(false, "revert")
-	auto stmt = std::make_shared<awst::ExpressionStatement>();
-	stmt->sourceLocation = _loc;
-	stmt->expr = awst::makeAssert(awst::makeBoolConstant(false, _loc), _loc, "revert");
+	auto stmt = awst::makeExpressionStatement(awst::makeAssert(awst::makeBoolConstant(false, _loc), _loc, "revert"), _loc);
 	_out.push_back(std::move(stmt));
 }
 

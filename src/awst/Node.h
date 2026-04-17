@@ -692,6 +692,17 @@ struct ExpressionStatement: Statement
 	std::shared_ptr<Expression> expr;
 };
 
+// Construct an ExpressionStatement wrapping `expr` (side-effectful call, etc).
+inline std::shared_ptr<ExpressionStatement> makeExpressionStatement(
+	std::shared_ptr<Expression> expr,
+	SourceLocation loc)
+{
+	auto node = std::make_shared<ExpressionStatement>();
+	node->sourceLocation = std::move(loc);
+	node->expr = std::move(expr);
+	return node;
+}
+
 struct ReturnStatement: Statement
 {
 	std::string nodeType() const override { return "ReturnStatement"; }

@@ -97,9 +97,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 				tmpAssign->target = tmpTarget;
 				tmpAssign->value = rhsItem;
 
-				auto stmt = std::make_shared<awst::ExpressionStatement>();
-				stmt->sourceLocation = _value->sourceLocation;
-				stmt->expr = std::move(tmpAssign);
+				auto stmt = awst::makeExpressionStatement(std::move(tmpAssign), _value->sourceLocation);
 				m_ctx.pendingStatements.push_back(std::move(stmt));
 
 				auto tmpRead = awst::makeVarExpression(tmpName, rhsItem->wtype, _value->sourceLocation);
@@ -229,9 +227,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 		e->wtype = assignTarget->wtype;
 		e->target = std::move(assignTarget);
 		e->value = std::move(assignValue);
-		auto stmt = std::make_shared<awst::ExpressionStatement>();
-		stmt->sourceLocation = m_loc;
-		stmt->expr = e;
+		auto stmt = awst::makeExpressionStatement(e, m_loc);
 		m_ctx.pendingStatements.push_back(std::move(stmt));
 	}
 
@@ -597,9 +593,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 			cmp->op = awst::NumericComparison::Lt;
 			cmp->rhs = std::move(maxVal);
 
-			auto assertStmt = std::make_shared<awst::ExpressionStatement>();
-			assertStmt->sourceLocation = m_loc;
-			assertStmt->expr = awst::makeAssert(std::move(cmp), m_loc, "enum out of range");
+			auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), m_loc, "enum out of range"), m_loc);
 			m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 
 			value = std::move(val);
@@ -718,9 +712,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 					call->args.push_back(std::move(valArg));
 				}
 
-				auto stmt = std::make_shared<awst::ExpressionStatement>();
-				stmt->sourceLocation = m_loc;
-				stmt->expr = std::move(call);
+				auto stmt = awst::makeExpressionStatement(std::move(call), m_loc);
 				m_ctx.pendingStatements.push_back(std::move(stmt));
 			}
 			// Return a dummy value (void-like, the writes are in pending)
@@ -776,9 +768,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 			call->args.push_back(std::move(valArg));
 		}
 
-		auto stmt = std::make_shared<awst::ExpressionStatement>();
-		stmt->sourceLocation = m_loc;
-		stmt->expr = std::move(call);
+		auto stmt = awst::makeExpressionStatement(std::move(call), m_loc);
 		m_ctx.pendingStatements.push_back(std::move(stmt));
 
 		auto zero = awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType());

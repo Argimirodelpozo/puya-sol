@@ -110,9 +110,7 @@ static void emitModByZeroCheck(
 	cmp->op = awst::NumericComparison::Ne;
 	cmp->rhs = std::move(zero);
 
-	auto stmt = std::make_shared<awst::ExpressionStatement>();
-	stmt->sourceLocation = _loc;
-	stmt->expr = awst::makeAssert(std::move(cmp), _loc, "modulo by zero");
+	auto stmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "modulo by zero"), _loc);
 	_ctx.prePendingStatements.push_back(std::move(stmt));
 }
 
@@ -227,9 +225,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSelfdestruct(
 		submit->wtype = &s_payTxnType;
 		submit->itxns.push_back(std::move(create));
 
-		auto submitStmt = std::make_shared<awst::ExpressionStatement>();
-		submitStmt->sourceLocation = _loc;
-		submitStmt->expr = std::move(submit);
+		auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
 		_ctx.prePendingStatements.push_back(std::move(submitStmt));
 	}
 

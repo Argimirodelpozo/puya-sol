@@ -885,9 +885,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 									storeIntr->immediates = {0};
 									storeIntr->stackArgs.push_back(storeVal);
 									storeIntr->wtype = awst::WType::voidType();
-									auto storeStmt = std::make_shared<awst::ExpressionStatement>();
-									storeStmt->sourceLocation = sloc;
-									storeStmt->expr = storeIntr;
+									auto storeStmt = awst::makeExpressionStatement(storeIntr, sloc);
 									newBody->body.push_back(storeStmt);
 								}
 							}
@@ -1125,9 +1123,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 				storeIntr->stackArgs.push_back(storeVal);
 				storeIntr->wtype = awst::WType::voidType();
 
-				auto storeStmt = std::make_shared<awst::ExpressionStatement>();
-				storeStmt->sourceLocation = sub->sourceLocation;
-				storeStmt->expr = storeIntr;
+				auto storeStmt = awst::makeExpressionStatement(storeIntr, sub->sourceLocation);
 				body->body.push_back(storeStmt);
 			}
 
@@ -1159,9 +1155,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 				}
 			}
 
-			auto stmt = std::make_shared<awst::ExpressionStatement>();
-			stmt->sourceLocation = sub->sourceLocation;
-			stmt->expr = callExpr;
+			auto stmt = awst::makeExpressionStatement(callExpr, sub->sourceLocation);
 			body->body.push_back(stmt);
 
 			if (arrayParamType != nullptr)
@@ -1279,35 +1273,27 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 			cmp->lhs = currentO;
 			cmp->op = awst::NumericComparison::Eq;
 			cmp->rhs = zero;
-			auto es = std::make_shared<awst::ExpressionStatement>();
-			es->sourceLocation = loc;
-			es->expr = awst::makeAssert(cmp, loc, "helper: already initialized",
-				awst::WType::boolType());
+			auto es = awst::makeExpressionStatement(awst::makeAssert(cmp, loc, "helper: already initialized",
+				awst::WType::boolType()), loc);
 			body->body.push_back(es);
 		}
 
 		// app_global_put("o", o)
 		{
 			auto put = makeIntrinsic("app_global_put", {}, {makeBytesKey("o"), makeVar("o", awst::WType::uint64Type())}, awst::WType::voidType());
-			auto stmt = std::make_shared<awst::ExpressionStatement>();
-			stmt->sourceLocation = loc;
-			stmt->expr = put;
+			auto stmt = awst::makeExpressionStatement(put, loc);
 			body->body.push_back(stmt);
 		}
 		// app_global_put("p", p)
 		{
 			auto put = makeIntrinsic("app_global_put", {}, {makeBytesKey("p"), makeVar("p", awst::WType::uint64Type())}, awst::WType::voidType());
-			auto stmt = std::make_shared<awst::ExpressionStatement>();
-			stmt->sourceLocation = loc;
-			stmt->expr = put;
+			auto stmt = awst::makeExpressionStatement(put, loc);
 			body->body.push_back(stmt);
 		}
 		// app_global_put("s", s)
 		{
 			auto put = makeIntrinsic("app_global_put", {}, {makeBytesKey("s"), makeVar("s", awst::WType::bytesType())}, awst::WType::voidType());
-			auto stmt = std::make_shared<awst::ExpressionStatement>();
-			stmt->sourceLocation = loc;
-			stmt->expr = put;
+			auto stmt = awst::makeExpressionStatement(put, loc);
 			body->body.push_back(stmt);
 		}
 
@@ -1413,9 +1399,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 		return awst::makeAssert(std::move(cond), loc, std::move(msg), awst::WType::boolType());
 	};
 	auto makeAssertStmt = [&](std::shared_ptr<awst::Expression> cond, std::string msg) {
-		auto es = std::make_shared<awst::ExpressionStatement>();
-		es->sourceLocation = loc;
-		es->expr = makeAssertExpr(std::move(cond), std::move(msg));
+		auto es = awst::makeExpressionStatement(makeAssertExpr(std::move(cond), std::move(msg)), loc);
 		return es;
 	};
 	auto makeBytesCmp = [&](
@@ -1484,9 +1468,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 			{
 				auto selector = makeIntrinsic("txna", {std::string("ApplicationArgs"), 0}, {}, awst::WType::bytesType());
 				auto put = makeIntrinsic("app_global_put", {}, {makeBytesKey("f"), selector}, awst::WType::voidType());
-				auto stmt = std::make_shared<awst::ExpressionStatement>();
-				stmt->sourceLocation = loc;
-				stmt->expr = put;
+				auto stmt = awst::makeExpressionStatement(put, loc);
 				body->body.push_back(stmt);
 			}
 
@@ -1520,9 +1502,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 				}
 
 				auto store = makeIntrinsic("store", {static_cast<int>(i)}, {storeValue}, awst::WType::voidType());
-				auto stmt = std::make_shared<awst::ExpressionStatement>();
-				stmt->sourceLocation = loc;
-				stmt->expr = store;
+				auto stmt = awst::makeExpressionStatement(store, loc);
 				body->body.push_back(stmt);
 			}
 
@@ -1612,9 +1592,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 			{
 				auto empty = makeBytesHex({});
 				auto put = makeIntrinsic("app_global_put", {}, {makeBytesKey("f"), empty}, awst::WType::voidType());
-				auto stmt = std::make_shared<awst::ExpressionStatement>();
-				stmt->sourceLocation = loc;
-				stmt->expr = put;
+				auto stmt = awst::makeExpressionStatement(put, loc);
 				body->body.push_back(stmt);
 			}
 
@@ -1653,9 +1631,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 		// Initialize "f" flag to empty bytes so app_global_get returns bytes, not uint64
 		{
 			auto initPut = makeIntrinsic("app_global_put", {}, {makeBytesKey("f"), makeBytesHex({})}, awst::WType::voidType());
-			auto stmt = std::make_shared<awst::ExpressionStatement>();
-			stmt->sourceLocation = loc;
-			stmt->expr = initPut;
+			auto stmt = awst::makeExpressionStatement(initPut, loc);
 			body->body.push_back(stmt);
 		}
 
@@ -1788,9 +1764,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 		return awst::makeAssert(std::move(cond), loc, std::move(msg), awst::WType::boolType());
 	};
 	auto makeAssertStmt = [&](std::shared_ptr<awst::Expression> cond, std::string msg) {
-		auto es = std::make_shared<awst::ExpressionStatement>();
-		es->sourceLocation = loc;
-		es->expr = makeAssertExpr(std::move(cond), std::move(msg));
+		auto es = awst::makeExpressionStatement(makeAssertExpr(std::move(cond), std::move(msg)), loc);
 		return es;
 	};
 	auto makeBytesCmp = [&](
@@ -1857,9 +1831,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 				{
 					auto selector = makeIntrinsic("txna", {std::string("ApplicationArgs"), 0}, {}, awst::WType::bytesType());
 					auto put = makeIntrinsic("app_global_put", {}, {makeBytesKey("f"), selector}, awst::WType::voidType());
-					auto stmt = std::make_shared<awst::ExpressionStatement>();
-					stmt->sourceLocation = loc;
-					stmt->expr = put;
+					auto stmt = awst::makeExpressionStatement(put, loc);
 					body->body.push_back(stmt);
 				}
 
@@ -1887,9 +1859,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 					}
 
 					auto store = makeIntrinsic("store", {static_cast<int>(i)}, {storeValue}, awst::WType::voidType());
-					auto stmt = std::make_shared<awst::ExpressionStatement>();
-					stmt->sourceLocation = loc;
-					stmt->expr = store;
+					auto stmt = awst::makeExpressionStatement(store, loc);
 					body->body.push_back(stmt);
 				}
 
@@ -1965,9 +1935,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 				// Clear flag
 				{
 					auto put = makeIntrinsic("app_global_put", {}, {makeBytesKey("f"), makeBytesHex({})}, awst::WType::voidType());
-					auto stmt = std::make_shared<awst::ExpressionStatement>();
-					stmt->sourceLocation = loc;
-					stmt->expr = put;
+					auto stmt = awst::makeExpressionStatement(put, loc);
 					body->body.push_back(stmt);
 				}
 
@@ -2021,9 +1989,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 		if (hasDelegated)
 		{
 			auto initPut = makeIntrinsic("app_global_put", {}, {makeBytesKey("f"), makeBytesHex({})}, awst::WType::voidType());
-			auto stmt = std::make_shared<awst::ExpressionStatement>();
-			stmt->sourceLocation = loc;
-			stmt->expr = initPut;
+			auto stmt = awst::makeExpressionStatement(initPut, loc);
 			body->body.push_back(stmt);
 		}
 
@@ -2273,9 +2239,7 @@ std::vector<std::shared_ptr<awst::Statement>> ContractSplitter::buildValidationB
 		return val;
 	};
 	auto makeAssert = [&](std::shared_ptr<awst::Expression> cond, std::string msg) {
-		auto es = std::make_shared<awst::ExpressionStatement>();
-		es->sourceLocation = _loc;
-		es->expr = awst::makeAssert(std::move(cond), _loc, std::move(msg), awst::WType::boolType());
+		auto es = awst::makeExpressionStatement(awst::makeAssert(std::move(cond), _loc, std::move(msg), awst::WType::boolType()), _loc);
 		return es;
 	};
 	auto makeNumericCmp = [&](

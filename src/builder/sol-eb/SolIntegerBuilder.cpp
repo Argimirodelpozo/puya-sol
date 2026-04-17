@@ -500,9 +500,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			cmp->op = awst::NumericComparison::Ne;
 			cmp->rhs = std::move(halfConst);
 
-			auto assertStmt = std::make_shared<awst::ExpressionStatement>();
-			assertStmt->sourceLocation = _loc;
-			assertStmt->expr = awst::makeAssert(std::move(cmp), _loc, "signed negation overflow");
+			auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "signed negation overflow"), _loc);
 			m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 		}
 
@@ -699,9 +697,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::emitOverflowCheck(
 	cmp->op = awst::NumericComparison::Lte;
 	cmp->rhs = std::move(maxConst);
 
-	auto assertStmt = std::make_shared<awst::ExpressionStatement>();
-	assertStmt->sourceLocation = _loc;
-	assertStmt->expr = awst::makeAssert(std::move(cmp), _loc, "overflow");
+	auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "overflow"), _loc);
 	m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 
 	return tmpVar;
@@ -899,9 +895,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildWrappingSubtract(
 		cmp->op = awst::NumericComparison::Gte;
 		cmp->rhs = _right; // shared ref
 
-		auto assertStmt = std::make_shared<awst::ExpressionStatement>();
-		assertStmt->sourceLocation = _loc;
-		assertStmt->expr = awst::makeAssert(std::move(cmp), _loc, "underflow");
+		auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "underflow"), _loc);
 		m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 	}
 

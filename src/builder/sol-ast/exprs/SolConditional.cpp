@@ -27,9 +27,8 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 	if (auto* assignExpr = dynamic_cast<awst::AssignmentExpression*>(e->condition.get()))
 	{
 		// Emit: flag = true; (as statement)
-		auto stmt = std::make_shared<awst::ExpressionStatement>();
-		stmt->sourceLocation = m_loc;
-		stmt->expr = e->condition; // shared_ptr copy — both stmt and condition reference it
+		// shared_ptr copy on e->condition so both stmt and condition reference it
+		auto stmt = awst::makeExpressionStatement(e->condition, m_loc);
 		m_ctx.prePendingStatements.push_back(std::move(stmt));
 		// The ConditionalExpression condition still holds the AssignmentExpression,
 		// which evaluates to the assigned value (the condition result).

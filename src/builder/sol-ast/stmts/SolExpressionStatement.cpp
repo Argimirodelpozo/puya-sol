@@ -47,9 +47,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolExpressionStatement::toAwst()
 		return result;
 	}
 
-	auto stmt = std::make_shared<awst::ExpressionStatement>();
-	stmt->sourceLocation = m_loc;
-	stmt->expr = std::move(expr);
+	auto stmt = awst::makeExpressionStatement(std::move(expr), m_loc);
 	result.push_back(stmt);
 
 	for (auto& p: m_ctx.takePending())
@@ -75,9 +73,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolRevertStatement::toAwst()
 	else if (auto const* ma = dynamic_cast<MemberAccess const*>(&errorCall.expression()))
 		errorName = ma->memberName();
 
-	auto stmt = std::make_shared<awst::ExpressionStatement>();
-	stmt->sourceLocation = m_loc;
-	stmt->expr = awst::makeAssert(awst::makeBoolConstant(false, m_loc), m_loc, errorName);
+	auto stmt = awst::makeExpressionStatement(awst::makeAssert(awst::makeBoolConstant(false, m_loc), m_loc, errorName), m_loc);
 	return {stmt};
 }
 
@@ -368,9 +364,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 					cmp->op = awst::NumericComparison::Lt;
 					cmp->rhs = std::move(maxVal);
 
-					auto assertStmt = std::make_shared<awst::ExpressionStatement>();
-					assertStmt->sourceLocation = m_loc;
-					assertStmt->expr = awst::makeAssert(std::move(cmp), m_loc, "enum out of range");
+					auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), m_loc, "enum out of range"), m_loc);
 					result.push_back(std::move(assertStmt));
 				}
 			}

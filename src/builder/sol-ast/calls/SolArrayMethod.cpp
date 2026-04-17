@@ -91,9 +91,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						del->wtype = awst::WType::boolType();
 						del->opCode = "box_del";
 						del->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
-						auto delStmt = std::make_shared<awst::ExpressionStatement>();
-						delStmt->sourceLocation = loc;
-						delStmt->expr = std::move(del);
+						auto delStmt = awst::makeExpressionStatement(std::move(del), loc);
 						m_ctx.pendingStatements.push_back(std::move(delStmt));
 
 						auto tmpRead = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
@@ -103,9 +101,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						put->opCode = "box_put";
 						put->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
 						put->stackArgs.push_back(std::move(tmpRead));
-						auto putStmt = std::make_shared<awst::ExpressionStatement>();
-						putStmt->sourceLocation = loc;
-						putStmt->expr = std::move(put);
+						auto putStmt = awst::makeExpressionStatement(std::move(put), loc);
 						m_ctx.pendingStatements.push_back(std::move(putStmt));
 					}
 					else
@@ -116,9 +112,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						put->opCode = "app_global_put";
 						put->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
 						put->stackArgs.push_back(std::move(extract));
-						auto stmt = std::make_shared<awst::ExpressionStatement>();
-						stmt->sourceLocation = loc;
-						stmt->expr = std::move(put);
+						auto stmt = awst::makeExpressionStatement(std::move(put), loc);
 						m_ctx.pendingStatements.push_back(std::move(stmt));
 					}
 
@@ -188,9 +182,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						del->wtype = awst::WType::boolType();
 						del->opCode = "box_del";
 						del->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
-						auto delStmt = std::make_shared<awst::ExpressionStatement>();
-						delStmt->sourceLocation = loc;
-						delStmt->expr = std::move(del);
+						auto delStmt = awst::makeExpressionStatement(std::move(del), loc);
 						m_ctx.pendingStatements.push_back(std::move(delStmt));
 
 						auto tmpRead = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
@@ -200,9 +192,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						put->opCode = "box_put";
 						put->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
 						put->stackArgs.push_back(std::move(tmpRead));
-						auto putStmt = std::make_shared<awst::ExpressionStatement>();
-						putStmt->sourceLocation = loc;
-						putStmt->expr = std::move(put);
+						auto putStmt = awst::makeExpressionStatement(std::move(put), loc);
 						m_ctx.pendingStatements.push_back(std::move(putStmt));
 					}
 					else
@@ -213,9 +203,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						put->opCode = "app_global_put";
 						put->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
 						put->stackArgs.push_back(std::move(cat));
-						auto stmt = std::make_shared<awst::ExpressionStatement>();
-						stmt->sourceLocation = loc;
-						stmt->expr = std::move(put);
+						auto stmt = awst::makeExpressionStatement(std::move(put), loc);
 						m_ctx.pendingStatements.push_back(std::move(stmt));
 					}
 
@@ -354,9 +342,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 		extend->wtype = awst::WType::voidType();
 		extend->base = fieldExpr;
 		extend->other = std::move(singleArr);
-		auto extendStmt = std::make_shared<awst::ExpressionStatement>();
-		extendStmt->sourceLocation = loc;
-		extendStmt->expr = std::move(extend);
+		auto extendStmt = awst::makeExpressionStatement(std::move(extend), loc);
 		m_ctx.pendingStatements.push_back(std::move(extendStmt));
 	}
 	else // pop
@@ -365,9 +351,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 		popExpr->sourceLocation = loc;
 		popExpr->wtype = elemType ? elemType : rawFieldType;
 		popExpr->base = fieldExpr;
-		auto popStmt = std::make_shared<awst::ExpressionStatement>();
-		popStmt->sourceLocation = loc;
-		popStmt->expr = std::move(popExpr);
+		auto popStmt = awst::makeExpressionStatement(std::move(popExpr), loc);
 		m_ctx.pendingStatements.push_back(std::move(popStmt));
 	}
 
@@ -378,9 +362,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 		varName, std::move(tmpWriteRead), structWType, kind, loc);
 	if (writeExpr)
 	{
-		auto writeStmt = std::make_shared<awst::ExpressionStatement>();
-		writeStmt->sourceLocation = loc;
-		writeStmt->expr = std::move(writeExpr);
+		auto writeStmt = awst::makeExpressionStatement(std::move(writeExpr), loc);
 		m_ctx.pendingStatements.push_back(std::move(writeStmt));
 	}
 
@@ -486,9 +468,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 		if (fromAssign)
 			return e;
 
-		auto extendStmt = std::make_shared<awst::ExpressionStatement>();
-		extendStmt->sourceLocation = m_loc;
-		extendStmt->expr = std::move(e);
+		auto extendStmt = awst::makeExpressionStatement(std::move(e), m_loc);
 		m_ctx.pendingStatements.push_back(std::move(extendStmt));
 
 		auto vc = std::make_shared<awst::VoidConstant>();

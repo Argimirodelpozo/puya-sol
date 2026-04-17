@@ -62,9 +62,7 @@ void AssemblyBuilder::buildStatement(
 					notCond->wtype = awst::WType::boolType();
 					notCond->expr = std::move(cond);
 
-					auto stmt = std::make_shared<awst::ExpressionStatement>();
-					stmt->sourceLocation = loc;
-					stmt->expr = awst::makeAssert(std::move(notCond), loc, "revert");
+					auto stmt = awst::makeExpressionStatement(awst::makeAssert(std::move(notCond), loc, "revert"), loc);
 					_out.push_back(std::move(stmt));
 				}
 				else
@@ -733,9 +731,7 @@ void AssemblyBuilder::buildExpressionStatement(
 		if (funcName == "invalid")
 		{
 			// EVM INVALID opcode — unconditional revert
-			auto stmt = std::make_shared<awst::ExpressionStatement>();
-			stmt->sourceLocation = loc;
-			stmt->expr = awst::makeAssert(awst::makeBoolConstant(false, loc), loc, "invalid");
+			auto stmt = awst::makeExpressionStatement(awst::makeAssert(awst::makeBoolConstant(false, loc), loc, "invalid"), loc);
 			_out.push_back(std::move(stmt));
 			return;
 		}
@@ -791,9 +787,7 @@ void AssemblyBuilder::buildExpressionStatement(
 		auto expr = buildExpression(_stmt.expression);
 		if (expr)
 		{
-			auto exprStmt = std::make_shared<awst::ExpressionStatement>();
-			exprStmt->sourceLocation = loc;
-			exprStmt->expr = std::move(expr);
+			auto exprStmt = awst::makeExpressionStatement(std::move(expr), loc);
 			_out.push_back(std::move(exprStmt));
 		}
 	}
@@ -803,9 +797,7 @@ void AssemblyBuilder::buildExpressionStatement(
 		auto expr = buildExpression(_stmt.expression);
 		if (expr)
 		{
-			auto exprStmt = std::make_shared<awst::ExpressionStatement>();
-			exprStmt->sourceLocation = loc;
-			exprStmt->expr = std::move(expr);
+			auto exprStmt = awst::makeExpressionStatement(std::move(expr), loc);
 			_out.push_back(std::move(exprStmt));
 		}
 	}

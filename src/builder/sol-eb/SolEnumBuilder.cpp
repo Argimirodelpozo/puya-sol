@@ -31,9 +31,7 @@ std::unique_ptr<InstanceBuilder> SolEnumBuilder::compare(
 			cmp->op = awst::NumericComparison::Lt;
 			cmp->rhs = std::move(maxVal);
 
-			auto stmt = std::make_shared<awst::ExpressionStatement>();
-			stmt->sourceLocation = _loc;
-			stmt->expr = awst::makeAssert(std::move(cmp), _loc, "enum out of range");
+			auto stmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "enum out of range"), _loc);
 			m_ctx.prePendingStatements.push_back(std::move(stmt));
 		};
 		validateEnum(lhs);

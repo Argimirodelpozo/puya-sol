@@ -1664,9 +1664,7 @@ std::shared_ptr<awst::Statement> FunctionInliner::deepCopyStmt(
 	if (type == "ExpressionStatement")
 	{
 		auto& src = static_cast<awst::ExpressionStatement const&>(*_stmt);
-		auto n = std::make_shared<awst::ExpressionStatement>();
-		n->sourceLocation = src.sourceLocation;
-		n->expr = deepCopyExpr(src.expr);
+		auto n = awst::makeExpressionStatement(deepCopyExpr(src.expr), src.sourceLocation);
 		return n;
 	}
 	if (type == "AssignmentStatement")

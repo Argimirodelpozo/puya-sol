@@ -362,9 +362,7 @@ void AssemblyBuilder::storeMemoryBlob(
 	storeOp->immediates = {MEMORY_SLOT_FIRST + _slot};
 	storeOp->stackArgs.push_back(std::move(_blob));
 
-	auto exprStmt = std::make_shared<awst::ExpressionStatement>();
-	exprStmt->sourceLocation = _loc;
-	exprStmt->expr = std::move(storeOp);
+	auto exprStmt = awst::makeExpressionStatement(std::move(storeOp), _loc);
 	_out.push_back(std::move(exprStmt));
 }
 

@@ -396,9 +396,7 @@ void AssemblyBuilder::handleReturn(
 			returnOp->opCode = "return";
 			returnOp->stackArgs.push_back(awst::makeBoolConstant(true, _loc));
 
-			auto exitStmt = std::make_shared<awst::ExpressionStatement>();
-			exitStmt->sourceLocation = _loc;
-			exitStmt->expr = std::move(returnOp);
+			auto exitStmt = awst::makeExpressionStatement(std::move(returnOp), _loc);
 			_out.push_back(std::move(exitStmt));
 			m_haltEmitted = true;
 			return;
@@ -429,9 +427,7 @@ void AssemblyBuilder::handleReturn(
 		logCall->opCode = "log";
 		logCall->stackArgs.push_back(std::move(extract));
 
-		auto logStmt = std::make_shared<awst::ExpressionStatement>();
-		logStmt->sourceLocation = _loc;
-		logStmt->expr = std::move(logCall);
+		auto logStmt = awst::makeExpressionStatement(std::move(logCall), _loc);
 		_out.push_back(std::move(logStmt));
 
 		// Flush and return void

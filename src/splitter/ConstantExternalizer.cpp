@@ -628,9 +628,7 @@ awst::ContractMethod ConstantExternalizer::buildLoadConstantsMethod(
 		storeCall->wtype = awst::WType::voidType();
 		storeCall->stackArgs = {boxExtract};
 
-		auto stmt = std::make_shared<awst::ExpressionStatement>();
-		stmt->sourceLocation = _loc;
-		stmt->expr = storeCall;
+		auto stmt = awst::makeExpressionStatement(storeCall, _loc);
 		body->body.push_back(stmt);
 	}
 

@@ -322,9 +322,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 		return submit;
 
 	// Submit as pre-pending statement, then extract from LastLog
-	auto submitStmt = std::make_shared<awst::ExpressionStatement>();
-	submitStmt->sourceLocation = m_loc;
-	submitStmt->expr = std::move(submit);
+	auto submitStmt = awst::makeExpressionStatement(std::move(submit), m_loc);
 	m_ctx.prePendingStatements.push_back(std::move(submitStmt));
 
 	auto readLog = std::make_shared<awst::IntrinsicCall>();

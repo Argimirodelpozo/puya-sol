@@ -120,9 +120,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			cmp->op = awst::NumericComparison::Ne;
 			cmp->rhs = makeBiguintConst(halfNStr);
 
-			auto assertStmt = std::make_shared<awst::ExpressionStatement>();
-			assertStmt->sourceLocation = m_loc;
-			assertStmt->expr = awst::makeAssert(std::move(cmp), m_loc, "signed negation overflow");
+			auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), m_loc, "signed negation overflow"), m_loc);
 			m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 		}
 
@@ -479,9 +477,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 				cmp->op = awst::NumericComparison::Ne;
 				cmp->rhs = makeBConst(limitStr);
 
-				auto assertStmt = std::make_shared<awst::ExpressionStatement>();
-				assertStmt->sourceLocation = m_loc;
-				assertStmt->expr = awst::makeAssert(std::move(cmp), m_loc, "signed inc/dec overflow");
+				auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), m_loc, "signed inc/dec overflow"), m_loc);
 				m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 			}
 
@@ -665,9 +661,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 		stateDelete->sourceLocation = m_loc;
 		stateDelete->wtype = awst::WType::boolType();
 		stateDelete->field = target;
-		auto stmt = std::make_shared<awst::ExpressionStatement>();
-		stmt->sourceLocation = m_loc;
-		stmt->expr = std::move(stateDelete);
+		auto stmt = awst::makeExpressionStatement(std::move(stateDelete), m_loc);
 		m_ctx.pendingStatements.push_back(std::move(stmt));
 		return _operand;
 	}
@@ -781,9 +775,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 				call->args.push_back(std::move(valArg));
 			}
 
-			auto stmt = std::make_shared<awst::ExpressionStatement>();
-			stmt->sourceLocation = m_loc;
-			stmt->expr = std::move(call);
+			auto stmt = awst::makeExpressionStatement(std::move(call), m_loc);
 			m_ctx.pendingStatements.push_back(std::move(stmt));
 		}
 		return _operand;
