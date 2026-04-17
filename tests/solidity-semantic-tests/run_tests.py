@@ -657,10 +657,17 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
 
         # Store box refs on the client for use in subsequent calls
         app_client._box_refs = box_refs
-        # Record the AVM baseline (min-balance + box reserves + ctor value)
-        # so _compare_values can subtract it when tests read
-        # `address(this).balance`.
-        app_client._balance_baseline = min_balance
+        # Record the AVM baseline so _compare_values can subtract it when
+        # tests read `address(this).balance`. Read the app account's real
+        # balance *after* __postInit so any funds the ctor spent on child
+        # app creation / funding are already subtracted — otherwise a
+        # Solidity `this.balance == N` check fails by the amount the child
+        # deployment cost.
+        try:
+            post_bal = algod.account_info(app_addr)["amount"]
+            app_client._balance_baseline = post_bal - fund_amount
+        except Exception:
+            app_client._balance_baseline = min_balance
         app_client._ctor_fund = fund_amount
         return app_client
     except Exception as e:
