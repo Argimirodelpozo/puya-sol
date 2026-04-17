@@ -4,20 +4,11 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_post_cancun_redeploy.sol.D.approval_program() -> uint64:
 main:
     intcblock 0 1 24 6
-    bytecblock "c" 0x "factory" 0x151f7c75 0x5ff16da4 0x0a8101 0x0de0b6b3a7640000
-    bytec_1 // ""
+    bytecblock "c" 0x "__ctor_pending" "factory" 0x151f7c75 0x5ff16da4 0x0de0b6b3a7640000 TMPL_APPROVAL_Factory TMPL_CLEAR_Factory
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 24
-    bzero
-    dig 1
-    itob
-    concat
-    bytec_2 // "factory"
-    swap
-    app_global_put
-    bytec_0 // "c"
-    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec_2 // "__ctor_pending"
+    intc_1 // 1
     app_global_put
     intc_1 // 1
     return
@@ -35,12 +26,36 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytes 0x32f85fc9 // method "deploy_create2()void"
-    bytec 4 // method "terminate()void"
+    pushbytess 0xbacc49e3 0x32f85fc9 // method "__postInit()void", method "deploy_create2()void"
+    bytec 5 // method "terminate()void"
     pushbytess 0xc7047fb5 0x6974599f 0xa25cf4b6 0x082c5ced 0x394c401b 0xd7fc866d // method "test_deploy_and_terminate()void", method "test_balance_after_create()void", method "test_balance_after_selfdestruct()void", method "exists()bool", method "factory()address", method "c()address"
     txna ApplicationArgs 0
-    match deploy_create2 terminate test_deploy_and_terminate test_balance_after_create test_balance_after_selfdestruct exists factory c
+    match __postInit deploy_create2 terminate test_deploy_and_terminate test_balance_after_create test_balance_after_selfdestruct exists factory c
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_post_cancun_redeploy.sol.D.__postInit[routing]() -> void:
+__postInit:
+    bytec_1 // ""
+    bytec_2 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_2 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    intc_2 // 24
+    bzero
+    swap
+    itob
+    concat
+    bytec_3 // "factory"
+    swap
+    app_global_put
+    bytec_0 // "c"
+    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_post_cancun_redeploy.sol.D.deploy_create2[routing]() -> void:
@@ -90,7 +105,7 @@ exists:
     intc_0 // 0
     uncover 2
     setbit
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -101,10 +116,10 @@ exists:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_post_cancun_redeploy.sol.D.factory[routing]() -> void:
 factory:
     intc_0 // 0
-    bytec_2 // "factory"
+    bytec_3 // "factory"
     app_global_get_ex
     assert // check factory exists
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -118,7 +133,7 @@ c:
     bytec_0 // "c"
     app_global_get_ex
     assert // check c exists
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -129,13 +144,19 @@ c:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_post_cancun_redeploy.sol.D.deploy_create2() -> void:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_post_cancun_redeploy.sol.D.deploy_create2:
     itxn_begin
+    bytec 7 // TMPL_APPROVAL_Factory
+    bytec 8 // TMPL_CLEAR_Factory
     intc_3 // 6
     itxn_field TypeEnum
+    pushint 16
+    itxn_field GlobalNumUint
+    pushint 16
+    itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
-    bytec 5 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec 5 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -147,12 +168,12 @@ c:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    pushint 200000
+    pushint 1000000
     itxn_field Amount
     itxn_submit
     itxn_begin
     intc_0 // 0
-    bytec_2 // "factory"
+    bytec_3 // "factory"
     app_global_get_ex
     assert // check factory exists
     intc_2 // 24
@@ -193,7 +214,7 @@ c:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 4 // method "terminate()void"
+    bytec 5 // method "terminate()void"
     itxn_field ApplicationArgs
     itxn_submit
     retsub

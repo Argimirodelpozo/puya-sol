@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/saltedCreate/salted_create.sol.A.approval_program() -> uint64:
 main:
-    intcblock 0 1 6 200000
-    bytecblock 0x0a8101
+    intcblock 0 16 1 6 1000000
+    bytecblock TMPL_APPROVAL_B TMPL_CLEAR_B
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -32,13 +32,19 @@ main_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/saltedCreate/salted_create.sol.A.different_salt[routing]() -> void:
 different_salt:
     itxn_begin
-    intc_2 // 6
+    bytec_0 // TMPL_APPROVAL_B
+    bytec_1 // TMPL_CLEAR_B
+    intc_3 // 6
     itxn_field TypeEnum
+    intc_1 // 16
+    itxn_field GlobalNumUint
+    intc_1 // 16
+    itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
-    bytec_0 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec_0 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -46,12 +52,12 @@ different_salt:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_1 // 1
+    intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc_3 // 200000
+    intc 4 // 1000000
     itxn_field Amount
     itxn_submit
     pushint 24
@@ -62,13 +68,19 @@ different_salt:
     swap
     concat
     itxn_begin
-    intc_2 // 6
+    bytec_0 // TMPL_APPROVAL_B
+    bytec_1 // TMPL_CLEAR_B
+    intc_3 // 6
     itxn_field TypeEnum
+    intc_1 // 16
+    itxn_field GlobalNumUint
+    intc_1 // 16
+    itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
-    bytec_0 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec_0 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -76,12 +88,12 @@ different_salt:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_1 // 1
+    intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc_3 // 200000
+    intc 4 // 1000000
     itxn_field Amount
     itxn_submit
     itob
@@ -97,57 +109,69 @@ different_salt:
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/saltedCreate/salted_create.sol.A.same_salt[routing]() -> void:
 same_salt:
     itxn_begin
-    intc_2 // 6
+    bytec_0 // TMPL_APPROVAL_B
+    bytec_1 // TMPL_CLEAR_B
+    intc_3 // 6
     itxn_field TypeEnum
+    intc_1 // 16
+    itxn_field GlobalNumUint
+    intc_1 // 16
+    itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
-    bytec_0 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec_0 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_1 // 1
+    intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc_3 // 200000
+    intc 4 // 1000000
     itxn_field Amount
     itxn_submit
     itxn_begin
-    intc_2 // 6
+    bytec_0 // TMPL_APPROVAL_B
+    bytec_1 // TMPL_CLEAR_B
+    intc_3 // 6
     itxn_field TypeEnum
+    intc_1 // 16
+    itxn_field GlobalNumUint
+    intc_1 // 16
+    itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
-    bytec_0 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec_0 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_1 // 1
+    intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc_3 // 200000
+    intc 4 // 1000000
     itxn_field Amount
     itxn_submit
     pushbytes 0x151f7c7500
     log
-    intc_1 // 1
+    intc_2 // 1
     return

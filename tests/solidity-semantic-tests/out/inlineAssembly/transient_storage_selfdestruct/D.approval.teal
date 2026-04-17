@@ -3,45 +3,17 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_selfdestruct.sol.D.approval_program() -> uint64:
 main:
-    intcblock 0 6 1 24 200000
-    bytecblock 0x0a8101 "c" 0x7cb116cd 0xb30e2ea6 0xf08d7860
+    intcblock 0 1 6 16 1000000
+    bytecblock "c" "__ctor_pending" TMPL_APPROVAL_C TMPL_CLEAR_C 0x7cb116cd 0xb30e2ea6 0xf08d7860
     txn ApplicationID
-    bnz main_after_if_else@4
-    itxn_begin
-    intc_1 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field Fee
-    bytec_0 // 0x0a8101
-    itxn_field ClearStateProgram
-    bytec_0 // 0x0a8101
-    itxn_field ApprovalProgram
-    itxn_submit
-    itxn CreatedApplicationID
-    dup
-    app_params_get AppAddress
-    pop
-    itxn_begin
-    intc_2 // 1
-    itxn_field TypeEnum
-    itxn_field Receiver
-    intc_0 // 0
-    itxn_field Fee
-    intc 4 // 200000
-    itxn_field Amount
-    itxn_submit
-    intc_3 // 24
-    bzero
-    swap
-    itob
-    concat
-    bytec_1 // "c"
-    swap
+    bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_1 // 1
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
-main_after_if_else@4:
+main_after_if_else@2:
     pushint 4096
     bzero
     store 0
@@ -54,10 +26,59 @@ main_after_if_else@4:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x9c86a185 0x154ed027 0xd7fc866d // method "destroy()void", method "createAndDestroy()void", method "c()address"
+    pushbytess 0xbacc49e3 0x9c86a185 0x154ed027 0xd7fc866d // method "__postInit()void", method "destroy()void", method "createAndDestroy()void", method "c()address"
     txna ApplicationArgs 0
-    match destroy createAndDestroy c
+    match __postInit destroy createAndDestroy c
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_selfdestruct.sol.D.__postInit[routing]() -> void:
+__postInit:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    itxn_begin
+    bytec_2 // TMPL_APPROVAL_C
+    bytec_3 // TMPL_CLEAR_C
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_3 // 16
+    itxn_field GlobalNumUint
+    intc_3 // 16
+    itxn_field GlobalNumByteSlice
+    intc_0 // 0
+    itxn_field Fee
+    pushint 3
+    itxn_field ExtraProgramPages
+    itxn_field ClearStateProgram
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    intc 4 // 1000000
+    itxn_field Amount
+    itxn_submit
+    pushint 24
+    bzero
+    swap
+    itob
+    concat
+    bytec_0 // "c"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_selfdestruct.sol.D.destroy[routing]() -> void:
@@ -66,12 +87,12 @@ destroy:
     pushint 42
     itob
     intc_0 // 0
-    bytec_1 // "c"
+    bytec_0 // "c"
     app_global_get_ex
     assert // check c exists
-    intc_3 // 24
+    pushint 24
     extract_uint64
-    intc_1 // 6
+    intc_2 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -79,14 +100,14 @@ destroy:
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec_2 // method "set(uint256)void"
+    bytec 4 // method "set(uint256)void"
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
     global CurrentApplicationAddress
-    intc_1 // 6
+    intc_2 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -94,19 +115,19 @@ destroy:
     itxn_field Fee
     dig 1
     itxn_field ApplicationID
-    bytec_3 // method "terminate(address)void"
+    bytec 5 // method "terminate(address)void"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
-    intc_1 // 6
+    intc_2 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 4 // method "get()uint256"
+    bytec 6 // method "get()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -114,20 +135,26 @@ destroy:
     pushbytes 0x2a
     b==
     assert
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_selfdestruct.sol.D.createAndDestroy[routing]() -> void:
 createAndDestroy:
     itxn_begin
-    intc_1 // 6
+    bytec_2 // TMPL_APPROVAL_C
+    bytec_3 // TMPL_CLEAR_C
+    intc_2 // 6
     itxn_field TypeEnum
+    intc_3 // 16
+    itxn_field GlobalNumUint
+    intc_3 // 16
+    itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
-    bytec_0 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec_0 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -135,29 +162,29 @@ createAndDestroy:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_2 // 1
+    intc_1 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc 4 // 200000
+    intc 4 // 1000000
     itxn_field Amount
     itxn_submit
-    intc_3 // 24
+    pushint 24
     bzero
     swap
     itob
     concat
-    bytec_1 // "c"
+    bytec_0 // "c"
     dig 1
     app_global_put
     itxn_begin
     pushint 42
     itob
     swap
-    intc_3 // 24
+    pushint 24
     extract_uint64
-    intc_1 // 6
+    intc_2 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -165,14 +192,14 @@ createAndDestroy:
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec_2 // method "set(uint256)void"
+    bytec 4 // method "set(uint256)void"
     itxn_field ApplicationArgs
     swap
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
     global CurrentApplicationAddress
-    intc_1 // 6
+    intc_2 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -180,19 +207,19 @@ createAndDestroy:
     itxn_field Fee
     dig 1
     itxn_field ApplicationID
-    bytec_3 // method "terminate(address)void"
+    bytec 5 // method "terminate(address)void"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
-    intc_1 // 6
+    intc_2 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 4 // method "get()uint256"
+    bytec 6 // method "get()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -200,19 +227,19 @@ createAndDestroy:
     pushbytes 0x2a
     b==
     assert
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_selfdestruct.sol.D.c[routing]() -> void:
 c:
     intc_0 // 0
-    bytec_1 // "c"
+    bytec_0 // "c"
     app_global_get_ex
     assert // check c exists
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return

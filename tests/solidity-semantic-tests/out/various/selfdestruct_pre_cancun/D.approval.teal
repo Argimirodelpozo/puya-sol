@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.approval_program() -> uint64:
 main:
-    intcblock 1 0 24 6 200000
-    bytecblock "c" 0x0a8101 0x 0x5ff16da4 0x151f7c75 0x0de0b6b3a7640000
+    intcblock 1 0 16 24 1000000
+    bytecblock "c" 0x 0x5ff16da4 0x151f7c75 TMPL_APPROVAL_C TMPL_CLEAR_C 0x0de0b6b3a7640000
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "c"
@@ -27,7 +27,7 @@ main_after_if_else@2:
     txn ApplicationID
     assert
     pushbytess 0xb87ad40c 0x32f85fc9 // method "deploy_create()void", method "deploy_create2()void"
-    bytec_3 // method "terminate()void"
+    bytec_2 // method "terminate()void"
     pushbytess 0xeb24ed0c 0x03163795 0x6974599f 0xa25cf4b6 0x082c5ced 0xd7fc866d // method "test_create_and_terminate()void", method "test_create2_and_terminate()void", method "test_balance_after_create()void", method "test_balance_after_selfdestruct()void", method "exists()bool", method "c()address"
     txna ApplicationArgs 0
     match deploy_create deploy_create2 terminate test_create_and_terminate test_create2_and_terminate test_balance_after_create test_balance_after_selfdestruct exists c
@@ -100,7 +100,7 @@ exists:
     intc_1 // 0
     uncover 2
     setbit
-    bytec 4 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -114,7 +114,7 @@ c:
     bytec_0 // "c"
     app_global_get_ex
     assert // check c exists
-    bytec 4 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -125,13 +125,19 @@ c:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.deploy_create() -> void:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.deploy_create:
     itxn_begin
-    intc_3 // 6
+    bytec 4 // TMPL_APPROVAL_C
+    bytec 5 // TMPL_CLEAR_C
+    pushint 6
     itxn_field TypeEnum
+    intc_2 // 16
+    itxn_field GlobalNumUint
+    intc_2 // 16
+    itxn_field GlobalNumByteSlice
     intc_1 // 0
     itxn_field Fee
-    bytec_1 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec_1 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -144,10 +150,10 @@ c:
     itxn_field Receiver
     intc_1 // 0
     itxn_field Fee
-    intc 4 // 200000
+    intc 4 // 1000000
     itxn_field Amount
     itxn_submit
-    intc_2 // 24
+    intc_3 // 24
     bzero
     swap
     itob
@@ -161,13 +167,19 @@ c:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.deploy_create2() -> void:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun.sol.D.deploy_create2:
     itxn_begin
-    intc_3 // 6
+    bytec 4 // TMPL_APPROVAL_C
+    bytec 5 // TMPL_CLEAR_C
+    pushint 6
     itxn_field TypeEnum
+    intc_2 // 16
+    itxn_field GlobalNumUint
+    intc_2 // 16
+    itxn_field GlobalNumByteSlice
     intc_1 // 0
     itxn_field Fee
-    bytec_1 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec_1 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -180,10 +192,10 @@ c:
     itxn_field Receiver
     intc_1 // 0
     itxn_field Fee
-    intc 4 // 200000
+    intc 4 // 1000000
     itxn_field Amount
     itxn_submit
-    intc_2 // 24
+    intc_3 // 24
     bzero
     swap
     itob
@@ -201,16 +213,16 @@ c:
     bytec_0 // "c"
     app_global_get_ex
     assert // check c exists
-    intc_2 // 24
+    intc_3 // 24
     extract_uint64
-    intc_3 // 6
+    pushint 6
     itxn_field TypeEnum
     intc_1 // 0
     itxn_field OnCompletion
     intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_3 // method "terminate()void"
+    bytec_2 // method "terminate()void"
     itxn_field ApplicationArgs
     itxn_submit
     retsub
@@ -222,7 +234,7 @@ c:
     acct_params_get AcctBalance
     pop
     itob
-    bytec_2 // 0x
+    bytec_1 // 0x
     b==
     assert
     intc_1 // 0
@@ -232,7 +244,7 @@ c:
     acct_params_get AcctBalance
     pop
     itob
-    bytec 5 // 0x0de0b6b3a7640000
+    bytec 6 // 0x0de0b6b3a7640000
     b==
     assert
     retsub
@@ -244,7 +256,7 @@ c:
     acct_params_get AcctBalance
     pop
     itob
-    bytec 5 // 0x0de0b6b3a7640000
+    bytec 6 // 0x0de0b6b3a7640000
     b==
     assert
     intc_1 // 0
@@ -254,7 +266,7 @@ c:
     acct_params_get AcctBalance
     pop
     itob
-    bytec_2 // 0x
+    bytec_1 // 0x
     b==
     assert
     retsub
@@ -266,12 +278,12 @@ c:
     bytec_0 // "c"
     app_global_get_ex
     assert // check c exists
-    intc_2 // 24
+    intc_3 // 24
     extract_uint64
     app_params_get AppApprovalProgram
     pop
     len
     itob
-    bytec_2 // 0x
+    bytec_1 // 0x
     b!=
     retsub

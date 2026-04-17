@@ -4,44 +4,16 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/gas_and_value_basic.sol.test.approval_program() -> uint64:
 main:
     intcblock 0 1 6 24
-    bytecblock "h" 0x0a8101 0x151f7c75
+    bytecblock "h" "__ctor_pending" 0x151f7c75 TMPL_APPROVAL_helper TMPL_CLEAR_helper
     txn ApplicationID
-    bnz main_after_if_else@4
-    itxn_begin
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field Fee
-    bytec_1 // 0x0a8101
-    itxn_field ClearStateProgram
-    bytec_1 // 0x0a8101
-    itxn_field ApprovalProgram
-    itxn_submit
-    itxn CreatedApplicationID
-    dup
-    app_params_get AppAddress
-    pop
-    itxn_begin
+    bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
     intc_1 // 1
-    itxn_field TypeEnum
-    itxn_field Receiver
-    intc_0 // 0
-    itxn_field Fee
-    pushint 200000
-    itxn_field Amount
-    itxn_submit
-    intc_3 // 24
-    bzero
-    swap
-    itob
-    concat
-    bytec_0 // "h"
-    swap
     app_global_put
     intc_1 // 1
     return
 
-main_after_if_else@4:
+main_after_if_else@2:
     pushint 4096
     bzero
     store 0
@@ -54,10 +26,59 @@ main_after_if_else@4:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xafa0ab92 0xd1b41813 0x1cded7a1 // method "sendAmount(uint256)uint256", method "outOfGas()bool", method "checkState()(bool,uint256)"
+    pushbytess 0xbacc49e3 0xafa0ab92 0xd1b41813 0x1cded7a1 // method "__postInit()void", method "sendAmount(uint256)uint256", method "outOfGas()bool", method "checkState()(bool,uint256)"
     txna ApplicationArgs 0
-    match sendAmount outOfGas checkState
+    match __postInit sendAmount outOfGas checkState
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/gas_and_value_basic.sol.test.__postInit[routing]() -> void:
+__postInit:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_1 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    itxn_begin
+    bytec_3 // TMPL_APPROVAL_helper
+    bytec 4 // TMPL_CLEAR_helper
+    intc_2 // 6
+    itxn_field TypeEnum
+    pushint 16
+    itxn_field GlobalNumUint
+    pushint 16
+    itxn_field GlobalNumByteSlice
+    intc_0 // 0
+    itxn_field Fee
+    pushint 3
+    itxn_field ExtraProgramPages
+    itxn_field ClearStateProgram
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    pushint 1000000
+    itxn_field Amount
+    itxn_submit
+    intc_3 // 24
+    bzero
+    swap
+    itob
+    concat
+    bytec_0 // "h"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/gas_and_value_basic.sol.test.sendAmount[routing]() -> void:

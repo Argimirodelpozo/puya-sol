@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/call_forward_bytes.sol.sender.approval_program() -> uint64:
 main:
-    intcblock 0 1 6 24
-    bytecblock "savedData" "__ctor_pending" 0x 0x151f7c7580 0x0a8101 "rec"
+    intcblock 0 1 6 16
+    bytecblock "savedData" "__ctor_pending" 0x 0x151f7c7580 "rec" TMPL_APPROVAL_receiver TMPL_CLEAR_receiver
     bytec_2 // ""
     dup
     txn ApplicationID
@@ -101,13 +101,19 @@ __postInit:
     intc_0 // 0
     app_global_put
     itxn_begin
+    bytec 5 // TMPL_APPROVAL_receiver
+    bytec 6 // TMPL_CLEAR_receiver
     intc_2 // 6
     itxn_field TypeEnum
+    intc_3 // 16
+    itxn_field GlobalNumUint
+    intc_3 // 16
+    itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
-    bytec 4 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec 4 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -120,15 +126,15 @@ __postInit:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    pushint 200000
+    pushint 1000000
     itxn_field Amount
     itxn_submit
-    intc_3 // 24
+    pushint 24
     bzero
     swap
     itob
     concat
-    bytec 5 // "rec"
+    bytec 4 // "rec"
     swap
     app_global_put
     retsub
@@ -157,10 +163,10 @@ clear:
 val:
     itxn_begin
     intc_0 // 0
-    bytec 5 // "rec"
+    bytec 4 // "rec"
     app_global_get_ex
     assert // check rec exists
-    intc_3 // 24
+    pushint 24
     extract_uint64
     intc_2 // 6
     itxn_field TypeEnum

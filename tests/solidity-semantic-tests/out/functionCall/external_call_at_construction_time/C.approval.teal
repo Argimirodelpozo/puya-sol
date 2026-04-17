@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/external_call_at_construction_time.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 6 200000
-    bytecblock 0x0a8101 0x01
+    intcblock 1 16 0 32 1000000
+    bytecblock 0x01 TMPL_APPROVAL_T TMPL_CLEAR_T TMPL_APPROVAL_U TMPL_CLEAR_U
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -37,20 +37,26 @@ f:
     txna ApplicationArgs 1
     dupn 2
     len
-    intc_2 // 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     pushbytes 0x
     b==
     bz f_else_body@5
     itxn_begin
-    intc_3 // 6
+    bytec_1 // TMPL_APPROVAL_T
+    bytec_2 // TMPL_CLEAR_T
+    pushint 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_1 // 16
+    itxn_field GlobalNumUint
+    intc_1 // 16
+    itxn_field GlobalNumByteSlice
+    intc_2 // 0
     itxn_field Fee
-    bytec_0 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec_0 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -60,22 +66,22 @@ f:
     intc_0 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_1 // 0
+    intc_2 // 0
     itxn_field Fee
-    intc 4 // 200000
+    intc 4 // 1000000
     itxn_field Amount
     itxn_submit
 
 f_after_if_else@10:
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     dig 1
     b+
     dup
     len
-    intc_2 // 32
+    intc_3 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_3 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -87,17 +93,23 @@ f_after_if_else@10:
 
 f_else_body@5:
     dup
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b==
     bz f_after_if_else@10
     itxn_begin
-    intc_3 // 6
+    bytec_3 // TMPL_APPROVAL_U
+    bytec 4 // TMPL_CLEAR_U
+    pushint 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_1 // 16
+    itxn_field GlobalNumUint
+    intc_1 // 16
+    itxn_field GlobalNumByteSlice
+    intc_2 // 0
     itxn_field Fee
-    bytec_0 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec_0 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -107,9 +119,9 @@ f_else_body@5:
     intc_0 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_1 // 0
+    intc_2 // 0
     itxn_field Fee
-    intc 4 // 200000
+    intc 4 // 1000000
     itxn_field Amount
     itxn_submit
     b f_after_if_else@10

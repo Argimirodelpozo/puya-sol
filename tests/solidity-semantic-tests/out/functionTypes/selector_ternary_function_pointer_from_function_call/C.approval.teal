@@ -3,18 +3,12 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary_function_pointer_from_function_call.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "a" 0x0a8101 0x151f7c75
-    pushbytes ""
+    intcblock 1 0 16
+    bytecblock "__ctor_pending" "a" 0x151f7c75 TMPL_APPROVAL_A TMPL_CLEAR_A
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 24
-    bzero
-    dig 1
-    itob
-    concat
-    bytec_0 // "a"
-    swap
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
     app_global_put
     intc_0 // 1
     return
@@ -32,22 +26,49 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x3cd4690e 0x5f67db17 // method "getContract()address", method "test(bool)byte[4]"
+    pushbytess 0xbacc49e3 0x3cd4690e 0x5f67db17 // method "__postInit()void", method "getContract()address", method "test(bool)byte[4]"
     txna ApplicationArgs 0
-    match getContract test
+    match __postInit getContract test
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary_function_pointer_from_function_call.sol.C.__postInit[routing]() -> void:
+__postInit:
+    pushbytes ""
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    pushint 24
+    bzero
+    swap
+    itob
+    concat
+    bytec_1 // "a"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary_function_pointer_from_function_call.sol.C.getContract[routing]() -> void:
 getContract:
     itxn_begin
+    bytec_3 // TMPL_APPROVAL_A
+    bytec 4 // TMPL_CLEAR_A
     pushint 6
     itxn_field TypeEnum
+    intc_2 // 16
+    itxn_field GlobalNumUint
+    intc_2 // 16
+    itxn_field GlobalNumByteSlice
     intc_1 // 0
     itxn_field Fee
-    bytec_1 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec_1 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -59,11 +80,11 @@ getContract:
     itxn_field Receiver
     intc_1 // 0
     itxn_field Fee
-    pushint 200000
+    pushint 1000000
     itxn_field Amount
     itxn_submit
     intc_1 // 0
-    bytec_0 // "a"
+    bytec_1 // "a"
     app_global_get_ex
     assert // check a exists
     bytec_2 // 0x151f7c75

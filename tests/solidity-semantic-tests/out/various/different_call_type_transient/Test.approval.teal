@@ -3,29 +3,14 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 0 6 24 1 200000
-    bytecblock "a" "b" 0x0a8101 0x75d12918 0x151f7c75
-    pushbytes ""
-    dup
+    intcblock 0 6 1 24 1000000
+    bytecblock "a" "b" 0x75d12918 "__ctor_pending" 0x151f7c75 TMPL_APPROVAL_A TMPL_CLEAR_A TMPL_APPROVAL_B TMPL_CLEAR_B
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 24
-    bzero
-    dig 1
-    itob
-    dig 1
-    swap
-    concat
-    bytec_0 // "a"
-    swap
+    bytec_3 // "__ctor_pending"
+    intc_2 // 1
     app_global_put
-    dig 2
-    itob
-    concat
-    bytec_1 // "b"
-    swap
-    app_global_put
-    intc_3 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -41,56 +26,98 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x3953a74d 0xfe0a5fac 0x370ca471 // method "testDelegate()(uint256,uint256)", method "testCall()(uint256,uint256)", method "testStatic()bool"
+    pushbytess 0xbacc49e3 0x3953a74d 0xfe0a5fac 0x370ca471 // method "__postInit()void", method "testDelegate()(uint256,uint256)", method "testCall()(uint256,uint256)", method "testStatic()bool"
     txna ApplicationArgs 0
-    match testDelegate testCall testStatic
+    match __postInit testDelegate testCall testStatic
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.Test.__postInit[routing]() -> void:
+__postInit:
+    pushbytes ""
+    dup
+    bytec_3 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_3 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    intc_3 // 24
+    bzero
+    swap
+    itob
+    dig 1
+    swap
+    concat
+    bytec_0 // "a"
+    swap
+    app_global_put
+    swap
+    itob
+    concat
+    bytec_1 // "b"
+    swap
+    app_global_put
+    intc_2 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/different_call_type_transient.sol.Test.testDelegate[routing]() -> void:
 testDelegate:
     itxn_begin
+    bytec 5 // TMPL_APPROVAL_A
+    bytec 6 // TMPL_CLEAR_A
     intc_1 // 6
     itxn_field TypeEnum
+    pushint 16
+    itxn_field GlobalNumUint
+    pushint 16
+    itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
-    bytec_2 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec_2 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_3 // 1
+    intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc 4 // 200000
+    intc 4 // 1000000
     itxn_field Amount
     itxn_submit
     itxn_begin
+    bytec 7 // TMPL_APPROVAL_B
+    bytec 8 // TMPL_CLEAR_B
     intc_1 // 6
     itxn_field TypeEnum
+    pushint 16
+    itxn_field GlobalNumUint
+    pushint 16
+    itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
-    bytec_2 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec_2 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_3 // 1
+    intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc 4 // 200000
+    intc 4 // 1000000
     itxn_field Amount
     itxn_submit
     itxn_begin
@@ -104,7 +131,7 @@ testDelegate:
     bytec_0 // "a"
     app_global_get_ex
     assert // check a exists
-    intc_2 // 24
+    intc_3 // 24
     extract_uint64
     intc_1 // 6
     itxn_field TypeEnum
@@ -129,11 +156,11 @@ testDelegate:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_3 // method "value()uint256"
+    bytec_2 // method "value()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
-    intc_2 // 24
+    intc_3 // 24
     extract_uint64
     intc_1 // 6
     itxn_field TypeEnum
@@ -142,7 +169,7 @@ testDelegate:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_3 // method "value()uint256"
+    bytec_2 // method "value()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -171,7 +198,7 @@ testDelegate:
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
 
@@ -188,7 +215,7 @@ testCall:
     bytec_0 // "a"
     app_global_get_ex
     assert // check a exists
-    intc_2 // 24
+    intc_3 // 24
     extract_uint64
     intc_1 // 6
     itxn_field TypeEnum
@@ -213,11 +240,11 @@ testCall:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_3 // method "value()uint256"
+    bytec_2 // method "value()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
-    intc_2 // 24
+    intc_3 // 24
     extract_uint64
     intc_1 // 6
     itxn_field TypeEnum
@@ -226,7 +253,7 @@ testCall:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_3 // method "value()uint256"
+    bytec_2 // method "value()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -255,7 +282,7 @@ testCall:
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
 
@@ -272,7 +299,7 @@ testStatic:
     bytec_0 // "a"
     app_global_get_ex
     assert // check a exists
-    intc_2 // 24
+    intc_3 // 24
     extract_uint64
     intc_1 // 6
     itxn_field TypeEnum
@@ -301,5 +328,5 @@ testStatic:
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return

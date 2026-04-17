@@ -3,27 +3,12 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_references_preserve.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 6 32 200000
-    bytecblock 0x0a8101 "a" "b" 0x1b56b14c 0x151f7c75
-    pushbytes ""
-    dup
+    intcblock 0 1 6 16 1000000
+    bytecblock "__ctor_pending" "a" "b" 0x1b56b14c 0x151f7c75 TMPL_APPROVAL_A TMPL_CLEAR_A TMPL_APPROVAL_B TMPL_CLEAR_B
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 24
-    bzero
-    dig 1
-    itob
-    dig 1
-    swap
-    concat
-    bytec_1 // "a"
-    swap
-    app_global_put
-    dig 2
-    itob
-    concat
-    bytec_2 // "b"
-    swap
+    bytec_0 // "__ctor_pending"
+    intc_1 // 1
     app_global_put
     intc_1 // 1
     return
@@ -41,22 +26,58 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x5d1cbb01 0xba302de3 // method "aSum()uint256", method "bSum()uint256"
+    pushbytess 0xbacc49e3 0x5d1cbb01 0xba302de3 // method "__postInit()void", method "aSum()uint256", method "bSum()uint256"
     txna ApplicationArgs 0
-    match aSum bSum
+    match __postInit aSum bSum
     err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_references_preserve.sol.C.__postInit[routing]() -> void:
+__postInit:
+    pushbytes ""
+    dup
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    pushint 24
+    bzero
+    swap
+    itob
+    dig 1
+    swap
+    concat
+    bytec_1 // "a"
+    swap
+    app_global_put
+    swap
+    itob
+    concat
+    bytec_2 // "b"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_references_preserve.sol.C.aSum[routing]() -> void:
 aSum:
     itxn_begin
+    bytec 5 // TMPL_APPROVAL_A
+    bytec 6 // TMPL_CLEAR_A
     intc_2 // 6
     itxn_field TypeEnum
+    intc_3 // 16
+    itxn_field GlobalNumUint
+    intc_3 // 16
+    itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
-    bytec_0 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec_0 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -68,17 +89,23 @@ aSum:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc 4 // 200000
+    intc 4 // 1000000
     itxn_field Amount
     itxn_submit
     itxn_begin
+    bytec 7 // TMPL_APPROVAL_B
+    bytec 8 // TMPL_CLEAR_B
     intc_2 // 6
     itxn_field TypeEnum
+    intc_3 // 16
+    itxn_field GlobalNumUint
+    intc_3 // 16
+    itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
-    bytec_0 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec_0 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -90,7 +117,7 @@ aSum:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc 4 // 200000
+    intc 4 // 1000000
     itxn_field Amount
     itxn_submit
     itxn_begin
@@ -114,10 +141,10 @@ aSum:
     extract 4 0
     dup
     len
-    intc_3 // 32
+    pushint 32
     <=
     assert // overflow
-    intc_3 // 32
+    pushint 32
     bzero
     b|
     bytec 4 // 0x151f7c75
@@ -151,10 +178,10 @@ bSum:
     extract 4 0
     dup
     len
-    intc_3 // 32
+    pushint 32
     <=
     assert // overflow
-    intc_3 // 32
+    pushint 32
     bzero
     b|
     bytec 4 // 0x151f7c75

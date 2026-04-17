@@ -4,17 +4,11 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/bubble.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 24 6
-    bytecblock "a" 0x0a8101
-    pushbytes ""
+    bytecblock "__ctor_pending" "a" TMPL_APPROVAL_A TMPL_CLEAR_A
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 24
-    bzero
-    dig 1
-    itob
-    concat
-    bytec_0 // "a"
-    swap
+    bytec_0 // "__ctor_pending"
+    intc_1 // 1
     app_global_put
     intc_1 // 1
     return
@@ -27,30 +21,54 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x2d4970c7 // method "f()void"
-    txna ApplicationArgs 0
-    match main_f_route@4
-    err
-
-main_f_route@4:
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
-    b f
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x2d4970c7 // method "__postInit()void", method "f()void"
+    txna ApplicationArgs 0
+    match __postInit f
+    err
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/bubble.sol.C.__postInit[routing]() -> void:
+__postInit:
+    pushbytes ""
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    intc_2 // 24
+    bzero
+    swap
+    itob
+    concat
+    bytec_1 // "a"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/bubble.sol.C.f[routing]() -> void:
 f:
     itxn_begin
+    bytec_2 // TMPL_APPROVAL_A
+    bytec_3 // TMPL_CLEAR_A
     intc_3 // 6
     itxn_field TypeEnum
+    pushint 16
+    itxn_field GlobalNumUint
+    pushint 16
+    itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
-    bytec_1 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec_1 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -62,12 +80,12 @@ f:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    pushint 200000
+    pushint 1000000
     itxn_field Amount
     itxn_submit
     itxn_begin
     intc_0 // 0
-    bytec_0 // "a"
+    bytec_1 // "a"
     app_global_get_ex
     assert // check a exists
     intc_2 // 24

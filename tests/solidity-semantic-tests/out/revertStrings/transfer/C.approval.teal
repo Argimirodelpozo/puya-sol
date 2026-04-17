@@ -3,19 +3,13 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/transfer.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "a" 0x0a8101
-    pushbytes ""
-    dup
+    intcblock 1 0 16
+    bytecblock "__ctor_pending" "a" "" TMPL_APPROVAL_A TMPL_CLEAR_A
+    bytec_2 // ""
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 24
-    bzero
-    dig 1
-    itob
-    concat
-    bytec_0 // "a"
-    swap
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
     app_global_put
     intc_0 // 1
     return
@@ -35,58 +29,89 @@ main_after_if_else@2:
 
 main_after_if_else@4:
     intc_1 // 0
-    bury 2
+    bury 1
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    bz main_create_NoOp@12
-    pushbytess 0xc599eb05 0x2d4970c7 0x0a449f0b 0x4b2c0376 // method "__receive()void", method "f()void", method "h()void", method "g()uint256"
+    bz main_create_NoOp@13
+    pushbytess 0xbacc49e3 0xc599eb05 0x2d4970c7 0x0a449f0b 0x4b2c0376 // method "__postInit()void", method "__receive()void", method "f()void", method "h()void", method "g()uint256"
     txna ApplicationArgs 0
-    match main___receive_route@7 main_f_route@8 main_h_route@9 main_g_route@10
+    match main___postInit_route@7 main___receive_route@8 main_f_route@9 main_h_route@10 main_g_route@11
 
-main_switch_case_next@11:
-    dig 1
+main_switch_case_next@12:
     return
 
-main_g_route@10:
+main_g_route@11:
     callsub g
     intc_0 // 1
-    bury 2
-    b main_switch_case_next@11
+    bury 1
+    b main_switch_case_next@12
 
-main_h_route@9:
+main_h_route@10:
     callsub h
     intc_0 // 1
-    bury 2
-    b main_switch_case_next@11
+    bury 1
+    b main_switch_case_next@12
 
-main_f_route@8:
+main_f_route@9:
     callsub f
     intc_0 // 1
-    bury 2
-    b main_switch_case_next@11
+    bury 1
+    b main_switch_case_next@12
 
-main___receive_route@7:
+main___receive_route@8:
     intc_0 // 1
-    bury 2
-    b main_switch_case_next@11
+    bury 1
+    b main_switch_case_next@12
 
-main_create_NoOp@12:
-    dig 1
+main___postInit_route@7:
+    callsub __postInit
+    intc_0 // 1
+    bury 1
+    b main_switch_case_next@12
+
+main_create_NoOp@13:
+    dup
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/transfer.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_2 // ""
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    pushint 24
+    bzero
+    swap
+    itob
+    concat
+    bytec_1 // "a"
+    swap
+    app_global_put
+    retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/transfer.sol.C.f[routing]() -> void:
 f:
     itxn_begin
+    bytec_3 // TMPL_APPROVAL_A
+    bytec 4 // TMPL_CLEAR_A
     pushint 6
     itxn_field TypeEnum
+    intc_2 // 16
+    itxn_field GlobalNumUint
+    intc_2 // 16
+    itxn_field GlobalNumByteSlice
     intc_1 // 0
     itxn_field Fee
-    bytec_1 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec_1 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -98,12 +123,12 @@ f:
     itxn_field Receiver
     intc_1 // 0
     itxn_field Fee
-    pushint 200000
+    pushint 1000000
     itxn_field Amount
     itxn_submit
     itxn_begin
     intc_1 // 0
-    bytec_0 // "a"
+    bytec_1 // "a"
     app_global_get_ex
     assert // check a exists
     intc_0 // 1
@@ -121,7 +146,7 @@ f:
 h:
     itxn_begin
     intc_1 // 0
-    bytec_0 // "a"
+    bytec_1 // "a"
     app_global_get_ex
     assert // check a exists
     intc_0 // 1

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.approval_program() -> uint64:
 main:
     intcblock 0 1 24 6
-    bytecblock "c" 0x0000000000000000000000000000000000000000000000000000000000000000 "account1" "account2" 0xb30e2ea6 0x151f7c75 0x0a8101
+    bytecblock "c" 0x0000000000000000000000000000000000000000000000000000000000000000 "account1" "account2" 0xb30e2ea6 0x151f7c75 TMPL_APPROVAL_C TMPL_CLEAR_C
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_2 // "account1"
@@ -120,13 +120,19 @@ c:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.deploy() -> void:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.deploy:
     itxn_begin
+    bytec 6 // TMPL_APPROVAL_C
+    bytec 7 // TMPL_CLEAR_C
     intc_3 // 6
     itxn_field TypeEnum
+    pushint 16
+    itxn_field GlobalNumUint
+    pushint 16
+    itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
-    bytec 6 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec 6 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -139,7 +145,7 @@ c:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    pushint 200000
+    pushint 1000000
     itxn_field Amount
     itxn_submit
     intc_2 // 24

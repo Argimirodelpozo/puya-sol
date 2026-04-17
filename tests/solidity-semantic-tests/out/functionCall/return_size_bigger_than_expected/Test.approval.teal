@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/return_size_bigger_than_expected.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 0 1 6 24
-    bytecblock 0x0a8101 0x010000000000000000000000000000000000000000000000000000000000000000
+    intcblock 0 1 6 16
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 TMPL_APPROVAL_LongReturn TMPL_CLEAR_LongReturn
     txn ApplicationID
     bnz main_after_if_else@2
     intc_1 // 1
@@ -35,13 +35,19 @@ main_test_route@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/return_size_bigger_than_expected.sol.Test.test[routing]() -> void:
 test:
     itxn_begin
+    bytec_1 // TMPL_APPROVAL_LongReturn
+    bytec_2 // TMPL_CLEAR_LongReturn
     intc_2 // 6
     itxn_field TypeEnum
+    intc_3 // 16
+    itxn_field GlobalNumUint
+    intc_3 // 16
+    itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
-    bytec_0 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec_0 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -54,10 +60,10 @@ test:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    pushint 200000
+    pushint 1000000
     itxn_field Amount
     itxn_submit
-    intc_3 // 24
+    pushint 24
     bzero
     swap
     itob
@@ -69,7 +75,7 @@ test:
     store 0
     itxn_begin
     swap
-    intc_3 // 24
+    pushint 24
     extract_uint64
     intc_2 // 6
     itxn_field TypeEnum
@@ -90,11 +96,11 @@ test:
     dig 2
     b>=
     assert // underflow
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     swap
     b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len

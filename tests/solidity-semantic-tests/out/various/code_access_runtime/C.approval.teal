@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/code_access_runtime.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    bytecblock 0x 0x0a8101 0x64 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
+    intcblock 1 0 32 16
+    bytecblock 0x 0x64 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470 TMPL_APPROVAL_D TMPL_CLEAR_D
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -36,13 +36,19 @@ main_test_route@4:
 test:
     intc_1 // 0
     itxn_begin
+    bytec_3 // TMPL_APPROVAL_D
+    bytec 4 // TMPL_CLEAR_D
     pushint 6
     itxn_field TypeEnum
+    intc_3 // 16
+    itxn_field GlobalNumUint
+    intc_3 // 16
+    itxn_field GlobalNumByteSlice
     intc_1 // 0
     itxn_field Fee
-    bytec_1 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec_1 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -55,7 +61,7 @@ test:
     itxn_field Receiver
     intc_1 // 0
     itxn_field Fee
-    pushint 200000
+    pushint 1000000
     itxn_field Amount
     itxn_submit
     pushint 24
@@ -108,7 +114,7 @@ test_ternary_merge@15:
 
 test_ternary_false@11:
     dig 3
-    bytec_2 // 0x64
+    bytec_1 // 0x64
     b>
     bz test_ternary_false@13
     global CurrentApplicationID
@@ -118,12 +124,12 @@ test_ternary_false@11:
     b test_ternary_merge@15
 
 test_ternary_false@13:
-    bytec_3 // 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
+    bytec_2 // 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
     b test_ternary_merge@15
 
 test_ternary_false@5:
     dig 3
-    bytec_2 // 0x64
+    bytec_1 // 0x64
     b>
     bz test_ternary_false@7
     global CurrentApplicationID
@@ -133,5 +139,5 @@ test_ternary_false@5:
     b test_ternary_merge@9
 
 test_ternary_false@7:
-    bytec_3 // 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
+    bytec_2 // 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
     b test_ternary_merge@9

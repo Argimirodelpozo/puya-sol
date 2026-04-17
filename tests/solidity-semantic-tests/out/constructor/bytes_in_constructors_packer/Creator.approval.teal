@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_packer.sol.Creator.approval_program() -> uint64:
 main:
     intcblock 0 32 1 6
-    bytecblock 0x0a8101
+    bytecblock TMPL_APPROVAL_Main TMPL_CLEAR_Main
     txn ApplicationID
     bnz main_after_if_else@2
     intc_2 // 1
@@ -51,13 +51,19 @@ f:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     itxn_begin
+    bytec_0 // TMPL_APPROVAL_Main
+    bytec_1 // TMPL_CLEAR_Main
     intc_3 // 6
     itxn_field TypeEnum
+    pushint 16
+    itxn_field GlobalNumUint
+    pushint 16
+    itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
-    bytec_0 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec_0 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -70,7 +76,7 @@ f:
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    pushint 200000
+    pushint 1000000
     itxn_field Amount
     itxn_submit
     pushint 24

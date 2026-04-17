@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/saltedCreate/salted_create_with_value.sol.A.approval_program() -> uint64:
 main:
-    intcblock 0 6 1 24 200000
-    bytecblock 0x0a8101 0xad7db34f
+    intcblock 0 6 16 1 1000000
+    bytecblock TMPL_APPROVAL_B TMPL_CLEAR_B 0xad7db34f
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 1
+    intc_3 // 1
     return
 
 main_after_if_else@2:
@@ -35,13 +35,19 @@ main_f_route@4:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/saltedCreate/salted_create_with_value.sol.A.f[routing]() -> void:
 f:
     itxn_begin
+    bytec_0 // TMPL_APPROVAL_B
+    bytec_1 // TMPL_CLEAR_B
     intc_1 // 6
     itxn_field TypeEnum
+    intc_2 // 16
+    itxn_field GlobalNumUint
+    intc_2 // 16
+    itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
-    bytec_0 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec_0 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -49,15 +55,15 @@ f:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_2 // 1
+    intc_3 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc 4 // 200000
+    intc 4 // 1000000
     itxn_field Amount
     itxn_submit
-    intc_3 // 24
+    pushint 24
     bzero
     swap
     itob
@@ -65,13 +71,19 @@ f:
     swap
     concat
     itxn_begin
+    bytec_0 // TMPL_APPROVAL_B
+    bytec_1 // TMPL_CLEAR_B
     intc_1 // 6
     itxn_field TypeEnum
+    intc_2 // 16
+    itxn_field GlobalNumUint
+    intc_2 // 16
+    itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
-    bytec_0 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec_0 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -79,12 +91,12 @@ f:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_2 // 1
+    intc_3 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc 4 // 200000
+    intc 4 // 1000000
     itxn_field Amount
     itxn_submit
     itob
@@ -92,13 +104,19 @@ f:
     swap
     concat
     itxn_begin
+    bytec_0 // TMPL_APPROVAL_B
+    bytec_1 // TMPL_CLEAR_B
     intc_1 // 6
     itxn_field TypeEnum
+    intc_2 // 16
+    itxn_field GlobalNumUint
+    intc_2 // 16
+    itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
-    bytec_0 // 0x0a8101
+    pushint 3
+    itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    bytec_0 // 0x0a8101
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
@@ -106,12 +124,12 @@ f:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_2 // 1
+    intc_3 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_0 // 0
     itxn_field Fee
-    intc 4 // 200000
+    intc 4 // 1000000
     itxn_field Amount
     itxn_submit
     itob
@@ -120,7 +138,7 @@ f:
     concat
     itxn_begin
     uncover 2
-    intc_3 // 24
+    pushint 24
     extract_uint64
     intc_1 // 6
     itxn_field TypeEnum
@@ -129,12 +147,12 @@ f:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_1 // method "getBalance()uint256"
+    bytec_2 // method "getBalance()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
     swap
-    intc_3 // 24
+    pushint 24
     extract_uint64
     intc_1 // 6
     itxn_field TypeEnum
@@ -143,11 +161,11 @@ f:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_1 // method "getBalance()uint256"
+    bytec_2 // method "getBalance()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
-    intc_3 // 24
+    pushint 24
     extract_uint64
     intc_1 // 6
     itxn_field TypeEnum
@@ -156,7 +174,7 @@ f:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_1 // method "getBalance()uint256"
+    bytec_2 // method "getBalance()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -197,5 +215,5 @@ f:
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return

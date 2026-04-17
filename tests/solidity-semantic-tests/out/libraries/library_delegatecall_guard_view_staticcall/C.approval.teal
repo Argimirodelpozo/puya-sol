@@ -3,45 +3,17 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_delegatecall_guard_view_staticcall.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 6 24
-    bytecblock 0x0a8101 "d" 0x151f7c75800000000000000000000000000000000000000000000000000000000000000000
+    intcblock 1 0 24 6
+    bytecblock "__ctor_pending" 0x151f7c75800000000000000000000000000000000000000000000000000000000000000000 "d" TMPL_APPROVAL_D TMPL_CLEAR_D
     txn ApplicationID
-    bnz main_after_if_else@4
-    itxn_begin
-    intc_2 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field Fee
-    bytec_0 // 0x0a8101
-    itxn_field ClearStateProgram
-    bytec_0 // 0x0a8101
-    itxn_field ApprovalProgram
-    itxn_submit
-    itxn CreatedApplicationID
-    dup
-    app_params_get AppAddress
-    pop
-    itxn_begin
-    intc_1 // 1
-    itxn_field TypeEnum
-    itxn_field Receiver
-    intc_0 // 0
-    itxn_field Fee
-    pushint 200000
-    itxn_field Amount
-    itxn_submit
-    intc_3 // 24
-    bzero
-    swap
-    itob
-    concat
-    bytec_1 // "d"
-    swap
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
-main_after_if_else@4:
+main_after_if_else@2:
     pushint 4096
     bzero
     store 0
@@ -54,21 +26,21 @@ main_after_if_else@4:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xcd78b354 0xe04a12f0 0xcea62e2b // method "f()uint256", method "g()(bool,uint256)", method "h()(bool,uint256)"
+    pushbytess 0xbacc49e3 0xcd78b354 0xe04a12f0 0xcea62e2b // method "__postInit()void", method "f()uint256", method "g()(bool,uint256)", method "h()(bool,uint256)"
     txna ApplicationArgs 0
-    match f main_g_route@8 main_h_route@9
+    match __postInit f main_g_route@7 main_h_route@8
     err
 
-main_h_route@9:
-    bytec_2 // 0x151f7c75800000000000000000000000000000000000000000000000000000000000000000
+main_h_route@8:
+    bytec_1 // 0x151f7c75800000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
-main_g_route@8:
-    bytec_2 // 0x151f7c75800000000000000000000000000000000000000000000000000000000000000000
+main_g_route@7:
+    bytec_1 // 0x151f7c75800000000000000000000000000000000000000000000000000000000000000000
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -77,13 +49,13 @@ L.f:
     proto 1 1
     itxn_begin
     frame_dig -1
-    intc_3 // 24
+    intc_2 // 24
     extract_uint64
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_0 // 0
+    intc_1 // 0
     itxn_field OnCompletion
-    intc_0 // 0
+    intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationID
     pushbytes 0x7c1072af // method "x()uint256"
@@ -94,10 +66,59 @@ L.f:
     retsub
 
 
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_delegatecall_guard_view_staticcall.sol.C.__postInit[routing]() -> void:
+__postInit:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    itxn_begin
+    bytec_3 // TMPL_APPROVAL_D
+    bytec 4 // TMPL_CLEAR_D
+    intc_3 // 6
+    itxn_field TypeEnum
+    pushint 16
+    itxn_field GlobalNumUint
+    pushint 16
+    itxn_field GlobalNumByteSlice
+    intc_1 // 0
+    itxn_field Fee
+    pushint 3
+    itxn_field ExtraProgramPages
+    itxn_field ClearStateProgram
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_0 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_1 // 0
+    itxn_field Fee
+    pushint 1000000
+    itxn_field Amount
+    itxn_submit
+    intc_2 // 24
+    bzero
+    swap
+    itob
+    concat
+    bytec_2 // "d"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_delegatecall_guard_view_staticcall.sol.C.f[routing]() -> void:
 f:
-    intc_0 // 0
-    bytec_1 // "d"
+    intc_1 // 0
+    bytec_2 // "d"
     app_global_get_ex
     assert // check d exists
     callsub L.f
@@ -113,5 +134,5 @@ f:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
