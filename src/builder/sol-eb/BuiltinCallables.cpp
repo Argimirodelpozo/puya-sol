@@ -55,10 +55,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleKeccak256(
 	std::vector<std::shared_ptr<awst::Expression>>& _args,
 	awst::SourceLocation const& _loc)
 {
-	auto call = std::make_shared<awst::IntrinsicCall>();
-	call->sourceLocation = _loc;
-	call->opCode = "keccak256";
-	call->wtype = awst::WType::bytesType();
+	auto call = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), _loc);
 	for (auto& arg: _args)
 		call->stackArgs.push_back(std::move(arg));
 	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(call));
@@ -69,10 +66,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSha256(
 	std::vector<std::shared_ptr<awst::Expression>>& _args,
 	awst::SourceLocation const& _loc)
 {
-	auto call = std::make_shared<awst::IntrinsicCall>();
-	call->sourceLocation = _loc;
-	call->opCode = "sha256";
-	call->wtype = awst::WType::bytesType();
+	auto call = awst::makeIntrinsicCall("sha256", awst::WType::bytesType(), _loc);
 	for (auto& arg: _args)
 		call->stackArgs.push_back(std::move(arg));
 	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(call));
@@ -85,10 +79,7 @@ std::shared_ptr<awst::Expression> BuiltinCallableRegistry::promoteToBigUInt(
 	if (_expr->wtype == awst::WType::biguintType())
 		return _expr;
 
-	auto itob = std::make_shared<awst::IntrinsicCall>();
-	itob->sourceLocation = _loc;
-	itob->wtype = awst::WType::bytesType();
-	itob->opCode = "itob";
+	auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
 	itob->stackArgs.push_back(std::move(_expr));
 
 	auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
@@ -185,10 +176,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSelfdestruct(
 		auto beneficiary = std::move(_args[0]);
 
 		// Get current app address for the Sender field
-		auto appAddr = std::make_shared<awst::IntrinsicCall>();
-		appAddr->sourceLocation = _loc;
-		appAddr->wtype = awst::WType::accountType();
-		appAddr->opCode = "global";
+		auto appAddr = awst::makeIntrinsicCall("global", awst::WType::accountType(), _loc);
 		appAddr->immediates = {std::string("CurrentApplicationAddress")};
 
 		static awst::WInnerTransactionFields s_payFieldsType(1); // pay
@@ -243,10 +231,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleGasleft(
 	std::vector<std::shared_ptr<awst::Expression>>& /*_args*/,
 	awst::SourceLocation const& _loc)
 {
-	auto e = std::make_shared<awst::IntrinsicCall>();
-	e->sourceLocation = _loc;
-	e->wtype = awst::WType::uint64Type();
-	e->opCode = "global";
+	auto e = awst::makeIntrinsicCall("global", awst::WType::uint64Type(), _loc);
 	e->immediates = {std::string("OpcodeBudget")};
 	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(e));
 }
@@ -291,10 +276,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	{
 		// biguint v → bytes → btoi
 		auto vBytes = awst::makeReinterpretCast(std::move(v), awst::WType::bytesType(), _loc);
-		auto btoi = std::make_shared<awst::IntrinsicCall>();
-		btoi->sourceLocation = _loc;
-		btoi->wtype = awst::WType::uint64Type();
-		btoi->opCode = "btoi";
+		auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
 		btoi->stackArgs.push_back(std::move(vBytes));
 		vUint = std::move(btoi);
 	}
@@ -341,10 +323,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 		std::vector<awst::WType const*>{awst::WType::bytesType(), awst::WType::bytesType()}
 	);
 
-	auto ecdsaRecover = std::make_shared<awst::IntrinsicCall>();
-	ecdsaRecover->sourceLocation = _loc;
-	ecdsaRecover->wtype = tupleType;
-	ecdsaRecover->opCode = "ecdsa_pk_recover";
+	auto ecdsaRecover = awst::makeIntrinsicCall("ecdsa_pk_recover", tupleType, _loc);
 	ecdsaRecover->immediates.push_back("Secp256k1");
 	ecdsaRecover->stackArgs.push_back(std::move(msgHash));
 	ecdsaRecover->stackArgs.push_back(std::move(recoveryId));
@@ -377,43 +356,28 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	pubkeyY->index = 1;
 
 	// concat(pubkey_x, pubkey_y) → 64 bytes
-	auto pubkeyConcat = std::make_shared<awst::IntrinsicCall>();
-	pubkeyConcat->sourceLocation = _loc;
-	pubkeyConcat->wtype = awst::WType::bytesType();
-	pubkeyConcat->opCode = "concat";
+	auto pubkeyConcat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
 	pubkeyConcat->stackArgs.push_back(std::move(pubkeyX));
 	pubkeyConcat->stackArgs.push_back(std::move(pubkeyY));
 
 	// keccak256(pubkey) → 32 bytes
-	auto hash = std::make_shared<awst::IntrinsicCall>();
-	hash->sourceLocation = _loc;
-	hash->wtype = awst::WType::bytesType();
-	hash->opCode = "keccak256";
+	auto hash = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), _loc);
 	hash->stackArgs.push_back(std::move(pubkeyConcat));
 
 	// extract3(hash, 12, 20) → last 20 bytes = Ethereum address
 	auto off12 = awst::makeIntegerConstant("12", _loc);
 	auto len20 = awst::makeIntegerConstant("20", _loc);
-	auto addr20 = std::make_shared<awst::IntrinsicCall>();
-	addr20->sourceLocation = _loc;
-	addr20->wtype = awst::WType::bytesType();
-	addr20->opCode = "extract3";
+	auto addr20 = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 	addr20->stackArgs.push_back(std::move(hash));
 	addr20->stackArgs.push_back(std::move(off12));
 	addr20->stackArgs.push_back(std::move(len20));
 
 	// Left-pad to 32 bytes: concat(bzero(12), addr20) → bytes32 form
-	auto pad12 = std::make_shared<awst::IntrinsicCall>();
-	pad12->sourceLocation = _loc;
-	pad12->wtype = awst::WType::bytesType();
-	pad12->opCode = "bzero";
+	auto pad12 = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
 	auto twelve = awst::makeIntegerConstant("12", _loc);
 	pad12->stackArgs.push_back(std::move(twelve));
 
-	auto paddedAddr = std::make_shared<awst::IntrinsicCall>();
-	paddedAddr->sourceLocation = _loc;
-	paddedAddr->wtype = awst::WType::bytesType();
-	paddedAddr->opCode = "concat";
+	auto paddedAddr = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
 	paddedAddr->stackArgs.push_back(std::move(pad12));
 	paddedAddr->stackArgs.push_back(std::move(addr20));
 
@@ -436,10 +400,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 		return andOp;
 	};
 
-	auto zero32 = std::make_shared<awst::IntrinsicCall>();
-	zero32->sourceLocation = _loc;
-	zero32->wtype = awst::WType::bytesType();
-	zero32->opCode = "bzero";
+	auto zero32 = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
 	zero32->stackArgs.push_back(mkU64("32"));
 
 	auto maskedAddr = std::make_shared<awst::ConditionalExpression>();

@@ -123,27 +123,18 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 		// Zero-argument event: raw log with 4-byte ARC-28 selector
 		auto sigBytes = awst::makeUtf8BytesConstant(eventSignature, m_loc);
 
-		auto hash = std::make_shared<awst::IntrinsicCall>();
-		hash->sourceLocation = m_loc;
-		hash->wtype = awst::WType::bytesType();
-		hash->opCode = "keccak256";
+		auto hash = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), m_loc);
 		hash->stackArgs.push_back(std::move(sigBytes));
 
 		auto zero = awst::makeIntegerConstant("0", m_loc);
 		auto four = awst::makeIntegerConstant("4", m_loc);
 
-		auto selector = std::make_shared<awst::IntrinsicCall>();
-		selector->sourceLocation = m_loc;
-		selector->wtype = awst::WType::bytesType();
-		selector->opCode = "extract3";
+		auto selector = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 		selector->stackArgs.push_back(std::move(hash));
 		selector->stackArgs.push_back(std::move(zero));
 		selector->stackArgs.push_back(std::move(four));
 
-		auto logCall = std::make_shared<awst::IntrinsicCall>();
-		logCall->sourceLocation = m_loc;
-		logCall->wtype = awst::WType::voidType();
-		logCall->opCode = "log";
+		auto logCall = awst::makeIntrinsicCall("log", awst::WType::voidType(), m_loc);
 		logCall->stackArgs.push_back(std::move(selector));
 
 		auto stmt = awst::makeExpressionStatement(logCall, m_loc);

@@ -47,20 +47,14 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 
 		auto withinRange = awst::makeNumericCompare(std::move(indexExpr), awst::NumericComparison::Lt, std::move(two), m_loc);
 
-		auto round = std::make_shared<awst::IntrinsicCall>();
-		round->sourceLocation = m_loc;
-		round->wtype = awst::WType::uint64Type();
-		round->opCode = "global";
+		auto round = awst::makeIntrinsicCall("global", awst::WType::uint64Type(), m_loc);
 		round->immediates = {std::string("Round")};
 
 		auto two2 = awst::makeIntegerConstant("2", m_loc);
 
 		auto prevRound = awst::makeUInt64BinOp(std::move(round), awst::UInt64BinaryOperator::Sub, std::move(two2), m_loc);
 
-		auto seed = std::make_shared<awst::IntrinsicCall>();
-		seed->sourceLocation = m_loc;
-		seed->wtype = awst::WType::bytesType();
-		seed->opCode = "block";
+		auto seed = awst::makeIntrinsicCall("block", awst::WType::bytesType(), m_loc);
 		seed->immediates = {std::string("BlkSeed")};
 		seed->stackArgs.push_back(std::move(prevRound));
 
@@ -120,10 +114,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		}
 
 		// h1 = keccak256(id)
-		auto h1 = std::make_shared<awst::IntrinsicCall>();
-		h1->sourceLocation = m_loc;
-		h1->wtype = awst::WType::bytesType();
-		h1->opCode = "keccak256";
+		auto h1 = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), m_loc);
 		h1->stackArgs.push_back(idExpr);
 
 		// h1_int = biguint(h1)
@@ -144,10 +135,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 
 		auto padLen = awst::makeIntegerConstant("32", m_loc);
 
-		auto padBytes = std::make_shared<awst::IntrinsicCall>();
-		padBytes->sourceLocation = m_loc;
-		padBytes->wtype = awst::WType::bytesType();
-		padBytes->opCode = "bzero";
+		auto padBytes = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
 		padBytes->stackArgs.push_back(std::move(padLen));
 
 		auto minus1Bytes = std::make_shared<awst::BytesBinaryOperation>();
@@ -158,10 +146,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		minus1Bytes->right = std::move(minusBytesCast);
 
 		// h2 = keccak256(minus1_bytes)
-		auto h2 = std::make_shared<awst::IntrinsicCall>();
-		h2->sourceLocation = m_loc;
-		h2->wtype = awst::WType::bytesType();
-		h2->opCode = "keccak256";
+		auto h2 = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), m_loc);
 		h2->stackArgs.push_back(std::move(minus1Bytes));
 
 		// Top 31 bytes of h2
@@ -169,10 +154,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 
 		auto top31Len = awst::makeIntegerConstant("31", m_loc);
 
-		auto top31 = std::make_shared<awst::IntrinsicCall>();
-		top31->sourceLocation = m_loc;
-		top31->wtype = awst::WType::bytesType();
-		top31->opCode = "extract3";
+		auto top31 = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 		top31->stackArgs.push_back(std::move(h2));
 		top31->stackArgs.push_back(std::move(top31Start));
 		top31->stackArgs.push_back(std::move(top31Len));
@@ -180,10 +162,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		// Concat with 0x00 to zero the last byte.
 		auto zeroByte = awst::makeBytesConstant({0}, m_loc);
 
-		auto masked = std::make_shared<awst::IntrinsicCall>();
-		masked->sourceLocation = m_loc;
-		masked->wtype = awst::WType::bytesType();
-		masked->opCode = "concat";
+		auto masked = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
 		masked->stackArgs.push_back(std::move(top31));
 		masked->stackArgs.push_back(std::move(zeroByte));
 
@@ -227,20 +206,14 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::handleBlockhash()
 	// constructed).
 	(void) buildExpr(*m_call.arguments()[0]);
 
-	auto round = std::make_shared<awst::IntrinsicCall>();
-	round->sourceLocation = m_loc;
-	round->wtype = awst::WType::uint64Type();
-	round->opCode = "global";
+	auto round = awst::makeIntrinsicCall("global", awst::WType::uint64Type(), m_loc);
 	round->immediates = {std::string("Round")};
 
 	auto two = awst::makeIntegerConstant("2", m_loc);
 
 	auto prevRound = awst::makeUInt64BinOp(std::move(round), awst::UInt64BinaryOperator::Sub, std::move(two), m_loc);
 
-	auto e = std::make_shared<awst::IntrinsicCall>();
-	e->sourceLocation = m_loc;
-	e->wtype = awst::WType::bytesType();
-	e->opCode = "block";
+	auto e = awst::makeIntrinsicCall("block", awst::WType::bytesType(), m_loc);
 	e->immediates = {std::string("BlkSeed")};
 	e->stackArgs.push_back(std::move(prevRound));
 

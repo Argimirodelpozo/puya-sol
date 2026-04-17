@@ -575,17 +575,11 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 
 					auto varB = awst::makeVarExpression(func->parameters()[1]->name(), m_typeMapper.map(func->parameters()[1]->type()), loc);
 
-					auto concat = std::make_shared<awst::IntrinsicCall>();
-					concat->sourceLocation = loc;
-					concat->wtype = awst::WType::bytesType();
-					concat->opCode = "concat";
+					auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), loc);
 					concat->stackArgs.push_back(std::move(varA));
 					concat->stackArgs.push_back(std::move(varB));
 
-					auto hash = std::make_shared<awst::IntrinsicCall>();
-					hash->sourceLocation = loc;
-					hash->wtype = awst::WType::bytesType();
-					hash->opCode = "keccak256";
+					auto hash = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), loc);
 					hash->stackArgs.push_back(std::move(concat));
 
 					// Cast bytes → bytes[32] to match return type

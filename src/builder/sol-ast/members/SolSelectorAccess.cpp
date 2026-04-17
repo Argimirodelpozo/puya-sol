@@ -17,19 +17,13 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::makeSelectorExpr(std::strin
 {
 	auto sigConst = awst::makeUtf8BytesConstant(_sig, m_loc);
 
-	auto keccak = std::make_shared<awst::IntrinsicCall>();
-	keccak->sourceLocation = m_loc;
-	keccak->wtype = awst::WType::bytesType();
-	keccak->opCode = "keccak256";
+	auto keccak = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), m_loc);
 	keccak->stackArgs.push_back(std::move(sigConst));
 
 	auto zero = awst::makeIntegerConstant("0", m_loc);
 	auto four = awst::makeIntegerConstant("4", m_loc);
 
-	auto extract = std::make_shared<awst::IntrinsicCall>();
-	extract->sourceLocation = m_loc;
-	extract->wtype = awst::WType::bytesType();
-	extract->opCode = "extract3";
+	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 	extract->stackArgs.push_back(std::move(keccak));
 	extract->stackArgs.push_back(std::move(zero));
 	extract->stackArgs.push_back(std::move(four));
@@ -210,10 +204,7 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 			if (base && base->wtype == awst::WType::bytesType())
 			{
 				// extract(base, 20, 4) — selector is last 4 bytes of 24-byte encoding
-				auto extract = std::make_shared<awst::IntrinsicCall>();
-				extract->sourceLocation = m_loc;
-				extract->wtype = awst::WType::bytesType();
-				extract->opCode = "extract";
+				auto extract = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), m_loc);
 				extract->immediates = {20, 4};
 				extract->stackArgs.push_back(std::move(base));
 
@@ -229,20 +220,14 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 
 	Logger::instance().debug("selector: " + sig, m_loc);
 
-	auto keccak = std::make_shared<awst::IntrinsicCall>();
-	keccak->sourceLocation = m_loc;
-	keccak->wtype = awst::WType::bytesType();
-	keccak->opCode = "keccak256";
+	auto keccak = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), m_loc);
 	keccak->stackArgs.push_back(awst::makeUtf8BytesConstant(sig, m_loc));
 
 	auto* targetType = m_ctx.typeMapper.map(m_memberAccess.annotation().type);
 	auto const* bytesWType = dynamic_cast<awst::BytesWType const*>(targetType);
 	if (bytesWType && bytesWType->length().has_value() && *bytesWType->length() == 4)
 	{
-		auto extract = std::make_shared<awst::IntrinsicCall>();
-		extract->sourceLocation = m_loc;
-		extract->wtype = awst::WType::bytesType();
-		extract->opCode = "extract";
+		auto extract = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), m_loc);
 		extract->immediates = {0, 4};
 		extract->stackArgs.push_back(std::move(keccak));
 

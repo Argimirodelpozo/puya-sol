@@ -48,10 +48,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						varName, awst::WType::bytesType(), kind, loc);
 
 					// len - 1
-					auto lenCall = std::make_shared<awst::IntrinsicCall>();
-					lenCall->sourceLocation = loc;
-					lenCall->wtype = awst::WType::uint64Type();
-					lenCall->opCode = "len";
+					auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), loc);
 					lenCall->stackArgs.push_back(readVal);
 
 					auto one = awst::makeIntegerConstant("1", loc);
@@ -60,10 +57,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					// extract3(readVal, 0, len-1)
 					auto zero = awst::makeIntegerConstant("0", loc);
 
-					auto extract = std::make_shared<awst::IntrinsicCall>();
-					extract->sourceLocation = loc;
-					extract->wtype = awst::WType::bytesType();
-					extract->opCode = "extract3";
+					auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), loc);
 					extract->stackArgs.push_back(readVal);
 					extract->stackArgs.push_back(std::move(zero));
 					extract->stackArgs.push_back(std::move(newLen));
@@ -81,19 +75,13 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						assignTmp->value = std::move(extract);
 						m_ctx.pendingStatements.push_back(std::move(assignTmp));
 
-						auto del = std::make_shared<awst::IntrinsicCall>();
-						del->sourceLocation = loc;
-						del->wtype = awst::WType::boolType();
-						del->opCode = "box_del";
+						auto del = awst::makeIntrinsicCall("box_del", awst::WType::boolType(), loc);
 						del->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
 						auto delStmt = awst::makeExpressionStatement(std::move(del), loc);
 						m_ctx.pendingStatements.push_back(std::move(delStmt));
 
 						auto tmpRead = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
-						auto put = std::make_shared<awst::IntrinsicCall>();
-						put->sourceLocation = loc;
-						put->wtype = awst::WType::voidType();
-						put->opCode = "box_put";
+						auto put = awst::makeIntrinsicCall("box_put", awst::WType::voidType(), loc);
 						put->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
 						put->stackArgs.push_back(std::move(tmpRead));
 						auto putStmt = awst::makeExpressionStatement(std::move(put), loc);
@@ -101,10 +89,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					}
 					else
 					{
-						auto put = std::make_shared<awst::IntrinsicCall>();
-						put->sourceLocation = loc;
-						put->wtype = awst::WType::voidType();
-						put->opCode = "app_global_put";
+						auto put = awst::makeIntrinsicCall("app_global_put", awst::WType::voidType(), loc);
 						put->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
 						put->stackArgs.push_back(std::move(extract));
 						auto stmt = awst::makeExpressionStatement(std::move(put), loc);
@@ -150,10 +135,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					}
 
 					// concat(current, pushVal)
-					auto cat = std::make_shared<awst::IntrinsicCall>();
-					cat->sourceLocation = loc;
-					cat->wtype = awst::WType::bytesType();
-					cat->opCode = "concat";
+					auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), loc);
 					cat->stackArgs.push_back(std::move(readVal));
 					cat->stackArgs.push_back(std::move(pushVal));
 
@@ -172,19 +154,13 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						assignTmp->value = std::move(cat);
 						m_ctx.pendingStatements.push_back(std::move(assignTmp));
 
-						auto del = std::make_shared<awst::IntrinsicCall>();
-						del->sourceLocation = loc;
-						del->wtype = awst::WType::boolType();
-						del->opCode = "box_del";
+						auto del = awst::makeIntrinsicCall("box_del", awst::WType::boolType(), loc);
 						del->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
 						auto delStmt = awst::makeExpressionStatement(std::move(del), loc);
 						m_ctx.pendingStatements.push_back(std::move(delStmt));
 
 						auto tmpRead = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
-						auto put = std::make_shared<awst::IntrinsicCall>();
-						put->sourceLocation = loc;
-						put->wtype = awst::WType::voidType();
-						put->opCode = "box_put";
+						auto put = awst::makeIntrinsicCall("box_put", awst::WType::voidType(), loc);
 						put->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
 						put->stackArgs.push_back(std::move(tmpRead));
 						auto putStmt = awst::makeExpressionStatement(std::move(put), loc);
@@ -192,10 +168,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					}
 					else
 					{
-						auto put = std::make_shared<awst::IntrinsicCall>();
-						put->sourceLocation = loc;
-						put->wtype = awst::WType::voidType();
-						put->opCode = "app_global_put";
+						auto put = awst::makeIntrinsicCall("app_global_put", awst::WType::voidType(), loc);
 						put->stackArgs.push_back(awst::makeUtf8BytesConstant(varName, loc));
 						put->stackArgs.push_back(std::move(cat));
 						auto stmt = awst::makeExpressionStatement(std::move(put), loc);
@@ -510,19 +483,13 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMemoryArray(
 			auto byteVal = val;
 			if (byteVal->wtype == awst::WType::uint64Type())
 			{
-				auto itob = std::make_shared<awst::IntrinsicCall>();
-				itob->sourceLocation = m_loc;
-				itob->wtype = awst::WType::bytesType();
-				itob->opCode = "itob";
+				auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
 				itob->stackArgs.push_back(std::move(byteVal));
 
 				auto seven = awst::makeIntegerConstant("7", m_loc);
 				auto one = awst::makeIntegerConstant("1", m_loc);
 
-				auto extract = std::make_shared<awst::IntrinsicCall>();
-				extract->sourceLocation = m_loc;
-				extract->wtype = awst::WType::bytesType();
-				extract->opCode = "extract3";
+				auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 				extract->stackArgs.push_back(std::move(itob));
 				extract->stackArgs.push_back(std::move(seven));
 				extract->stackArgs.push_back(std::move(one));
@@ -538,10 +505,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMemoryArray(
 				}
 			}
 
-			auto cat = std::make_shared<awst::IntrinsicCall>();
-			cat->sourceLocation = m_loc;
-			cat->wtype = baseWtype;
-			cat->opCode = "concat";
+			auto cat = awst::makeIntrinsicCall("concat", baseWtype, m_loc);
 			cat->stackArgs.push_back(std::move(base));
 			cat->stackArgs.push_back(std::move(byteVal));
 			return cat;

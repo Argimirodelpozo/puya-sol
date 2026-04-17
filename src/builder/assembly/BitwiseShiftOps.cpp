@@ -47,16 +47,10 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleGas(
 	// gas() → global OpcodeBudget (uint64) → itob → reinterpret as biguint
 	Logger::instance().debug(
 		"gas() mapped to AVM OpcodeBudget (analogous but not equivalent to EVM gas)", _loc);
-	auto gasCall = std::make_shared<awst::IntrinsicCall>();
-	gasCall->sourceLocation = _loc;
-	gasCall->wtype = awst::WType::uint64Type();
-	gasCall->opCode = "global";
+	auto gasCall = awst::makeIntrinsicCall("global", awst::WType::uint64Type(), _loc);
 	gasCall->immediates = {std::string("OpcodeBudget")};
 
-	auto itobCall = std::make_shared<awst::IntrinsicCall>();
-	itobCall->sourceLocation = _loc;
-	itobCall->wtype = awst::WType::bytesType();
-	itobCall->opCode = "itob";
+	auto itobCall = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
 	itobCall->stackArgs.push_back(std::move(gasCall));
 
 	auto biguintCast = awst::makeReinterpretCast(std::move(itobCall), awst::WType::biguintType(), _loc);
@@ -68,16 +62,10 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTimestamp(
 )
 {
 	// timestamp() → global LatestTimestamp (uint64) → itob → reinterpret as biguint
-	auto tsCall = std::make_shared<awst::IntrinsicCall>();
-	tsCall->sourceLocation = _loc;
-	tsCall->wtype = awst::WType::uint64Type();
-	tsCall->opCode = "global";
+	auto tsCall = awst::makeIntrinsicCall("global", awst::WType::uint64Type(), _loc);
 	tsCall->immediates.push_back("LatestTimestamp");
 
-	auto itobCall = std::make_shared<awst::IntrinsicCall>();
-	itobCall->sourceLocation = _loc;
-	itobCall->wtype = awst::WType::bytesType();
-	itobCall->opCode = "itob";
+	auto itobCall = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
 	itobCall->stackArgs.push_back(std::move(tsCall));
 
 	auto biguintCast = awst::makeReinterpretCast(std::move(itobCall), awst::WType::biguintType(), _loc);
@@ -105,48 +93,30 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildPowerOf2(
 		// Pattern: concat(bzero(8), bytes) → extract3(result, len-8, 8) → btoi
 		auto eight = awst::makeIntegerConstant("8", _loc);
 
-		auto bzeroCall = std::make_shared<awst::IntrinsicCall>();
-		bzeroCall->sourceLocation = _loc;
-		bzeroCall->wtype = awst::WType::bytesType();
-		bzeroCall->opCode = "bzero";
+		auto bzeroCall = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
 		bzeroCall->stackArgs.push_back(eight);
 
-		auto cat = std::make_shared<awst::IntrinsicCall>();
-		cat->sourceLocation = _loc;
-		cat->wtype = awst::WType::bytesType();
-		cat->opCode = "concat";
+		auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
 		cat->stackArgs.push_back(std::move(bzeroCall));
 		cat->stackArgs.push_back(std::move(cast));
 
-		auto lenCall = std::make_shared<awst::IntrinsicCall>();
-		lenCall->sourceLocation = _loc;
-		lenCall->wtype = awst::WType::uint64Type();
-		lenCall->opCode = "len";
+		auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
 		lenCall->stackArgs.push_back(cat);
 
 		auto eight2 = awst::makeIntegerConstant("8", _loc);
 
-		auto start = std::make_shared<awst::IntrinsicCall>();
-		start->sourceLocation = _loc;
-		start->wtype = awst::WType::uint64Type();
-		start->opCode = "-";
+		auto start = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), _loc);
 		start->stackArgs.push_back(std::move(lenCall));
 		start->stackArgs.push_back(eight2);
 
 		auto eight3 = awst::makeIntegerConstant("8", _loc);
 
-		auto extract = std::make_shared<awst::IntrinsicCall>();
-		extract->sourceLocation = _loc;
-		extract->wtype = awst::WType::bytesType();
-		extract->opCode = "extract3";
+		auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 		extract->stackArgs.push_back(cat);
 		extract->stackArgs.push_back(std::move(start));
 		extract->stackArgs.push_back(eight3);
 
-		auto btoi = std::make_shared<awst::IntrinsicCall>();
-		btoi->sourceLocation = _loc;
-		btoi->wtype = awst::WType::uint64Type();
-		btoi->opCode = "btoi";
+		auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
 		btoi->stackArgs.push_back(std::move(extract));
 		shiftAmt = std::move(btoi);
 	}
@@ -154,10 +124,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildPowerOf2(
 	// bzero(32) — 256-bit zero buffer
 	auto thirtyTwo = awst::makeIntegerConstant("32", _loc);
 
-	auto bzero = std::make_shared<awst::IntrinsicCall>();
-	bzero->sourceLocation = _loc;
-	bzero->wtype = awst::WType::bytesType();
-	bzero->opCode = "bzero";
+	auto bzero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
 	bzero->stackArgs.push_back(std::move(thirtyTwo));
 
 	// Clamp shift amount to 0..255 — EVM shifts mod 256 implicitly,
@@ -174,10 +141,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildPowerOf2(
 	// setbit(bzero(32), 255-shift, 1) → bytes with only bit `shift` set
 	auto one = awst::makeIntegerConstant("1", _loc);
 
-	auto setbit = std::make_shared<awst::IntrinsicCall>();
-	setbit->sourceLocation = _loc;
-	setbit->wtype = awst::WType::bytesType();
-	setbit->opCode = "setbit";
+	auto setbit = awst::makeIntrinsicCall("setbit", awst::WType::bytesType(), _loc);
 	setbit->stackArgs.push_back(std::move(bzero));
 	setbit->stackArgs.push_back(std::move(bitIdx));
 	setbit->stackArgs.push_back(std::move(one));
@@ -268,10 +232,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleByte(
 	// extract3(padded, n, 1)
 	auto one = awst::makeIntegerConstant("1", _loc);
 
-	auto extract = std::make_shared<awst::IntrinsicCall>();
-	extract->sourceLocation = _loc;
-	extract->wtype = awst::WType::bytesType();
-	extract->opCode = "extract3";
+	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 	extract->stackArgs.push_back(std::move(padded));
 	extract->stackArgs.push_back(std::move(nExpr));
 	extract->stackArgs.push_back(std::move(one));
@@ -368,10 +329,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 
 	auto highMaskBytes = awst::makeReinterpretCast(highMask, awst::WType::bytesType(), _loc);
 
-	auto orCall = std::make_shared<awst::IntrinsicCall>();
-	orCall->sourceLocation = _loc;
-	orCall->wtype = awst::WType::bytesType();
-	orCall->opCode = "b|";
+	auto orCall = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), _loc);
 	orCall->stackArgs.push_back(std::move(xCastNeg));
 	orCall->stackArgs.push_back(std::move(highMaskBytes));
 
@@ -391,10 +349,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 
 	auto lowMask2Bytes = awst::makeReinterpretCast(lowMask2, awst::WType::bytesType(), _loc);
 
-	auto andCall = std::make_shared<awst::IntrinsicCall>();
-	andCall->sourceLocation = _loc;
-	andCall->wtype = awst::WType::bytesType();
-	andCall->opCode = "b&";
+	auto andCall = awst::makeIntrinsicCall("b&", awst::WType::bytesType(), _loc);
 	andCall->stackArgs.push_back(std::move(xCastPos));
 	andCall->stackArgs.push_back(std::move(lowMask2Bytes));
 

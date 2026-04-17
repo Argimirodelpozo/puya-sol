@@ -169,24 +169,15 @@ void AssemblyBuilder::buildStatement(
 					// uint512 mapping) but the case constants below are 32
 					// bytes. Pattern: b| bzero(32) → ensures at least 32
 					// bytes, then extract the last 32.
-					auto bzero32 = std::make_shared<awst::IntrinsicCall>();
-					bzero32->sourceLocation = loc;
-					bzero32->wtype = awst::WType::bytesType();
-					bzero32->opCode = "bzero";
+					auto bzero32 = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), loc);
 					auto size32 = awst::makeIntegerConstant("32", loc);
 					bzero32->stackArgs.push_back(size32);
 
-					auto bor = std::make_shared<awst::IntrinsicCall>();
-					bor->sourceLocation = loc;
-					bor->wtype = awst::WType::bytesType();
-					bor->opCode = "b|";
+					auto bor = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), loc);
 					bor->stackArgs.push_back(std::move(bzero32));
 					bor->stackArgs.push_back(std::move(cast));
 
-					auto lenCall = std::make_shared<awst::IntrinsicCall>();
-					lenCall->sourceLocation = loc;
-					lenCall->wtype = awst::WType::uint64Type();
-					lenCall->opCode = "len";
+					auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), loc);
 					lenCall->stackArgs.push_back(bor);
 
 					auto minus = std::make_shared<awst::UInt64BinaryOperation>();
@@ -199,10 +190,7 @@ void AssemblyBuilder::buildStatement(
 
 					auto width = awst::makeIntegerConstant("32", loc);
 
-					auto extract = std::make_shared<awst::IntrinsicCall>();
-					extract->sourceLocation = loc;
-					extract->wtype = awst::WType::bytesType();
-					extract->opCode = "extract3";
+					auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), loc);
 					extract->stackArgs.push_back(std::move(bor));
 					extract->stackArgs.push_back(std::move(minus));
 					extract->stackArgs.push_back(std::move(width));
@@ -458,10 +446,7 @@ void AssemblyBuilder::buildAssignment(
 				// Ensure biguint type for the slot value
 				if (slotExpr->wtype == awst::WType::uint64Type())
 				{
-					auto itob = std::make_shared<awst::IntrinsicCall>();
-					itob->sourceLocation = loc;
-					itob->wtype = awst::WType::bytesType();
-					itob->opCode = "itob";
+					auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), loc);
 					itob->stackArgs.push_back(std::move(slotExpr));
 					auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), loc);
 					slotExpr = std::move(cast);
@@ -546,10 +531,7 @@ void AssemblyBuilder::buildAssignment(
 				// Extract first N bytes (EVM left-aligned)
 				auto zero = awst::makeIntegerConstant("0", loc);
 				auto lenConst = awst::makeIntegerConstant(std::to_string(n), loc);
-				auto extract = std::make_shared<awst::IntrinsicCall>();
-				extract->sourceLocation = loc;
-				extract->wtype = awst::WType::bytesType();
-				extract->opCode = "extract3";
+				auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), loc);
 				extract->stackArgs.push_back(std::move(padded));
 				extract->stackArgs.push_back(std::move(zero));
 				extract->stackArgs.push_back(std::move(lenConst));

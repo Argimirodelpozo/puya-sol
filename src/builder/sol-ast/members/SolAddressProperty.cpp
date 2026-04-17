@@ -51,10 +51,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 				&& std::holds_alternative<std::string>(ic->immediates[0])
 				&& std::get<std::string>(ic->immediates[0]) == "CurrentApplicationAddress")
 			{
-				auto idCall = std::make_shared<awst::IntrinsicCall>();
-				idCall->sourceLocation = m_loc;
-				idCall->wtype = awst::WType::uint64Type();
-				idCall->opCode = "global";
+				auto idCall = awst::makeIntrinsicCall("global", awst::WType::uint64Type(), m_loc);
 				idCall->immediates = {std::string("CurrentApplicationID")};
 				auto cast = awst::makeReinterpretCast(std::move(idCall), awst::WType::applicationType(), m_loc);
 				appId = std::move(cast);
@@ -70,17 +67,11 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 				bytesExpr = std::move(toBytes);
 			}
 
-			auto extract = std::make_shared<awst::IntrinsicCall>();
-			extract->sourceLocation = m_loc;
-			extract->wtype = awst::WType::bytesType();
-			extract->opCode = "extract";
+			auto extract = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), m_loc);
 			extract->immediates = {24, 8};
 			extract->stackArgs.push_back(std::move(bytesExpr));
 
-			auto btoi = std::make_shared<awst::IntrinsicCall>();
-			btoi->sourceLocation = m_loc;
-			btoi->wtype = awst::WType::uint64Type();
-			btoi->opCode = "btoi";
+			auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), m_loc);
 			btoi->stackArgs.push_back(std::move(extract));
 
 			auto castId = awst::makeReinterpretCast(std::move(btoi), awst::WType::applicationType(), m_loc);
@@ -90,10 +81,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 		auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
 			std::vector<awst::WType const*>{
 				awst::WType::bytesType(), awst::WType::boolType()});
-		auto appParamsGet = std::make_shared<awst::IntrinsicCall>();
-		appParamsGet->sourceLocation = m_loc;
-		appParamsGet->wtype = tupleType;
-		appParamsGet->opCode = "app_params_get";
+		auto appParamsGet = awst::makeIntrinsicCall("app_params_get", tupleType, m_loc);
 		appParamsGet->immediates = {std::string("AppApprovalProgram")};
 		appParamsGet->stackArgs.push_back(std::move(appId));
 
@@ -133,10 +121,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 		auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
 			std::vector<awst::WType const*>{
 				awst::WType::uint64Type(), awst::WType::boolType()});
-		auto acctParams = std::make_shared<awst::IntrinsicCall>();
-		acctParams->sourceLocation = m_loc;
-		acctParams->wtype = tupleType;
-		acctParams->opCode = "acct_params_get";
+		auto acctParams = awst::makeIntrinsicCall("acct_params_get", tupleType, m_loc);
 		acctParams->immediates = {std::string("AcctBalance")};
 		acctParams->stackArgs.push_back(std::move(addrExpr));
 
@@ -148,10 +133,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 		balanceVal->index = 0;
 
 		// Solidity returns uint256 for balance — promote uint64 → biguint
-		auto itob = std::make_shared<awst::IntrinsicCall>();
-		itob->sourceLocation = m_loc;
-		itob->wtype = awst::WType::bytesType();
-		itob->opCode = "itob";
+		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
 		itob->stackArgs.push_back(std::move(balanceVal));
 
 		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
@@ -204,20 +186,14 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 				&& std::holds_alternative<std::string>(ic->immediates[0])
 				&& std::get<std::string>(ic->immediates[0]) == "CurrentApplicationAddress")
 			{
-				auto appId = std::make_shared<awst::IntrinsicCall>();
-				appId->sourceLocation = m_loc;
-				appId->wtype = awst::WType::uint64Type();
-				appId->opCode = "global";
+				auto appId = awst::makeIntrinsicCall("global", awst::WType::uint64Type(), m_loc);
 				appId->immediates = {std::string("CurrentApplicationID")};
 				auto appIdCast = awst::makeReinterpretCast(std::move(appId), awst::WType::applicationType(), m_loc);
 
 				auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
 					std::vector<awst::WType const*>{
 						awst::WType::bytesType(), awst::WType::boolType()});
-				auto appParamsGet = std::make_shared<awst::IntrinsicCall>();
-				appParamsGet->sourceLocation = m_loc;
-				appParamsGet->wtype = tupleType;
-				appParamsGet->opCode = "app_params_get";
+				auto appParamsGet = awst::makeIntrinsicCall("app_params_get", tupleType, m_loc);
 				appParamsGet->immediates = {std::string("AppApprovalProgram")};
 				appParamsGet->stackArgs.push_back(std::move(appIdCast));
 
@@ -227,10 +203,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 				bytesOut->base = std::move(appParamsGet);
 				bytesOut->index = 0;
 
-				auto hash = std::make_shared<awst::IntrinsicCall>();
-				hash->sourceLocation = m_loc;
-				hash->wtype = awst::WType::bytesType();
-				hash->opCode = "keccak256";
+				auto hash = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), m_loc);
 				hash->stackArgs.push_back(std::move(bytesOut));
 
 				if (m_wtype && m_wtype != awst::WType::bytesType())

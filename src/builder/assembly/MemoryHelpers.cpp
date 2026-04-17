@@ -21,10 +21,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemSlot(
 
 	auto len32 = awst::makeIntegerConstant("32", _loc);
 
-	auto extract = std::make_shared<awst::IntrinsicCall>();
-	extract->sourceLocation = _loc;
-	extract->wtype = awst::WType::bytesType();
-	extract->opCode = "extract3";
+	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 	extract->stackArgs.push_back(memoryVar(_loc));
 	extract->stackArgs.push_back(std::move(offsetConst));
 	extract->stackArgs.push_back(std::move(len32));
@@ -40,39 +37,24 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::padTo32Bytes(
 {
 	auto cast = awst::makeReinterpretCast(std::move(_expr), awst::WType::bytesType(), _loc);
 
-	auto zeroBytes = std::make_shared<awst::IntrinsicCall>();
-	zeroBytes->sourceLocation = _loc;
-	zeroBytes->wtype = awst::WType::bytesType();
-	zeroBytes->opCode = "bzero";
+	auto zeroBytes = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
 	auto sz = awst::makeIntegerConstant("32", _loc);
 	zeroBytes->stackArgs.push_back(sz);
 
-	auto concatPad = std::make_shared<awst::IntrinsicCall>();
-	concatPad->sourceLocation = _loc;
-	concatPad->wtype = awst::WType::bytesType();
-	concatPad->opCode = "concat";
+	auto concatPad = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
 	concatPad->stackArgs.push_back(std::move(zeroBytes));
 	concatPad->stackArgs.push_back(std::move(cast));
 
-	auto lenCall = std::make_shared<awst::IntrinsicCall>();
-	lenCall->sourceLocation = _loc;
-	lenCall->wtype = awst::WType::uint64Type();
-	lenCall->opCode = "len";
+	auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
 	lenCall->stackArgs.push_back(concatPad);
 
 	auto n32 = awst::makeIntegerConstant("32", _loc);
 
-	auto startOff = std::make_shared<awst::IntrinsicCall>();
-	startOff->sourceLocation = _loc;
-	startOff->wtype = awst::WType::uint64Type();
-	startOff->opCode = "-";
+	auto startOff = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), _loc);
 	startOff->stackArgs.push_back(std::move(lenCall));
 	startOff->stackArgs.push_back(n32);
 
-	auto extract = std::make_shared<awst::IntrinsicCall>();
-	extract->sourceLocation = _loc;
-	extract->wtype = awst::WType::bytesType();
-	extract->opCode = "extract3";
+	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 	extract->stackArgs.push_back(concatPad);
 	extract->stackArgs.push_back(std::move(startOff));
 	auto n32e = awst::makeIntegerConstant("32", _loc);
@@ -95,10 +77,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::concatSlots(
 
 	auto lenConst = awst::makeIntegerConstant(std::to_string(byteLen), _loc);
 
-	auto extract = std::make_shared<awst::IntrinsicCall>();
-	extract->sourceLocation = _loc;
-	extract->wtype = awst::WType::bytesType();
-	extract->opCode = "extract3";
+	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 	extract->stackArgs.push_back(memoryVar(_loc));
 	extract->stackArgs.push_back(std::move(offsetConst));
 	extract->stackArgs.push_back(std::move(lenConst));
@@ -131,10 +110,7 @@ void AssemblyBuilder::storeResultToMemory(
 
 		auto offsetConst = awst::makeIntegerConstant(std::to_string(_outputOffset), _loc);
 
-		auto replace = std::make_shared<awst::IntrinsicCall>();
-		replace->sourceLocation = _loc;
-		replace->wtype = awst::WType::bytesType();
-		replace->opCode = "replace3";
+		auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
 		replace->stackArgs.push_back(memoryVar(_loc));
 		replace->stackArgs.push_back(std::move(offsetConst));
 		replace->stackArgs.push_back(std::move(padded));
@@ -157,10 +133,7 @@ void AssemblyBuilder::storeResultToMemory(
 
 		auto offsetConst = awst::makeIntegerConstant(std::to_string(_outputOffset), _loc);
 
-		auto replace = std::make_shared<awst::IntrinsicCall>();
-		replace->sourceLocation = _loc;
-		replace->wtype = awst::WType::bytesType();
-		replace->opCode = "replace3";
+		auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
 		replace->stackArgs.push_back(memoryVar(_loc));
 		replace->stackArgs.push_back(std::move(offsetConst));
 		replace->stackArgs.push_back(std::move(padded));
@@ -195,10 +168,7 @@ void AssemblyBuilder::storeResultToMemory(
 
 		auto slotLen = awst::makeIntegerConstant("32", _loc);
 
-		auto extractSlot = std::make_shared<awst::IntrinsicCall>();
-		extractSlot->sourceLocation = _loc;
-		extractSlot->wtype = awst::WType::bytesType();
-		extractSlot->opCode = "extract3";
+		auto extractSlot = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 		extractSlot->stackArgs.push_back(resultRead);
 		extractSlot->stackArgs.push_back(slotStart);
 		extractSlot->stackArgs.push_back(slotLen);
@@ -206,10 +176,7 @@ void AssemblyBuilder::storeResultToMemory(
 		// replace3(__evm_memory, outOff, chunk)
 		auto offsetConst = awst::makeIntegerConstant(std::to_string(outOff), _loc);
 
-		auto replace = std::make_shared<awst::IntrinsicCall>();
-		replace->sourceLocation = _loc;
-		replace->wtype = awst::WType::bytesType();
-		replace->opCode = "replace3";
+		auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
 		replace->stackArgs.push_back(memoryVar(_loc));
 		replace->stackArgs.push_back(std::move(offsetConst));
 		replace->stackArgs.push_back(std::move(extractSlot));

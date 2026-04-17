@@ -141,33 +141,21 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 		unsigned funcId = (idIt != s_targets.end()) ? idIt->second.id : 0;
 
 		// itob(0) — sentinel appId
-		auto zeroAppId = std::make_shared<awst::IntrinsicCall>();
-		zeroAppId->sourceLocation = _loc;
-		zeroAppId->wtype = awst::WType::bytesType();
-		zeroAppId->opCode = "itob";
+		auto zeroAppId = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
 		auto zeroConst = awst::makeIntegerConstant("0", _loc);
 		zeroAppId->stackArgs.push_back(std::move(zeroConst));
 
 		// itob(funcId)[:4] — internal ID in selector slot
-		auto idItob = std::make_shared<awst::IntrinsicCall>();
-		idItob->sourceLocation = _loc;
-		idItob->wtype = awst::WType::bytesType();
-		idItob->opCode = "itob";
+		auto idItob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
 		auto idConst = awst::makeIntegerConstant(std::to_string(funcId), _loc);
 		idItob->stackArgs.push_back(std::move(idConst));
-		auto idBytes4 = std::make_shared<awst::IntrinsicCall>();
-		idBytes4->sourceLocation = _loc;
-		idBytes4->wtype = awst::WType::bytesType();
-		idBytes4->opCode = "extract";
+		auto idBytes4 = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
 		idBytes4->immediates = {4, 4}; // last 4 bytes of 8-byte itob
 		idBytes4->stackArgs.push_back(std::move(idItob));
 
 		// concat(itob(0), idBytes4) → 12 bytes
 		static awst::BytesWType s_bytes12(12);
-		auto packed = std::make_shared<awst::IntrinsicCall>();
-		packed->sourceLocation = _loc;
-		packed->wtype = &s_bytes12;
-		packed->opCode = "concat";
+		auto packed = awst::makeIntrinsicCall("concat", &s_bytes12, _loc);
 		packed->stackArgs.push_back(std::move(zeroAppId));
 		packed->stackArgs.push_back(std::move(idBytes4));
 		return packed;
@@ -205,18 +193,12 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		auto zero = awst::makeIntegerConstant("0", _loc);
 		auto eight = awst::makeIntegerConstant("8", _loc);
 
-		auto extractAppId = std::make_shared<awst::IntrinsicCall>();
-		extractAppId->sourceLocation = _loc;
-		extractAppId->wtype = awst::WType::bytesType();
-		extractAppId->opCode = "extract3";
+		auto extractAppId = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 		extractAppId->stackArgs.push_back(_ptrExpr);
 		extractAppId->stackArgs.push_back(std::move(zero));
 		extractAppId->stackArgs.push_back(std::move(eight));
 
-		auto appId = std::make_shared<awst::IntrinsicCall>();
-		appId->sourceLocation = _loc;
-		appId->wtype = awst::WType::uint64Type();
-		appId->opCode = "btoi";
+		auto appId = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
 		appId->stackArgs.push_back(std::move(extractAppId));
 
 		// Check if self-call: appId == 0 (sentinel for current app)
@@ -229,17 +211,11 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		isSelf->rhs = std::move(zeroCheck);
 
 		// Self-call path: extract internal ID from selector slot, dispatch
-		auto extractId4 = std::make_shared<awst::IntrinsicCall>();
-		extractId4->sourceLocation = _loc;
-		extractId4->wtype = awst::WType::bytesType();
-		extractId4->opCode = "extract";
+		auto extractId4 = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
 		extractId4->immediates = {8, 4};
 		extractId4->stackArgs.push_back(_ptrExpr);
 
-		auto internalId = std::make_shared<awst::IntrinsicCall>();
-		internalId->sourceLocation = _loc;
-		internalId->wtype = awst::WType::uint64Type();
-		internalId->opCode = "btoi";
+		auto internalId = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
 		internalId->stackArgs.push_back(std::move(extractId4));
 
 		// Build internal dispatch call with the same args

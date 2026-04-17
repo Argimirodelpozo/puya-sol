@@ -452,6 +452,20 @@ struct IntrinsicCall: Expression
 	std::vector<std::shared_ptr<Expression>> stackArgs;
 };
 
+// Construct an IntrinsicCall header (sourceLocation/wtype/opCode). Callers
+// append to `stackArgs` and `immediates` as needed afterwards.
+inline std::shared_ptr<IntrinsicCall> makeIntrinsicCall(
+	std::string opCode,
+	WType const* wtype,
+	SourceLocation loc)
+{
+	auto node = std::make_shared<IntrinsicCall>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->opCode = std::move(opCode);
+	return node;
+}
+
 struct FieldExpression: Expression
 {
 	std::string nodeType() const override { return "FieldExpression"; }

@@ -30,10 +30,7 @@ std::shared_ptr<awst::IntrinsicCall> IntrinsicMapper::tryMapMemberAccess(
 			call->opCode = "gtxns";
 			call->immediates = {std::string("Amount")};
 
-			auto groupIdx = std::make_shared<awst::IntrinsicCall>();
-			groupIdx->sourceLocation = _loc;
-			groupIdx->wtype = awst::WType::uint64Type();
-			groupIdx->opCode = "txn";
+			auto groupIdx = awst::makeIntrinsicCall("txn", awst::WType::uint64Type(), _loc);
 			groupIdx->immediates = {std::string("GroupIndex")};
 			auto one = awst::makeIntegerConstant("1", _loc);
 			auto payIdx = awst::makeUInt64BinOp(std::move(groupIdx), awst::UInt64BinaryOperator::Sub, std::move(one), _loc);
@@ -139,10 +136,7 @@ std::shared_ptr<awst::IntrinsicCall> IntrinsicMapper::createLog(
 	awst::SourceLocation const& _loc
 )
 {
-	auto call = std::make_shared<awst::IntrinsicCall>();
-	call->sourceLocation = _loc;
-	call->opCode = "log";
-	call->wtype = awst::WType::voidType();
+	auto call = awst::makeIntrinsicCall("log", awst::WType::voidType(), _loc);
 	call->stackArgs = std::move(_args);
 	return call;
 }

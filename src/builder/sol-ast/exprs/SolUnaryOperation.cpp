@@ -89,10 +89,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		auto operand = std::move(_operand);
 		if (operand->wtype == awst::WType::uint64Type())
 		{
-			auto itob = std::make_shared<awst::IntrinsicCall>();
-			itob->sourceLocation = m_loc;
-			itob->wtype = awst::WType::bytesType();
-			itob->opCode = "itob";
+			auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
 			itob->stackArgs.push_back(std::move(operand));
 			auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 			operand = std::move(cast);
@@ -196,33 +193,18 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			auto castBytes = awst::makeReinterpretCast(std::move(negated), awst::WType::bytesType(), m_loc);
 
 			auto eight = awst::makeIntegerConstant("8", m_loc);
-			auto bz = std::make_shared<awst::IntrinsicCall>();
-			bz->sourceLocation = m_loc;
-			bz->wtype = awst::WType::bytesType();
-			bz->opCode = "bzero";
+			auto bz = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
 			bz->stackArgs.push_back(eight);
-			auto cat = std::make_shared<awst::IntrinsicCall>();
-			cat->sourceLocation = m_loc;
-			cat->wtype = awst::WType::bytesType();
-			cat->opCode = "concat";
+			auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
 			cat->stackArgs.push_back(std::move(bz));
 			cat->stackArgs.push_back(std::move(castBytes));
-			auto lenCall = std::make_shared<awst::IntrinsicCall>();
-			lenCall->sourceLocation = m_loc;
-			lenCall->wtype = awst::WType::uint64Type();
-			lenCall->opCode = "len";
+			auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), m_loc);
 			lenCall->stackArgs.push_back(cat);
 			auto eight2 = awst::makeIntegerConstant("8", m_loc);
-			auto start = std::make_shared<awst::IntrinsicCall>();
-			start->sourceLocation = m_loc;
-			start->wtype = awst::WType::uint64Type();
-			start->opCode = "-";
+			auto start = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), m_loc);
 			start->stackArgs.push_back(std::move(lenCall));
 			start->stackArgs.push_back(eight2);
-			auto extract = std::make_shared<awst::IntrinsicCall>();
-			extract->sourceLocation = m_loc;
-			extract->wtype = awst::WType::uint64Type();
-			extract->opCode = "extract_uint64";
+			auto extract = awst::makeIntrinsicCall("extract_uint64", awst::WType::uint64Type(), m_loc);
 			extract->stackArgs.push_back(cat);
 			extract->stackArgs.push_back(std::move(start));
 			return extract;
@@ -416,10 +398,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 			auto val = std::move(base);
 			if (val->wtype == awst::WType::uint64Type())
 			{
-				auto itob = std::make_shared<awst::IntrinsicCall>();
-				itob->sourceLocation = m_loc;
-				itob->wtype = awst::WType::bytesType();
-				itob->opCode = "itob";
+				auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
 				itob->stackArgs.push_back(std::move(val));
 				auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 				val = std::move(cast);
@@ -502,33 +481,18 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 			{
 				auto castBytes = awst::makeReinterpretCast(std::move(mod), awst::WType::bytesType(), m_loc);
 				auto eight = awst::makeIntegerConstant("8", m_loc);
-				auto bz = std::make_shared<awst::IntrinsicCall>();
-				bz->sourceLocation = m_loc;
-				bz->wtype = awst::WType::bytesType();
-				bz->opCode = "bzero";
+				auto bz = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
 				bz->stackArgs.push_back(eight);
-				auto cat = std::make_shared<awst::IntrinsicCall>();
-				cat->sourceLocation = m_loc;
-				cat->wtype = awst::WType::bytesType();
-				cat->opCode = "concat";
+				auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
 				cat->stackArgs.push_back(std::move(bz));
 				cat->stackArgs.push_back(std::move(castBytes));
-				auto lenCall = std::make_shared<awst::IntrinsicCall>();
-				lenCall->sourceLocation = m_loc;
-				lenCall->wtype = awst::WType::uint64Type();
-				lenCall->opCode = "len";
+				auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), m_loc);
 				lenCall->stackArgs.push_back(cat);
 				auto eight2 = awst::makeIntegerConstant("8", m_loc);
-				auto start = std::make_shared<awst::IntrinsicCall>();
-				start->sourceLocation = m_loc;
-				start->wtype = awst::WType::uint64Type();
-				start->opCode = "-";
+				auto start = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), m_loc);
 				start->stackArgs.push_back(std::move(lenCall));
 				start->stackArgs.push_back(eight2);
-				auto extract = std::make_shared<awst::IntrinsicCall>();
-				extract->sourceLocation = m_loc;
-				extract->wtype = awst::WType::uint64Type();
-				extract->opCode = "extract_uint64";
+				auto extract = awst::makeIntrinsicCall("extract_uint64", awst::WType::uint64Type(), m_loc);
 				extract->stackArgs.push_back(cat);
 				extract->stackArgs.push_back(std::move(start));
 				return extract;

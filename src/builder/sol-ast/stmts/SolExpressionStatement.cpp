@@ -222,15 +222,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 							if (dstLen > srcLen)
 							{
 								auto padSize = awst::makeIntegerConstant(std::to_string(dstLen - srcLen), m_loc);
-								auto pad = std::make_shared<awst::IntrinsicCall>();
-								pad->sourceLocation = m_loc;
-								pad->wtype = awst::WType::bytesType();
-								pad->opCode = "bzero";
+								auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
 								pad->stackArgs.push_back(std::move(padSize));
-								auto cat = std::make_shared<awst::IntrinsicCall>();
-								cat->sourceLocation = m_loc;
-								cat->wtype = awst::WType::bytesType();
-								cat->opCode = "concat";
+								auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
 								cat->stackArgs.push_back(std::move(toBytes));
 								cat->stackArgs.push_back(std::move(pad));
 								result = std::move(cat);
@@ -239,10 +233,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 							{
 								auto zero = awst::makeIntegerConstant("0", m_loc);
 								auto width = awst::makeIntegerConstant(std::to_string(dstLen), m_loc);
-								auto extract = std::make_shared<awst::IntrinsicCall>();
-								extract->sourceLocation = m_loc;
-								extract->wtype = awst::WType::bytesType();
-								extract->opCode = "extract3";
+								auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 								extract->stackArgs.push_back(std::move(toBytes));
 								extract->stackArgs.push_back(std::move(zero));
 								extract->stackArgs.push_back(std::move(width));

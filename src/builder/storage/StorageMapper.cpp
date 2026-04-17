@@ -264,10 +264,7 @@ std::shared_ptr<awst::Expression> StorageMapper::biguintSlotToBtoi(
 	auto castToBytes = awst::makeReinterpretCast(_slotExpr, awst::WType::bytesType(), _loc);
 
 	// len(castToBytes)
-	auto lenOp = std::make_shared<awst::IntrinsicCall>();
-	lenOp->sourceLocation = _loc;
-	lenOp->wtype = awst::WType::uint64Type();
-	lenOp->opCode = "len";
+	auto lenOp = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
 	lenOp->stackArgs.push_back(castToBytes);
 
 	// len - 8
@@ -280,20 +277,14 @@ std::shared_ptr<awst::Expression> StorageMapper::biguintSlotToBtoi(
 	sub8->right = std::move(eight);
 
 	// extract3(castToBytes, len-8, 8)
-	auto last8 = std::make_shared<awst::IntrinsicCall>();
-	last8->sourceLocation = _loc;
-	last8->wtype = awst::WType::bytesType();
-	last8->opCode = "extract3";
+	auto last8 = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 	last8->stackArgs.push_back(std::move(castToBytes));
 	last8->stackArgs.push_back(std::move(sub8));
 	auto eight2 = awst::makeIntegerConstant("8", _loc);
 	last8->stackArgs.push_back(std::move(eight2));
 
 	// btoi(last8)
-	auto btoi = std::make_shared<awst::IntrinsicCall>();
-	btoi->sourceLocation = _loc;
-	btoi->wtype = awst::WType::uint64Type();
-	btoi->opCode = "btoi";
+	auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
 	btoi->stackArgs.push_back(std::move(last8));
 
 	return btoi;

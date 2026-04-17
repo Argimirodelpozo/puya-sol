@@ -56,10 +56,7 @@ std::unique_ptr<InstanceBuilder> SolStringBuilder::bool_eval(
 	awst::SourceLocation const& _loc, bool _negate)
 {
 	// string is truthy if len(s) != 0
-	auto len = std::make_shared<awst::IntrinsicCall>();
-	len->sourceLocation = _loc;
-	len->wtype = awst::WType::uint64Type();
-	len->opCode = "len";
+	auto len = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
 	len->stackArgs.push_back(resolve());
 
 	auto zero = awst::makeIntegerConstant("0", _loc);
@@ -115,10 +112,7 @@ std::unique_ptr<InstanceBuilder> SolDynamicBytesBuilder::compare(
 std::unique_ptr<InstanceBuilder> SolDynamicBytesBuilder::bool_eval(
 	awst::SourceLocation const& _loc, bool _negate)
 {
-	auto len = std::make_shared<awst::IntrinsicCall>();
-	len->sourceLocation = _loc;
-	len->wtype = awst::WType::uint64Type();
-	len->opCode = "len";
+	auto len = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
 	len->stackArgs.push_back(resolve());
 
 	auto zero = awst::makeIntegerConstant("0", _loc);

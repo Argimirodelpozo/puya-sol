@@ -138,10 +138,7 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::compare(
 	default: return nullptr;
 	}
 
-	auto e = std::make_shared<awst::IntrinsicCall>();
-	e->sourceLocation = _loc;
-	e->wtype = awst::WType::boolType();
-	e->opCode = std::move(opCode);
+	auto e = awst::makeIntrinsicCall(std::move(opCode), awst::WType::boolType(), _loc);
 	e->stackArgs.push_back(resolve());
 	e->stackArgs.push_back(_other.resolve());
 	return std::make_unique<SolFixedBytesBuilder>(m_ctx, m_bytesType, std::move(e));

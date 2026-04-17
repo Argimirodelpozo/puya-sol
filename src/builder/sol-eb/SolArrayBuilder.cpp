@@ -119,10 +119,7 @@ std::unique_ptr<NodeBuilder> SolArrayBuilder::member_access(
 			return std::make_unique<SolArrayBuilder>(m_ctx, m_arrayType, std::move(e));
 		}
 		// For other types (bytes): use len intrinsic
-		auto len = std::make_shared<awst::IntrinsicCall>();
-		len->sourceLocation = _loc;
-		len->wtype = awst::WType::uint64Type();
-		len->opCode = "len";
+		auto len = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
 		len->stackArgs.push_back(std::move(base));
 		return std::make_unique<SolArrayBuilder>(m_ctx, m_arrayType, std::move(len));
 	}

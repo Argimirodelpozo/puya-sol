@@ -72,10 +72,7 @@ std::shared_ptr<awst::Expression> SolTupleExpression::toAwst()
 							auto startConst = awst::makeIntegerConstant(std::to_string(8 - arc4uint->n() / 8), m_loc);
 							auto lenConst = awst::makeIntegerConstant(std::to_string(arc4uint->n() / 8), m_loc);
 
-							auto extract = std::make_shared<awst::IntrinsicCall>();
-							extract->sourceLocation = m_loc;
-							extract->wtype = awst::WType::bytesType();
-							extract->opCode = "extract3";
+							auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 							auto castBytes = awst::makeReinterpretCast(std::move(fullEncode), awst::WType::bytesType(), m_loc);
 							extract->stackArgs.push_back(std::move(castBytes));
 							extract->stackArgs.push_back(std::move(startConst));

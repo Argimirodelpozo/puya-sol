@@ -302,10 +302,7 @@ void AssemblyBuilder::initializeMemoryBlob(
 
 			auto offsetConst = awst::makeIntegerConstant(std::to_string(offset), loc);
 
-			auto replace = std::make_shared<awst::IntrinsicCall>();
-			replace->sourceLocation = loc;
-			replace->wtype = awst::WType::bytesType();
-			replace->opCode = "replace3";
+			auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), loc);
 			replace->stackArgs.push_back(memoryVar(loc));
 			replace->stackArgs.push_back(std::move(offsetConst));
 			replace->stackArgs.push_back(std::move(padded));
@@ -340,10 +337,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::loadMemoryBlob(
 	int _slot
 )
 {
-	auto loadOp = std::make_shared<awst::IntrinsicCall>();
-	loadOp->sourceLocation = _loc;
-	loadOp->wtype = awst::WType::bytesType();
-	loadOp->opCode = "load";
+	auto loadOp = awst::makeIntrinsicCall("load", awst::WType::bytesType(), _loc);
 	loadOp->immediates = {MEMORY_SLOT_FIRST + _slot};
 	return loadOp;
 }
@@ -355,10 +349,7 @@ void AssemblyBuilder::storeMemoryBlob(
 	int _slot
 )
 {
-	auto storeOp = std::make_shared<awst::IntrinsicCall>();
-	storeOp->sourceLocation = _loc;
-	storeOp->wtype = awst::WType::voidType();
-	storeOp->opCode = "store";
+	auto storeOp = awst::makeIntrinsicCall("store", awst::WType::voidType(), _loc);
 	storeOp->immediates = {MEMORY_SLOT_FIRST + _slot};
 	storeOp->stackArgs.push_back(std::move(_blob));
 
@@ -628,10 +619,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBiguint(
 	if (_expr->wtype == awst::WType::uint64Type())
 	{
 		// uint64 → biguint: itob(expr) then ReinterpretCast bytes→biguint
-		auto itob = std::make_shared<awst::IntrinsicCall>();
-		itob->sourceLocation = _loc;
-		itob->wtype = awst::WType::bytesType();
-		itob->opCode = "itob";
+		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
 		itob->stackArgs.push_back(std::move(_expr));
 
 		auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
@@ -758,38 +746,23 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::safeBtoi(
 
 	auto eight = awst::makeIntegerConstant("8", _loc);
 
-	auto bzeroCall = std::make_shared<awst::IntrinsicCall>();
-	bzeroCall->sourceLocation = _loc;
-	bzeroCall->wtype = awst::WType::bytesType();
-	bzeroCall->opCode = "bzero";
+	auto bzeroCall = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
 	bzeroCall->stackArgs.push_back(eight);
 
-	auto cat = std::make_shared<awst::IntrinsicCall>();
-	cat->sourceLocation = _loc;
-	cat->wtype = awst::WType::bytesType();
-	cat->opCode = "concat";
+	auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
 	cat->stackArgs.push_back(std::move(bzeroCall));
 	cat->stackArgs.push_back(std::move(cast));
 
-	auto lenCall = std::make_shared<awst::IntrinsicCall>();
-	lenCall->sourceLocation = _loc;
-	lenCall->wtype = awst::WType::uint64Type();
-	lenCall->opCode = "len";
+	auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
 	lenCall->stackArgs.push_back(cat);
 
 	auto eight2 = awst::makeIntegerConstant("8", _loc);
 
-	auto start = std::make_shared<awst::IntrinsicCall>();
-	start->sourceLocation = _loc;
-	start->wtype = awst::WType::uint64Type();
-	start->opCode = "-";
+	auto start = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), _loc);
 	start->stackArgs.push_back(std::move(lenCall));
 	start->stackArgs.push_back(eight2);
 
-	auto extractU64 = std::make_shared<awst::IntrinsicCall>();
-	extractU64->sourceLocation = _loc;
-	extractU64->wtype = awst::WType::uint64Type();
-	extractU64->opCode = "extract_uint64";
+	auto extractU64 = awst::makeIntrinsicCall("extract_uint64", awst::WType::uint64Type(), _loc);
 	extractU64->stackArgs.push_back(cat);
 	extractU64->stackArgs.push_back(std::move(start));
 

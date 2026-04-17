@@ -98,29 +98,17 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 		if (isDynamicBytes)
 		{
 			// ARC4 byte[] encoding: uint16(length) ++ raw_bytes
-			auto lenExpr = std::make_shared<awst::IntrinsicCall>();
-			lenExpr->sourceLocation = m_loc;
-			lenExpr->wtype = awst::WType::uint64Type();
-			lenExpr->opCode = "len";
+			auto lenExpr = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), m_loc);
 			lenExpr->stackArgs.push_back(_argExpr);
 
-			auto itobLen = std::make_shared<awst::IntrinsicCall>();
-			itobLen->sourceLocation = m_loc;
-			itobLen->wtype = awst::WType::bytesType();
-			itobLen->opCode = "itob";
+			auto itobLen = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
 			itobLen->stackArgs.push_back(std::move(lenExpr));
 
-			auto header = std::make_shared<awst::IntrinsicCall>();
-			header->sourceLocation = m_loc;
-			header->wtype = awst::WType::bytesType();
-			header->opCode = "extract";
+			auto header = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), m_loc);
 			header->immediates = {6, 2};
 			header->stackArgs.push_back(std::move(itobLen));
 
-			auto encoded = std::make_shared<awst::IntrinsicCall>();
-			encoded->sourceLocation = m_loc;
-			encoded->wtype = awst::WType::bytesType();
-			encoded->opCode = "concat";
+			auto encoded = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
 			encoded->stackArgs.push_back(std::move(header));
 			encoded->stackArgs.push_back(std::move(_argExpr));
 			return encoded;
@@ -140,23 +128,14 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 			else if (auto const* addr = dynamic_cast<AddressType const*>(_paramSolType))
 				(void)addr, widthBytes = 20;
 		}
-		auto itob = std::make_shared<awst::IntrinsicCall>();
-		itob->sourceLocation = m_loc;
-		itob->wtype = awst::WType::bytesType();
-		itob->opCode = "itob";
+		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
 		itob->stackArgs.push_back(std::move(_argExpr));
 		if (widthBytes <= 8)
 			return itob;
 		// pad = bzero(widthBytes - 8)  ++  itob(value)
-		auto zeros = std::make_shared<awst::IntrinsicCall>();
-		zeros->sourceLocation = m_loc;
-		zeros->wtype = awst::WType::bytesType();
-		zeros->opCode = "bzero";
+		auto zeros = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
 		zeros->stackArgs.push_back(makeUint64(std::to_string(widthBytes - 8), m_loc));
-		auto padded = std::make_shared<awst::IntrinsicCall>();
-		padded->sourceLocation = m_loc;
-		padded->wtype = awst::WType::bytesType();
-		padded->opCode = "concat";
+		auto padded = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
 		padded->stackArgs.push_back(std::move(zeros));
 		padded->stackArgs.push_back(std::move(itob));
 		return padded;
@@ -166,36 +145,21 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 		// biguint → 32 bytes, left-padded
 		auto cast = awst::makeReinterpretCast(std::move(_argExpr), awst::WType::bytesType(), m_loc);
 
-		auto zeros = std::make_shared<awst::IntrinsicCall>();
-		zeros->sourceLocation = m_loc;
-		zeros->wtype = awst::WType::bytesType();
-		zeros->opCode = "bzero";
+		auto zeros = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
 		zeros->stackArgs.push_back(makeUint64("32", m_loc));
 
-		auto padded = std::make_shared<awst::IntrinsicCall>();
-		padded->sourceLocation = m_loc;
-		padded->wtype = awst::WType::bytesType();
-		padded->opCode = "concat";
+		auto padded = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
 		padded->stackArgs.push_back(std::move(zeros));
 		padded->stackArgs.push_back(std::move(cast));
 
-		auto lenCall = std::make_shared<awst::IntrinsicCall>();
-		lenCall->sourceLocation = m_loc;
-		lenCall->wtype = awst::WType::uint64Type();
-		lenCall->opCode = "len";
+		auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), m_loc);
 		lenCall->stackArgs.push_back(padded);
 
-		auto offset = std::make_shared<awst::IntrinsicCall>();
-		offset->sourceLocation = m_loc;
-		offset->wtype = awst::WType::uint64Type();
-		offset->opCode = "-";
+		auto offset = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), m_loc);
 		offset->stackArgs.push_back(std::move(lenCall));
 		offset->stackArgs.push_back(makeUint64("32", m_loc));
 
-		auto extracted = std::make_shared<awst::IntrinsicCall>();
-		extracted->sourceLocation = m_loc;
-		extracted->wtype = awst::WType::bytesType();
-		extracted->opCode = "extract3";
+		auto extracted = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 		extracted->stackArgs.push_back(std::move(padded));
 		extracted->stackArgs.push_back(std::move(offset));
 		extracted->stackArgs.push_back(makeUint64("32", m_loc));
@@ -206,10 +170,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 		// bool → ARC4 bool = setbit(0x00, 0, boolValue)
 		auto zeroByte = awst::makeBytesConstant({0x00}, m_loc);
 
-		auto setbit = std::make_shared<awst::IntrinsicCall>();
-		setbit->sourceLocation = m_loc;
-		setbit->wtype = awst::WType::bytesType();
-		setbit->opCode = "setbit";
+		auto setbit = awst::makeIntrinsicCall("setbit", awst::WType::bytesType(), m_loc);
 		setbit->stackArgs.push_back(std::move(zeroByte));
 		setbit->stackArgs.push_back(makeUint64("0", m_loc));
 		setbit->stackArgs.push_back(std::move(_argExpr));
@@ -270,10 +231,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::addressToAppId(
 			auto const* imm = std::get_if<std::string>(&intrinsic->immediates[0]);
 			if (imm && *imm == "CurrentApplicationAddress")
 			{
-				auto appId = std::make_shared<awst::IntrinsicCall>();
-				appId->sourceLocation = m_loc;
-				appId->wtype = awst::WType::uint64Type();
-				appId->opCode = "global";
+				auto appId = awst::makeIntrinsicCall("global", awst::WType::uint64Type(), m_loc);
 				appId->immediates = {std::string("CurrentApplicationID")};
 
 				auto cast = awst::makeReinterpretCast(std::move(appId), awst::WType::applicationType(), m_loc);
@@ -290,17 +248,11 @@ std::shared_ptr<awst::Expression> SolExternalCall::addressToAppId(
 	}
 
 	// extract last 8 bytes from 32-byte address
-	auto extract = std::make_shared<awst::IntrinsicCall>();
-	extract->sourceLocation = m_loc;
-	extract->wtype = awst::WType::bytesType();
-	extract->opCode = "extract";
+	auto extract = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), m_loc);
 	extract->immediates = {24, 8};
 	extract->stackArgs.push_back(std::move(bytesExpr));
 
-	auto btoi = std::make_shared<awst::IntrinsicCall>();
-	btoi->sourceLocation = m_loc;
-	btoi->wtype = awst::WType::uint64Type();
-	btoi->opCode = "btoi";
+	auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), m_loc);
 	btoi->stackArgs.push_back(std::move(extract));
 
 	auto cast = awst::makeReinterpretCast(std::move(btoi), awst::WType::applicationType(), m_loc);
@@ -325,10 +277,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 	auto submitStmt = awst::makeExpressionStatement(std::move(submit), m_loc);
 	m_ctx.prePendingStatements.push_back(std::move(submitStmt));
 
-	auto readLog = std::make_shared<awst::IntrinsicCall>();
-	readLog->sourceLocation = m_loc;
-	readLog->wtype = awst::WType::bytesType();
-	readLog->opCode = "itxn";
+	auto readLog = awst::makeIntrinsicCall("itxn", awst::WType::bytesType(), m_loc);
 	readLog->immediates = {std::string("LastLog")};
 
 	// Strip 4-byte ARC4 return prefix
@@ -346,19 +295,13 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 	}
 	else if (_returnType == awst::WType::uint64Type())
 	{
-		auto btoi = std::make_shared<awst::IntrinsicCall>();
-		btoi->sourceLocation = m_loc;
-		btoi->opCode = "btoi";
-		btoi->wtype = awst::WType::uint64Type();
+		auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), m_loc);
 		btoi->stackArgs.push_back(std::move(stripPrefix));
 		return btoi;
 	}
 	else if (_returnType == awst::WType::boolType())
 	{
-		auto getbit = std::make_shared<awst::IntrinsicCall>();
-		getbit->sourceLocation = m_loc;
-		getbit->opCode = "getbit";
-		getbit->wtype = awst::WType::uint64Type();
+		auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), m_loc);
 		getbit->stackArgs.push_back(std::move(stripPrefix));
 		getbit->stackArgs.push_back(makeUint64("0", m_loc));
 
@@ -410,10 +353,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 				break;
 			}
 
-			auto extract = std::make_shared<awst::IntrinsicCall>();
-			extract->sourceLocation = m_loc;
-			extract->opCode = "extract3";
-			extract->wtype = awst::WType::bytesType();
+			auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 			extract->stackArgs.push_back(singleBytes);
 			extract->stackArgs.push_back(makeUint64(std::to_string(offset), m_loc));
 			extract->stackArgs.push_back(makeUint64(std::to_string(fieldSize), m_loc));
@@ -426,19 +366,13 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 			}
 			else if (fieldType == awst::WType::uint64Type())
 			{
-				auto btoi = std::make_shared<awst::IntrinsicCall>();
-				btoi->sourceLocation = m_loc;
-				btoi->opCode = "btoi";
-				btoi->wtype = awst::WType::uint64Type();
+				auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), m_loc);
 				btoi->stackArgs.push_back(std::move(extract));
 				decoded = std::move(btoi);
 			}
 			else if (fieldType == awst::WType::boolType())
 			{
-				auto getbit = std::make_shared<awst::IntrinsicCall>();
-				getbit->sourceLocation = m_loc;
-				getbit->opCode = "getbit";
-				getbit->wtype = awst::WType::uint64Type();
+				auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), m_loc);
 				getbit->stackArgs.push_back(std::move(extract));
 				getbit->stackArgs.push_back(makeUint64("0", m_loc));
 
@@ -611,36 +545,21 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 
 				auto cast = awst::makeReinterpretCast(std::move(elem), awst::WType::bytesType(), m_loc);
 
-				auto zeros = std::make_shared<awst::IntrinsicCall>();
-				zeros->sourceLocation = m_loc;
-				zeros->wtype = awst::WType::bytesType();
-				zeros->opCode = "bzero";
+				auto zeros = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
 				zeros->stackArgs.push_back(makeUint64("32", m_loc));
 
-				auto padded = std::make_shared<awst::IntrinsicCall>();
-				padded->sourceLocation = m_loc;
-				padded->wtype = awst::WType::bytesType();
-				padded->opCode = "concat";
+				auto padded = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
 				padded->stackArgs.push_back(std::move(zeros));
 				padded->stackArgs.push_back(std::move(cast));
 
-				auto lenCall = std::make_shared<awst::IntrinsicCall>();
-				lenCall->sourceLocation = m_loc;
-				lenCall->wtype = awst::WType::uint64Type();
-				lenCall->opCode = "len";
+				auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), m_loc);
 				lenCall->stackArgs.push_back(padded);
 
-				auto off = std::make_shared<awst::IntrinsicCall>();
-				off->sourceLocation = m_loc;
-				off->wtype = awst::WType::uint64Type();
-				off->opCode = "-";
+				auto off = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), m_loc);
 				off->stackArgs.push_back(std::move(lenCall));
 				off->stackArgs.push_back(makeUint64("32", m_loc));
 
-				auto extracted = std::make_shared<awst::IntrinsicCall>();
-				extracted->sourceLocation = m_loc;
-				extracted->wtype = awst::WType::bytesType();
-				extracted->opCode = "extract3";
+				auto extracted = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 				extracted->stackArgs.push_back(std::move(padded));
 				extracted->stackArgs.push_back(std::move(off));
 				extracted->stackArgs.push_back(makeUint64("32", m_loc));
@@ -649,10 +568,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 					acc = std::move(extracted);
 				else
 				{
-					auto cat = std::make_shared<awst::IntrinsicCall>();
-					cat->sourceLocation = m_loc;
-					cat->wtype = awst::WType::bytesType();
-					cat->opCode = "concat";
+					auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), m_loc);
 					cat->stackArgs.push_back(std::move(acc));
 					cat->stackArgs.push_back(std::move(extracted));
 					acc = std::move(cat);

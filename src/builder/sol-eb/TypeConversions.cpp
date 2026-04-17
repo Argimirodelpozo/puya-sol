@@ -138,10 +138,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToInteger(
 		// bytes[N≤8] → btoi → uint64/biguint
 		auto toBytes = awst::makeReinterpretCast(std::move(_arg), awst::WType::bytesType(), _loc);
 
-		auto btoi = std::make_shared<awst::IntrinsicCall>();
-		btoi->sourceLocation = _loc;
-		btoi->wtype = awst::WType::uint64Type();
-		btoi->opCode = "btoi";
+		auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
 		btoi->stackArgs.push_back(std::move(toBytes));
 
 		auto result = TypeCoercion::implicitNumericCast(std::move(btoi), _targetWType, _loc);
@@ -192,23 +189,14 @@ std::shared_ptr<awst::Expression> TypeConversionRegistry::leftPadToN(
 {
 	auto nConst = awst::makeIntegerConstant(std::to_string(_n), _loc);
 
-	auto padding = std::make_shared<awst::IntrinsicCall>();
-	padding->sourceLocation = _loc;
-	padding->wtype = awst::WType::bytesType();
-	padding->opCode = "bzero";
+	auto padding = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
 	padding->stackArgs.push_back(nConst);
 
-	auto padded = std::make_shared<awst::IntrinsicCall>();
-	padded->sourceLocation = _loc;
-	padded->wtype = awst::WType::bytesType();
-	padded->opCode = "concat";
+	auto padded = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
 	padded->stackArgs.push_back(std::move(padding));
 	padded->stackArgs.push_back(std::move(_expr));
 
-	auto paddedLen = std::make_shared<awst::IntrinsicCall>();
-	paddedLen->sourceLocation = _loc;
-	paddedLen->wtype = awst::WType::uint64Type();
-	paddedLen->opCode = "len";
+	auto paddedLen = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), _loc);
 	paddedLen->stackArgs.push_back(padded);
 
 	auto nConst2 = awst::makeIntegerConstant(std::to_string(_n), _loc);
@@ -217,10 +205,7 @@ std::shared_ptr<awst::Expression> TypeConversionRegistry::leftPadToN(
 
 	auto nConst3 = awst::makeIntegerConstant(std::to_string(_n), _loc);
 
-	auto extract = std::make_shared<awst::IntrinsicCall>();
-	extract->sourceLocation = _loc;
-	extract->wtype = awst::WType::bytesType();
-	extract->opCode = "extract3";
+	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 	extract->stackArgs.push_back(std::move(padded));
 	extract->stackArgs.push_back(std::move(offset));
 	extract->stackArgs.push_back(std::move(nConst3));
@@ -288,10 +273,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 	if (srcWType == awst::WType::uint64Type())
 	{
 		unsigned byteWidth = fbType->numBytes();
-		auto itob = std::make_shared<awst::IntrinsicCall>();
-		itob->sourceLocation = _loc;
-		itob->wtype = awst::WType::bytesType();
-		itob->opCode = "itob";
+		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
 		itob->stackArgs.push_back(std::move(_arg));
 
 		std::shared_ptr<awst::Expression> result;
@@ -301,10 +283,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 			auto off = awst::makeIntegerConstant(std::to_string(8 - byteWidth), _loc);
 			auto len = awst::makeIntegerConstant(std::to_string(byteWidth), _loc);
 
-			auto extract = std::make_shared<awst::IntrinsicCall>();
-			extract->sourceLocation = _loc;
-			extract->wtype = awst::WType::bytesType();
-			extract->opCode = "extract3";
+			auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 			extract->stackArgs.push_back(std::move(itob));
 			extract->stackArgs.push_back(std::move(off));
 			extract->stackArgs.push_back(std::move(len));
@@ -351,15 +330,9 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 			{
 				// Right-pad: concat(input, bzero(N-M))
 				auto padSize = awst::makeIntegerConstant(std::to_string(tgtLen - srcLen), _loc);
-				auto pad = std::make_shared<awst::IntrinsicCall>();
-				pad->sourceLocation = _loc;
-				pad->wtype = awst::WType::bytesType();
-				pad->opCode = "bzero";
+				auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
 				pad->stackArgs.push_back(std::move(padSize));
-				auto cat = std::make_shared<awst::IntrinsicCall>();
-				cat->sourceLocation = _loc;
-				cat->wtype = awst::WType::bytesType();
-				cat->opCode = "concat";
+				auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
 				cat->stackArgs.push_back(std::move(toBytes));
 				cat->stackArgs.push_back(std::move(pad));
 				result = std::move(cat);
@@ -369,10 +342,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 				// Left-truncate: extract(0, N)
 				auto zero = awst::makeIntegerConstant("0", _loc);
 				auto len = awst::makeIntegerConstant(std::to_string(tgtLen), _loc);
-				auto extract = std::make_shared<awst::IntrinsicCall>();
-				extract->sourceLocation = _loc;
-				extract->wtype = awst::WType::bytesType();
-				extract->opCode = "extract3";
+				auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 				extract->stackArgs.push_back(std::move(toBytes));
 				extract->stackArgs.push_back(std::move(zero));
 				extract->stackArgs.push_back(std::move(len));

@@ -872,10 +872,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 									}
 									else if (method.returnType == awst::WType::uint64Type())
 									{
-										auto itob = std::make_shared<awst::IntrinsicCall>();
-										itob->sourceLocation = sloc;
-										itob->opCode = "itob";
-										itob->wtype = awst::WType::bytesType();
+										auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), sloc);
 										itob->stackArgs.push_back(storeVal);
 										storeVal = itob;
 									}
@@ -1096,10 +1093,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 				}
 				else if (sub->returnType == awst::WType::uint64Type())
 				{
-					auto itob = std::make_shared<awst::IntrinsicCall>();
-					itob->sourceLocation = sub->sourceLocation;
-					itob->opCode = "itob";
-					itob->wtype = awst::WType::bytesType();
+					auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), sub->sourceLocation);
 					itob->stackArgs.push_back(storeVal);
 					storeVal = itob;
 				}
@@ -1107,10 +1101,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 				{
 					// bool → itob(btoi equivalent)
 					auto boolToInt = awst::makeReinterpretCast(storeVal, awst::WType::uint64Type(), sub->sourceLocation);
-					auto itob = std::make_shared<awst::IntrinsicCall>();
-					itob->sourceLocation = sub->sourceLocation;
-					itob->opCode = "itob";
-					itob->wtype = awst::WType::bytesType();
+					auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), sub->sourceLocation);
 					itob->stackArgs.push_back(boolToInt);
 					storeVal = itob;
 				}

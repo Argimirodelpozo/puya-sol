@@ -27,10 +27,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewBytes()
 		sizeExpr = builder::TypeCoercion::implicitNumericCast(
 			std::move(sizeExpr), awst::WType::uint64Type(), m_loc);
 
-	auto e = std::make_shared<awst::IntrinsicCall>();
-	e->sourceLocation = m_loc;
-	e->wtype = resultType;
-	e->opCode = "bzero";
+	auto e = awst::makeIntrinsicCall("bzero", resultType, m_loc);
 	if (sizeExpr)
 		e->stackArgs.push_back(std::move(sizeExpr));
 	return e;
@@ -172,10 +169,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 		if (sizeExpr)
 			sizeExpr = builder::TypeCoercion::implicitNumericCast(
 				std::move(sizeExpr), awst::WType::uint64Type(), m_loc);
-		auto bzero = std::make_shared<awst::IntrinsicCall>();
-		bzero->sourceLocation = m_loc;
-		bzero->wtype = awst::WType::bytesType();
-		bzero->opCode = "bzero";
+		auto bzero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
 		if (sizeExpr)
 			bzero->stackArgs.push_back(std::move(sizeExpr));
 		auto cast = awst::makeReinterpretCast(std::move(bzero), resultType, m_loc);
@@ -249,10 +243,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 
 			// Read CreatedApplicationID via itxn intrinsic and save to temp var
 			// because subsequent fund txn would clobber the itxn context.
-			auto createdAppIdCall = std::make_shared<awst::IntrinsicCall>();
-			createdAppIdCall->sourceLocation = m_loc;
-			createdAppIdCall->wtype = awst::WType::uint64Type();
-			createdAppIdCall->opCode = "itxn";
+			auto createdAppIdCall = awst::makeIntrinsicCall("itxn", awst::WType::uint64Type(), m_loc);
 			createdAppIdCall->immediates = {std::string("CreatedApplicationID")};
 
 			static int newAppIdCounter = 0;
@@ -274,10 +265,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 
 				auto* fundTupleType = new awst::WTuple(
 					{awst::WType::bytesType(), awst::WType::boolType()});
-				auto fundAppParams = std::make_shared<awst::IntrinsicCall>();
-				fundAppParams->sourceLocation = m_loc;
-				fundAppParams->wtype = fundTupleType;
-				fundAppParams->opCode = "app_params_get";
+				auto fundAppParams = awst::makeIntrinsicCall("app_params_get", fundTupleType, m_loc);
 				fundAppParams->immediates = {std::string("AppAddress")};
 				fundAppParams->stackArgs.push_back(std::move(fundAppId));
 

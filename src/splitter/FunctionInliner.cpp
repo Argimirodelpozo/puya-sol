@@ -1590,10 +1590,7 @@ std::shared_ptr<awst::Expression> FunctionInliner::deepCopyExpr(
 	if (type == "IntrinsicCall")
 	{
 		auto& src = static_cast<awst::IntrinsicCall const&>(*_expr);
-		auto n = std::make_shared<awst::IntrinsicCall>();
-		n->sourceLocation = src.sourceLocation;
-		n->wtype = src.wtype;
-		n->opCode = src.opCode;
+		auto n = awst::makeIntrinsicCall(src.opCode, src.wtype, src.sourceLocation);
 		n->immediates = src.immediates;
 		for (auto const& arg: src.stackArgs)
 			n->stackArgs.push_back(deepCopyExpr(arg));

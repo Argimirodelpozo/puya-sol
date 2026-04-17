@@ -16,10 +16,7 @@ void AssemblyBuilder::handleEcAdd(
 )
 {
 	// ecAdd: 4 input slots (x1,y1,x2,y2), 2 output slots (rx,ry)
-	auto ecCall = std::make_shared<awst::IntrinsicCall>();
-	ecCall->sourceLocation = _loc;
-	ecCall->wtype = awst::WType::bytesType();
-	ecCall->opCode = "ec_add";
+	auto ecCall = awst::makeIntrinsicCall("ec_add", awst::WType::bytesType(), _loc);
 	ecCall->immediates.push_back("BN254g1");
 	ecCall->stackArgs.push_back(concatSlots(_inputOffset, 0, 2, _loc)); // point A
 	ecCall->stackArgs.push_back(concatSlots(_inputOffset, 2, 2, _loc)); // point B
@@ -33,10 +30,7 @@ void AssemblyBuilder::handleEcMul(
 )
 {
 	// ecMul: 3 input slots (x,y,s), 2 output slots (rx,ry)
-	auto ecCall = std::make_shared<awst::IntrinsicCall>();
-	ecCall->sourceLocation = _loc;
-	ecCall->wtype = awst::WType::bytesType();
-	ecCall->opCode = "ec_scalar_mul";
+	auto ecCall = awst::makeIntrinsicCall("ec_scalar_mul", awst::WType::bytesType(), _loc);
 	ecCall->immediates.push_back("BN254g1");
 	ecCall->stackArgs.push_back(concatSlots(_inputOffset, 0, 2, _loc)); // point A
 	ecCall->stackArgs.push_back(concatSlots(_inputOffset, 2, 1, _loc)); // scalar
@@ -54,10 +48,7 @@ void AssemblyBuilder::handleEcPairing(
 	int inputSlots = static_cast<int>(_inputSize / 0x20);
 	int numPairs = inputSlots / 6;
 
-	auto ecCall = std::make_shared<awst::IntrinsicCall>();
-	ecCall->sourceLocation = _loc;
-	ecCall->wtype = awst::WType::boolType();
-	ecCall->opCode = "ec_pairing_check";
+	auto ecCall = awst::makeIntrinsicCall("ec_pairing_check", awst::WType::boolType(), _loc);
 	ecCall->immediates.push_back("BN254g1");
 
 	if (numPairs > 0)
@@ -67,10 +58,7 @@ void AssemblyBuilder::handleEcPairing(
 		{
 			auto a = padTo32Bytes(readMemSlot(offA, _loc), _loc);
 			auto b = padTo32Bytes(readMemSlot(offB, _loc), _loc);
-			auto c = std::make_shared<awst::IntrinsicCall>();
-			c->sourceLocation = _loc;
-			c->wtype = awst::WType::bytesType();
-			c->opCode = "concat";
+			auto c = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
 			c->stackArgs.push_back(std::move(a));
 			c->stackArgs.push_back(std::move(b));
 			return c;
@@ -91,10 +79,7 @@ void AssemblyBuilder::handleEcPairing(
 			auto g2_y = concatTwoAbsSlots(
 				pairBase + 5 * 0x20, pairBase + 4 * 0x20 // y_re, y_im
 			);
-			auto g2 = std::make_shared<awst::IntrinsicCall>();
-			g2->sourceLocation = _loc;
-			g2->wtype = awst::WType::bytesType();
-			g2->opCode = "concat";
+			auto g2 = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
 			g2->stackArgs.push_back(std::move(g2_x));
 			g2->stackArgs.push_back(std::move(g2_y));
 
@@ -102,10 +87,7 @@ void AssemblyBuilder::handleEcPairing(
 				g1Points = std::move(g1);
 			else
 			{
-				auto c = std::make_shared<awst::IntrinsicCall>();
-				c->sourceLocation = _loc;
-				c->wtype = awst::WType::bytesType();
-				c->opCode = "concat";
+				auto c = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
 				c->stackArgs.push_back(std::move(g1Points));
 				c->stackArgs.push_back(std::move(g1));
 				g1Points = std::move(c);
@@ -114,10 +96,7 @@ void AssemblyBuilder::handleEcPairing(
 				g2Points = std::move(g2);
 			else
 			{
-				auto c = std::make_shared<awst::IntrinsicCall>();
-				c->sourceLocation = _loc;
-				c->wtype = awst::WType::bytesType();
-				c->opCode = "concat";
+				auto c = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
 				c->stackArgs.push_back(std::move(g2Points));
 				c->stackArgs.push_back(std::move(g2));
 				g2Points = std::move(c);
@@ -159,10 +138,7 @@ void AssemblyBuilder::handleEcRecover(
 	// Cast biguint → bytes → btoi → uint64
 	auto vBytes = awst::makeReinterpretCast(std::move(vMinus27), awst::WType::bytesType(), _loc);
 
-	auto recoveryId = std::make_shared<awst::IntrinsicCall>();
-	recoveryId->sourceLocation = _loc;
-	recoveryId->wtype = awst::WType::uint64Type();
-	recoveryId->opCode = "btoi";
+	auto recoveryId = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
 	recoveryId->stackArgs.push_back(std::move(vBytes));
 
 	// 3. Call ecdsa_pk_recover Secp256k1
@@ -171,10 +147,7 @@ void AssemblyBuilder::handleEcRecover(
 		std::vector<awst::WType const*>{awst::WType::bytesType(), awst::WType::bytesType()}
 	);
 
-	auto ecdsaRecover = std::make_shared<awst::IntrinsicCall>();
-	ecdsaRecover->sourceLocation = _loc;
-	ecdsaRecover->wtype = tupleTypePtr;
-	ecdsaRecover->opCode = "ecdsa_pk_recover";
+	auto ecdsaRecover = awst::makeIntrinsicCall("ecdsa_pk_recover", tupleTypePtr, _loc);
 	ecdsaRecover->immediates.push_back("Secp256k1");
 	ecdsaRecover->stackArgs.push_back(std::move(msgHash));
 	ecdsaRecover->stackArgs.push_back(std::move(recoveryId));
@@ -211,44 +184,29 @@ void AssemblyBuilder::handleEcRecover(
 	pubkeyY->index = 1;
 
 	// 5. concat(pubkey_x, pubkey_y) → 64 bytes
-	auto pubkeyConcat = std::make_shared<awst::IntrinsicCall>();
-	pubkeyConcat->sourceLocation = _loc;
-	pubkeyConcat->wtype = awst::WType::bytesType();
-	pubkeyConcat->opCode = "concat";
+	auto pubkeyConcat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
 	pubkeyConcat->stackArgs.push_back(std::move(pubkeyX));
 	pubkeyConcat->stackArgs.push_back(std::move(pubkeyY));
 
 	// 6. keccak256(concat) → 32 bytes
-	auto hash = std::make_shared<awst::IntrinsicCall>();
-	hash->sourceLocation = _loc;
-	hash->wtype = awst::WType::bytesType();
-	hash->opCode = "keccak256";
+	auto hash = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), _loc);
 	hash->stackArgs.push_back(std::move(pubkeyConcat));
 
 	// 7. extract3(hash, 12, 20) → last 20 bytes (Ethereum address)
 	auto off12 = awst::makeIntegerConstant("12", _loc);
 	auto len20 = awst::makeIntegerConstant("20", _loc);
 
-	auto addr = std::make_shared<awst::IntrinsicCall>();
-	addr->sourceLocation = _loc;
-	addr->wtype = awst::WType::bytesType();
-	addr->opCode = "extract3";
+	auto addr = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 	addr->stackArgs.push_back(std::move(hash));
 	addr->stackArgs.push_back(std::move(off12));
 	addr->stackArgs.push_back(std::move(len20));
 
 	// 8. Left-pad to 32 bytes: concat(bzero(12), addr)
-	auto pad12 = std::make_shared<awst::IntrinsicCall>();
-	pad12->sourceLocation = _loc;
-	pad12->wtype = awst::WType::bytesType();
-	pad12->opCode = "bzero";
+	auto pad12 = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
 	auto twelve = awst::makeIntegerConstant("12", _loc);
 	pad12->stackArgs.push_back(std::move(twelve));
 
-	auto paddedAddr = std::make_shared<awst::IntrinsicCall>();
-	paddedAddr->sourceLocation = _loc;
-	paddedAddr->wtype = awst::WType::bytesType();
-	paddedAddr->opCode = "concat";
+	auto paddedAddr = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
 	paddedAddr->stackArgs.push_back(std::move(pad12));
 	paddedAddr->stackArgs.push_back(std::move(addr));
 
@@ -283,10 +241,7 @@ void AssemblyBuilder::handleSha256Precompile(
 		auto offZero = awst::makeIntegerConstant("0", _loc);
 		auto remLen = awst::makeIntegerConstant(std::to_string(remainder), _loc);
 
-		auto truncated = std::make_shared<awst::IntrinsicCall>();
-		truncated->sourceLocation = _loc;
-		truncated->wtype = awst::WType::bytesType();
-		truncated->opCode = "extract3";
+		auto truncated = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 		truncated->stackArgs.push_back(std::move(partialSlot));
 		truncated->stackArgs.push_back(std::move(offZero));
 		truncated->stackArgs.push_back(std::move(remLen));
@@ -295,10 +250,7 @@ void AssemblyBuilder::handleSha256Precompile(
 			inputData = std::move(truncated);
 		else
 		{
-			auto concat = std::make_shared<awst::IntrinsicCall>();
-			concat->sourceLocation = _loc;
-			concat->wtype = awst::WType::bytesType();
-			concat->opCode = "concat";
+			auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
 			concat->stackArgs.push_back(std::move(inputData));
 			concat->stackArgs.push_back(std::move(truncated));
 			inputData = std::move(concat);
@@ -319,10 +271,7 @@ void AssemblyBuilder::handleSha256Precompile(
 	}
 
 	// Apply sha256
-	auto sha256Call = std::make_shared<awst::IntrinsicCall>();
-	sha256Call->sourceLocation = _loc;
-	sha256Call->wtype = awst::WType::bytesType();
-	sha256Call->opCode = "sha256";
+	auto sha256Call = awst::makeIntrinsicCall("sha256", awst::WType::bytesType(), _loc);
 	sha256Call->stackArgs.push_back(std::move(inputData));
 
 	// Convert to biguint and store at output
@@ -517,20 +466,14 @@ void AssemblyBuilder::handleIdentityPrecompile(
 
 	auto inSizeConst = awst::makeIntegerConstant(std::to_string(_inputSize), _loc);
 
-	auto extractData = std::make_shared<awst::IntrinsicCall>();
-	extractData->sourceLocation = _loc;
-	extractData->wtype = awst::WType::bytesType();
-	extractData->opCode = "extract3";
+	auto extractData = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 	extractData->stackArgs.push_back(memoryVar(_loc));
 	extractData->stackArgs.push_back(std::move(inOffConst));
 	extractData->stackArgs.push_back(std::move(inSizeConst));
 
 	auto outOffConst = awst::makeIntegerConstant(std::to_string(_outputOffset), _loc);
 
-	auto replace = std::make_shared<awst::IntrinsicCall>();
-	replace->sourceLocation = _loc;
-	replace->wtype = awst::WType::bytesType();
-	replace->opCode = "replace3";
+	auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
 	replace->stackArgs.push_back(memoryVar(_loc));
 	replace->stackArgs.push_back(std::move(outOffConst));
 	replace->stackArgs.push_back(std::move(extractData));

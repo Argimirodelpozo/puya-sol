@@ -60,10 +60,7 @@ std::shared_ptr<awst::Statement> TransientStorage::buildInit(
 	unsigned sz = std::max(blobSize(), MAX_SLOTS * SLOT_SIZE);
 	auto size = awst::makeIntegerConstant(std::to_string(sz), _loc);
 
-	auto bzero = std::make_shared<awst::IntrinsicCall>();
-	bzero->sourceLocation = _loc;
-	bzero->wtype = awst::WType::bytesType();
-	bzero->opCode = "bzero";
+	auto bzero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
 	bzero->stackArgs.push_back(std::move(size));
 
 	auto target = awst::makeVarExpression(BLOB_VAR, awst::WType::bytesType(), _loc);
@@ -87,10 +84,7 @@ std::shared_ptr<awst::Expression> TransientStorage::buildRead(
 	auto blob = awst::makeVarExpression(BLOB_VAR, awst::WType::bytesType(), _loc);
 
 	// extract(blob, offset, 32) → 32 raw bytes
-	auto extract = std::make_shared<awst::IntrinsicCall>();
-	extract->sourceLocation = _loc;
-	extract->wtype = awst::WType::bytesType();
-	extract->opCode = "extract";
+	auto extract = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
 	extract->immediates = {offset, static_cast<int>(SLOT_SIZE)};
 	extract->stackArgs.push_back(std::move(blob));
 
@@ -103,19 +97,13 @@ std::shared_ptr<awst::Expression> TransientStorage::buildRead(
 	else if (_type == awst::WType::uint64Type() || _type == awst::WType::boolType())
 	{
 		// extract last 8 bytes → btoi
-		auto extract8 = std::make_shared<awst::IntrinsicCall>();
-		extract8->sourceLocation = _loc;
-		extract8->wtype = awst::WType::bytesType();
-		extract8->opCode = "extract";
+		auto extract8 = awst::makeIntrinsicCall("extract", awst::WType::bytesType(), _loc);
 		extract8->immediates = {offset + static_cast<int>(SLOT_SIZE) - 8, 8};
 
 		auto blobRef = awst::makeVarExpression(BLOB_VAR, awst::WType::bytesType(), _loc);
 		extract8->stackArgs.push_back(std::move(blobRef));
 
-		auto btoi = std::make_shared<awst::IntrinsicCall>();
-		btoi->sourceLocation = _loc;
-		btoi->wtype = awst::WType::uint64Type();
-		btoi->opCode = "btoi";
+		auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
 		btoi->stackArgs.push_back(std::move(extract8));
 		return btoi;
 	}
@@ -141,18 +129,12 @@ std::shared_ptr<awst::Statement> TransientStorage::buildWrite(
 		auto toBytes = awst::makeReinterpretCast(std::move(_value), awst::WType::bytesType(), _loc);
 
 		// bzero(32)
-		auto zeros = std::make_shared<awst::IntrinsicCall>();
-		zeros->sourceLocation = _loc;
-		zeros->wtype = awst::WType::bytesType();
-		zeros->opCode = "bzero";
+		auto zeros = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
 		auto sz = awst::makeIntegerConstant("32", _loc);
 		zeros->stackArgs.push_back(std::move(sz));
 
 		// b| pads shorter operand to match longer (both become 32+ bytes)
-		auto padded = std::make_shared<awst::IntrinsicCall>();
-		padded->sourceLocation = _loc;
-		padded->wtype = awst::WType::bytesType();
-		padded->opCode = "b|";
+		auto padded = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), _loc);
 		padded->stackArgs.push_back(std::move(zeros));
 		padded->stackArgs.push_back(std::move(toBytes));
 
@@ -165,23 +147,14 @@ std::shared_ptr<awst::Statement> TransientStorage::buildWrite(
 		|| _value->wtype == awst::WType::boolType())
 	{
 		// itob produces 8 bytes, pad to 32 with bzero(24) prefix
-		auto itob = std::make_shared<awst::IntrinsicCall>();
-		itob->sourceLocation = _loc;
-		itob->wtype = awst::WType::bytesType();
-		itob->opCode = "itob";
+		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
 		itob->stackArgs.push_back(std::move(_value));
 
-		auto prefix = std::make_shared<awst::IntrinsicCall>();
-		prefix->sourceLocation = _loc;
-		prefix->wtype = awst::WType::bytesType();
-		prefix->opCode = "bzero";
+		auto prefix = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
 		auto twentyFour = awst::makeIntegerConstant("24", _loc);
 		prefix->stackArgs.push_back(std::move(twentyFour));
 
-		auto cat = std::make_shared<awst::IntrinsicCall>();
-		cat->sourceLocation = _loc;
-		cat->wtype = awst::WType::bytesType();
-		cat->opCode = "concat";
+		auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), _loc);
 		cat->stackArgs.push_back(std::move(prefix));
 		cat->stackArgs.push_back(std::move(itob));
 
@@ -195,10 +168,7 @@ std::shared_ptr<awst::Statement> TransientStorage::buildWrite(
 	// Load blob, replace at offset, store back
 	auto blobRead = awst::makeVarExpression(BLOB_VAR, awst::WType::bytesType(), _loc);
 
-	auto replace = std::make_shared<awst::IntrinsicCall>();
-	replace->sourceLocation = _loc;
-	replace->wtype = awst::WType::bytesType();
-	replace->opCode = "replace2";
+	auto replace = awst::makeIntrinsicCall("replace2", awst::WType::bytesType(), _loc);
 	replace->immediates = {offset};
 	replace->stackArgs.push_back(std::move(blobRead));
 	replace->stackArgs.push_back(std::move(bytes32));

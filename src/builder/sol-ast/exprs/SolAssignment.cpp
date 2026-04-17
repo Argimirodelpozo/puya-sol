@@ -265,17 +265,11 @@ std::shared_ptr<awst::Expression> SolAssignment::handleBytesElementAssignment(
 	// Coerce value to single byte
 	if (_value->wtype == awst::WType::uint64Type())
 	{
-		auto itob = std::make_shared<awst::IntrinsicCall>();
-		itob->sourceLocation = m_loc;
-		itob->wtype = awst::WType::bytesType();
-		itob->opCode = "itob";
+		auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
 		itob->stackArgs.push_back(std::move(_value));
 		auto seven = awst::makeIntegerConstant("7", m_loc);
 		auto one = awst::makeIntegerConstant("1", m_loc);
-		auto extract = std::make_shared<awst::IntrinsicCall>();
-		extract->sourceLocation = m_loc;
-		extract->wtype = awst::WType::bytesType();
-		extract->opCode = "extract3";
+		auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 		extract->stackArgs.push_back(std::move(itob));
 		extract->stackArgs.push_back(std::move(seven));
 		extract->stackArgs.push_back(std::move(one));
@@ -289,10 +283,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleBytesElementAssignment(
 	}
 	_value = builder::TypeCoercion::stringToBytes(std::move(_value), m_loc);
 
-	auto replace = std::make_shared<awst::IntrinsicCall>();
-	replace->sourceLocation = m_loc;
-	replace->wtype = _indexExpr->base->wtype;
-	replace->opCode = "replace3";
+	auto replace = awst::makeIntrinsicCall("replace3", _indexExpr->base->wtype, m_loc);
 	replace->stackArgs.push_back(_indexExpr->base);
 	replace->stackArgs.push_back(_indexExpr->index);
 	replace->stackArgs.push_back(std::move(_value));
@@ -627,10 +618,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 				auto castBytes = awst::makeReinterpretCast(std::move(slotJ), awst::WType::bytesType(), m_loc);
 
 				// Safe truncate biguint slot to uint64: extract last 8 bytes then btoi
-				auto lenOp = std::make_shared<awst::IntrinsicCall>();
-				lenOp->sourceLocation = m_loc;
-				lenOp->wtype = awst::WType::uint64Type();
-				lenOp->opCode = "len";
+				auto lenOp = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), m_loc);
 				lenOp->stackArgs.push_back(castBytes);
 				auto sub8 = std::make_shared<awst::UInt64BinaryOperation>();
 				sub8->sourceLocation = m_loc;
@@ -639,18 +627,12 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 				sub8->op = awst::UInt64BinaryOperator::Sub;
 				auto eight = awst::makeIntegerConstant("8", m_loc);
 				sub8->right = std::move(eight);
-				auto last8 = std::make_shared<awst::IntrinsicCall>();
-				last8->sourceLocation = m_loc;
-				last8->wtype = awst::WType::bytesType();
-				last8->opCode = "extract3";
+				auto last8 = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), m_loc);
 				last8->stackArgs.push_back(std::move(castBytes));
 				last8->stackArgs.push_back(std::move(sub8));
 				auto eight2 = awst::makeIntegerConstant("8", m_loc);
 				last8->stackArgs.push_back(std::move(eight2));
-				auto btoi = std::make_shared<awst::IntrinsicCall>();
-				btoi->sourceLocation = m_loc;
-				btoi->wtype = awst::WType::uint64Type();
-				btoi->opCode = "btoi";
+				auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), m_loc);
 				btoi->stackArgs.push_back(std::move(last8));
 
 				// value[j]
@@ -681,10 +663,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 				else if (elemVal->wtype == awst::WType::uint64Type())
 				{
 					// Convert uint64 to biguint
-					auto itob = std::make_shared<awst::IntrinsicCall>();
-					itob->sourceLocation = m_loc;
-					itob->wtype = awst::WType::bytesType();
-					itob->opCode = "itob";
+					auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), m_loc);
 					itob->stackArgs.push_back(std::move(elemVal));
 					auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), m_loc);
 					elemVal = std::move(cast);

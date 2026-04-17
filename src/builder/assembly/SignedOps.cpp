@@ -22,10 +22,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTload(
 
 	// Convert slot to uint64 offset: slot * 32
 	auto slotBytes = awst::makeReinterpretCast(std::move(slot), awst::WType::bytesType(), _loc);
-	auto slotU64 = std::make_shared<awst::IntrinsicCall>();
-	slotU64->sourceLocation = _loc;
-	slotU64->wtype = awst::WType::uint64Type();
-	slotU64->opCode = "btoi";
+	auto slotU64 = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
 	slotU64->stackArgs.push_back(std::move(slotBytes));
 
 	auto thirtyTwo = awst::makeIntegerConstant("32", _loc);
@@ -37,10 +34,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTload(
 
 	auto thirtyTwo2 = awst::makeIntegerConstant("32", _loc);
 
-	auto extract = std::make_shared<awst::IntrinsicCall>();
-	extract->sourceLocation = _loc;
-	extract->wtype = awst::WType::bytesType();
-	extract->opCode = "extract3";
+	auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 	extract->stackArgs.push_back(std::move(blob));
 	extract->stackArgs.push_back(std::move(offset));
 	extract->stackArgs.push_back(std::move(thirtyTwo2));
@@ -64,10 +58,7 @@ void AssemblyBuilder::handleTstore(
 
 	// Convert slot to uint64 offset: slot * 32
 	auto slotBytes = awst::makeReinterpretCast(std::move(slot), awst::WType::bytesType(), _loc);
-	auto slotU64 = std::make_shared<awst::IntrinsicCall>();
-	slotU64->sourceLocation = _loc;
-	slotU64->wtype = awst::WType::uint64Type();
-	slotU64->opCode = "btoi";
+	auto slotU64 = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
 	slotU64->stackArgs.push_back(std::move(slotBytes));
 
 	auto thirtyTwo = awst::makeIntegerConstant("32", _loc);
@@ -77,27 +68,18 @@ void AssemblyBuilder::handleTstore(
 	// Convert value to 32 bytes: b| with bzero(32)
 	auto valueBytes = awst::makeReinterpretCast(std::move(value), awst::WType::bytesType(), _loc);
 
-	auto zeros = std::make_shared<awst::IntrinsicCall>();
-	zeros->sourceLocation = _loc;
-	zeros->wtype = awst::WType::bytesType();
-	zeros->opCode = "bzero";
+	auto zeros = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
 	auto sz = awst::makeIntegerConstant("32", _loc);
 	zeros->stackArgs.push_back(std::move(sz));
 
-	auto padded = std::make_shared<awst::IntrinsicCall>();
-	padded->sourceLocation = _loc;
-	padded->wtype = awst::WType::bytesType();
-	padded->opCode = "b|";
+	auto padded = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), _loc);
 	padded->stackArgs.push_back(std::move(zeros));
 	padded->stackArgs.push_back(std::move(valueBytes));
 
 	// replace3(__transient, offset, padded_value)
 	auto blobRead = awst::makeVarExpression("__transient", awst::WType::bytesType(), _loc);
 
-	auto replace = std::make_shared<awst::IntrinsicCall>();
-	replace->sourceLocation = _loc;
-	replace->wtype = awst::WType::bytesType();
-	replace->opCode = "replace3";
+	auto replace = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), _loc);
 	replace->stackArgs.push_back(std::move(blobRead));
 	replace->stackArgs.push_back(std::move(offset));
 	replace->stackArgs.push_back(std::move(padded));
@@ -433,10 +415,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSar(
 
 	auto fillBytes = awst::makeReinterpretCast(fillMask, awst::WType::bytesType(), _loc);
 
-	auto orCall = std::make_shared<awst::IntrinsicCall>();
-	orCall->sourceLocation = _loc;
-	orCall->wtype = awst::WType::bytesType();
-	orCall->opCode = "b|";
+	auto orCall = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), _loc);
 	orCall->stackArgs.push_back(std::move(shrBytes));
 	orCall->stackArgs.push_back(std::move(fillBytes));
 

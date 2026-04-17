@@ -263,10 +263,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 				auto toBytes = awst::makeReinterpretCast(std::move(expr), awst::WType::bytesType(), _loc);
 				expr = std::move(toBytes);
 			}
-			auto btoi = std::make_shared<awst::IntrinsicCall>();
-			btoi->sourceLocation = _loc;
-			btoi->wtype = awst::WType::uint64Type();
-			btoi->opCode = "btoi";
+			auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
 			btoi->stackArgs.push_back(std::move(expr));
 			operand = std::move(btoi);
 		}
@@ -297,10 +294,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 				return;
 			}
 
-			auto itob = std::make_shared<awst::IntrinsicCall>();
-			itob->sourceLocation = _loc;
-			itob->wtype = awst::WType::bytesType();
-			itob->opCode = "itob";
+			auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
 			itob->stackArgs.push_back(std::move(operand));
 
 			auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
@@ -361,10 +355,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			}
 			if (!opCode.empty())
 			{
-				auto e = std::make_shared<awst::IntrinsicCall>();
-				e->sourceLocation = _loc;
-				e->wtype = awst::WType::boolType();
-				e->opCode = std::move(opCode);
+				auto e = awst::makeIntrinsicCall(std::move(opCode), awst::WType::boolType(), _loc);
 				e->stackArgs.push_back(std::move(_left));
 				e->stackArgs.push_back(std::move(_right));
 				return e;
@@ -470,10 +461,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			// bzero(32) — 256-bit zero buffer
 			auto thirtyTwo = awst::makeIntegerConstant("32", _loc);
 
-			auto bzero = std::make_shared<awst::IntrinsicCall>();
-			bzero->sourceLocation = _loc;
-			bzero->wtype = awst::WType::bytesType();
-			bzero->opCode = "bzero";
+			auto bzero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
 			bzero->stackArgs.push_back(std::move(thirtyTwo));
 
 			// 255 - n: setbit uses MSB-first ordering, so bit (255-n) = 2^n
@@ -484,10 +472,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			// setbit(bzero(32), 255-n, 1) → bytes with only bit n set
 			auto one = awst::makeIntegerConstant("1", _loc);
 
-			auto setbit = std::make_shared<awst::IntrinsicCall>();
-			setbit->sourceLocation = _loc;
-			setbit->wtype = awst::WType::bytesType();
-			setbit->opCode = "setbit";
+			auto setbit = awst::makeIntrinsicCall("setbit", awst::WType::bytesType(), _loc);
 			setbit->stackArgs.push_back(std::move(bzero));
 			setbit->stackArgs.push_back(std::move(bitIdx));
 			setbit->stackArgs.push_back(std::move(one));
@@ -868,10 +853,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildSubmitAndReturn(
 		m_prePendingStatements.push_back(std::move(submitStmt));
 
 		// Read LastLog from most recently submitted inner txn using itxn intrinsic
-		auto readLog = std::make_shared<awst::IntrinsicCall>();
-		readLog->sourceLocation = _loc;
-		readLog->wtype = awst::WType::bytesType();
-		readLog->opCode = "itxn";
+		auto readLog = awst::makeIntrinsicCall("itxn", awst::WType::bytesType(), _loc);
 		readLog->immediates = {std::string("LastLog")};
 
 		// Strip the 4-byte ARC4 return prefix (0x151f7c75)
@@ -890,10 +872,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildSubmitAndReturn(
 		}
 		else if (_solidityReturnType == awst::WType::uint64Type())
 		{
-			auto btoi = std::make_shared<awst::IntrinsicCall>();
-			btoi->sourceLocation = _loc;
-			btoi->opCode = "btoi";
-			btoi->wtype = awst::WType::uint64Type();
+			auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
 			btoi->stackArgs.push_back(std::move(stripPrefix));
 			return btoi;
 		}
@@ -901,10 +880,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildSubmitAndReturn(
 		{
 			// ARC4 bool is 1 byte: 0x80 = true, 0x00 = false.
 			// Extract bit 0 (MSB) using getbit to get 0 or 1, then compare != 0 for bool.
-			auto getbit = std::make_shared<awst::IntrinsicCall>();
-			getbit->sourceLocation = _loc;
-			getbit->opCode = "getbit";
-			getbit->wtype = awst::WType::uint64Type();
+			auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), _loc);
 			getbit->stackArgs.push_back(std::move(stripPrefix));
 			getbit->stackArgs.push_back(makeUint64("0", _loc));
 
@@ -960,10 +936,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildSubmitAndReturn(
 				}
 
 				// extract3(bytes, offset, fieldSize)
-				auto extract = std::make_shared<awst::IntrinsicCall>();
-				extract->sourceLocation = _loc;
-				extract->opCode = "extract3";
-				extract->wtype = awst::WType::bytesType();
+				auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
 				extract->stackArgs.push_back(singleBytes);
 				extract->stackArgs.push_back(makeUint64(std::to_string(offset), _loc));
 				extract->stackArgs.push_back(makeUint64(std::to_string(fieldSize), _loc));
@@ -977,19 +950,13 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildSubmitAndReturn(
 				}
 				else if (fieldType == awst::WType::uint64Type())
 				{
-					auto btoi = std::make_shared<awst::IntrinsicCall>();
-					btoi->sourceLocation = _loc;
-					btoi->opCode = "btoi";
-					btoi->wtype = awst::WType::uint64Type();
+					auto btoi = awst::makeIntrinsicCall("btoi", awst::WType::uint64Type(), _loc);
 					btoi->stackArgs.push_back(std::move(extract));
 					fieldExpr = std::move(btoi);
 				}
 				else if (fieldType == awst::WType::boolType())
 				{
-					auto getbit = std::make_shared<awst::IntrinsicCall>();
-					getbit->sourceLocation = _loc;
-					getbit->opCode = "getbit";
-					getbit->wtype = awst::WType::uint64Type();
+					auto getbit = awst::makeIntrinsicCall("getbit", awst::WType::uint64Type(), _loc);
 					getbit->stackArgs.push_back(std::move(extract));
 					getbit->stackArgs.push_back(makeUint64("0", _loc));
 

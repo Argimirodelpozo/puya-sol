@@ -603,10 +603,7 @@ awst::ContractMethod ConstantExternalizer::buildLoadConstantsMethod(
 	for (auto const& [hash, entry]: m_constants)
 	{
 		// box_extract(key, offset, length)
-		auto boxExtract = std::make_shared<awst::IntrinsicCall>();
-		boxExtract->sourceLocation = _loc;
-		boxExtract->opCode = "box_extract";
-		boxExtract->wtype = awst::WType::bytesType();
+		auto boxExtract = awst::makeIntrinsicCall("box_extract", awst::WType::bytesType(), _loc);
 
 		auto offset = std::make_shared<awst::IntegerConstant>();
 		offset->value = std::to_string(entry.boxOffset);

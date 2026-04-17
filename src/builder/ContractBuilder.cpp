@@ -213,29 +213,20 @@ void ContractBuilder::prependNonPayableCheck(awst::ContractMethod& _method)
 
 	auto loc = _method.sourceLocation;
 
-	auto groupIdx = std::make_shared<awst::IntrinsicCall>();
-	groupIdx->sourceLocation = loc;
-	groupIdx->wtype = awst::WType::uint64Type();
-	groupIdx->opCode = "txn";
+	auto groupIdx = awst::makeIntrinsicCall("txn", awst::WType::uint64Type(), loc);
 	groupIdx->immediates = {std::string("GroupIndex")};
 
 	auto hasPayment = awst::makeNumericCompare(
 		groupIdx, awst::NumericComparison::Gt,
 		awst::makeIntegerConstant("0", loc), loc);
 
-	auto groupIdx2 = std::make_shared<awst::IntrinsicCall>();
-	groupIdx2->sourceLocation = loc;
-	groupIdx2->wtype = awst::WType::uint64Type();
-	groupIdx2->opCode = "txn";
+	auto groupIdx2 = awst::makeIntrinsicCall("txn", awst::WType::uint64Type(), loc);
 	groupIdx2->immediates = {std::string("GroupIndex")};
 	auto payIdx = awst::makeUInt64BinOp(
 		std::move(groupIdx2), awst::UInt64BinaryOperator::Sub,
 		awst::makeIntegerConstant("1", loc), loc);
 
-	auto amount = std::make_shared<awst::IntrinsicCall>();
-	amount->sourceLocation = loc;
-	amount->wtype = awst::WType::uint64Type();
-	amount->opCode = "gtxns";
+	auto amount = awst::makeIntrinsicCall("gtxns", awst::WType::uint64Type(), loc);
 	amount->immediates = {std::string("Amount")};
 	amount->stackArgs.push_back(std::move(payIdx));
 
@@ -920,10 +911,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 					std::shared_ptr<awst::Expression> keyBytes;
 					if (argRef->wtype == awst::WType::uint64Type())
 					{
-						auto itob = std::make_shared<awst::IntrinsicCall>();
-						itob->sourceLocation = loc;
-						itob->wtype = awst::WType::bytesType();
-						itob->opCode = "itob";
+						auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), loc);
 						itob->stackArgs.push_back(std::move(argRef));
 						keyBytes = std::move(itob);
 					}
@@ -934,40 +922,25 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 
 						auto padWidth = awst::makeIntegerConstant("32", loc);
 
-						auto pad = std::make_shared<awst::IntrinsicCall>();
-						pad->sourceLocation = loc;
-						pad->wtype = awst::WType::bytesType();
-						pad->opCode = "bzero";
+						auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), loc);
 						pad->stackArgs.push_back(std::move(padWidth));
 
-						auto cat = std::make_shared<awst::IntrinsicCall>();
-						cat->sourceLocation = loc;
-						cat->wtype = awst::WType::bytesType();
-						cat->opCode = "concat";
+						auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), loc);
 						cat->stackArgs.push_back(std::move(pad));
 						cat->stackArgs.push_back(std::move(reinterpret));
 
-						auto lenCall = std::make_shared<awst::IntrinsicCall>();
-						lenCall->sourceLocation = loc;
-						lenCall->wtype = awst::WType::uint64Type();
-						lenCall->opCode = "len";
+						auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), loc);
 						lenCall->stackArgs.push_back(cat);
 
 						auto width32 = awst::makeIntegerConstant("32", loc);
 
-						auto offset = std::make_shared<awst::IntrinsicCall>();
-						offset->sourceLocation = loc;
-						offset->wtype = awst::WType::uint64Type();
-						offset->opCode = "-";
+						auto offset = awst::makeIntrinsicCall("-", awst::WType::uint64Type(), loc);
 						offset->stackArgs.push_back(std::move(lenCall));
 						offset->stackArgs.push_back(std::move(width32));
 
 						auto width32b = awst::makeIntegerConstant("32", loc);
 
-						auto extract = std::make_shared<awst::IntrinsicCall>();
-						extract->sourceLocation = loc;
-						extract->wtype = awst::WType::bytesType();
-						extract->opCode = "extract3";
+						auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), loc);
 						extract->stackArgs.push_back(std::move(cat));
 						extract->stackArgs.push_back(std::move(offset));
 						extract->stackArgs.push_back(std::move(width32b));
@@ -992,10 +965,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 					compositeKey = std::move(keyParts[0]);
 					for (size_t i = 1; i < keyParts.size(); ++i)
 					{
-						auto concat = std::make_shared<awst::IntrinsicCall>();
-						concat->sourceLocation = loc;
-						concat->wtype = awst::WType::bytesType();
-						concat->opCode = "concat";
+						auto concat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), loc);
 						concat->stackArgs.push_back(std::move(compositeKey));
 						concat->stackArgs.push_back(std::move(keyParts[i]));
 						compositeKey = std::move(concat);
@@ -1003,10 +973,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				}
 
 				// Hash the composite key
-				auto hashCall = std::make_shared<awst::IntrinsicCall>();
-				hashCall->sourceLocation = loc;
-				hashCall->wtype = awst::WType::bytesType();
-				hashCall->opCode = "sha256";
+				auto hashCall = awst::makeIntrinsicCall("sha256", awst::WType::bytesType(), loc);
 				hashCall->stackArgs.push_back(std::move(compositeKey));
 
 				auto boxKey = std::make_shared<awst::BoxPrefixedKeyExpression>();
@@ -1565,10 +1532,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				} // end if (!defaultVal)
 
 				// app_global_put(key, defaultVal)
-				auto put = std::make_shared<awst::IntrinsicCall>();
-				put->sourceLocation = method.sourceLocation;
-				put->opCode = "app_global_put";
-				put->wtype = awst::WType::voidType();
+				auto put = awst::makeIntrinsicCall("app_global_put", awst::WType::voidType(), method.sourceLocation);
 				put->stackArgs.push_back(key);
 				put->stackArgs.push_back(defaultVal);
 
@@ -1705,29 +1669,20 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				{
 					// Constructor args come as 32-byte big-endian (EVM ABI encoding).
 					// Extract last 8 bytes, then btoi to native uint64/bool.
-					auto len = std::make_shared<awst::IntrinsicCall>();
-					len->sourceLocation = method.sourceLocation;
-					len->opCode = "len";
-					len->wtype = awst::WType::uint64Type();
+					auto len = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), method.sourceLocation);
 					len->stackArgs.push_back(readArg);
 
 					auto eight = awst::makeIntegerConstant("8", method.sourceLocation);
 
 					auto offset = awst::makeUInt64BinOp(std::move(len), awst::UInt64BinaryOperator::Sub, eight, method.sourceLocation);
 
-					auto extract = std::make_shared<awst::IntrinsicCall>();
-					extract->sourceLocation = method.sourceLocation;
-					extract->opCode = "extract3";
-					extract->wtype = awst::WType::bytesType();
+					auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), method.sourceLocation);
 					extract->stackArgs.push_back(std::move(readArg));
 					extract->stackArgs.push_back(std::move(offset));
 					auto eight2 = awst::makeIntegerConstant("8", method.sourceLocation);
 					extract->stackArgs.push_back(std::move(eight2));
 
-					auto btoi = std::make_shared<awst::IntrinsicCall>();
-					btoi->sourceLocation = method.sourceLocation;
-					btoi->opCode = "btoi";
-					btoi->wtype = paramType; // match target type (uint64 or bool)
+					auto btoi = awst::makeIntrinsicCall("btoi", paramType, method.sourceLocation);
 					btoi->stackArgs.push_back(std::move(extract));
 					paramVal = std::move(btoi);
 				}
@@ -1872,10 +1827,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 			auto one = awst::makeIntegerConstant("1", method.sourceLocation);
 
-			auto setPending = std::make_shared<awst::IntrinsicCall>();
-			setPending->sourceLocation = method.sourceLocation;
-			setPending->opCode = "app_global_put";
-			setPending->wtype = awst::WType::voidType();
+			auto setPending = awst::makeIntrinsicCall("app_global_put", awst::WType::voidType(), method.sourceLocation);
 			setPending->stackArgs.push_back(pendingKey);
 			setPending->stackArgs.push_back(one);
 
@@ -1944,10 +1896,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			postInitBody->sourceLocation = method.sourceLocation;
 
 			// Guard: assert(__ctor_pending == 1)
-			auto readPending = std::make_shared<awst::IntrinsicCall>();
-			readPending->sourceLocation = method.sourceLocation;
-			readPending->opCode = "app_global_get";
-			readPending->wtype = awst::WType::uint64Type();
+			auto readPending = awst::makeIntrinsicCall("app_global_get", awst::WType::uint64Type(), method.sourceLocation);
 			readPending->stackArgs.push_back(
 				awst::makeUtf8BytesConstant("__ctor_pending", method.sourceLocation));
 
@@ -1960,10 +1909,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 			auto zeroVal = awst::makeIntegerConstant("0", method.sourceLocation);
 
-			auto clearPending = std::make_shared<awst::IntrinsicCall>();
-			clearPending->sourceLocation = method.sourceLocation;
-			clearPending->opCode = "app_global_put";
-			clearPending->wtype = awst::WType::voidType();
+			auto clearPending = awst::makeIntrinsicCall("app_global_put", awst::WType::voidType(), method.sourceLocation);
 			clearPending->stackArgs.push_back(clearKey);
 			clearPending->stackArgs.push_back(zeroVal);
 
@@ -2068,10 +2014,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				}
 				auto boxSize = awst::makeIntegerConstant(std::to_string(boxSizeVal), method.sourceLocation);
 
-				auto boxCreate = std::make_shared<awst::IntrinsicCall>();
-				boxCreate->sourceLocation = method.sourceLocation;
-				boxCreate->opCode = "box_create";
-				boxCreate->wtype = awst::WType::boolType();
+				auto boxCreate = awst::makeIntrinsicCall("box_create", awst::WType::boolType(), method.sourceLocation);
 				boxCreate->stackArgs.push_back(std::move(boxKey));
 				boxCreate->stackArgs.push_back(std::move(boxSize));
 
@@ -2082,10 +2025,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				if (boxInitVal)
 				{
 					auto putKey = awst::makeUtf8BytesConstant(varName, method.sourceLocation);
-					auto put = std::make_shared<awst::IntrinsicCall>();
-					put->sourceLocation = method.sourceLocation;
-					put->opCode = "box_put";
-					put->wtype = awst::WType::voidType();
+					auto put = awst::makeIntrinsicCall("box_put", awst::WType::voidType(), method.sourceLocation);
 					put->stackArgs.push_back(std::move(putKey));
 					put->stackArgs.push_back(std::move(boxInitVal));
 					auto putStmt = awst::makeExpressionStatement(std::move(put), method.sourceLocation);
@@ -2369,16 +2309,10 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 	{
 		auto blobSize = awst::makeIntegerConstant(std::to_string(AssemblyBuilder::SLOT_SIZE), method.sourceLocation);
 
-		auto bzeroCall = std::make_shared<awst::IntrinsicCall>();
-		bzeroCall->sourceLocation = method.sourceLocation;
-		bzeroCall->wtype = awst::WType::bytesType();
-		bzeroCall->opCode = "bzero";
+		auto bzeroCall = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), method.sourceLocation);
 		bzeroCall->stackArgs.push_back(std::move(blobSize));
 
-		auto storeOp = std::make_shared<awst::IntrinsicCall>();
-		storeOp->sourceLocation = method.sourceLocation;
-		storeOp->wtype = awst::WType::voidType();
-		storeOp->opCode = "store";
+		auto storeOp = awst::makeIntrinsicCall("store", awst::WType::voidType(), method.sourceLocation);
 		storeOp->immediates = {AssemblyBuilder::MEMORY_SLOT_FIRST};
 		storeOp->stackArgs.push_back(std::move(bzeroCall));
 
@@ -2389,10 +2323,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		// This must be done once in the preamble, not in each assembly block,
 		// so that subsequent assembly blocks see any FMP updates from earlier blocks.
 		// Pattern: store 0, replace3(load(0), 64, pad32_0x80)
-		auto loadBlob = std::make_shared<awst::IntrinsicCall>();
-		loadBlob->sourceLocation = method.sourceLocation;
-		loadBlob->wtype = awst::WType::bytesType();
-		loadBlob->opCode = "load";
+		auto loadBlob = awst::makeIntrinsicCall("load", awst::WType::bytesType(), method.sourceLocation);
 		loadBlob->immediates = {AssemblyBuilder::MEMORY_SLOT_FIRST};
 
 		auto fmpOffset = std::make_shared<awst::IntegerConstant>();
@@ -2406,18 +2337,12 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		auto fmpBytes = awst::makeBytesConstant(
 			std::move(fmpBytesVal), method.sourceLocation, awst::BytesEncoding::Unknown);
 
-		auto replaceOp = std::make_shared<awst::IntrinsicCall>();
-		replaceOp->sourceLocation = method.sourceLocation;
-		replaceOp->wtype = awst::WType::bytesType();
-		replaceOp->opCode = "replace3";
+		auto replaceOp = awst::makeIntrinsicCall("replace3", awst::WType::bytesType(), method.sourceLocation);
 		replaceOp->stackArgs.push_back(std::move(loadBlob));
 		replaceOp->stackArgs.push_back(std::move(fmpOffset));
 		replaceOp->stackArgs.push_back(std::move(fmpBytes));
 
-		auto storeFmpOp = std::make_shared<awst::IntrinsicCall>();
-		storeFmpOp->sourceLocation = method.sourceLocation;
-		storeFmpOp->wtype = awst::WType::voidType();
-		storeFmpOp->opCode = "store";
+		auto storeFmpOp = awst::makeIntrinsicCall("store", awst::WType::voidType(), method.sourceLocation);
 		storeFmpOp->immediates = {AssemblyBuilder::MEMORY_SLOT_FIRST};
 		storeFmpOp->stackArgs.push_back(std::move(replaceOp));
 
@@ -2541,10 +2466,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				}
 				else
 				{
-					auto argBytes = std::make_shared<awst::IntrinsicCall>();
-					argBytes->sourceLocation = method.sourceLocation;
-					argBytes->wtype = awst::WType::bytesType();
-					argBytes->opCode = "txna";
+					auto argBytes = awst::makeIntrinsicCall("txna", awst::WType::bytesType(), method.sourceLocation);
 					argBytes->immediates = {std::string("ApplicationArgs"), 0};
 					argExpr = std::move(argBytes);
 				}
@@ -2573,10 +2495,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		// Step 1: Bare call check (NumAppArgs == 0).
 		// Call receive/fallback and return true — no selector to match.
 		{
-			auto numAppArgs = std::make_shared<awst::IntrinsicCall>();
-			numAppArgs->sourceLocation = method.sourceLocation;
-			numAppArgs->wtype = awst::WType::uint64Type();
-			numAppArgs->opCode = "txn";
+			auto numAppArgs = awst::makeIntrinsicCall("txn", awst::WType::uint64Type(), method.sourceLocation);
 			numAppArgs->immediates = {std::string("NumAppArgs")};
 
 			auto zero = awst::makeIntegerConstant("0", method.sourceLocation);
@@ -4598,10 +4517,7 @@ void ContractBuilder::buildStorageDispatch(
 			auto offset = awst::makeUInt64BinOp(std::move(mod256), awst::UInt64BinaryOperator::Mult, makeUint64("32"), loc);
 
 			// box_create("__dyn_storage", 8192) — 256 slots * 32 bytes
-			auto boxCreate = std::make_shared<awst::IntrinsicCall>();
-			boxCreate->sourceLocation = loc;
-			boxCreate->wtype = awst::WType::boolType();
-			boxCreate->opCode = "box_create";
+			auto boxCreate = awst::makeIntrinsicCall("box_create", awst::WType::boolType(), loc);
 			boxCreate->stackArgs.push_back(boxKey);
 			boxCreate->stackArgs.push_back(makeUint64("8192"));
 
@@ -4609,10 +4525,7 @@ void ContractBuilder::buildStorageDispatch(
 			defaultBlock->body.push_back(std::move(popStmt));
 
 			// box_extract("__dyn_storage", offset, 32)
-			auto boxExtract = std::make_shared<awst::IntrinsicCall>();
-			boxExtract->sourceLocation = loc;
-			boxExtract->wtype = awst::WType::bytesType();
-			boxExtract->opCode = "box_extract";
+			auto boxExtract = awst::makeIntrinsicCall("box_extract", awst::WType::bytesType(), loc);
 			boxExtract->stackArgs.push_back(std::move(boxKey));
 			boxExtract->stackArgs.push_back(std::move(offset));
 			boxExtract->stackArgs.push_back(makeUint64("32"));
@@ -4642,39 +4555,24 @@ void ContractBuilder::buildStorageDispatch(
 			auto ifBlock = std::make_shared<awst::Block>();
 			ifBlock->sourceLocation = loc;
 			{
-				auto get = std::make_shared<awst::IntrinsicCall>();
-				get->sourceLocation = loc;
-				get->wtype = awst::WType::bytesType();
-				get->opCode = "app_global_get";
+				auto get = awst::makeIntrinsicCall("app_global_get", awst::WType::bytesType(), loc);
 				get->stackArgs.push_back(makeBytes(sv.name));
 
 				// Pad to 32 bytes: concat(bzero(32), value), take last 32
-				auto bz = std::make_shared<awst::IntrinsicCall>();
-				bz->sourceLocation = loc;
-				bz->wtype = awst::WType::bytesType();
-				bz->opCode = "bzero";
+				auto bz = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), loc);
 				bz->stackArgs.push_back(makeUint64("32"));
 
-				auto cat = std::make_shared<awst::IntrinsicCall>();
-				cat->sourceLocation = loc;
-				cat->wtype = awst::WType::bytesType();
-				cat->opCode = "concat";
+				auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), loc);
 				cat->stackArgs.push_back(std::move(bz));
 				cat->stackArgs.push_back(std::move(get));
 
 				// Extract last 32 bytes
-				auto lenCall = std::make_shared<awst::IntrinsicCall>();
-				lenCall->sourceLocation = loc;
-				lenCall->wtype = awst::WType::uint64Type();
-				lenCall->opCode = "len";
+				auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), loc);
 				lenCall->stackArgs.push_back(cat);
 
 				auto sub = awst::makeUInt64BinOp(std::move(lenCall), awst::UInt64BinaryOperator::Sub, makeUint64("32"), loc);
 
-				auto extract = std::make_shared<awst::IntrinsicCall>();
-				extract->sourceLocation = loc;
-				extract->wtype = awst::WType::bytesType();
-				extract->opCode = "extract3";
+				auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), loc);
 				extract->stackArgs.push_back(cat);
 				extract->stackArgs.push_back(std::move(sub));
 				extract->stackArgs.push_back(makeUint64("32"));
@@ -4739,17 +4637,11 @@ void ContractBuilder::buildStorageDispatch(
 		{
 			// Build key: concat("s", itob(__slot))
 			auto prefix = makeBytes("s");
-			auto slotItob = std::make_shared<awst::IntrinsicCall>();
-			slotItob->sourceLocation = loc;
-			slotItob->wtype = awst::WType::bytesType();
-			slotItob->opCode = "itob";
+			auto slotItob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), loc);
 			auto slotVar = awst::makeVarExpression("__slot", awst::WType::uint64Type(), loc);
 			slotItob->stackArgs.push_back(std::move(slotVar));
 
-			auto key = std::make_shared<awst::IntrinsicCall>();
-			key->sourceLocation = loc;
-			key->wtype = awst::WType::bytesType();
-			key->opCode = "concat";
+			auto key = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), loc);
 			key->stackArgs.push_back(std::move(prefix));
 			key->stackArgs.push_back(std::move(slotItob));
 
@@ -4769,40 +4661,25 @@ void ContractBuilder::buildStorageDispatch(
 			auto valBytes = awst::makeReinterpretCast(std::move(valueVar), awst::WType::bytesType(), loc);
 
 			// Pad to 32 bytes
-			auto bz = std::make_shared<awst::IntrinsicCall>();
-			bz->sourceLocation = loc;
-			bz->wtype = awst::WType::bytesType();
-			bz->opCode = "bzero";
+			auto bz = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), loc);
 			bz->stackArgs.push_back(makeUint64("32"));
 
-			auto cat = std::make_shared<awst::IntrinsicCall>();
-			cat->sourceLocation = loc;
-			cat->wtype = awst::WType::bytesType();
-			cat->opCode = "concat";
+			auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), loc);
 			cat->stackArgs.push_back(std::move(bz));
 			cat->stackArgs.push_back(std::move(valBytes));
 
-			auto lenCall = std::make_shared<awst::IntrinsicCall>();
-			lenCall->sourceLocation = loc;
-			lenCall->wtype = awst::WType::uint64Type();
-			lenCall->opCode = "len";
+			auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), loc);
 			lenCall->stackArgs.push_back(cat);
 
 			auto sub32 = awst::makeUInt64BinOp(std::move(lenCall), awst::UInt64BinaryOperator::Sub, makeUint64("32"), loc);
 
-			auto paddedVal = std::make_shared<awst::IntrinsicCall>();
-			paddedVal->sourceLocation = loc;
-			paddedVal->wtype = awst::WType::bytesType();
-			paddedVal->opCode = "extract3";
+			auto paddedVal = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), loc);
 			paddedVal->stackArgs.push_back(cat);
 			paddedVal->stackArgs.push_back(std::move(sub32));
 			paddedVal->stackArgs.push_back(makeUint64("32"));
 
 			// box_create("__dyn_storage", 8192) — ensure box exists
-			auto boxCreate = std::make_shared<awst::IntrinsicCall>();
-			boxCreate->sourceLocation = loc;
-			boxCreate->wtype = awst::WType::boolType();
-			boxCreate->opCode = "box_create";
+			auto boxCreate = awst::makeIntrinsicCall("box_create", awst::WType::boolType(), loc);
 			boxCreate->stackArgs.push_back(boxKey);
 			boxCreate->stackArgs.push_back(makeUint64("8192"));
 
@@ -4810,10 +4687,7 @@ void ContractBuilder::buildStorageDispatch(
 			defaultBlock->body.push_back(std::move(createStmt));
 
 			// box_replace("__dyn_storage", offset, padded_value)
-			auto boxReplace = std::make_shared<awst::IntrinsicCall>();
-			boxReplace->sourceLocation = loc;
-			boxReplace->wtype = awst::WType::voidType();
-			boxReplace->opCode = "box_replace";
+			auto boxReplace = awst::makeIntrinsicCall("box_replace", awst::WType::voidType(), loc);
 			boxReplace->stackArgs.push_back(std::move(boxKey));
 			boxReplace->stackArgs.push_back(std::move(offset));
 			boxReplace->stackArgs.push_back(std::move(paddedVal));
@@ -4846,39 +4720,24 @@ void ContractBuilder::buildStorageDispatch(
 				auto cast = awst::makeReinterpretCast(std::move(valueVar), awst::WType::bytesType(), loc);
 
 				// concat(bzero(32), bytes) → take last 32 bytes
-				auto bz = std::make_shared<awst::IntrinsicCall>();
-				bz->sourceLocation = loc;
-				bz->wtype = awst::WType::bytesType();
-				bz->opCode = "bzero";
+				auto bz = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), loc);
 				bz->stackArgs.push_back(makeUint64("32"));
 
-				auto cat = std::make_shared<awst::IntrinsicCall>();
-				cat->sourceLocation = loc;
-				cat->wtype = awst::WType::bytesType();
-				cat->opCode = "concat";
+				auto cat = awst::makeIntrinsicCall("concat", awst::WType::bytesType(), loc);
 				cat->stackArgs.push_back(std::move(bz));
 				cat->stackArgs.push_back(std::move(cast));
 
-				auto lenCall = std::make_shared<awst::IntrinsicCall>();
-				lenCall->sourceLocation = loc;
-				lenCall->wtype = awst::WType::uint64Type();
-				lenCall->opCode = "len";
+				auto lenCall = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), loc);
 				lenCall->stackArgs.push_back(cat);
 
 				auto sub32 = awst::makeUInt64BinOp(std::move(lenCall), awst::UInt64BinaryOperator::Sub, makeUint64("32"), loc);
 
-				auto extract = std::make_shared<awst::IntrinsicCall>();
-				extract->sourceLocation = loc;
-				extract->wtype = awst::WType::bytesType();
-				extract->opCode = "extract3";
+				auto extract = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), loc);
 				extract->stackArgs.push_back(cat);
 				extract->stackArgs.push_back(std::move(sub32));
 				extract->stackArgs.push_back(makeUint64("32"));
 
-				auto put = std::make_shared<awst::IntrinsicCall>();
-				put->sourceLocation = loc;
-				put->wtype = awst::WType::voidType();
-				put->opCode = "app_global_put";
+				auto put = awst::makeIntrinsicCall("app_global_put", awst::WType::voidType(), loc);
 				put->stackArgs.push_back(makeBytes(sv.name));
 				put->stackArgs.push_back(std::move(extract));
 

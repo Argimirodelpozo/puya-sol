@@ -50,10 +50,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::promoteToBigUInt(
 	}
 
 	// itob → ReinterpretCast to biguint
-	auto itob = std::make_shared<awst::IntrinsicCall>();
-	itob->sourceLocation = _loc;
-	itob->wtype = awst::WType::bytesType();
-	itob->opCode = "itob";
+	auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
 	itob->stackArgs.push_back(std::move(_expr));
 
 	auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
@@ -446,10 +443,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 				auto masked = awst::makeUInt64BinOp(operand, awst::UInt64BinaryOperator::BitAnd, std::move(maskConst), _loc);
 
 				// Promote to biguint for comparison
-				auto itob = std::make_shared<awst::IntrinsicCall>();
-				itob->sourceLocation = _loc;
-				itob->wtype = awst::WType::bytesType();
-				itob->opCode = "itob";
+				auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
 				itob->stackArgs.push_back(std::move(masked));
 
 				auto cast = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
@@ -504,10 +498,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 		// (0 - operand would underflow in uint64 for positive operands)
 		{
 			// Promote to biguint: itob → ReinterpretCast
-			auto itob = std::make_shared<awst::IntrinsicCall>();
-			itob->sourceLocation = _loc;
-			itob->wtype = awst::WType::bytesType();
-			itob->opCode = "itob";
+			auto itob = awst::makeIntrinsicCall("itob", awst::WType::bytesType(), _loc);
 			itob->stackArgs.push_back(std::move(operand));
 
 			auto castBiguint = awst::makeReinterpretCast(std::move(itob), awst::WType::biguintType(), _loc);
@@ -661,10 +652,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildBigUIntShift(
 	// bzero(32)
 	auto thirtyTwo = awst::makeIntegerConstant("32", _loc);
 
-	auto bzero = std::make_shared<awst::IntrinsicCall>();
-	bzero->sourceLocation = _loc;
-	bzero->wtype = awst::WType::bytesType();
-	bzero->opCode = "bzero";
+	auto bzero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
 	bzero->stackArgs.push_back(std::move(thirtyTwo));
 
 	// 255 - n
@@ -675,10 +663,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildBigUIntShift(
 	// setbit(bzero(32), 255-n, 1)
 	auto one = awst::makeIntegerConstant("1", _loc);
 
-	auto setbit = std::make_shared<awst::IntrinsicCall>();
-	setbit->sourceLocation = _loc;
-	setbit->wtype = awst::WType::bytesType();
-	setbit->opCode = "setbit";
+	auto setbit = awst::makeIntrinsicCall("setbit", awst::WType::bytesType(), _loc);
 	setbit->stackArgs.push_back(std::move(bzero));
 	setbit->stackArgs.push_back(std::move(bitIdx));
 	setbit->stackArgs.push_back(std::move(one));

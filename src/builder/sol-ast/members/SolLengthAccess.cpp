@@ -65,19 +65,12 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 					c->value = oss.str();
 					return c;
 				}
-				auto* rawElemType = m_ctx.typeMapper.map(arrType->baseType());
-				auto* arc4ElemType = m_ctx.typeMapper.mapToARC4Type(rawElemType);
-				unsigned elemSize = builder::StorageMapper::computeEncodedElementSize(arc4ElemType);
-
 				auto boxKey = awst::makeUtf8BytesConstant(ident->name(), m_loc);
 
 				auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
 					std::vector<awst::WType const*>{
 						awst::WType::uint64Type(), awst::WType::boolType()});
-				auto boxLen = std::make_shared<awst::IntrinsicCall>();
-				boxLen->sourceLocation = m_loc;
-				boxLen->wtype = tupleType;
-				boxLen->opCode = "box_len";
+				auto boxLen = awst::makeIntrinsicCall("box_len", tupleType, m_loc);
 				boxLen->stackArgs.push_back(std::move(boxKey));
 
 				auto lenVal = std::make_shared<awst::TupleItemExpression>();
@@ -92,6 +85,11 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 				// drops raw bytes into the box), so don't subtract one here.
 				if (arrType->isByteArrayOrString())
 					return lenVal;
+
+				auto* rawElemType = m_ctx.typeMapper.map(arrType->baseType());
+				auto* arc4ElemType = m_ctx.typeMapper.mapToARC4Type(rawElemType);
+				unsigned elemSize = builder::StorageMapper::computeEncodedElementSize(arc4ElemType);
+
 
 				// Elements with unknown fixed size (e.g. nested dynamic arrays)
 				// can't use the `(box_len - 2) / elemSize` trick. Puya's backend
@@ -146,10 +144,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 	// bytes.length → len intrinsic
 	if (base->wtype == awst::WType::bytesType())
 	{
-		auto e = std::make_shared<awst::IntrinsicCall>();
-		e->sourceLocation = m_loc;
-		e->wtype = awst::WType::uint64Type();
-		e->opCode = "len";
+		auto e = awst::makeIntrinsicCall("len", awst::WType::uint64Type(), m_loc);
 		e->stackArgs.push_back(std::move(base));
 		return e;
 	}

@@ -200,10 +200,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleAnd(
 		return nullptr;
 	}
 	// Bitwise AND on biguint: use b& opcode
-	auto call = std::make_shared<awst::IntrinsicCall>();
-	call->sourceLocation = _loc;
-	call->wtype = awst::WType::bytesType();
-	call->opCode = "b&";
+	auto call = awst::makeIntrinsicCall("b&", awst::WType::bytesType(), _loc);
 	// Convert both operands to biguint first, then to bytes
 	auto lhsCast = awst::makeReinterpretCast(ensureBiguint(_args[0], _loc), awst::WType::bytesType(), _loc);
 	auto rhsCast = awst::makeReinterpretCast(ensureBiguint(_args[1], _loc), awst::WType::bytesType(), _loc);
@@ -224,10 +221,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleOr(
 		Logger::instance().error("or requires 2 arguments", _loc);
 		return nullptr;
 	}
-	auto call = std::make_shared<awst::IntrinsicCall>();
-	call->sourceLocation = _loc;
-	call->wtype = awst::WType::bytesType();
-	call->opCode = "b|";
+	auto call = awst::makeIntrinsicCall("b|", awst::WType::bytesType(), _loc);
 	auto lhsCast = awst::makeReinterpretCast(ensureBiguint(_args[0], _loc), awst::WType::bytesType(), _loc);
 	auto rhsCast = awst::makeReinterpretCast(ensureBiguint(_args[1], _loc), awst::WType::bytesType(), _loc);
 	call->stackArgs.push_back(std::move(lhsCast));
@@ -249,10 +243,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleNot(
 	// EVM `not` operates on 256-bit values. AVM `b~` operates on actual byte length.
 	// Pad input to 32 bytes so b~ produces a 256-bit result (e.g. not(0) = MAX_UINT256).
 	auto padded = padTo32Bytes(ensureBiguint(_args[0], _loc), _loc);
-	auto call = std::make_shared<awst::IntrinsicCall>();
-	call->sourceLocation = _loc;
-	call->wtype = awst::WType::bytesType();
-	call->opCode = "b~";
+	auto call = awst::makeIntrinsicCall("b~", awst::WType::bytesType(), _loc);
 	call->stackArgs.push_back(std::move(padded));
 	auto result = awst::makeReinterpretCast(std::move(call), awst::WType::biguintType(), _loc);
 	return result;
@@ -273,10 +264,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleXor(
 	auto lhs = ensureBiguint(_args[0], _loc);
 	auto rhs = ensureBiguint(_args[1], _loc);
 
-	auto call = std::make_shared<awst::IntrinsicCall>();
-	call->sourceLocation = _loc;
-	call->wtype = awst::WType::bytesType();
-	call->opCode = "b^";
+	auto call = awst::makeIntrinsicCall("b^", awst::WType::bytesType(), _loc);
 	// Convert both operands to bytes first
 	auto lhsCast = awst::makeReinterpretCast(std::move(lhs), awst::WType::bytesType(), _loc);
 	auto rhsCast = awst::makeReinterpretCast(std::move(rhs), awst::WType::bytesType(), _loc);
