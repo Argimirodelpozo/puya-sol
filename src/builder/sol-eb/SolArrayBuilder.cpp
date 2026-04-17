@@ -102,15 +102,9 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 		cmp->op = awst::NumericComparison::Lt;
 		cmp->rhs = std::move(maxVal);
 
-		auto assertExpr = std::make_shared<awst::AssertExpression>();
-		assertExpr->sourceLocation = _loc;
-		assertExpr->wtype = awst::WType::voidType();
-		assertExpr->condition = std::move(cmp);
-		assertExpr->errorMessage = "Enum out of range";
-
 		auto assertStmt = std::make_shared<awst::ExpressionStatement>();
 		assertStmt->sourceLocation = _loc;
-		assertStmt->expr = std::move(assertExpr);
+		assertStmt->expr = awst::makeAssert(std::move(cmp), _loc, "Enum out of range");
 		m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 
 		result = tmpVar;

@@ -308,6 +308,23 @@ struct AssertExpression: Expression
 	std::optional<std::string> errorMessage;
 };
 
+// Construct an AssertExpression node. The wtype defaults to voidType()
+// (what the vast majority of callers use); the splitter uses boolType()
+// for helper-group flags, and a few sites clone an existing node's wtype.
+inline std::shared_ptr<AssertExpression> makeAssert(
+	std::shared_ptr<Expression> condition,
+	SourceLocation loc,
+	std::optional<std::string> errorMessage = std::nullopt,
+	WType const* wtype = WType::voidType())
+{
+	auto node = std::make_shared<AssertExpression>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->condition = std::move(condition);
+	node->errorMessage = std::move(errorMessage);
+	return node;
+}
+
 struct AssignmentExpression: Expression
 {
 	std::string nodeType() const override { return "AssignmentExpression"; }

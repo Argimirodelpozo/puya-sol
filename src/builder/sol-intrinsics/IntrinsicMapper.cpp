@@ -161,12 +161,7 @@ std::shared_ptr<awst::AssertExpression> IntrinsicMapper::createAssert(
 	awst::SourceLocation const& _loc
 )
 {
-	auto expr = std::make_shared<awst::AssertExpression>();
-	expr->sourceLocation = _loc;
-	expr->wtype = awst::WType::voidType();
-	expr->condition = std::move(_condition);
-	expr->errorMessage = std::move(_message);
-	return expr;
+	return awst::makeAssert(std::move(_condition), _loc, std::move(_message));
 }
 
 } // namespace puyasol::builder

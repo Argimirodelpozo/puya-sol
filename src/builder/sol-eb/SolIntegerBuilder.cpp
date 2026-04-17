@@ -548,15 +548,9 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			cmp->op = awst::NumericComparison::Ne;
 			cmp->rhs = std::move(halfConst);
 
-			auto assertExpr = std::make_shared<awst::AssertExpression>();
-			assertExpr->sourceLocation = _loc;
-			assertExpr->wtype = awst::WType::voidType();
-			assertExpr->condition = std::move(cmp);
-			assertExpr->errorMessage = "signed negation overflow";
-
 			auto assertStmt = std::make_shared<awst::ExpressionStatement>();
 			assertStmt->sourceLocation = _loc;
-			assertStmt->expr = std::move(assertExpr);
+			assertStmt->expr = awst::makeAssert(std::move(cmp), _loc, "signed negation overflow");
 			m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 		}
 
@@ -786,15 +780,9 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::emitOverflowCheck(
 	cmp->op = awst::NumericComparison::Lte;
 	cmp->rhs = std::move(maxConst);
 
-	auto assertExpr = std::make_shared<awst::AssertExpression>();
-	assertExpr->sourceLocation = _loc;
-	assertExpr->wtype = awst::WType::voidType();
-	assertExpr->condition = std::move(cmp);
-	assertExpr->errorMessage = "overflow";
-
 	auto assertStmt = std::make_shared<awst::ExpressionStatement>();
 	assertStmt->sourceLocation = _loc;
-	assertStmt->expr = std::move(assertExpr);
+	assertStmt->expr = awst::makeAssert(std::move(cmp), _loc, "overflow");
 	m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 
 	return tmpVar;
@@ -1010,15 +998,9 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildWrappingSubtract(
 		cmp->op = awst::NumericComparison::Gte;
 		cmp->rhs = _right; // shared ref
 
-		auto assertExpr = std::make_shared<awst::AssertExpression>();
-		assertExpr->sourceLocation = _loc;
-		assertExpr->wtype = awst::WType::voidType();
-		assertExpr->condition = std::move(cmp);
-		assertExpr->errorMessage = "underflow";
-
 		auto assertStmt = std::make_shared<awst::ExpressionStatement>();
 		assertStmt->sourceLocation = _loc;
-		assertStmt->expr = std::move(assertExpr);
+		assertStmt->expr = awst::makeAssert(std::move(cmp), _loc, "underflow");
 		m_ctx.prePendingStatements.push_back(std::move(assertStmt));
 	}
 

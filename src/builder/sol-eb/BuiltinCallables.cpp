@@ -116,15 +116,9 @@ static void emitModByZeroCheck(
 	cmp->op = awst::NumericComparison::Ne;
 	cmp->rhs = std::move(zero);
 
-	auto assertExpr = std::make_shared<awst::AssertExpression>();
-	assertExpr->sourceLocation = _loc;
-	assertExpr->wtype = awst::WType::voidType();
-	assertExpr->condition = std::move(cmp);
-	assertExpr->errorMessage = "modulo by zero";
-
 	auto stmt = std::make_shared<awst::ExpressionStatement>();
 	stmt->sourceLocation = _loc;
-	stmt->expr = std::move(assertExpr);
+	stmt->expr = awst::makeAssert(std::move(cmp), _loc, "modulo by zero");
 	_ctx.prePendingStatements.push_back(std::move(stmt));
 }
 

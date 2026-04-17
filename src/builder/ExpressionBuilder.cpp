@@ -552,12 +552,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 
 				auto assertStmt = std::make_shared<awst::ExpressionStatement>();
 				assertStmt->sourceLocation = _loc;
-				auto assertExpr = std::make_shared<awst::AssertExpression>();
-				assertExpr->sourceLocation = _loc;
-				assertExpr->wtype = awst::WType::voidType();
-				assertExpr->condition = std::move(cmp);
-				assertExpr->errorMessage = "underflow";
-				assertStmt->expr = std::move(assertExpr);
+				assertStmt->expr = awst::makeAssert(std::move(cmp), _loc, "underflow");
 				m_prePendingStatements.push_back(std::move(assertStmt));
 			}
 
