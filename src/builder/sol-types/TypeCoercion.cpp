@@ -159,12 +159,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint256(
 
 	auto threshConst = awst::makeIntegerConstant(threshold.str(), _loc, awst::WType::biguintType());
 
-	auto cond = std::make_shared<awst::NumericComparisonExpression>();
-	cond->sourceLocation = _loc;
-	cond->wtype = awst::WType::boolType();
-	cond->lhs = promoted;
-	cond->op = awst::NumericComparison::Gte;
-	cond->rhs = threshConst;
+	auto cond = awst::makeNumericCompare(promoted, awst::NumericComparison::Gte, threshConst, _loc);
 
 	auto offsetConst = awst::makeIntegerConstant(offsetStr, _loc, awst::WType::biguintType());
 
@@ -866,12 +861,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 		&& _expr->wtype == awst::WType::uint64Type())
 	{
 		auto zero = awst::makeIntegerConstant("0", _loc);
-		auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-		cmp->sourceLocation = _loc;
-		cmp->wtype = awst::WType::boolType();
-		cmp->lhs = std::move(_expr);
-		cmp->op = awst::NumericComparison::Ne;
-		cmp->rhs = std::move(zero);
+		auto cmp = awst::makeNumericCompare(std::move(_expr), awst::NumericComparison::Ne, std::move(zero), _loc);
 		return cmp;
 	}
 

@@ -113,12 +113,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		// Checked: assert(x != INT_MIN) i.e. x != 2^(N-1)
 		if (!m_ctx.inUncheckedBlock)
 		{
-			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-			cmp->sourceLocation = m_loc;
-			cmp->wtype = awst::WType::boolType();
-			cmp->lhs = operand;
-			cmp->op = awst::NumericComparison::Ne;
-			cmp->rhs = makeBiguintConst(halfNStr);
+			auto cmp = awst::makeNumericCompare(operand, awst::NumericComparison::Ne, makeBiguintConst(halfNStr), m_loc);
 
 			auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), m_loc, "signed negation overflow"), m_loc);
 			m_ctx.prePendingStatements.push_back(std::move(assertStmt));
@@ -143,12 +138,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			m_ctx.prePendingStatements.push_back(std::move(initStmt));
 
 			// if (x != 0) { __neg_tmp = (2^256 - x) % 2^256; }
-			auto isNonZero = std::make_shared<awst::NumericComparisonExpression>();
-			isNonZero->sourceLocation = m_loc;
-			isNonZero->wtype = awst::WType::boolType();
-			isNonZero->lhs = operand;
-			isNonZero->op = awst::NumericComparison::Ne;
-			isNonZero->rhs = makeBiguintConst("0");
+			auto isNonZero = awst::makeNumericCompare(operand, awst::NumericComparison::Ne, makeBiguintConst("0"), m_loc);
 
 			auto sub = std::make_shared<awst::BigUIntBinaryOperation>();
 			sub->sourceLocation = m_loc;
@@ -470,12 +460,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 				else
 					limitStr = halfNStr2; // MIN = half
 
-				auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-				cmp->sourceLocation = m_loc;
-				cmp->wtype = awst::WType::boolType();
-				cmp->lhs = val;
-				cmp->op = awst::NumericComparison::Ne;
-				cmp->rhs = makeBConst(limitStr);
+				auto cmp = awst::makeNumericCompare(val, awst::NumericComparison::Ne, makeBConst(limitStr), m_loc);
 
 				auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), m_loc, "signed inc/dec overflow"), m_loc);
 				m_ctx.prePendingStatements.push_back(std::move(assertStmt));

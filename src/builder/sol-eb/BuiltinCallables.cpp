@@ -103,12 +103,7 @@ static void emitModByZeroCheck(
 	// assert(modulus != 0, "modulo by zero") — prevents optimizer from eliminating
 	auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 
-	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-	cmp->sourceLocation = _loc;
-	cmp->wtype = awst::WType::boolType();
-	cmp->lhs = _modulus;
-	cmp->op = awst::NumericComparison::Ne;
-	cmp->rhs = std::move(zero);
+	auto cmp = awst::makeNumericCompare(_modulus, awst::NumericComparison::Ne, std::move(zero), _loc);
 
 	auto stmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "modulo by zero"), _loc);
 	_ctx.prePendingStatements.push_back(std::move(stmt));
@@ -325,12 +320,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 
 	// Recovery id: if v ∈ {27,28} then v-27 else 0. The conditional is
 	// important because unguarded `v-27` underflows for v < 27 and crashes.
-	auto vGte27 = std::make_shared<awst::NumericComparisonExpression>();
-	vGte27->sourceLocation = _loc;
-	vGte27->wtype = awst::WType::boolType();
-	vGte27->lhs = readV();
-	vGte27->op = awst::NumericComparison::Gte;
-	vGte27->rhs = mkU64("27");
+	auto vGte27 = awst::makeNumericCompare(readV(), awst::NumericComparison::Gte, mkU64("27"), _loc);
 
 	auto vMinus27 = std::make_shared<awst::UInt64BinaryOperation>();
 	vMinus27->sourceLocation = _loc;
@@ -443,19 +433,9 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	// ecdsa_pk_recover opcode itself, so always compute it and mask the
 	// result to bzero(32) when v was out of range.
 	auto isValidV = [&]() -> std::shared_ptr<awst::Expression> {
-		auto gte = std::make_shared<awst::NumericComparisonExpression>();
-		gte->sourceLocation = _loc;
-		gte->wtype = awst::WType::boolType();
-		gte->lhs = readV();
-		gte->op = awst::NumericComparison::Gte;
-		gte->rhs = mkU64("27");
+		auto gte = awst::makeNumericCompare(readV(), awst::NumericComparison::Gte, mkU64("27"), _loc);
 
-		auto lte = std::make_shared<awst::NumericComparisonExpression>();
-		lte->sourceLocation = _loc;
-		lte->wtype = awst::WType::boolType();
-		lte->lhs = readV();
-		lte->op = awst::NumericComparison::Lte;
-		lte->rhs = mkU64("28");
+		auto lte = awst::makeNumericCompare(readV(), awst::NumericComparison::Lte, mkU64("28"), _loc);
 
 		auto andOp = std::make_shared<awst::BooleanBinaryOperation>();
 		andOp->sourceLocation = _loc;

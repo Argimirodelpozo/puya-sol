@@ -169,12 +169,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToBool(
 	{
 		auto zero = awst::makeIntegerConstant("0", _loc, _arg->wtype);
 
-		auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-		cmp->sourceLocation = _loc;
-		cmp->wtype = awst::WType::boolType();
-		cmp->lhs = std::move(_arg);
-		cmp->rhs = std::move(zero);
-		cmp->op = awst::NumericComparison::Ne;
+		auto cmp = awst::makeNumericCompare(std::move(_arg), awst::NumericComparison::Ne, std::move(zero), _loc);
 
 		return std::make_unique<SolBoolBuilder>(_ctx, std::move(cmp));
 	}
@@ -422,12 +417,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToEnum(
 	unsigned numMembers = enumType->numberOfMembers();
 	auto maxVal = awst::makeIntegerConstant(std::to_string(numMembers), _loc);
 
-	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-	cmp->sourceLocation = _loc;
-	cmp->wtype = awst::WType::boolType();
-	cmp->lhs = result; // shared_ptr ref
-	cmp->op = awst::NumericComparison::Lt;
-	cmp->rhs = std::move(maxVal);
+	auto cmp = awst::makeNumericCompare(result, awst::NumericComparison::Lt, std::move(maxVal), _loc);
 
 	auto stmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "enum out of range"), _loc);
 	_ctx.prePendingStatements.push_back(std::move(stmt));

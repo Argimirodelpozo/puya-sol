@@ -45,12 +45,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 
 		auto two = awst::makeIntegerConstant("2", m_loc);
 
-		auto withinRange = std::make_shared<awst::NumericComparisonExpression>();
-		withinRange->sourceLocation = m_loc;
-		withinRange->wtype = awst::WType::boolType();
-		withinRange->lhs = std::move(indexExpr);
-		withinRange->op = awst::NumericComparison::Lt;
-		withinRange->rhs = std::move(two);
+		auto withinRange = awst::makeNumericCompare(std::move(indexExpr), awst::NumericComparison::Lt, std::move(two), m_loc);
 
 		auto round = std::make_shared<awst::IntrinsicCall>();
 		round->sourceLocation = m_loc;

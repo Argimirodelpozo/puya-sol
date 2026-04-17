@@ -194,12 +194,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 
 		auto zero = awst::makeIntegerConstant("0", _loc);
 
-		auto cond = std::make_shared<awst::NumericComparisonExpression>();
-		cond->sourceLocation = _loc;
-		cond->wtype = awst::WType::boolType();
-		cond->lhs = e->right; // y
-		cond->op = awst::NumericComparison::Eq;
-		cond->rhs = std::move(zero);
+		auto cond = awst::makeNumericCompare(e->right, awst::NumericComparison::Eq, std::move(zero), _loc);
 
 		auto one = awst::makeIntegerConstant("1", _loc);
 
@@ -493,12 +488,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 
 			auto halfConst = awst::makeIntegerConstant(halfNStr, _loc, awst::WType::biguintType());
 
-			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-			cmp->sourceLocation = _loc;
-			cmp->wtype = awst::WType::boolType();
-			cmp->lhs = std::move(cmpOperand);
-			cmp->op = awst::NumericComparison::Ne;
-			cmp->rhs = std::move(halfConst);
+			auto cmp = awst::makeNumericCompare(std::move(cmpOperand), awst::NumericComparison::Ne, std::move(halfConst), _loc);
 
 			auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "signed negation overflow"), _loc);
 			m_ctx.prePendingStatements.push_back(std::move(assertStmt));
@@ -631,12 +621,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::bool_eval(
 {
 	auto zero = awst::makeIntegerConstant("0", _loc, m_isBigUInt ? awst::WType::biguintType() : awst::WType::uint64Type());
 
-	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-	cmp->sourceLocation = _loc;
-	cmp->wtype = awst::WType::boolType();
-	cmp->lhs = resolve();
-	cmp->rhs = std::move(zero);
-	cmp->op = _negate ? awst::NumericComparison::Eq : awst::NumericComparison::Ne;
+	auto cmp = awst::makeNumericCompare(resolve(), _negate ? awst::NumericComparison::Eq : awst::NumericComparison::Ne, std::move(zero), _loc);
 
 	// Returns a bool-typed expression wrapped in an integer builder (temporary)
 	return wrap(std::move(cmp));
@@ -690,12 +675,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::emitOverflowCheck(
 		maxConst->value = std::to_string(maxVal);
 	}
 
-	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-	cmp->sourceLocation = _loc;
-	cmp->wtype = awst::WType::boolType();
-	cmp->lhs = tmpVar;
-	cmp->op = awst::NumericComparison::Lte;
-	cmp->rhs = std::move(maxConst);
+	auto cmp = awst::makeNumericCompare(tmpVar, awst::NumericComparison::Lte, std::move(maxConst), _loc);
 
 	auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "overflow"), _loc);
 	m_ctx.prePendingStatements.push_back(std::move(assertStmt));
@@ -813,12 +793,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildBigUIntExp(
 	auto loop = std::make_shared<awst::WhileLoop>();
 	loop->sourceLocation = _loc;
 	{
-		auto cond = std::make_shared<awst::NumericComparisonExpression>();
-		cond->sourceLocation = _loc;
-		cond->wtype = awst::WType::boolType();
-		cond->lhs = makeVar(expVar);
-		cond->op = awst::NumericComparison::Gt;
-		cond->rhs = makeConst("0");
+		auto cond = awst::makeNumericCompare(makeVar(expVar), awst::NumericComparison::Gt, makeConst("0"), _loc);
 		loop->condition = std::move(cond);
 	}
 
@@ -838,12 +813,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildBigUIntExp(
 	// if exp & 1 != 0: result = (result * base) [mod 2^256 if unchecked]
 	{
 		auto expAnd1 = makeBinOp(makeVar(expVar), awst::BigUIntBinaryOperator::BitAnd, makeConst("1"));
-		auto isOdd = std::make_shared<awst::NumericComparisonExpression>();
-		isOdd->sourceLocation = _loc;
-		isOdd->wtype = awst::WType::boolType();
-		isOdd->lhs = std::move(expAnd1);
-		isOdd->op = awst::NumericComparison::Ne;
-		isOdd->rhs = makeConst("0");
+		auto isOdd = awst::makeNumericCompare(std::move(expAnd1), awst::NumericComparison::Ne, makeConst("0"), _loc);
 
 		std::shared_ptr<awst::Expression> product =
 			makeBinOp(makeVar(resultVar), awst::BigUIntBinaryOperator::Mult, makeVar(baseVar));
@@ -888,12 +858,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildWrappingSubtract(
 	// Checked subtraction: assert a >= b before wrapping
 	if (!m_ctx.inUncheckedBlock)
 	{
-		auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-		cmp->sourceLocation = _loc;
-		cmp->wtype = awst::WType::boolType();
-		cmp->lhs = _left;  // shared ref
-		cmp->op = awst::NumericComparison::Gte;
-		cmp->rhs = _right; // shared ref
+		auto cmp = awst::makeNumericCompare(_left, awst::NumericComparison::Gte, _right, _loc);
 
 		auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "underflow"), _loc);
 		m_ctx.prePendingStatements.push_back(std::move(assertStmt));
@@ -958,12 +923,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildSignedModDiv(
 	};
 
 	// isLeftNeg = left >= 2^255
-	auto isLeftNeg = std::make_shared<awst::NumericComparisonExpression>();
-	isLeftNeg->sourceLocation = _loc;
-	isLeftNeg->wtype = awst::WType::boolType();
-	isLeftNeg->lhs = _left;
-	isLeftNeg->op = awst::NumericComparison::Gte;
-	isLeftNeg->rhs = makeConst(POW_2_255);
+	auto isLeftNeg = awst::makeNumericCompare(_left, awst::NumericComparison::Gte, makeConst(POW_2_255), _loc);
 
 	// absLeft = isLeftNeg ? (2^256 - left) : left
 	auto negLeft = std::make_shared<awst::BigUIntBinaryOperation>();
@@ -981,12 +941,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildSignedModDiv(
 	absLeft->falseExpr = _left;
 
 	// isRightNeg = right >= 2^255
-	auto isRightNeg = std::make_shared<awst::NumericComparisonExpression>();
-	isRightNeg->sourceLocation = _loc;
-	isRightNeg->wtype = awst::WType::boolType();
-	isRightNeg->lhs = _right;
-	isRightNeg->op = awst::NumericComparison::Gte;
-	isRightNeg->rhs = makeConst(POW_2_255);
+	auto isRightNeg = awst::makeNumericCompare(_right, awst::NumericComparison::Gte, makeConst(POW_2_255), _loc);
 
 	// absRight = isRightNeg ? (2^256 - right) : right
 	auto negRight = std::make_shared<awst::BigUIntBinaryOperation>();
@@ -1063,12 +1018,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildSignedModDiv(
 	}
 
 	// Only negate if result is non-zero (negating 0 gives 2^256)
-	auto isZero = std::make_shared<awst::NumericComparisonExpression>();
-	isZero->sourceLocation = _loc;
-	isZero->wtype = awst::WType::boolType();
-	isZero->lhs = absResult;
-	isZero->op = awst::NumericComparison::Eq;
-	isZero->rhs = makeConst("0");
+	auto isZero = awst::makeNumericCompare(absResult, awst::NumericComparison::Eq, makeConst("0"), _loc);
 
 	auto notZero = std::make_shared<awst::Not>();
 	notZero->sourceLocation = _loc;

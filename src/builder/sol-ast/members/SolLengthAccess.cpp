@@ -105,12 +105,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 				// empty boxes.
 				auto two = awst::makeIntegerConstant("2", m_loc);
 
-				auto lenGe2 = std::make_shared<awst::NumericComparisonExpression>();
-				lenGe2->sourceLocation = m_loc;
-				lenGe2->wtype = awst::WType::boolType();
-				lenGe2->lhs = lenVal;
-				lenGe2->op = awst::NumericComparison::Gte;
-				lenGe2->rhs = two;
+				auto lenGe2 = awst::makeNumericCompare(lenVal, awst::NumericComparison::Gte, two, m_loc);
 
 				auto safeLen = std::make_shared<awst::ConditionalExpression>();
 				safeLen->sourceLocation = m_loc;

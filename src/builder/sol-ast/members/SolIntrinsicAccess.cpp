@@ -105,12 +105,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		groupIdx->immediates = {std::string("GroupIndex")};
 
 		auto zero = awst::makeIntegerConstant("0", m_loc);
-		auto hasPayment = std::make_shared<awst::NumericComparisonExpression>();
-		hasPayment->sourceLocation = m_loc;
-		hasPayment->wtype = awst::WType::boolType();
-		hasPayment->lhs = groupIdx;
-		hasPayment->op = awst::NumericComparison::Gt;
-		hasPayment->rhs = std::move(zero);
+		auto hasPayment = awst::makeNumericCompare(groupIdx, awst::NumericComparison::Gt, std::move(zero), m_loc);
 
 		auto groupIdx2 = std::make_shared<awst::IntrinsicCall>();
 		groupIdx2->sourceLocation = m_loc;
@@ -182,12 +177,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 
 		auto zero = awst::makeIntegerConstant("0", m_loc);
 
-		auto hasData = std::make_shared<awst::NumericComparisonExpression>();
-		hasData->sourceLocation = m_loc;
-		hasData->wtype = awst::WType::boolType();
-		hasData->lhs = std::move(numAppArgs);
-		hasData->op = awst::NumericComparison::Gt;
-		hasData->rhs = std::move(zero);
+		auto hasData = awst::makeNumericCompare(std::move(numAppArgs), awst::NumericComparison::Gt, std::move(zero), m_loc);
 
 		// Build concatenated calldata from slot 0 (selector) onwards.
 		std::shared_ptr<awst::Expression> calldataConcat;
@@ -203,12 +193,7 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 
 			auto slotIdxCmp = awst::makeIntegerConstant(std::to_string(slot), m_loc);
 
-			auto slotPresent = std::make_shared<awst::NumericComparisonExpression>();
-			slotPresent->sourceLocation = m_loc;
-			slotPresent->wtype = awst::WType::boolType();
-			slotPresent->lhs = std::move(numArgsCheck);
-			slotPresent->op = awst::NumericComparison::Gt;
-			slotPresent->rhs = std::move(slotIdxCmp);
+			auto slotPresent = awst::makeNumericCompare(std::move(numArgsCheck), awst::NumericComparison::Gt, std::move(slotIdxCmp), m_loc);
 
 			auto slotBytes = std::make_shared<awst::IntrinsicCall>();
 			slotBytes->sourceLocation = m_loc;

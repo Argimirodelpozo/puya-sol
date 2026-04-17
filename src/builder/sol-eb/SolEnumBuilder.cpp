@@ -24,12 +24,7 @@ std::unique_ptr<InstanceBuilder> SolEnumBuilder::compare(
 		auto validateEnum = [&](std::shared_ptr<awst::Expression> val) {
 			auto maxVal = awst::makeIntegerConstant(std::to_string(numMembers), _loc);
 
-			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-			cmp->sourceLocation = _loc;
-			cmp->wtype = awst::WType::boolType();
-			cmp->lhs = val;
-			cmp->op = awst::NumericComparison::Lt;
-			cmp->rhs = std::move(maxVal);
+			auto cmp = awst::makeNumericCompare(val, awst::NumericComparison::Lt, std::move(maxVal), _loc);
 
 			auto stmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "enum out of range"), _loc);
 			m_ctx.prePendingStatements.push_back(std::move(stmt));
@@ -61,12 +56,7 @@ std::unique_ptr<InstanceBuilder> SolEnumBuilder::bool_eval(
 {
 	auto zero = awst::makeIntegerConstant("0", _loc);
 
-	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-	cmp->sourceLocation = _loc;
-	cmp->wtype = awst::WType::boolType();
-	cmp->lhs = resolve();
-	cmp->rhs = std::move(zero);
-	cmp->op = _negate ? awst::NumericComparison::Eq : awst::NumericComparison::Ne;
+	auto cmp = awst::makeNumericCompare(resolve(), _negate ? awst::NumericComparison::Eq : awst::NumericComparison::Ne, std::move(zero), _loc);
 	return std::make_unique<SolEnumBuilder>(m_ctx, m_enumType, std::move(cmp));
 }
 

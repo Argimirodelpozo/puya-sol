@@ -800,12 +800,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 		btoi->stackArgs.push_back(std::move(bytesExpr));
 
 		auto zero = makeUint64("0", _loc);
-		auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-		cmp->sourceLocation = _loc;
-		cmp->wtype = awst::WType::boolType();
-		cmp->lhs = std::move(btoi);
-		cmp->rhs = std::move(zero);
-		cmp->op = awst::NumericComparison::Ne;
+		auto cmp = awst::makeNumericCompare(std::move(btoi), awst::NumericComparison::Ne, std::move(zero), _loc);
 		return std::make_unique<GenericAbiResult>(_ctx, std::move(cmp));
 	}
 
@@ -932,12 +927,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeAbiValue(
 	{
 		auto val = uint64FromAbiWord(std::move(headWord), _loc);
 		auto zero = makeUint64("0", _loc);
-		auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-		cmp->sourceLocation = _loc;
-		cmp->wtype = awst::WType::boolType();
-		cmp->lhs = std::move(val);
-		cmp->rhs = std::move(zero);
-		cmp->op = awst::NumericComparison::Ne;
+		auto cmp = awst::makeNumericCompare(std::move(val), awst::NumericComparison::Ne, std::move(zero), _loc);
 		return cmp;
 	}
 

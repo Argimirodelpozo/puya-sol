@@ -115,12 +115,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 			// while (__i < n)
 			auto loop = std::make_shared<awst::WhileLoop>();
 			loop->sourceLocation = m_loc;
-			auto cond = std::make_shared<awst::NumericComparisonExpression>();
-			cond->sourceLocation = m_loc;
-			cond->wtype = awst::WType::boolType();
-			cond->lhs = idxVar;
-			cond->op = awst::NumericComparison::Lt;
-			cond->rhs = sizeExpr;
+			auto cond = awst::makeNumericCompare(idxVar, awst::NumericComparison::Lt, sizeExpr, m_loc);
 			loop->condition = cond;
 
 			auto loopBody = std::make_shared<awst::Block>();

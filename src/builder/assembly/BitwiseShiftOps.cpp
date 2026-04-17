@@ -356,12 +356,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSignextend(
 	// signBit != 0  (i.e., sign bit is set)
 	auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 
-	auto isNeg = std::make_shared<awst::NumericComparisonExpression>();
-	isNeg->sourceLocation = _loc;
-	isNeg->wtype = awst::WType::boolType();
-	isNeg->lhs = signBit;
-	isNeg->op = awst::NumericComparison::Ne;
-	isNeg->rhs = zero;
+	auto isNeg = awst::makeNumericCompare(signBit, awst::NumericComparison::Ne, zero, _loc);
 
 	// lowMask = 2^bitPos - 1
 	auto bitPosConst = awst::makeIntegerConstant(std::to_string(bitPos), _loc);

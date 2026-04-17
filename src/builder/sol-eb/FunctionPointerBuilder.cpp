@@ -522,12 +522,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 
 			auto idConst = awst::makeIntegerConstant(std::to_string(entry->id), _loc);
 
-			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-			cmp->sourceLocation = _loc;
-			cmp->wtype = awst::WType::boolType();
-			cmp->lhs = std::move(idVar);
-			cmp->op = awst::NumericComparison::Eq;
-			cmp->rhs = std::move(idConst);
+			auto cmp = awst::makeNumericCompare(std::move(idVar), awst::NumericComparison::Eq, std::move(idConst), _loc);
 
 			// If branch: call the actual function and return result
 			auto ifBlock = std::make_shared<awst::Block>();

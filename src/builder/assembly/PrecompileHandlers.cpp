@@ -443,12 +443,7 @@ void AssemblyBuilder::handleModExp(
 	loop->sourceLocation = _loc;
 
 	// Condition: __modexp_exp > 0
-	auto cond = std::make_shared<awst::NumericComparisonExpression>();
-	cond->sourceLocation = _loc;
-	cond->wtype = awst::WType::boolType();
-	cond->lhs = makeVar(expVar);
-	cond->op = awst::NumericComparison::Gt;
-	cond->rhs = makeConst("0");
+	auto cond = awst::makeNumericCompare(makeVar(expVar), awst::NumericComparison::Gt, makeConst("0"), _loc);
 	loop->condition = std::move(cond);
 
 	// Loop body
@@ -464,12 +459,7 @@ void AssemblyBuilder::handleModExp(
 		);
 
 		// expAnd1 != 0
-		auto isOdd = std::make_shared<awst::NumericComparisonExpression>();
-		isOdd->sourceLocation = _loc;
-		isOdd->wtype = awst::WType::boolType();
-		isOdd->lhs = std::move(expAnd1);
-		isOdd->op = awst::NumericComparison::Ne;
-		isOdd->rhs = makeConst("0");
+		auto isOdd = awst::makeNumericCompare(std::move(expAnd1), awst::NumericComparison::Ne, makeConst("0"), _loc);
 
 		// result = (result * base) % mod
 		auto product = makeBigUIntBinOp(

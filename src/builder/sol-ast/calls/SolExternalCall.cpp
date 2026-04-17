@@ -362,12 +362,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 		getbit->stackArgs.push_back(std::move(stripPrefix));
 		getbit->stackArgs.push_back(makeUint64("0", m_loc));
 
-		auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-		cmp->sourceLocation = m_loc;
-		cmp->wtype = awst::WType::boolType();
-		cmp->lhs = std::move(getbit);
-		cmp->rhs = makeUint64("0", m_loc);
-		cmp->op = awst::NumericComparison::Ne;
+		auto cmp = awst::makeNumericCompare(std::move(getbit), awst::NumericComparison::Ne, makeUint64("0", m_loc), m_loc);
 		return cmp;
 	}
 	else if (_returnType == awst::WType::accountType())
@@ -447,12 +442,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 				getbit->stackArgs.push_back(std::move(extract));
 				getbit->stackArgs.push_back(makeUint64("0", m_loc));
 
-				auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-				cmp->sourceLocation = m_loc;
-				cmp->wtype = awst::WType::boolType();
-				cmp->lhs = std::move(getbit);
-				cmp->rhs = makeUint64("0", m_loc);
-				cmp->op = awst::NumericComparison::Ne;
+				auto cmp = awst::makeNumericCompare(std::move(getbit), awst::NumericComparison::Ne, makeUint64("0", m_loc), m_loc);
 				decoded = std::move(cmp);
 			}
 			else if (fieldType == awst::WType::accountType())

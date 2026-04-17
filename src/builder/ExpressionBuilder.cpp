@@ -516,12 +516,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			// Checked subtraction: assert a >= b before wrapping
 			if (!m_inUncheckedBlock)
 			{
-				auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-				cmp->sourceLocation = _loc;
-				cmp->wtype = awst::WType::boolType();
-				cmp->lhs = _left;   // shared ref, OK since BigUInt is immutable
-				cmp->op = awst::NumericComparison::Gte;
-				cmp->rhs = _right;  // shared ref
+				auto cmp = awst::makeNumericCompare(_left, awst::NumericComparison::Gte, _right, _loc);
 
 				auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "underflow"), _loc);
 				m_prePendingStatements.push_back(std::move(assertStmt));
@@ -618,12 +613,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			auto loop = std::make_shared<awst::WhileLoop>();
 			loop->sourceLocation = _loc;
 			{
-				auto cond = std::make_shared<awst::NumericComparisonExpression>();
-				cond->sourceLocation = _loc;
-				cond->wtype = awst::WType::boolType();
-				cond->lhs = makeVar(expVar);
-				cond->op = awst::NumericComparison::Gt;
-				cond->rhs = makeConst("0");
+				auto cond = awst::makeNumericCompare(makeVar(expVar), awst::NumericComparison::Gt, makeConst("0"), _loc);
 				loop->condition = std::move(cond);
 			}
 
@@ -650,12 +640,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 			// if exp & 1 != 0: result = result * base
 			{
 				auto expAnd1 = makeBinOp(makeVar(expVar), awst::BigUIntBinaryOperator::BitAnd, makeConst("1"));
-				auto isOdd = std::make_shared<awst::NumericComparisonExpression>();
-				isOdd->sourceLocation = _loc;
-				isOdd->wtype = awst::WType::boolType();
-				isOdd->lhs = std::move(expAnd1);
-				isOdd->op = awst::NumericComparison::Ne;
-				isOdd->rhs = makeConst("0");
+				auto isOdd = awst::makeNumericCompare(std::move(expAnd1), awst::NumericComparison::Ne, makeConst("0"), _loc);
 
 				std::shared_ptr<awst::Expression> product =
 					makeBinOp(makeVar(resultVar), awst::BigUIntBinaryOperator::Mult, makeVar(baseVar));
@@ -750,12 +735,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 
 			auto zero = awst::makeIntegerConstant("0", _loc);
 
-			auto cond = std::make_shared<awst::NumericComparisonExpression>();
-			cond->sourceLocation = _loc;
-			cond->wtype = awst::WType::boolType();
-			cond->lhs = e->right; // y (shared ref)
-			cond->op = awst::NumericComparison::Eq;
-			cond->rhs = std::move(zero);
+			auto cond = awst::makeNumericCompare(e->right, awst::NumericComparison::Eq, std::move(zero), _loc);
 
 			auto one = awst::makeIntegerConstant("1", _loc);
 
@@ -933,12 +913,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildSubmitAndReturn(
 			getbit->stackArgs.push_back(std::move(stripPrefix));
 			getbit->stackArgs.push_back(makeUint64("0", _loc));
 
-			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-			cmp->sourceLocation = _loc;
-			cmp->wtype = awst::WType::boolType();
-			cmp->lhs = std::move(getbit);
-			cmp->rhs = makeUint64("0", _loc);
-			cmp->op = awst::NumericComparison::Ne;
+			auto cmp = awst::makeNumericCompare(std::move(getbit), awst::NumericComparison::Ne, makeUint64("0", _loc), _loc);
 			return cmp;
 		}
 		else if (_solidityReturnType == awst::WType::accountType())
@@ -1023,12 +998,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildSubmitAndReturn(
 					getbit->stackArgs.push_back(std::move(extract));
 					getbit->stackArgs.push_back(makeUint64("0", _loc));
 
-					auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-					cmp->sourceLocation = _loc;
-					cmp->wtype = awst::WType::boolType();
-					cmp->lhs = std::move(getbit);
-					cmp->rhs = makeUint64("0", _loc);
-					cmp->op = awst::NumericComparison::Ne;
+					auto cmp = awst::makeNumericCompare(std::move(getbit), awst::NumericComparison::Ne, makeUint64("0", _loc), _loc);
 					fieldExpr = std::move(cmp);
 				}
 				else if (fieldType == awst::WType::accountType())

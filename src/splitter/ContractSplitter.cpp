@@ -1267,12 +1267,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 		{
 			auto currentO = makeIntrinsic("app_global_get", {}, {makeBytesKey("o")}, awst::WType::uint64Type());
 			auto zero = awst::makeIntegerConstant("0", loc);
-			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-			cmp->sourceLocation = loc;
-			cmp->wtype = awst::WType::boolType();
-			cmp->lhs = currentO;
-			cmp->op = awst::NumericComparison::Eq;
-			cmp->rhs = zero;
+			auto cmp = awst::makeNumericCompare(currentO, awst::NumericComparison::Eq, zero, loc);
 			auto es = awst::makeExpressionStatement(awst::makeAssert(cmp, loc, "helper: already initialized",
 				awst::WType::boolType()), loc);
 			body->body.push_back(es);
@@ -1420,12 +1415,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 		awst::NumericComparison op,
 		std::shared_ptr<awst::Expression> rhs
 	) {
-		auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-		cmp->sourceLocation = loc;
-		cmp->wtype = awst::WType::boolType();
-		cmp->lhs = std::move(lhs);
-		cmp->op = op;
-		cmp->rhs = std::move(rhs);
+		auto cmp = awst::makeNumericCompare(std::move(lhs), op, std::move(rhs), loc);
 		return cmp;
 	};
 	auto makeVar = [&](std::string name, awst::WType const* type) {
@@ -1785,12 +1775,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 		awst::NumericComparison op,
 		std::shared_ptr<awst::Expression> rhs
 	) {
-		auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-		cmp->sourceLocation = loc;
-		cmp->wtype = awst::WType::boolType();
-		cmp->lhs = std::move(lhs);
-		cmp->op = op;
-		cmp->rhs = std::move(rhs);
+		auto cmp = awst::makeNumericCompare(std::move(lhs), op, std::move(rhs), loc);
 		return cmp;
 	};
 	auto makeVar = [&](std::string name, awst::WType const* type) {
@@ -2247,12 +2232,7 @@ std::vector<std::shared_ptr<awst::Statement>> ContractSplitter::buildValidationB
 		awst::NumericComparison op,
 		std::shared_ptr<awst::Expression> rhs
 	) {
-		auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-		cmp->sourceLocation = _loc;
-		cmp->wtype = awst::WType::boolType();
-		cmp->lhs = std::move(lhs);
-		cmp->op = op;
-		cmp->rhs = std::move(rhs);
+		auto cmp = awst::makeNumericCompare(std::move(lhs), op, std::move(rhs), _loc);
 		return cmp;
 	};
 	auto makeBytesCmp = [&](

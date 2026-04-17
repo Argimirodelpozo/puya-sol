@@ -674,12 +674,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBool(
 	{
 		auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 
-		auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-		cmp->sourceLocation = _loc;
-		cmp->wtype = awst::WType::boolType();
-		cmp->lhs = std::move(_expr);
-		cmp->op = awst::NumericComparison::Ne;
-		cmp->rhs = std::move(zero);
+		auto cmp = awst::makeNumericCompare(std::move(_expr), awst::NumericComparison::Ne, std::move(zero), _loc);
 		return cmp;
 	}
 
@@ -687,12 +682,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBool(
 	{
 		auto zero = awst::makeIntegerConstant("0", _loc);
 
-		auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-		cmp->sourceLocation = _loc;
-		cmp->wtype = awst::WType::boolType();
-		cmp->lhs = std::move(_expr);
-		cmp->op = awst::NumericComparison::Ne;
-		cmp->rhs = std::move(zero);
+		auto cmp = awst::makeNumericCompare(std::move(_expr), awst::NumericComparison::Ne, std::move(zero), _loc);
 		return cmp;
 	}
 
@@ -744,12 +734,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::safeDivMod(
 
 	auto zeroForCmp = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 
-	auto cond = std::make_shared<awst::NumericComparisonExpression>();
-	cond->sourceLocation = _loc;
-	cond->wtype = awst::WType::boolType();
-	cond->lhs = ensureBiguint(_right, _loc);  // copies shared_ptr
-	cond->op = awst::NumericComparison::Ne;
-	cond->rhs = std::move(zeroForCmp);
+	auto cond = awst::makeNumericCompare(ensureBiguint(_right, _loc), awst::NumericComparison::Ne, std::move(zeroForCmp), _loc);
 
 	auto divExpr = makeBigUIntBinOp(_left, _op, _right, _loc);
 

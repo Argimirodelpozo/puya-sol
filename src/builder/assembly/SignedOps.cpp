@@ -141,12 +141,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::isNegative256(
 			: "57896044618658097711785492504343953926634992332820282019728792003956564819968", // 2^255
 		_loc, awst::WType::biguintType());
 
-	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-	cmp->sourceLocation = _loc;
-	cmp->wtype = awst::WType::boolType();
-	cmp->lhs = _val;
-	cmp->op = awst::NumericComparison::Gte;
-	cmp->rhs = std::move(halfMax);
+	auto cmp = awst::makeNumericCompare(_val, awst::NumericComparison::Gte, std::move(halfMax), _loc);
 	return cmp;
 }
 
@@ -216,12 +211,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSdiv(
 	auto bNeg2 = isNegative256(b, _loc);
 	auto aNegInt = ensureBiguint(aNeg2, _loc);
 	auto bNegInt = ensureBiguint(bNeg2, _loc);
-	auto xorResult = std::make_shared<awst::NumericComparisonExpression>();
-	xorResult->sourceLocation = _loc;
-	xorResult->wtype = awst::WType::boolType();
-	xorResult->lhs = aNegInt;
-	xorResult->op = awst::NumericComparison::Ne;
-	xorResult->rhs = bNegInt;
+	auto xorResult = awst::makeNumericCompare(aNegInt, awst::NumericComparison::Ne, bNegInt, _loc);
 
 	// result = resultNeg ? negate(quotient) : quotient
 	auto result = std::make_shared<awst::ConditionalExpression>();
@@ -325,19 +315,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSlt(
 					: "57896044618658097711785492504343953926634992332820282019728792003956564819968", // 2^255
 				_loc, awst::WType::biguintType());
 			// x > 0
-			auto gtZero = std::make_shared<awst::NumericComparisonExpression>();
-			gtZero->sourceLocation = _loc;
-			gtZero->wtype = awst::WType::boolType();
-			gtZero->lhs = b;
-			gtZero->op = awst::NumericComparison::Gt;
-			gtZero->rhs = std::move(zero);
+			auto gtZero = awst::makeNumericCompare(b, awst::NumericComparison::Gt, std::move(zero), _loc);
 			// x < signBitThreshold
-			auto ltPow = std::make_shared<awst::NumericComparisonExpression>();
-			ltPow->sourceLocation = _loc;
-			ltPow->wtype = awst::WType::boolType();
-			ltPow->lhs = b;
-			ltPow->op = awst::NumericComparison::Lt;
-			ltPow->rhs = std::move(signThreshold);
+			auto ltPow = awst::makeNumericCompare(b, awst::NumericComparison::Lt, std::move(signThreshold), _loc);
 			// AND
 			auto andExpr = std::make_shared<awst::BooleanBinaryOperation>();
 			andExpr->sourceLocation = _loc;
@@ -357,20 +337,10 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSlt(
 	// signsMatch = (aNeg == bNeg) via biguint comparison
 	auto aNegInt = ensureBiguint(aNeg, _loc);
 	auto bNegInt = ensureBiguint(bNeg, _loc);
-	auto signsMatch = std::make_shared<awst::NumericComparisonExpression>();
-	signsMatch->sourceLocation = _loc;
-	signsMatch->wtype = awst::WType::boolType();
-	signsMatch->lhs = aNegInt;
-	signsMatch->op = awst::NumericComparison::Eq;
-	signsMatch->rhs = bNegInt;
+	auto signsMatch = awst::makeNumericCompare(aNegInt, awst::NumericComparison::Eq, bNegInt, _loc);
 
 	// unsignedLt = a < b
-	auto unsignedLt = std::make_shared<awst::NumericComparisonExpression>();
-	unsignedLt->sourceLocation = _loc;
-	unsignedLt->wtype = awst::WType::boolType();
-	unsignedLt->lhs = a;
-	unsignedLt->op = awst::NumericComparison::Lt;
-	unsignedLt->rhs = b;
+	auto unsignedLt = awst::makeNumericCompare(a, awst::NumericComparison::Lt, b, _loc);
 
 	// signsMatch ? (a < b) : aNeg
 	auto result = std::make_shared<awst::ConditionalExpression>();

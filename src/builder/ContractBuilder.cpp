@@ -1067,12 +1067,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 
 						auto mv = awst::makeIntegerConstant(std::to_string(memberCount - 1), loc);
 
-						auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-						cmp->sourceLocation = loc;
-						cmp->wtype = awst::WType::boolType();
-						cmp->lhs = pv;
-						cmp->op = awst::NumericComparison::Lte;
-						cmp->rhs = std::move(mv);
+						auto cmp = awst::makeNumericCompare(pv, awst::NumericComparison::Lte, std::move(mv), loc);
 
 						auto as = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), loc, "enum validation"), loc);
 						body->body.push_back(std::move(as));
@@ -1407,12 +1402,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 		auto zero = awst::makeIntegerConstant("0", method.sourceLocation);
 
-		auto isCreate = std::make_shared<awst::NumericComparisonExpression>();
-		isCreate->sourceLocation = method.sourceLocation;
-		isCreate->wtype = awst::WType::boolType();
-		isCreate->lhs = appIdCheck;
-		isCreate->op = awst::NumericComparison::Eq;
-		isCreate->rhs = zero;
+		auto isCreate = awst::makeNumericCompare(appIdCheck, awst::NumericComparison::Eq, zero, method.sourceLocation);
 
 		auto createBlock = std::make_shared<awst::Block>();
 		createBlock->sourceLocation = method.sourceLocation;
@@ -2537,12 +2527,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 			auto zero = awst::makeIntegerConstant("0", method.sourceLocation);
 
-			auto isBareCall = std::make_shared<awst::NumericComparisonExpression>();
-			isBareCall->sourceLocation = method.sourceLocation;
-			isBareCall->wtype = awst::WType::boolType();
-			isBareCall->lhs = std::move(numAppArgs);
-			isBareCall->op = awst::NumericComparison::Eq;
-			isBareCall->rhs = std::move(zero);
+			auto isBareCall = awst::makeNumericCompare(std::move(numAppArgs), awst::NumericComparison::Eq, std::move(zero), method.sourceLocation);
 
 			auto bareBlock = std::make_shared<awst::Block>();
 			bareBlock->sourceLocation = method.sourceLocation;
@@ -3027,12 +3012,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 					auto maxVal = awst::makeIntegerConstant(std::to_string(numMembers), method.sourceLocation);
 
-					auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-					cmp->sourceLocation = method.sourceLocation;
-					cmp->wtype = awst::WType::boolType();
-					cmp->lhs = std::move(var);
-					cmp->op = awst::NumericComparison::Lt;
-					cmp->rhs = std::move(maxVal);
+					auto cmp = awst::makeNumericCompare(std::move(var), awst::NumericComparison::Lt, std::move(maxVal), method.sourceLocation);
 
 					auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), method.sourceLocation, "enum out of range"), method.sourceLocation);
 					method.body->body.push_back(std::move(assertStmt));
@@ -3545,21 +3525,11 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 						auto paramCheck1 = awst::makeVarExpression(param->name(), awst::WType::uint64Type(), loc);
 						auto maxPosConst = awst::makeIntegerConstant(std::to_string(maxPos), loc);
-						auto cmpPos = std::make_shared<awst::NumericComparisonExpression>();
-						cmpPos->sourceLocation = loc;
-						cmpPos->wtype = awst::WType::boolType();
-						cmpPos->lhs = paramCheck1;
-						cmpPos->op = awst::NumericComparison::Lte;
-						cmpPos->rhs = std::move(maxPosConst);
+						auto cmpPos = awst::makeNumericCompare(paramCheck1, awst::NumericComparison::Lte, std::move(maxPosConst), loc);
 
 						auto paramCheck2 = awst::makeVarExpression(param->name(), awst::WType::uint64Type(), loc);
 						auto minNegConst = awst::makeIntegerConstant(std::to_string(minNeg), loc);
-						auto cmpNeg = std::make_shared<awst::NumericComparisonExpression>();
-						cmpNeg->sourceLocation = loc;
-						cmpNeg->wtype = awst::WType::boolType();
-						cmpNeg->lhs = paramCheck2;
-						cmpNeg->op = awst::NumericComparison::Gte;
-						cmpNeg->rhs = std::move(minNegConst);
+						auto cmpNeg = awst::makeNumericCompare(paramCheck2, awst::NumericComparison::Gte, std::move(minNegConst), loc);
 
 						// OR the two conditions
 						auto orExpr = std::make_shared<awst::BooleanBinaryOperation>();
@@ -3584,12 +3554,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 					auto maxVal = awst::makeIntegerConstant(std::to_string(mask), loc);
 
-					auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-					cmp->sourceLocation = loc;
-					cmp->wtype = awst::WType::boolType();
-					cmp->lhs = paramCheck;
-					cmp->op = awst::NumericComparison::Lte;
-					cmp->rhs = std::move(maxVal);
+					auto cmp = awst::makeNumericCompare(paramCheck, awst::NumericComparison::Lte, std::move(maxVal), loc);
 
 					auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), loc, "ABI validation"), loc);
 					maskStmts.push_back(std::move(assertStmt));
@@ -3640,12 +3605,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 					auto one = awst::makeIntegerConstant("1", loc);
 
-					auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-					cmp->sourceLocation = loc;
-					cmp->wtype = awst::WType::boolType();
-					cmp->lhs = paramVar;
-					cmp->op = awst::NumericComparison::Lte;
-					cmp->rhs = std::move(one);
+					auto cmp = awst::makeNumericCompare(paramVar, awst::NumericComparison::Lte, std::move(one), loc);
 
 					auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), loc, "ABI bool validation"), loc);
 					maskStmts.push_back(std::move(assertStmt));
@@ -3668,12 +3628,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 					auto maxVal = awst::makeIntegerConstant(std::to_string(memberCount - 1), loc);
 
-					auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-					cmp->sourceLocation = loc;
-					cmp->wtype = awst::WType::boolType();
-					cmp->lhs = paramVar;
-					cmp->op = awst::NumericComparison::Lte;
-					cmp->rhs = std::move(maxVal);
+					auto cmp = awst::makeNumericCompare(paramVar, awst::NumericComparison::Lte, std::move(maxVal), loc);
 
 					auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), loc, "ABI enum validation"), loc);
 					maskStmts.push_back(std::move(assertStmt));
@@ -4636,12 +4591,7 @@ void ContractBuilder::buildStorageDispatch(
 			// Condition: __slot == slotNumber
 			auto slotVar = awst::makeVarExpression("__slot", awst::WType::uint64Type(), loc);
 
-			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-			cmp->sourceLocation = loc;
-			cmp->wtype = awst::WType::boolType();
-			cmp->lhs = slotVar;
-			cmp->op = awst::NumericComparison::Eq;
-			cmp->rhs = makeUint64(std::to_string(sv.slot));
+			auto cmp = awst::makeNumericCompare(slotVar, awst::NumericComparison::Eq, makeUint64(std::to_string(sv.slot)), loc);
 
 			// If branch: return app_global_get(varName) as biguint
 			auto ifBlock = std::make_shared<awst::Block>();
@@ -4859,12 +4809,7 @@ void ContractBuilder::buildStorageDispatch(
 
 			auto slotVar = awst::makeVarExpression("__slot", awst::WType::uint64Type(), loc);
 
-			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-			cmp->sourceLocation = loc;
-			cmp->wtype = awst::WType::boolType();
-			cmp->lhs = slotVar;
-			cmp->op = awst::NumericComparison::Eq;
-			cmp->rhs = makeUint64(std::to_string(sv.slot));
+			auto cmp = awst::makeNumericCompare(slotVar, awst::NumericComparison::Eq, makeUint64(std::to_string(sv.slot)), loc);
 
 			auto ifBlock = std::make_shared<awst::Block>();
 			ifBlock->sourceLocation = loc;

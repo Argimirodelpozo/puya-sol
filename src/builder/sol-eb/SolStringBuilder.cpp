@@ -64,12 +64,7 @@ std::unique_ptr<InstanceBuilder> SolStringBuilder::bool_eval(
 
 	auto zero = awst::makeIntegerConstant("0", _loc);
 
-	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-	cmp->sourceLocation = _loc;
-	cmp->wtype = awst::WType::boolType();
-	cmp->lhs = std::move(len);
-	cmp->rhs = std::move(zero);
-	cmp->op = _negate ? awst::NumericComparison::Eq : awst::NumericComparison::Ne;
+	auto cmp = awst::makeNumericCompare(std::move(len), _negate ? awst::NumericComparison::Eq : awst::NumericComparison::Ne, std::move(zero), _loc);
 	return std::make_unique<SolStringBuilder>(m_ctx, m_solType, std::move(cmp));
 }
 
@@ -128,12 +123,7 @@ std::unique_ptr<InstanceBuilder> SolDynamicBytesBuilder::bool_eval(
 
 	auto zero = awst::makeIntegerConstant("0", _loc);
 
-	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-	cmp->sourceLocation = _loc;
-	cmp->wtype = awst::WType::boolType();
-	cmp->lhs = std::move(len);
-	cmp->rhs = std::move(zero);
-	cmp->op = _negate ? awst::NumericComparison::Eq : awst::NumericComparison::Ne;
+	auto cmp = awst::makeNumericCompare(std::move(len), _negate ? awst::NumericComparison::Eq : awst::NumericComparison::Ne, std::move(zero), _loc);
 	return std::make_unique<SolDynamicBytesBuilder>(m_ctx, m_solType, std::move(cmp));
 }
 

@@ -143,12 +143,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleIszero(
 
 	auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 
-	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-	cmp->sourceLocation = _loc;
-	cmp->wtype = awst::WType::boolType();
-	cmp->lhs = std::move(arg);
-	cmp->op = awst::NumericComparison::Eq;
-	cmp->rhs = std::move(zero);
+	auto cmp = awst::makeNumericCompare(std::move(arg), awst::NumericComparison::Eq, std::move(zero), _loc);
 	return cmp;
 }
 
@@ -162,12 +157,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleEq(
 		Logger::instance().error("eq requires 2 arguments", _loc);
 		return nullptr;
 	}
-	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-	cmp->sourceLocation = _loc;
-	cmp->wtype = awst::WType::boolType();
-	cmp->lhs = ensureBiguint(_args[0], _loc);
-	cmp->op = awst::NumericComparison::Eq;
-	cmp->rhs = ensureBiguint(_args[1], _loc);
+	auto cmp = awst::makeNumericCompare(ensureBiguint(_args[0], _loc), awst::NumericComparison::Eq, ensureBiguint(_args[1], _loc), _loc);
 	return cmp;
 }
 
@@ -181,12 +171,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleLt(
 		Logger::instance().error("lt requires 2 arguments", _loc);
 		return nullptr;
 	}
-	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-	cmp->sourceLocation = _loc;
-	cmp->wtype = awst::WType::boolType();
-	cmp->lhs = ensureBiguint(_args[0], _loc);
-	cmp->op = awst::NumericComparison::Lt;
-	cmp->rhs = ensureBiguint(_args[1], _loc);
+	auto cmp = awst::makeNumericCompare(ensureBiguint(_args[0], _loc), awst::NumericComparison::Lt, ensureBiguint(_args[1], _loc), _loc);
 	return cmp;
 }
 
@@ -200,12 +185,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleGt(
 		Logger::instance().error("gt requires 2 arguments", _loc);
 		return nullptr;
 	}
-	auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-	cmp->sourceLocation = _loc;
-	cmp->wtype = awst::WType::boolType();
-	cmp->lhs = ensureBiguint(_args[0], _loc);
-	cmp->op = awst::NumericComparison::Gt;
-	cmp->rhs = ensureBiguint(_args[1], _loc);
+	auto cmp = awst::makeNumericCompare(ensureBiguint(_args[0], _loc), awst::NumericComparison::Gt, ensureBiguint(_args[1], _loc), _loc);
 	return cmp;
 }
 

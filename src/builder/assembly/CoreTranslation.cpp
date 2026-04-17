@@ -411,20 +411,10 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 			loc);
 		auto emptyHashBigUint = awst::makeReinterpretCast(std::move(emptyHash), awst::WType::biguintType(), loc);
 
-		auto isLarge = std::make_shared<awst::NumericComparisonExpression>();
-		isLarge->sourceLocation = loc;
-		isLarge->wtype = awst::WType::boolType();
-		isLarge->lhs = std::move(addrExprForLarge);
-		isLarge->op = awst::NumericComparison::Gt;
-		isLarge->rhs = std::move(threshold);
+		auto isLarge = awst::makeNumericCompare(std::move(addrExprForLarge), awst::NumericComparison::Gt, std::move(threshold), loc);
 
 		auto zeroLit = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
-		auto isZero = std::make_shared<awst::NumericComparisonExpression>();
-		isZero->sourceLocation = loc;
-		isZero->wtype = awst::WType::boolType();
-		isZero->lhs = std::move(addrExprForZero);
-		isZero->op = awst::NumericComparison::Eq;
-		isZero->rhs = std::move(zeroLit);
+		auto isZero = awst::makeNumericCompare(std::move(addrExprForZero), awst::NumericComparison::Eq, std::move(zeroLit), loc);
 
 		// small (0 < addr <= 100) → emptyHash; large (addr > 100) → hash(self); addr == 0 → 0
 		auto smallOrLarge = std::make_shared<awst::ConditionalExpression>();
@@ -510,12 +500,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 			// 2-slot EVM mock harness.
 			auto indexArg = args[0];
 			auto twoLit = awst::makeIntegerConstant("2", loc, awst::WType::biguintType());
-			auto withinRange = std::make_shared<awst::NumericComparisonExpression>();
-			withinRange->sourceLocation = loc;
-			withinRange->wtype = awst::WType::boolType();
-			withinRange->lhs = std::move(indexArg);
-			withinRange->op = awst::NumericComparison::Lt;
-			withinRange->rhs = std::move(twoLit);
+			auto withinRange = awst::makeNumericCompare(std::move(indexArg), awst::NumericComparison::Lt, std::move(twoLit), loc);
 
 			auto zero = awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
 

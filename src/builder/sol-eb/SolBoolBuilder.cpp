@@ -52,14 +52,9 @@ std::unique_ptr<InstanceBuilder> SolBoolBuilder::compare(
 	if (_op != BuilderComparisonOp::Eq && _op != BuilderComparisonOp::Ne)
 		return nullptr;
 
-	auto e = std::make_shared<awst::NumericComparisonExpression>();
-	e->sourceLocation = _loc;
-	e->wtype = awst::WType::boolType();
-	e->lhs = resolve();
-	e->rhs = _other.resolve();
-	e->op = (_op == BuilderComparisonOp::Eq)
+	auto e = awst::makeNumericCompare(resolve(), (_op == BuilderComparisonOp::Eq)
 		? awst::NumericComparison::Eq
-		: awst::NumericComparison::Ne;
+		: awst::NumericComparison::Ne, _other.resolve(), _loc);
 	return std::make_unique<SolBoolBuilder>(m_ctx, std::move(e));
 }
 

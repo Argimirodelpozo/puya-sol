@@ -586,12 +586,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 
 			auto maxVal = awst::makeIntegerConstant(std::to_string(numMembers), m_loc);
 
-			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-			cmp->sourceLocation = m_loc;
-			cmp->wtype = awst::WType::boolType();
-			cmp->lhs = val;
-			cmp->op = awst::NumericComparison::Lt;
-			cmp->rhs = std::move(maxVal);
+			auto cmp = awst::makeNumericCompare(val, awst::NumericComparison::Lt, std::move(maxVal), m_loc);
 
 			auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), m_loc, "enum out of range"), m_loc);
 			m_ctx.prePendingStatements.push_back(std::move(assertStmt));

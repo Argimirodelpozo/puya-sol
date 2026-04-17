@@ -344,6 +344,22 @@ struct NumericComparisonExpression: Expression
 	std::shared_ptr<Expression> rhs;
 };
 
+// Construct a NumericComparisonExpression. wtype is always boolType().
+inline std::shared_ptr<NumericComparisonExpression> makeNumericCompare(
+	std::shared_ptr<Expression> lhs,
+	NumericComparison op,
+	std::shared_ptr<Expression> rhs,
+	SourceLocation loc)
+{
+	auto node = std::make_shared<NumericComparisonExpression>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = WType::boolType();
+	node->lhs = std::move(lhs);
+	node->op = op;
+	node->rhs = std::move(rhs);
+	return node;
+}
+
 struct BytesComparisonExpression: Expression
 {
 	std::string nodeType() const override { return "BytesComparisonExpression"; }

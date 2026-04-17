@@ -457,12 +457,7 @@ void AssemblyBuilder::handleReturn(
 	{
 		auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 
-		auto cmp = std::make_shared<awst::NumericComparisonExpression>();
-		cmp->sourceLocation = _loc;
-		cmp->wtype = awst::WType::boolType();
-		cmp->lhs = std::move(returnValue);
-		cmp->op = awst::NumericComparison::Ne;
-		cmp->rhs = std::move(zero);
+		auto cmp = awst::makeNumericCompare(std::move(returnValue), awst::NumericComparison::Ne, std::move(zero), _loc);
 		returnValue = std::move(cmp);
 	}
 
