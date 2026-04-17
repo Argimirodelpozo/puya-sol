@@ -1551,6 +1551,10 @@ def execute_call(app, call, app_spec=None, verbose=False, uses_v1=False):
             _atc = _ATC2()
             _atc.add_transaction(_TWS2(_txn, _signer))
             try:
+                try:
+                    _atc = au.populate_app_call_resources(_atc, _algod)
+                except Exception:
+                    pass
                 _result = _atc.execute(_algod, 5)
                 if call.expect_failure:
                     return False, "expected FAILURE but succeeded"
