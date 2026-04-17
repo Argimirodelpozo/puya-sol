@@ -34,12 +34,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 	{
 		auto const& elem = it->second;
 
-		auto base = std::make_shared<awst::VarExpression>();
-		base->sourceLocation = _loc;
-		base->name = elem.paramName;
-		base->wtype = m_locals.count(elem.paramName)
+		auto base = awst::makeVarExpression(elem.paramName, m_locals.count(elem.paramName)
 			? m_locals[elem.paramName]
-			: awst::WType::biguintType();
+			: awst::WType::biguintType(), _loc);
 
 		// For bytes/string parameters, calldataload reads 32 bytes at a relative offset.
 		// Extract 32 bytes from the parameter and convert to biguint.
@@ -539,12 +536,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 		if (structType && numSlots == static_cast<int>(structType->fields().size()))
 		{
 			// ARC4Struct parameter: extract each field from raw bytes, pad to 32 bytes
-			auto base = std::make_shared<awst::VarExpression>();
-			base->sourceLocation = _loc;
-			base->name = elem.paramName;
-			base->wtype = m_locals.count(elem.paramName)
+			auto base = awst::makeVarExpression(elem.paramName, m_locals.count(elem.paramName)
 				? m_locals[elem.paramName]
-				: elem.paramType;
+				: elem.paramType, _loc);
 
 			// Cast struct to raw bytes for field extraction
 			auto structBytes = std::make_shared<awst::ReinterpretCast>();

@@ -803,10 +803,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 					var->name(), arrWType, storageKind, loc
 				);
 
-				auto idxRef = std::make_shared<awst::VarExpression>();
-				idxRef->sourceLocation = loc;
-				idxRef->wtype = getter.args[0].wtype;
-				idxRef->name = getter.args[0].name;
+				auto idxRef = awst::makeVarExpression(getter.args[0].name, getter.args[0].wtype, loc);
 				auto idx = ExpressionBuilder::implicitNumericCast(
 					idxRef, awst::WType::uint64Type(), loc);
 
@@ -866,10 +863,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				std::vector<std::shared_ptr<awst::Expression>> keyParts;
 				for (size_t i = 0; i < getter.args.size(); ++i)
 				{
-					auto argRef = std::make_shared<awst::VarExpression>();
-					argRef->sourceLocation = loc;
-					argRef->wtype = getter.args[i].wtype;
-					argRef->name = getter.args[i].name;
+					auto argRef = awst::makeVarExpression(getter.args[i].name, getter.args[i].wtype, loc);
 
 					std::shared_ptr<awst::Expression> keyBytes;
 					if (argRef->wtype == awst::WType::uint64Type())
@@ -1078,10 +1072,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 						std::string pname = (pi < solParamNames.size() && !solParamNames[pi].empty())
 							? solParamNames[pi] : "key" + std::to_string(pi);
 
-						auto pv = std::make_shared<awst::VarExpression>();
-						pv->sourceLocation = loc;
-						pv->name = pname;
-						pv->wtype = awst::WType::uint64Type();
+						auto pv = awst::makeVarExpression(pname, awst::WType::uint64Type(), loc);
 
 						auto mv = awst::makeIntegerConstant(std::to_string(memberCount - 1), loc);
 
@@ -1122,20 +1113,14 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 					garg.wtype = arc4Type;
 					garg.name = arc4Name;
 
-					auto arc4Var = std::make_shared<awst::VarExpression>();
-					arc4Var->sourceLocation = loc;
-					arc4Var->name = arc4Name;
-					arc4Var->wtype = arc4Type;
+					auto arc4Var = awst::makeVarExpression(arc4Name, arc4Type, loc);
 
 					auto decode = std::make_shared<awst::ARC4Decode>();
 					decode->sourceLocation = loc;
 					decode->wtype = awst::WType::biguintType();
 					decode->value = std::move(arc4Var);
 
-					auto target = std::make_shared<awst::VarExpression>();
-					target->sourceLocation = loc;
-					target->name = origName;
-					target->wtype = awst::WType::biguintType();
+					auto target = awst::makeVarExpression(origName, awst::WType::biguintType(), loc);
 
 					auto assign = std::make_shared<awst::AssignmentStatement>();
 					assign->sourceLocation = loc;
@@ -1793,10 +1778,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					paramVal = std::move(readArg);
 				}
 
-				auto target = std::make_shared<awst::VarExpression>();
-				target->sourceLocation = method.sourceLocation;
-				target->name = param->name();
-				target->wtype = paramType;
+				auto target = awst::makeVarExpression(param->name(), paramType, method.sourceLocation);
 
 				auto assignment = std::make_shared<awst::AssignmentStatement>();
 				assignment->sourceLocation = method.sourceLocation;
@@ -2148,10 +2130,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 						if (!argExpr)
 							continue;
 
-						auto target = std::make_shared<awst::VarExpression>();
-						target->sourceLocation = makeLoc(args[i]->location());
-						target->name = params[i]->name();
-						target->wtype = m_typeMapper.map(params[i]->type());
+						auto target = awst::makeVarExpression(params[i]->name(), m_typeMapper.map(params[i]->type()), makeLoc(args[i]->location()));
 
 						argExpr = ExpressionBuilder::implicitNumericCast(
 							std::move(argExpr), target->wtype, target->sourceLocation
@@ -2237,10 +2216,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					argExpr = ExpressionBuilder::implicitNumericCast(
 						std::move(argExpr), targetType, makeLoc(args[i]->location()));
 
-					auto target = std::make_shared<awst::VarExpression>();
-					target->sourceLocation = makeLoc(args[i]->location());
-					target->name = params[i]->name();
-					target->wtype = targetType;
+					auto target = awst::makeVarExpression(params[i]->name(), targetType, makeLoc(args[i]->location()));
 
 					auto assignment = std::make_shared<awst::AssignmentStatement>();
 					assignment->sourceLocation = target->sourceLocation;
@@ -2284,10 +2260,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					argExpr = ExpressionBuilder::implicitNumericCast(
 						std::move(argExpr), targetType, makeLoc(args[i]->location()));
 
-					auto target = std::make_shared<awst::VarExpression>();
-					target->sourceLocation = makeLoc(args[i]->location());
-					target->name = params[i]->name();
-					target->wtype = targetType;
+					auto target = awst::makeVarExpression(params[i]->name(), targetType, makeLoc(args[i]->location()));
 
 					auto assignment = std::make_shared<awst::AssignmentStatement>();
 					assignment->sourceLocation = target->sourceLocation;
@@ -2338,10 +2311,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					if (!evaledArgs[i])
 						continue;
 
-					auto target = std::make_shared<awst::VarExpression>();
-					target->sourceLocation = method.sourceLocation;
-					target->name = params[i]->name();
-					target->wtype = m_typeMapper.map(params[i]->type());
+					auto target = awst::makeVarExpression(params[i]->name(), m_typeMapper.map(params[i]->type()), method.sourceLocation);
 
 					auto assignment = std::make_shared<awst::AssignmentStatement>();
 					assignment->sourceLocation = method.sourceLocation;
@@ -2648,10 +2618,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		// Assign result to var (triggers can_exit_early=False in puya).
 		std::string matchVarName = "__did_match_routing";
 		{
-			auto matchVar = std::make_shared<awst::VarExpression>();
-			matchVar->sourceLocation = method.sourceLocation;
-			matchVar->wtype = awst::WType::boolType();
-			matchVar->name = matchVarName;
+			auto matchVar = awst::makeVarExpression(matchVarName, awst::WType::boolType(), method.sourceLocation);
 
 			auto routerExpr = std::make_shared<awst::ARC4Router>();
 			routerExpr->sourceLocation = method.sourceLocation;
@@ -2667,10 +2634,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		// Step 3: If no match AND fallback exists, call fallback.
 		if (fallbackFunc)
 		{
-			auto matchVarRead = std::make_shared<awst::VarExpression>();
-			matchVarRead->sourceLocation = method.sourceLocation;
-			matchVarRead->wtype = awst::WType::boolType();
-			matchVarRead->name = matchVarName;
+			auto matchVarRead = awst::makeVarExpression(matchVarName, awst::WType::boolType(), method.sourceLocation);
 
 			auto notMatch = std::make_shared<awst::Not>();
 			notMatch->sourceLocation = method.sourceLocation;
@@ -2682,10 +2646,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			dispatchBlock->body.push_back(makeCall("__fallback", fallbackFunc, false));
 
 			// Set __did_match = true so the approval returns true.
-			auto matchVarWrite = std::make_shared<awst::VarExpression>();
-			matchVarWrite->sourceLocation = method.sourceLocation;
-			matchVarWrite->wtype = awst::WType::boolType();
-			matchVarWrite->name = matchVarName;
+			auto matchVarWrite = awst::makeVarExpression(matchVarName, awst::WType::boolType(), method.sourceLocation);
 
 			auto assignTrue = std::make_shared<awst::AssignmentStatement>();
 			assignTrue->sourceLocation = method.sourceLocation;
@@ -2701,10 +2662,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		}
 
 		// Step 4: return __did_match_routing
-		auto finalRead = std::make_shared<awst::VarExpression>();
-		finalRead->sourceLocation = method.sourceLocation;
-		finalRead->wtype = awst::WType::boolType();
-		finalRead->name = matchVarName;
+		auto finalRead = awst::makeVarExpression(matchVarName, awst::WType::boolType(), method.sourceLocation);
 
 		auto retStmt = std::make_shared<awst::ReturnStatement>();
 		retStmt->sourceLocation = method.sourceLocation;
@@ -3054,10 +3012,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					continue;
 				auto* rpType = m_typeMapper.map(rp->type());
 
-				auto target = std::make_shared<awst::VarExpression>();
-				target->sourceLocation = method.sourceLocation;
-				target->wtype = rpType;
-				target->name = rp->name();
+				auto target = awst::makeVarExpression(rp->name(), rpType, method.sourceLocation);
 
 				auto zeroVal = StorageMapper::makeDefaultValue(rpType, method.sourceLocation);
 
@@ -3096,10 +3051,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			{
 				if (retParams.size() == 1)
 				{
-					auto var = std::make_shared<awst::VarExpression>();
-					var->sourceLocation = method.sourceLocation;
-					var->name = retParams[0]->name();
-					var->wtype = m_typeMapper.map(retParams[0]->type());
+					auto var = awst::makeVarExpression(retParams[0]->name(), m_typeMapper.map(retParams[0]->type()), method.sourceLocation);
 					retStmt->value = std::move(var);
 				}
 				else
@@ -3108,10 +3060,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					tuple->sourceLocation = method.sourceLocation;
 					for (auto const& rp: retParams)
 					{
-						auto var = std::make_shared<awst::VarExpression>();
-						var->sourceLocation = method.sourceLocation;
-						var->name = rp->name();
-						var->wtype = m_typeMapper.map(rp->type());
+						auto var = awst::makeVarExpression(rp->name(), m_typeMapper.map(rp->type()), method.sourceLocation);
 						tuple->items.push_back(std::move(var));
 					}
 					tuple->wtype = method.returnType;
@@ -3129,10 +3078,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(retParams[0]->type()))
 				{
 					unsigned numMembers = enumType->numberOfMembers();
-					auto var = std::make_shared<awst::VarExpression>();
-					var->sourceLocation = method.sourceLocation;
-					var->name = retParams[0]->name();
-					var->wtype = awst::WType::uint64Type();
+					auto var = awst::makeVarExpression(retParams[0]->name(), awst::WType::uint64Type(), method.sourceLocation);
 
 					auto maxVal = awst::makeIntegerConstant(std::to_string(numMembers), method.sourceLocation);
 
@@ -3346,10 +3292,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 								if (!needsWrap) continue;
 
 								std::string tmpName = "__ret_tmp_" + std::to_string(retTmpCounter++);
-								auto tmpVar = std::make_shared<awst::VarExpression>();
-								tmpVar->sourceLocation = ret->sourceLocation;
-								tmpVar->wtype = ret->value->wtype;
-								tmpVar->name = tmpName;
+								auto tmpVar = awst::makeVarExpression(tmpName, ret->value->wtype, ret->sourceLocation);
 
 								auto assign = std::make_shared<awst::AssignmentStatement>();
 								assign->sourceLocation = ret->sourceLocation;
@@ -3572,10 +3515,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				// instead of ARC4Decode — works around a puya backend issue where
 				// extract3(value, 2, 0) returns empty bytes instead of extracting
 				// to end (see puya-possible-bug.md).
-				auto arc4Var = std::make_shared<awst::VarExpression>();
-				arc4Var->sourceLocation = pd.loc;
-				arc4Var->name = arc4Name;
-				arc4Var->wtype = pd.arc4Type;
+				auto arc4Var = awst::makeVarExpression(arc4Name, pd.arc4Type, pd.loc);
 
 				std::shared_ptr<awst::Expression> decodeExpr;
 				auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(pd.nativeType);
@@ -3602,10 +3542,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					decodeExpr = std::move(decode);
 				}
 
-				auto target = std::make_shared<awst::VarExpression>();
-				target->sourceLocation = pd.loc;
-				target->name = pd.name;
-				target->wtype = pd.nativeType;
+				auto target = awst::makeVarExpression(pd.name, pd.nativeType, pd.loc);
 
 				auto assign = std::make_shared<awst::AssignmentStatement>();
 				assign->sourceLocation = pd.loc;
@@ -3663,10 +3600,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						uint64_t maxPos = (uint64_t(1) << (bits - 1)) - 1;
 						uint64_t minNeg = ~((uint64_t(1) << (bits - 1)) - 1); // 2^64 - 2^(n-1)
 
-						auto paramCheck1 = std::make_shared<awst::VarExpression>();
-						paramCheck1->sourceLocation = loc;
-						paramCheck1->name = param->name();
-						paramCheck1->wtype = awst::WType::uint64Type();
+						auto paramCheck1 = awst::makeVarExpression(param->name(), awst::WType::uint64Type(), loc);
 						auto maxPosConst = awst::makeIntegerConstant(std::to_string(maxPos), loc);
 						auto cmpPos = std::make_shared<awst::NumericComparisonExpression>();
 						cmpPos->sourceLocation = loc;
@@ -3675,10 +3609,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						cmpPos->op = awst::NumericComparison::Lte;
 						cmpPos->rhs = std::move(maxPosConst);
 
-						auto paramCheck2 = std::make_shared<awst::VarExpression>();
-						paramCheck2->sourceLocation = loc;
-						paramCheck2->name = param->name();
-						paramCheck2->wtype = awst::WType::uint64Type();
+						auto paramCheck2 = awst::makeVarExpression(param->name(), awst::WType::uint64Type(), loc);
 						auto minNegConst = awst::makeIntegerConstant(std::to_string(minNeg), loc);
 						auto cmpNeg = std::make_shared<awst::NumericComparisonExpression>();
 						cmpNeg->sourceLocation = loc;
@@ -3708,10 +3639,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 				if (useV2)
 				{
-					auto paramCheck = std::make_shared<awst::VarExpression>();
-					paramCheck->sourceLocation = loc;
-					paramCheck->name = param->name();
-					paramCheck->wtype = awst::WType::uint64Type();
+					auto paramCheck = awst::makeVarExpression(param->name(), awst::WType::uint64Type(), loc);
 
 					auto maxVal = awst::makeIntegerConstant(std::to_string(mask), loc);
 
@@ -3728,10 +3656,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					maskStmts.push_back(std::move(assertStmt));
 				}
 
-				auto paramVar = std::make_shared<awst::VarExpression>();
-				paramVar->sourceLocation = loc;
-				paramVar->name = param->name();
-				paramVar->wtype = awst::WType::uint64Type();
+				auto paramVar = awst::makeVarExpression(param->name(), awst::WType::uint64Type(), loc);
 
 				auto maskConst = awst::makeIntegerConstant(std::to_string(mask), loc);
 
@@ -3742,10 +3667,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				bitAnd->op = awst::UInt64BinaryOperator::BitAnd;
 				bitAnd->right = std::move(maskConst);
 
-				auto target = std::make_shared<awst::VarExpression>();
-				target->sourceLocation = loc;
-				target->name = param->name();
-				target->wtype = awst::WType::uint64Type();
+				auto target = awst::makeVarExpression(param->name(), awst::WType::uint64Type(), loc);
 
 				auto assign = std::make_shared<awst::AssignmentStatement>();
 				assign->sourceLocation = loc;
@@ -3773,12 +3695,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						continue;
 					auto loc = makeLoc(param->location());
 
-					auto paramVar = std::make_shared<awst::VarExpression>();
-					paramVar->sourceLocation = loc;
-					paramVar->name = param->name().empty()
+					auto paramVar = awst::makeVarExpression(param->name().empty()
 						? "_param" + std::to_string(pi)
-						: param->name();
-					paramVar->wtype = awst::WType::uint64Type();
+						: param->name(), awst::WType::uint64Type(), loc);
 
 					auto one = awst::makeIntegerConstant("1", loc);
 
@@ -3806,12 +3725,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					auto loc = makeLoc(param->location());
 					unsigned memberCount = enumType->numberOfMembers();
 
-					auto paramVar = std::make_shared<awst::VarExpression>();
-					paramVar->sourceLocation = loc;
-					paramVar->name = param->name().empty()
+					auto paramVar = awst::makeVarExpression(param->name().empty()
 						? "_param" + std::to_string(pi)
-						: param->name();
-					paramVar->wtype = awst::WType::uint64Type();
+						: param->name(), awst::WType::uint64Type(), loc);
 
 					auto maxVal = awst::makeIntegerConstant(std::to_string(memberCount - 1), loc);
 
@@ -4034,10 +3950,7 @@ void ContractBuilder::inlineModifiers(
 	{
 		auto synthInit = std::make_shared<awst::AssignmentStatement>();
 		synthInit->sourceLocation = makeLoc(_func.location());
-		auto target = std::make_shared<awst::VarExpression>();
-		target->sourceLocation = synthInit->sourceLocation;
-		target->name = syntheticRetName;
-		target->wtype = syntheticRetType;
+		auto target = awst::makeVarExpression(syntheticRetName, syntheticRetType, synthInit->sourceLocation);
 		synthInit->target = std::move(target);
 		synthInit->value = StorageMapper::makeDefaultValue(syntheticRetType, synthInit->sourceLocation);
 		hoistedInits.push_back(std::move(synthInit));
@@ -4099,10 +4012,7 @@ void ContractBuilder::inlineModifiers(
 				);
 
 				// Create assignment: __mod_role_N = <evaluated arg>
-				auto target = std::make_shared<awst::VarExpression>();
-				target->sourceLocation = modLoc;
-				target->name = uniqueName;
-				target->wtype = paramType;
+				auto target = awst::makeVarExpression(uniqueName, paramType, modLoc);
 
 				auto assignment = std::make_shared<awst::AssignmentStatement>();
 				assignment->sourceLocation = modLoc;
@@ -4179,10 +4089,7 @@ void ContractBuilder::inlineModifiers(
 					if (!isJustRetVar)
 					{
 						// Create assignment: r = expr
-						auto target = std::make_shared<awst::VarExpression>();
-						target->sourceLocation = retStmt->sourceLocation;
-						target->wtype = retStmt->value->wtype;
-						target->name = retName;
+						auto target = awst::makeVarExpression(retName, retStmt->value->wtype, retStmt->sourceLocation);
 
 						auto assign = std::make_shared<awst::AssignmentStatement>();
 						assign->sourceLocation = retStmt->sourceLocation;
@@ -4192,10 +4099,7 @@ void ContractBuilder::inlineModifiers(
 					}
 
 					// Create deferred return: return r
-					auto retVar = std::make_shared<awst::VarExpression>();
-					retVar->sourceLocation = retStmt->sourceLocation;
-					retVar->wtype = retStmt->value->wtype;
-					retVar->name = retName;
+					auto retVar = awst::makeVarExpression(retName, retStmt->value->wtype, retStmt->sourceLocation);
 
 					auto deferRet = std::make_shared<awst::ReturnStatement>();
 					deferRet->sourceLocation = retStmt->sourceLocation;
@@ -4251,10 +4155,7 @@ void ContractBuilder::inlineModifiers(
 
 			// Helper: create flag = true assignment
 			auto makeFlagSet = [&]() -> std::shared_ptr<awst::Statement> {
-				auto target = std::make_shared<awst::VarExpression>();
-				target->sourceLocation = flagLoc;
-				target->wtype = awst::WType::boolType();
-				target->name = flagName;
+				auto target = awst::makeVarExpression(flagName, awst::WType::boolType(), flagLoc);
 				auto assign = std::make_shared<awst::AssignmentStatement>();
 				assign->sourceLocation = flagLoc;
 				assign->target = std::move(target);
@@ -4271,10 +4172,7 @@ void ContractBuilder::inlineModifiers(
 
 			// Helper: create if(flag) break;
 			auto makeFlagCheck = [&]() -> std::shared_ptr<awst::Statement> {
-				auto cond = std::make_shared<awst::VarExpression>();
-				cond->sourceLocation = flagLoc;
-				cond->wtype = awst::WType::boolType();
-				cond->name = flagName;
+				auto cond = awst::makeVarExpression(flagName, awst::WType::boolType(), flagLoc);
 				auto branchBody = std::make_shared<awst::Block>();
 				branchBody->sourceLocation = flagLoc;
 				branchBody->body.push_back(makeBreak());
@@ -4347,10 +4245,7 @@ void ContractBuilder::inlineModifiers(
 			// Initialize flag: __mod_exit_N = false
 			auto flagInit = std::make_shared<awst::AssignmentStatement>();
 			flagInit->sourceLocation = flagLoc;
-			auto flagTarget = std::make_shared<awst::VarExpression>();
-			flagTarget->sourceLocation = flagLoc;
-			flagTarget->wtype = awst::WType::boolType();
-			flagTarget->name = flagName;
+			auto flagTarget = awst::makeVarExpression(flagName, awst::WType::boolType(), flagLoc);
 			flagInit->target = std::move(flagTarget);
 			flagInit->value = awst::makeBoolConstant(false, flagLoc);
 			modBody->body.push_back(std::move(flagInit));
@@ -4500,10 +4395,7 @@ void ContractBuilder::buildModifierChain(
 				if (!argExpr) continue;
 				argExpr = ExpressionBuilder::implicitNumericCast(std::move(argExpr), paramType, modLoc);
 
-				auto target = std::make_shared<awst::VarExpression>();
-				target->sourceLocation = modLoc;
-				target->name = uniqueName;
-				target->wtype = paramType;
+				auto target = awst::makeVarExpression(uniqueName, paramType, modLoc);
 
 				auto assignment = std::make_shared<awst::AssignmentStatement>();
 				assignment->sourceLocation = modLoc;
@@ -4542,10 +4434,7 @@ void ContractBuilder::buildModifierChain(
 			{
 				awst::CallArg ca;
 				ca.name = arg.name;
-				auto varRef = std::make_shared<awst::VarExpression>();
-				varRef->sourceLocation = modSub.sourceLocation;
-				varRef->wtype = arg.wtype;
-				varRef->name = arg.name;
+				auto varRef = awst::makeVarExpression(arg.name, arg.wtype, modSub.sourceLocation);
 				ca.value = std::move(varRef);
 				call->args.push_back(std::move(ca));
 			}
@@ -4553,10 +4442,7 @@ void ContractBuilder::buildModifierChain(
 			if (!retVarName.empty())
 			{
 				// Assign call result to return variable
-				auto retTarget = std::make_shared<awst::VarExpression>();
-				retTarget->sourceLocation = modSub.sourceLocation;
-				retTarget->wtype = _method.returnType;
-				retTarget->name = retVarName;
+				auto retTarget = awst::makeVarExpression(retVarName, _method.returnType, modSub.sourceLocation);
 
 				auto assign = std::make_shared<awst::AssignmentStatement>();
 				assign->sourceLocation = modSub.sourceLocation;
@@ -4576,10 +4462,7 @@ void ContractBuilder::buildModifierChain(
 		// Initialize return variable at the start of the modifier sub
 		if (!retVarName.empty())
 		{
-			auto target = std::make_shared<awst::VarExpression>();
-			target->sourceLocation = modSub.sourceLocation;
-			target->wtype = _method.returnType;
-			target->name = retVarName;
+			auto target = awst::makeVarExpression(retVarName, _method.returnType, modSub.sourceLocation);
 			auto zeroVal = StorageMapper::makeDefaultValue(_method.returnType, modSub.sourceLocation);
 			auto assign = std::make_shared<awst::AssignmentStatement>();
 			assign->sourceLocation = modSub.sourceLocation;
@@ -4608,10 +4491,7 @@ void ContractBuilder::buildModifierChain(
 						{
 							if (!ret->value)
 							{
-								auto var = std::make_shared<awst::VarExpression>();
-								var->sourceLocation = ret->sourceLocation;
-								var->name = retVarName;
-								var->wtype = _method.returnType;
+								auto var = awst::makeVarExpression(retVarName, _method.returnType, ret->sourceLocation);
 								ret->value = std::move(var);
 							}
 						}
@@ -4639,10 +4519,7 @@ void ContractBuilder::buildModifierChain(
 			retStmt->sourceLocation = modSub.sourceLocation;
 			if (!retVarName.empty())
 			{
-				auto var = std::make_shared<awst::VarExpression>();
-				var->sourceLocation = modSub.sourceLocation;
-				var->name = retVarName;
-				var->wtype = _method.returnType;
+				auto var = awst::makeVarExpression(retVarName, _method.returnType, modSub.sourceLocation);
 				retStmt->value = std::move(var);
 			}
 			modBody->body.push_back(std::move(retStmt));
@@ -4666,10 +4543,7 @@ void ContractBuilder::buildModifierChain(
 	{
 		if (rp->name().empty()) continue;
 		auto* rpType = m_typeMapper.map(rp->type());
-		auto target = std::make_shared<awst::VarExpression>();
-		target->sourceLocation = _method.sourceLocation;
-		target->wtype = rpType;
-		target->name = rp->name();
+		auto target = awst::makeVarExpression(rp->name(), rpType, _method.sourceLocation);
 
 		auto zeroVal = StorageMapper::makeDefaultValue(rpType, _method.sourceLocation);
 		auto assign = std::make_shared<awst::AssignmentStatement>();
@@ -4688,10 +4562,7 @@ void ContractBuilder::buildModifierChain(
 	{
 		awst::CallArg ca;
 		ca.name = arg.name;
-		auto varRef = std::make_shared<awst::VarExpression>();
-		varRef->sourceLocation = _method.sourceLocation;
-		varRef->wtype = arg.wtype;
-		varRef->name = arg.name;
+		auto varRef = awst::makeVarExpression(arg.name, arg.wtype, _method.sourceLocation);
 		ca.value = std::move(varRef);
 		call->args.push_back(std::move(ca));
 	}
@@ -4781,10 +4652,7 @@ void ContractBuilder::buildStorageDispatch(
 			auto boxKey = makeBytes("__dyn_storage");
 
 			// Compute offset: (__slot % 256) * 32
-			auto slotVar = std::make_shared<awst::VarExpression>();
-			slotVar->sourceLocation = loc;
-			slotVar->wtype = awst::WType::uint64Type();
-			slotVar->name = "__slot";
+			auto slotVar = awst::makeVarExpression("__slot", awst::WType::uint64Type(), loc);
 
 			auto mod256 = std::make_shared<awst::UInt64BinaryOperation>();
 			mod256->sourceLocation = loc;
@@ -4848,10 +4716,7 @@ void ContractBuilder::buildStorageDispatch(
 			if (!sv.wtype || sv.wtype == awst::WType::voidType()) continue;
 
 			// Condition: __slot == slotNumber
-			auto slotVar = std::make_shared<awst::VarExpression>();
-			slotVar->sourceLocation = loc;
-			slotVar->wtype = awst::WType::uint64Type();
-			slotVar->name = "__slot";
+			auto slotVar = awst::makeVarExpression("__slot", awst::WType::uint64Type(), loc);
 
 			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 			cmp->sourceLocation = loc;
@@ -4973,10 +4838,7 @@ void ContractBuilder::buildStorageDispatch(
 			slotItob->sourceLocation = loc;
 			slotItob->wtype = awst::WType::bytesType();
 			slotItob->opCode = "itob";
-			auto slotVar = std::make_shared<awst::VarExpression>();
-			slotVar->sourceLocation = loc;
-			slotVar->wtype = awst::WType::uint64Type();
-			slotVar->name = "__slot";
+			auto slotVar = awst::makeVarExpression("__slot", awst::WType::uint64Type(), loc);
 			slotItob->stackArgs.push_back(std::move(slotVar));
 
 			auto key = std::make_shared<awst::IntrinsicCall>();
@@ -4990,10 +4852,7 @@ void ContractBuilder::buildStorageDispatch(
 			auto boxKey = makeBytes("__dyn_storage");
 
 			// Compute offset: (__slot % 256) * 32
-			auto slotVar2 = std::make_shared<awst::VarExpression>();
-			slotVar2->sourceLocation = loc;
-			slotVar2->wtype = awst::WType::uint64Type();
-			slotVar2->name = "__slot";
+			auto slotVar2 = awst::makeVarExpression("__slot", awst::WType::uint64Type(), loc);
 
 			auto mod256 = std::make_shared<awst::UInt64BinaryOperation>();
 			mod256->sourceLocation = loc;
@@ -5010,10 +4869,7 @@ void ContractBuilder::buildStorageDispatch(
 			offset->right = makeUint64("32");
 
 			// value as bytes (pad to 32)
-			auto valueVar = std::make_shared<awst::VarExpression>();
-			valueVar->sourceLocation = loc;
-			valueVar->wtype = awst::WType::biguintType();
-			valueVar->name = "__value";
+			auto valueVar = awst::makeVarExpression("__value", awst::WType::biguintType(), loc);
 
 			auto valBytes = std::make_shared<awst::ReinterpretCast>();
 			valBytes->sourceLocation = loc;
@@ -5093,10 +4949,7 @@ void ContractBuilder::buildStorageDispatch(
 		{
 			if (!sv.wtype || sv.wtype == awst::WType::voidType()) continue;
 
-			auto slotVar = std::make_shared<awst::VarExpression>();
-			slotVar->sourceLocation = loc;
-			slotVar->wtype = awst::WType::uint64Type();
-			slotVar->name = "__slot";
+			auto slotVar = awst::makeVarExpression("__slot", awst::WType::uint64Type(), loc);
 
 			auto cmp = std::make_shared<awst::NumericComparisonExpression>();
 			cmp->sourceLocation = loc;
@@ -5110,10 +4963,7 @@ void ContractBuilder::buildStorageDispatch(
 			{
 				// app_global_put(varName, pad32(value_as_bytes))
 				// Pad to 32 bytes to match EVM slot semantics
-				auto valueVar = std::make_shared<awst::VarExpression>();
-				valueVar->sourceLocation = loc;
-				valueVar->wtype = awst::WType::biguintType();
-				valueVar->name = "__value";
+				auto valueVar = awst::makeVarExpression("__value", awst::WType::biguintType(), loc);
 
 				auto cast = std::make_shared<awst::ReinterpretCast>();
 				cast->sourceLocation = loc;

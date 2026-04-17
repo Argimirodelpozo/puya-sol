@@ -33,10 +33,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		auto const& decl = *declarations[0];
 		auto* type = m_ctx.typeMapper->map(decl.type());
 
-		auto target = std::make_shared<awst::VarExpression>();
-		target->sourceLocation = m_ctx.makeLoc(decl.location());
-		target->wtype = type;
-		target->name = m_exprBuilder.resolveVarName(decl.name(), decl.id());
+		auto target = awst::makeVarExpression(m_exprBuilder.resolveVarName(decl.name(), decl.id()), type, m_ctx.makeLoc(decl.location()));
 
 		std::shared_ptr<awst::Expression> value;
 		if (initialValue)
@@ -132,10 +129,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			{
 				m_exprBuilder.addSlotStorageRef(decl.id(), value);
 				// Also emit the call as an assignment so the slot value is available
-				auto slotVar = std::make_shared<awst::VarExpression>();
-				slotVar->sourceLocation = m_loc;
-				slotVar->wtype = awst::WType::biguintType();
-				slotVar->name = decl.name();
+				auto slotVar = awst::makeVarExpression(decl.name(), awst::WType::biguintType(), m_loc);
 
 				auto assign = std::make_shared<awst::AssignmentStatement>();
 				assign->sourceLocation = m_loc;
@@ -184,10 +178,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			auto const& decl = *declarations[i];
 			auto* type = m_ctx.typeMapper->map(decl.type());
 
-			auto target = std::make_shared<awst::VarExpression>();
-			target->sourceLocation = m_ctx.makeLoc(decl.location());
-			target->wtype = type;
-			target->name = decl.name();
+			auto target = awst::makeVarExpression(decl.name(), type, m_ctx.makeLoc(decl.location()));
 
 			auto itemExpr = std::make_shared<awst::TupleItemExpression>();
 			itemExpr->sourceLocation = m_loc;

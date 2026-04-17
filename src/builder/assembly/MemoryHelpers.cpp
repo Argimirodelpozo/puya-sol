@@ -184,10 +184,7 @@ void AssemblyBuilder::storeResultToMemory(
 	std::string resultVar = "__precompile_result";
 	m_locals[resultVar] = awst::WType::bytesType();
 
-	auto resultTarget = std::make_shared<awst::VarExpression>();
-	resultTarget->sourceLocation = _loc;
-	resultTarget->name = resultVar;
-	resultTarget->wtype = awst::WType::bytesType();
+	auto resultTarget = awst::makeVarExpression(resultVar, awst::WType::bytesType(), _loc);
 
 	auto assignResult = std::make_shared<awst::AssignmentStatement>();
 	assignResult->sourceLocation = _loc;
@@ -200,10 +197,7 @@ void AssemblyBuilder::storeResultToMemory(
 	{
 		uint64_t outOff = _outputOffset + static_cast<uint64_t>(i) * 0x20;
 
-		auto resultRead = std::make_shared<awst::VarExpression>();
-		resultRead->sourceLocation = _loc;
-		resultRead->name = resultVar;
-		resultRead->wtype = awst::WType::bytesType();
+		auto resultRead = awst::makeVarExpression(resultVar, awst::WType::bytesType(), _loc);
 
 		// extract3(result, i*32, 32)
 		auto slotStart = awst::makeIntegerConstant(std::to_string(i * 32), _loc);

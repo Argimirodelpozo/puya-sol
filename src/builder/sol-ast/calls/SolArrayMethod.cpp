@@ -79,10 +79,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						static int popTmpCounter = 0;
 						std::string tmpName = "__bytes_pop_tmp_" + std::to_string(popTmpCounter++);
 
-						auto tmpTarget = std::make_shared<awst::VarExpression>();
-						tmpTarget->sourceLocation = loc;
-						tmpTarget->name = tmpName;
-						tmpTarget->wtype = awst::WType::bytesType();
+						auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
 						auto assignTmp = std::make_shared<awst::AssignmentStatement>();
 						assignTmp->sourceLocation = loc;
 						assignTmp->target = tmpTarget;
@@ -99,10 +96,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						delStmt->expr = std::move(del);
 						m_ctx.pendingStatements.push_back(std::move(delStmt));
 
-						auto tmpRead = std::make_shared<awst::VarExpression>();
-						tmpRead->sourceLocation = loc;
-						tmpRead->name = tmpName;
-						tmpRead->wtype = awst::WType::bytesType();
+						auto tmpRead = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
 						auto put = std::make_shared<awst::IntrinsicCall>();
 						put->sourceLocation = loc;
 						put->wtype = awst::WType::voidType();
@@ -181,10 +175,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						static int tmpCounter = 0;
 						std::string tmpName = "__bytes_push_tmp_" + std::to_string(tmpCounter++);
 
-						auto tmpTarget = std::make_shared<awst::VarExpression>();
-						tmpTarget->sourceLocation = loc;
-						tmpTarget->name = tmpName;
-						tmpTarget->wtype = awst::WType::bytesType();
+						auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
 
 						auto assignTmp = std::make_shared<awst::AssignmentStatement>();
 						assignTmp->sourceLocation = loc;
@@ -202,10 +193,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						delStmt->expr = std::move(del);
 						m_ctx.pendingStatements.push_back(std::move(delStmt));
 
-						auto tmpRead = std::make_shared<awst::VarExpression>();
-						tmpRead->sourceLocation = loc;
-						tmpRead->name = tmpName;
-						tmpRead->wtype = awst::WType::bytesType();
+						auto tmpRead = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
 						auto put = std::make_shared<awst::IntrinsicCall>();
 						put->sourceLocation = loc;
 						put->wtype = awst::WType::voidType();
@@ -314,10 +302,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 	// tmp = structRead
 	static int structPushCounter = 0;
 	std::string tmpName = "__struct_arr_tmp_" + std::to_string(structPushCounter++);
-	auto tmpTarget = std::make_shared<awst::VarExpression>();
-	tmpTarget->sourceLocation = loc;
-	tmpTarget->name = tmpName;
-	tmpTarget->wtype = structWType;
+	auto tmpTarget = awst::makeVarExpression(tmpName, structWType, loc);
 	auto tmpAssign = std::make_shared<awst::AssignmentStatement>();
 	tmpAssign->sourceLocation = loc;
 	tmpAssign->target = tmpTarget;
@@ -325,10 +310,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 	m_ctx.pendingStatements.push_back(std::move(tmpAssign));
 
 	// tmp.field (FieldExpression)
-	auto tmpRead = std::make_shared<awst::VarExpression>();
-	tmpRead->sourceLocation = loc;
-	tmpRead->name = tmpName;
-	tmpRead->wtype = structWType;
+	auto tmpRead = awst::makeVarExpression(tmpName, structWType, loc);
 	auto fieldExpr = std::make_shared<awst::FieldExpression>();
 	fieldExpr->sourceLocation = loc;
 	fieldExpr->wtype = rawFieldType;
@@ -390,10 +372,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 	}
 
 	// Write the struct back (box_put or app_global_put)
-	auto tmpWriteRead = std::make_shared<awst::VarExpression>();
-	tmpWriteRead->sourceLocation = loc;
-	tmpWriteRead->name = tmpName;
-	tmpWriteRead->wtype = structWType;
+	auto tmpWriteRead = awst::makeVarExpression(tmpName, structWType, loc);
 
 	auto writeExpr = m_ctx.storageMapper.createStateWrite(
 		varName, std::move(tmpWriteRead), structWType, kind, loc);

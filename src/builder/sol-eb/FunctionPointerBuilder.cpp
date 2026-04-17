@@ -522,10 +522,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		for (auto const* entry : entries)
 		{
 			// Condition: __funcptr_id == entry->id
-			auto idVar = std::make_shared<awst::VarExpression>();
-			idVar->sourceLocation = _loc;
-			idVar->wtype = awst::WType::uint64Type();
-			idVar->name = "__funcptr_id";
+			auto idVar = awst::makeVarExpression("__funcptr_id", awst::WType::uint64Type(), _loc);
 
 			auto idConst = awst::makeIntegerConstant(std::to_string(entry->id), _loc);
 
@@ -556,10 +553,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 				for (size_t i = 0; i < funcType->parameterTypes().size(); ++i)
 				{
 					awst::CallArg arg;
-					auto var = std::make_shared<awst::VarExpression>();
-					var->sourceLocation = _loc;
-					var->name = "__arg" + std::to_string(i);
-					var->wtype = dispatch.args[i + 1].wtype;
+					auto var = awst::makeVarExpression("__arg" + std::to_string(i), dispatch.args[i + 1].wtype, _loc);
 
 					// Get the actual parameter name from the target function
 					std::string paramName = "__arg" + std::to_string(i);

@@ -44,10 +44,7 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 		auto remapIt = m_ctx.paramRemaps.find(decl->id());
 		if (remapIt != m_ctx.paramRemaps.end())
 		{
-			auto var = std::make_shared<awst::VarExpression>();
-			var->sourceLocation = m_loc;
-			var->name = remapIt->second.name;
-			var->wtype = remapIt->second.type;
+			auto var = awst::makeVarExpression(remapIt->second.name, remapIt->second.type, m_loc);
 			return var;
 		}
 
@@ -136,10 +133,7 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 			if (type && type->kind() == awst::WTypeKind::ReferenceArray
 				&& kind == awst::AppStorageKind::Box)
 			{
-				auto placeholder = std::make_shared<awst::VarExpression>();
-				placeholder->sourceLocation = m_loc;
-				placeholder->name = name;
-				placeholder->wtype = type;
+				auto placeholder = awst::makeVarExpression(name, type, m_loc);
 				return placeholder;
 			}
 

@@ -139,10 +139,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			std::string tmpName = "__neg_tmp_" + std::to_string(m_unaryOp.id());
 
 			// __neg_tmp = 0
-			auto tmpVar = std::make_shared<awst::VarExpression>();
-			tmpVar->sourceLocation = m_loc;
-			tmpVar->name = tmpName;
-			tmpVar->wtype = awst::WType::biguintType();
+			auto tmpVar = awst::makeVarExpression(tmpName, awst::WType::biguintType(), m_loc);
 
 			auto initStmt = std::make_shared<awst::AssignmentStatement>();
 			initStmt->sourceLocation = m_loc;
@@ -644,10 +641,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		static int postIncCounter = 0;
 		std::string tempName = "__postinc_" + std::to_string(postIncCounter++);
 
-		auto tempVar = std::make_shared<awst::VarExpression>();
-		tempVar->sourceLocation = m_loc;
-		tempVar->wtype = _operand->wtype;
-		tempVar->name = tempName;
+		auto tempVar = awst::makeVarExpression(tempName, _operand->wtype, m_loc);
 
 		// Save old value: temp = a
 		auto saveStmt = std::make_shared<awst::AssignmentStatement>();

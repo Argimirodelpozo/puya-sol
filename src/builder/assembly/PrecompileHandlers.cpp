@@ -188,10 +188,7 @@ void AssemblyBuilder::handleEcRecover(
 	std::string tupleVar = "__ecdsa_result";
 	m_locals[tupleVar] = tupleTypePtr;
 
-	auto tupleTarget = std::make_shared<awst::VarExpression>();
-	tupleTarget->sourceLocation = _loc;
-	tupleTarget->name = tupleVar;
-	tupleTarget->wtype = tupleTypePtr;
+	auto tupleTarget = awst::makeVarExpression(tupleVar, tupleTypePtr, _loc);
 
 	auto assignTuple = std::make_shared<awst::AssignmentStatement>();
 	assignTuple->sourceLocation = _loc;
@@ -200,10 +197,7 @@ void AssemblyBuilder::handleEcRecover(
 	_out.push_back(std::move(assignTuple));
 
 	// 4. Extract pubkey_x (index 0) and pubkey_y (index 1)
-	auto tupleRead0 = std::make_shared<awst::VarExpression>();
-	tupleRead0->sourceLocation = _loc;
-	tupleRead0->name = tupleVar;
-	tupleRead0->wtype = tupleTypePtr;
+	auto tupleRead0 = awst::makeVarExpression(tupleVar, tupleTypePtr, _loc);
 
 	auto pubkeyX = std::make_shared<awst::TupleItemExpression>();
 	pubkeyX->sourceLocation = _loc;
@@ -211,10 +205,7 @@ void AssemblyBuilder::handleEcRecover(
 	pubkeyX->base = std::move(tupleRead0);
 	pubkeyX->index = 0;
 
-	auto tupleRead1 = std::make_shared<awst::VarExpression>();
-	tupleRead1->sourceLocation = _loc;
-	tupleRead1->name = tupleVar;
-	tupleRead1->wtype = tupleTypePtr;
+	auto tupleRead1 = awst::makeVarExpression(tupleVar, tupleTypePtr, _loc);
 
 	auto pubkeyY = std::make_shared<awst::TupleItemExpression>();
 	pubkeyY->sourceLocation = _loc;
@@ -418,10 +409,7 @@ void AssemblyBuilder::handleModExp(
 	// Helper: make a VarExpression
 	auto makeVar = [&](std::string const& name) -> std::shared_ptr<awst::VarExpression>
 	{
-		auto v = std::make_shared<awst::VarExpression>();
-		v->sourceLocation = _loc;
-		v->name = name;
-		v->wtype = awst::WType::biguintType();
+		auto v = awst::makeVarExpression(name, awst::WType::biguintType(), _loc);
 		return v;
 	};
 

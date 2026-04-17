@@ -300,10 +300,7 @@ std::vector<std::shared_ptr<awst::Statement>> FunctionInliner::inlineCall(
 	{
 		std::string renamedParam = prefix + _callee.args[i].name;
 
-		auto target = std::make_shared<awst::VarExpression>();
-		target->sourceLocation = loc;
-		target->wtype = _callee.args[i].wtype;
-		target->name = renamedParam;
+		auto target = awst::makeVarExpression(renamedParam, _callee.args[i].wtype, loc);
 
 		auto assign = std::make_shared<awst::AssignmentStatement>();
 		assign->sourceLocation = loc;
@@ -896,10 +893,7 @@ void FunctionInliner::flattenExpr(
 		{
 			// Hoist the call to a temp variable
 			std::string tmpName = "__flat" + std::to_string(m_flattenCounter++) + "_";
-			auto tmpVar = std::make_shared<awst::VarExpression>();
-			tmpVar->sourceLocation = _loc;
-			tmpVar->wtype = call.wtype;
-			tmpVar->name = tmpName;
+			auto tmpVar = awst::makeVarExpression(tmpName, call.wtype, _loc);
 
 			auto assign = std::make_shared<awst::AssignmentStatement>();
 			assign->sourceLocation = _loc;
@@ -908,10 +902,7 @@ void FunctionInliner::flattenExpr(
 			_hoisted.push_back(assign);
 
 			// Replace the call expression with the temp variable reference
-			auto ref = std::make_shared<awst::VarExpression>();
-			ref->sourceLocation = _loc;
-			ref->wtype = call.wtype;
-			ref->name = tmpName;
+			auto ref = awst::makeVarExpression(tmpName, call.wtype, _loc);
 			_expr = ref;
 		}
 		return;
@@ -1164,10 +1155,7 @@ std::shared_ptr<awst::Expression> FunctionInliner::deepCopyExpr(
 	if (type == "VarExpression")
 	{
 		auto& src = static_cast<awst::VarExpression const&>(*_expr);
-		auto n = std::make_shared<awst::VarExpression>();
-		n->sourceLocation = src.sourceLocation;
-		n->wtype = src.wtype;
-		n->name = src.name;
+		auto n = awst::makeVarExpression(src.name, src.wtype, src.sourceLocation);
 		return n;
 	}
 	if (type == "ARC4Router")

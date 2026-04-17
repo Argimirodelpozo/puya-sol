@@ -62,10 +62,7 @@ void AssemblyBuilder::handlePrecompileCall(
 
 			auto assignStmt = std::make_shared<awst::AssignmentStatement>();
 			assignStmt->sourceLocation = _loc;
-			auto varExpr = std::make_shared<awst::VarExpression>();
-			varExpr->sourceLocation = _loc;
-			varExpr->wtype = varType;
-			varExpr->name = _assignTarget;
+			auto varExpr = awst::makeVarExpression(_assignTarget, varType, _loc);
 			assignStmt->target = std::move(varExpr);
 
 			if (varType == awst::WType::boolType())
@@ -161,10 +158,7 @@ void AssemblyBuilder::handlePrecompileCall(
 		if (localIt == m_locals.end())
 			m_locals[_assignTarget] = varType;
 
-		auto target = std::make_shared<awst::VarExpression>();
-		target->sourceLocation = _loc;
-		target->name = _assignTarget;
-		target->wtype = varType;
+		auto target = awst::makeVarExpression(_assignTarget, varType, _loc);
 
 		std::shared_ptr<awst::Expression> val;
 		if (varType == awst::WType::boolType())

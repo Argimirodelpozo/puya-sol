@@ -29,12 +29,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleMload(
 		if (cdIt != m_calldataMap.end())
 		{
 			auto const& elem = cdIt->second;
-			auto base = std::make_shared<awst::VarExpression>();
-			base->sourceLocation = _loc;
-			base->name = elem.paramName;
-			base->wtype = m_locals.count(elem.paramName)
+			auto base = awst::makeVarExpression(elem.paramName, m_locals.count(elem.paramName)
 				? m_locals[elem.paramName]
-				: awst::WType::biguintType();
+				: awst::WType::biguintType(), _loc);
 
 			return accessFlatElement(std::move(base), elem.paramType, elem.flatIndex, _loc);
 		}
@@ -140,10 +137,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleBytesMemoryRead(
 	);
 
 	// Build param reference
-	auto paramVar = std::make_shared<awst::VarExpression>();
-	paramVar->sourceLocation = _loc;
-	paramVar->name = paramName;
-	paramVar->wtype = paramType;
+	auto paramVar = awst::makeVarExpression(paramName, paramType, _loc);
 
 	// Translate the dynamic offset and convert biguint → uint64
 	auto offsetExpr = buildExpression(*offsetExprYul);
@@ -243,10 +237,7 @@ bool AssemblyBuilder::tryHandleBytesMemoryWrite(
 	// This overwrites x with the first len(x) bytes of the 32-byte value.
 
 	// Reference to the variable
-	auto varRef = std::make_shared<awst::VarExpression>();
-	varRef->sourceLocation = _loc;
-	varRef->name = varName;
-	varRef->wtype = varType;
+	auto varRef = awst::makeVarExpression(varName, varType, _loc);
 
 	// len(x)
 	auto lenCall = std::make_shared<awst::IntrinsicCall>();
@@ -281,10 +272,7 @@ bool AssemblyBuilder::tryHandleBytesMemoryWrite(
 	}
 
 	// x = newValue
-	auto target = std::make_shared<awst::VarExpression>();
-	target->sourceLocation = _loc;
-	target->name = varName;
-	target->wtype = varType;
+	auto target = awst::makeVarExpression(varName, varType, _loc);
 
 	auto assign = std::make_shared<awst::AssignmentStatement>();
 	assign->sourceLocation = _loc;

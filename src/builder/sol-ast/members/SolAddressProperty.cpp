@@ -112,20 +112,14 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 		// going through a VarExpression matches the pattern that
 		// SolNewExpression already uses successfully.
 		std::string tmpName = "__app_program_result";
-		auto tmpTarget = std::make_shared<awst::VarExpression>();
-		tmpTarget->sourceLocation = m_loc;
-		tmpTarget->name = tmpName;
-		tmpTarget->wtype = tupleType;
+		auto tmpTarget = awst::makeVarExpression(tmpName, tupleType, m_loc);
 		auto assign = std::make_shared<awst::AssignmentStatement>();
 		assign->sourceLocation = m_loc;
 		assign->target = tmpTarget;
 		assign->value = std::move(appParamsGet);
 		m_ctx.prePendingStatements.push_back(std::move(assign));
 
-		auto tupleRead = std::make_shared<awst::VarExpression>();
-		tupleRead->sourceLocation = m_loc;
-		tupleRead->name = tmpName;
-		tupleRead->wtype = tupleType;
+		auto tupleRead = awst::makeVarExpression(tmpName, tupleType, m_loc);
 
 		auto item = std::make_shared<awst::TupleItemExpression>();
 		item->sourceLocation = m_loc;

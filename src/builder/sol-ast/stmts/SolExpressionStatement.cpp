@@ -109,10 +109,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 				if (!retParams[0]->name().empty())
 				{
 					// Named return: return the variable
-					auto retVar = std::make_shared<awst::VarExpression>();
-					retVar->sourceLocation = m_loc;
-					retVar->wtype = retType;
-					retVar->name = retParams[0]->name();
+					auto retVar = awst::makeVarExpression(retParams[0]->name(), retType, m_loc);
 					stmt->value = std::move(retVar);
 				}
 				else

@@ -146,10 +146,7 @@ static std::vector<std::shared_ptr<awst::Statement>> dispatchStatementImpl(
 				if (params.size() == 1)
 				{
 					auto* paramType = _ctx.typeMapper->map(params[0]->type());
-					auto target = std::make_shared<awst::VarExpression>();
-					target->sourceLocation = loc;
-					target->name = params[0]->name();
-					target->wtype = paramType;
+					auto target = awst::makeVarExpression(params[0]->name(), paramType, loc);
 
 					auto assign = std::make_shared<awst::AssignmentStatement>();
 					assign->sourceLocation = loc;
@@ -165,10 +162,7 @@ static std::vector<std::shared_ptr<awst::Statement>> dispatchStatementImpl(
 					for (auto const& p : params)
 					{
 						auto* paramType = _ctx.typeMapper->map(p->type());
-						auto v = std::make_shared<awst::VarExpression>();
-						v->sourceLocation = loc;
-						v->name = p->name();
-						v->wtype = paramType;
+						auto v = awst::makeVarExpression(p->name(), paramType, loc);
 						tupleTarget->items.push_back(std::move(v));
 						tupleTypes.push_back(paramType);
 					}

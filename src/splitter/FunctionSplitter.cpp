@@ -424,10 +424,7 @@ std::vector<std::shared_ptr<awst::Subroutine>> FunctionSplitter::splitFunction(
 
 				if (liveOut.size() == 1)
 				{
-					auto var = std::make_shared<awst::VarExpression>();
-					var->sourceLocation = _func->sourceLocation;
-					var->wtype = liveOut[0].wtype;
-					var->name = liveOut[0].name;
+					auto var = awst::makeVarExpression(liveOut[0].name, liveOut[0].wtype, _func->sourceLocation);
 					ret->value = var;
 				}
 				else
@@ -437,10 +434,7 @@ std::vector<std::shared_ptr<awst::Subroutine>> FunctionSplitter::splitFunction(
 					tuple->wtype = chunk->returnType;
 					for (auto const& lv: liveOut)
 					{
-						auto var = std::make_shared<awst::VarExpression>();
-						var->sourceLocation = _func->sourceLocation;
-						var->wtype = lv.wtype;
-						var->name = lv.name;
+						auto var = awst::makeVarExpression(lv.name, lv.wtype, _func->sourceLocation);
 						tuple->items.push_back(var);
 					}
 					ret->value = tuple;
@@ -479,10 +473,7 @@ std::vector<std::shared_ptr<awst::Subroutine>> FunctionSplitter::splitFunction(
 		{
 			if (callLiveNames.count(arg.name))
 				continue;
-			auto var = std::make_shared<awst::VarExpression>();
-			var->sourceLocation = _func->sourceLocation;
-			var->wtype = arg.wtype;
-			var->name = arg.name;
+			auto var = awst::makeVarExpression(arg.name, arg.wtype, _func->sourceLocation);
 			call->args.push_back(awst::CallArg{arg.name, var});
 		}
 
@@ -491,10 +482,7 @@ std::vector<std::shared_ptr<awst::Subroutine>> FunctionSplitter::splitFunction(
 		{
 			for (auto const& lv: liveAtSplits[c - 1])
 			{
-				auto var = std::make_shared<awst::VarExpression>();
-				var->sourceLocation = _func->sourceLocation;
-				var->wtype = lv.wtype;
-				var->name = lv.name;
+				auto var = awst::makeVarExpression(lv.name, lv.wtype, _func->sourceLocation);
 				call->args.push_back(awst::CallArg{lv.name, var});
 			}
 		}
@@ -535,10 +523,7 @@ std::vector<std::shared_ptr<awst::Subroutine>> FunctionSplitter::splitFunction(
 				// Single live var: assign directly
 				auto assign = std::make_shared<awst::AssignmentStatement>();
 				assign->sourceLocation = _func->sourceLocation;
-				auto target = std::make_shared<awst::VarExpression>();
-				target->sourceLocation = _func->sourceLocation;
-				target->wtype = liveOut[0].wtype;
-				target->name = liveOut[0].name;
+				auto target = awst::makeVarExpression(liveOut[0].name, liveOut[0].wtype, _func->sourceLocation);
 				assign->target = target;
 				assign->value = call;
 				newBody->body.push_back(assign);
@@ -557,10 +542,7 @@ std::vector<std::shared_ptr<awst::Subroutine>> FunctionSplitter::splitFunction(
 					auto assign = std::make_shared<awst::AssignmentStatement>();
 					assign->sourceLocation = _func->sourceLocation;
 
-					auto target = std::make_shared<awst::VarExpression>();
-					target->sourceLocation = _func->sourceLocation;
-					target->wtype = liveOut[j].wtype;
-					target->name = liveOut[j].name;
+					auto target = awst::makeVarExpression(liveOut[j].name, liveOut[j].wtype, _func->sourceLocation);
 					assign->target = target;
 
 					auto item = std::make_shared<awst::TupleItemExpression>();
@@ -1315,10 +1297,7 @@ void FunctionSplitter::convertToValueBasedIO(
 							int index = std::stoi(ic.value);
 							std::string localName = "_" + var.name + "_" + std::to_string(index);
 
-							auto newTarget = std::make_shared<awst::VarExpression>();
-							newTarget->sourceLocation = as.target->sourceLocation;
-							newTarget->wtype = idx.wtype ? idx.wtype : awst::WType::biguintType();
-							newTarget->name = localName;
+							auto newTarget = awst::makeVarExpression(localName, idx.wtype ? idx.wtype : awst::WType::biguintType(), as.target->sourceLocation);
 							as.target = newTarget;
 						}
 					}
@@ -1343,10 +1322,7 @@ void FunctionSplitter::convertToValueBasedIO(
 								int index = std::stoi(ic.value);
 								std::string localName = "_" + var.name + "_" + std::to_string(index);
 
-								auto newTarget = std::make_shared<awst::VarExpression>();
-								newTarget->sourceLocation = ae.target->sourceLocation;
-								newTarget->wtype = idx.wtype ? idx.wtype : awst::WType::biguintType();
-								newTarget->name = localName;
+								auto newTarget = awst::makeVarExpression(localName, idx.wtype ? idx.wtype : awst::WType::biguintType(), ae.target->sourceLocation);
 								ae.target = newTarget;
 							}
 						}
@@ -1392,10 +1368,7 @@ void FunctionSplitter::convertToValueBasedIO(
 		std::vector<std::shared_ptr<awst::Expression>> evalItems;
 		for (auto const& w: writes)
 		{
-			auto var = std::make_shared<awst::VarExpression>();
-			var->sourceLocation = chunk->sourceLocation;
-			var->wtype = w.wtype;
-			var->name = w.localVarName;
+			auto var = awst::makeVarExpression(w.localVarName, w.wtype, chunk->sourceLocation);
 			evalItems.push_back(var);
 		}
 
@@ -1574,10 +1547,7 @@ void FunctionSplitter::convertToValueBasedIO(
 			}
 			if (inChunk)
 			{
-				auto var = std::make_shared<awst::VarExpression>();
-				var->sourceLocation = _parent->sourceLocation;
-				var->wtype = arg.wtype;
-				var->name = arg.name;
+				auto var = awst::makeVarExpression(arg.name, arg.wtype, _parent->sourceLocation);
 				newCall->args.push_back(awst::CallArg{arg.name, var});
 			}
 		}
@@ -1586,10 +1556,7 @@ void FunctionSplitter::convertToValueBasedIO(
 		for (size_t ai = parentNonRefArgs.size(); ai < chunk->args.size(); ++ai)
 		{
 			auto const& ca = chunk->args[ai];
-			auto var = std::make_shared<awst::VarExpression>();
-			var->sourceLocation = _parent->sourceLocation;
-			var->wtype = ca.wtype;
-			var->name = ca.name;
+			auto var = awst::makeVarExpression(ca.name, ca.wtype, _parent->sourceLocation);
 			newCall->args.push_back(awst::CallArg{ca.name, var});
 		}
 
@@ -1670,10 +1637,7 @@ void FunctionSplitter::convertToValueBasedIO(
 				// Single eval return
 				auto assign = std::make_shared<awst::AssignmentStatement>();
 				assign->sourceLocation = _parent->sourceLocation;
-				auto target = std::make_shared<awst::VarExpression>();
-				target->sourceLocation = _parent->sourceLocation;
-				target->wtype = writes[0].wtype;
-				target->name = writes[0].localVarName;
+				auto target = awst::makeVarExpression(writes[0].localVarName, writes[0].wtype, _parent->sourceLocation);
 				assign->target = target;
 				assign->value = newCall;
 				newBody->body.push_back(assign);
@@ -1733,10 +1697,7 @@ void FunctionSplitter::convertToValueBasedIO(
 					auto assign = std::make_shared<awst::AssignmentStatement>();
 					assign->sourceLocation = _parent->sourceLocation;
 
-					auto target = std::make_shared<awst::VarExpression>();
-					target->sourceLocation = _parent->sourceLocation;
-					target->wtype = writes[wi].wtype;
-					target->name = writes[wi].localVarName;
+					auto target = awst::makeVarExpression(writes[wi].localVarName, writes[wi].wtype, _parent->sourceLocation);
 					assign->target = target;
 
 					auto item = std::make_shared<awst::TupleItemExpression>();
@@ -1796,10 +1757,7 @@ void FunctionSplitter::convertToValueBasedIO(
 		assign->target = idxExpr;
 
 		// Value: _evals_N
-		auto valVar = std::make_shared<awst::VarExpression>();
-		valVar->sourceLocation = _parent->sourceLocation;
-		valVar->wtype = w.wtype;
-		valVar->name = w.localVarName;
+		auto valVar = awst::makeVarExpression(w.localVarName, w.wtype, _parent->sourceLocation);
 		assign->value = valVar;
 
 		newBody->body.push_back(assign);
@@ -2297,10 +2255,7 @@ void FunctionSplitter::rewriteInnerReturns(
 	auto buildLiveReturnValue = [&]() -> std::shared_ptr<awst::Expression> {
 		if (_liveOut.size() == 1)
 		{
-			auto var = std::make_shared<awst::VarExpression>();
-			var->sourceLocation = _loc;
-			var->wtype = _liveOut[0].wtype;
-			var->name = _liveOut[0].name;
+			auto var = awst::makeVarExpression(_liveOut[0].name, _liveOut[0].wtype, _loc);
 			return var;
 		}
 		auto tuple = std::make_shared<awst::TupleExpression>();
@@ -2308,10 +2263,7 @@ void FunctionSplitter::rewriteInnerReturns(
 		tuple->wtype = _chunkReturnType;
 		for (auto const& lv: _liveOut)
 		{
-			auto var = std::make_shared<awst::VarExpression>();
-			var->sourceLocation = _loc;
-			var->wtype = lv.wtype;
-			var->name = lv.name;
+			auto var = awst::makeVarExpression(lv.name, lv.wtype, _loc);
 			tuple->items.push_back(var);
 		}
 		return tuple;
@@ -2461,10 +2413,7 @@ void FunctionSplitter::ensureLiveOutVarsInitialized(
 		auto assign = std::make_shared<awst::AssignmentStatement>();
 		assign->sourceLocation = _loc;
 
-		auto target = std::make_shared<awst::VarExpression>();
-		target->sourceLocation = _loc;
-		target->wtype = lv->wtype;
-		target->name = lv->name;
+		auto target = awst::makeVarExpression(lv->name, lv->wtype, _loc);
 		assign->target = target;
 
 		assign->value = buildDefault(lv->wtype, _loc);

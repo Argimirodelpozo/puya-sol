@@ -406,10 +406,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 				}
 				else
 				{
-					auto var = std::make_shared<awst::VarExpression>();
-					var->sourceLocation = m_loc;
-					var->wtype = ptrWType;
-					var->name = name;
+					auto var = awst::makeVarExpression(name, ptrWType, m_loc);
 					ptrExpr = std::move(var);
 				}
 

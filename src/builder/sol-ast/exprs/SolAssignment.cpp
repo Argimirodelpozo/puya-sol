@@ -89,10 +89,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 				std::string tmpName = "__tuple_tmp_" + std::to_string(m_loc.line)
 					+ "_" + std::to_string(i);
 
-				auto tmpTarget = std::make_shared<awst::VarExpression>();
-				tmpTarget->sourceLocation = _value->sourceLocation;
-				tmpTarget->name = tmpName;
-				tmpTarget->wtype = rhsItem->wtype;
+				auto tmpTarget = awst::makeVarExpression(tmpName, rhsItem->wtype, _value->sourceLocation);
 
 				auto tmpAssign = std::make_shared<awst::AssignmentExpression>();
 				tmpAssign->sourceLocation = _value->sourceLocation;
@@ -105,10 +102,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 				stmt->expr = std::move(tmpAssign);
 				m_ctx.pendingStatements.push_back(std::move(stmt));
 
-				auto tmpRead = std::make_shared<awst::VarExpression>();
-				tmpRead->sourceLocation = _value->sourceLocation;
-				tmpRead->name = tmpName;
-				tmpRead->wtype = rhsItem->wtype;
+				auto tmpRead = awst::makeVarExpression(tmpName, rhsItem->wtype, _value->sourceLocation);
 				newTuple->items.push_back(std::move(tmpRead));
 				tmpTypes.push_back(rhsItem->wtype);
 			}

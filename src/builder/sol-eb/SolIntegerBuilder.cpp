@@ -691,10 +691,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::emitOverflowCheck(
 	std::string tmpName = "__checked_" + std::to_string(checkedCounter++);
 	auto* resType = _result->wtype;
 
-	auto tmpVar = std::make_shared<awst::VarExpression>();
-	tmpVar->sourceLocation = _loc;
-	tmpVar->wtype = resType;
-	tmpVar->name = tmpName;
+	auto tmpVar = awst::makeVarExpression(tmpName, resType, _loc);
 
 	auto assign = std::make_shared<awst::AssignmentStatement>();
 	assign->sourceLocation = _loc;
@@ -811,10 +808,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::buildBigUIntExp(
 	std::string expVar = "__biguint_exp_exp_" + std::to_string(id);
 
 	auto makeVar = [&](std::string const& name) {
-		auto v = std::make_shared<awst::VarExpression>();
-		v->sourceLocation = _loc;
-		v->name = name;
-		v->wtype = awst::WType::biguintType();
+		auto v = awst::makeVarExpression(name, awst::WType::biguintType(), _loc);
 		return v;
 	};
 	auto makeConst = [&](std::string const& value) {

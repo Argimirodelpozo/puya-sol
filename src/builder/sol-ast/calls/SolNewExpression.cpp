@@ -94,10 +94,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 				std::move(sizeExpr), awst::WType::uint64Type(), m_loc);
 
 			// __arr = NewArray()
-			auto arrVar = std::make_shared<awst::VarExpression>();
-			arrVar->sourceLocation = m_loc;
-			arrVar->wtype = resultType;
-			arrVar->name = arrName;
+			auto arrVar = awst::makeVarExpression(arrName, resultType, m_loc);
 
 			auto initArr = std::make_shared<awst::AssignmentStatement>();
 			initArr->sourceLocation = m_loc;
@@ -106,10 +103,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 			m_ctx.prePendingStatements.push_back(std::move(initArr));
 
 			// __i = 0
-			auto idxVar = std::make_shared<awst::VarExpression>();
-			idxVar->sourceLocation = m_loc;
-			idxVar->wtype = awst::WType::uint64Type();
-			idxVar->name = idxName;
+			auto idxVar = awst::makeVarExpression(idxName, awst::WType::uint64Type(), m_loc);
 
 			auto initIdx = std::make_shared<awst::AssignmentStatement>();
 			initIdx->sourceLocation = m_loc;
@@ -280,10 +274,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 
 			static int newAppIdCounter = 0;
 			std::string newAppIdVarName = "__new_app_id_" + std::to_string(newAppIdCounter++);
-			auto newAppIdTarget = std::make_shared<awst::VarExpression>();
-			newAppIdTarget->sourceLocation = m_loc;
-			newAppIdTarget->name = newAppIdVarName;
-			newAppIdTarget->wtype = awst::WType::uint64Type();
+			auto newAppIdTarget = awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc);
 			auto newAppIdAssign = std::make_shared<awst::AssignmentStatement>();
 			newAppIdAssign->sourceLocation = m_loc;
 			newAppIdAssign->target = newAppIdTarget;
@@ -291,18 +282,12 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			m_ctx.prePendingStatements.push_back(std::move(newAppIdAssign));
 
 			// Use the stored app ID from now on
-			auto createdAppId = std::make_shared<awst::VarExpression>();
-			createdAppId->sourceLocation = m_loc;
-			createdAppId->name = newAppIdVarName;
-			createdAppId->wtype = awst::WType::uint64Type();
+			auto createdAppId = awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc);
 
 			// Fund the newly created app with minimum balance (200000 microAlgos)
 			{
 				// Use the stored app ID
-				auto fundAppId = std::make_shared<awst::VarExpression>();
-				fundAppId->sourceLocation = m_loc;
-				fundAppId->name = newAppIdVarName;
-				fundAppId->wtype = awst::WType::uint64Type();
+				auto fundAppId = awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc);
 
 				auto* fundTupleType = new awst::WTuple(
 					{awst::WType::bytesType(), awst::WType::boolType()});
@@ -314,20 +299,14 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				fundAppParams->stackArgs.push_back(std::move(fundAppId));
 
 				std::string fundTmpName = "__fund_app_result";
-				auto fundTmpTarget = std::make_shared<awst::VarExpression>();
-				fundTmpTarget->sourceLocation = m_loc;
-				fundTmpTarget->name = fundTmpName;
-				fundTmpTarget->wtype = fundTupleType;
+				auto fundTmpTarget = awst::makeVarExpression(fundTmpName, fundTupleType, m_loc);
 				auto fundAssign = std::make_shared<awst::AssignmentStatement>();
 				fundAssign->sourceLocation = m_loc;
 				fundAssign->target = fundTmpTarget;
 				fundAssign->value = std::move(fundAppParams);
 				m_ctx.prePendingStatements.push_back(std::move(fundAssign));
 
-				auto fundTupleRead = std::make_shared<awst::VarExpression>();
-				fundTupleRead->sourceLocation = m_loc;
-				fundTupleRead->name = fundTmpName;
-				fundTupleRead->wtype = fundTupleType;
+				auto fundTupleRead = awst::makeVarExpression(fundTmpName, fundTupleType, m_loc);
 				auto fundAddrBytes = std::make_shared<awst::TupleItemExpression>();
 				fundAddrBytes->sourceLocation = m_loc;
 				fundAddrBytes->wtype = awst::WType::bytesType();

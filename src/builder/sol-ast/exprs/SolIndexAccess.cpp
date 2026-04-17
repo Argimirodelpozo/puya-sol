@@ -203,10 +203,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 	if (!mappingKeyParam.empty())
 	{
 		// Dynamic prefix from function parameter (bytes value at runtime)
-		auto var = std::make_shared<awst::VarExpression>();
-		var->sourceLocation = m_loc;
-		var->wtype = awst::WType::bytesType();
-		var->name = mappingKeyParam;
+		auto var = awst::makeVarExpression(mappingKeyParam, awst::WType::bytesType(), m_loc);
 		prefix = std::move(var);
 	}
 	else
@@ -501,10 +498,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 				}
 
 				// slot_var holds the base slot (biguint)
-				auto slotVar = std::make_shared<awst::VarExpression>();
-				slotVar->sourceLocation = m_loc;
-				slotVar->wtype = awst::WType::biguintType();
-				slotVar->name = varDecl->name();
+				auto slotVar = awst::makeVarExpression(varDecl->name(), awst::WType::biguintType(), m_loc);
 
 				// For now, handle simple single-index: slot + index
 				// The outer array is T[N][1], so _x[0] accesses the inner T[N]

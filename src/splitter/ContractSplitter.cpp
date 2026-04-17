@@ -995,10 +995,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 		// that will be assigned from gload reconstruction below)
 		for (auto const& arg: sub->args)
 		{
-			auto varExpr = std::make_shared<awst::VarExpression>();
-			varExpr->sourceLocation = arg.sourceLocation;
-			varExpr->wtype = arg.wtype;
-			varExpr->name = arg.name;
+			auto varExpr = awst::makeVarExpression(arg.name, arg.wtype, arg.sourceLocation);
 			callExpr->args.push_back(awst::CallArg{arg.name, varExpr});
 		}
 
@@ -1071,10 +1068,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 				// Assign to local variable with the original arg name
 				auto assign = std::make_shared<awst::AssignmentStatement>();
 				assign->sourceLocation = sub->sourceLocation;
-				auto target = std::make_shared<awst::VarExpression>();
-				target->sourceLocation = sub->sourceLocation;
-				target->wtype = sa.wtype;
-				target->name = sa.name;
+				auto target = awst::makeVarExpression(sa.name, sa.wtype, sub->sourceLocation);
 				assign->target = target;
 				assign->value = cast;
 
@@ -1088,10 +1082,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 			// by orchestrator __finish method), then return it (for ARC4 log).
 			std::string tmpName = "__result__";
 			auto tmpVar = [&]() {
-				auto v = std::make_shared<awst::VarExpression>();
-				v->sourceLocation = sub->sourceLocation;
-				v->wtype = sub->returnType;
-				v->name = tmpName;
+				auto v = awst::makeVarExpression(tmpName, sub->returnType, sub->sourceLocation);
 				return v;
 			};
 
@@ -1190,10 +1181,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 				// Return the mutated array to prevent DCE
 				method.returnType = arrayParamType;
 
-				auto varExpr = std::make_shared<awst::VarExpression>();
-				varExpr->sourceLocation = sub->sourceLocation;
-				varExpr->wtype = arrayParamType;
-				varExpr->name = arrayParamName;
+				auto varExpr = awst::makeVarExpression(arrayParamName, arrayParamType, sub->sourceLocation);
 
 				auto ret = std::make_shared<awst::ReturnStatement>();
 				ret->sourceLocation = sub->sourceLocation;
@@ -1289,10 +1277,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::createHelperContract(
 			return awst::makeUtf8BytesConstant(k, loc);
 		};
 		auto makeVar = [&](std::string name, awst::WType const* type) {
-			auto v = std::make_shared<awst::VarExpression>();
-			v->sourceLocation = loc;
-			v->wtype = type;
-			v->name = std::move(name);
+			auto v = awst::makeVarExpression(std::move(name), type, loc);
 			return v;
 		};
 
@@ -1472,10 +1457,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 		return cmp;
 	};
 	auto makeVar = [&](std::string name, awst::WType const* type) {
-		auto v = std::make_shared<awst::VarExpression>();
-		v->sourceLocation = loc;
-		v->wtype = type;
-		v->name = std::move(name);
+		auto v = awst::makeVarExpression(std::move(name), type, loc);
 		return v;
 	};
 
@@ -1859,10 +1841,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 		return cmp;
 	};
 	auto makeVar = [&](std::string name, awst::WType const* type) {
-		auto v = std::make_shared<awst::VarExpression>();
-		v->sourceLocation = loc;
-		v->wtype = type;
-		v->name = std::move(name);
+		auto v = awst::makeVarExpression(std::move(name), type, loc);
 		return v;
 	};
 

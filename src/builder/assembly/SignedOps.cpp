@@ -41,10 +41,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTload(
 	offset->right = std::move(thirtyTwo);
 
 	// extract3(__transient, offset, 32)
-	auto blob = std::make_shared<awst::VarExpression>();
-	blob->sourceLocation = _loc;
-	blob->name = "__transient";
-	blob->wtype = awst::WType::bytesType();
+	auto blob = awst::makeVarExpression("__transient", awst::WType::bytesType(), _loc);
 
 	auto thirtyTwo2 = awst::makeIntegerConstant("32", _loc);
 
@@ -117,10 +114,7 @@ void AssemblyBuilder::handleTstore(
 	padded->stackArgs.push_back(std::move(valueBytes));
 
 	// replace3(__transient, offset, padded_value)
-	auto blobRead = std::make_shared<awst::VarExpression>();
-	blobRead->sourceLocation = _loc;
-	blobRead->name = "__transient";
-	blobRead->wtype = awst::WType::bytesType();
+	auto blobRead = awst::makeVarExpression("__transient", awst::WType::bytesType(), _loc);
 
 	auto replace = std::make_shared<awst::IntrinsicCall>();
 	replace->sourceLocation = _loc;
@@ -131,10 +125,7 @@ void AssemblyBuilder::handleTstore(
 	replace->stackArgs.push_back(std::move(padded));
 
 	// __transient = replace3(...)
-	auto target = std::make_shared<awst::VarExpression>();
-	target->sourceLocation = _loc;
-	target->name = "__transient";
-	target->wtype = awst::WType::bytesType();
+	auto target = awst::makeVarExpression("__transient", awst::WType::bytesType(), _loc);
 
 	auto assign = std::make_shared<awst::AssignmentStatement>();
 	assign->sourceLocation = _loc;

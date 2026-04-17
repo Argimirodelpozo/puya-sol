@@ -131,10 +131,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 			auto it = m_storageSlotVars.find(name);
 			if (it != m_storageSlotVars.end())
 			{
-				auto node = std::make_shared<awst::VarExpression>();
-				node->sourceLocation = loc;
-				node->wtype = awst::WType::biguintType();
-				node->name = "__slot_" + it->second;
+				auto node = awst::makeVarExpression("__slot_" + it->second, awst::WType::biguintType(), loc);
 				return node;
 			}
 		}
@@ -160,10 +157,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 			auto paramIt = m_locals.find(baseName);
 			if (paramIt != m_locals.end())
 			{
-				auto paramVar = std::make_shared<awst::VarExpression>();
-				paramVar->sourceLocation = loc;
-				paramVar->name = baseName;
-				paramVar->wtype = paramIt->second;
+				auto paramVar = awst::makeVarExpression(baseName, paramIt->second, loc);
 
 				auto lenCall = std::make_shared<awst::IntrinsicCall>();
 				lenCall->sourceLocation = loc;
@@ -264,10 +258,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		if (!funcDef.returnVariables.empty())
 		{
 			std::string retName = funcDef.returnVariables[0].name.str();
-			auto retVar = std::make_shared<awst::VarExpression>();
-			retVar->sourceLocation = loc;
-			retVar->name = retName;
-			retVar->wtype = awst::WType::biguintType();
+			auto retVar = awst::makeVarExpression(retName, awst::WType::biguintType(), loc);
 			return retVar;
 		}
 		return std::make_shared<awst::VoidConstant>();
@@ -760,10 +751,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		if (!funcDef.returnVariables.empty())
 		{
 			std::string retName = funcDef.returnVariables[0].name.str();
-			auto retVar = std::make_shared<awst::VarExpression>();
-			retVar->sourceLocation = loc;
-			retVar->name = retName;
-			retVar->wtype = awst::WType::biguintType();
+			auto retVar = awst::makeVarExpression(retName, awst::WType::biguintType(), loc);
 			return retVar;
 		}
 

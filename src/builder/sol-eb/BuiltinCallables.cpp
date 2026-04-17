@@ -319,10 +319,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 
 	// Stash v in a temp so we can read it multiple times.
 	std::string vTmpName = "__ecrecover_v";
-	auto vTmpTarget = std::make_shared<awst::VarExpression>();
-	vTmpTarget->sourceLocation = _loc;
-	vTmpTarget->name = vTmpName;
-	vTmpTarget->wtype = awst::WType::uint64Type();
+	auto vTmpTarget = awst::makeVarExpression(vTmpName, awst::WType::uint64Type(), _loc);
 	auto vAssign = std::make_shared<awst::AssignmentStatement>();
 	vAssign->sourceLocation = _loc;
 	vAssign->target = vTmpTarget;
@@ -330,10 +327,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	_ctx.prePendingStatements.push_back(std::move(vAssign));
 
 	auto readV = [&]() -> std::shared_ptr<awst::Expression> {
-		auto r = std::make_shared<awst::VarExpression>();
-		r->sourceLocation = _loc;
-		r->name = vTmpName;
-		r->wtype = awst::WType::uint64Type();
+		auto r = awst::makeVarExpression(vTmpName, awst::WType::uint64Type(), _loc);
 		return r;
 	};
 
@@ -392,10 +386,7 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 
 	// Store result in temp var
 	std::string tmpName = "__ecrecover_result";
-	auto tmpTarget = std::make_shared<awst::VarExpression>();
-	tmpTarget->sourceLocation = _loc;
-	tmpTarget->name = tmpName;
-	tmpTarget->wtype = tupleType;
+	auto tmpTarget = awst::makeVarExpression(tmpName, tupleType, _loc);
 
 	auto assignTuple = std::make_shared<awst::AssignmentStatement>();
 	assignTuple->sourceLocation = _loc;
@@ -404,20 +395,14 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	_ctx.prePendingStatements.push_back(std::move(assignTuple));
 
 	// Extract pubkey_x and pubkey_y
-	auto tupleRead0 = std::make_shared<awst::VarExpression>();
-	tupleRead0->sourceLocation = _loc;
-	tupleRead0->name = tmpName;
-	tupleRead0->wtype = tupleType;
+	auto tupleRead0 = awst::makeVarExpression(tmpName, tupleType, _loc);
 	auto pubkeyX = std::make_shared<awst::TupleItemExpression>();
 	pubkeyX->sourceLocation = _loc;
 	pubkeyX->wtype = awst::WType::bytesType();
 	pubkeyX->base = std::move(tupleRead0);
 	pubkeyX->index = 0;
 
-	auto tupleRead1 = std::make_shared<awst::VarExpression>();
-	tupleRead1->sourceLocation = _loc;
-	tupleRead1->name = tmpName;
-	tupleRead1->wtype = tupleType;
+	auto tupleRead1 = awst::makeVarExpression(tmpName, tupleType, _loc);
 	auto pubkeyY = std::make_shared<awst::TupleItemExpression>();
 	pubkeyY->sourceLocation = _loc;
 	pubkeyY->wtype = awst::WType::bytesType();

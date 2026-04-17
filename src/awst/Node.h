@@ -287,6 +287,19 @@ struct VarExpression: Expression
 	std::string name;
 };
 
+// Construct a VarExpression (variable reference by name).
+inline std::shared_ptr<VarExpression> makeVarExpression(
+	std::string name,
+	WType const* wtype,
+	SourceLocation loc)
+{
+	auto node = std::make_shared<VarExpression>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->name = std::move(name);
+	return node;
+}
+
 struct UInt64BinaryOperation: Expression
 {
 	std::string nodeType() const override { return "UInt64BinaryOperation"; }

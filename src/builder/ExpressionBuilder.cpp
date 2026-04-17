@@ -586,10 +586,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildBinaryOp(
 
 			auto makeVar = [&](std::string const& name) -> std::shared_ptr<awst::VarExpression>
 			{
-				auto v = std::make_shared<awst::VarExpression>();
-				v->sourceLocation = _loc;
-				v->name = name;
-				v->wtype = awst::WType::biguintType();
+				auto v = awst::makeVarExpression(name, awst::WType::biguintType(), _loc);
 				return v;
 			};
 			auto makeConst = [&](std::string const& value) -> std::shared_ptr<awst::IntegerConstant>

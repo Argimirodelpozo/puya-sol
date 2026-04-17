@@ -66,10 +66,7 @@ std::shared_ptr<awst::Statement> TransientStorage::buildInit(
 	bzero->opCode = "bzero";
 	bzero->stackArgs.push_back(std::move(size));
 
-	auto target = std::make_shared<awst::VarExpression>();
-	target->sourceLocation = _loc;
-	target->name = BLOB_VAR;
-	target->wtype = awst::WType::bytesType();
+	auto target = awst::makeVarExpression(BLOB_VAR, awst::WType::bytesType(), _loc);
 
 	auto assign = std::make_shared<awst::AssignmentStatement>();
 	assign->sourceLocation = _loc;
@@ -87,10 +84,7 @@ std::shared_ptr<awst::Expression> TransientStorage::buildRead(
 		return nullptr;
 
 	// Load blob
-	auto blob = std::make_shared<awst::VarExpression>();
-	blob->sourceLocation = _loc;
-	blob->name = BLOB_VAR;
-	blob->wtype = awst::WType::bytesType();
+	auto blob = awst::makeVarExpression(BLOB_VAR, awst::WType::bytesType(), _loc);
 
 	// extract(blob, offset, 32) → 32 raw bytes
 	auto extract = std::make_shared<awst::IntrinsicCall>();
@@ -118,10 +112,7 @@ std::shared_ptr<awst::Expression> TransientStorage::buildRead(
 		extract8->opCode = "extract";
 		extract8->immediates = {offset + static_cast<int>(SLOT_SIZE) - 8, 8};
 
-		auto blobRef = std::make_shared<awst::VarExpression>();
-		blobRef->sourceLocation = _loc;
-		blobRef->name = BLOB_VAR;
-		blobRef->wtype = awst::WType::bytesType();
+		auto blobRef = awst::makeVarExpression(BLOB_VAR, awst::WType::bytesType(), _loc);
 		extract8->stackArgs.push_back(std::move(blobRef));
 
 		auto btoi = std::make_shared<awst::IntrinsicCall>();
@@ -208,10 +199,7 @@ std::shared_ptr<awst::Statement> TransientStorage::buildWrite(
 	}
 
 	// Load blob, replace at offset, store back
-	auto blobRead = std::make_shared<awst::VarExpression>();
-	blobRead->sourceLocation = _loc;
-	blobRead->name = BLOB_VAR;
-	blobRead->wtype = awst::WType::bytesType();
+	auto blobRead = awst::makeVarExpression(BLOB_VAR, awst::WType::bytesType(), _loc);
 
 	auto replace = std::make_shared<awst::IntrinsicCall>();
 	replace->sourceLocation = _loc;
@@ -221,10 +209,7 @@ std::shared_ptr<awst::Statement> TransientStorage::buildWrite(
 	replace->stackArgs.push_back(std::move(blobRead));
 	replace->stackArgs.push_back(std::move(bytes32));
 
-	auto target = std::make_shared<awst::VarExpression>();
-	target->sourceLocation = _loc;
-	target->name = BLOB_VAR;
-	target->wtype = awst::WType::bytesType();
+	auto target = awst::makeVarExpression(BLOB_VAR, awst::WType::bytesType(), _loc);
 
 	auto assign = std::make_shared<awst::AssignmentStatement>();
 	assign->sourceLocation = _loc;

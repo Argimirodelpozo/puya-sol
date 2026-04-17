@@ -485,10 +485,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 							continue;
 						auto* rpType = m_typeMapper.map(rp->type());
 
-						auto target = std::make_shared<awst::VarExpression>();
-						target->sourceLocation = loc;
-						target->wtype = rpType;
-						target->name = rp->name();
+						auto target = awst::makeVarExpression(rp->name(), rpType, loc);
 
 						std::shared_ptr<awst::Expression> zeroVal;
 						if (rpType == awst::WType::boolType())
@@ -554,10 +551,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 									tuple->items.push_back(ret->value);
 								for (size_t idx: storageParamIndices)
 								{
-									auto pv = std::make_shared<awst::VarExpression>();
-									pv->sourceLocation = ret->sourceLocation;
-									pv->wtype = sub->args[idx].wtype;
-									pv->name = sub->args[idx].name;
+									auto pv = awst::makeVarExpression(sub->args[idx].name, sub->args[idx].wtype, ret->sourceLocation);
 									tuple->items.push_back(std::move(pv));
 								}
 								ret->value = std::move(tuple);
@@ -577,15 +571,9 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					&& func->parameters().size() == 2)
 				{
 					// efficientKeccak256(a, b) → return keccak256(concat(a, b))
-					auto varA = std::make_shared<awst::VarExpression>();
-					varA->sourceLocation = loc;
-					varA->name = func->parameters()[0]->name();
-					varA->wtype = m_typeMapper.map(func->parameters()[0]->type());
+					auto varA = awst::makeVarExpression(func->parameters()[0]->name(), m_typeMapper.map(func->parameters()[0]->type()), loc);
 
-					auto varB = std::make_shared<awst::VarExpression>();
-					varB->sourceLocation = loc;
-					varB->name = func->parameters()[1]->name();
-					varB->wtype = m_typeMapper.map(func->parameters()[1]->type());
+					auto varB = awst::makeVarExpression(func->parameters()[1]->name(), m_typeMapper.map(func->parameters()[1]->type()), loc);
 
 					auto concat = std::make_shared<awst::IntrinsicCall>();
 					concat->sourceLocation = loc;
@@ -637,10 +625,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 
 					if (returnParams.size() == 1)
 					{
-						auto var = std::make_shared<awst::VarExpression>();
-						var->sourceLocation = loc;
-						var->name = returnParams[0]->name();
-						var->wtype = m_typeMapper.map(returnParams[0]->type());
+						auto var = awst::makeVarExpression(returnParams[0]->name(), m_typeMapper.map(returnParams[0]->type()), loc);
 						implicitReturn->value = std::move(var);
 					}
 					else
@@ -650,10 +635,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 						std::vector<awst::WType const*> types;
 						for (auto const& rp: returnParams)
 						{
-							auto var = std::make_shared<awst::VarExpression>();
-							var->sourceLocation = loc;
-							var->name = rp->name();
-							var->wtype = m_typeMapper.map(rp->type());
+							auto var = awst::makeVarExpression(rp->name(), m_typeMapper.map(rp->type()), loc);
 							types.push_back(var->wtype);
 							tuple->items.push_back(std::move(var));
 						}
@@ -808,10 +790,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 						continue;
 					auto* rpType = m_typeMapper.map(rp->type());
 
-					auto target = std::make_shared<awst::VarExpression>();
-					target->sourceLocation = loc;
-					target->wtype = rpType;
-					target->name = rp->name();
+					auto target = awst::makeVarExpression(rp->name(), rpType, loc);
 
 					std::shared_ptr<awst::Expression> zeroVal;
 					if (rpType == awst::WType::boolType())
@@ -862,10 +841,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 
 					if (returnParams.size() == 1)
 					{
-						auto var = std::make_shared<awst::VarExpression>();
-						var->sourceLocation = loc;
-						var->name = returnParams[0]->name();
-						var->wtype = m_typeMapper.map(returnParams[0]->type());
+						auto var = awst::makeVarExpression(returnParams[0]->name(), m_typeMapper.map(returnParams[0]->type()), loc);
 						implicitReturn->value = std::move(var);
 					}
 					else
@@ -875,10 +851,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 						std::vector<awst::WType const*> types;
 						for (auto const& rp: returnParams)
 						{
-							auto var = std::make_shared<awst::VarExpression>();
-							var->sourceLocation = loc;
-							var->name = rp->name();
-							var->wtype = m_typeMapper.map(rp->type());
+							auto var = awst::makeVarExpression(rp->name(), m_typeMapper.map(rp->type()), loc);
 							types.push_back(var->wtype);
 							tuple->items.push_back(std::move(var));
 						}

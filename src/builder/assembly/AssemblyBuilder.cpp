@@ -202,10 +202,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 		loc.file = m_sourceFile;
 
 		// Read the biguint-typed variable
-		auto src = std::make_shared<awst::VarExpression>();
-		src->sourceLocation = loc;
-		src->name = name;
-		src->wtype = awst::WType::biguintType();
+		auto src = awst::makeVarExpression(name, awst::WType::biguintType(), loc);
 
 		// If the Solidity type is narrower than 64 bits, mask to the correct width
 		// before converting to uint64. E.g., uint16 a := 0x0f0f0f0f0f → mask to 0x0f0f.
@@ -232,10 +229,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 		// Convert to original type (uint64)
 		auto converted = safeBtoi(std::move(valueToCast), loc);
 
-		auto target = std::make_shared<awst::VarExpression>();
-		target->sourceLocation = loc;
-		target->name = name;
-		target->wtype = origType;
+		auto target = awst::makeVarExpression(name, origType, loc);
 
 		auto assign = std::make_shared<awst::AssignmentStatement>();
 		assign->sourceLocation = loc;
@@ -293,10 +287,7 @@ void AssemblyBuilder::initializeMemoryBlob(
 			uint64_t offset = 0x80 + static_cast<uint64_t>(i) * 0x20;
 
 			// Access param[i]
-			auto base = std::make_shared<awst::VarExpression>();
-			base->sourceLocation = loc;
-			base->name = m_arrayParamName;
-			base->wtype = m_arrayParamType;
+			auto base = awst::makeVarExpression(m_arrayParamName, m_arrayParamType, loc);
 
 			auto index = awst::makeIntegerConstant(std::to_string(i), loc);
 
@@ -325,10 +316,7 @@ void AssemblyBuilder::initializeMemoryBlob(
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::memoryVar(awst::SourceLocation const& _loc)
 {
-	auto var = std::make_shared<awst::VarExpression>();
-	var->sourceLocation = _loc;
-	var->name = MEMORY_VAR;
-	var->wtype = awst::WType::bytesType();
+	auto var = awst::makeVarExpression(MEMORY_VAR, awst::WType::bytesType(), _loc);
 	return var;
 }
 
@@ -338,10 +326,7 @@ void AssemblyBuilder::assignMemoryVar(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	auto target = std::make_shared<awst::VarExpression>();
-	target->sourceLocation = _loc;
-	target->name = MEMORY_VAR;
-	target->wtype = awst::WType::bytesType();
+	auto target = awst::makeVarExpression(MEMORY_VAR, awst::WType::bytesType(), _loc);
 
 	auto assign = std::make_shared<awst::AssignmentStatement>();
 	assign->sourceLocation = _loc;

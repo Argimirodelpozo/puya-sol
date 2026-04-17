@@ -321,15 +321,9 @@ void AssemblyBuilder::buildVariableDeclaration(
 					std::string retName = funcDef.returnVariables[i].name.str();
 					std::string varName = _decl.variables[i].name.str();
 
-					auto retVar = std::make_shared<awst::VarExpression>();
-					retVar->sourceLocation = loc;
-					retVar->name = retName;
-					retVar->wtype = awst::WType::biguintType();
+					auto retVar = awst::makeVarExpression(retName, awst::WType::biguintType(), loc);
 
-					auto target = std::make_shared<awst::VarExpression>();
-					target->sourceLocation = loc;
-					target->name = varName;
-					target->wtype = awst::WType::biguintType();
+					auto target = awst::makeVarExpression(varName, awst::WType::biguintType(), loc);
 
 					auto assign = std::make_shared<awst::AssignmentStatement>();
 					assign->sourceLocation = loc;
@@ -359,10 +353,7 @@ void AssemblyBuilder::buildVariableDeclaration(
 			m_localConstants[name] = 0;
 		}
 
-		auto target = std::make_shared<awst::VarExpression>();
-		target->sourceLocation = makeLoc(var.debugData);
-		target->wtype = awst::WType::biguintType();
-		target->name = name;
+		auto target = awst::makeVarExpression(name, awst::WType::biguintType(), makeLoc(var.debugData));
 
 		std::shared_ptr<awst::Expression> value;
 		if (_decl.value)
@@ -434,15 +425,9 @@ void AssemblyBuilder::buildAssignment(
 						std::string retName = funcDef.returnVariables[i].name.str();
 						std::string varName = _assign.variableNames[i].name.str();
 
-						auto retVar = std::make_shared<awst::VarExpression>();
-						retVar->sourceLocation = loc;
-						retVar->name = retName;
-						retVar->wtype = awst::WType::biguintType();
+						auto retVar = awst::makeVarExpression(retName, awst::WType::biguintType(), loc);
 
-						auto target = std::make_shared<awst::VarExpression>();
-						target->sourceLocation = loc;
-						target->name = varName;
-						target->wtype = awst::WType::biguintType();
+						auto target = awst::makeVarExpression(varName, awst::WType::biguintType(), loc);
 
 						auto assign = std::make_shared<awst::AssignmentStatement>();
 						assign->sourceLocation = loc;
@@ -499,10 +484,7 @@ void AssemblyBuilder::buildAssignment(
 					slotExpr = std::move(cast);
 				}
 
-				auto target = std::make_shared<awst::VarExpression>();
-				target->sourceLocation = loc;
-				target->wtype = awst::WType::biguintType();
-				target->name = baseName;
+				auto target = awst::makeVarExpression(baseName, awst::WType::biguintType(), loc);
 
 				auto assign = std::make_shared<awst::AssignmentStatement>();
 				assign->sourceLocation = loc;
@@ -927,10 +909,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 		if (constVal)
 			m_localConstants[paramName] = *constVal;
 
-		auto target = std::make_shared<awst::VarExpression>();
-		target->sourceLocation = _loc;
-		target->name = paramName;
-		target->wtype = paramType;
+		auto target = awst::makeVarExpression(paramName, paramType, _loc);
 
 		auto assign = std::make_shared<awst::AssignmentStatement>();
 		assign->sourceLocation = _loc;
@@ -945,10 +924,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 		std::string retName = retVar.name.str();
 		m_locals[retName] = awst::WType::biguintType();
 
-		auto target = std::make_shared<awst::VarExpression>();
-		target->sourceLocation = _loc;
-		target->name = retName;
-		target->wtype = awst::WType::biguintType();
+		auto target = awst::makeVarExpression(retName, awst::WType::biguintType(), _loc);
 
 		auto zero = awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
 

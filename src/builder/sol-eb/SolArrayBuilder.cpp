@@ -77,10 +77,7 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 		static int enumCheckCounter = 0;
 		std::string tmpName = "__enum_idx_" + std::to_string(enumCheckCounter++);
 
-		auto tmpVar = std::make_shared<awst::VarExpression>();
-		tmpVar->sourceLocation = _loc;
-		tmpVar->wtype = result->wtype;
-		tmpVar->name = tmpName;
+		auto tmpVar = awst::makeVarExpression(tmpName, result->wtype, _loc);
 
 		auto assignTmp = std::make_shared<awst::AssignmentStatement>();
 		assignTmp->sourceLocation = _loc;
