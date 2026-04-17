@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 64 32
+    intcblock 1 0 32
     bytecblock "x" "y" 0x "w" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -32,7 +32,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x2a49be10 0x9cea6db3 0x60d68bc1 0x3f4abdfd 0x88035e71 0x8a37d29b // method "h(uint256)void", method "w()uint512", method "y()uint512", method "x()uint512", method "g(uint256)void", method "f(uint256)void"
+    pushbytess 0x2a49be10 0xc2059c64 0x5c5e3bbc 0x7c1072af 0x88035e71 0x8a37d29b // method "h(uint256)void", method "w()uint256", method "y()uint256", method "x()uint256", method "g(uint256)void", method "f(uint256)void"
     txna ApplicationArgs 0
     match h w y x g f
     err
@@ -43,7 +43,7 @@ h:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -96,10 +96,10 @@ w_ternary_merge@4:
     assert // check w exists
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     bytec 4 // 0x151f7c75
@@ -132,10 +132,10 @@ y_ternary_merge@4:
     assert // check y exists
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     bytec 4 // 0x151f7c75
@@ -168,10 +168,10 @@ x_ternary_merge@4:
     assert // check x exists
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     bytec 4 // 0x151f7c75
@@ -191,7 +191,7 @@ g:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.C.g
@@ -204,7 +204,7 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.C.f

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/accessors_mapping_for_array.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 1 64 0
+    intcblock 32 1 0 2
     bytecblock "__ctor_pending" "data" "dynamicData" 0x0000000000000000000000000000000000000000000000000000000000000008 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x5c5fb070 0xdd596ada // method "__postInit()void", method "data(uint256,uint256)uint512", method "dynamicData(uint256,uint256)uint512"
+    pushbytess 0xbacc49e3 0xcbf39868 0xb83d2dcb // method "__postInit()void", method "data(uint256,uint256)uint256", method "dynamicData(uint256,uint256)uint256"
     txna ApplicationArgs 0
     match __postInit data dynamicData
     err
@@ -38,21 +38,21 @@ __postInit:
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
-    intc_3 // 0
+    intc_2 // 0
     app_global_put
     bytec_1 // "data"
-    pushint 2
+    intc_3 // 2
     box_create
     pop
     bytec_2 // "dynamicData"
-    pushint 2
+    intc_3 // 2
     box_create
     pop
     pushbytes 0x646174619267d3dbed802941483f1afa2a6bc68de5f653128aca9bf1461c5d0a3ad36ed2
-    intc_2 // 64
+    pushint 64
     bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000008
     box_replace // on error: index out of bounds
-    intc_3 // 0
+    intc_2 // 0
     itob
 
 __postInit_while_top@2:
@@ -110,8 +110,8 @@ data_ternary_merge@4:
     -
     intc_0 // 32
     extract3
-    swap
-    dig 2
+    dig 1
+    dig 3
     concat
     dup
     len
@@ -130,11 +130,9 @@ data_ternary_merge@4:
     select
     dup
     len
-    intc_2 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_2 // 64
-    bzero
     b|
     bytec 4 // 0x151f7c75
     swap
@@ -144,7 +142,7 @@ data_ternary_merge@4:
     return
 
 data_ternary_false@3:
-    intc_3 // 0
+    intc_2 // 0
     b data_ternary_merge@4
 
 
@@ -183,8 +181,8 @@ dynamicData_ternary_merge@4:
     -
     intc_0 // 32
     extract3
-    swap
-    dig 2
+    dig 1
+    dig 3
     concat
     dup
     len
@@ -203,11 +201,9 @@ dynamicData_ternary_merge@4:
     select
     dup
     len
-    intc_2 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_2 // 64
-    bzero
     b|
     bytec 4 // 0x151f7c75
     swap
@@ -217,5 +213,5 @@ dynamicData_ternary_merge@4:
     return
 
 dynamicData_ternary_false@3:
-    intc_3 // 0
+    intc_2 // 0
     b dynamicData_ternary_merge@4

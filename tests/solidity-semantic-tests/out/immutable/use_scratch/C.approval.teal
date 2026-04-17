@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/use_scratch.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 64
+    intcblock 32 1 0
     bytecblock "__ctor_pending" "m" "x" 0x "y" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x51e966e2 0x219b312e 0x5d40219c // method "__postInit(uint512)void", method "f()(uint256,uint256)", method "m(uint256)uint512"
+    pushbytess 0xa5074cc7 0x219b312e 0x8338d04b // method "__postInit(uint256)void", method "f()(uint256,uint256)", method "m(uint256)uint256"
     txna ApplicationArgs 0
     match __postInit f m
     err
@@ -37,9 +37,9 @@ __postInit:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 64
+    intc_0 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -163,7 +163,8 @@ m_ternary_merge@4:
     assert // not payable
     intc_0 // 32
     bzero
-    dig 1
+    dup
+    dig 2
     concat
     dup
     len
@@ -181,11 +182,9 @@ m_ternary_merge@4:
     select
     dup
     len
-    intc_3 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_3 // 64
-    bzero
     b|
     bytec 5 // 0x151f7c75
     swap

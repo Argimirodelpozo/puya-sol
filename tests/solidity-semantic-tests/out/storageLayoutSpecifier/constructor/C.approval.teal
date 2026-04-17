@@ -113,7 +113,7 @@ main_after_if_else@6:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x5bb3453a 0x60d68bc1 0x3f4abdfd // method "z()uint64", method "y()uint512", method "x()uint512"
+    pushbytess 0x5bb3453a 0x60d68bc1 0x7c1072af // method "z()uint64", method "y()uint512", method "x()uint256"
     txna ApplicationArgs 0
     match z y x
     err
@@ -231,10 +231,10 @@ x_ternary_merge@4:
     assert // check x exists
     dup
     len
-    intc_3 // 64
+    pushint 32
     <=
     assert // overflow
-    intc_3 // 64
+    pushint 32
     bzero
     b|
     bytec 5 // 0x151f7c75

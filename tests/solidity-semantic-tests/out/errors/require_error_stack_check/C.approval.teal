@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/require_error_stack_check.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 64
+    intcblock 1 32 0
     bytecblock "x" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xc7619fcb 0xde29cd95 0x3f4abdfd // method "e(uint256)uint256", method "f(bool,uint256,uint256,uint256)void", method "x()uint512"
+    pushbytess 0xc7619fcb 0xde29cd95 0x7c1072af // method "e(uint256)uint256", method "f(bool,uint256,uint256,uint256)void", method "x()uint256"
     txna ApplicationArgs 0
     match e f x
     err
@@ -142,10 +142,10 @@ x_ternary_merge@4:
     assert // check x exists
     dup
     len
-    intc_3 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75

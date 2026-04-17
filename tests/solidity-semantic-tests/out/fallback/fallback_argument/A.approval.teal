@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/fallback_argument.sol.A.approval_program() -> uint64:
 main:
-    intcblock 1 0 64
+    intcblock 1 0 32
     bytecblock 0x "x" 0x151f7c75
     bytec_0 // ""
     dup
@@ -39,7 +39,7 @@ main_after_if_else@4:
     assert
     txn ApplicationID
     bz main_create_NoOp@13
-    pushbytess 0x9509a93a 0x856fee35 0x3f4abdfd // method "__fallback(byte[])byte[]", method "f()(bool,byte[])", method "x()uint512"
+    pushbytess 0x9509a93a 0x856fee35 0x7c1072af // method "__fallback(byte[])byte[]", method "f()(bool,byte[])", method "x()uint256"
     txna ApplicationArgs 0
     match main___fallback_route@9 main_f_route@10 main_x_route@11
 
@@ -152,10 +152,10 @@ x_ternary_merge@4:
     assert // check x exists
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75

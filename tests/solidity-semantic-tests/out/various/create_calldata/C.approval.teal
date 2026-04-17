@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x51e966e2 0x74ee17b8 // method "__postInit(uint512)void", method "s()byte[]"
+    pushbytess 0xa5074cc7 0x74ee17b8 // method "__postInit(uint256)void", method "s()byte[]"
     txna ApplicationArgs 0
     match __postInit s
     err
@@ -38,9 +38,9 @@ __postInit:
     dupn 29
     txna ApplicationArgs 1
     len
-    pushint 64
+    pushint 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -65,7 +65,7 @@ __postInit_ternary_merge@8:
     dig 30
     swap
     concat
-    bury 10
+    bury 7
     txn NumAppArgs
     intc_2 // 2
     >
@@ -73,7 +73,7 @@ __postInit_ternary_merge@8:
     txna ApplicationArgs 2
 
 __postInit_ternary_merge@11:
-    dig 10
+    dig 7
     swap
     concat
     bury 28
@@ -300,7 +300,7 @@ __postInit_ternary_merge@74:
     dig 11
     swap
     concat
-    bury 9
+    bury 10
     txn NumAppArgs
     pushint 7
     >
@@ -308,10 +308,10 @@ __postInit_ternary_merge@74:
     txna ApplicationArgs 7
 
 __postInit_ternary_merge@77:
-    dig 9
+    dig 10
     swap
     concat
-    bury 8
+    bury 9
     txn NumAppArgs
     pushint 8
     >
@@ -319,10 +319,10 @@ __postInit_ternary_merge@77:
     txna ApplicationArgs 8
 
 __postInit_ternary_merge@80:
-    dig 8
+    dig 9
     swap
     concat
-    bury 7
+    bury 8
     txn NumAppArgs
     pushint 9
     >
@@ -330,7 +330,7 @@ __postInit_ternary_merge@80:
     txna ApplicationArgs 9
 
 __postInit_ternary_merge@83:
-    dig 7
+    dig 8
     swap
     concat
     bury 6

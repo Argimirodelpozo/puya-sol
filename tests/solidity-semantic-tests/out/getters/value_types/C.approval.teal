@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/value_types.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 64
+    intcblock 0 1 16 32
     bytecblock 0x151f7c75 "a" "b" "c" "d" "e" "f" "g" "h" "i" 0x0000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -81,7 +81,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xf9522e2f 0x8c9379e6 0xf86a3d56 0xeb34bdcf 0x1a85185d 0x88f30a97 0x3fc82556 0xcddc3345 0xc2b6aca2 // method "a()uint64", method "b()uint64", method "c()uint512", method "d()uint512", method "e()byte[1]", method "f()byte[20]", method "g()byte[32]", method "h()bool", method "i()address"
+    pushbytess 0xf9522e2f 0x8c9379e6 0xa0cc6002 0x4075f398 0x1a85185d 0x88f30a97 0x3fc82556 0xcddc3345 0xc2b6aca2 // method "a()uint64", method "b()uint64", method "c()uint128", method "d()uint256", method "e()byte[1]", method "f()byte[20]", method "g()byte[32]", method "h()bool", method "i()address"
     txna ApplicationArgs 0
     match a b c d e f g h i
     err
@@ -163,10 +163,10 @@ c_ternary_merge@4:
     assert // check c exists
     dup
     len
-    intc_2 // 64
+    intc_2 // 16
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 16
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -199,10 +199,10 @@ d_ternary_merge@4:
     assert // check d exists
     dup
     len
-    intc_2 // 64
+    intc_3 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_3 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75

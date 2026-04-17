@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_slot_offset.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 64
+    intcblock 0 1 64 32
     bytecblock "x" "y" 0xff 0x151f7c75 0xffffffff 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -31,7 +31,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xfbb0074f 0x93cfbb67 0xc4d2bd2b 0x3f4abdfd 0x60d68bc1 0xf8ee0c77 // method "xSlotOffset()(uint512,uint512)", method "ySlotOffset()(uint512,uint512)", method "zSlotOffset()(uint512,uint512)", method "x()uint512", method "y()uint512", method "z()uint512"
+    pushbytess 0xfbb0074f 0x93cfbb67 0xc4d2bd2b 0x3f4abdfd 0x60d68bc1 0x5848be20 // method "xSlotOffset()(uint512,uint512)", method "ySlotOffset()(uint512,uint512)", method "zSlotOffset()(uint512,uint512)", method "x()uint512", method "y()uint512", method "z()uint256"
     txna ApplicationArgs 0
     match xSlotOffset ySlotOffset zSlotOffset x y z
     err
@@ -257,10 +257,10 @@ z_ternary_merge@4:
     assert // check z exists
     dup
     len
-    intc_2 // 64
+    intc_3 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_3 // 32
     bzero
     b|
     bytec_3 // 0x151f7c75

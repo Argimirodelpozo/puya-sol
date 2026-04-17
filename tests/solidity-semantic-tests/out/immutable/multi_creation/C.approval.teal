@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0xb34b38c7 0x3f4abdfd 0x60d68bc1 // method "__postInit()void", method "f()(uint256,uint256,uint256)", method "x()uint512", method "y()uint512"
+    pushbytess 0xbacc49e3 0xb34b38c7 0x7c1072af 0x5c5e3bbc // method "__postInit()void", method "f()(uint256,uint256,uint256)", method "x()uint256", method "y()uint256"
     txna ApplicationArgs 0
     match __postInit f x y
     err
@@ -306,10 +306,10 @@ x_ternary_merge@4:
     assert // check x exists
     dup
     len
-    pushint 64
+    pushint 32
     <=
     assert // overflow
-    pushint 64
+    pushint 32
     bzero
     b|
     bytec 6 // 0x151f7c75
@@ -342,10 +342,10 @@ y_ternary_merge@4:
     assert // check y exists
     dup
     len
-    pushint 64
+    pushint 32
     <=
     assert // overflow
-    pushint 64
+    pushint 32
     bzero
     b|
     bytec 6 // 0x151f7c75

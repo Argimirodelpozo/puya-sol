@@ -1142,6 +1142,60 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 					);
 			}
 
+			// Remap biguint return type to ARC4UIntN(N) so the ABI selector
+			// uses Solidity's declared "uintN" signature, not the internal
+			// "uint512" marker. Matches the wrap applied to regular method
+			// returns; without this, external callers of `c.x()` compute
+			// selector sha512_256("x()uint256") but the contract's dispatch
+			// emitted sha512_256("x()uint512"), producing a `match` miss.
+			//
+			// Only applied to UNSIGNED integer returns: signed returns
+			// (including signedGetterBits sign-extension) encode as two's
+			// complement in biguint and need a different ARC4 path. Wrapping
+			// a two's-complement biguint as ARC4UIntN would report overflow.
+			bool isUnsignedIntReturn = false;
+			unsigned retBits = 256;
+			if (getter.returnType == awst::WType::biguintType()
+				&& solReturnTypes.size() == 1)
+			{
+				auto const* retSolType = solReturnTypes[0];
+				if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(retSolType))
+					retSolType = &udvt->underlyingType();
+				if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(retSolType))
+				{
+					if (!intType->isSigned())
+					{
+						isUnsignedIntReturn = true;
+						retBits = intType->numBits();
+					}
+				}
+			}
+			if (isUnsignedIntReturn)
+			{
+				auto const* arc4RetType = m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(retBits));
+				std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> wrap;
+				wrap = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts) {
+					for (auto& stmt : stmts) {
+						if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get())) {
+							if (ret->value && ret->value->wtype == awst::WType::biguintType()) {
+								auto encode = std::make_shared<awst::ARC4Encode>();
+								encode->sourceLocation = ret->value->sourceLocation;
+								encode->wtype = arc4RetType;
+								encode->value = std::move(ret->value);
+								ret->value = std::move(encode);
+							}
+						} else if (auto* ifElse = dynamic_cast<awst::IfElse*>(stmt.get())) {
+							if (ifElse->ifBranch) wrap(ifElse->ifBranch->body);
+							if (ifElse->elseBranch) wrap(ifElse->elseBranch->body);
+						} else if (auto* block = dynamic_cast<awst::Block*>(stmt.get())) {
+							wrap(block->body);
+						}
+					}
+				};
+				wrap(getter.body->body);
+				getter.returnType = arc4RetType;
+			}
+
 			// Non-payable check for public state-variable getters
 			// (auto-generated getters are always view, never payable).
 			prependNonPayableCheck(getter);
@@ -1868,9 +1922,39 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			postInitConfig.readonly = false;
 			postInit.arc4MethodConfig = postInitConfig;
 
-			// Remap aggregate types (arrays, tuples) to ARC4 encoding for __postInit args
-			for (auto& arg: postInit.args)
+			// Remap aggregate types (arrays, tuples) to ARC4 encoding for __postInit args,
+			// plus biguint uintN to ARC4UIntN so the ABI signature and the stored value
+			// both use Solidity's declared bit width (matches regular method-param remap).
+			// Biguint remap tracks (orig name, arc4 name) so we can emit ARC4Decode
+			// statements at the top of __postInit body below.
+			struct PostInitDecode { std::string origName; std::string arc4Name; awst::WType const* arc4Type; awst::WType const* origType; };
+			std::vector<PostInitDecode> postInitDecodes;
+			for (size_t pi = 0; pi < postInit.args.size(); ++pi)
 			{
+				auto& arg = postInit.args[pi];
+
+				if (arg.wtype == awst::WType::biguintType() && constructor
+					&& pi < constructor->parameters().size())
+				{
+					auto const* solType = constructor->parameters()[pi]->annotation().type;
+					auto const* intType = solType ? dynamic_cast<solidity::frontend::IntegerType const*>(solType) : nullptr;
+					if (!intType && solType)
+						if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
+							intType = dynamic_cast<solidity::frontend::IntegerType const*>(&udvt->underlyingType());
+					// Only unsigned — signed uses two's-complement in biguint which ARC4UIntN would reject.
+					if (intType && !intType->isSigned())
+					{
+						unsigned bits = intType->numBits();
+						auto const* arc4Type = m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
+						std::string origName = arg.name;
+						std::string arc4Name = "__arc4_" + origName;
+						postInitDecodes.push_back({origName, arc4Name, arc4Type, arg.wtype});
+						arg.name = arc4Name;
+						arg.wtype = arc4Type;
+						continue;
+					}
+				}
+
 				bool isAggregate = arg.wtype
 					&& (arg.wtype->kind() == awst::WTypeKind::ReferenceArray
 						|| arg.wtype->kind() == awst::WTypeKind::ARC4StaticArray
@@ -1884,11 +1968,21 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				}
 			}
 
-			// Set function context so constructor body can reference params by name
+			// Set function context so constructor body can reference params by name.
+			// For biguint args remapped to ARC4UIntN, use the ORIGINAL name + biguint
+			// type so the body looks them up via the decoded local (emitted below).
 			{
 				std::vector<std::pair<std::string, awst::WType const*>> paramContext;
+				std::set<std::string> arc4Names;
+				for (auto const& d: postInitDecodes)
+					arc4Names.insert(d.arc4Name);
 				for (auto const& arg: postInit.args)
+				{
+					if (arc4Names.count(arg.name)) continue; // skip the __arc4_ shim
 					paramContext.emplace_back(arg.name, arg.wtype);
+				}
+				for (auto const& d: postInitDecodes)
+					paramContext.emplace_back(d.origName, d.origType);
 				setFunctionContext(paramContext, postInit.returnType);
 			}
 
@@ -1915,6 +2009,27 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 			auto clearStmt = awst::makeExpressionStatement(clearPending, method.sourceLocation);
 			postInitBody->body.push_back(std::move(clearStmt));
+
+			// Emit ARC4Decode statements for biguint uintN args remapped to ARC4UIntN.
+			// `<origName> = ARC4Decode(<__arc4_origName>)` — constructor body then
+			// references the original name as biguint, matching pre-remap semantics.
+			for (auto const& decode: postInitDecodes)
+			{
+				auto arc4Var = awst::makeVarExpression(decode.arc4Name, decode.arc4Type, method.sourceLocation);
+
+				auto decodeExpr = std::make_shared<awst::ARC4Decode>();
+				decodeExpr->sourceLocation = method.sourceLocation;
+				decodeExpr->wtype = decode.origType;
+				decodeExpr->value = std::move(arc4Var);
+
+				auto target = awst::makeVarExpression(decode.origName, decode.origType, method.sourceLocation);
+
+				auto assign = std::make_shared<awst::AssignmentStatement>();
+				assign->sourceLocation = method.sourceLocation;
+				assign->target = std::move(target);
+				assign->value = std::move(decodeExpr);
+				postInitBody->body.push_back(std::move(assign));
+			}
 
 			// Create boxes for dynamic array state variables
 			for (auto const& varName: m_boxArrayVarNames)

@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x6b6d77ff 0xbafe2a00 0x67a42407 0xf844d3d6 // method "__postInit()void", method "to_string_map(uint256)byte[4]", method "to_bool_map(uint256)bool", method "to_uint_map(uint256)uint512", method "to_multiple_map(uint256,uint256)uint512"
+    pushbytess 0xbacc49e3 0x6b6d77ff 0xbafe2a00 0xe02cc6cf 0x19995877 // method "__postInit()void", method "to_string_map(uint256)byte[4]", method "to_bool_map(uint256)bool", method "to_uint_map(uint256)uint256", method "to_multiple_map(uint256,uint256)uint256"
     txna ApplicationArgs 0
     match __postInit to_string_map to_bool_map to_uint_map to_multiple_map
     err
@@ -206,7 +206,8 @@ to_uint_map_ternary_merge@4:
     assert // not payable
     intc_0 // 32
     bzero
-    dig 1
+    dup
+    dig 2
     concat
     dup
     len
@@ -224,11 +225,9 @@ to_uint_map_ternary_merge@4:
     select
     dup
     len
-    pushint 64
+    intc_0 // 32
     <=
     assert // overflow
-    pushint 64
-    bzero
     b|
     bytec_0 // 0x151f7c75
     swap
@@ -277,8 +276,8 @@ to_multiple_map_ternary_merge@4:
     -
     intc_0 // 32
     extract3
-    swap
-    dig 2
+    dig 1
+    dig 3
     concat
     dup
     len
@@ -297,11 +296,9 @@ to_multiple_map_ternary_merge@4:
     select
     dup
     len
-    pushint 64
+    intc_0 // 32
     <=
     assert // overflow
-    pushint 64
-    bzero
     b|
     bytec_0 // 0x151f7c75
     swap

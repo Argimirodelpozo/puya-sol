@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_delegatecall_guard_view_staticcall.sol.D.approval_program() -> uint64:
 main:
-    intcblock 1 0 64
+    intcblock 1 0 32
     txn ApplicationID
     bnz main_after_if_else@2
     pushint 42
@@ -22,7 +22,7 @@ main_after_if_else@2:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
     store 0
-    pushbytes 0x3f4abdfd // method "x()uint512"
+    pushbytes 0x7c1072af // method "x()uint256"
     txna ApplicationArgs 0
     match main_x_route@4
     err
@@ -54,10 +54,10 @@ x_ternary_merge@4:
     assert // check x exists
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     pushbytes 0x151f7c75

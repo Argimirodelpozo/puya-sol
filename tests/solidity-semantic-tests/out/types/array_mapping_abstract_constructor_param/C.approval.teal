@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x7805cd5a // method "__postInit()void", method "m(uint256,uint256,uint256)uint512"
+    pushbytess 0xbacc49e3 0xca419643 // method "__postInit()void", method "m(uint256,uint256,uint256)uint256"
     txna ApplicationArgs 0
     match __postInit m
     err
@@ -107,8 +107,8 @@ m_ternary_merge@4:
     intc_0 // 32
     extract3
     concat
-    swap
-    dig 2
+    dig 1
+    dig 3
     concat
     dup
     len
@@ -127,11 +127,9 @@ m_ternary_merge@4:
     select
     dup
     len
-    pushint 64
+    intc_0 // 32
     <=
     assert // overflow
-    pushint 64
-    bzero
     b|
     pushbytes 0x151f7c75
     swap

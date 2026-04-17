@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.A.approval_program() -> uint64:
 main:
-    intcblock 1 0 64
+    intcblock 1 32 0
     bytecblock "x"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x8a37d29b 0x3f4abdfd // method "f(uint256)void", method "x()uint512"
+    pushbytess 0x8a37d29b 0x7c1072af // method "f(uint256)void", method "x()uint256"
     txna ApplicationArgs 0
     match f x
     err
@@ -37,7 +37,7 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    pushint 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -57,7 +57,7 @@ f_ternary_merge@4:
     return
 
 f_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b f_ternary_merge@4
 
 
@@ -73,16 +73,16 @@ x:
 x_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
+    intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     dup
     len
-    intc_2 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_1 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -93,5 +93,5 @@ x_ternary_merge@4:
     return
 
 x_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b x_ternary_merge@4

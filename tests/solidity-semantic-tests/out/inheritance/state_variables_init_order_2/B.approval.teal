@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/state_variables_init_order_2.sol.B.approval_program() -> uint64:
 main:
-    intcblock 0 1 64
+    intcblock 0 1 32
     bytecblock "x" "z" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -42,7 +42,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xf8ee0c77 0x3f4abdfd 0xcd78b354 // method "z()uint512", method "x()uint512", method "f()uint256"
+    pushbytess 0x5848be20 0x7c1072af 0xcd78b354 // method "z()uint256", method "x()uint256", method "f()uint256"
     txna ApplicationArgs 0
     match z x f
     err
@@ -66,10 +66,10 @@ z_ternary_merge@4:
     assert // check z exists
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -102,10 +102,10 @@ x_ternary_merge@4:
     assert // check x exists
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75

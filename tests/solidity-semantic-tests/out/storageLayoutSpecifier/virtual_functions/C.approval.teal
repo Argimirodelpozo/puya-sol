@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/virtual_functions.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 64 32
+    intcblock 1 32 0
     bytecblock 0x151f7c75 "x" 0x "y" "z"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -32,7 +32,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x4b2c0376 0xafedb2e5 0xf8ee0c77 0x60d68bc1 0x3f4abdfd 0xcd78b354 // method "g()uint256", method "h()uint256", method "z()uint512", method "y()uint512", method "x()uint512", method "f()uint256"
+    pushbytess 0x4b2c0376 0xafedb2e5 0x5848be20 0x5c5e3bbc 0x7c1072af 0xcd78b354 // method "g()uint256", method "h()uint256", method "z()uint256", method "y()uint256", method "x()uint256", method "f()uint256"
     txna ApplicationArgs 0
     match g h z y x f
     err
@@ -69,10 +69,10 @@ h_ternary_merge@4:
     app_global_put
     dup
     len
-    intc_3 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_3 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -83,7 +83,7 @@ h_ternary_merge@4:
     return
 
 h_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b h_ternary_merge@4
 
 
@@ -99,16 +99,16 @@ z:
 z_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
+    intc_2 // 0
     bytec 4 // "z"
     app_global_get_ex
     assert // check z exists
     dup
     len
-    intc_2 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -119,7 +119,7 @@ z_ternary_merge@4:
     return
 
 z_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b z_ternary_merge@4
 
 
@@ -135,16 +135,16 @@ y:
 y_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
+    intc_2 // 0
     bytec_3 // "y"
     app_global_get_ex
     assert // check y exists
     dup
     len
-    intc_2 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -155,7 +155,7 @@ y_ternary_merge@4:
     return
 
 y_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b y_ternary_merge@4
 
 
@@ -171,16 +171,16 @@ x:
 x_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
+    intc_2 // 0
     bytec_1 // "x"
     app_global_get_ex
     assert // check x exists
     dup
     len
-    intc_2 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -191,7 +191,7 @@ x_ternary_merge@4:
     return
 
 x_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b x_ternary_merge@4
 
 
@@ -218,7 +218,7 @@ f_ternary_merge@4:
     return
 
 f_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b f_ternary_merge@4
 
 
@@ -234,7 +234,7 @@ f_ternary_false@3:
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/virtual_functions.sol.C.g_ternary_merge@3:
     !
     assert // not payable
-    intc_1 // 0
+    intc_2 // 0
     bytec_1 // "x"
     app_global_get_ex
     assert // check x exists
@@ -245,14 +245,14 @@ f_ternary_false@3:
     app_global_put
     dup
     len
-    intc_3 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_3 // 32
+    intc_1 // 32
     bzero
     b|
     retsub
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/virtual_functions.sol.C.g_ternary_false@2:
-    intc_1 // 0
+    intc_2 // 0
     b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/virtual_functions.sol.C.g_ternary_merge@3

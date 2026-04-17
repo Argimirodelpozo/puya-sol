@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 64
+    intcblock 1 32 0
     bytecblock "x"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x8a37d29b 0x88035e71 0x0a449f0b 0x3f4abdfd // method "f(uint256)void", method "g(uint256)void", method "h()void", method "x()uint512"
+    pushbytess 0x8a37d29b 0x88035e71 0x0a449f0b 0x7c1072af // method "f(uint256)void", method "g(uint256)void", method "h()void", method "x()uint256"
     txna ApplicationArgs 0
     match f g h x
     err
@@ -37,7 +37,7 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     bytec_0 // "x"
@@ -52,7 +52,7 @@ g:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.C.g
@@ -79,7 +79,7 @@ h_ternary_merge@4:
     return
 
 h_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b h_ternary_merge@4
 
 
@@ -95,16 +95,16 @@ x:
 x_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
+    intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     dup
     len
-    intc_3 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_1 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -115,7 +115,7 @@ x_ternary_merge@4:
     return
 
 x_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b x_ternary_merge@4
 
 
@@ -138,5 +138,5 @@ x_ternary_false@3:
     retsub
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.C.g_ternary_false@2:
-    intc_1 // 0
+    intc_2 // 0
     b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.C.g_ternary_merge@3

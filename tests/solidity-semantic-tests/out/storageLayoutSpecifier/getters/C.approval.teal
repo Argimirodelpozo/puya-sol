@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/getters.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 64
+    intcblock 1 0 32 64
     bytecblock "y" 0x151f7c75 0xff "x"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -34,7 +34,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x3f4abdfd 0x60d68bc1 0x5bb3453a // method "x()uint512", method "y()uint512", method "z()uint64"
+    pushbytess 0x7c1072af 0x60d68bc1 0x5bb3453a // method "x()uint256", method "y()uint512", method "z()uint64"
     txna ApplicationArgs 0
     match x y z
     err
@@ -58,10 +58,10 @@ x_ternary_merge@4:
     assert // check x exists
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
@@ -113,10 +113,10 @@ y_ternary_merge@4:
 y_ternary_merge@7:
     dup
     len
-    intc_2 // 64
+    intc_3 // 64
     <=
     assert // overflow
-    intc_2 // 64
+    intc_3 // 64
     bzero
     b|
     bytec_1 // 0x151f7c75

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/member_accessors.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 0 64
+    intcblock 1 0 32
     bytecblock 0x151f7c75 "data" "name" "a_hash" "an_address" 0x0000000000000000000000000000000000000000000000000000000000000000 "super_secret_data"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -57,7 +57,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x7b473e15 0x4ba6bde2 0x8fed8df9 0xce9ccef0 // method "data()uint512", method "name()byte[6]", method "a_hash()byte[32]", method "an_address()address"
+    pushbytess 0xd93a53a3 0x4ba6bde2 0x8fed8df9 0xce9ccef0 // method "data()uint256", method "name()byte[6]", method "a_hash()byte[32]", method "an_address()address"
     txna ApplicationArgs 0
     match data name a_hash an_address
     err
@@ -81,10 +81,10 @@ data_ternary_merge@4:
     assert // check data exists
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75

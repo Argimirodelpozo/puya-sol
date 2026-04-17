@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/literal_empty_string.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 64
+    intcblock 1 0 32
     bytecblock "x" "a" 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -29,7 +29,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x8fd9fca1 0xf2b65f27 0x7632a750 0x978d552f // method "f(byte[32],uint256)void", method "g()void", method "x()byte[32]", method "a()uint512"
+    pushbytess 0x8fd9fca1 0xf2b65f27 0x7632a750 0xb5251388 // method "f(byte[32],uint256)void", method "g()void", method "x()byte[32]", method "a()uint256"
     txna ApplicationArgs 0
     match f g x a
     err
@@ -125,10 +125,10 @@ a_ternary_merge@4:
     assert // check a exists
     dup
     len
-    intc_3 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_3 // 0x151f7c75

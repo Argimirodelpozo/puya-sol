@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x30df5fb9 0x356d5853 0xa0e79d05 0x8e21369f 0x7f05186a 0x5b6e5e89 0x751fd609 0x805876af // method "__postInit()void", method "fillSource()void", method "fillDest()void", method "copySourceToDest()void", method "deleteSource()void", method "deleteDest()void", method "getSourceAsUint()uint64[20]", method "getDestAsUint()uint64[40]", method "canary()uint512"
+    pushbytess 0xbacc49e3 0x30df5fb9 0x356d5853 0xa0e79d05 0x8e21369f 0x7f05186a 0x5b6e5e89 0x751fd609 0x96e93f04 // method "__postInit()void", method "fillSource()void", method "fillDest()void", method "copySourceToDest()void", method "deleteSource()void", method "deleteDest()void", method "getSourceAsUint()uint64[20]", method "getDestAsUint()uint64[40]", method "canary()uint256"
     txna ApplicationArgs 0
     match __postInit fillSource fillDest copySourceToDest deleteSource deleteDest getSourceAsUint getDestAsUint canary
     err
@@ -648,10 +648,10 @@ canary_ternary_merge@4:
     assert // check canary exists
     dup
     len
-    pushint 64
+    intc_3 // 32
     <=
     assert // overflow
-    pushint 64
+    intc_3 // 32
     bzero
     b|
     bytec 9 // 0x151f7c75

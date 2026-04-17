@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/state_variable_arithmetic_expression.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 64 32
+    intcblock 1 32 0
     bytecblock "x" "y" 0x151f7c75 0x "z" 0x010000000000000000000000000000000000000000000000000000000000000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -32,7 +32,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x1928cd24 0x3f4abdfd 0x60d68bc1 0xf8ee0c77 // method "f(uint256)uint256", method "x()uint512", method "y()uint512", method "z()uint512"
+    pushbytess 0x1928cd24 0x7c1072af 0x5c5e3bbc 0x5848be20 // method "f(uint256)uint256", method "x()uint256", method "y()uint256", method "z()uint256"
     txna ApplicationArgs 0
     match f x y z
     err
@@ -43,7 +43,7 @@ f:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -56,7 +56,7 @@ f:
 f_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
+    intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
@@ -65,7 +65,7 @@ f_ternary_merge@4:
     bytec_0 // "x"
     dig 1
     app_global_put
-    intc_1 // 0
+    intc_2 // 0
     bytec_1 // "y"
     app_global_get_ex
     assert // check y exists
@@ -88,10 +88,10 @@ f_ternary_merge@4:
     app_global_put
     dup
     len
-    intc_3 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_3 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -102,7 +102,7 @@ f_ternary_merge@4:
     return
 
 f_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b f_ternary_merge@4
 
 
@@ -118,16 +118,16 @@ x:
 x_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
+    intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex
     assert // check x exists
     dup
     len
-    intc_2 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -138,7 +138,7 @@ x_ternary_merge@4:
     return
 
 x_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b x_ternary_merge@4
 
 
@@ -154,16 +154,16 @@ y:
 y_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
+    intc_2 // 0
     bytec_1 // "y"
     app_global_get_ex
     assert // check y exists
     dup
     len
-    intc_2 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -174,7 +174,7 @@ y_ternary_merge@4:
     return
 
 y_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b y_ternary_merge@4
 
 
@@ -190,16 +190,16 @@ z:
 z_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
+    intc_2 // 0
     bytec 4 // "z"
     app_global_get_ex
     assert // check z exists
     dup
     len
-    intc_2 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -210,5 +210,5 @@ z_ternary_merge@4:
     return
 
 z_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b z_ternary_merge@4

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/constructor.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 64
+    intcblock 1 32 0
     bytecblock "state" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x76d8a28f 0x70dc8bf7 0xe24e5b20 // method "balance()uint256", method "update(uint256)void", method "state()uint512"
+    pushbytess 0x76d8a28f 0x70dc8bf7 0xd327fc16 // method "balance()uint256", method "update(uint256)void", method "state()uint256"
     txna ApplicationArgs 0
     match balance update state
     err
@@ -38,7 +38,7 @@ balance:
     acct_params_get AcctBalance
     pop
     itob
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
@@ -54,7 +54,7 @@ update:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -74,7 +74,7 @@ update_ternary_merge@4:
     return
 
 update_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b update_ternary_merge@4
 
 
@@ -90,16 +90,16 @@ state:
 state_ternary_merge@4:
     !
     assert // not payable
-    intc_1 // 0
+    intc_2 // 0
     bytec_0 // "state"
     app_global_get_ex
     assert // check state exists
     dup
     len
-    intc_3 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
@@ -110,5 +110,5 @@ state_ternary_merge@4:
     return
 
 state_ternary_false@3:
-    intc_1 // 0
+    intc_2 // 0
     b state_ternary_merge@4

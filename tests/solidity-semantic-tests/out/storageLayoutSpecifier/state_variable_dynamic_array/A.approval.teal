@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0xd3678af4 // method "__postInit()void", method "arrayA(uint256)uint512"
+    pushbytess 0xbacc49e3 0x5e2610e9 // method "__postInit()void", method "arrayA(uint256)uint256"
     txna ApplicationArgs 0
     match __postInit arrayA
     err
@@ -89,10 +89,10 @@ arrayA_ternary_merge@4:
     extract3 // on error: index access is out of bounds
     dup
     len
-    pushint 64
+    intc_1 // 32
     <=
     assert // overflow
-    pushint 64
+    intc_1 // 32
     bzero
     b|
     pushbytes 0x151f7c75

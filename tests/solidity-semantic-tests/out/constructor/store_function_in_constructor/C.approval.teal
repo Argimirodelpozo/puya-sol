@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/store_function_in_constructor.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 64
+    intcblock 1 32 0
     bytecblock "result_in_constructor" 0x151f7c75 "x"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -35,7 +35,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x82fadf35 0x622cfe87 0xae8c4c69 // method "double(uint256)uint256", method "use(uint256)uint256", method "result_in_constructor()uint512"
+    pushbytess 0x82fadf35 0x622cfe87 0x25dcf787 // method "double(uint256)uint256", method "use(uint256)uint256", method "result_in_constructor()uint256"
     txna ApplicationArgs 0
     match double use result_in_constructor
     err
@@ -93,10 +93,10 @@ result_in_constructor_ternary_merge@4:
     assert // check result_in_constructor exists
     dup
     len
-    intc_3 // 64
+    intc_1 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_1 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75

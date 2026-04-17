@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/fixed_arrays_in_constructors.sol.Creator.approval_program() -> uint64:
 main:
-    intcblock 1 0 64
+    intcblock 1 0 32
     bytecblock "r" "ch" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -38,7 +38,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x6801c2d9 0x950b7cd9 // method "r()uint512", method "ch()address"
+    pushbytess 0x8cd7bc25 0x950b7cd9 // method "r()uint256", method "ch()address"
     txna ApplicationArgs 0
     match r ch
     err
@@ -62,10 +62,10 @@ r_ternary_merge@4:
     assert // check r exists
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75

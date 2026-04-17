@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/bytes_in_constructors_packer.sol.Base.approval_program() -> uint64:
 main:
-    intcblock 1 0 64 8
+    intcblock 1 0 32 8
     bytecblock "__ctor_pending" "m_s" "m_x" 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xf8cd4da6 0xe73cd39c 0xef04bd33 // method "__postInit(uint512,byte[])void", method "part(uint256)byte[1]", method "m_x()uint512"
+    pushbytess 0x0510532b 0xe73cd39c 0xce7531ad // method "__postInit(uint256,byte[])void", method "part(uint256)byte[1]", method "m_x()uint256"
     txna ApplicationArgs 0
     match __postInit part m_x
     err
@@ -37,9 +37,9 @@ __postInit:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     ==
-    assert // invalid number of bytes for arc4.uint512
+    assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     intc_1 // 0
@@ -75,7 +75,7 @@ part:
     txna ApplicationArgs 1
     dup
     len
-    pushint 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -134,10 +134,10 @@ m_x_ternary_merge@4:
     assert // check m_x exists
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_3 // 0x151f7c75

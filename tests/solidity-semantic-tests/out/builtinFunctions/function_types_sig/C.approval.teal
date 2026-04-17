@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/function_types_sig.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 64
+    intcblock 1 0 32
     bytecblock "x" 0x151f7c7500000000
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x4bb8a92a 0x886e1470 0xd63ef4f0 0x4e620b13 0x3f4abdfd // method "f()byte[4]", method "g()byte[4]", method "h()byte[4]", method "i()byte[4]", method "x()uint512"
+    pushbytess 0x4bb8a92a 0x886e1470 0xd63ef4f0 0x4e620b13 0x7c1072af // method "f()byte[4]", method "g()byte[4]", method "h()byte[4]", method "i()byte[4]", method "x()uint256"
     txna ApplicationArgs 0
     match f g h i x
     err
@@ -138,10 +138,10 @@ x_ternary_merge@4:
     assert // check x exists
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     pushbytes 0x151f7c75

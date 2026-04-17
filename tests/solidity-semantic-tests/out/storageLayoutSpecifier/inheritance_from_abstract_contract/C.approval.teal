@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_abstract_contract.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 64
+    intcblock 1 0 32
     bytecblock "x" "y" 0x 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -29,7 +29,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xcd78b354 0x60d68bc1 0x3f4abdfd // method "f()uint256", method "y()uint512", method "x()uint512"
+    pushbytess 0xcd78b354 0x5c5e3bbc 0x7c1072af // method "f()uint256", method "y()uint256", method "x()uint256"
     txna ApplicationArgs 0
     match f y x
     err
@@ -81,10 +81,10 @@ y_ternary_merge@4:
     assert // check y exists
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_3 // 0x151f7c75
@@ -117,10 +117,10 @@ x_ternary_merge@4:
     assert // check x exists
     dup
     len
-    intc_2 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_2 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_3 // 0x151f7c75

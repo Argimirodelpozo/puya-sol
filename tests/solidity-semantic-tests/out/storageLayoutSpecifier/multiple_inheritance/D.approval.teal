@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/multiple_inheritance.sol.D.approval_program() -> uint64:
 main:
-    intcblock 0 1 32 64
+    intcblock 0 1 32
     bytecblock "x" "y" "w" 0x151f7c75 "z"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -35,7 +35,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x8ef91fdb 0xf8ee0c77 0x9cea6db3 0x60d68bc1 0x3f4abdfd 0x2a49be10 0x88035e71 0x8a37d29b // method "test()(uint256,uint256,uint256,uint256)", method "z()uint512", method "w()uint512", method "y()uint512", method "x()uint512", method "h(uint256)void", method "g(uint256)void", method "f(uint256)void"
+    pushbytess 0x8ef91fdb 0x5848be20 0xc2059c64 0x5c5e3bbc 0x7c1072af 0x2a49be10 0x88035e71 0x8a37d29b // method "test()(uint256,uint256,uint256,uint256)", method "z()uint256", method "w()uint256", method "y()uint256", method "x()uint256", method "h(uint256)void", method "g(uint256)void", method "f(uint256)void"
     txna ApplicationArgs 0
     match test z w y x h g f
     err
@@ -146,10 +146,10 @@ z_ternary_merge@4:
     assert // check z exists
     dup
     len
-    intc_3 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_3 // 0x151f7c75
@@ -182,10 +182,10 @@ w_ternary_merge@4:
     assert // check w exists
     dup
     len
-    intc_3 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_3 // 0x151f7c75
@@ -218,10 +218,10 @@ y_ternary_merge@4:
     assert // check y exists
     dup
     len
-    intc_3 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_3 // 0x151f7c75
@@ -254,10 +254,10 @@ x_ternary_merge@4:
     assert // check x exists
     dup
     len
-    intc_3 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_3 // 0x151f7c75

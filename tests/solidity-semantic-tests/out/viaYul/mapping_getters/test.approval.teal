@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/mapping_getters.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 64
+    intcblock 32 1 0 2
     bytecblock "__ctor_pending" "m1" "m2" 0x 0x151f7c75
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x76a2115c 0xfa6f9035 0x9e61c4cc 0x8ea38828 // method "__postInit()void", method "set(uint256,uint256)void", method "set(uint256,uint256,uint256)void", method "m1(uint256)uint512", method "m2(uint256,uint256)uint512"
+    pushbytess 0xbacc49e3 0x76a2115c 0xfa6f9035 0x249cf2cf 0x47cd50d7 // method "__postInit()void", method "set(uint256,uint256)void", method "set(uint256,uint256,uint256)void", method "m1(uint256)uint256", method "m2(uint256,uint256)uint256"
     txna ApplicationArgs 0
     match __postInit set(u256,u256) set(u256,u256,u256) m1 m2
     err
@@ -41,11 +41,11 @@ __postInit:
     intc_2 // 0
     app_global_put
     bytec_1 // "m1"
-    pushint 2
+    intc_3 // 2
     box_create
     pop
     bytec_2 // "m2"
-    pushint 2
+    intc_3 // 2
     box_create
     pop
     intc_1 // 1
@@ -191,7 +191,8 @@ m1_ternary_merge@4:
     assert // not payable
     intc_0 // 32
     bzero
-    dig 1
+    dup
+    dig 2
     concat
     dup
     len
@@ -209,11 +210,9 @@ m1_ternary_merge@4:
     select
     dup
     len
-    intc_3 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_3 // 64
-    bzero
     b|
     bytec 4 // 0x151f7c75
     swap
@@ -262,8 +261,8 @@ m2_ternary_merge@4:
     -
     intc_0 // 32
     extract3
-    swap
-    dig 2
+    dig 1
+    dig 3
     concat
     dup
     len
@@ -282,11 +281,9 @@ m2_ternary_merge@4:
     select
     dup
     len
-    intc_3 // 64
+    intc_0 // 32
     <=
     assert // overflow
-    intc_3 // 64
-    bzero
     b|
     bytec 4 // 0x151f7c75
     swap

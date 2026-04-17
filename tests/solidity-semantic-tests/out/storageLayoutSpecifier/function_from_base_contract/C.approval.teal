@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/function_from_base_contract.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 32 64
+    intcblock 0 1 32
     bytecblock "x" "y" 0x151f7c75 0x "z"
     txn ApplicationID
     bnz main_after_if_else@2
@@ -32,7 +32,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xc95a9d21 0xf8ee0c77 0x60d68bc1 0x3f4abdfd 0x4b2c0376 0xcd78b354 // method "test()uint256", method "z()uint512", method "y()uint512", method "x()uint512", method "g()uint256", method "f()uint256"
+    pushbytess 0xc95a9d21 0x5848be20 0x5c5e3bbc 0x7c1072af 0x4b2c0376 0xcd78b354 // method "test()uint256", method "z()uint256", method "y()uint256", method "x()uint256", method "g()uint256", method "f()uint256"
     txna ApplicationArgs 0
     match test z y x g f
     err
@@ -159,10 +159,10 @@ z_ternary_merge@4:
     assert // check z exists
     dup
     len
-    intc_3 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -195,10 +195,10 @@ y_ternary_merge@4:
     assert // check y exists
     dup
     len
-    intc_3 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -231,10 +231,10 @@ x_ternary_merge@4:
     assert // check x exists
     dup
     len
-    intc_3 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/failed_create.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 64
+    intcblock 1 0 32 16
     bytecblock "x" 0x01 0x 0x010000000000000000000000000000000000000000000000000000000000000000 TMPL_APPROVAL_D TMPL_CLEAR_D
     txn ApplicationID
     bnz main_after_if_else@2
@@ -26,7 +26,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x8a37d29b 0xc608be41 0x3f4abdfd // method "f(uint256)void", method "stack(uint256)void", method "x()uint512"
+    pushbytess 0x8a37d29b 0xc608be41 0x7c1072af // method "f(uint256)void", method "stack(uint256)void", method "x()uint256"
     txna ApplicationArgs 0
     match f stack x
     err
@@ -76,10 +76,10 @@ x_ternary_merge@4:
     assert // check x exists
     dup
     len
-    intc_3 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_2 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -121,9 +121,9 @@ x_ternary_false@3:
     bytec 5 // TMPL_CLEAR_D
     pushint 6
     itxn_field TypeEnum
-    pushint 16
+    intc_3 // 16
     itxn_field GlobalNumUint
-    pushint 16
+    intc_3 // 16
     itxn_field GlobalNumByteSlice
     intc_1 // 0
     itxn_field Fee

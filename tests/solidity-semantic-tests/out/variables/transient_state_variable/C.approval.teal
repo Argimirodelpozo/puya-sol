@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/transient_state_variable.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 64
+    intcblock 1 0 32
     bytecblock "x" 0x151f7c75 0x
     txn ApplicationID
     bnz main_after_if_else@2
@@ -29,7 +29,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x2d4970c7 0x4b2c0376 0xafedb2e5 0x3f4abdfd // method "f()void", method "g()uint256", method "h()uint256", method "x()uint512"
+    pushbytess 0x2d4970c7 0x4b2c0376 0xafedb2e5 0x7c1072af // method "f()void", method "g()uint256", method "h()uint256", method "x()uint256"
     txna ApplicationArgs 0
     match f g h x
     err
@@ -138,10 +138,10 @@ x_ternary_merge@4:
     assert // check x exists
     dup
     len
-    intc_3 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_2 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
