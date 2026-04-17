@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_selfdestruct.sol.D.approval_program() -> uint64:
 main:
     intcblock 0 1 6 16 1000000
-    bytecblock "c" "__ctor_pending" TMPL_APPROVAL_C TMPL_CLEAR_C 0x7cb116cd 0xb30e2ea6 0xf08d7860
+    bytecblock "c" "__ctor_pending" TMPL_APPROVAL_C TMPL_CLEAR_C 0x7cb116cd 0x000000000000000000000000000000000000000000000000000000000000002a 0xb30e2ea6 0xf08d7860
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
@@ -84,8 +84,6 @@ __postInit:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/transient_storage_selfdestruct.sol.D.destroy[routing]() -> void:
 destroy:
     itxn_begin
-    pushint 42
-    itob
     intc_0 // 0
     bytec_0 // "c"
     app_global_get_ex
@@ -102,7 +100,7 @@ destroy:
     itxn_field ApplicationID
     bytec 4 // method "set(uint256)void"
     itxn_field ApplicationArgs
-    swap
+    bytec 5 // 0x000000000000000000000000000000000000000000000000000000000000002a
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
@@ -115,7 +113,7 @@ destroy:
     itxn_field Fee
     dig 1
     itxn_field ApplicationID
-    bytec 5 // method "terminate(address)void"
+    bytec 6 // method "terminate(address)void"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
@@ -127,7 +125,7 @@ destroy:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 6 // method "get()uint256"
+    bytec 7 // method "get()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -179,9 +177,6 @@ createAndDestroy:
     dig 1
     app_global_put
     itxn_begin
-    pushint 42
-    itob
-    swap
     pushint 24
     extract_uint64
     intc_2 // 6
@@ -194,7 +189,7 @@ createAndDestroy:
     itxn_field ApplicationID
     bytec 4 // method "set(uint256)void"
     itxn_field ApplicationArgs
-    swap
+    bytec 5 // 0x000000000000000000000000000000000000000000000000000000000000002a
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
@@ -207,7 +202,7 @@ createAndDestroy:
     itxn_field Fee
     dig 1
     itxn_field ApplicationID
-    bytec 5 // method "terminate(address)void"
+    bytec 6 // method "terminate(address)void"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
@@ -219,7 +214,7 @@ createAndDestroy:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 6 // method "get()uint256"
+    bytec 7 // method "get()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog

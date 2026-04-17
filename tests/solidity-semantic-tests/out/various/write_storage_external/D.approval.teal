@@ -34,27 +34,12 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.D.__postInit[routing]() -> void:
 __postInit:
-    pushbytes ""
     bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     bytec_1 // "__ctor_pending"
     intc_0 // 0
     app_global_put
-    pushint 24
-    bzero
-    swap
-    itob
-    concat
-    bytec_0 // "c"
-    swap
-    app_global_put
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.D.f[routing]() -> void:
-f:
     itxn_begin
     bytec 5 // TMPL_APPROVAL_C
     bytec 6 // TMPL_CLEAR_C
@@ -72,6 +57,7 @@ f:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -83,9 +69,21 @@ f:
     pushint 1000000
     itxn_field Amount
     itxn_submit
-    itxn_begin
-    pushint 3
+    pushint 24
+    bzero
+    swap
     itob
+    concat
+    bytec_0 // "c"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.D.f[routing]() -> void:
+f:
+    itxn_begin
     intc_0 // 0
     bytec_0 // "c"
     app_global_get_ex
@@ -102,7 +100,7 @@ f:
     itxn_field ApplicationID
     bytec 4 // method "g(uint256)void"
     itxn_field ApplicationArgs
-    swap
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
@@ -137,8 +135,6 @@ f:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/write_storage_external.sol.D.g[routing]() -> void:
 g:
     itxn_begin
-    pushint 8
-    itob
     intc_0 // 0
     bytec_0 // "c"
     app_global_get_ex
@@ -155,7 +151,7 @@ g:
     itxn_field ApplicationID
     bytec 4 // method "g(uint256)void"
     itxn_field ApplicationArgs
-    swap
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin

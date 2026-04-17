@@ -4,8 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/transfer.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 16
-    bytecblock "__ctor_pending" "a" "" TMPL_APPROVAL_A TMPL_CLEAR_A
-    bytec_2 // ""
+    bytecblock "__ctor_pending" "a" TMPL_APPROVAL_A TMPL_CLEAR_A
+    pushbytes ""
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
@@ -78,29 +78,15 @@ main_create_NoOp@13:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/transfer.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_2 // ""
     bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    pushint 24
-    bzero
-    swap
-    itob
-    concat
-    bytec_1 // "a"
-    swap
-    app_global_put
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/transfer.sol.C.f[routing]() -> void:
-f:
     itxn_begin
-    bytec_3 // TMPL_APPROVAL_A
-    bytec 4 // TMPL_CLEAR_A
+    bytec_2 // TMPL_APPROVAL_A
+    bytec_3 // TMPL_CLEAR_A
     pushint 6
     itxn_field TypeEnum
     intc_2 // 16
@@ -115,6 +101,7 @@ f:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -126,6 +113,19 @@ f:
     pushint 1000000
     itxn_field Amount
     itxn_submit
+    pushint 24
+    bzero
+    swap
+    itob
+    concat
+    bytec_1 // "a"
+    swap
+    app_global_put
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/transfer.sol.C.f[routing]() -> void:
+f:
     itxn_begin
     intc_1 // 0
     bytec_1 // "a"

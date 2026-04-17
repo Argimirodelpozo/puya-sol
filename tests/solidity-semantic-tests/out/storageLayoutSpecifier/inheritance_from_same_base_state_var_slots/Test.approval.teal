@@ -34,44 +34,12 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.Test.__postInit[routing]() -> void:
 __postInit:
-    pushbytes ""
-    dupn 2
     bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
     intc_0 // 0
     app_global_put
-    pushint 24
-    bzero
-    swap
-    itob
-    dig 1
-    swap
-    concat
-    bytec_2 // "a"
-    swap
-    app_global_put
-    swap
-    itob
-    dig 1
-    swap
-    concat
-    bytec_3 // "b"
-    swap
-    app_global_put
-    swap
-    itob
-    concat
-    pushbytes "c"
-    swap
-    app_global_put
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.Test.contractASlots[routing]() -> void:
-contractASlots:
     itxn_begin
     bytec 4 // TMPL_APPROVAL_A
     bytec 5 // TMPL_CLEAR_A
@@ -89,6 +57,7 @@ contractASlots:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -100,6 +69,16 @@ contractASlots:
     intc 4 // 1000000
     itxn_field Amount
     itxn_submit
+    pushint 24
+    bzero
+    swap
+    itob
+    dig 1
+    swap
+    concat
+    bytec_2 // "a"
+    swap
+    app_global_put
     itxn_begin
     bytec 6 // TMPL_APPROVAL_B
     bytec 7 // TMPL_CLEAR_B
@@ -117,6 +96,7 @@ contractASlots:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -128,6 +108,13 @@ contractASlots:
     intc 4 // 1000000
     itxn_field Amount
     itxn_submit
+    itob
+    dig 1
+    swap
+    concat
+    bytec_3 // "b"
+    swap
+    app_global_put
     itxn_begin
     bytec 8 // TMPL_APPROVAL_C
     bytec 9 // TMPL_CLEAR_C
@@ -145,6 +132,7 @@ contractASlots:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -156,6 +144,17 @@ contractASlots:
     intc 4 // 1000000
     itxn_field Amount
     itxn_submit
+    itob
+    concat
+    pushbytes "c"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/inheritance_from_same_base_state_var_slots.sol.Test.contractASlots[routing]() -> void:
+contractASlots:
     itxn_begin
     intc_0 // 0
     bytec_2 // "a"

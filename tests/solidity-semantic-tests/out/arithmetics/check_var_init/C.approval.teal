@@ -4,9 +4,9 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/check_var_init.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 64
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 "x"
+    bytecblock 0x0a 0x010000000000000000000000000000000000000000000000000000000000000000 "x"
     txn ApplicationID
-    bnz main_after_if_else@5
+    bnz main_after_if_else@8
     txn GroupIndex
     bz main_ternary_false@3
     txn GroupIndex
@@ -16,23 +16,39 @@ main:
 
 main_ternary_merge@4:
     itob
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x0a
+    b>=
+    assert // underflow
+    txn GroupIndex
+    bz main_ternary_false@6
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@7:
+    itob
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    pushbytes 0x0a
+    bytec_0 // 0x0a
     b-
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec_1 // "x"
+    bytec_2 // "x"
     swap
     app_global_put
     intc_0 // 1
     return
 
+main_ternary_false@6:
+    intc_1 // 0
+    b main_ternary_merge@7
+
 main_ternary_false@3:
     intc_1 // 0
     b main_ternary_merge@4
 
-main_after_if_else@5:
+main_after_if_else@8:
     pushint 4096
     bzero
     store 0
@@ -42,10 +58,10 @@ main_after_if_else@5:
     store 0
     pushbytes 0x3f4abdfd // method "x()uint512"
     txna ApplicationArgs 0
-    match main_x_route@7
+    match main_x_route@10
     err
 
-main_x_route@7:
+main_x_route@10:
     txn OnCompletion
     !
     txn ApplicationID
@@ -57,7 +73,7 @@ main_x_route@7:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/check_var_init.sol.C.x[routing]() -> void:
 x:
     intc_1 // 0
-    bytec_1 // "x"
+    bytec_2 // "x"
     app_global_get_ex
     assert // check x exists
     dup

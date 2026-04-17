@@ -34,27 +34,12 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary_function_pointer_from_function_call.sol.C.__postInit[routing]() -> void:
 __postInit:
-    pushbytes ""
     bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    pushint 24
-    bzero
-    swap
-    itob
-    concat
-    bytec_1 // "a"
-    swap
-    app_global_put
-    intc_0 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary_function_pointer_from_function_call.sol.C.getContract[routing]() -> void:
-getContract:
     itxn_begin
     bytec_3 // TMPL_APPROVAL_A
     bytec 4 // TMPL_CLEAR_A
@@ -72,6 +57,7 @@ getContract:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -83,6 +69,20 @@ getContract:
     pushint 1000000
     itxn_field Amount
     itxn_submit
+    pushint 24
+    bzero
+    swap
+    itob
+    concat
+    bytec_1 // "a"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/selector_ternary_function_pointer_from_function_call.sol.C.getContract[routing]() -> void:
+getContract:
     intc_1 // 0
     bytec_1 // "a"
     app_global_get_ex

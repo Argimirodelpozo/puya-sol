@@ -34,36 +34,12 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_references_preserve.sol.C.__postInit[routing]() -> void:
 __postInit:
-    pushbytes ""
-    dup
     bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     bytec_0 // "__ctor_pending"
     intc_0 // 0
     app_global_put
-    pushint 24
-    bzero
-    swap
-    itob
-    dig 1
-    swap
-    concat
-    bytec_1 // "a"
-    swap
-    app_global_put
-    swap
-    itob
-    concat
-    bytec_2 // "b"
-    swap
-    app_global_put
-    intc_1 // 1
-    return
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_references_preserve.sol.C.aSum[routing]() -> void:
-aSum:
     itxn_begin
     bytec 5 // TMPL_APPROVAL_A
     bytec 6 // TMPL_CLEAR_A
@@ -81,6 +57,7 @@ aSum:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -92,6 +69,16 @@ aSum:
     intc 4 // 1000000
     itxn_field Amount
     itxn_submit
+    pushint 24
+    bzero
+    swap
+    itob
+    dig 1
+    swap
+    concat
+    bytec_1 // "a"
+    swap
+    app_global_put
     itxn_begin
     bytec 7 // TMPL_APPROVAL_B
     bytec 8 // TMPL_CLEAR_B
@@ -109,6 +96,7 @@ aSum:
     itxn_field ApprovalProgram
     itxn_submit
     itxn CreatedApplicationID
+    dup
     app_params_get AppAddress
     pop
     itxn_begin
@@ -120,6 +108,17 @@ aSum:
     intc 4 // 1000000
     itxn_field Amount
     itxn_submit
+    itob
+    concat
+    bytec_2 // "b"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/library_references_preserve.sol.C.aSum[routing]() -> void:
+aSum:
     itxn_begin
     intc_0 // 0
     bytec_1 // "a"
