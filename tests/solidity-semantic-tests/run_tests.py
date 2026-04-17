@@ -227,40 +227,6 @@ def compile_test(sol_path: Path, out_dir: Path, ensure_budget: dict = None, via_
     return contracts
 
 
-def _extract_box_refs(teal_path):
-    """Extract box references from TEAL by finding the string constant that
-    immediately precedes each box_* opcode. Anything simulate can already
-    discover (via populate_app_call_resources) is left to runtime — in
-    particular we do NOT scan the whole bytecblock for quoted strings,
-    since that also picks up app_global_put keys (e.g. "__ctor_pending",
-    "a") which are not boxes and only inflate funding + baselining."""
-    teal = teal_path.read_text()
-    refs = []
-    seen = set()
-    lines = teal.split('\n')
-    for i, line in enumerate(lines):
-        stripped = line.strip()
-        if any(op in stripped for op in ['box_create', 'box_get', 'box_put',
-                'box_del', 'box_len', 'box_resize', 'box_replace', 'box_extract']):
-            for j in range(max(0, i-5), i):
-                prev = lines[j].strip()
-                m = re.search(r'// "([^"]+)"', prev)
-                if m:
-                    key = m.group(1)
-                    if key not in seen:
-                        seen.add(key)
-                        refs.append((0, key.encode()))
-                    break
-                m2 = re.search(r'pushbytes "([^"]+)"', prev)
-                if m2:
-                    key = m2.group(1)
-                    if key not in seen:
-                        seen.add(key)
-                        refs.append((0, key.encode()))
-                    break
-    return refs
-
-
 def _get_constructor_param_types(app_spec, artifacts):
     """Extract constructor parameter types from __postInit ARC56 spec or Solidity source.
     Returns a list of type descriptors: 'uint256', 'uint256[3]', 'bytes', etc.
@@ -498,9 +464,6 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
             else:
                 app_args = [_encode_ctor_arg(a) for a in ctor_args]
 
-        # Extract box references from TEAL
-        box_refs = _extract_box_refs(artifacts["approval_teal"])
-
         sp = algod.suggested_params()
         sp.flat_fee = True
         sp.fee = max(sp.min_fee, 1000) * 8  # cover inner txns + box ops + child app creation
@@ -512,7 +475,9 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
             local_schema=StateSchema(num_uints=0, num_byte_slices=0),
             extra_pages=extra_pages,
             app_args=app_args,
-            boxes=box_refs if box_refs else None,
+            # No boxes= here: box creation is impossible in a create txn
+            # (the app doesn't exist yet so has no address to own boxes),
+            # and simulate discovers the refs that subsequent calls need.
         )
         signed = txn.sign(account.private_key)
         txid = algod.send_transaction(signed)
@@ -523,10 +488,11 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
         app_addr = encoding.encode_address(
             encoding.checksum(b"appID" + app_id.to_bytes(8, "big"))
         )
-        # Fund: min balance + box storage + constructor value
-        # Box storage costs 2500 + 400*size per box
-        box_cost = sum(2500 + 400 * 1024 for _ in box_refs)  # assume 1KB per box
-        min_balance = 100_000 + 28500 * 16 + 50000 * 16 + box_cost + 10_000_000  # extra for inner app creation + child funding
+        # Fund: base MBR + state schema + generous headroom for inner-app
+        # creations and per-box MBR. 10 ALGO headroom covers ~24 boxes at
+        # 1KB each plus child-app deployments; balance-baseline is read
+        # from the account after __postInit so over-funding is harmless.
+        min_balance = 100_000 + 28500 * 16 + 50000 * 16 + 10_000_000
         total_fund = min_balance + fund_amount
         sp2 = algod.suggested_params()
         pay = PaymentTxn(account.address, sp2, app_addr, total_fund)
@@ -629,29 +595,16 @@ def deploy_contract(localnet, account, artifacts, ctor_args=None, fund_amount=0)
                     sp=_sp, signer=_signer, method_args=_postinit_args,
                     note=_os.urandom(8),
                 )
-                try:
-                    _atc = au.populate_app_call_resources(_atc, _algod)
-                    _atc.execute(_algod, wait_rounds=4)
-                except Exception:
-                    # Fall back: retry with static box refs for non-mapping cases
-                    _atc2 = AtomicTransactionComposer()
-                    _atc2.add_method_call(
-                        app_id=app_id, method=_postinit_method, sender=_sender,
-                        sp=_sp, signer=_signer, method_args=_postinit_args,
-                        boxes=[AlgoBoxRef(app_index=0, name=ref[1]) for ref in box_refs] if box_refs else None,
-                        note=_os.urandom(8),
-                    )
-                    try:
-                        _atc2 = au.populate_app_call_resources(_atc2, _algod)
-                    except Exception:
-                        pass
-                    _atc2.execute(_algod, wait_rounds=4)
+                _atc = au.populate_app_call_resources(_atc, _algod)
+                _atc.execute(_algod, wait_rounds=4)
             except Exception as e:
                 import sys
                 print(f"  [warn] __postInit failed: {str(e)[:100]}", file=sys.stderr)
 
-        # Store box refs on the client for use in subsequent calls
-        app_client._box_refs = box_refs
+        # Kept as an empty list for API compatibility with call-site code
+        # that checks `app._box_refs` to seed a box-ref list; simulate
+        # discovers the real refs at each call.
+        app_client._box_refs = []
         # Record the AVM baseline so _compare_values can subtract it when
         # tests read `address(this).balance`. Read the app account's real
         # balance *after* __postInit so any funds the ctor spent on child
