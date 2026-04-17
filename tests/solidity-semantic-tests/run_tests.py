@@ -10,7 +10,8 @@ Phases:
   3. Deploy to localnet
   4. Execute assertion calls and compare results
 
-Results are printed as PASS/FAIL/SKIP/COMPILE_ERROR/DEPLOY_ERROR.
+Results are printed as PASS/FAIL/COMPILE_ERROR/DEPLOY_ERROR.
+Any unverified call (was previously SKIP) now counts as an explicit FAIL.
 """
 import argparse
 import json
@@ -2143,7 +2144,8 @@ def _compare_values(actual, expected):
 def run_test(test: SemanticTest, localnet, account, verbose=False, _budget_retry=False):
     """Run a single semantic test. Returns (status, details)."""
     if test.skipped:
-        return "SKIP", test.skip_reason
+        # Previously SKIP; an unverified test is not a pass, so report FAIL.
+        return "FAIL", f"unparseable: {test.skip_reason}"
 
     # Compile — on budget retry, inject ensure_budget for failing functions
     out_dir = OUT_DIR / test.category / test.name
@@ -2205,9 +2207,11 @@ def run_test(test: SemanticTest, localnet, account, verbose=False, _budget_retry
         uses_v1 = "pragma abicoder v1" in test.source_code or "pragma abicoder               v1" in test.source_code
         ok, detail = execute_call(app, call, app_spec, verbose, uses_v1=uses_v1)
         if ok is None:
-            skipped += 1
-            if verbose:
-                details.append(f"  SKIP: {call.raw_line} ({detail})")
+            # An unrecognised/unsupported call was previously counted as
+            # "skipped"; we treat it as a failure — the assertion was not
+            # verified, so the test cannot claim to pass.
+            failed += 1
+            details.append(f"  FAIL: {call.raw_line} — unverified: {detail}")
         elif ok:
             passed += 1
             if verbose:
@@ -2230,12 +2234,10 @@ def run_test(test: SemanticTest, localnet, account, verbose=False, _budget_retry
                 test._ensure_budget = budget_funcs
                 return run_test(test, localnet, account, verbose, _budget_retry=True)
 
+    # `skipped` is kept for backwards-compatible output formatting only;
+    # the counter is no longer incremented (unverified calls count as failed).
     if failed > 0:
         return "FAIL", f"{passed}p/{failed}f/{skipped}s" + "\n".join([""] + details)
-    # If every assertion was skipped and none passed, report as FAIL
-    # (not a false positive — the test wasn't actually verified)
-    if passed == 0 and skipped > 0:
-        return "FAIL", f"0p/0f/{skipped}s (all skipped)" + "\n".join([""] + details)
     return "PASS", f"{passed}p/{skipped}s"
 
 
@@ -2261,7 +2263,8 @@ def main():
     else:
         categories = sorted(d.name for d in TESTS_DIR.iterdir() if d.is_dir())
 
-    results = {"PASS": 0, "FAIL": 0, "SKIP": 0, "COMPILE_ERROR": 0, "DEPLOY_ERROR": 0}
+    # SKIP no longer appears — unverified tests/calls are reported as FAIL.
+    results = {"PASS": 0, "FAIL": 0, "COMPILE_ERROR": 0, "DEPLOY_ERROR": 0}
 
     # Count total tests upfront for progress reporting
     all_test_files = []
@@ -2291,7 +2294,7 @@ def main():
         results[status] += 1
         tests_done += 1
 
-        icon = {"PASS": "✓", "FAIL": "✗", "SKIP": "○",
+        icon = {"PASS": "✓", "FAIL": "✗",
                 "COMPILE_ERROR": "⚠", "DEPLOY_ERROR": "⚠"}.get(status, "?")
         short_detail = detail.split("\n")[0][:60]
         print(f"  {icon} {test.name}: {short_detail}")
