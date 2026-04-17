@@ -864,8 +864,23 @@ def _regroup_args(raw_args, method_sig):
     if not has_complex:
         return raw_args
 
+    def _inner_type(pt):
+        """Strip the outermost array suffix: 'bytes[1]' -> 'bytes',
+        'uint256[][3]' -> 'uint256[]', 'uint256' -> None."""
+        m = _re.match(r'(.+)\[\d*\]$', pt)
+        return m.group(1) if m else None
+
     def _is_dynamic(pt):
-        return pt in dynamic_types or _re.match(r'.*\[\]$', pt)
+        if pt in dynamic_types:
+            return True
+        if _re.match(r'.*\[\]$', pt):
+            return True
+        # Static array whose element type is itself dynamic (e.g. `bytes[1]`,
+        # `uint256[][3]`, `string[2]`) is dynamically encoded per EVM ABI.
+        inner = _inner_type(pt)
+        if inner is not None:
+            return _is_dynamic(inner)
+        return False
 
     def _static_array_dims(pt):
         """Parse static array dimensions. Returns list of sizes or None.
@@ -882,6 +897,73 @@ def _regroup_args(raw_args, method_sig):
         for d in dims:
             total *= d
         return total
+
+    def _decode_dynamic(pt, word_idx):
+        """Decode the value at raw_args[word_idx..] for type `pt`. `word_idx` is
+        the start of the value in the flat raw_args list (i.e. the tail-region
+        location that the caller's offset word pointed to). Returns the decoded
+        Python value. Handles: string / bytes / <T>[] / <T>[N] (static array of
+        dynamic T)."""
+        if pt in dynamic_types:
+            # length + data
+            if word_idx >= len(raw_args):
+                return "" if pt == 'string' else b""
+            length = raw_args[word_idx]
+            if not isinstance(length, int):
+                return raw_args[word_idx]
+            data_start = word_idx + 1
+            if length == 0:
+                return "" if pt == 'string' else b""
+            data = b""
+            n_words = (length + 31) // 32
+            for w in range(n_words):
+                if data_start + w >= len(raw_args):
+                    break
+                wv = raw_args[data_start + w]
+                if isinstance(wv, bytes):
+                    data += wv.ljust(32, b'\x00')[:32]
+                elif isinstance(wv, int):
+                    data += wv.to_bytes(32, 'big', signed=(wv < 0))
+            return (data[:length].decode('utf-8', errors='replace')
+                    if pt == 'string' else data[:length])
+        # Array: dynamic `<inner>[]` or static `<inner>[N]`
+        inner = _inner_type(pt)
+        if inner is None:
+            # Scalar dynamic fallback — shouldn't really happen
+            return raw_args[word_idx] if word_idx < len(raw_args) else 0
+        # Determine length: dynamic arrays have a length word, static arrays
+        # infer from the declared size.
+        is_outer_dynamic = _re.match(r'.*\[\]$', pt) is not None
+        if is_outer_dynamic:
+            if word_idx >= len(raw_args):
+                return []
+            length = raw_args[word_idx]
+            if not isinstance(length, int):
+                return []
+            body_start = word_idx + 1
+        else:
+            m = _re.match(r'.+\[(\d+)\]$', pt)
+            length = int(m.group(1)) if m else 0
+            body_start = word_idx
+        if _is_dynamic(inner):
+            # Each element has a head-offset (relative to body_start) pointing
+            # to its own tail.
+            arr = []
+            for i in range(length):
+                if body_start + i >= len(raw_args):
+                    arr.append(b"" if inner in dynamic_types else [])
+                    continue
+                inner_offset = raw_args[body_start + i]
+                if not isinstance(inner_offset, int):
+                    arr.append(b"" if inner in dynamic_types else [])
+                    continue
+                inner_word_idx = body_start + (inner_offset // 32)
+                arr.append(_decode_dynamic(inner, inner_word_idx))
+            return arr
+        # Static inner element type: values are packed element-per-word
+        # (or packed across multiple words for multi-slot primitives, but
+        # ARC4 static primitives all fit in one word for our purposes).
+        return raw_args[body_start:body_start + length]
 
     # Two-pass ABI decode: head (one word per param) then tail (dynamic data)
     # Head region: N words where N = number of params (each static param is
@@ -948,6 +1030,17 @@ def _regroup_args(raw_args, method_sig):
             # Dynamic type: head word is offset (in bytes)
             offset = raw_args[head_idx] if head_idx < len(raw_args) else 0
             head_idx += 1
+            if isinstance(offset, int):
+                word_idx = offset // 32
+                # Arrays of `bytes` / `string` (either dynamic `bytes[]` or
+                # static `bytes[N]`, same for string) and multi-level
+                # dynamic arrays need the recursive decoder — the inline
+                # logic below only understands `<scalar>[]` and the
+                # top-level bytes/string case.
+                inner = _inner_type(pt)
+                if inner is not None and inner in dynamic_types:
+                    result.append(_decode_dynamic(pt, word_idx))
+                    continue
             # Decode data at offset
             if isinstance(offset, int):
                 word_idx = offset // 32  # convert byte offset to word index
