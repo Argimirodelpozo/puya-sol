@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/bytes_length_member.sol.c.approval_program() -> uint64:
 main:
-    intcblock 0 1 2
-    bytecblock "data" "__ctor_pending"
+    intcblock 0 1
+    bytecblock "__ctor_pending" "data"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -34,10 +34,10 @@ main_after_if_else@2:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/bytes_length_member.sol.c.__postInit[routing]() -> void:
 __postInit:
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     intc_0 // 0
     app_global_put
     intc_1 // 1
@@ -78,7 +78,7 @@ set_ternary_merge@11:
     concat
     bury 14
     txn NumAppArgs
-    intc_2 // 2
+    pushint 2
     >
     bz set_ternary_false@13
     txna ApplicationArgs 2
@@ -232,10 +232,10 @@ set_ternary_merge@53:
     concat
 
 set_ternary_merge@55:
-    bytec_0 // "data"
+    bytec_1 // "data"
     box_del
     pop
-    bytec_0 // "data"
+    bytec_1 // "data"
     swap
     box_put
     pushbytes 0x151f7c7580
@@ -346,19 +346,9 @@ getLength:
 getLength_ternary_merge@4:
     !
     assert // not payable
-    bytec_0 // "data"
+    bytec_1 // "data"
     box_len
     pop
-    intc_2 // 2
-    >=
-    bz getLength_ternary_false@6
-    bytec_0 // "data"
-    box_len
-    pop
-
-getLength_ternary_merge@7:
-    intc_2 // 2
-    -
     itob
     pushint 32
     bzero
@@ -369,10 +359,6 @@ getLength_ternary_merge@7:
     log
     intc_1 // 1
     return
-
-getLength_ternary_false@6:
-    intc_2 // 2
-    b getLength_ternary_merge@7
 
 getLength_ternary_false@3:
     intc_0 // 0

@@ -100,8 +100,6 @@ getCanarySlot_ternary_false@3:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_delete.sol.C.checkSlots[routing]() -> void:
 checkSlots:
-    intc_1 // 0
-    dupn 3
     txn GroupIndex
     bz checkSlots_ternary_false@3
     txn GroupIndex
@@ -125,13 +123,12 @@ checkSlots_ternary_merge@4:
     -
     extract_uint64
     callsub __storage_read
-    bury 7
-    dig 2
+    dig 3
     pushbytes 0x01
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    dig 1
+    dig 2
     swap
     concat
     dup
@@ -140,13 +137,12 @@ checkSlots_ternary_merge@4:
     -
     extract_uint64
     callsub __storage_read
-    bury 6
-    dig 2
+    dig 4
     pushbytes 0x02
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    dig 1
+    dig 3
     swap
     concat
     dup
@@ -155,12 +151,13 @@ checkSlots_ternary_merge@4:
     -
     extract_uint64
     callsub __storage_read
-    bury 5
-    uncover 2
+    uncover 5
     pushbytes 0x03
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    uncover 4
+    swap
     concat
     dup
     len
@@ -168,57 +165,46 @@ checkSlots_ternary_merge@4:
     -
     extract_uint64
     callsub __storage_read
-    bury 2
+    uncover 4
     store 0
     bytec_0 // "testArray"
     box_len
     pop
-    pushint 2
-    >=
-    bz checkSlots_ternary_false@6
-    bytec_0 // "testArray"
-    box_len
-    pop
-
-checkSlots_ternary_merge@7:
-    pushint 2
-    -
     itob
     dig 4
-    dup
     len
     intc_2 // 64
     <=
     assert // overflow
     intc_2 // 64
     bzero
-    swap
+    uncover 5
     dig 1
     b|
     dig 5
-    dup
     len
     intc_2 // 64
     <=
     assert // overflow
+    uncover 5
     dig 2
     b|
     concat
     dig 4
-    dup
     len
     intc_2 // 64
     <=
     assert // overflow
+    uncover 4
     dig 2
     b|
     concat
     dig 3
-    dup
     len
     intc_2 // 64
     <=
     assert // overflow
+    uncover 3
     dig 2
     b|
     concat
@@ -231,10 +217,6 @@ checkSlots_ternary_merge@7:
     log
     intc_0 // 1
     return
-
-checkSlots_ternary_false@6:
-    pushint 2
-    b checkSlots_ternary_merge@7
 
 checkSlots_ternary_false@3:
     intc_1 // 0

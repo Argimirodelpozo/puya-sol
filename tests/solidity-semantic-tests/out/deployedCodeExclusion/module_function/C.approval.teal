@@ -1,13 +1,13 @@
 #pragma version 10
 #pragma typetrack false
 
-// /tmp/multisource_s_ida7al/main.sol.C.approval_program() -> uint64:
+// /tmp/multisource_kcswlmw0/main.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2
-    bytecblock "data" "__ctor_pending"
+    intcblock 1 0
+    bytecblock "__ctor_pending" "data"
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -32,32 +32,32 @@ main_after_if_else@2:
     err
 
 
-// /tmp/multisource_s_ida7al/main.sol.longdata() -> bytes:
+// /tmp/multisource_kcswlmw0/main.sol.longdata() -> bytes:
 longdata:
     pushbytes "xasopca.pngaibngidak.jbtnudak.cAP.BRRSMCPJAGPD KIAJDOMHUKR,SCPIDxasopca.pngaibngidak.jbtnudak.cAP.BRRSMCPJAGPD KIAJDOMHUKR,SCPIDM,SEYBDXCNTKIMNJGO;DUIAQBQUEHAKMPGIDSAJCOUKANJBCUEBKNA.GIAKMV.TIAJMO<KXBANJCPGUD ABKCJIDHA NKIMAJU,EKAMHSO;PYCAKUM,L.UCA MR;KITAM,SEYBDXCNTKIMNJGO;DUIAQBQUEHAKMPGIDSAJCOUKANJBCUEBKNA.GIAKMV.TIAJMO<KXBANJCPGUD ABKCJIDHA NKIMAJU,EKAMHSO;PYCAKUM,L.UCA MR;KITA .RPOKIDAS,.CKUMT.,ORKAD ,NOKIDHA .CGKIAD OVHAMS CUAOGT DAKN OITxasopca.pngaibngidak.jbtnudak.cAP.BRRSMCPJAGPD KIAJDOMHUKR,SCPIDM,SEYBDXCNTKIMNJGO;DUIAQBQUEHAKMPGIDSAJCOUKANJBCUEBKNA.GIAKMV.TIAJMO<KXBANJCPGUD ABKCJIDHA NKIMAJU,EKAMHSO;PYCAKUM,L.UCA MR;KITAapibakrpidbacnidkacjadtnpdkylca.,jda,r.kuadc,jdlkjd',c'dj, ncg danosumantkudkc,djntudkantuadnc,ui,c.ud,.nujdncud,j.rsch'pkl.'pih"
     retsub
 
 
-// /tmp/multisource_s_ida7al/main.sol.C.__postInit[routing]() -> void:
+// /tmp/multisource_kcswlmw0/main.sol.C.__postInit[routing]() -> void:
 __postInit:
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     intc_1 // 0
     app_global_put
     callsub longdata
-    bytec_0 // "data"
+    bytec_1 // "data"
     box_del
     pop
-    bytec_0 // "data"
+    bytec_1 // "data"
     swap
     box_put
     intc_0 // 1
     return
 
 
-// /tmp/multisource_s_ida7al/main.sol.C.test[routing]() -> void:
+// /tmp/multisource_kcswlmw0/main.sol.C.test[routing]() -> void:
 test:
     txn GroupIndex
     bz test_ternary_false@3
@@ -71,19 +71,9 @@ test_ternary_merge@4:
     assert // not payable
     load 0
     store 0
-    bytec_0 // "data"
+    bytec_1 // "data"
     box_len
     pop
-    intc_2 // 2
-    >=
-    bz test_ternary_false@6
-    bytec_0 // "data"
-    box_len
-    pop
-
-test_ternary_merge@7:
-    intc_2 // 2
-    -
     itob
     pushbytes 0x32
     b>
@@ -97,10 +87,6 @@ test_ternary_merge@7:
     log
     intc_0 // 1
     return
-
-test_ternary_false@6:
-    intc_2 // 2
-    b test_ternary_merge@7
 
 test_ternary_false@3:
     intc_1 // 0

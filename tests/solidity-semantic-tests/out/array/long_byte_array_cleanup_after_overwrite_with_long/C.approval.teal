@@ -178,16 +178,6 @@ shrinkArray_after_while@7:
     bytec_0 // "testArray"
     box_len
     pop
-    pushint 2
-    >=
-    bz shrinkArray_ternary_false@9
-    bytec_0 // "testArray"
-    box_len
-    pop
-
-shrinkArray_ternary_merge@10:
-    pushint 2
-    -
     itob
     intc_2 // 32
     bzero
@@ -198,10 +188,6 @@ shrinkArray_ternary_merge@10:
     log
     intc_0 // 1
     return
-
-shrinkArray_ternary_false@9:
-    pushint 2
-    b shrinkArray_ternary_merge@10
 
 shrinkArray_ternary_false@3:
     intc_1 // 0
@@ -400,28 +386,18 @@ getArrayBytes_while_top@5:
     dig 5
     dig 1
     b<
-    bz getArrayBytes_after_while@11
+    bz getArrayBytes_after_while@8
     dig 1
     dig 6
     b+
-    bury 4
+    dup
+    bury 5
     bytec_0 // "testArray"
     box_len
     pop
-    pushint 2
-    >=
-    bz getArrayBytes_ternary_false@8
-    bytec_0 // "testArray"
-    box_len
-    pop
-
-getArrayBytes_ternary_merge@9:
-    pushint 2
-    -
     itob
-    dig 4
-    b>
-    bz getArrayBytes_after_while@11
+    b<
+    bz getArrayBytes_after_while@8
     dig 2
     dup
     dig 7
@@ -457,7 +433,7 @@ getArrayBytes_ternary_merge@9:
     bury 6
     b getArrayBytes_while_top@5
 
-getArrayBytes_after_while@11:
+getArrayBytes_after_while@8:
     dig 4
     dup
     len
@@ -471,10 +447,6 @@ getArrayBytes_after_while@11:
     log
     intc_0 // 1
     return
-
-getArrayBytes_ternary_false@8:
-    pushint 2
-    b getArrayBytes_ternary_merge@9
 
 getArrayBytes_ternary_false@3:
     intc_1 // 0
@@ -516,25 +488,11 @@ getArrayBytes_ternary_false@3:
     bytec_0 // "testArray"
     box_len
     pop
-    pushint 2
-    >=
-    bz /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength_ternary_false@5
-    bytec_0 // "testArray"
-    box_len
-    pop
-
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength_ternary_merge@6:
-    pushint 2
-    -
     itob
     intc_2 // 32
     bzero
     b|
     retsub
-
-/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength_ternary_false@5:
-    pushint 2
-    b /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength_ternary_merge@6
 
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength_ternary_false@2:
     intc_1 // 0

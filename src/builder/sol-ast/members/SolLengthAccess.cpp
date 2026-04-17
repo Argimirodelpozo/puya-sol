@@ -86,6 +86,13 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 				lenVal->base = std::move(boxLen);
 				lenVal->index = 0;
 
+				// Dynamic bytes / string state var: the raw box byte count is
+				// the Solidity length. No 2-byte ARC4 prefix is applied on
+				// write (see `bytes data; data = msg.data;` write path which
+				// drops raw bytes into the box), so don't subtract one here.
+				if (arrType->isByteArrayOrString())
+					return lenVal;
+
 				// Elements with unknown fixed size (e.g. nested dynamic arrays)
 				// can't use the `(box_len - 2) / elemSize` trick. Puya's backend
 				// doesn't yet model this storage shape — return 0 as a

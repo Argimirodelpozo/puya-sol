@@ -407,16 +407,6 @@ checkIfDataIsEmpty_ternary_merge@4:
     bytec_0 // "data"
     box_len
     pop
-    intc_2 // 2
-    >=
-    bz checkIfDataIsEmpty_ternary_false@6
-    bytec_0 // "data"
-    box_len
-    pop
-
-checkIfDataIsEmpty_ternary_merge@7:
-    intc_2 // 2
-    -
     itob
     bytec_2 // 0x
     b==
@@ -429,10 +419,6 @@ checkIfDataIsEmpty_ternary_merge@7:
     concat
     log
     retsub
-
-checkIfDataIsEmpty_ternary_false@6:
-    intc_2 // 2
-    b checkIfDataIsEmpty_ternary_merge@7
 
 checkIfDataIsEmpty_ternary_false@3:
     intc_0 // 0
