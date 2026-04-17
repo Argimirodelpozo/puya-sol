@@ -1032,11 +1032,13 @@ def _regroup_args(raw_args, method_sig):
             head_idx += 1
             if isinstance(offset, int):
                 word_idx = offset // 32
-                # Arrays of `bytes` / `string` (either dynamic `bytes[]` or
-                # static `bytes[N]`, same for string) and multi-level
-                # dynamic arrays need the recursive decoder — the inline
-                # logic below only understands `<scalar>[]` and the
-                # top-level bytes/string case.
+                # Dispatch to the recursive decoder only when the inner
+                # element type is literally `bytes` or `string`. Broader
+                # "static-array-of-dynamic" dispatching (e.g. uint16[][][1])
+                # regressed tests where the old inline code's FALLBACK
+                # path happened to hide expected-FAILURE edge cases —
+                # don't widen without a runner-side way to validate
+                # calldata bounds that the compiler doesn't yet enforce.
                 inner = _inner_type(pt)
                 if inner is not None and inner in dynamic_types:
                     result.append(_decode_dynamic(pt, word_idx))
