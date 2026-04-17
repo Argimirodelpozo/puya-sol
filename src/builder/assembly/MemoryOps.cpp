@@ -429,16 +429,11 @@ void AssemblyBuilder::handleReturn(
 			// opcode as a hard exit from inside a nested call.
 			flushMemoryToScratch(_loc, _out);
 
-			auto one = std::make_shared<awst::BoolConstant>();
-			one->sourceLocation = _loc;
-			one->wtype = awst::WType::boolType();
-			one->value = true;
-
 			auto returnOp = std::make_shared<awst::IntrinsicCall>();
 			returnOp->sourceLocation = _loc;
 			returnOp->wtype = awst::WType::voidType();
 			returnOp->opCode = "return";
-			returnOp->stackArgs.push_back(std::move(one));
+			returnOp->stackArgs.push_back(awst::makeBoolConstant(true, _loc));
 
 			auto exitStmt = std::make_shared<awst::ExpressionStatement>();
 			exitStmt->sourceLocation = _loc;

@@ -270,12 +270,9 @@ void AssemblyBuilder::buildStatement(
 						{
 							// Convert numeric case to BoolConstant for bool switch
 							auto const& val = yulCase.value->value.value();
-							auto caseVal = std::make_shared<awst::BoolConstant>();
-							caseVal->sourceLocation = makeLoc(yulCase.value->debugData);
-							caseVal->wtype = awst::WType::boolType();
-							caseVal->value = (val != 0);
 							switchNode->cases.emplace_back(
-								std::move(caseVal), std::move(caseBlock));
+								awst::makeBoolConstant(val != 0, makeLoc(yulCase.value->debugData)),
+								std::move(caseBlock));
 						}
 						else
 						{
@@ -822,11 +819,7 @@ void AssemblyBuilder::buildExpressionStatement(
 			auto assertExpr = std::make_shared<awst::AssertExpression>();
 			assertExpr->sourceLocation = loc;
 			assertExpr->wtype = awst::WType::voidType();
-			auto falseLit = std::make_shared<awst::BoolConstant>();
-			falseLit->sourceLocation = loc;
-			falseLit->wtype = awst::WType::boolType();
-			falseLit->value = false;
-			assertExpr->condition = std::move(falseLit);
+			assertExpr->condition = awst::makeBoolConstant(false, loc);
 			assertExpr->errorMessage = "invalid";
 			auto stmt = std::make_shared<awst::ExpressionStatement>();
 			stmt->sourceLocation = loc;
@@ -1056,11 +1049,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 		auto loop = std::make_shared<awst::WhileLoop>();
 		loop->sourceLocation = _loc;
 
-		auto cond = std::make_shared<awst::BoolConstant>();
-		cond->sourceLocation = _loc;
-		cond->wtype = awst::WType::boolType();
-		cond->value = true;
-		loop->condition = std::move(cond);
+		loop->condition = awst::makeBoolConstant(true, _loc);
 
 		auto block = std::make_shared<awst::Block>();
 		block->sourceLocation = _loc;

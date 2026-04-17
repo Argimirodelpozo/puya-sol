@@ -76,11 +76,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 	{
 		auto loop = std::make_shared<awst::WhileLoop>();
 		loop->sourceLocation = m_loc;
-		auto trueLit = std::make_shared<awst::BoolConstant>();
-		trueLit->sourceLocation = m_loc;
-		trueLit->wtype = awst::WType::boolType();
-		trueLit->value = true;
-		loop->condition = trueLit;
+		loop->condition = awst::makeBoolConstant(true, m_loc);
 
 		auto body = std::make_shared<awst::Block>();
 		body->sourceLocation = m_ctx.makeLoc(m_node.body().location());
@@ -181,11 +177,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolForStatement::toAwst()
 		loop->condition = m_ctx.buildExpr(*m_node.condition());
 	else
 	{
-		auto trueLit = std::make_shared<awst::BoolConstant>();
-		trueLit->sourceLocation = m_loc;
-		trueLit->wtype = awst::WType::boolType();
-		trueLit->value = true;
-		loop->condition = trueLit;
+		loop->condition = awst::makeBoolConstant(true, m_loc);
 	}
 
 	std::shared_ptr<awst::Statement> postStmt;

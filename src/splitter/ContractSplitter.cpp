@@ -1604,11 +1604,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildThinOrchestrator(
 			ret->sourceLocation = loc;
 			if (method.returnType == awst::WType::boolType())
 			{
-				auto trueConst = std::make_shared<awst::BoolConstant>();
-				trueConst->value = true;
-				trueConst->wtype = awst::WType::boolType();
-				trueConst->sourceLocation = loc;
-				ret->value = trueConst;
+				ret->value = awst::makeBoolConstant(true, loc);
 			}
 			else if (method.returnType != awst::WType::voidType() && method.returnType != nullptr)
 			{
@@ -2010,11 +2006,7 @@ std::shared_ptr<awst::Contract> ContractSplitter::buildHybridOrchestrator(
 				ret->sourceLocation = loc;
 				if (method.returnType == awst::WType::boolType())
 				{
-					auto trueConst = std::make_shared<awst::BoolConstant>();
-					trueConst->value = true;
-					trueConst->wtype = awst::WType::boolType();
-					trueConst->sourceLocation = loc;
-					ret->value = trueConst;
+					ret->value = awst::makeBoolConstant(true, loc);
 				}
 				else if (method.returnType != awst::WType::voidType() && method.returnType != nullptr)
 					ret->value = buildDefaultExpression(loc, method.returnType);
@@ -2236,11 +2228,7 @@ static std::shared_ptr<awst::Expression> buildDefaultExpression(
 {
 	if (_type == awst::WType::boolType())
 	{
-		auto val = std::make_shared<awst::BoolConstant>();
-		val->value = false;
-		val->wtype = awst::WType::boolType();
-		val->sourceLocation = _loc;
-		return val;
+		return awst::makeBoolConstant(false, _loc);
 	}
 	if (_type == awst::WType::uint64Type())
 	{
@@ -2569,11 +2557,7 @@ awst::ContractMethod ContractSplitter::buildClearProgram(
 
 	auto returnStmt = std::make_shared<awst::ReturnStatement>();
 	returnStmt->sourceLocation = _loc;
-	auto trueConst = std::make_shared<awst::BoolConstant>();
-	trueConst->value = true;
-	trueConst->wtype = awst::WType::boolType();
-	trueConst->sourceLocation = _loc;
-	returnStmt->value = trueConst;
+	returnStmt->value = awst::makeBoolConstant(true, _loc);
 	body->body.push_back(returnStmt);
 
 	clearProg.body = body;

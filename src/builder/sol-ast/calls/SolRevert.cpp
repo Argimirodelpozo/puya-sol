@@ -18,11 +18,7 @@ std::shared_ptr<awst::Expression> SolRevert::toAwst()
 	assertExpr->sourceLocation = m_loc;
 	assertExpr->wtype = awst::WType::voidType();
 
-	auto falseLit = std::make_shared<awst::BoolConstant>();
-	falseLit->sourceLocation = m_loc;
-	falseLit->wtype = awst::WType::boolType();
-	falseLit->value = false;
-	assertExpr->condition = std::move(falseLit);
+	assertExpr->condition = awst::makeBoolConstant(false, m_loc);
 
 	// Determine error message. For `revert Error(args)`, the callee
 	// identifies the error name. For `revert("msg")`, Solidity treats

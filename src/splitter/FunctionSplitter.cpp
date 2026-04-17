@@ -2197,11 +2197,7 @@ std::shared_ptr<awst::Expression> FunctionSplitter::buildDefault(
 {
 	if (_type == awst::WType::boolType())
 	{
-		auto val = std::make_shared<awst::BoolConstant>();
-		val->value = false;
-		val->wtype = awst::WType::boolType();
-		val->sourceLocation = _loc;
-		return val;
+		return awst::makeBoolConstant(false, _loc);
 	}
 	if (_type == awst::WType::uint64Type())
 	{

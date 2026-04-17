@@ -42,15 +42,10 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::makeBoolBytesTuple(
 	std::shared_ptr<awst::Expression> _data,
 	awst::SourceLocation const& _loc)
 {
-	auto boolLit = std::make_shared<awst::BoolConstant>();
-	boolLit->sourceLocation = _loc;
-	boolLit->wtype = awst::WType::boolType();
-	boolLit->value = _success;
-
 	auto tuple = std::make_shared<awst::TupleExpression>();
 	tuple->sourceLocation = _loc;
 	tuple->wtype = &s_boolBytesType;
-	tuple->items.push_back(std::move(boolLit));
+	tuple->items.push_back(awst::makeBoolConstant(_success, _loc));
 	tuple->items.push_back(std::move(_data));
 	return tuple;
 }
@@ -391,11 +386,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleSend(
 	stmt->expr = submit;
 	_ctx.pendingStatements.push_back(std::move(stmt));
 
-	auto trueLit = std::make_shared<awst::BoolConstant>();
-	trueLit->sourceLocation = _loc;
-	trueLit->wtype = awst::WType::boolType();
-	trueLit->value = true;
-	return std::make_unique<SolBoolBuilder>(_ctx, std::move(trueLit));
+	return std::make_unique<SolBoolBuilder>(_ctx, awst::makeBoolConstant(true, _loc));
 }
 
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithValue(

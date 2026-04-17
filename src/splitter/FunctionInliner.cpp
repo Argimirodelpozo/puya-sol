@@ -1141,11 +1141,7 @@ std::shared_ptr<awst::Expression> FunctionInliner::deepCopyExpr(
 	if (type == "BoolConstant")
 	{
 		auto& src = static_cast<awst::BoolConstant const&>(*_expr);
-		auto n = std::make_shared<awst::BoolConstant>();
-		n->sourceLocation = src.sourceLocation;
-		n->wtype = src.wtype;
-		n->value = src.value;
-		return n;
+		return awst::makeBoolConstant(src.value, src.sourceLocation, src.wtype);
 	}
 	if (type == "BytesConstant")
 	{

@@ -23,21 +23,9 @@ std::shared_ptr<awst::Expression> SolLiteral::toAwst()
 	switch (m_literal.token())
 	{
 	case Token::TrueLiteral:
-	{
-		auto e = std::make_shared<awst::BoolConstant>();
-		e->sourceLocation = m_loc;
-		e->wtype = awst::WType::boolType();
-		e->value = true;
-		return e;
-	}
+		return awst::makeBoolConstant(true, m_loc);
 	case Token::FalseLiteral:
-	{
-		auto e = std::make_shared<awst::BoolConstant>();
-		e->sourceLocation = m_loc;
-		e->wtype = awst::WType::boolType();
-		e->value = false;
-		return e;
-	}
+		return awst::makeBoolConstant(false, m_loc);
 	case Token::Number:
 	{
 		auto* mappedType = m_ctx.typeMapper.map(m_solType);

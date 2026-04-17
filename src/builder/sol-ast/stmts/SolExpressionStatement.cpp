@@ -78,11 +78,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolRevertStatement::toAwst()
 	auto assertExpr = std::make_shared<awst::AssertExpression>();
 	assertExpr->sourceLocation = m_loc;
 	assertExpr->wtype = awst::WType::voidType();
-	auto falseLit = std::make_shared<awst::BoolConstant>();
-	falseLit->sourceLocation = m_loc;
-	falseLit->wtype = awst::WType::boolType();
-	falseLit->value = false;
-	assertExpr->condition = falseLit;
+	assertExpr->condition = awst::makeBoolConstant(false, m_loc);
 	assertExpr->errorMessage = errorName;
 
 	auto stmt = std::make_shared<awst::ExpressionStatement>();

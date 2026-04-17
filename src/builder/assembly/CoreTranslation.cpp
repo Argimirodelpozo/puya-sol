@@ -53,11 +53,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildLiteral(
 	}
 	else if (_lit.kind == solidity::yul::LiteralKind::Boolean)
 	{
-		auto node = std::make_shared<awst::BoolConstant>();
-		node->sourceLocation = loc;
-		node->wtype = awst::WType::boolType();
-		node->value = (_lit.value.value() != 0);
-		return node;
+		return awst::makeBoolConstant(_lit.value.value() != 0, loc);
 	}
 	else if (_lit.kind == solidity::yul::LiteralKind::String)
 	{

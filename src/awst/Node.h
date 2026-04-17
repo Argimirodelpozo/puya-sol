@@ -198,6 +198,19 @@ struct BoolConstant: Expression
 	bool value = false;
 };
 
+// Construct a BoolConstant node. The wtype defaults to the canonical bool
+// singleton; callers only need to pass a custom type when they are e.g.
+// cloning another node or using an ABI-widened return-path type.
+inline std::shared_ptr<BoolConstant> makeBoolConstant(
+	bool value, SourceLocation loc, WType const* wtype = WType::boolType())
+{
+	auto node = std::make_shared<BoolConstant>();
+	node->sourceLocation = std::move(loc);
+	node->wtype = wtype;
+	node->value = value;
+	return node;
+}
+
 struct BytesConstant: Expression
 {
 	std::string nodeType() const override { return "BytesConstant"; }

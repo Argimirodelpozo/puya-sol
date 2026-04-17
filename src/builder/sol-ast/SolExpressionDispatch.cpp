@@ -113,11 +113,7 @@ std::shared_ptr<awst::Expression> buildExpression(
 		}
 		if (wtype == awst::WType::boolType())
 		{
-			auto e = std::make_shared<awst::BoolConstant>();
-			e->sourceLocation = loc;
-			e->wtype = wtype;
-			e->value = false;
-			return e;
+			return awst::makeBoolConstant(false, loc, wtype);
 		}
 		auto e = std::make_shared<awst::BytesConstant>();
 		e->sourceLocation = loc;

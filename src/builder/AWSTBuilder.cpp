@@ -493,11 +493,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 						std::shared_ptr<awst::Expression> zeroVal;
 						if (rpType == awst::WType::boolType())
 						{
-							auto def = std::make_shared<awst::BoolConstant>();
-							def->sourceLocation = loc;
-							def->wtype = rpType;
-							def->value = false;
-							zeroVal = std::move(def);
+							zeroVal = awst::makeBoolConstant(false, loc, rpType);
 						}
 						else if (rpType == awst::WType::uint64Type()
 							|| rpType == awst::WType::biguintType())
@@ -832,11 +828,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					std::shared_ptr<awst::Expression> zeroVal;
 					if (rpType == awst::WType::boolType())
 					{
-						auto def = std::make_shared<awst::BoolConstant>();
-						def->sourceLocation = loc;
-						def->wtype = rpType;
-						def->value = false;
-						zeroVal = std::move(def);
+						zeroVal = awst::makeBoolConstant(false, loc, rpType);
 					}
 					else if (rpType == awst::WType::uint64Type()
 						|| rpType == awst::WType::biguintType())
@@ -995,13 +987,9 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 
 				auto body = std::make_shared<awst::Block>();
 				body->sourceLocation = dummy.sourceLocation;
-				auto trueLit = std::make_shared<awst::BoolConstant>();
-				trueLit->sourceLocation = dummy.sourceLocation;
-				trueLit->wtype = awst::WType::boolType();
-				trueLit->value = true;
 				auto ret = std::make_shared<awst::ReturnStatement>();
 				ret->sourceLocation = dummy.sourceLocation;
-				ret->value = trueLit;
+				ret->value = awst::makeBoolConstant(true, dummy.sourceLocation);
 				body->body.push_back(ret);
 				dummy.body = body;
 

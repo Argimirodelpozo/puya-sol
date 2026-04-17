@@ -534,11 +534,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 			auto assertExpr = std::make_shared<awst::AssertExpression>();
 			assertExpr->sourceLocation = _loc;
 			assertExpr->wtype = awst::WType::voidType();
-			auto falseLit = std::make_shared<awst::BoolConstant>();
-			falseLit->sourceLocation = _loc;
-			falseLit->wtype = awst::WType::boolType();
-			falseLit->value = false;
-			assertExpr->condition = std::move(falseLit);
+			assertExpr->condition = awst::makeBoolConstant(false, _loc);
 			assertExpr->errorMessage = "invalid function pointer";
 			auto stmt = std::make_shared<awst::ExpressionStatement>();
 			stmt->sourceLocation = _loc;

@@ -70,11 +70,7 @@ void AssemblyBuilder::handlePrecompileCall(
 
 			if (varType == awst::WType::boolType())
 			{
-				auto val = std::make_shared<awst::BoolConstant>();
-				val->sourceLocation = _loc;
-				val->wtype = awst::WType::boolType();
-				val->value = true;
-				assignStmt->value = std::move(val);
+				assignStmt->value = awst::makeBoolConstant(true, _loc);
 			}
 			else
 			{
@@ -176,11 +172,7 @@ void AssemblyBuilder::handlePrecompileCall(
 		std::shared_ptr<awst::Expression> val;
 		if (varType == awst::WType::boolType())
 		{
-			auto boolVal = std::make_shared<awst::BoolConstant>();
-			boolVal->sourceLocation = _loc;
-			boolVal->wtype = awst::WType::boolType();
-			boolVal->value = success;
-			val = std::move(boolVal);
+			val = awst::makeBoolConstant(success, _loc);
 		}
 		else
 		{

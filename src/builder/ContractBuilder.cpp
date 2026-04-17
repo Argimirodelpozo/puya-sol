@@ -2457,14 +2457,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		} // end else (no postInit needed)
 
 		// Return true to complete the create transaction
-		auto trueLit = std::make_shared<awst::BoolConstant>();
-		trueLit->sourceLocation = method.sourceLocation;
-		trueLit->wtype = awst::WType::boolType();
-		trueLit->value = true;
-
 		auto createReturn = std::make_shared<awst::ReturnStatement>();
 		createReturn->sourceLocation = method.sourceLocation;
-		createReturn->value = trueLit;
+		createReturn->value = awst::makeBoolConstant(true, method.sourceLocation);
 		createBlock->body.push_back(createReturn);
 
 		auto ifCreate = std::make_shared<awst::IfElse>();
@@ -2689,11 +2684,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		};
 
 		auto makeTrueLit = [&]() {
-			auto lit = std::make_shared<awst::BoolConstant>();
-			lit->sourceLocation = method.sourceLocation;
-			lit->wtype = awst::WType::boolType();
-			lit->value = true;
-			return lit;
+			return awst::makeBoolConstant(true, method.sourceLocation);
 		};
 
 		auto makeReturnTrue = [&]() -> std::shared_ptr<awst::Statement> {
@@ -2827,14 +2818,9 @@ awst::ContractMethod ContractBuilder::buildClearProgram(
 	body->sourceLocation = method.sourceLocation;
 
 	// return true
-	auto trueLit = std::make_shared<awst::BoolConstant>();
-	trueLit->sourceLocation = method.sourceLocation;
-	trueLit->wtype = awst::WType::boolType();
-	trueLit->value = true;
-
 	auto ret = std::make_shared<awst::ReturnStatement>();
 	ret->sourceLocation = method.sourceLocation;
-	ret->value = trueLit;
+	ret->value = awst::makeBoolConstant(true, method.sourceLocation);
 
 	body->body.push_back(ret);
 	method.body = body;
@@ -4415,14 +4401,10 @@ void ContractBuilder::inlineModifiers(
 				target->sourceLocation = flagLoc;
 				target->wtype = awst::WType::boolType();
 				target->name = flagName;
-				auto trueVal = std::make_shared<awst::BoolConstant>();
-				trueVal->sourceLocation = flagLoc;
-				trueVal->wtype = awst::WType::boolType();
-				trueVal->value = true;
 				auto assign = std::make_shared<awst::AssignmentStatement>();
 				assign->sourceLocation = flagLoc;
 				assign->target = std::move(target);
-				assign->value = std::move(trueVal);
+				assign->value = awst::makeBoolConstant(true, flagLoc);
 				return assign;
 			};
 
@@ -4515,22 +4497,14 @@ void ContractBuilder::inlineModifiers(
 			flagTarget->sourceLocation = flagLoc;
 			flagTarget->wtype = awst::WType::boolType();
 			flagTarget->name = flagName;
-			auto falseVal = std::make_shared<awst::BoolConstant>();
-			falseVal->sourceLocation = flagLoc;
-			falseVal->wtype = awst::WType::boolType();
-			falseVal->value = false;
 			flagInit->target = std::move(flagTarget);
-			flagInit->value = std::move(falseVal);
+			flagInit->value = awst::makeBoolConstant(false, flagLoc);
 			modBody->body.push_back(std::move(flagInit));
 
 			// Wrap in while(true) { ...body...; break; }
 			auto wrapperLoop = std::make_shared<awst::WhileLoop>();
 			wrapperLoop->sourceLocation = flagLoc;
-			auto trueConst = std::make_shared<awst::BoolConstant>();
-			trueConst->sourceLocation = flagLoc;
-			trueConst->wtype = awst::WType::boolType();
-			trueConst->value = true;
-			wrapperLoop->condition = std::move(trueConst);
+			wrapperLoop->condition = awst::makeBoolConstant(true, flagLoc);
 
 			auto loopBody = std::make_shared<awst::Block>();
 			loopBody->sourceLocation = flagLoc;

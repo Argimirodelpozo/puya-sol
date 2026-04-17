@@ -942,11 +942,7 @@ std::shared_ptr<awst::Expression> ExpressionBuilder::buildSubmitAndReturn(
 		stmt->expr = std::move(submit);
 		m_prePendingStatements.push_back(std::move(stmt));
 
-		auto result = std::make_shared<awst::BoolConstant>();
-		result->sourceLocation = _loc;
-		result->wtype = awst::WType::boolType();
-		result->value = true;
-		return result;
+		return awst::makeBoolConstant(true, _loc);
 	}
 
 	// For application calls with return values: extract from LastLog

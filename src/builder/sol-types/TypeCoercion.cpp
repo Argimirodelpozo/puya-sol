@@ -356,11 +356,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 	// Bool → BoolConstant
 	if (_type == awst::WType::boolType())
 	{
-		auto val = std::make_shared<awst::BoolConstant>();
-		val->sourceLocation = _loc;
-		val->wtype = awst::WType::boolType();
-		val->value = false;
-		return val;
+		return awst::makeBoolConstant(false, _loc);
 	}
 
 	// Integer types → IntegerConstant
