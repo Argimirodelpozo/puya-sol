@@ -132,12 +132,37 @@ std::shared_ptr<awst::Expression> SolExternalCall::encodeArgToBytes(
 	}
 	else if (_argExpr->wtype == awst::WType::uint64Type())
 	{
+		// itob produces 8 bytes. If the target ABI param is wider (e.g.
+		// uint256 = 32 bytes), left-pad with zeros so the callee's arc4
+		// length check (len == N) holds.
+		unsigned widthBytes = 8;
+		if (_paramSolType)
+		{
+			if (auto const* intType = dynamic_cast<IntegerType const*>(_paramSolType))
+				widthBytes = intType->numBits() / 8;
+			else if (auto const* addr = dynamic_cast<AddressType const*>(_paramSolType))
+				(void)addr, widthBytes = 20;
+		}
 		auto itob = std::make_shared<awst::IntrinsicCall>();
 		itob->sourceLocation = m_loc;
 		itob->wtype = awst::WType::bytesType();
 		itob->opCode = "itob";
 		itob->stackArgs.push_back(std::move(_argExpr));
-		return itob;
+		if (widthBytes <= 8)
+			return itob;
+		// pad = bzero(widthBytes - 8)  ++  itob(value)
+		auto zeros = std::make_shared<awst::IntrinsicCall>();
+		zeros->sourceLocation = m_loc;
+		zeros->wtype = awst::WType::bytesType();
+		zeros->opCode = "bzero";
+		zeros->stackArgs.push_back(makeUint64(std::to_string(widthBytes - 8), m_loc));
+		auto padded = std::make_shared<awst::IntrinsicCall>();
+		padded->sourceLocation = m_loc;
+		padded->wtype = awst::WType::bytesType();
+		padded->opCode = "concat";
+		padded->stackArgs.push_back(std::move(zeros));
+		padded->stackArgs.push_back(std::move(itob));
+		return padded;
 	}
 	else if (_argExpr->wtype == awst::WType::biguintType())
 	{
